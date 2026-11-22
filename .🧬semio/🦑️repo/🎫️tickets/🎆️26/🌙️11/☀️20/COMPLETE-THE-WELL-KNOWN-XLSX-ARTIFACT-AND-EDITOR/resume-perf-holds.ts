@@ -1,0 +1,18 @@
+const BUILD="/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build";
+const t0=performance.now();
+const observation=await import(BUILD+"/👁️observation/🟨️.mjs");
+const memoModule=await import(BUILD+"/🕸️graph/📥️load/🧠️admission-memo/🟦️.ts");
+if(process.env.RESUME_PERF_PRODUCER!=="0")await import(BUILD+"/🕸️graph/📥️inference/🟨️.mjs");
+const t1=performance.now();
+const memo=JSON.parse(await Bun.file(process.argv[2]).text());
+const owners=memoModule.ownersOfAdmissionMemoV1(memo);
+const t2=performance.now();
+const limit=Number(process.argv[3]??owners.length),mode=process.env.RESUME_PERF_MODE??"round";
+const perOwner:{owner:string;rows:number;ms:number;holds:boolean}[]=[];
+let stale:any[]=[];
+const run=async()=>{for(const entry of owners.slice(0,limit)){const s=performance.now();const holds=await observation.observationsHoldWithinRoundV1(entry.rows,64,undefined,(row:any)=>stale.push({owner:entry.suffix.split("\0")[0],kind:row.kind,path:row.path}),undefined);observation.retainObservedRowsV1(entry.rows);perOwner.push({owner:entry.suffix.split("\0")[0],rows:entry.rows.length,ms:Math.round(performance.now()-s),holds});}return 1;};
+const t3=performance.now();
+if(mode==="round")await observation.captureObservedSourceInputsV1(()=>observation.settleObservedComputationV1(run,{}),undefined,false);else await run();
+const t4=performance.now();
+perOwner.sort((a,b)=>b.ms-a.ms);
+console.log(JSON.stringify({imports:Math.round(t1-t0),memoParse:Math.round(t2-t1),holdAll:Math.round(t4-t3),owners:perOwner.length,rows:perOwner.reduce((n,o)=>n+o.rows,0),held:perOwner.filter(o=>o.holds).length,stale:process.env.RESUME_PERF_ALL==="1"?stale:stale.slice(0,10),slowest:perOwner.slice(0,12)},null,1));

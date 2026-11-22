@@ -158,6 +158,15 @@ pub fn plugin_demand_grant(demand: RetirementDemand) -> RetainedCloneGrant {
     RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes, maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth.max(1) }
 }
 
+/// 🧮️ The copy-byte body a self-funded caller pages its owner's retirement by.
+pub const PLUGIN_SELF_FUNDED_BODY_BYTES: usize = 65_536;
+
+/// 🪙️ Self-funds exactly one quoted turn for a caller that pages its owner by `body`: the owner's demand on every axis, with the
+/// copy axis widened to the body the demand was quoted against. See [`plugin_demand_grant`] for owners quoted without a body.
+pub fn plugin_self_funded_grant(demand: RetirementDemand, body: usize) -> RetainedCloneGrant {
+    RetainedCloneGrant { maximum_copy_bytes: demand.copy_bytes.max(body), ..plugin_demand_grant(demand) }
+}
+
 /// 🚦️ Admits a turn only when every axis is funded: an under-granted axis yields, a depth below demand is refused.
 pub fn plugin_turn_admitted(demand: RetirementDemand, grant: RetainedCloneGrant) -> Result<bool, Fault> {
     if grant.maximum_items != 0 && grant.maximum_depth < demand.depth {
@@ -511,6 +520,16 @@ pub fn original_plugin_turn_grant(policy:RetainedCloneGrant,remaining:RetainedCl
 #[cfg(test)]
 mod typed_owner_work_tests {
     use super::*;
+
+    #[test]
+    fn a_self_funded_grant_funds_its_demand_and_the_body_it_was_quoted_against() {
+        let demand = RetirementDemand { copy_bytes: 96, capacity_bytes: 7, release_bytes: 11, depth: 0, ..Default::default() };
+        let grant = plugin_self_funded_grant(demand, PLUGIN_SELF_FUNDED_BODY_BYTES);
+        assert_eq!(grant, RetainedCloneGrant { maximum_copy_bytes: PLUGIN_SELF_FUNDED_BODY_BYTES, ..plugin_demand_grant(demand) });
+        assert!(plugin_grant_funds(demand, grant));
+        let large = RetirementDemand { copy_bytes: PLUGIN_SELF_FUNDED_BODY_BYTES + 1, depth: 3, ..Default::default() };
+        assert_eq!(plugin_self_funded_grant(large, PLUGIN_SELF_FUNDED_BODY_BYTES), plugin_demand_grant(large));
+    }
 
     fn run(caller: &mut semio_framework_job::OriginalJobFixtureCaller, original: &mut Option<String>, active: &mut Option<ControlledRetirement<String>>, grant: RetainedCloneGrant) -> (RetainedCloneStep, u128) {
         let turn = RetainedCloneGrant { maximum_items: 64, maximum_copy_bytes: 1 << 16, maximum_capacity_bytes: 1 << 16, maximum_release_bytes: 1 << 16, maximum_depth: 16 };

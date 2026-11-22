@@ -13,6 +13,30 @@ use super::*;
 /// 📜️ `renderDocument` returns `{ document, effects }` so render-time host effects reach `refresh_effects`.
 #[cfg(target_arch = "wasm32")]
 pub(super) async fn render_with_document_js(handle: &Rc<JsValue>, instance_id: u32, surface_id: &str, body_key: &str, view_state: &ViewModel, _document_dsl: Option<&str>, refresh_effects: Option<&mut Vec<Effect>>) -> Result<UiDocumentLease, String> {
+    let (mut published, mut effects) = render_browser_document(handle, instance_id, surface_id, body_key, view_state).await?;
+    super::extension_splice::splice_browser_extensions(&mut published.nodes, instance_id, view_state, &mut effects).await;
+    if let Some(sink) = refresh_effects {
+        sink.extend(effects);
+    }
+    let root = published.root.ok_or_else(|| format!("plugin published no root node for surface '{surface_id}'"))?;
+    if published.nodes.is_empty() {
+        return Err((format!("plugin published an empty retained document for surface '{surface_id}'")).into());
+    }
+    let identity = ui_contract::UiDocumentAssemblyIdentity {
+        generation: browser_document_generation(surface_id, published.revision),
+        revision: ui_contract::UiRevision(published.revision),
+        root: Some(ui_contract::UiNodeId(root)),
+        layout_epoch: published.layout_epoch,
+    };
+    let surface = ui_contract::SurfaceId::try_from(surface_id).map_err(|_| "program surface id exceeds the retained contract".to_string())?;
+    let outcome = UiDocumentLease::try_publish(surface, identity, published.nodes).map_err(|error| retained_publication_refusal(surface_id, error));
+    retire_browser_ui_values();
+    outcome
+}
+
+/// 🧩️ Calls a program's `renderDocument` and reads the retained document and effects it answers — the one render call every program document, an extension's included, goes through.
+#[cfg(target_arch = "wasm32")]
+pub(super) async fn render_browser_document(handle: &Rc<JsValue>, instance_id: u32, surface_id: &str, body_key: &str, view_state: &ViewModel) -> Result<(BrowserRetainedDocument, Vec<Effect>), String> {
     let render = get_fn(handle.as_ref(), "renderDocument")?;
     let view_json = view_state_pack_base64(view_state);
     let result = render
@@ -30,24 +54,7 @@ pub(super) async fn render_with_document_js(handle: &Rc<JsValue>, instance_id: u
         let headroom = ui_contract::ui_value_headroom();
         format!("renderDocument result parse failed: {error} headroom collections={} items={} near {}", headroom.collections, headroom.items, json_window_around(&text, error.column()))
     })?;
-    if let Some(sink) = refresh_effects {
-        sink.extend(envelope.effects);
-    }
-    let published = envelope.document;
-    let root = published.root.ok_or_else(|| format!("plugin published no root node for surface '{surface_id}'"))?;
-    if published.nodes.is_empty() {
-        return Err((format!("plugin published an empty retained document for surface '{surface_id}'")).into());
-    }
-    let identity = ui_contract::UiDocumentAssemblyIdentity {
-        generation: browser_document_generation(surface_id, published.revision),
-        revision: ui_contract::UiRevision(published.revision),
-        root: Some(ui_contract::UiNodeId(root)),
-        layout_epoch: published.layout_epoch,
-    };
-    let surface = ui_contract::SurfaceId::try_from(surface_id).map_err(|_| "program surface id exceeds the retained contract".to_string())?;
-    let outcome = UiDocumentLease::try_publish(surface, identity, published.nodes).map_err(|error| retained_publication_refusal(surface_id, error));
-    retire_browser_ui_values();
-    outcome
+    Ok((envelope.document, envelope.effects))
 }
 
 /// ♻️ Returns this parse's `UiValue` collection slots to the process-wide arena.
@@ -231,11 +238,13 @@ pub async fn install_js_extension(record_json: &str, extension_id: &str, version
     if entry.manifest.plugin_id != extension_id || entry.manifest.version != version {
         return Err((format!("extension {extension_id}: loaded manifest identity/version mismatch")).into());
     }
+    super::extension_splice::register_extension_program(extension_id, entry.clone(), None);
     Ok(entry)
 }
 
 #[cfg(target_arch = "wasm32")]
 pub async fn retire_js_extension(extension_id: &str) -> Result<(), String> {
+    super::extension_splice::unregister_extension_program(extension_id);
     let door = js_plugin_install_door("semioWgpuRetireExtension").ok_or_else(|| "this isolate installs no semioWgpuRetireExtension door".to_string())?;
     let result = door.call1(&JsValue::NULL, &JsValue::from_str(extension_id)).map_err(|error| format!("extension {extension_id}: {}", describe_js_rejection(&error)))?;
     if let Some(promise) = result.dyn_ref::<js_sys::Promise>() {

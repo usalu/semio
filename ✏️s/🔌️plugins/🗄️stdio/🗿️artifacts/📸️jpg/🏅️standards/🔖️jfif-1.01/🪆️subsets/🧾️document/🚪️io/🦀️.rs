@@ -37,6 +37,10 @@ pub use header_and_decode_entry::*;
 mod step_decoder;
 pub use step_decoder::*;
 
+#[path = "🧮️baseline-proof/🦀️.rs"]
+mod baseline_proof;
+pub use baseline_proof::*;
+
 //#region Tests
 
 //#endregion Tests

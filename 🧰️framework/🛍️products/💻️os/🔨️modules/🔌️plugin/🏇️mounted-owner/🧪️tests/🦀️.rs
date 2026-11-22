@@ -465,9 +465,53 @@ fn the_interactive_copy_grant_covers_the_largest_indivisible_step_with_power_of_
     let demand = MountedOwnerPolicyV1::LARGEST_INDIVISIBLE_STEP_COPY_BYTES;
     let grant = MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.maintenance.maximum_copy_bytes;
     assert!(grant >= demand && grant.is_power_of_two(), "grant {grant} must cover demand {demand}");
+    for measured in [33_976usize, 277_538, 377_696] {
+        assert!(grant >= measured, "grant {grant} must fund the measured step {measured}");
+    }
     assert_eq!(MountedOwnerPolicyV1::covering_copy_bytes(1), 32_768);
     assert_eq!(MountedOwnerPolicyV1::covering_copy_bytes(32_769), 65_536);
     for phase in [MountedOwnerPhaseV1::Preparation, MountedOwnerPhaseV1::Maintenance, MountedOwnerPhaseV1::Close] {
         assert_eq!(MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.grant(phase).maximum_copy_bytes, grant);
+    }
+}
+
+fn fixture_grant(row: &Value) -> RetainedCloneGrant {
+    let field = |name: &str| usize::try_from(row[name].as_u64().unwrap()).unwrap();
+    RetainedCloneGrant { maximum_items: field("items"), maximum_copy_bytes: field("copy"), maximum_capacity_bytes: field("capacity"), maximum_release_bytes: field("release"), maximum_depth: field("depth") }
+}
+
+#[test]
+fn covering_grant_covers_an_indivisible_demand_only_within_the_ceiling() {
+    let rows: Vec<Value> = serde_json::from_str(include_str!("🧫️fixtures/🪜️covering-grant/🔣️.json")).unwrap();
+    for row in rows {
+        let amount = |name: &str| usize::try_from(row["demand"][name].as_u64().unwrap()).unwrap();
+        let demand = RetirementDemand { copy_bytes: amount("copy"), capacity_bytes: amount("capacity"), release_bytes: amount("release"), depth: amount("depth"), ..Default::default() };
+        assert_eq!(covering_grant(fixture_grant(&row["loan"]), demand, fixture_grant(&row["ceiling"])), fixture_grant(&row["expected"]), "{}", row["id"]);
+    }
+}
+
+#[test]
+fn a_covered_step_above_the_mounted_loan_is_accepted_only_by_the_covering_lifecycle() {
+    let rows: Vec<Value> = serde_json::from_str(include_str!("🧫️fixtures/🪜️covering-grant/🔣️.json")).unwrap();
+    let identity = MountedOwnerIdentityV1 { instance_id: 7, operation: OperationId(81), generation: Generation(2) };
+    CLOCK.with(|clock| clock.set(Some(10)));
+    let loan = fixture_grant(&rows[0]["loan"]);
+    let ceiling = RetainedCloneGrant { maximum_items: 64, maximum_copy_bytes: 2_094_757_945, maximum_capacity_bytes: 263_862_856, maximum_release_bytes: 467_039_831, maximum_depth: 64 };
+    for (copy, covering_accepts) in [(1_000usize, true), (33_976, true), (377_696, true)] {
+        for covering in [false, true] {
+            let mut recipient = RetainedCloneProgress::default();
+            let mut sequence = 0;
+            let mut context = StepContext::new(identity.operation, identity.generation, StepBudget::new(10, 100, ceiling), CancelToken::root_now(), now_us, &mut sequence, &mut recipient);
+            let policy = MountedOwnerPolicyV1 { preparation: loan, maintenance: loan, close: loan };
+            let mut turn = MountedOwnerTurnV1::admit(7, identity, MountedOwnerPhaseV1::Maintenance, policy, &mut context).unwrap().unwrap();
+            let receipt = RetainedCloneProgress { copied_items: 1, copied_bytes: copy, ..Default::default() };
+            let produce = |cx: &mut StepContext<'_>, _: RetainedCloneGrant| -> Result<_, ValueError> {
+                cx.consume_fuel(1);
+                cx.consume_retained(receipt)?;
+                Ok(semio_framework_value::RetainedCloneStep::Progress(receipt))
+            };
+            let result = if covering { turn.advance_covering_lifecycle(|_, progress| semio_framework_value::RetainedCloneStep::Progress(progress), produce) } else { turn.advance_lifecycle(|_, progress| semio_framework_value::RetainedCloneStep::Progress(progress), produce) };
+            assert_eq!(result.is_ok(), if covering { covering_accepts } else { copy <= loan.maximum_copy_bytes }, "copy {copy} covering {covering}");
+        }
     }
 }

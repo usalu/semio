@@ -153,9 +153,28 @@ def verify_deployed_module(staged, deployed):
 
 
 
+def roster(cases):
+    return [(module, directory) for group, directory in (("pluginIds", "🔌️plugin-modules"), ("extensionIds", "🧩️extension-modules")) for module in cases[group]]
+
+
+def missing_report(modules, evidence, cases):
+    """📋️ List every roster module without a queue confirmation and say whether its release was at least staged."""
+    rows = roster(cases)
+    missing = [module for module, _ in rows if not (evidence / f"{module}.json").is_file()]
+    lines = [f"{len(rows) - len(missing)} of {len(rows)} roster modules confirmed; {len(missing)} still missing:"]
+    for module in missing:
+        try:
+            receipt_path(modules, module)
+            state = "staged, awaiting confirmation"
+        except ValueError:
+            state = "no staged release"
+        lines.append(f"  {module}: {state}")
+    return missing, "\n".join(lines)
+
+
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("operation", choices=("record", "verify"))
+    parser.add_argument("operation", choices=("record", "verify", "status"))
     parser.add_argument("modules", type=Path)
     parser.add_argument("evidence", type=Path)
     parser.add_argument("module", nargs="?")
@@ -167,14 +186,16 @@ def main():
         record_confirmation(receipt_path(args.modules, args.module), args.evidence / f"{args.module}.json", args.module)
         return
     cases = json.loads(CASES.read_bytes())
-    missing = []
+    missing, report = missing_report(args.modules, args.evidence, cases)
+    if args.operation == "status":
+        print(report)
+        raise SystemExit(1 if missing else 0)
+    if missing:
+        raise ValueError(report)
     verified = []
     for group, directory in (("pluginIds", "🔌️plugin-modules"), ("extensionIds", "🧩️extension-modules")):
         for module in cases[group]:
             receipt = args.evidence / f"{module}.json"
-            if not receipt.is_file():
-                missing.append(module)
-                continue
             expected, inventory = read_confirmation(receipt, module)
             staged = receipt_path(args.modules, module)
             if read_receipt(staged, module) != expected:
@@ -192,8 +213,6 @@ def main():
                 raise ValueError(f"{module} site differs from its successful build")
             verify_recorded_cores(deployed.parent, inventory)
             verify_deployed_module(staged.parent, deployed.parent)
-    if missing:
-        raise ValueError("awaiting successful queue receipts for " + ", ".join(missing))
 
 
 if __name__ == "__main__":

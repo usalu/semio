@@ -62,13 +62,13 @@ test("a busy pool grows beyond its bound up to the live maximum and trims back w
 test("the recorded bytes bound the idle lanes, least recently used first, and a held lane is never removed",async()=>{
  const root=scratch();
  try{
-  const ids=["q1","q2","q3"];
+  const ids=["m1","m2","m3"];
   for(const [index,id] of ids.entries()){const entered=enterLaneV1(root,id,undefined,["x"+index]);entered.release();recordLaneSizeV1(root,id,400,0,Date.now());await new Promise(done=>setTimeout(done,15));}
-  const held=enterLaneV1(root,"q1",undefined,["x0"]);
+  const held=enterLaneV1(root,"m1",undefined,["x0"]);
   const result=trimPoolV1(root,{maximumLanes:16,maximumLiveLanes:32,quotaBytes:900},Date.now());
-  expect(result.removed).toBe(1);expect(laneIdsV1(root)).toEqual(["q1","q3"]);
+  expect(result.removed).toBe(1);expect(laneIdsV1(root)).toEqual(["m1","m3"]);
   held.release();
-  expect(readPoolV1(root,Date.now()).map(row=>[row.id,row.claimed,row.bytes])).toEqual([["q1",false,400],["q3",false,400]]);
+  expect(readPoolV1(root,Date.now()).map(row=>[row.id,row.claimed,row.bytes])).toEqual([["m1",false,400],["m3",false,400]]);
  }finally{rmSync(root,{recursive:true,force:true});}
 });
 

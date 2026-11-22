@@ -3,7 +3,7 @@ import {readFile,stat} from "node:fs/promises";
 import {dirname,join} from "node:path";
 import {compileJsonSchemaSubset,type CompiledJsonSchemaSubset} from "../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import {listOriginsV1,readEventSpansV1,readHeadV1,readThroughReplacementV1,replaceOriginFileV1,storePathsV1,type FleetCursorV1} from "../📒️journal/🟦️.ts";
-import {importClosureV1,moduleSourcesV1,restartJitterMillisecondsV1,StoreStalledV1,type FailureSummaryV1} from "../🛡️resilience/🟦️.ts";
+import {importClosureV1,moduleSourcesV1,restartJitterMillisecondsV1,StoreStalledV1,type FailureSummaryV1} from "../🛡️resilience/🧱️attestation-support/🟦️.ts";
 import gitSchema from "../🌿️git/🧬️schema/🔣️.json" with {type:"json"};
 import type {GitStageObservationV1,GitStateV1} from "../🌿️git/🟦️.ts";
 import {platformV1} from "../🗺️topology/🟦️.ts";

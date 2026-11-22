@@ -4819,7 +4819,7 @@
             "size": [0.035, 0.03, 0.03],
             "cornerRadius": 0.004,
             "transform": {
-              "translation": [0.04, 0.74, 0.385]
+              "translation": [0.04, 0.74, 0.39]
             }
           },
           {
@@ -5653,7 +5653,7 @@
             "size": [0.035, 0.03, 0.03],
             "cornerRadius": 0.004,
             "transform": {
-              "translation": [0.04, 0.74, 0.385]
+              "translation": [0.04, 0.74, 0.39]
             },
             "region": "compressor"
           },
@@ -6371,6 +6371,12 @@
             "part": "member"
           },
           {
+            "id": "lid-hinge-leaf-member",
+            "of": "lid-hinge-leaves",
+            "member": "lid",
+            "part": "member"
+          },
+          {
             "id": "hinge-lid",
             "of": "lid-knuckles",
             "member": "lid",
@@ -6381,6 +6387,12 @@
             "of": "hinge-knuckles",
             "member": "unit",
             "part": "joint"
+          },
+          {
+            "id": "hinge-bracket-member",
+            "of": "hinge-brackets",
+            "member": "unit",
+            "part": "member"
           },
           {
             "id": "fan-rotor",
@@ -6500,6 +6512,10 @@
           {
             "en": "Thermal: every body solid carries its region; the hidden regions compressor (hot), condenser (warm in heating), suction (cold in heating) and inverter make the cycle readable in a cut. Structure: four corner angles, top rails, base pan and feet carry the unit; the compressor stands on its grommets, the fan hangs on the motor bearing, the lid on its hinges.",
             "de": "Thermisch: Jeder Körper trägt seine Region; die verdeckten Regionen Verdichter (heiß), Verflüssiger (im Heizbetrieb warm), Saugseite (im Heizbetrieb kalt) und Inverter machen den Kreisprozess im Schnitt lesbar. Tragwerk: vier Eckwinkel, obere Riegel, Bodenwanne und Füße tragen das Gerät; der Verdichter steht auf seinen Puffern, der Lüfter hängt am Motorlager, der Deckel an seinen Scharnieren."
+          },
+          {
+            "en": "The pilot valve sits on the reversing valve; each lid hinge is a full load path of bracket, casing knuckle, lid knuckle and leaf.",
+            "de": "Das Pilotventil sitzt auf dem Umkehrventil; jedes Haubenscharnier ist ein vollständiger Lastpfad aus Halter, Gehäuserolle, Haubenrolle und Lappen."
           }
         ]
       },
@@ -6900,7 +6916,8 @@
               "origin": [0, 0, 0]
             },
             "capStart": true,
-            "capEnd": true
+            "capEnd": true,
+            "sheet": true
           },
           {
             "id": "guard-rim",
@@ -6955,7 +6972,7 @@
             "material": "galvanised-steel",
             "role": "detail",
             "tone": 0.3,
-            "p0": [0.23002, 0.86, -0.15],
+            "p0": [0.2304, 0.852, -0.15],
             "p1": [0.2175, 1.108, -0.15],
             "r0": 0.0025,
             "r1": 0.0025,
@@ -7382,6 +7399,18 @@
             "origin": [0.12, 0, 0.3]
           },
           {
+            "id": "expansion-valve-bracket",
+            "kind": "box",
+            "bone": "unit",
+            "material": "galvanised-steel",
+            "role": "detail",
+            "tone": 0.3,
+            "size": [0.03, 0.03, 0.03],
+            "transform": {
+              "translation": [0.12, 0.6225, 0.2725]
+            }
+          },
+          {
             "id": "coil-header",
             "kind": "capsule",
             "bone": "unit",
@@ -7550,7 +7579,7 @@
             "material": "galvanised-steel",
             "role": "detail",
             "tone": 0.3,
-            "p0": [0.23002, 0.86, -0.15],
+            "p0": [0.2304, 0.852, -0.15],
             "p1": [0.2175, 1.108, -0.15],
             "r0": 0.0025,
             "r1": 0.0025,
@@ -7975,6 +8004,19 @@
             "region": "suction"
           },
           {
+            "id": "th-expansion-valve-bracket",
+            "kind": "box",
+            "bone": "unit",
+            "material": "galvanised-steel",
+            "role": "detail",
+            "tone": 0.3,
+            "size": [0.03, 0.03, 0.03],
+            "transform": {
+              "translation": [0.12, 0.6225, 0.2725]
+            },
+            "region": "suction"
+          },
+          {
             "id": "th-coil-header",
             "kind": "capsule",
             "bone": "unit",
@@ -8191,10 +8233,22 @@
             "part": "member"
           },
           {
+            "id": "lid-hinge-leaf-member",
+            "of": "lid-hinge-leaves",
+            "member": "lid",
+            "part": "member"
+          },
+          {
             "id": "hinge-lid",
             "of": "lid-knuckles",
             "member": "lid",
             "part": "joint"
+          },
+          {
+            "id": "hinge-bracket-member",
+            "of": "hinge-brackets",
+            "member": "unit",
+            "part": "member"
           },
           {
             "id": "fan-rotor",
@@ -8306,6 +8360,14 @@
           {
             "en": "Thermal regions and the structural frame follow the 1:50 model with box posts and one top frame.",
             "de": "Thermische Regionen und Tragrahmen folgen dem 1:50-Modell mit Kastenpfosten und einem oberen Rahmen."
+          },
+          {
+            "en": "The three fan blades are pressed aluminium sheet and keep their sheet section at this scale; thickened to the smallest feature they would close the fan opening.",
+            "de": "Die drei Ventilatorflügel sind gepresstes Aluminiumblech und behalten in diesem Maßstab ihren Blechquerschnitt; auf das kleinste Merkmal verdickt würden sie die Ventilatoröffnung schließen."
+          },
+          {
+            "en": "The expansion valve is clipped to the partition by a bracket because its 10 mm lines are left to 1:50; the grille wires start in the cap; each lid hinge is a load path of bracket, knuckle and leaf.",
+            "de": "Das Expansionsventil ist mit einem Halter an die Trennwand geklemmt, weil seine 10-mm-Leitungen dem Maßstab 1:50 bleiben; die Gitterdrähte beginnen in der Kappe; jedes Haubenscharnier ist ein Lastpfad aus Halter, Rolle und Lappen."
           }
         ]
       },
@@ -8608,7 +8670,8 @@
               "origin": [0, 0, 0]
             },
             "capStart": true,
-            "capEnd": true
+            "capEnd": true,
+            "sheet": true
           },
           {
             "id": "guard-rim",
@@ -8620,6 +8683,24 @@
             "profile": [[0.235, 0.305], [0.2275, 0.31799], [0.2125, 0.31799], [0.205, 0.305], [0.2125, 0.29201], [0.2275, 0.29201], [0.235, 0.305]],
             "axis": [1, 0, 0],
             "origin": [0, 0.8, -0.15]
+          },
+          {
+            "id": "guard-spokes",
+            "kind": "capsule",
+            "bone": "unit",
+            "material": "galvanised-steel",
+            "role": "detail",
+            "tone": 0.3,
+            "p0": [0.22, 0.85, -0.15],
+            "p1": [0.22, 1.1, -0.15],
+            "r0": 0.015,
+            "r1": 0.015,
+            "repeat": {
+              "count": 4,
+              "rotationRad": 1.5708,
+              "rotationAxis": [1, 0, 0],
+              "origin": [0, 0.8, -0.15]
+            }
           },
           {
             "id": "guard-cap",
@@ -8813,6 +8894,11 @@
           {
             "id": "th-guard-rim",
             "of": "guard-rim",
+            "region": "fan-guard"
+          },
+          {
+            "id": "th-guard-spokes",
+            "of": "guard-spokes",
             "region": "fan-guard"
           },
           {
@@ -9197,6 +9283,14 @@
           {
             "en": "Thermal regions as at 1:50; structure with box posts, top frame, base pan, feet, motor bracket and the masses of compressor, condenser, accumulator and inverter.",
             "de": "Thermische Regionen wie bei 1:50; Tragwerk mit Kastenpfosten, oberem Rahmen, Bodenwanne, Füßen, Motorhalter und den Massen von Verdichter, Verflüssiger, Abscheider und Inverter."
+          },
+          {
+            "en": "The three fan blades are pressed aluminium sheet and keep their sheet section at this scale; thickened to the smallest feature they would close the fan opening.",
+            "de": "Die drei Ventilatorflügel sind gepresstes Aluminiumblech und behalten in diesem Maßstab ihren Blechquerschnitt; auf das kleinste Merkmal verdickt würden sie die Ventilatoröffnung schließen."
+          },
+          {
+            "en": "Four 30 mm spokes, typified from the eight wires, carry the grille cap on the rim.",
+            "de": "Vier 30-mm-Speichen, typisiert aus den acht Drähten, tragen die Gitterkappe am Ring."
           }
         ]
       },
@@ -9413,7 +9507,8 @@
               "origin": [0, 0, 0]
             },
             "capStart": true,
-            "capEnd": true
+            "capEnd": true,
+            "sheet": true
           },
           {
             "id": "compressor-shell",
@@ -9857,6 +9952,10 @@
           {
             "en": "Thermal regions as at 1:50; structure with four posts, top frame, base pan, feet and the masses.",
             "de": "Thermische Regionen wie bei 1:50; Tragwerk mit vier Pfosten, oberem Rahmen, Bodenwanne, Füßen und den Massen."
+          },
+          {
+            "en": "The three fan blades are pressed aluminium sheet and keep their sheet section at this scale; thickened to the smallest feature they would close the fan opening.",
+            "de": "Die drei Ventilatorflügel sind gepresstes Aluminiumblech und behalten in diesem Maßstab ihren Blechquerschnitt; auf das kleinste Merkmal verdickt würden sie die Ventilatoröffnung schließen."
           }
         ]
       }

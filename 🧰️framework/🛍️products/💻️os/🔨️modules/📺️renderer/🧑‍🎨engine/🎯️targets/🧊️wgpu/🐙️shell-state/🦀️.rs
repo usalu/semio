@@ -11,7 +11,7 @@ use semio_renderer_wgpu_shell_directory::shell_directory_transport;
 use semio_renderer_wgpu_shell_doc_open::OpeningState;
 use semio_renderer_wgpu_shell_dock::{DEFAULT_PANEL_WIDTH_PX, ShellDock, ShellDockState, TreeWindowScheduler};
 use semio_renderer_wgpu_shell_docs::{DocumentState, ShellDocumentRetirementRegistry};
-use semio_renderer_wgpu_shell_history::{HistoryState, prefs_get};
+use semio_renderer_wgpu_shell_history::{initial_local_files, HistoryState, prefs_get};
 use semio_renderer_wgpu_shell_input::{OverlayState, PresentedInputGeometry, RightClickState, ShellInputState};
 use semio_renderer_wgpu_shell_plugins::PluginState;
 use semio_renderer_wgpu_shell_prefs::PrefsState;

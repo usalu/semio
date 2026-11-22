@@ -39,4 +39,6 @@ pub struct HistoryState {
     pub local_folder_direct_reattach: bool,
     /// 🌐️ The folder- or file-bound document the browser build keeps through the dev host's backbone route.
     pub host_route_folder: Option<HostRouteFolder>,
+    /// 🗂️ The documents this device keeps (`os.config.local-catalog`) that name a surface to reopen them on, newest first — what React's `LocalFilesV1` lists; fed by the page's catalog facet client in the browser.
+    pub local_files: Vec<LocalFileRow>,
 }

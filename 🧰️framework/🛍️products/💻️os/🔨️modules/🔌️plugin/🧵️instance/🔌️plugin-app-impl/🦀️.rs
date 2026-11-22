@@ -139,7 +139,7 @@ impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'static> P
 
     fn mounted_owner_maintenance_step(&mut self,turn:&mut MountedOwnerTurnV1<'_,'_>)->Result<PluginLifecycleStep,semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure>{
         let identity=turn.identity();if self.tools.live_runtime_instance_id!=Some(identity.instance_id)||!matches!(turn.phase(),MountedOwnerPhaseV1::Preparation|MountedOwnerPhaseV1::Maintenance){return Err(plugin_sdk_fault("mounted maintenance does not own this live instance and phase").into())}
-        let step = turn.advance_lifecycle(PluginLifecycleStep::with_progress, |cx, loan| {
+        let step = turn.advance_covering_lifecycle(PluginLifecycleStep::with_progress, |cx, loan| {
             if self.ingest.document_blocks_pending_effects()
                 || A::mounted_job_maintenance_phase(identity.instance_id) != Some(MountedOwnerPhaseV1::Preparation)
             {
@@ -260,6 +260,10 @@ impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'static> P
 
     fn maintenance_terminal_is_empty(&self) -> bool {
         self.ladder_ref().maintenance_ladder_terminal_is_empty()
+    }
+
+    fn maintenance_quiescent_under_live_preview(&self) -> bool {
+        self.ladder_ref().maintenance_ladder_quiescent_under_live_preview()
     }
 
     fn maintenance_under_pressure(&self) -> bool {

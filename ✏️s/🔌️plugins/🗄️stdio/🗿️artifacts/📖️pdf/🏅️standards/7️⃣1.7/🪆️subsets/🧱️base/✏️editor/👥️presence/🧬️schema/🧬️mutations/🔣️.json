@@ -1,0 +1,15 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/app/stdio/pdf/presence/mutations.json",
+  "title": "PdfPresenceMutation",
+  "oneOf": [
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["SetPresence"],
+      "properties": {
+        "SetPresence": { "$ref": "https://json.schemas.assets.semio-tech.com/app/stdio/pdf/presence/mutation/set-presence/schema.json" }
+      }
+    }
+  ]
+}

@@ -9,9 +9,11 @@ import {createIssuedResourceControlV1,scriptResourceProcessEnvironmentV1} from "
 import {runOwnedCommand} from "../../../../../../../../../../../../🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts";
 import {captureCompilerBuildSourceClosureV1} from "../../../../../🏗️compiler/🟦️.ts";
 import {buildSourceClosureTextV1,buildSourceClosureStreamLoaderV1} from "../../../../../🟦️.ts";
+import {issueRepositoryScriptProvidersV1} from "../../../../../../../../🏃️process/🔌️providers/🟦️.ts";
 import{existsSync as existsRootV1}from"node:fs";import{dirname as dirnameRootV1,join as joinRootV1}from"node:path";
 const repositoryRootV1=(()=>{let directory=import.meta.dir;while(!existsRootV1(joinRootV1(directory,"MODULE.bazel"))&&dirnameRootV1(directory)!==directory)directory=dirnameRootV1(directory);return directory;})();
 declareLibraryBuildTestEnvelopeV1({suite:"build-source-closure",maximumElapsedMilliseconds:180000,scratch:"checkout"});
+issueRepositoryScriptProvidersV1(process.env);
 /** ⏱️ Records actual read-only Native method costs without replacing complete artifact-plan acceptance. */
 test("public tools partition read observations preserve zero-request semantics",()=>withBuildTestInvocationV1(async original=>{
  const root=repositoryRootV1,control=createIssuedResourceControlV1(original,"test:tools-read-observation",160000),entry=relative(root,fileURLToPath(new URL("./📜️script.ts",import.meta.url))).replaceAll("\\","/"),snapshot=buildSourceClosureTextV1(await captureCompilerBuildSourceClosureV1(root,entry,original,control)),chunks:Buffer[]=[];

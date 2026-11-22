@@ -92,7 +92,10 @@ const SHELL_PALETTE_RESULT_LIMIT: usize = 20;
 
 pub const SHELL_PALETTE_PLAN_ENTRY_CAPACITY: usize = 2 + SHELL_PALETTE_RESULT_LIMIT * 2;
 
-pub const SHELL_PALETTE_DESKTOP_MAX_WIDTH_PX: f32 = 512.0;
+pub fn shell_palette_desktop_max_width_px() -> f32 {
+    let constants = semio_renderer_wgpu_shell_chrome_state::chrome_parity_constants();
+    constants.sizes.palette_dialog_max_width_rem * constants.status_stacks.rem_px
+}
 
 pub const SHELL_PALETTE_LIST_MAX_UI_SPACING: f32 = 93.75;
 

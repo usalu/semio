@@ -2,6 +2,7 @@ import{machinePathV1}from"../../../../../../../🔨️modules/🏃️process/�
 import {createHash,randomBytes} from "node:crypto";
 import {createReadStream,createWriteStream,constants} from "node:fs";
 import {appendFile,copyFile,mkdir,open,readFile,rename,rm,stat,writeFile} from "node:fs/promises";
+import {tmpdir} from "node:os";
 import {dirname,join} from "node:path";
 import {Readable} from "node:stream";
 import {remoteCacheFetchV1,resolveRemoteCacheV1,fleetStoreRootV1} from "../../../🏗️build/🌐️remote-cache/🛰️fleet/🟦️.ts";
@@ -151,7 +152,7 @@ export async function fleetBlobPublishFileV1(context:FleetFetchContextV1,sha256:
 /** 📮️ Publishes bytes held in memory under their sha256. */
 export async function fleetBlobPublishBytesV1(context:FleetFetchContextV1,bytes:Uint8Array):Promise<string>{
  const sha256=sha256Hex(bytes);if(context.storeRoot===undefined&&context.remote===undefined)return sha256;
- const staging=join(context.storeRoot??context.root??".",`.fleet-fetch-${randomBytes(6).toString("hex")}.tmp`);
+ const staging=join(context.storeRoot??context.root??tmpdir(),`.fleet-fetch-${randomBytes(6).toString("hex")}.tmp`);
  try{await writeFile(staging,bytes,{flag:"wx",mode:0o600});await fleetBlobPublishFileV1(context,sha256,staging,bytes.byteLength);}catch{}finally{await rm(staging,{force:true}).catch(()=>{});}
  return sha256;
 }
@@ -192,7 +193,7 @@ export async function pinnedFetchV1(context:FleetFetchContextV1,pin:PinnedDownlo
  let response:Response;
  try{response=await context.fetch(pin.url,init);}catch(error){await claim?.release();throw error;}
  if(!response.ok||!response.body||(context.storeRoot===undefined&&context.remote===undefined)){await claim?.release();return response;}
- const staging=context.storeRoot!==undefined?`${fleetBlobStorePathV1(context.storeRoot,pin.sha256)}.${randomBytes(6).toString("hex")}.tmp`:machinePathV1(context.root??".",".cache","f","fetch-tmp",`${randomBytes(6).toString("hex")}.tmp`),hash=createHash(algorithmOf(pin.sha256));
+ const staging=context.storeRoot!==undefined?`${fleetBlobStorePathV1(context.storeRoot,pin.sha256)}.${randomBytes(6).toString("hex")}.tmp`:context.root!==undefined?machinePathV1(context.root,".cache","f","fetch-tmp",`${randomBytes(6).toString("hex")}.tmp`):join(tmpdir(),`.fleet-fetch-${randomBytes(6).toString("hex")}.tmp`),hash=createHash(algorithmOf(pin.sha256));
  let file:Awaited<ReturnType<typeof open>>|undefined,bytes=0,broken=false;
  try{await mkdir(dirname(staging),{recursive:true});file=await open(staging,"wx",0o600);}catch{broken=true;}
  const transform=new TransformStream<Uint8Array,Uint8Array>({

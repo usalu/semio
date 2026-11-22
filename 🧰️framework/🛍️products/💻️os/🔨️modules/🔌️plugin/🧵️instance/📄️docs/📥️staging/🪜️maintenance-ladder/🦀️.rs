@@ -141,8 +141,7 @@ impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static> Envelope
             return Ok(active.terminal_removal_demands());
         }
         if active.terminal_target.is_some() || (closing && !active.terminal()) {
-            let replacement_live = active.replacement.is_some_and(|handle| self.store_replacement_jobs.get(handle.operation.0).is_some());
-            return Ok(if replacement_live || active.inputs_are_empty() { item } else { nonzero(active.retirement_demands(body)?) });
+            return Ok(if active.replacement.is_some() || active.inputs_are_empty() { item } else { nonzero(active.retirement_demands(body)?) });
         }
         if active.state == ActiveDocumentArchiveLoadState::Pending {
             return Ok(item);
@@ -196,7 +195,6 @@ impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static> Envelope
             active.phase = ActiveDocumentArchiveLoadPhase::Terminal;
             return Ok(removed(RetainedCloneProgress::default()));
         }
-        // The rejected hydration keeps the full original cause until its archive owner receives it.
         if let Some(hydration) = active.hydration.as_mut().filter(|owner| {
             active.retained.is_none() && (owner.original_failure.is_some() || owner.original_context_failure.is_some())
         }) {
@@ -221,7 +219,6 @@ impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static> Envelope
             let progress = semio_plugin_ownership::bounded_ownership::original_lifecycle_delta(before, cx.retained_progress())?;
             return Ok(PluginLifecycleStep::Progress(progress));
         }
-        // The parent hydration's fold control closes with its actual Source decoder before any grant-only retirement.
         if let Some(hydration)=active.hydration.as_mut().filter(|hydration|active.retained.is_none() && hydration.requires_original_close()){
             let before=cx.retained_progress();
             hydration.close_original_step(cx)?;
@@ -382,7 +379,6 @@ impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static> Envelope
                             Some(failure)=>format!("document archive parent Pack and SPR hydration was rejected at {phase:?}: {diagnostic:?}: {}",failure.primary.message()),
                             None=>format!("document archive parent Pack and SPR hydration was rejected at {phase:?}: {diagnostic:?}"),
                         };
-                        eprintln!("{message}");
                         return Err(document_load_fault(DOCUMENT_LOAD_HISTORY_INVALID_CODE,message).with_retained_progress(spent).into());
                     }
                     store::PersistedDocumentHydrationStep::Ready(store::PersistedDocumentHydrationOutput::Envelope(envelope)) => envelope,

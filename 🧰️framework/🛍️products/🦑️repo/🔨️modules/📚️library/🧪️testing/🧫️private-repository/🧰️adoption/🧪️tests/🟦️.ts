@@ -1,10 +1,10 @@
 import {test,expect} from "bun:test";
 import {spawnSync} from "node:child_process";
-import {statSync} from "node:fs";
+import {existsSync,statSync} from "node:fs";
 import {tmpdir} from "node:os";
 import {join} from "node:path";
 import Ajv from "ajv";
-import {adoptInstalledToolV1,requireAdoptedReadOnlyV1} from "../🟦️.ts";
+import {adoptInstalledNxToolkitIdentityV1,adoptInstalledToolV1,requireAdoptedReadOnlyV1} from "../🟦️.ts";
 import {testCheckoutRootV1} from "../../📥️invocation/🟦️.ts";
 import schema from "../🧬️schema/🔣️.json" with {type:"json"};
 const checkout=testCheckoutRootV1();
@@ -40,4 +40,12 @@ test("an adopted SDK directory is identified by path and only paths inside it ar
  expect(adoptedReadOnlyDirectoryV1(sdk.directory)).toBe(sdk.directory);expect(adoptedReadOnlyDirectoryV1(join(sdk.directory,"node_modules"))).toBeUndefined();expect(adoptedReadOnlyDirectoryV1(sdk.storeRoot)).toBeUndefined();
  expect(requireWithinAdoptedDirectoryV1(sdk.directory,join(sdk.directory,"node_modules"))).toBe(join(sdk.directory,"node_modules"));
  expect(()=>requireWithinAdoptedDirectoryV1(sdk.directory,join(sdk.directory,"..","other"))).toThrow("live repository store");expect(()=>requireWithinAdoptedDirectoryV1(sdk.directory,sdk.storeRoot)).toThrow("live repository store");expect(()=>requireWithinAdoptedDirectoryV1(sdk.directory,join(tmpdir(),"outside"))).toThrow("escapes its directory");expect(()=>requireWithinAdoptedDirectoryV1(join(sdk.storeRoot,"sdk"),join(sdk.storeRoot,"sdk","x"))).toThrow();
+});
+test("a toolkit identity the suite runner granted is adopted read-only in place, and an absent grant names the newest installation, both as the independent filesystem says",async()=>{
+ const {adoptedReadOnlyDirectoryV1}=await import("../../../../../../../../🔨️modules/🏃️process/🔒️leases/🎛️control/🟦️.ts"),newest=adoptInstalledToolV1(checkout,"nx-toolkit"),environment:NodeJS.ProcessEnv={SEMIO_NX_TOOLING_IDENTITY:newest.identity};
+ expect(existsSync(join(newest.directory,"node_modules","nx","package.json"))).toBe(true);
+ expect(adoptInstalledNxToolkitIdentityV1(checkout,environment)).toBe(newest.identity);expect(environment.SEMIO_NX_TOOLING_IDENTITY).toBe(newest.identity);expect(adoptedReadOnlyDirectoryV1(newest.directory)).toBe(newest.directory);
+ expect(()=>requireAdoptedReadOnlyV1(join(newest.directory,"package.json"),"write","en")).toThrow("read-only: write refused");
+ const absent:NodeJS.ProcessEnv={};expect(adoptInstalledNxToolkitIdentityV1(checkout,absent)).toBe(newest.identity);expect(absent.SEMIO_NX_TOOLING_IDENTITY).toBe(newest.identity);
+ expect(adoptInstalledNxToolkitIdentityV1("/nonexistent-checkout",{})).toBeUndefined();expect(adoptInstalledNxToolkitIdentityV1("/nonexistent-checkout",{SEMIO_NX_TOOLING_IDENTITY:"a".repeat(64)})).toBe("a".repeat(64));
 });

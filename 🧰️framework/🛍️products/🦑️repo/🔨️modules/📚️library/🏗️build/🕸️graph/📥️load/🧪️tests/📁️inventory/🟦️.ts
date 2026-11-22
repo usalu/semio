@@ -31,7 +31,7 @@ for(const vector of cases)test("inventory receipt "+vector.mode,async()=>{
   calls.push(phase);samples.push(report!);
  };
  const owner={name:"fixture owner"},invocation={control:{signal:signals.signal}},ports={
-  selected:!whole,scope:whole?undefined:"s",options:{selection:{}},root:"fixture",memoPath:"private",registry:{},invocation,phaseControl:{},loadedGraphAdmissionFormatV1:"v",ownerRegistryInvalidationV1:{},readBuildOwnerRegistryV1:(v:unknown)=>v,buildGraphScopeKeyV1:()=>"s",
+  selected:!whole,scope:whole?undefined:"s",options:{selection:{}},root:"fixture",memoPath:"private",registry:{},invocation,phaseControl:{},loadedGraphAdmissionFormatV1:"v",ownerRegistryInvalidationV1:{},readBuildOwnerRegistryV1:(v:unknown)=>v,buildGraphScopeKeyV1:()=>"s",registryDigest:"d",ownerRegistryDigestV1:()=>"d",askOwnerRegistryV1:()=>"d",
   producer:{readBuildOwnerRegistrySourceV1:()=>"{}",discoverBuildOwnerAdmissionFactsV1:async()=>({})},
   readAdmissionMemoV1:async()=>{sample("memo-read");return{admission,observations:[1,2]};},
   selectedAdmissionFactsV1:{entries:()=>[],seed:()=>undefined},ownersOfAdmissionMemoV1:()=>[],
@@ -79,7 +79,7 @@ for(const vector of owners)test("active admission lookup "+vector.mode,async()=>
  };
  const read=()=>(buildSliceReportV1({reason:"interval"}).sources as {inventory?:Report}).inventory;
  const ports={
-  selected:true,scope,options:{selection:{}},root:"fixture",memoPath:"private",registry:{},invocation:{control:{signal:signal.signal}},phaseControl:{},loadedGraphAdmissionFormatV1:"v",ownerRegistryInvalidationV1:{},readBuildOwnerRegistryV1:(v:unknown)=>v,buildGraphScopeKeyV1:()=>scope,
+  selected:true,scope,options:{selection:{}},root:"fixture",memoPath:"private",registry:{},invocation:{control:{signal:signal.signal}},phaseControl:{},loadedGraphAdmissionFormatV1:"v",ownerRegistryInvalidationV1:{},readBuildOwnerRegistryV1:(v:unknown)=>v,buildGraphScopeKeyV1:()=>scope,registryDigest:"d",ownerRegistryDigestV1:()=>"d",askOwnerRegistryV1:()=>"d",
   producer:{readBuildOwnerRegistrySourceV1:()=>"{}",discoverBuildOwnerAdmissionFactsV1:async(_owner:unknown,_targets:unknown,_registry:unknown,context:{onOwnerDiscoveryPhase:(operation:string)=>void})=>{sample("discovery",vector.discoveryAt,vector.discoverySampleAt);
    const moved=sliceReadMovedAtV1(),prior=read()?.active;
    for(const operation of vector.operations??[]){

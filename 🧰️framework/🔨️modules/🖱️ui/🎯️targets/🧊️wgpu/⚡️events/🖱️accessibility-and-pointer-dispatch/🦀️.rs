@@ -5,7 +5,6 @@ use super::*;
 // #region events
 //#region 🔖️UiCommand
 impl EventRouter {
-    //#region 🔖️CursorApi
     #[allow(dead_code, reason = "cursor-state accessor, not yet called; likely wired by a later events-integration milestone")]
     pub fn hovered(&self) -> Option<NodeId> {
         self.hovered
@@ -27,7 +26,6 @@ impl EventRouter {
     pub fn is_focused(&self) -> bool {
         self.focus.focused.is_some()
     }
-    //#endregion 🔖️CursorApi
 
     /// 🧹️ Drops registry entries (`drag_payloads`/`drop_accept`) keyed by a `NodeId`
     /// `reconcile` has since removed from `tree` — generation-tagged `NodeId`s (see `arena`'s own doc
@@ -50,6 +48,13 @@ impl EventRouter {
     /// `Escape` stays with the overlay stack and `Tab` still moves focus after the popup
     /// this closes, so neither of those two is ever reported as consumed.
     pub fn dispatch_accessibility(&mut self, tree: &mut UiTree, target: NodeId, event: &AccessibilityUiEvent) -> Vec<UiCommand> {
+        let before = self.focus.focused;
+        let commands = self.route_accessibility(tree, target, event);
+        self.arm_focus_tooltip(before);
+        commands
+    }
+
+    fn route_accessibility(&mut self, tree: &mut UiTree, target: NodeId, event: &AccessibilityUiEvent) -> Vec<UiCommand> {
         self.prune_dead_registrations(tree);
         let mut commands = Vec::new();
         let enabled = tree.node(target).is_some_and(|node| node.spec.0.presence().state != UiState::Disabled);
@@ -83,9 +88,14 @@ impl EventRouter {
                 match kind {
                     _ if self.toggle_disclosure(tree, target) => {}
                     Some(UiNode::Select(_)) => commands.extend(self.toggle_select_popup(tree, target)),
+                    Some(UiNode::Input(_) | UiNode::Button(_)) if self.picker_release(tree, target, &mut commands) => {}
                     Some(UiNode::Button(button)) => {
                         if let Some(fired) = bare_action(&button.action, Trigger::Activate) {
                             self.push_app_command(tree, target, fired, &mut commands);
+                        }
+                        let open_picker = tree.node(target).and_then(|node| node.parent).filter(|parent| tree.node(*parent).is_some_and(|node| node.state.open && matches!(&node.spec.0, UiNode::Input(input) if semio_ui_wgpu_layout::date_picker::is_picker_kind(&input.input_kind))));
+                        if let Some(parent) = open_picker {
+                            commands.extend(self.close_overlay(tree, parent));
                         }
                     }
                     Some(UiNode::Stack(stack)) => {
@@ -219,6 +229,14 @@ impl EventRouter {
     }
 
     pub fn dispatch_pointer(&mut self, tree: &mut UiTree, root: NodeId, pointer_id: u64, event: &UiEvent) -> Vec<UiCommand> {
+        let before = self.focus.focused;
+        let commands = self.route_pointer(tree, root, pointer_id, event);
+        self.sync_drop_ready(tree);
+        self.arm_focus_tooltip(before);
+        commands
+    }
+
+    fn route_pointer(&mut self, tree: &mut UiTree, root: NodeId, pointer_id: u64, event: &UiEvent) -> Vec<UiCommand> {
         if matches!(event, UiEvent::PointerCancel | UiEvent::PointerLeave | UiEvent::PointerDown { .. } | UiEvent::PointerUp { .. } | UiEvent::PointerMove { .. }) && self.capture.target.is_some_and(|(owner, _, _)| owner != pointer_id) {
             return Vec::new();
         }
@@ -405,9 +423,11 @@ impl EventRouter {
                                     self.segmented_select_click(tree, active_id, *x, &mut commands);
                                 } else if is_select {
                                     commands.extend(self.toggle_select_popup(tree, active_id));
+                                } else if self.picker_release(tree, active_id, &mut commands) {
                                 } else {
                                     let fired = tree.node(active_id).and_then(|node| match &node.spec.0 {
                                         UiNode::Button(button) => bare_action(&button.action, Trigger::Activate).map(|fired| (fired, node.parent)),
+                                        UiNode::Input(input) => input.pick_file_action().and_then(|pick| bare_action(&pick, Trigger::Activate)).map(|fired| (fired, None)),
                                         UiNode::Stack(stack) => stack.activate.as_ref().and_then(|action| bare_action(action, Trigger::Activate)).map(|fired| (fired, None)),
                                         _ => None,
                                     });
@@ -447,7 +467,7 @@ impl EventRouter {
             }
             UiEvent::KeyDown { key, modifiers } => {
                 self.focus_visible = true;
-                let select_consumed = key != "Escape" && self.route_select_key(tree, key, *modifiers, &mut commands);
+                let select_consumed = key != "Escape" && (self.route_picker_key(tree, key, *modifiers, &mut commands) || self.route_select_key(tree, key, *modifiers, &mut commands));
                 if key == "Escape" && self.set_row_reason(tree, None) {
                 } else if key == "Escape" {
                     let over_overlay = self.overlays.topmost().is_some_and(|overlay| !overlay.veto.escape);

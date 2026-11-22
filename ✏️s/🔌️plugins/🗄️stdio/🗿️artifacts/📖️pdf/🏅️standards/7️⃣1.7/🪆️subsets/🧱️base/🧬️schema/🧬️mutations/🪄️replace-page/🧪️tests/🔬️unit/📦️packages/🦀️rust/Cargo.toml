@@ -9,6 +9,39 @@ description = "Component crate of semio-s-artifact-stdio-pdf: mut-family"
 [package.metadata.semio]
 role = "library"
 
+[package.metadata.semio.carve]
+owned = [
+  "standards::v1_7::subsets::base::io::binary",
+  "standards::v1_7::subsets::base::io::import",
+  "standards::v1_7::subsets::base::io::import::controlled",
+  "standards::v1_7::subsets::base::io::import::retained_graph",
+  "standards::v1_7::subsets::base::io::import::retained_graph::compressed_length",
+  "standards::v1_7::subsets::base::io::import::retained_graph::compressed_length::tests",
+  "standards::v1_7::subsets::base::io::import::retained_graph::tests",
+  "standards::v1_7::subsets::base::io::import::tests",
+  "standards::v1_7::subsets::base::io::text",
+  "standards::v1_7::subsets::base::schema::mutations::replace_page::tests",
+  "standards::v1_7::subsets::e::schema::mutations::tests",
+  "standards::v1_7::subsets::h::schema::mutations",
+  "standards::v1_7::subsets::vt::io::text::mutations::embed_font_file::tests",
+  "standards::v1_7::subsets::vt::io::text::mutations::insert_encryption_dictionary::tests",
+  "standards::v1_7::subsets::vt::io::text::mutations::insert_javascript_action::tests",
+  "standards::v1_7::subsets::vt::io::text::mutations::insert_launch_action::tests",
+  "standards::v1_7::subsets::vt::io::text::mutations::insert_media_annotation::tests",
+  "standards::v1_7::subsets::vt::io::text::mutations::remove_dpart_metadata::tests",
+  "standards::v1_7::subsets::vt::io::text::mutations::remove_encryption_dictionary::tests",
+  "standards::v1_7::subsets::vt::io::text::mutations::remove_font_file::tests",
+  "standards::v1_7::subsets::vt::io::text::mutations::remove_javascript_action::tests",
+  "standards::v1_7::subsets::vt::io::text::mutations::remove_launch_action::tests",
+  "standards::v1_7::subsets::vt::io::text::mutations::remove_media_annotation::tests",
+  "standards::v1_7::subsets::vt::io::text::mutations::remove_output_intent::tests",
+  "standards::v1_7::subsets::vt::io::text::mutations::set_dpart_metadata::tests",
+  "standards::v1_7::subsets::vt::io::text::mutations::set_dpart_root::tests",
+  "standards::v1_7::subsets::x::io::binary",
+  "standards::v1_7::subsets::x::io::text",
+  "standards::v1_7::subsets::x::schema::mutations::tests",
+]
+
 [lints]
 workspace = true
 

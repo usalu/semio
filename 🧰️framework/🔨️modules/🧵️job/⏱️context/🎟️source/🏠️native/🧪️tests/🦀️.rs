@@ -17,7 +17,7 @@ impl OriginalNativeRetirement for Native{
  fn terminal_is_empty(&self)->bool{self.empty}
 }
 impl Drop for Native{fn drop(&mut self){assert!(std::thread::panicking()||self.empty);DROPS.fetch_add(1,Ordering::Relaxed);}}
-fn prebirth(caller:&mut OriginalJobFixtureCaller,grant:RetainedCloneGrant){for _ in 0..64{let admitted=caller.refreshed_turn(grant,|cx|cx.admit_original_return_table()).unwrap();if admitted{return}}panic!("original Source escrow table did not admit")}
+fn prebirth(caller:&mut OriginalJobFixtureCaller,grant:RetainedCloneGrant){for _ in 0..64{let admitted=caller.refreshed_turn(grant,|cx|cx.admit_original_return_origin()).unwrap();if admitted{return}}panic!("original Source escrow table did not admit")}
 fn clock()->Option<u64>{Some(1)}
 fn stock()->RetainedCloneGrant{RetainedCloneGrant{maximum_items:4096,maximum_copy_bytes:1048576,maximum_capacity_bytes:1048576,maximum_release_bytes:1048576,maximum_depth:128}}
 #[test]
@@ -57,7 +57,7 @@ fn native_parent_survives_foreign_context_cancellation_and_return(){
    "cancel"=>{caller.cancel().cancel_now();"retained"},
    "dropCaller"=>{drop(owner.take());drop(child.take());"captured"},
    "return"=>{let loan=if child.is_some(){&mut child}else{&mut owner};bounded!(caller,loan.is_some(),{caller.refreshed_turn(grant,|cx|OriginalNativeLease::return_slot_step(loan,cx)).unwrap();});"returned"},
-   "close"=>{bounded!(caller,owner.is_some(),{caller.refreshed_turn(grant,|cx|OriginalNativeLease::return_slot_step(&mut owner,cx)).unwrap();});loop{let before=caller.fuel_remaining();let complete=caller.refreshed_turn(grant,|cx|cx.close_original_native_step()).unwrap();if complete{break "closed"}if before==caller.fuel_remaining(){break "blocked"}}},
+   "close"=>{bounded!(caller,owner.is_some(),{caller.refreshed_turn(grant,|cx|OriginalNativeLease::return_slot_step(&mut owner,cx)).unwrap();});loop{let before=caller.fuel_remaining();let complete=caller.refreshed_turn(grant,|cx|cx.close_original_native_step()).unwrap();if complete{break "closed"}if before==caller.fuel_remaining()&&caller.receipt()==Default::default(){break "blocked"}}},
    _=>unreachable!()};outputs.push(output);
   }
   assert_eq!(serde_json::json!(outputs),row["outputs"]);drop(owner);drop(child);caller.retire(grant);foreign.retire(grant);
@@ -79,8 +79,8 @@ fn native_cleanup_selects_vm_credit_only_for_the_next_actual_owner(){
 
 #[test]
 fn source_escrow_birth_refuses_insufficient_total_and_yields_for_a_small_turn(){
- let cases:serde_json::Value=serde_json::from_str(include_str!("cases.json")).unwrap();let(copy,capacity,_)=semio_framework_job_payload::OriginalReturnEscrowTable::birth_demand();let all=stock();let probe=OriginalJobFixtureCaller::admit(OperationId(690),Generation(1),all,clock,100000,100000);let birth=probe.cumulative_receipt().copied_bytes;probe.retire(all);let funded=RetainedCloneGrant{maximum_copy_bytes:birth+copy-1,..all};let mut denied=OriginalJobFixtureCaller::admit(OperationId(691),Generation(1),funded,clock,100000,100000);
+ let cases:serde_json::Value=serde_json::from_str(include_str!("cases.json")).unwrap();let(copy,_,_)=semio_framework_job_payload::OriginalReturnEscrowTable::birth_demand();let all=stock();let probe=OriginalJobFixtureCaller::admit(OperationId(690),Generation(1),all,clock,100000,100000);let birth=probe.cumulative_receipt().copied_bytes;probe.retire(all);let funded=RetainedCloneGrant{maximum_copy_bytes:birth+copy-1,..all};let mut denied=OriginalJobFixtureCaller::admit(OperationId(691),Generation(1),funded,clock,100000,100000);
  let refused=denied.turn(RetainedCloneGrant{maximum_copy_bytes:copy,..all},|cx|cx.admit_original_return_table()).is_err();assert_eq!(refused,cases["escrowBirth"]["underfundedRefused"].as_bool().unwrap());assert_eq!(denied.receipt(),Default::default());denied.retire(funded);
  let mut caller=OriginalJobFixtureCaller::admit(OperationId(692),Generation(1),all,clock,100000,100000);caller.admit_return_table();let one=RetainedCloneGrant{maximum_items:1,..all};assert!(!caller.refreshed_turn(one,|cx|cx.admit_original_return_table()).unwrap());let tiny=RetainedCloneGrant{maximum_copy_bytes:0,..one};let pending=!caller.refreshed_turn(tiny,|cx|cx.admit_original_return_table()).unwrap();assert_eq!(pending,cases["escrowBirth"]["zeroCopyQuantumPending"].as_bool().unwrap());assert_eq!(caller.business_receipt(),Default::default());
- let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||caller.refreshed_turn(one,|cx|cx.admit_original_return_table()));assert_eq!(result.unwrap(),cases["escrowBirth"]["oneItemAdmitted"].as_bool().unwrap());assert_eq!(caller.business_receipt().copied_items,1);assert_eq!(caller.receipt().copied_bytes,copy);assert_eq!(caller.receipt().retained_capacity_bytes,capacity);assert_eq!(heap.requested_bytes,capacity);caller.retire(all);
+ let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||caller.refreshed_turn(one,|cx|cx.admit_original_return_table()));assert_eq!(result.unwrap(),cases["escrowBirth"]["oneItemAdmitted"].as_bool().unwrap());assert_eq!(caller.business_receipt(),Default::default());assert_eq!(heap.requested_bytes,caller.receipt().retained_capacity_bytes);caller.retire(all);
 }

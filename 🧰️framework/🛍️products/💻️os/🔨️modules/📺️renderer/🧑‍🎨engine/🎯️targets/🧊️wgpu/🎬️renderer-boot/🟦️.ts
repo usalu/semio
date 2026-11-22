@@ -1,4 +1,5 @@
 import {emptyNativeCatalogV1,readNativeCatalogV1,type NativeCatalogV1} from "@semio-tech/plugin-registry/runtime";
+import type { PickedFileFormatCatalogPortV1 } from "../../../🧱️elements/🏛️ShellHost/📂️picked-file-opening/🟦️.ts";
 import type { PluginCatalogRowsV1 } from "@semio-tech/framework/plugin-catalog";
 import { resolveEmbeddedWgpuBoot } from "./🧩️selection/🟦️.ts";
 // #region 🧲️Header
@@ -8,6 +9,7 @@ import { resolveEmbeddedWgpuBoot } from "./🧩️selection/🟦️.ts";
 import { type WgpuBootDefaults, type WgpuBootHub, type WgpuBootLocks } from "../🧭️boot-descriptor/🟦️.ts";
 import { mountWgpuBrowserHost, type WgpuBrowserMount, type WgpuBootProgress } from "../🌐️browser-host/🟦️.ts";
 import { Locale } from "@semio-tech/ui-locale-rs/index";
+import { publishedPageUrl } from "@semio-tech/assets/published-page";
 
 /** 🧊️ The embeddable wgpu boot door. Field-for-field React's `FrameworkOsBootOptions`
  * (`🧱️elements/🐚️Shell/🟦️.tsx`), so one call site can swap renderers without dropping options: it
@@ -33,6 +35,8 @@ export type FrameworkOsWgpuBootOptions = {
   readonly brand?: string;
   readonly hub?: WgpuBootHub;
   readonly rendererModuleUrl?: string;
+  /** 📂️ The product's Open file format catalog (React's `ShellHostPortsV1.formatCatalog`): claims, revision sniffs and package claims the Worker routes picked files by. */
+  readonly formatCatalog?: PickedFileFormatCatalogPortV1;
 };
 
 /** 🎬️ Owns host resource loading and lifecycle capabilities for one renderer mount. */
@@ -52,13 +56,13 @@ export async function bootFrameworkOsWgpu(options: FrameworkOsWgpuBootOptions, e
   const root = document.getElementById(rootId);
   if (!root) throw new Error("missing #" + rootId);
   const { plugins, descriptor, pluginRegistrySelection } = resolveEmbeddedWgpuBoot({
-    modules: options.plugins ?? options.catalog.targets.map(({ pluginId, moduleUrl }) => ({ pluginId, moduleUrl })), baseUrl: window.location.href, hash: window.location.hash,
+    modules: (options.plugins ?? options.catalog.targets).map(({ pluginId, moduleUrl }) => ({ pluginId, moduleUrl: publishedPageUrl(moduleUrl) })), baseUrl: window.location.href, hash: window.location.hash,
     overrides: { plugin: options.plugin, appId: options.appId, appRole: options.appRole, appMode: options.appMode, appExample: options.appExample, brandId: options.brand, locks: options.locks, defaults: options.defaults, hub: options.hub },
   });
-  const moduleUrl = new URL(options.rendererModuleUrl ?? DEFAULT_RENDERER_MODULE_URL, window.location.href).href;
+  const moduleUrl = new URL(publishedPageUrl(options.rendererModuleUrl ?? DEFAULT_RENDERER_MODULE_URL), window.location.href).href;
   const wasmUrl = execution.rendererWasmUrl ?? moduleUrl.replace(/\.js(?=[?#]|$)/u, "_bg.wasm");
   const locale = Locale.fromLanguageTag(descriptor.locks.locale || navigator.language).id as "en" | "de";
-  return mountWgpuBrowserHost(root, { catalog: options.catalog, nativeCatalog: options.nativeCatalog ?? emptyNativeCatalogV1(), descriptor, locale, mountId: rootId, rendererModuleUrl: moduleUrl, rendererWasmUrl: wasmUrl, plugins, pluginRegistrySelection, frameWorkerUrl: execution.frameWorkerUrl, suppressAutoIntroduction: execution.suppressAutoIntroduction, signal: execution.signal, onProgress: execution.onProgress });
+  return mountWgpuBrowserHost(root, { catalog: options.catalog, formatCatalog: options.formatCatalog, nativeCatalog: options.nativeCatalog ?? emptyNativeCatalogV1(), descriptor, locale, mountId: rootId, rendererModuleUrl: moduleUrl, rendererWasmUrl: wasmUrl, plugins, pluginRegistrySelection, frameWorkerUrl: execution.frameWorkerUrl, suppressAutoIntroduction: execution.suppressAutoIntroduction, signal: execution.signal, onProgress: execution.onProgress });
 }
 
 export type { WgpuBootProgress } from "../🌐️browser-host/🟦️.ts";

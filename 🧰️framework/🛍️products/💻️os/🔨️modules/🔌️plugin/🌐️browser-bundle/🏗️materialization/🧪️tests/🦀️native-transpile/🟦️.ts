@@ -77,5 +77,5 @@ test("native transpile cache identifies the binary and implementation that actua
  expect(actual).toEqual(row.expected);
  using db = new Database(":memory:");
  const fields = db.query<{ tool: string }, [string]>("select key as tool from json_each(json_extract(?1, '$.tools')) order by key");
- expect(fields.all(JSON.stringify(actual)).map(row => row.tool)).toEqual(["base", "materialization", "native-transpile"]);
+ expect(fields.all(JSON.stringify(actual)).map(row => row.tool)).toEqual(["base", "maps", "materialization", "native-transpile"]);
 });

@@ -57,7 +57,7 @@ fn reject_foreign(
  for _ in 0..4096 {
   let checked = turn(caller, decoder, |cx| {
    let mut scope = None;
-   let complete = cx.with_native_receiving_work(&mut scope, |control, grant, work| {
+   let complete = cx.with_native_receiving_work(&mut scope, Default::default(), |control, grant, work| {
     let (refusal, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| run(control, grant, work));
     assert_eq!(refusal.unwrap_err().kind, ValueRefusalKind::InvariantViolated);
     assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));

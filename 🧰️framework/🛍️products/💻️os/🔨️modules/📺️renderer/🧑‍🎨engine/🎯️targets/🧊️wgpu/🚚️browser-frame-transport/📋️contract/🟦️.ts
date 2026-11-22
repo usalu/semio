@@ -139,9 +139,6 @@ export type BrowserFrameLosslessEvent =
   | { readonly kind: "ime-commit"; readonly text: string }
   | ({ readonly kind: "accessibility-focus" | "accessibility-blur" | "accessibility-activate" } & BrowserFrameAccessibilityAddress)
   | ({ readonly kind: "accessibility-value"; readonly value: string } & BrowserFrameAccessibilityAddress)
-  // ⏱️ These two are minted straight into a wire batch by `takeWireBatch` rather than enqueued
-  // as input, so unlike every other member they carry the batch stamp on the type instead of
-  // acquiring it at flush.
   | { readonly kind: "hub-document-status"; readonly documentKey: string; readonly remote: BrowserHubDocumentRemote; readonly timestampMs: number }
   | { readonly kind: "hub-document-close"; readonly documentKey: string; readonly timestampMs: number };
 
@@ -202,6 +199,15 @@ export type BrowserFrameHostPageHidden = { readonly kind: "host-page-hidden"; re
 
 /** 🫥️ The page's `window` lost the system focus (the person switched applications or windows): the Worker ends every open
  * text-editor typing run (`blur`) and blurs the focused pane for its program (`hostEvent{kind: blur}`), React's pane `onBlur`. */
+/** 🛬️ One OS file the page took from a drop or a pick, held by the page under `token`; the Worker reads its bytes through the host-io range door. */
+export type BrowserFramePickedFile = { readonly token: number; readonly name: string; readonly size: number; readonly mime: string };
+
+/** 🛬️ OS files dropped onto the page: the shell opens each like Open File, one after the other. */
+export type BrowserFrameHostFileDrop = { readonly kind: "host-file-drop"; readonly lifecycle: number; readonly files: readonly BrowserFramePickedFile[] };
+
+/** 🗂️ The device's local document catalog (`os.config.local-catalog`) as the page's facet client last saw it, JSON of the catalog snapshot; the Worker lists it and re-posts nothing. */
+export type BrowserFrameHostLocalCatalog = { readonly kind: "host-local-catalog"; readonly lifecycle: number; readonly catalogJson: string };
+
 export type BrowserFrameHostWindowBlur = { readonly kind: "host-window-blur"; readonly lifecycle: number };
 
 /** 🛰️ The local supervisor's agent-bridge offer as the page last read it (`🔗️AgentBridge/🛰️offer`), `null` once no
@@ -254,7 +260,7 @@ export type BrowserFrameHostIoResult = { readonly kind: "host-io-result"; readon
 export type BrowserFrameImageDecodeResult = { readonly kind: "image-decode-result"; readonly lifecycle: number; readonly requestId: number; readonly bitmap: ImageBitmap | null; readonly detail?: string };
 
 export type BrowserFrameUiMessage =
-  | OriginalBootstrapResponse | BrowserMediaRelease | BrowserMediaCommand | BrowserFrameWorkerBoot | BrowserFrameWorkerBatch | BrowserFrameWorkerIntrospect | InteractiveJobUiMessage | BrowserFrameShardPort | BrowserFrameHostIoResult | BrowserFrameImageDecodeResult | BrowserFrameHostAppearance | BrowserFrameHostPlatformPrefs | BrowserFrameHostStorage | BrowserFrameHostAgentBridge | BrowserFrameHostIntroductionPolicy | BrowserFrameHostPageHidden | BrowserFrameHostWindowBlur | { readonly kind: "close"; readonly lifecycle: number };
+  | OriginalBootstrapResponse | BrowserMediaRelease | BrowserMediaCommand | BrowserFrameWorkerBoot | BrowserFrameWorkerBatch | BrowserFrameWorkerIntrospect | InteractiveJobUiMessage | BrowserFrameShardPort | BrowserFrameHostIoResult | BrowserFrameImageDecodeResult | BrowserFrameHostAppearance | BrowserFrameHostPlatformPrefs | BrowserFrameHostStorage | BrowserFrameHostAgentBridge | BrowserFrameHostIntroductionPolicy | BrowserFrameHostPageHidden | BrowserFrameHostWindowBlur | BrowserFrameHostFileDrop | BrowserFrameHostLocalCatalog | { readonly kind: "close"; readonly lifecycle: number };
 
 /** 🧵️ The frame Worker's own step ledger, as the UI isolate sees it. The Worker prices its steps
  * against `WORKER_STEP_BUDGET_MS` with the same executing-span law the UI isolate uses for its turns
@@ -291,6 +297,7 @@ export type BrowserFrameWorkerMessage =
       readonly generation: number;
       readonly cursor: string;
       readonly fullscreen: boolean | null;
+      readonly unsaved: boolean;
       readonly requestFrame: boolean;
       readonly nextDeadlineDelayMs: number | null;
       readonly progress: number;
@@ -330,6 +337,7 @@ export type BrowserFrameDirectives = {
   readonly tutorialVideo: TutorialVideoOverlayPlan | null;
   readonly cursor: string;
   readonly fullscreen: boolean | null;
+  readonly unsaved: boolean;
   readonly generation: number;
   readonly workerDurationMs: number;
 };

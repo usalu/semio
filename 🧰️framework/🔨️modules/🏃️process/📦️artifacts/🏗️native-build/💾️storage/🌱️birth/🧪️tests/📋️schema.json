@@ -1,0 +1,38 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "cases"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 10,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "request",
+          "ids"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "request": {
+            "$ref": "https://json.schemas.assets.semio-tech.com/framework/process/artifacts/native-build/storage/birth/component.json#/definitions/UnbornReservationRequest"
+          },
+          "ids": {
+            "$ref": "https://json.schemas.assets.semio-tech.com/framework/process/artifacts/native-build/storage/birth/component.json#/definitions/UnbornReservationRetirement/properties/ids"
+          }
+        }
+      }
+    }
+  }
+}

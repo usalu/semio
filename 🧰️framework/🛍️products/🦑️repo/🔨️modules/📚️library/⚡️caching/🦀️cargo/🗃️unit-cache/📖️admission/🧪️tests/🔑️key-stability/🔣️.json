@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "namespace": "semio.cargo.unit-cache/v1",
+  "namespace": "semio.cargo.unit-cache/v2",
   "keyedFields": [
     "packageId",
     "packageName",

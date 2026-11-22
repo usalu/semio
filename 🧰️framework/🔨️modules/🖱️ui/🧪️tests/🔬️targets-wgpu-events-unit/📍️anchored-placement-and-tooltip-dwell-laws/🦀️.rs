@@ -142,4 +142,34 @@ fn returning_to_the_anchor_disarms_the_hover_out_countdown() {
     assert_eq!(router.advance_clock(&mut tree, f64::from(TOOLTIP_HOVER_OUT_SECONDS) * 4.0).tooltip, TooltipStep::Idle);
     assert!(router.topmost_overlay().is_some(), "the pointer came back, so the tooltip stays open");
 }
+
+#[test]
+fn keyboard_focus_reveals_the_focused_tooltip_after_the_same_dwell_as_hover() {
+    let mut tree = UiTree::new();
+    let root = leaf(&mut tree, None, 0, stack_ui(), (0.0, 0.0, 200.0, 200.0));
+    let first = leaf(&mut tree, Some(root), 1, button_ui("a"), (0.0, 0.0, 50.0, 20.0));
+    let second = leaf(&mut tree, Some(root), 2, button_ui("b"), (60.0, 0.0, 50.0, 20.0));
+    let mut router = EventRouter::new("main");
+    let tab = UiEvent::KeyDown { key: "Tab".into(), modifiers: Default::default() };
+
+    router.dispatch(&mut tree, root, &tab);
+    assert_eq!(router.advance_clock(&mut tree, f64::from(TOOLTIP_DWELL_SECONDS) - 0.01).tooltip, TooltipStep::Idle, "nothing reveals before the dwell");
+    assert_eq!(router.advance_clock(&mut tree, f64::from(TOOLTIP_DWELL_SECONDS)).tooltip, TooltipStep::Reveal(first));
+    router.dispatch(&mut tree, root, &tab);
+    assert_eq!(router.advance_clock(&mut tree, f64::from(TOOLTIP_DWELL_SECONDS) * 1.5).tooltip, TooltipStep::Idle, "the next focused control restarts the dwell from its focus");
+    assert_eq!(router.advance_clock(&mut tree, f64::from(TOOLTIP_DWELL_SECONDS) * 2.0).tooltip, TooltipStep::Reveal(second));
+}
+
+#[test]
+fn an_assistive_focus_move_arms_the_focused_tooltip_like_any_focus_change() {
+    let mut tree = UiTree::new();
+    let root = leaf(&mut tree, None, 0, stack_ui(), (0.0, 0.0, 200.0, 200.0));
+    let first = leaf(&mut tree, Some(root), 1, button_ui("a"), (0.0, 0.0, 50.0, 20.0));
+    let second = leaf(&mut tree, Some(root), 2, button_ui("b"), (60.0, 0.0, 50.0, 20.0));
+    let mut router = EventRouter::new("main");
+    router.dispatch_accessibility(&mut tree, first, &AccessibilityUiEvent::Focus);
+    assert_eq!(router.advance_clock(&mut tree, f64::from(TOOLTIP_DWELL_SECONDS)).tooltip, TooltipStep::Reveal(first));
+    router.dispatch_accessibility(&mut tree, second, &AccessibilityUiEvent::Focus);
+    assert_eq!(router.advance_clock(&mut tree, f64::from(TOOLTIP_DWELL_SECONDS) * 2.0).tooltip, TooltipStep::Reveal(second));
+}
 //#endregion 🔖️TooltipDwellTests

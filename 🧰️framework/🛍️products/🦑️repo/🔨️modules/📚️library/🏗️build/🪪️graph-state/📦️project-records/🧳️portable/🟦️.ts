@@ -311,13 +311,13 @@ export function unpackRecordV1(packed:PackedRecordV1):PortableRecordV1{
  return{digest:packed.digest,authority:lists[0]!,observations:lists[1]!,image:packed.image};
 }
 
-/** 🌊️ A closure bundle in the neutral stored form, built layer by layer: only the distinct rows and the numbers of each layer are held, whatever the number of layers, so memory follows the distinct material and not the expanded entry. `consulted` names the closure keys the rows asked for. Undefined when the bundle cannot be mapped (the taker derives the entry itself). */
+/** 🌊️ A closure bundle in the neutral stored form, with its rows and every layer in the canonical order of the rows (a layer is a set that two machines observed in another order), built layer by layer: only the distinct rows and the numbers of each layer are held, whatever the number of layers, so memory follows the distinct material and not the expanded entry. `consulted` names the closure keys the rows asked for. Undefined when the bundle cannot be mapped (the taker derives the entry itself). */
 export function packBundleV1(input:Readonly<{recipeKey:string;bundle:ClosureBundleV1}>,host:HostV1,keys:KeyMapV1,policy:PortableRowsPolicyV1=portableRowsPolicyV1):Readonly<{recipeKey:string;document:PackedClosureV1;consulted:ConsultedKeysV1}>|undefined{
  try{
   if(closureKeyV1(input.bundle.recipe)!==input.recipeKey)return undefined;
   const{rows,layers,rest}=bundleParts(input.bundle),moved=movedRestV1(rest,"neutral",host,policy),memo=rowMemoV1(),{keys:asked,consulted}=recordingKeysV1(keys),packer=createRowPackerV1();
-  packer.add(neutralRowsV1(rows,host,asked,policy,memo));
-  for(const layer of layers)packer.add(neutralRowsV1(layer,host,asked,policy,memo));
+  packer.add(canonicalRowOrderV1(neutralRowsV1(rows,host,asked,policy,memo)));
+  for(const layer of layers)packer.add(canonicalRowOrderV1(neutralRowsV1(layer,host,asked,policy,memo)));
   const{recipe,value,sidecar,...others}=moved;
   return{recipeKey:closureKeyV1(recipe),consulted,document:{version:2,recipe,rest:others,rows:packer.finish([value??null,sidecar??null])}};
  }catch{return undefined;}

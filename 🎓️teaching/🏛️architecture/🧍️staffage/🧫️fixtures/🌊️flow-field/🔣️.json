@@ -1,23 +1,9688 @@
 {
  "id": "flow-field",
- "oracle": "numpy re-implementation of the documented field; scipy quad (continuous entrainment line sink with ground image), numpy trapezoid (volume flux of the Gaussian profile), scipy solve_ivp DOP853 (streams in arc length, particle advection in time); parcels from the Morton-Taylor-Turner top-hat plume and the top-hat round jet",
- "ambient": { "airTempC": 20, "meanRadiantTempC": 20, "relativeHumidity": 0.5, "windMS": 0, "windDirectionDeg": 0, "solarWM2": 0, "diffuseFraction": 1, "pressurePa": 101325, "sigmaMS": 0.03 },
- "turbulence": { "intensity": 0.1, "floorMS": 0.03, "lagrangianTimeS": 1 },
- "emitters": [{ "id": "plume", "kind": "plume", "diameterM": 0.2 }, { "id": "jet", "kind": "fan", "diameterM": 0.1 }],
- "stream": { "stepM": 0.02, "points": 60, "advectS": [0.5, 1, 2, 4] },
- "tolerances": { "velocityMS": 1e-6, "scalar": 1e-6, "lineSinkRelative": 0.03, "fluxRelative": 0.03, "streamM": 0.004, "travelRelative": 0.01, "advectedM": 0.01 },
- "cases": [
+ "oracle": "numpy re-implementation of the documented field; scipy quad (continuous entrainment line sink with ground image), numpy trapezoid (volume flux of the Gaussian profile), scipy solve_ivp DOP853 (streams in arc length, particle advection in time); parcels from the Morton-Taylor-Turner top-hat plume, the top-hat round jet and two such jets through one outlet (mixture of overlapping streams)",
+ "ambient": {
+  "airTempC": 20,
+  "meanRadiantTempC": 20,
+  "relativeHumidity": 0.5,
+  "windMS": 0,
+  "windDirectionDeg": 0,
+  "solarWM2": 0,
+  "diffuseFraction": 1,
+  "pressurePa": 101325,
+  "sigmaMS": 0.03
+ },
+ "turbulence": {
+  "intensity": 0.1,
+  "floorMS": 0.03,
+  "lagrangianTimeS": 1
+ },
+ "emitters": [
   {
-   "id": "plume", "kind": "plume", "emitter": "plume", "buoyancyFluxM4S3": 0.00277, "fromM": 0.4, "toM": 2.4,
-   "points": [[0, 1, 0], [0.05, 1, 0], [0.1, 1.2, 0], [0, 1.6, 0.12], [0.3, 1, 0], [0.5, 1.4, 0.2], [1.5, 1, 0], [3, 0.5, 1], [0.4, 0, 0], [0, 0.2, 0], [0.05, 2.39, 0], [0, 3, 0]],
-   "entrainmentPoints": [[0.3, 1.2, 0], [0.45, 1.4, 0], [0.6, 1, 0], [0.9, 1.4, 0]],
-   "fluxHeightsM": [1, 1.4, 1.8],
-   "seeds": [[0.02, 0.6, 0], [0.4, 0.9, 0], [0.5, 1.3, 0.3], [0.6, 0.05, 0]]
+   "id": "plume",
+   "kind": "plume",
+   "diameterM": 0.2
   },
   {
-   "id": "jet", "kind": "jet", "emitter": "jet", "radiusM": 0.05, "speedMS": 3, "excessK": 12, "vapourExcessKgPerKg": 0.004, "heightM": 1.2, "fromM": 0.1, "toM": 2.5,
-   "points": [[0.5, 1.2, 0], [1, 1.25, 0], [1.5, 1.2, 0.1], [1, 1.6, 0], [1, 0.6, 0], [2, 1.2, 0.5], [-0.5, 1.2, 0], [4, 1.2, 0], [1, 0, 0.3]],
-   "seeds": [[0.3, 1.21, 0], [1, 1.7, 0], [1.2, 0.8, 0.2]]
+   "id": "jet",
+   "kind": "fan",
+   "diameterM": 0.1
+  },
+  {
+   "id": "twin-a",
+   "kind": "fan",
+   "diameterM": 0.1
+  },
+  {
+   "id": "twin-b",
+   "kind": "fan",
+   "diameterM": 0.1
   }
- ]
+ ],
+ "stream": {
+  "stepM": 0.02,
+  "points": 60,
+  "advectS": [
+   0.5,
+   1,
+   2,
+   4
+  ]
+ },
+ "tolerances": {
+  "velocityMS": 1e-06,
+  "scalar": 1e-06,
+  "lineSinkRelative": 0.03,
+  "fluxRelative": 0.03,
+  "streamM": 0.004,
+  "travelRelative": 0.01,
+  "advectedM": 0.01
+ },
+ "cases": [
+  {
+   "id": "plume",
+   "kind": "plume",
+   "emitter": "plume",
+   "buoyancyFluxM4S3": 0.00277,
+   "fromM": 0.4,
+   "toM": 2.4,
+   "points": [
+    [
+     0,
+     1,
+     0
+    ],
+    [
+     0.05,
+     1,
+     0
+    ],
+    [
+     0.1,
+     1.2,
+     0
+    ],
+    [
+     0,
+     1.6,
+     0.12
+    ],
+    [
+     0.3,
+     1,
+     0
+    ],
+    [
+     0.5,
+     1.4,
+     0.2
+    ],
+    [
+     1.5,
+     1,
+     0
+    ],
+    [
+     3,
+     0.5,
+     1
+    ],
+    [
+     0.4,
+     0,
+     0
+    ],
+    [
+     0,
+     0.2,
+     0
+    ],
+    [
+     0.05,
+     2.39,
+     0
+    ],
+    [
+     0,
+     3,
+     0
+    ]
+   ],
+   "entrainmentPoints": [
+    [
+     0.3,
+     1.2,
+     0
+    ],
+    [
+     0.45,
+     1.4,
+     0
+    ],
+    [
+     0.6,
+     1,
+     0
+    ],
+    [
+     0.9,
+     1.4,
+     0
+    ]
+   ],
+   "fluxHeightsM": [
+    1,
+    1.4,
+    1.8
+   ],
+   "seeds": [
+    [
+     0.02,
+     0.6,
+     0
+    ],
+    [
+     0.4,
+     0.9,
+     0
+    ],
+    [
+     0.5,
+     1.3,
+     0.3
+    ],
+    [
+     0.6,
+     0.05,
+     0
+    ]
+   ],
+   "parcels": [
+    {
+     "id": "plume#0",
+     "emitter": "plume",
+     "bornS": 0,
+     "ageS": 0.0,
+     "at": {
+      "x": 0,
+      "y": 0.4,
+      "z": 0
+     },
+     "velocity": {
+      "x": 0,
+      "y": 0.44023466075,
+      "z": 0
+     },
+     "radiusM": 0.05568,
+     "excessK": 19.31151889973,
+     "vapourExcessKgPerKg": 0,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "plume#1",
+     "emitter": "plume",
+     "bornS": 0,
+     "ageS": 0.100231921,
+     "at": {
+      "x": 0,
+      "y": 0.444125566,
+      "z": 0
+     },
+     "velocity": {
+      "x": 0,
+      "y": 0.425143592896,
+      "z": 0
+     },
+     "radiusM": 0.061822278772,
+     "excessK": 16.220844560047,
+     "vapourExcessKgPerKg": 0,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "plume#2",
+     "emitter": "plume",
+     "bornS": 0,
+     "ageS": 0.200480579,
+     "at": {
+      "x": 0,
+      "y": 0.48674564,
+      "z": 0
+     },
+     "velocity": {
+      "x": 0,
+      "y": 0.412353994816,
+      "z": 0
+     },
+     "radiusM": 0.067754993135,
+     "excessK": 13.923432117478,
+     "vapourExcessKgPerKg": 0,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "plume#3",
+     "emitter": "plume",
+     "bornS": 0,
+     "ageS": 0.30074488,
+     "at": {
+      "x": 0,
+      "y": 0.528090025,
+      "z": 0
+     },
+     "velocity": {
+      "x": 0,
+      "y": 0.401299151585,
+      "z": 0
+     },
+     "radiusM": 0.073510131526,
+     "excessK": 12.154482653503,
+     "vapourExcessKgPerKg": 0,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "plume#4",
+     "emitter": "plume",
+     "bornS": 0,
+     "ageS": 0.401023922,
+     "at": {
+      "x": 0,
+      "y": 0.56833192,
+      "z": 0
+     },
+     "velocity": {
+      "x": 0,
+      "y": 0.391594767568,
+      "z": 0
+     },
+     "radiusM": 0.079111803271,
+     "excessK": 10.754238687319,
+     "vapourExcessKgPerKg": 0,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "plume#5",
+     "emitter": "plume",
+     "bornS": 0,
+     "ageS": 0.501316946,
+     "at": {
+      "x": 0,
+      "y": 0.607606143,
+      "z": 0
+     },
+     "velocity": {
+      "x": 0,
+      "y": 0.382968903177,
+      "z": 0
+     },
+     "radiusM": 0.084578775162,
+     "excessK": 9.620836301914,
+     "vapourExcessKgPerKg": 0,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "plume#6",
+     "emitter": "plume",
+     "bornS": 0,
+     "ageS": 0.601623298,
+     "at": {
+      "x": 0,
+      "y": 0.646020357,
+      "z": 0
+     },
+     "velocity": {
+      "x": 0,
+      "y": 0.375222461884,
+      "z": 0
+     },
+     "radiusM": 0.089926033697,
+     "excessK": 8.686391778894,
+     "vapourExcessKgPerKg": 0,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "plume#7",
+     "emitter": "plume",
+     "bornS": 0,
+     "ageS": 0.70194241,
+     "at": {
+      "x": 0,
+      "y": 0.683662341,
+      "z": 0
+     },
+     "velocity": {
+      "x": 0,
+      "y": 0.368205561379,
+      "z": 0
+     },
+     "radiusM": 0.095165797869,
+     "excessK": 7.904001051585,
+     "vapourExcessKgPerKg": 0,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "plume#8",
+     "emitter": "plume",
+     "bornS": 0,
+     "ageS": 0.802273779,
+     "at": {
+      "x": 0,
+      "y": 0.720604909,
+      "z": 0
+     },
+     "velocity": {
+      "x": 0,
+      "y": 0.361802717247,
+      "z": 0
+     },
+     "radiusM": 0.10030820338,
+     "excessK": 7.240263822754,
+     "vapourExcessKgPerKg": 0,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "plume#9",
+     "emitter": "plume",
+     "bornS": 0,
+     "ageS": 0.902616961,
+     "at": {
+      "x": 0,
+      "y": 0.756909345,
+      "z": 0
+     },
+     "velocity": {
+      "x": 0,
+      "y": 0.355923180826,
+      "z": 0
+     },
+     "radiusM": 0.10536178085,
+     "excessK": 6.670780341059,
+     "vapourExcessKgPerKg": 0,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "plume#10",
+     "emitter": "plume",
+     "bornS": 0,
+     "ageS": 1.002971555,
+     "at": {
+      "x": 0,
+      "y": 0.792627871,
+      "z": 0
+     },
+     "velocity": {
+      "x": 0,
+      "y": 0.350494426753,
+      "z": 0
+     },
+     "radiusM": 0.110333799682,
+     "excessK": 6.177330723436,
+     "vapourExcessKgPerKg": 0,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "plume#11",
+     "emitter": "plume",
+     "bornS": 0,
+     "ageS": 1.103337197,
+     "at": {
+      "x": 0,
+      "y": 0.82780547,
+      "z": 0
+     },
+     "velocity": {
+      "x": 0,
+      "y": 0.345457637912,
+      "z": 0
+     },
+     "radiusM": 0.115230521385,
+     "excessK": 5.746048220447,
+     "vapourExcessKgPerKg": 0,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "plume#12",
+     "emitter": "plume",
+     "bornS": 0,
+     "ageS": 1.20371356,
+     "at": {
+      "x": 0,
+      "y": 0.862481251,
+      "z": 0
+     },
+     "velocity": {
+      "x": 0,
+      "y": 0.340764497946,
+      "z": 0
+     },
+     "radiusM": 0.120057390116,
+     "excessK": 5.36620155644,
+     "vapourExcessKgPerKg": 0,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "plume#13",
+     "emitter": "plume",
+     "bornS": 0,
+     "ageS": 1.304100341,
+     "at": {
+      "x": 0,
+      "y": 0.896689502,
+      "z": 0
+     },
+     "velocity": {
+      "x": 0,
+      "y": 0.336374863615,
+      "z": 0
+     },
+     "radiusM": 0.124819178643,
+     "excessK": 5.029362551948,
+     "vapourExcessKgPerKg": 0,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "plume#14",
+     "emitter": "plume",
+     "bornS": 0,
+     "ageS": 1.404497262,
+     "at": {
+      "x": 0,
+      "y": 0.930460502,
+      "z": 0
+     },
+     "velocity": {
+      "x": 0,
+      "y": 0.332255043671,
+      "z": 0
+     },
+     "radiusM": 0.129520101942,
+     "excessK": 4.728824341592,
+     "vapourExcessKgPerKg": 0,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "plume#15",
+     "emitter": "plume",
+     "bornS": 0,
+     "ageS": 1.504904068,
+     "at": {
+      "x": 0,
+      "y": 0.96382117,
+      "z": 0
+     },
+     "velocity": {
+      "x": 0,
+      "y": 0.328376504822,
+      "z": 0
+     },
+     "radiusM": 0.134163906867,
+     "excessK": 4.459186641541,
+     "vapourExcessKgPerKg": 0,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "plume#16",
+     "emitter": "plume",
+     "bornS": 0,
+     "ageS": 1.60532052,
+     "at": {
+      "x": 0,
+      "y": 0.996795574,
+      "z": 0
+     },
+     "velocity": {
+      "x": 0,
+      "y": 0.324714884189,
+      "z": 0
+     },
+     "radiusM": 0.13875394384,
+     "excessK": 4.216054838019,
+     "vapourExcessKgPerKg": 0,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "plume#17",
+     "emitter": "plume",
+     "bornS": 0,
+     "ageS": 1.705746397,
+     "at": {
+      "x": 0,
+      "y": 1.029405351,
+      "z": 0
+     },
+     "velocity": {
+      "x": 0,
+      "y": 0.321249225506,
+      "z": 0
+     },
+     "radiusM": 0.143293224808,
+     "excessK": 3.99581816518,
+     "vapourExcessKgPerKg": 0,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "plume#18",
+     "emitter": "plume",
+     "bornS": 0,
+     "ageS": 1.806181492,
+     "at": {
+      "x": 0,
+      "y": 1.061670047,
+      "z": 0
+     },
+     "velocity": {
+      "x": 0,
+      "y": 0.31796138115,
+      "z": 0
+     },
+     "radiusM": 0.147784470579,
+     "excessK": 3.795483819125,
+     "vapourExcessKgPerKg": 0,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "plume#19",
+     "emitter": "plume",
+     "bornS": 0,
+     "ageS": 1.906625612,
+     "at": {
+      "x": 0,
+      "y": 1.093607398,
+      "z": 0
+     },
+     "velocity": {
+      "x": 0,
+      "y": 0.314835538812,
+      "z": 0
+     },
+     "radiusM": 0.15223014986,
+     "excessK": 3.612551271942,
+     "vapourExcessKgPerKg": 0,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "plume#20",
+     "emitter": "plume",
+     "bornS": 0,
+     "ageS": 2.007078575,
+     "at": {
+      "x": 0,
+      "y": 1.125233561,
+      "z": 0
+     },
+     "velocity": {
+      "x": 0,
+      "y": 0.311857843037,
+      "z": 0
+     },
+     "radiusM": 0.156632511703,
+     "excessK": 3.444915901215,
+     "vapourExcessKgPerKg": 0,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "plume#21",
+     "emitter": "plume",
+     "bornS": 0,
+     "ageS": 2.107540209,
+     "at": {
+      "x": 0,
+      "y": 1.15656331,
+      "z": 0
+     },
+     "velocity": {
+      "x": 0,
+      "y": 0.309016089814,
+      "z": 0
+     },
+     "radiusM": 0.160993612698,
+     "excessK": 3.290794284759,
+     "vapourExcessKgPerKg": 0,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "plume#22",
+     "emitter": "plume",
+     "bornS": 0,
+     "ageS": 2.208010353,
+     "at": {
+      "x": 0,
+      "y": 1.187610201,
+      "z": 0
+     },
+     "velocity": {
+      "x": 0,
+      "y": 0.306299478006,
+      "z": 0
+     },
+     "radiusM": 0.165315339918,
+     "excessK": 3.148665704137,
+     "vapourExcessKgPerKg": 0,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "plume#23",
+     "emitter": "plume",
+     "bornS": 0,
+     "ageS": 2.308488853,
+     "at": {
+      "x": 0,
+      "y": 1.218386713,
+      "z": 0
+     },
+     "velocity": {
+      "x": 0,
+      "y": 0.30369840546,
+      "z": 0
+     },
+     "radiusM": 0.169599430414,
+     "excessK": 3.017225912412,
+     "vapourExcessKgPerKg": 0,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "plume#24",
+     "emitter": "plume",
+     "bornS": 0,
+     "ageS": 2.408975565,
+     "at": {
+      "x": 0,
+      "y": 1.248904367,
+      "z": 0
+     },
+     "velocity": {
+      "x": 0,
+      "y": 0.301204300542,
+      "z": 0
+     },
+     "radiusM": 0.173847487872,
+     "excessK": 2.895350278898,
+     "vapourExcessKgPerKg": 0,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "plume#25",
+     "emitter": "plume",
+     "bornS": 0,
+     "ageS": 2.509470351,
+     "at": {
+      "x": 0,
+      "y": 1.279173829,
+      "z": 0
+     },
+     "velocity": {
+      "x": 0,
+      "y": 0.298809481989,
+      "z": 0
+     },
+     "radiusM": 0.178060996929,
+     "excessK": 2.782064173098,
+     "vapourExcessKgPerKg": 0,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "plume#26",
+     "emitter": "plume",
+     "bornS": 0,
+     "ageS": 2.609973079,
+     "at": {
+      "x": 0,
+      "y": 1.309204997,
+      "z": 0
+     },
+     "velocity": {
+      "x": 0,
+      "y": 0.296507041606,
+      "z": 0
+     },
+     "radiusM": 0.182241335547,
+     "excessK": 2.676518987931,
+     "vapourExcessKgPerKg": 0,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "plume#27",
+     "emitter": "plume",
+     "bornS": 0,
+     "ageS": 2.710483626,
+     "at": {
+      "x": 0,
+      "y": 1.339007082,
+      "z": 0
+     },
+     "velocity": {
+      "x": 0,
+      "y": 0.294290745484,
+      "z": 0
+     },
+     "radiusM": 0.186389785748,
+     "excessK": 2.577972592953,
+     "vapourExcessKgPerKg": 0,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "plume#28",
+     "emitter": "plume",
+     "bornS": 0,
+     "ageS": 2.811001871,
+     "at": {
+      "x": 0,
+      "y": 1.368588671,
+      "z": 0
+     },
+     "velocity": {
+      "x": 0,
+      "y": 0.292154950369,
+      "z": 0
+     },
+     "radiusM": 0.190507542986,
+     "excessK": 2.485773294994,
+     "vapourExcessKgPerKg": 0,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "plume#29",
+     "emitter": "plume",
+     "bornS": 0,
+     "ageS": 2.911527701,
+     "at": {
+      "x": 0,
+      "y": 1.39795779,
+      "z": 0
+     },
+     "velocity": {
+      "x": 0,
+      "y": 0.29009453249,
+      "z": 0
+     },
+     "radiusM": 0.19459572435,
+     "excessK": 2.399346596239,
+     "vapourExcessKgPerKg": 0,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "plume#30",
+     "emitter": "plume",
+     "bornS": 0,
+     "ageS": 3.012061008,
+     "at": {
+      "x": 0,
+      "y": 1.427121952,
+      "z": 0
+     },
+     "velocity": {
+      "x": 0,
+      "y": 0.288104826695,
+      "z": 0
+     },
+     "radiusM": 0.198655375778,
+     "excessK": 2.318184198922,
+     "vapourExcessKgPerKg": 0,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "plume#31",
+     "emitter": "plume",
+     "bornS": 0,
+     "ageS": 3.112601686,
+     "at": {
+      "x": 0,
+      "y": 1.456088207,
+      "z": 0
+     },
+     "velocity": {
+      "x": 0,
+      "y": 0.286181574169,
+      "z": 0
+     },
+     "radiusM": 0.202687478433,
+     "excessK": 2.241834826019,
+     "vapourExcessKgPerKg": 0,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "plume#32",
+     "emitter": "plume",
+     "bornS": 0,
+     "ageS": 3.213149636,
+     "at": {
+      "x": 0,
+      "y": 1.484863178,
+      "z": 0
+     },
+     "velocity": {
+      "x": 0,
+      "y": 0.284320877317,
+      "z": 0
+     },
+     "radiusM": 0.206692954343,
+     "excessK": 2.169896518838,
+     "vapourExcessKgPerKg": 0,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "plume#33",
+     "emitter": "plume",
+     "bornS": 0,
+     "ageS": 3.313704762,
+     "at": {
+      "x": 0,
+      "y": 1.513453099,
+      "z": 0
+     },
+     "velocity": {
+      "x": 0,
+      "y": 0.282519160696,
+      "z": 0
+     },
+     "radiusM": 0.210672671419,
+     "excessK": 2.102010142681,
+     "vapourExcessKgPerKg": 0,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "plume#34",
+     "emitter": "plume",
+     "bornS": 0,
+     "ageS": 3.414266971,
+     "at": {
+      "x": 0,
+      "y": 1.54186385,
+      "z": 0
+     },
+     "velocity": {
+      "x": 0,
+      "y": 0.280773137027,
+      "z": 0
+     },
+     "radiusM": 0.214627447932,
+     "excessK": 2.037853886091,
+     "vapourExcessKgPerKg": 0,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "plume#35",
+     "emitter": "plume",
+     "bornS": 0,
+     "ageS": 3.514836173,
+     "at": {
+      "x": 0,
+      "y": 1.570100981,
+      "z": 0
+     },
+     "velocity": {
+      "x": 0,
+      "y": 0.279079777537,
+      "z": 0
+     },
+     "radiusM": 0.218558056512,
+     "excessK": 1.977138581505,
+     "vapourExcessKgPerKg": 0,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "plume#36",
+     "emitter": "plume",
+     "bornS": 0,
+     "ageS": 3.615412285,
+     "at": {
+      "x": 0,
+      "y": 1.59816974,
+      "z": 0
+     },
+     "velocity": {
+      "x": 0,
+      "y": 0.277436285988,
+      "z": 0
+     },
+     "radiusM": 0.222465227741,
+     "excessK": 1.919603708292,
+     "vapourExcessKgPerKg": 0,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "plume#37",
+     "emitter": "plume",
+     "bornS": 0,
+     "ageS": 3.715995223,
+     "at": {
+      "x": 0,
+      "y": 1.626075096,
+      "z": 0
+     },
+     "velocity": {
+      "x": 0,
+      "y": 0.275840075852,
+      "z": 0
+     },
+     "radiusM": 0.226349653382,
+     "excessK": 1.865013965357,
+     "vapourExcessKgPerKg": 0,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "plume#38",
+     "emitter": "plume",
+     "bornS": 0,
+     "ageS": 3.816584906,
+     "at": {
+      "x": 0,
+      "y": 1.653821762,
+      "z": 0
+     },
+     "velocity": {
+      "x": 0,
+      "y": 0.274288750191,
+      "z": 0
+     },
+     "radiusM": 0.23021198929,
+     "excessK": 1.813156321201,
+     "vapourExcessKgPerKg": 0,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "plume#39",
+     "emitter": "plume",
+     "bornS": 0,
+     "ageS": 3.917181259,
+     "at": {
+      "x": 0,
+      "y": 1.68141421,
+      "z": 0
+     },
+     "velocity": {
+      "x": 0,
+      "y": 0.272780083879,
+      "z": 0
+     },
+     "radiusM": 0.234052858047,
+     "excessK": 1.763837465977,
+     "vapourExcessKgPerKg": 0,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "plume#40",
+     "emitter": "plume",
+     "bornS": 0,
+     "ageS": 4.017784207,
+     "at": {
+      "x": 0,
+      "y": 1.708856691,
+      "z": 0
+     },
+     "velocity": {
+      "x": 0,
+      "y": 0.271312007828,
+      "z": 0
+     },
+     "radiusM": 0.237872851347,
+     "excessK": 1.716881603295,
+     "vapourExcessKgPerKg": 0,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "plume#41",
+     "emitter": "plume",
+     "bornS": 0,
+     "ageS": 4.118393678,
+     "at": {
+      "x": 0,
+      "y": 1.736153248,
+      "z": 0
+     },
+     "velocity": {
+      "x": 0,
+      "y": 0.269882594975,
+      "z": 0
+     },
+     "radiusM": 0.241672532163,
+     "excessK": 1.672128530337,
+     "vapourExcessKgPerKg": 0,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "plume#42",
+     "emitter": "plume",
+     "bornS": 0,
+     "ageS": 4.219009603,
+     "at": {
+      "x": 0,
+      "y": 1.763307735,
+      "z": 0
+     },
+     "velocity": {
+      "x": 0,
+      "y": 0.268490047791,
+      "z": 0
+     },
+     "radiusM": 0.245452436718,
+     "excessK": 1.62943196348,
+     "vapourExcessKgPerKg": 0,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "plume#43",
+     "emitter": "plume",
+     "bornS": 0,
+     "ageS": 4.319631913,
+     "at": {
+      "x": 0,
+      "y": 1.790323824,
+      "z": 0
+     },
+     "velocity": {
+      "x": 0,
+      "y": 0.267132687114,
+      "z": 0
+     },
+     "radiusM": 0.249213076289,
+     "excessK": 1.588658073729,
+     "vapourExcessKgPerKg": 0,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "plume#44",
+     "emitter": "plume",
+     "bornS": 0,
+     "ageS": 4.420260544,
+     "at": {
+      "x": 0,
+      "y": 1.81720502,
+      "z": 0
+     },
+     "velocity": {
+      "x": 0,
+      "y": 0.265808942156,
+      "z": 0
+     },
+     "radiusM": 0.252954938841,
+     "excessK": 1.549684202069,
+     "vapourExcessKgPerKg": 0,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "plume#45",
+     "emitter": "plume",
+     "bornS": 0,
+     "ageS": 4.520895431,
+     "at": {
+      "x": 0,
+      "y": 1.843954673,
+      "z": 0
+     },
+     "velocity": {
+      "x": 0,
+      "y": 0.264517341529,
+      "z": 0
+     },
+     "radiusM": 0.256678490543,
+     "excessK": 1.512397729563,
+     "vapourExcessKgPerKg": 0,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "plume#46",
+     "emitter": "plume",
+     "bornS": 0,
+     "ageS": 4.621536514,
+     "at": {
+      "x": 0,
+      "y": 1.870575985,
+      "z": 0
+     },
+     "velocity": {
+      "x": 0,
+      "y": 0.263256505169,
+      "z": 0
+     },
+     "radiusM": 0.26038417714,
+     "excessK": 1.476695080988,
+     "vapourExcessKgPerKg": 0,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "plume#47",
+     "emitter": "plume",
+     "bornS": 0,
+     "ageS": 4.722183733,
+     "at": {
+      "x": 0,
+      "y": 1.89707202,
+      "z": 0
+     },
+     "velocity": {
+      "x": 0,
+      "y": 0.262025137062,
+      "z": 0
+     },
+     "radiusM": 0.264072425224,
+     "excessK": 1.442480844042,
+     "vapourExcessKgPerKg": 0,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "plume#48",
+     "emitter": "plume",
+     "bornS": 0,
+     "ageS": 4.82283703,
+     "at": {
+      "x": 0,
+      "y": 1.923445714,
+      "z": 0
+     },
+     "velocity": {
+      "x": 0,
+      "y": 0.260822018667,
+      "z": 0
+     },
+     "radiusM": 0.2677436434,
+     "excessK": 1.409666988833,
+     "vapourExcessKgPerKg": 0,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "plume#49",
+     "emitter": "plume",
+     "bornS": 0,
+     "ageS": 4.923496347,
+     "at": {
+      "x": 0,
+      "y": 1.94969988,
+      "z": 0
+     },
+     "velocity": {
+      "x": 0,
+      "y": 0.259646002967,
+      "z": 0
+     },
+     "radiusM": 0.271398223365,
+     "excessK": 1.378172174659,
+     "vapourExcessKgPerKg": 0,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "plume#50",
+     "emitter": "plume",
+     "bornS": 0,
+     "ageS": 5.024161631,
+     "at": {
+      "x": 0,
+      "y": 1.975837219,
+      "z": 0
+     },
+     "velocity": {
+      "x": 0,
+      "y": 0.258496009071,
+      "z": 0
+     },
+     "radiusM": 0.275036540897,
+     "excessK": 1.347921132937,
+     "vapourExcessKgPerKg": 0,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "plume#51",
+     "emitter": "plume",
+     "bornS": 0,
+     "ageS": 5.124832828,
+     "at": {
+      "x": 0,
+      "y": 2.001860322,
+      "z": 0
+     },
+     "velocity": {
+      "x": 0,
+      "y": 0.257371017318,
+      "z": 0
+     },
+     "radiusM": 0.278658956774,
+     "excessK": 1.318844116747,
+     "vapourExcessKgPerKg": 0,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "plume#52",
+     "emitter": "plume",
+     "bornS": 0,
+     "ageS": 5.225509885,
+     "at": {
+      "x": 0,
+      "y": 2.027771678,
+      "z": 0
+     },
+     "velocity": {
+      "x": 0,
+      "y": 0.256270064812,
+      "z": 0
+     },
+     "radiusM": 0.282265817625,
+     "excessK": 1.290876408794,
+     "vapourExcessKgPerKg": 0,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "plume#53",
+     "emitter": "plume",
+     "bornS": 0,
+     "ageS": 5.326192753,
+     "at": {
+      "x": 0,
+      "y": 2.053573683,
+      "z": 0
+     },
+     "velocity": {
+      "x": 0,
+      "y": 0.255192241359,
+      "z": 0
+     },
+     "radiusM": 0.285857456719,
+     "excessK": 1.263957880706,
+     "vapourExcessKgPerKg": 0,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "plume#54",
+     "emitter": "plume",
+     "bornS": 0,
+     "ageS": 5.426881381,
+     "at": {
+      "x": 0,
+      "y": 2.07926864,
+      "z": 0
+     },
+     "velocity": {
+      "x": 0,
+      "y": 0.254136685755,
+      "z": 0
+     },
+     "radiusM": 0.289434194694,
+     "excessK": 1.238032597562,
+     "vapourExcessKgPerKg": 0,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "plume#55",
+     "emitter": "plume",
+     "bornS": 0,
+     "ageS": 5.527575722,
+     "at": {
+      "x": 0,
+      "y": 2.104858766,
+      "z": 0
+     },
+     "velocity": {
+      "x": 0,
+      "y": 0.253102582392,
+      "z": 0
+     },
+     "radiusM": 0.292996340238,
+     "excessK": 1.213048462344,
+     "vapourExcessKgPerKg": 0,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "plume#56",
+     "emitter": "plume",
+     "bornS": 0,
+     "ageS": 5.628275728,
+     "at": {
+      "x": 0,
+      "y": 2.130346198,
+      "z": 0
+     },
+     "velocity": {
+      "x": 0,
+      "y": 0.252089158151,
+      "z": 0
+     },
+     "radiusM": 0.296544190723,
+     "excessK": 1.188956895724,
+     "vapourExcessKgPerKg": 0,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "plume#57",
+     "emitter": "plume",
+     "bornS": 0,
+     "ageS": 5.728981354,
+     "at": {
+      "x": 0,
+      "y": 2.155732994,
+      "z": 0
+     },
+     "velocity": {
+      "x": 0,
+      "y": 0.25109567955,
+      "z": 0
+     },
+     "radiusM": 0.300078032796,
+     "excessK": 1.165712547159,
+     "vapourExcessKgPerKg": 0,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "plume#58",
+     "emitter": "plume",
+     "bornS": 0,
+     "ageS": 5.829692555,
+     "at": {
+      "x": 0,
+      "y": 2.181021142,
+      "z": 0
+     },
+     "velocity": {
+      "x": 0,
+      "y": 0.250121450131,
+      "z": 0
+     },
+     "radiusM": 0.303598142925,
+     "excessK": 1.143273033809,
+     "vapourExcessKgPerKg": 0,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "plume#59",
+     "emitter": "plume",
+     "bornS": 0,
+     "ageS": 5.930409288,
+     "at": {
+      "x": 0,
+      "y": 2.206212557,
+      "z": 0
+     },
+     "velocity": {
+      "x": 0,
+      "y": 0.249165808046,
+      "z": 0
+     },
+     "radiusM": 0.307104787917,
+     "excessK": 1.12159870421,
+     "vapourExcessKgPerKg": 0,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "plume#60",
+     "emitter": "plume",
+     "bornS": 0,
+     "ageS": 6.031131509,
+     "at": {
+      "x": 0,
+      "y": 2.23130909,
+      "z": 0
+     },
+     "velocity": {
+      "x": 0,
+      "y": 0.248228123844,
+      "z": 0
+     },
+     "radiusM": 0.310598225394,
+     "excessK": 1.100652424025,
+     "vapourExcessKgPerKg": 0,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "plume#61",
+     "emitter": "plume",
+     "bornS": 0,
+     "ageS": 6.131859177,
+     "at": {
+      "x": 0,
+      "y": 2.256312531,
+      "z": 0
+     },
+     "velocity": {
+      "x": 0,
+      "y": 0.247307798429,
+      "z": 0
+     },
+     "radiusM": 0.31407870425,
+     "excessK": 1.080399381508,
+     "vapourExcessKgPerKg": 0,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "plume#62",
+     "emitter": "plume",
+     "bornS": 0,
+     "ageS": 6.232592251,
+     "at": {
+      "x": 0,
+      "y": 2.281224605,
+      "z": 0
+     },
+     "velocity": {
+      "x": 0,
+      "y": 0.246404261169,
+      "z": 0
+     },
+     "radiusM": 0.317546465065,
+     "excessK": 1.060806910616,
+     "vapourExcessKgPerKg": 0,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "plume#63",
+     "emitter": "plume",
+     "bornS": 0,
+     "ageS": 6.333330692,
+     "at": {
+      "x": 0,
+      "y": 2.306046986,
+      "z": 0
+     },
+     "velocity": {
+      "x": 0,
+      "y": 0.245516968154,
+      "z": 0
+     },
+     "radiusM": 0.321001740502,
+     "excessK": 1.041844329923,
+     "vapourExcessKgPerKg": 0,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "plume#64",
+     "emitter": "plume",
+     "bornS": 0,
+     "ageS": 6.434074459,
+     "at": {
+      "x": 0,
+      "y": 2.330781291,
+      "z": 0
+     },
+     "velocity": {
+      "x": 0,
+      "y": 0.244645400583,
+      "z": 0
+     },
+     "radiusM": 0.324444755681,
+     "excessK": 1.023482795747,
+     "vapourExcessKgPerKg": 0,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "plume#65",
+     "emitter": "plume",
+     "bornS": 0,
+     "ageS": 6.534823516,
+     "at": {
+      "x": 0,
+      "y": 2.355429084,
+      "z": 0
+     },
+     "velocity": {
+      "x": 0,
+      "y": 0.243789063267,
+      "z": 0
+     },
+     "radiusM": 0.327875728524,
+     "excessK": 1.005695168022,
+     "vapourExcessKgPerKg": 0,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "plume#66",
+     "emitter": "plume",
+     "bornS": 0,
+     "ageS": 6.635577825,
+     "at": {
+      "x": 0,
+      "y": 2.379991883,
+      "z": 0
+     },
+     "velocity": {
+      "x": 0,
+      "y": 0.242947483244,
+      "z": 0
+     },
+     "radiusM": 0.331294870086,
+     "excessK": 0.988455887681,
+     "vapourExcessKgPerKg": 0,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    }
+   ]
+  },
+  {
+   "id": "jet",
+   "kind": "jet",
+   "emitter": "jet",
+   "radiusM": 0.05,
+   "speedMS": 3,
+   "excessK": 12,
+   "vapourExcessKgPerKg": 0.004,
+   "heightM": 1.2,
+   "fromM": 0.1,
+   "toM": 2.5,
+   "points": [
+    [
+     0.5,
+     1.2,
+     0
+    ],
+    [
+     1,
+     1.25,
+     0
+    ],
+    [
+     1.5,
+     1.2,
+     0.1
+    ],
+    [
+     1,
+     1.6,
+     0
+    ],
+    [
+     1,
+     0.6,
+     0
+    ],
+    [
+     2,
+     1.2,
+     0.5
+    ],
+    [
+     -0.5,
+     1.2,
+     0
+    ],
+    [
+     4,
+     1.2,
+     0
+    ],
+    [
+     1,
+     0,
+     0.3
+    ]
+   ],
+   "seeds": [
+    [
+     0.3,
+     1.21,
+     0
+    ],
+    [
+     1,
+     1.7,
+     0
+    ],
+    [
+     1.2,
+     0.8,
+     0.2
+    ]
+   ],
+   "parcels": [
+    {
+     "id": "jet#0",
+     "emitter": "jet",
+     "bornS": 0,
+     "ageS": 0.0,
+     "at": {
+      "x": 0.1,
+      "y": 1.2,
+      "z": 0
+     },
+     "velocity": {
+      "x": 2.300613496933,
+      "y": 0,
+      "z": 0
+     },
+     "radiusM": 0.0652,
+     "excessK": 9.20245398773,
+     "vapourExcessKgPerKg": 0.003067484662577,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "jet#1",
+     "emitter": "jet",
+     "bornS": 0,
+     "ageS": 0.066672334,
+     "at": {
+      "x": 0.253387273,
+      "y": 1.2,
+      "z": 0
+     },
+     "velocity": {
+      "x": 1.694630605481,
+      "y": 0,
+      "z": 0
+     },
+     "radiusM": 0.088514865431,
+     "excessK": 6.778522421926,
+     "vapourExcessKgPerKg": 0.002259507473975,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "jet#2",
+     "emitter": "jet",
+     "bornS": 0,
+     "ageS": 0.133349447,
+     "at": {
+      "x": 0.366380348,
+      "y": 1.2,
+      "z": 0
+     },
+     "velocity": {
+      "x": 1.419247474474,
+      "y": 0,
+      "z": 0
+     },
+     "radiusM": 0.105689812875,
+     "excessK": 5.676989897896,
+     "vapourExcessKgPerKg": 0.001892329965965,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "jet#3",
+     "emitter": "jet",
+     "bornS": 0,
+     "ageS": 0.200031006,
+     "at": {
+      "x": 0.461017982,
+      "y": 1.2,
+      "z": 0
+     },
+     "velocity": {
+      "x": 1.249222013392,
+      "y": 0,
+      "z": 0
+     },
+     "radiusM": 0.120074733227,
+     "excessK": 4.99688805357,
+     "vapourExcessKgPerKg": 0.00166562935119,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "jet#4",
+     "emitter": "jet",
+     "bornS": 0,
+     "ageS": 0.266716893,
+     "at": {
+      "x": 0.544323461,
+      "y": 1.2,
+      "z": 0
+     },
+     "velocity": {
+      "x": 1.130052753667,
+      "y": 0,
+      "z": 0
+     },
+     "radiusM": 0.132737166042,
+     "excessK": 4.520211014667,
+     "vapourExcessKgPerKg": 0.001506737004889,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "jet#5",
+     "emitter": "jet",
+     "bornS": 0,
+     "ageS": 0.333407048,
+     "at": {
+      "x": 0.619686854,
+      "y": 1.2,
+      "z": 0
+     },
+     "velocity": {
+      "x": 1.040276728522,
+      "y": 0,
+      "z": 0
+     },
+     "radiusM": 0.144192401779,
+     "excessK": 4.16110691409,
+     "vapourExcessKgPerKg": 0.00138703563803,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "jet#6",
+     "emitter": "jet",
+     "bornS": 0,
+     "ageS": 0.400101431,
+     "at": {
+      "x": 0.689067468,
+      "y": 1.2,
+      "z": 0
+     },
+     "velocity": {
+      "x": 0.969378902712,
+      "y": 0,
+      "z": 0
+     },
+     "radiusM": 0.154738255166,
+     "excessK": 3.877515610848,
+     "vapourExcessKgPerKg": 0.001292505203616,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "jet#7",
+     "emitter": "jet",
+     "bornS": 0,
+     "ageS": 0.466800015,
+     "at": {
+      "x": 0.753723669,
+      "y": 1.2,
+      "z": 0
+     },
+     "velocity": {
+      "x": 0.911488412916,
+      "y": 0,
+      "z": 0
+     },
+     "radiusM": 0.16456599763,
+     "excessK": 3.645953651666,
+     "vapourExcessKgPerKg": 0.001215317883889,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "jet#8",
+     "emitter": "jet",
+     "bornS": 0,
+     "ageS": 0.533502781,
+     "at": {
+      "x": 0.814522467,
+      "y": 1.2,
+      "z": 0
+     },
+     "velocity": {
+      "x": 0.863024169596,
+      "y": 0,
+      "z": 0
+     },
+     "radiusM": 0.173807415,
+     "excessK": 3.452096678384,
+     "vapourExcessKgPerKg": 0.001150698892795,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "jet#9",
+     "emitter": "jet",
+     "bornS": 0,
+     "ageS": 0.600209715,
+     "at": {
+      "x": 0.872092163,
+      "y": 1.2,
+      "z": 0
+     },
+     "velocity": {
+      "x": 0.821656639657,
+      "y": 0,
+      "z": 0
+     },
+     "radiusM": 0.182558008735,
+     "excessK": 3.286626558627,
+     "vapourExcessKgPerKg": 0.001095542186209,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "jet#10",
+     "emitter": "jet",
+     "bornS": 0,
+     "ageS": 0.666920803,
+     "at": {
+      "x": 0.926905771,
+      "y": 1.2,
+      "z": 0
+     },
+     "velocity": {
+      "x": 0.785794193529,
+      "y": 0,
+      "z": 0
+     },
+     "radiusM": 0.190889677266,
+     "excessK": 3.143176774115,
+     "vapourExcessKgPerKg": 0.001047725591372,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "jet#11",
+     "emitter": "jet",
+     "bornS": 0,
+     "ageS": 0.733636037,
+     "at": {
+      "x": 0.979330215,
+      "y": 1.2,
+      "z": 0
+     },
+     "velocity": {
+      "x": 0.754306362581,
+      "y": 0,
+      "z": 0
+     },
+     "radiusM": 0.198858192693,
+     "excessK": 3.017225450325,
+     "vapourExcessKgPerKg": 0.001005741816775,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "jet#12",
+     "emitter": "jet",
+     "bornS": 0,
+     "ageS": 0.800355409,
+     "at": {
+      "x": 1.029657062,
+      "y": 1.2,
+      "z": 0
+     },
+     "velocity": {
+      "x": 0.726364557097,
+      "y": 0,
+      "z": 0
+     },
+     "radiusM": 0.206507873401,
+     "excessK": 2.905458228386,
+     "vapourExcessKgPerKg": 0.000968486076129,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "jet#13",
+     "emitter": "jet",
+     "bornS": 0,
+     "ageS": 0.867078912,
+     "at": {
+      "x": 1.07812265,
+      "y": 1.2,
+      "z": 0
+     },
+     "velocity": {
+      "x": 0.701345414657,
+      "y": 0,
+      "z": 0
+     },
+     "radiusM": 0.213874642744,
+     "excessK": 2.805381658627,
+     "vapourExcessKgPerKg": 0.000935127219542,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "jet#14",
+     "emitter": "jet",
+     "bornS": 0,
+     "ageS": 0.933806541,
+     "at": {
+      "x": 1.124921766,
+      "y": 1.2,
+      "z": 0
+     },
+     "velocity": {
+      "x": 0.678769554911,
+      "y": 0,
+      "z": 0
+     },
+     "radiusM": 0.22098810843,
+     "excessK": 2.715078219644,
+     "vapourExcessKgPerKg": 0.000905026073215,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "jet#15",
+     "emitter": "jet",
+     "bornS": 0,
+     "ageS": 1.00053829,
+     "at": {
+      "x": 1.170217246,
+      "y": 1.2,
+      "z": 0
+     },
+     "velocity": {
+      "x": 0.658261338322,
+      "y": 0,
+      "z": 0
+     },
+     "radiusM": 0.227873021348,
+     "excessK": 2.63304535329,
+     "vapourExcessKgPerKg": 0.00087768178443,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "jet#16",
+     "emitter": "jet",
+     "bornS": 0,
+     "ageS": 1.067274156,
+     "at": {
+      "x": 1.214146886,
+      "y": 1.2,
+      "z": 0
+     },
+     "velocity": {
+      "x": 0.639521599217,
+      "y": 0,
+      "z": 0
+     },
+     "radiusM": 0.234550326656,
+     "excessK": 2.55808639687,
+     "vapourExcessKgPerKg": 0.000852695465623,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "jet#17",
+     "emitter": "jet",
+     "bornS": 0,
+     "ageS": 1.134014134,
+     "at": {
+      "x": 1.256828543,
+      "y": 1.2,
+      "z": 0
+     },
+     "velocity": {
+      "x": 0.622308674175,
+      "y": 0,
+      "z": 0
+     },
+     "radiusM": 0.241037938606,
+     "excessK": 2.489234696701,
+     "vapourExcessKgPerKg": 0.0008297448989,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "jet#18",
+     "emitter": "jet",
+     "bornS": 0,
+     "ageS": 1.200758221,
+     "at": {
+      "x": 1.298363968,
+      "y": 1.2,
+      "z": 0
+     },
+     "velocity": {
+      "x": 0.606424894342,
+      "y": 0,
+      "z": 0
+     },
+     "radiusM": 0.247351323139,
+     "excessK": 2.42569957737,
+     "vapourExcessKgPerKg": 0.00080856652579,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "jet#19",
+     "emitter": "jet",
+     "bornS": 0,
+     "ageS": 1.267506415,
+     "at": {
+      "x": 1.338841734,
+      "y": 1.2,
+      "z": 0
+     },
+     "velocity": {
+      "x": 0.591706771334,
+      "y": 0,
+      "z": 0
+     },
+     "radiusM": 0.25350394362,
+     "excessK": 2.366827085337,
+     "vapourExcessKgPerKg": 0.000788942361779,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "jet#20",
+     "emitter": "jet",
+     "bornS": 0,
+     "ageS": 1.334258712,
+     "at": {
+      "x": 1.378339521,
+      "y": 1.2,
+      "z": 0
+     },
+     "velocity": {
+      "x": 0.578017737712,
+      "y": 0,
+      "z": 0
+     },
+     "radiusM": 0.259507607143,
+     "excessK": 2.312070950847,
+     "vapourExcessKgPerKg": 0.000770690316949,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "jet#21",
+     "emitter": "jet",
+     "bornS": 0,
+     "ageS": 1.401015111,
+     "at": {
+      "x": 1.416925903,
+      "y": 1.2,
+      "z": 0
+     },
+     "velocity": {
+      "x": 0.565242690484,
+      "y": 0,
+      "z": 0
+     },
+     "radiusM": 0.265372737278,
+     "excessK": 2.260970761936,
+     "vapourExcessKgPerKg": 0.000753656920645,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "jet#22",
+     "emitter": "jet",
+     "bornS": 0,
+     "ageS": 1.467775608,
+     "at": {
+      "x": 1.454661786,
+      "y": 1.2,
+      "z": 0
+     },
+     "velocity": {
+      "x": 0.553283830483,
+      "y": 0,
+      "z": 0
+     },
+     "radiusM": 0.271108591533,
+     "excessK": 2.213135321931,
+     "vapourExcessKgPerKg": 0.000737711773977,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "jet#23",
+     "emitter": "jet",
+     "bornS": 0,
+     "ageS": 1.534540203,
+     "at": {
+      "x": 1.491601557,
+      "y": 1.2,
+      "z": 0
+     },
+     "velocity": {
+      "x": 0.542057448428,
+      "y": 0,
+      "z": 0
+     },
+     "radiusM": 0.276723436667,
+     "excessK": 2.16822979371,
+     "vapourExcessKgPerKg": 0.00072274326457,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "jet#24",
+     "emitter": "jet",
+     "bornS": 0,
+     "ageS": 1.601308893,
+     "at": {
+      "x": 1.527794023,
+      "y": 1.2,
+      "z": 0
+     },
+     "velocity": {
+      "x": 0.531491412872,
+      "y": 0,
+      "z": 0
+     },
+     "radiusM": 0.282224691439,
+     "excessK": 2.125965651488,
+     "vapourExcessKgPerKg": 0.000708655217163,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "jet#25",
+     "emitter": "jet",
+     "bornS": 0,
+     "ageS": 1.668081676,
+     "at": {
+      "x": 1.563283184,
+      "y": 1.2,
+      "z": 0
+     },
+     "velocity": {
+      "x": 0.521523185557,
+      "y": 0,
+      "z": 0
+     },
+     "radiusM": 0.287619043897,
+     "excessK": 2.08609274223,
+     "vapourExcessKgPerKg": 0.00069536424741,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "jet#26",
+     "emitter": "jet",
+     "bornS": 0,
+     "ageS": 1.734858551,
+     "at": {
+      "x": 1.598108872,
+      "y": 1.2,
+      "z": 0
+     },
+     "velocity": {
+      "x": 0.512098237955,
+      "y": 0,
+      "z": 0
+     },
+     "radiusM": 0.292912548575,
+     "excessK": 2.048392951819,
+     "vapourExcessKgPerKg": 0.000682797650606,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "jet#27",
+     "emitter": "jet",
+     "bornS": 0,
+     "ageS": 1.801639517,
+     "at": {
+      "x": 1.632307287,
+      "y": 1.2,
+      "z": 0
+     },
+     "velocity": {
+      "x": 0.503168776427,
+      "y": 0,
+      "z": 0
+     },
+     "radiusM": 0.298110707634,
+     "excessK": 2.012675105708,
+     "vapourExcessKgPerKg": 0.000670891701903,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "jet#28",
+     "emitter": "jet",
+     "bornS": 0,
+     "ageS": 1.868424572,
+     "at": {
+      "x": 1.665911441,
+      "y": 1.2,
+      "z": 0
+     },
+     "velocity": {
+      "x": 0.494692707273,
+      "y": 0,
+      "z": 0
+     },
+     "radiusM": 0.303218539094,
+     "excessK": 1.978770829092,
+     "vapourExcessKgPerKg": 0.000659590276364,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "jet#29",
+     "emitter": "jet",
+     "bornS": 0,
+     "ageS": 1.935213715,
+     "at": {
+      "x": 1.698951543,
+      "y": 1.2,
+      "z": 0
+     },
+     "velocity": {
+      "x": 0.486632790011,
+      "y": 0,
+      "z": 0
+     },
+     "radiusM": 0.308240634579,
+     "excessK": 1.946531160046,
+     "vapourExcessKgPerKg": 0.000648843720015,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "jet#30",
+     "emitter": "jet",
+     "bornS": 0,
+     "ageS": 2.002006944,
+     "at": {
+      "x": 1.731455319,
+      "y": 1.2,
+      "z": 0
+     },
+     "velocity": {
+      "x": 0.478955939687,
+      "y": 0,
+      "z": 0
+     },
+     "radiusM": 0.31318120848,
+     "excessK": 1.91582375875,
+     "vapourExcessKgPerKg": 0.000638607919583,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "jet#31",
+     "emitter": "jet",
+     "bornS": 0,
+     "ageS": 2.068804259,
+     "at": {
+      "x": 1.76344829,
+      "y": 1.2,
+      "z": 0
+     },
+     "velocity": {
+      "x": 0.471632648137,
+      "y": 0,
+      "z": 0
+     },
+     "radiusM": 0.318044140058,
+     "excessK": 1.88653059255,
+     "vapourExcessKgPerKg": 0.00062884353085,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "jet#32",
+     "emitter": "jet",
+     "bornS": 0,
+     "ageS": 2.135605659,
+     "at": {
+      "x": 1.794954011,
+      "y": 1.2,
+      "z": 0
+     },
+     "velocity": {
+      "x": 0.464636500931,
+      "y": 0,
+      "z": 0
+     },
+     "radiusM": 0.322833009674,
+     "excessK": 1.858546003726,
+     "vapourExcessKgPerKg": 0.000619515334575,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "jet#33",
+     "emitter": "jet",
+     "bornS": 0,
+     "ageS": 2.202411143,
+     "at": {
+      "x": 1.825994277,
+      "y": 1.2,
+      "z": 0
+     },
+     "velocity": {
+      "x": 0.457943771829,
+      "y": 0,
+      "z": 0
+     },
+     "radiusM": 0.327551130133,
+     "excessK": 1.831775087317,
+     "vapourExcessKgPerKg": 0.000610591695772,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "jet#34",
+     "emitter": "jet",
+     "bornS": 0,
+     "ageS": 2.26922071,
+     "at": {
+      "x": 1.856589302,
+      "y": 1.2,
+      "z": 0
+     },
+     "velocity": {
+      "x": 0.45153308045,
+      "y": 0,
+      "z": 0
+     },
+     "radiusM": 0.332201573915,
+     "excessK": 1.8061323218,
+     "vapourExcessKgPerKg": 0.000602044107267,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "jet#35",
+     "emitter": "jet",
+     "bornS": 0,
+     "ageS": 2.336034358,
+     "at": {
+      "x": 1.886757875,
+      "y": 1.2,
+      "z": 0
+     },
+     "velocity": {
+      "x": 0.445385101821,
+      "y": 0,
+      "z": 0
+     },
+     "radiusM": 0.336787196937,
+     "excessK": 1.781540407285,
+     "vapourExcessKgPerKg": 0.000593846802428,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "jet#36",
+     "emitter": "jet",
+     "bornS": 0,
+     "ageS": 2.402852088,
+     "at": {
+      "x": 1.916517496,
+      "y": 1.2,
+      "z": 0
+     },
+     "velocity": {
+      "x": 0.439482318755,
+      "y": 0,
+      "z": 0
+     },
+     "radiusM": 0.34131065938,
+     "excessK": 1.757929275019,
+     "vapourExcessKgPerKg": 0.000585976425006,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "jet#37",
+     "emitter": "jet",
+     "bornS": 0,
+     "ageS": 2.469673898,
+     "at": {
+      "x": 1.9458845,
+      "y": 1.2,
+      "z": 0
+     },
+     "velocity": {
+      "x": 0.433808809775,
+      "y": 0,
+      "z": 0
+     },
+     "radiusM": 0.345774443995,
+     "excessK": 1.735235239099,
+     "vapourExcessKgPerKg": 0.000578411746366,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "jet#38",
+     "emitter": "jet",
+     "bornS": 0,
+     "ageS": 2.536499788,
+     "at": {
+      "x": 1.97487416,
+      "y": 1.2,
+      "z": 0
+     },
+     "velocity": {
+      "x": 0.428350066714,
+      "y": 0,
+      "z": 0
+     },
+     "radiusM": 0.350180872273,
+     "excessK": 1.713400266856,
+     "vapourExcessKgPerKg": 0.000571133422285,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "jet#39",
+     "emitter": "jet",
+     "bornS": 0,
+     "ageS": 2.603329756,
+     "at": {
+      "x": 2.003500781,
+      "y": 1.2,
+      "z": 0
+     },
+     "velocity": {
+      "x": 0.423092837189,
+      "y": 0,
+      "z": 0
+     },
+     "radiusM": 0.354532118758,
+     "excessK": 1.692371348755,
+     "vapourExcessKgPerKg": 0.000564123782918,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "jet#40",
+     "emitter": "jet",
+     "bornS": 0,
+     "ageS": 2.670163804,
+     "at": {
+      "x": 2.031777788,
+      "y": 1.2,
+      "z": 0
+     },
+     "velocity": {
+      "x": 0.418024988038,
+      "y": 0,
+      "z": 0
+     },
+     "radiusM": 0.358830223772,
+     "excessK": 1.672099952152,
+     "vapourExcessKgPerKg": 0.000557366650717,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "jet#41",
+     "emitter": "jet",
+     "bornS": 0,
+     "ageS": 2.737001929,
+     "at": {
+      "x": 2.059717794,
+      "y": 1.2,
+      "z": 0
+     },
+     "velocity": {
+      "x": 0.413135386503,
+      "y": 0,
+      "z": 0
+     },
+     "radiusM": 0.363077104747,
+     "excessK": 1.652541546013,
+     "vapourExcessKgPerKg": 0.000550847182004,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "jet#42",
+     "emitter": "jet",
+     "bornS": 0,
+     "ageS": 2.803844131,
+     "at": {
+      "x": 2.087332673,
+      "y": 1.2,
+      "z": 0
+     },
+     "velocity": {
+      "x": 0.408413796484,
+      "y": 0,
+      "z": 0
+     },
+     "radiusM": 0.367274566362,
+     "excessK": 1.633655185937,
+     "vapourExcessKgPerKg": 0.000544551728646,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "jet#43",
+     "emitter": "jet",
+     "bornS": 0,
+     "ageS": 2.87069041,
+     "at": {
+      "x": 2.114633616,
+      "y": 1.2,
+      "z": 0
+     },
+     "velocity": {
+      "x": 0.403850787664,
+      "y": 0,
+      "z": 0
+     },
+     "radiusM": 0.371424309626,
+     "excessK": 1.615403150655,
+     "vapourExcessKgPerKg": 0.000538467716885,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "jet#44",
+     "emitter": "jet",
+     "bornS": 0,
+     "ageS": 2.937540765,
+     "at": {
+      "x": 2.141631184,
+      "y": 1.2,
+      "z": 0
+     },
+     "velocity": {
+      "x": 0.399437655649,
+      "y": 0,
+      "z": 0
+     },
+     "radiusM": 0.375527940039,
+     "excessK": 1.597750622596,
+     "vapourExcessKgPerKg": 0.000532583540865,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "jet#45",
+     "emitter": "jet",
+     "bornS": 0,
+     "ageS": 3.004395195,
+     "at": {
+      "x": 2.168335361,
+      "y": 1.2,
+      "z": 0
+     },
+     "velocity": {
+      "x": 0.395166351589,
+      "y": 0,
+      "z": 0
+     },
+     "radiusM": 0.379586974945,
+     "excessK": 1.580665406357,
+     "vapourExcessKgPerKg": 0.000526888468786,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "jet#46",
+     "emitter": "jet",
+     "bornS": 0,
+     "ageS": 3.071253701,
+     "at": {
+      "x": 2.194755593,
+      "y": 1.2,
+      "z": 0
+     },
+     "velocity": {
+      "x": 0.391029419965,
+      "y": 0,
+      "z": 0
+     },
+     "radiusM": 0.383602850173,
+     "excessK": 1.564117679858,
+     "vapourExcessKgPerKg": 0.000521372559953,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "jet#47",
+     "emitter": "jet",
+     "bornS": 0,
+     "ageS": 3.138116281,
+     "at": {
+      "x": 2.220900829,
+      "y": 1.2,
+      "z": 0
+     },
+     "velocity": {
+      "x": 0.387019943448,
+      "y": 0,
+      "z": 0
+     },
+     "radiusM": 0.387576926046,
+     "excessK": 1.548079773792,
+     "vapourExcessKgPerKg": 0.000516026591264,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "jet#48",
+     "emitter": "jet",
+     "bornS": 0,
+     "ageS": 3.204982936,
+     "at": {
+      "x": 2.246779558,
+      "y": 1.2,
+      "z": 0
+     },
+     "velocity": {
+      "x": 0.38313149391,
+      "y": 0,
+      "z": 0
+     },
+     "radiusM": 0.391510492832,
+     "excessK": 1.532525975638,
+     "vapourExcessKgPerKg": 0.000510841991879,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "jet#49",
+     "emitter": "jet",
+     "bornS": 0,
+     "ageS": 3.271853664,
+     "at": {
+      "x": 2.27239984,
+      "y": 1.2,
+      "z": 0
+     },
+     "velocity": {
+      "x": 0.379358088768,
+      "y": 0,
+      "z": 0
+     },
+     "radiusM": 0.395404775702,
+     "excessK": 1.517432355073,
+     "vapourExcessKgPerKg": 0.000505810785024,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "jet#50",
+     "emitter": "jet",
+     "bornS": 0,
+     "ageS": 3.338728466,
+     "at": {
+      "x": 2.297769337,
+      "y": 1.2,
+      "z": 0
+     },
+     "velocity": {
+      "x": 0.375694152015,
+      "y": 0,
+      "z": 0
+     },
+     "radiusM": 0.399260939238,
+     "excessK": 1.502776608061,
+     "vapourExcessKgPerKg": 0.00050092553602,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "jet#51",
+     "emitter": "jet",
+     "bornS": 0,
+     "ageS": 3.405607341,
+     "at": {
+      "x": 2.322895339,
+      "y": 1.2,
+      "z": 0
+     },
+     "velocity": {
+      "x": 0.37213447933,
+      "y": 0,
+      "z": 0
+     },
+     "radiusM": 0.403080091558,
+     "excessK": 1.488537917318,
+     "vapourExcessKgPerKg": 0.000496179305773,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "jet#52",
+     "emitter": "jet",
+     "bornS": 0,
+     "ageS": 3.472490288,
+     "at": {
+      "x": 2.34778479,
+      "y": 1.2,
+      "z": 0
+     },
+     "velocity": {
+      "x": 0.368674206785,
+      "y": 0,
+      "z": 0
+     },
+     "radiusM": 0.406863288072,
+     "excessK": 1.474696827141,
+     "vapourExcessKgPerKg": 0.000491565609047,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "jet#53",
+     "emitter": "jet",
+     "bornS": 0,
+     "ageS": 3.539377307,
+     "at": {
+      "x": 2.372444309,
+      "y": 1.2,
+      "z": 0
+     },
+     "velocity": {
+      "x": 0.365308782723,
+      "y": 0,
+      "z": 0
+     },
+     "radiusM": 0.410611534937,
+     "excessK": 1.461235130892,
+     "vapourExcessKgPerKg": 0.000487078376964,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "jet#54",
+     "emitter": "jet",
+     "bornS": 0,
+     "ageS": 3.606268399,
+     "at": {
+      "x": 2.396880212,
+      "y": 1.2,
+      "z": 0
+     },
+     "velocity": {
+      "x": 0.362033942413,
+      "y": 0,
+      "z": 0
+     },
+     "radiusM": 0.414325792218,
+     "excessK": 1.448135769652,
+     "vapourExcessKgPerKg": 0.000482711923217,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "jet#55",
+     "emitter": "jet",
+     "bornS": 0,
+     "ageS": 3.673163562,
+     "at": {
+      "x": 2.421098532,
+      "y": 1.2,
+      "z": 0
+     },
+     "velocity": {
+      "x": 0.358845685189,
+      "y": 0,
+      "z": 0
+     },
+     "radiusM": 0.41800697679,
+     "excessK": 1.435382740756,
+     "vapourExcessKgPerKg": 0.000478460913585,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "jet#56",
+     "emitter": "jet",
+     "bornS": 0,
+     "ageS": 3.740062796,
+     "at": {
+      "x": 2.445105033,
+      "y": 1.2,
+      "z": 0
+     },
+     "velocity": {
+      "x": 0.355740253771,
+      "y": 0,
+      "z": 0
+     },
+     "radiusM": 0.421655965019,
+     "excessK": 1.422961015085,
+     "vapourExcessKgPerKg": 0.000474320338362,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "jet#57",
+     "emitter": "jet",
+     "bornS": 0,
+     "ageS": 3.806966101,
+     "at": {
+      "x": 2.468905232,
+      "y": 1.2,
+      "z": 0
+     },
+     "velocity": {
+      "x": 0.352714115537,
+      "y": 0,
+      "z": 0
+     },
+     "radiusM": 0.425273595222,
+     "excessK": 1.410856462147,
+     "vapourExcessKgPerKg": 0.000470285487382,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "jet#58",
+     "emitter": "jet",
+     "bornS": 0,
+     "ageS": 3.873873476,
+     "at": {
+      "x": 2.492504408,
+      "y": 1.2,
+      "z": 0
+     },
+     "velocity": {
+      "x": 0.349763945523,
+      "y": 0,
+      "z": 0
+     },
+     "radiusM": 0.428860669946,
+     "excessK": 1.399055782092,
+     "vapourExcessKgPerKg": 0.000466351927364,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    }
+   ]
+  },
+  {
+   "id": "twin",
+   "kind": "twin",
+   "emitters": [
+    "twin-a",
+    "twin-b"
+   ],
+   "radiusM": 0.05,
+   "speedMS": 3,
+   "excessK": 12,
+   "vapourExcessKgPerKg": 0.004,
+   "heightM": 1.2,
+   "fromM": 0.1,
+   "toM": 2.5,
+   "points": [
+    [
+     0.5,
+     1.2,
+     0
+    ],
+    [
+     1,
+     1.2,
+     0
+    ],
+    [
+     1,
+     1.25,
+     0
+    ],
+    [
+     1.5,
+     1.2,
+     0.1
+    ],
+    [
+     2,
+     1.2,
+     0
+    ],
+    [
+     1,
+     1.6,
+     0
+    ],
+    [
+     1,
+     0.6,
+     0
+    ],
+    [
+     2,
+     1.2,
+     0.5
+    ],
+    [
+     -0.5,
+     1.2,
+     0
+    ],
+    [
+     4,
+     1.2,
+     0
+    ],
+    [
+     1,
+     0,
+     0.3
+    ]
+   ],
+   "axisPoints": [
+    [
+     0.5,
+     1.2,
+     0
+    ],
+    [
+     1,
+     1.2,
+     0
+    ],
+    [
+     2,
+     1.2,
+     0
+    ]
+   ],
+   "seeds": [
+    [
+     0.3,
+     1.21,
+     0
+    ],
+    [
+     1,
+     1.7,
+     0
+    ]
+   ],
+   "parcels": [
+    {
+     "id": "twin-a#0",
+     "emitter": "twin-a",
+     "bornS": 0,
+     "ageS": 0.0,
+     "at": {
+      "x": 0.1,
+      "y": 1.2,
+      "z": 0
+     },
+     "velocity": {
+      "x": 2.300613496933,
+      "y": 0,
+      "z": 0
+     },
+     "radiusM": 0.0652,
+     "excessK": 9.20245398773,
+     "vapourExcessKgPerKg": 0.003067484662577,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "twin-a#1",
+     "emitter": "twin-a",
+     "bornS": 0,
+     "ageS": 0.066672334,
+     "at": {
+      "x": 0.253387273,
+      "y": 1.2,
+      "z": 0
+     },
+     "velocity": {
+      "x": 1.694630605481,
+      "y": 0,
+      "z": 0
+     },
+     "radiusM": 0.088514865431,
+     "excessK": 6.778522421926,
+     "vapourExcessKgPerKg": 0.002259507473975,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "twin-a#2",
+     "emitter": "twin-a",
+     "bornS": 0,
+     "ageS": 0.133349447,
+     "at": {
+      "x": 0.366380348,
+      "y": 1.2,
+      "z": 0
+     },
+     "velocity": {
+      "x": 1.419247474474,
+      "y": 0,
+      "z": 0
+     },
+     "radiusM": 0.105689812875,
+     "excessK": 5.676989897896,
+     "vapourExcessKgPerKg": 0.001892329965965,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "twin-a#3",
+     "emitter": "twin-a",
+     "bornS": 0,
+     "ageS": 0.200031006,
+     "at": {
+      "x": 0.461017982,
+      "y": 1.2,
+      "z": 0
+     },
+     "velocity": {
+      "x": 1.249222013392,
+      "y": 0,
+      "z": 0
+     },
+     "radiusM": 0.120074733227,
+     "excessK": 4.99688805357,
+     "vapourExcessKgPerKg": 0.00166562935119,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "twin-a#4",
+     "emitter": "twin-a",
+     "bornS": 0,
+     "ageS": 0.266716893,
+     "at": {
+      "x": 0.544323461,
+      "y": 1.2,
+      "z": 0
+     },
+     "velocity": {
+      "x": 1.130052753667,
+      "y": 0,
+      "z": 0
+     },
+     "radiusM": 0.132737166042,
+     "excessK": 4.520211014667,
+     "vapourExcessKgPerKg": 0.001506737004889,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "twin-a#5",
+     "emitter": "twin-a",
+     "bornS": 0,
+     "ageS": 0.333407048,
+     "at": {
+      "x": 0.619686854,
+      "y": 1.2,
+      "z": 0
+     },
+     "velocity": {
+      "x": 1.040276728522,
+      "y": 0,
+      "z": 0
+     },
+     "radiusM": 0.144192401779,
+     "excessK": 4.16110691409,
+     "vapourExcessKgPerKg": 0.00138703563803,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "twin-a#6",
+     "emitter": "twin-a",
+     "bornS": 0,
+     "ageS": 0.400101431,
+     "at": {
+      "x": 0.689067468,
+      "y": 1.2,
+      "z": 0
+     },
+     "velocity": {
+      "x": 0.969378902712,
+      "y": 0,
+      "z": 0
+     },
+     "radiusM": 0.154738255166,
+     "excessK": 3.877515610848,
+     "vapourExcessKgPerKg": 0.001292505203616,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "twin-a#7",
+     "emitter": "twin-a",
+     "bornS": 0,
+     "ageS": 0.466800015,
+     "at": {
+      "x": 0.753723669,
+      "y": 1.2,
+      "z": 0
+     },
+     "velocity": {
+      "x": 0.911488412916,
+      "y": 0,
+      "z": 0
+     },
+     "radiusM": 0.16456599763,
+     "excessK": 3.645953651666,
+     "vapourExcessKgPerKg": 0.001215317883889,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "twin-a#8",
+     "emitter": "twin-a",
+     "bornS": 0,
+     "ageS": 0.533502781,
+     "at": {
+      "x": 0.814522467,
+      "y": 1.2,
+      "z": 0
+     },
+     "velocity": {
+      "x": 0.863024169596,
+      "y": 0,
+      "z": 0
+     },
+     "radiusM": 0.173807415,
+     "excessK": 3.452096678384,
+     "vapourExcessKgPerKg": 0.001150698892795,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "twin-a#9",
+     "emitter": "twin-a",
+     "bornS": 0,
+     "ageS": 0.600209715,
+     "at": {
+      "x": 0.872092163,
+      "y": 1.2,
+      "z": 0
+     },
+     "velocity": {
+      "x": 0.821656639657,
+      "y": 0,
+      "z": 0
+     },
+     "radiusM": 0.182558008735,
+     "excessK": 3.286626558627,
+     "vapourExcessKgPerKg": 0.001095542186209,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "twin-a#10",
+     "emitter": "twin-a",
+     "bornS": 0,
+     "ageS": 0.666920803,
+     "at": {
+      "x": 0.926905771,
+      "y": 1.2,
+      "z": 0
+     },
+     "velocity": {
+      "x": 0.785794193529,
+      "y": 0,
+      "z": 0
+     },
+     "radiusM": 0.190889677266,
+     "excessK": 3.143176774115,
+     "vapourExcessKgPerKg": 0.001047725591372,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "twin-a#11",
+     "emitter": "twin-a",
+     "bornS": 0,
+     "ageS": 0.733636037,
+     "at": {
+      "x": 0.979330215,
+      "y": 1.2,
+      "z": 0
+     },
+     "velocity": {
+      "x": 0.754306362581,
+      "y": 0,
+      "z": 0
+     },
+     "radiusM": 0.198858192693,
+     "excessK": 3.017225450325,
+     "vapourExcessKgPerKg": 0.001005741816775,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "twin-a#12",
+     "emitter": "twin-a",
+     "bornS": 0,
+     "ageS": 0.800355409,
+     "at": {
+      "x": 1.029657062,
+      "y": 1.2,
+      "z": 0
+     },
+     "velocity": {
+      "x": 0.726364557097,
+      "y": 0,
+      "z": 0
+     },
+     "radiusM": 0.206507873401,
+     "excessK": 2.905458228386,
+     "vapourExcessKgPerKg": 0.000968486076129,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "twin-a#13",
+     "emitter": "twin-a",
+     "bornS": 0,
+     "ageS": 0.867078912,
+     "at": {
+      "x": 1.07812265,
+      "y": 1.2,
+      "z": 0
+     },
+     "velocity": {
+      "x": 0.701345414657,
+      "y": 0,
+      "z": 0
+     },
+     "radiusM": 0.213874642744,
+     "excessK": 2.805381658627,
+     "vapourExcessKgPerKg": 0.000935127219542,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "twin-a#14",
+     "emitter": "twin-a",
+     "bornS": 0,
+     "ageS": 0.933806541,
+     "at": {
+      "x": 1.124921766,
+      "y": 1.2,
+      "z": 0
+     },
+     "velocity": {
+      "x": 0.678769554911,
+      "y": 0,
+      "z": 0
+     },
+     "radiusM": 0.22098810843,
+     "excessK": 2.715078219644,
+     "vapourExcessKgPerKg": 0.000905026073215,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "twin-a#15",
+     "emitter": "twin-a",
+     "bornS": 0,
+     "ageS": 1.00053829,
+     "at": {
+      "x": 1.170217246,
+      "y": 1.2,
+      "z": 0
+     },
+     "velocity": {
+      "x": 0.658261338322,
+      "y": 0,
+      "z": 0
+     },
+     "radiusM": 0.227873021348,
+     "excessK": 2.63304535329,
+     "vapourExcessKgPerKg": 0.00087768178443,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "twin-a#16",
+     "emitter": "twin-a",
+     "bornS": 0,
+     "ageS": 1.067274156,
+     "at": {
+      "x": 1.214146886,
+      "y": 1.2,
+      "z": 0
+     },
+     "velocity": {
+      "x": 0.639521599217,
+      "y": 0,
+      "z": 0
+     },
+     "radiusM": 0.234550326656,
+     "excessK": 2.55808639687,
+     "vapourExcessKgPerKg": 0.000852695465623,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "twin-a#17",
+     "emitter": "twin-a",
+     "bornS": 0,
+     "ageS": 1.134014134,
+     "at": {
+      "x": 1.256828543,
+      "y": 1.2,
+      "z": 0
+     },
+     "velocity": {
+      "x": 0.622308674175,
+      "y": 0,
+      "z": 0
+     },
+     "radiusM": 0.241037938606,
+     "excessK": 2.489234696701,
+     "vapourExcessKgPerKg": 0.0008297448989,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "twin-a#18",
+     "emitter": "twin-a",
+     "bornS": 0,
+     "ageS": 1.200758221,
+     "at": {
+      "x": 1.298363968,
+      "y": 1.2,
+      "z": 0
+     },
+     "velocity": {
+      "x": 0.606424894342,
+      "y": 0,
+      "z": 0
+     },
+     "radiusM": 0.247351323139,
+     "excessK": 2.42569957737,
+     "vapourExcessKgPerKg": 0.00080856652579,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "twin-a#19",
+     "emitter": "twin-a",
+     "bornS": 0,
+     "ageS": 1.267506415,
+     "at": {
+      "x": 1.338841734,
+      "y": 1.2,
+      "z": 0
+     },
+     "velocity": {
+      "x": 0.591706771334,
+      "y": 0,
+      "z": 0
+     },
+     "radiusM": 0.25350394362,
+     "excessK": 2.366827085337,
+     "vapourExcessKgPerKg": 0.000788942361779,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "twin-a#20",
+     "emitter": "twin-a",
+     "bornS": 0,
+     "ageS": 1.334258712,
+     "at": {
+      "x": 1.378339521,
+      "y": 1.2,
+      "z": 0
+     },
+     "velocity": {
+      "x": 0.578017737712,
+      "y": 0,
+      "z": 0
+     },
+     "radiusM": 0.259507607143,
+     "excessK": 2.312070950847,
+     "vapourExcessKgPerKg": 0.000770690316949,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "twin-a#21",
+     "emitter": "twin-a",
+     "bornS": 0,
+     "ageS": 1.401015111,
+     "at": {
+      "x": 1.416925903,
+      "y": 1.2,
+      "z": 0
+     },
+     "velocity": {
+      "x": 0.565242690484,
+      "y": 0,
+      "z": 0
+     },
+     "radiusM": 0.265372737278,
+     "excessK": 2.260970761936,
+     "vapourExcessKgPerKg": 0.000753656920645,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "twin-a#22",
+     "emitter": "twin-a",
+     "bornS": 0,
+     "ageS": 1.467775608,
+     "at": {
+      "x": 1.454661786,
+      "y": 1.2,
+      "z": 0
+     },
+     "velocity": {
+      "x": 0.553283830483,
+      "y": 0,
+      "z": 0
+     },
+     "radiusM": 0.271108591533,
+     "excessK": 2.213135321931,
+     "vapourExcessKgPerKg": 0.000737711773977,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "twin-a#23",
+     "emitter": "twin-a",
+     "bornS": 0,
+     "ageS": 1.534540203,
+     "at": {
+      "x": 1.491601557,
+      "y": 1.2,
+      "z": 0
+     },
+     "velocity": {
+      "x": 0.542057448428,
+      "y": 0,
+      "z": 0
+     },
+     "radiusM": 0.276723436667,
+     "excessK": 2.16822979371,
+     "vapourExcessKgPerKg": 0.00072274326457,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "twin-a#24",
+     "emitter": "twin-a",
+     "bornS": 0,
+     "ageS": 1.601308893,
+     "at": {
+      "x": 1.527794023,
+      "y": 1.2,
+      "z": 0
+     },
+     "velocity": {
+      "x": 0.531491412872,
+      "y": 0,
+      "z": 0
+     },
+     "radiusM": 0.282224691439,
+     "excessK": 2.125965651488,
+     "vapourExcessKgPerKg": 0.000708655217163,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "twin-a#25",
+     "emitter": "twin-a",
+     "bornS": 0,
+     "ageS": 1.668081676,
+     "at": {
+      "x": 1.563283184,
+      "y": 1.2,
+      "z": 0
+     },
+     "velocity": {
+      "x": 0.521523185557,
+      "y": 0,
+      "z": 0
+     },
+     "radiusM": 0.287619043897,
+     "excessK": 2.08609274223,
+     "vapourExcessKgPerKg": 0.00069536424741,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "twin-a#26",
+     "emitter": "twin-a",
+     "bornS": 0,
+     "ageS": 1.734858551,
+     "at": {
+      "x": 1.598108872,
+      "y": 1.2,
+      "z": 0
+     },
+     "velocity": {
+      "x": 0.512098237955,
+      "y": 0,
+      "z": 0
+     },
+     "radiusM": 0.292912548575,
+     "excessK": 2.048392951819,
+     "vapourExcessKgPerKg": 0.000682797650606,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "twin-a#27",
+     "emitter": "twin-a",
+     "bornS": 0,
+     "ageS": 1.801639517,
+     "at": {
+      "x": 1.632307287,
+      "y": 1.2,
+      "z": 0
+     },
+     "velocity": {
+      "x": 0.503168776427,
+      "y": 0,
+      "z": 0
+     },
+     "radiusM": 0.298110707634,
+     "excessK": 2.012675105708,
+     "vapourExcessKgPerKg": 0.000670891701903,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "twin-a#28",
+     "emitter": "twin-a",
+     "bornS": 0,
+     "ageS": 1.868424572,
+     "at": {
+      "x": 1.665911441,
+      "y": 1.2,
+      "z": 0
+     },
+     "velocity": {
+      "x": 0.494692707273,
+      "y": 0,
+      "z": 0
+     },
+     "radiusM": 0.303218539094,
+     "excessK": 1.978770829092,
+     "vapourExcessKgPerKg": 0.000659590276364,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "twin-a#29",
+     "emitter": "twin-a",
+     "bornS": 0,
+     "ageS": 1.935213715,
+     "at": {
+      "x": 1.698951543,
+      "y": 1.2,
+      "z": 0
+     },
+     "velocity": {
+      "x": 0.486632790011,
+      "y": 0,
+      "z": 0
+     },
+     "radiusM": 0.308240634579,
+     "excessK": 1.946531160046,
+     "vapourExcessKgPerKg": 0.000648843720015,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "twin-a#30",
+     "emitter": "twin-a",
+     "bornS": 0,
+     "ageS": 2.002006944,
+     "at": {
+      "x": 1.731455319,
+      "y": 1.2,
+      "z": 0
+     },
+     "velocity": {
+      "x": 0.478955939687,
+      "y": 0,
+      "z": 0
+     },
+     "radiusM": 0.31318120848,
+     "excessK": 1.91582375875,
+     "vapourExcessKgPerKg": 0.000638607919583,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "twin-a#31",
+     "emitter": "twin-a",
+     "bornS": 0,
+     "ageS": 2.068804259,
+     "at": {
+      "x": 1.76344829,
+      "y": 1.2,
+      "z": 0
+     },
+     "velocity": {
+      "x": 0.471632648137,
+      "y": 0,
+      "z": 0
+     },
+     "radiusM": 0.318044140058,
+     "excessK": 1.88653059255,
+     "vapourExcessKgPerKg": 0.00062884353085,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "twin-a#32",
+     "emitter": "twin-a",
+     "bornS": 0,
+     "ageS": 2.135605659,
+     "at": {
+      "x": 1.794954011,
+      "y": 1.2,
+      "z": 0
+     },
+     "velocity": {
+      "x": 0.464636500931,
+      "y": 0,
+      "z": 0
+     },
+     "radiusM": 0.322833009674,
+     "excessK": 1.858546003726,
+     "vapourExcessKgPerKg": 0.000619515334575,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "twin-a#33",
+     "emitter": "twin-a",
+     "bornS": 0,
+     "ageS": 2.202411143,
+     "at": {
+      "x": 1.825994277,
+      "y": 1.2,
+      "z": 0
+     },
+     "velocity": {
+      "x": 0.457943771829,
+      "y": 0,
+      "z": 0
+     },
+     "radiusM": 0.327551130133,
+     "excessK": 1.831775087317,
+     "vapourExcessKgPerKg": 0.000610591695772,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "twin-a#34",
+     "emitter": "twin-a",
+     "bornS": 0,
+     "ageS": 2.26922071,
+     "at": {
+      "x": 1.856589302,
+      "y": 1.2,
+      "z": 0
+     },
+     "velocity": {
+      "x": 0.45153308045,
+      "y": 0,
+      "z": 0
+     },
+     "radiusM": 0.332201573915,
+     "excessK": 1.8061323218,
+     "vapourExcessKgPerKg": 0.000602044107267,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "twin-a#35",
+     "emitter": "twin-a",
+     "bornS": 0,
+     "ageS": 2.336034358,
+     "at": {
+      "x": 1.886757875,
+      "y": 1.2,
+      "z": 0
+     },
+     "velocity": {
+      "x": 0.445385101821,
+      "y": 0,
+      "z": 0
+     },
+     "radiusM": 0.336787196937,
+     "excessK": 1.781540407285,
+     "vapourExcessKgPerKg": 0.000593846802428,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "twin-a#36",
+     "emitter": "twin-a",
+     "bornS": 0,
+     "ageS": 2.402852088,
+     "at": {
+      "x": 1.916517496,
+      "y": 1.2,
+      "z": 0
+     },
+     "velocity": {
+      "x": 0.439482318755,
+      "y": 0,
+      "z": 0
+     },
+     "radiusM": 0.34131065938,
+     "excessK": 1.757929275019,
+     "vapourExcessKgPerKg": 0.000585976425006,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "twin-a#37",
+     "emitter": "twin-a",
+     "bornS": 0,
+     "ageS": 2.469673898,
+     "at": {
+      "x": 1.9458845,
+      "y": 1.2,
+      "z": 0
+     },
+     "velocity": {
+      "x": 0.433808809775,
+      "y": 0,
+      "z": 0
+     },
+     "radiusM": 0.345774443995,
+     "excessK": 1.735235239099,
+     "vapourExcessKgPerKg": 0.000578411746366,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "twin-a#38",
+     "emitter": "twin-a",
+     "bornS": 0,
+     "ageS": 2.536499788,
+     "at": {
+      "x": 1.97487416,
+      "y": 1.2,
+      "z": 0
+     },
+     "velocity": {
+      "x": 0.428350066714,
+      "y": 0,
+      "z": 0
+     },
+     "radiusM": 0.350180872273,
+     "excessK": 1.713400266856,
+     "vapourExcessKgPerKg": 0.000571133422285,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "twin-a#39",
+     "emitter": "twin-a",
+     "bornS": 0,
+     "ageS": 2.603329756,
+     "at": {
+      "x": 2.003500781,
+      "y": 1.2,
+      "z": 0
+     },
+     "velocity": {
+      "x": 0.423092837189,
+      "y": 0,
+      "z": 0
+     },
+     "radiusM": 0.354532118758,
+     "excessK": 1.692371348755,
+     "vapourExcessKgPerKg": 0.000564123782918,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "twin-a#40",
+     "emitter": "twin-a",
+     "bornS": 0,
+     "ageS": 2.670163804,
+     "at": {
+      "x": 2.031777788,
+      "y": 1.2,
+      "z": 0
+     },
+     "velocity": {
+      "x": 0.418024988038,
+      "y": 0,
+      "z": 0
+     },
+     "radiusM": 0.358830223772,
+     "excessK": 1.672099952152,
+     "vapourExcessKgPerKg": 0.000557366650717,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "twin-a#41",
+     "emitter": "twin-a",
+     "bornS": 0,
+     "ageS": 2.737001929,
+     "at": {
+      "x": 2.059717794,
+      "y": 1.2,
+      "z": 0
+     },
+     "velocity": {
+      "x": 0.413135386503,
+      "y": 0,
+      "z": 0
+     },
+     "radiusM": 0.363077104747,
+     "excessK": 1.652541546013,
+     "vapourExcessKgPerKg": 0.000550847182004,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "twin-a#42",
+     "emitter": "twin-a",
+     "bornS": 0,
+     "ageS": 2.803844131,
+     "at": {
+      "x": 2.087332673,
+      "y": 1.2,
+      "z": 0
+     },
+     "velocity": {
+      "x": 0.408413796484,
+      "y": 0,
+      "z": 0
+     },
+     "radiusM": 0.367274566362,
+     "excessK": 1.633655185937,
+     "vapourExcessKgPerKg": 0.000544551728646,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "twin-a#43",
+     "emitter": "twin-a",
+     "bornS": 0,
+     "ageS": 2.87069041,
+     "at": {
+      "x": 2.114633616,
+      "y": 1.2,
+      "z": 0
+     },
+     "velocity": {
+      "x": 0.403850787664,
+      "y": 0,
+      "z": 0
+     },
+     "radiusM": 0.371424309626,
+     "excessK": 1.615403150655,
+     "vapourExcessKgPerKg": 0.000538467716885,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "twin-a#44",
+     "emitter": "twin-a",
+     "bornS": 0,
+     "ageS": 2.937540765,
+     "at": {
+      "x": 2.141631184,
+      "y": 1.2,
+      "z": 0
+     },
+     "velocity": {
+      "x": 0.399437655649,
+      "y": 0,
+      "z": 0
+     },
+     "radiusM": 0.375527940039,
+     "excessK": 1.597750622596,
+     "vapourExcessKgPerKg": 0.000532583540865,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "twin-a#45",
+     "emitter": "twin-a",
+     "bornS": 0,
+     "ageS": 3.004395195,
+     "at": {
+      "x": 2.168335361,
+      "y": 1.2,
+      "z": 0
+     },
+     "velocity": {
+      "x": 0.395166351589,
+      "y": 0,
+      "z": 0
+     },
+     "radiusM": 0.379586974945,
+     "excessK": 1.580665406357,
+     "vapourExcessKgPerKg": 0.000526888468786,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "twin-a#46",
+     "emitter": "twin-a",
+     "bornS": 0,
+     "ageS": 3.071253701,
+     "at": {
+      "x": 2.194755593,
+      "y": 1.2,
+      "z": 0
+     },
+     "velocity": {
+      "x": 0.391029419965,
+      "y": 0,
+      "z": 0
+     },
+     "radiusM": 0.383602850173,
+     "excessK": 1.564117679858,
+     "vapourExcessKgPerKg": 0.000521372559953,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "twin-a#47",
+     "emitter": "twin-a",
+     "bornS": 0,
+     "ageS": 3.138116281,
+     "at": {
+      "x": 2.220900829,
+      "y": 1.2,
+      "z": 0
+     },
+     "velocity": {
+      "x": 0.387019943448,
+      "y": 0,
+      "z": 0
+     },
+     "radiusM": 0.387576926046,
+     "excessK": 1.548079773792,
+     "vapourExcessKgPerKg": 0.000516026591264,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "twin-a#48",
+     "emitter": "twin-a",
+     "bornS": 0,
+     "ageS": 3.204982936,
+     "at": {
+      "x": 2.246779558,
+      "y": 1.2,
+      "z": 0
+     },
+     "velocity": {
+      "x": 0.38313149391,
+      "y": 0,
+      "z": 0
+     },
+     "radiusM": 0.391510492832,
+     "excessK": 1.532525975638,
+     "vapourExcessKgPerKg": 0.000510841991879,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "twin-a#49",
+     "emitter": "twin-a",
+     "bornS": 0,
+     "ageS": 3.271853664,
+     "at": {
+      "x": 2.27239984,
+      "y": 1.2,
+      "z": 0
+     },
+     "velocity": {
+      "x": 0.379358088768,
+      "y": 0,
+      "z": 0
+     },
+     "radiusM": 0.395404775702,
+     "excessK": 1.517432355073,
+     "vapourExcessKgPerKg": 0.000505810785024,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "twin-a#50",
+     "emitter": "twin-a",
+     "bornS": 0,
+     "ageS": 3.338728466,
+     "at": {
+      "x": 2.297769337,
+      "y": 1.2,
+      "z": 0
+     },
+     "velocity": {
+      "x": 0.375694152015,
+      "y": 0,
+      "z": 0
+     },
+     "radiusM": 0.399260939238,
+     "excessK": 1.502776608061,
+     "vapourExcessKgPerKg": 0.00050092553602,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "twin-a#51",
+     "emitter": "twin-a",
+     "bornS": 0,
+     "ageS": 3.405607341,
+     "at": {
+      "x": 2.322895339,
+      "y": 1.2,
+      "z": 0
+     },
+     "velocity": {
+      "x": 0.37213447933,
+      "y": 0,
+      "z": 0
+     },
+     "radiusM": 0.403080091558,
+     "excessK": 1.488537917318,
+     "vapourExcessKgPerKg": 0.000496179305773,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "twin-a#52",
+     "emitter": "twin-a",
+     "bornS": 0,
+     "ageS": 3.472490288,
+     "at": {
+      "x": 2.34778479,
+      "y": 1.2,
+      "z": 0
+     },
+     "velocity": {
+      "x": 0.368674206785,
+      "y": 0,
+      "z": 0
+     },
+     "radiusM": 0.406863288072,
+     "excessK": 1.474696827141,
+     "vapourExcessKgPerKg": 0.000491565609047,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "twin-a#53",
+     "emitter": "twin-a",
+     "bornS": 0,
+     "ageS": 3.539377307,
+     "at": {
+      "x": 2.372444309,
+      "y": 1.2,
+      "z": 0
+     },
+     "velocity": {
+      "x": 0.365308782723,
+      "y": 0,
+      "z": 0
+     },
+     "radiusM": 0.410611534937,
+     "excessK": 1.461235130892,
+     "vapourExcessKgPerKg": 0.000487078376964,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "twin-a#54",
+     "emitter": "twin-a",
+     "bornS": 0,
+     "ageS": 3.606268399,
+     "at": {
+      "x": 2.396880212,
+      "y": 1.2,
+      "z": 0
+     },
+     "velocity": {
+      "x": 0.362033942413,
+      "y": 0,
+      "z": 0
+     },
+     "radiusM": 0.414325792218,
+     "excessK": 1.448135769652,
+     "vapourExcessKgPerKg": 0.000482711923217,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "twin-a#55",
+     "emitter": "twin-a",
+     "bornS": 0,
+     "ageS": 3.673163562,
+     "at": {
+      "x": 2.421098532,
+      "y": 1.2,
+      "z": 0
+     },
+     "velocity": {
+      "x": 0.358845685189,
+      "y": 0,
+      "z": 0
+     },
+     "radiusM": 0.41800697679,
+     "excessK": 1.435382740756,
+     "vapourExcessKgPerKg": 0.000478460913585,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "twin-a#56",
+     "emitter": "twin-a",
+     "bornS": 0,
+     "ageS": 3.740062796,
+     "at": {
+      "x": 2.445105033,
+      "y": 1.2,
+      "z": 0
+     },
+     "velocity": {
+      "x": 0.355740253771,
+      "y": 0,
+      "z": 0
+     },
+     "radiusM": 0.421655965019,
+     "excessK": 1.422961015085,
+     "vapourExcessKgPerKg": 0.000474320338362,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "twin-a#57",
+     "emitter": "twin-a",
+     "bornS": 0,
+     "ageS": 3.806966101,
+     "at": {
+      "x": 2.468905232,
+      "y": 1.2,
+      "z": 0
+     },
+     "velocity": {
+      "x": 0.352714115537,
+      "y": 0,
+      "z": 0
+     },
+     "radiusM": 0.425273595222,
+     "excessK": 1.410856462147,
+     "vapourExcessKgPerKg": 0.000470285487382,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "twin-a#58",
+     "emitter": "twin-a",
+     "bornS": 0,
+     "ageS": 3.873873476,
+     "at": {
+      "x": 2.492504408,
+      "y": 1.2,
+      "z": 0
+     },
+     "velocity": {
+      "x": 0.349763945523,
+      "y": 0,
+      "z": 0
+     },
+     "radiusM": 0.428860669946,
+     "excessK": 1.399055782092,
+     "vapourExcessKgPerKg": 0.000466351927364,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "twin-b#0",
+     "emitter": "twin-b",
+     "bornS": 0,
+     "ageS": 0.0,
+     "at": {
+      "x": 0.1,
+      "y": 1.2,
+      "z": 0
+     },
+     "velocity": {
+      "x": 2.300613496933,
+      "y": 0,
+      "z": 0
+     },
+     "radiusM": 0.0652,
+     "excessK": 9.20245398773,
+     "vapourExcessKgPerKg": 0.003067484662577,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "twin-b#1",
+     "emitter": "twin-b",
+     "bornS": 0,
+     "ageS": 0.066672334,
+     "at": {
+      "x": 0.253387273,
+      "y": 1.2,
+      "z": 0
+     },
+     "velocity": {
+      "x": 1.694630605481,
+      "y": 0,
+      "z": 0
+     },
+     "radiusM": 0.088514865431,
+     "excessK": 6.778522421926,
+     "vapourExcessKgPerKg": 0.002259507473975,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "twin-b#2",
+     "emitter": "twin-b",
+     "bornS": 0,
+     "ageS": 0.133349447,
+     "at": {
+      "x": 0.366380348,
+      "y": 1.2,
+      "z": 0
+     },
+     "velocity": {
+      "x": 1.419247474474,
+      "y": 0,
+      "z": 0
+     },
+     "radiusM": 0.105689812875,
+     "excessK": 5.676989897896,
+     "vapourExcessKgPerKg": 0.001892329965965,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "twin-b#3",
+     "emitter": "twin-b",
+     "bornS": 0,
+     "ageS": 0.200031006,
+     "at": {
+      "x": 0.461017982,
+      "y": 1.2,
+      "z": 0
+     },
+     "velocity": {
+      "x": 1.249222013392,
+      "y": 0,
+      "z": 0
+     },
+     "radiusM": 0.120074733227,
+     "excessK": 4.99688805357,
+     "vapourExcessKgPerKg": 0.00166562935119,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "twin-b#4",
+     "emitter": "twin-b",
+     "bornS": 0,
+     "ageS": 0.266716893,
+     "at": {
+      "x": 0.544323461,
+      "y": 1.2,
+      "z": 0
+     },
+     "velocity": {
+      "x": 1.130052753667,
+      "y": 0,
+      "z": 0
+     },
+     "radiusM": 0.132737166042,
+     "excessK": 4.520211014667,
+     "vapourExcessKgPerKg": 0.001506737004889,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "twin-b#5",
+     "emitter": "twin-b",
+     "bornS": 0,
+     "ageS": 0.333407048,
+     "at": {
+      "x": 0.619686854,
+      "y": 1.2,
+      "z": 0
+     },
+     "velocity": {
+      "x": 1.040276728522,
+      "y": 0,
+      "z": 0
+     },
+     "radiusM": 0.144192401779,
+     "excessK": 4.16110691409,
+     "vapourExcessKgPerKg": 0.00138703563803,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "twin-b#6",
+     "emitter": "twin-b",
+     "bornS": 0,
+     "ageS": 0.400101431,
+     "at": {
+      "x": 0.689067468,
+      "y": 1.2,
+      "z": 0
+     },
+     "velocity": {
+      "x": 0.969378902712,
+      "y": 0,
+      "z": 0
+     },
+     "radiusM": 0.154738255166,
+     "excessK": 3.877515610848,
+     "vapourExcessKgPerKg": 0.001292505203616,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "twin-b#7",
+     "emitter": "twin-b",
+     "bornS": 0,
+     "ageS": 0.466800015,
+     "at": {
+      "x": 0.753723669,
+      "y": 1.2,
+      "z": 0
+     },
+     "velocity": {
+      "x": 0.911488412916,
+      "y": 0,
+      "z": 0
+     },
+     "radiusM": 0.16456599763,
+     "excessK": 3.645953651666,
+     "vapourExcessKgPerKg": 0.001215317883889,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "twin-b#8",
+     "emitter": "twin-b",
+     "bornS": 0,
+     "ageS": 0.533502781,
+     "at": {
+      "x": 0.814522467,
+      "y": 1.2,
+      "z": 0
+     },
+     "velocity": {
+      "x": 0.863024169596,
+      "y": 0,
+      "z": 0
+     },
+     "radiusM": 0.173807415,
+     "excessK": 3.452096678384,
+     "vapourExcessKgPerKg": 0.001150698892795,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "twin-b#9",
+     "emitter": "twin-b",
+     "bornS": 0,
+     "ageS": 0.600209715,
+     "at": {
+      "x": 0.872092163,
+      "y": 1.2,
+      "z": 0
+     },
+     "velocity": {
+      "x": 0.821656639657,
+      "y": 0,
+      "z": 0
+     },
+     "radiusM": 0.182558008735,
+     "excessK": 3.286626558627,
+     "vapourExcessKgPerKg": 0.001095542186209,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "twin-b#10",
+     "emitter": "twin-b",
+     "bornS": 0,
+     "ageS": 0.666920803,
+     "at": {
+      "x": 0.926905771,
+      "y": 1.2,
+      "z": 0
+     },
+     "velocity": {
+      "x": 0.785794193529,
+      "y": 0,
+      "z": 0
+     },
+     "radiusM": 0.190889677266,
+     "excessK": 3.143176774115,
+     "vapourExcessKgPerKg": 0.001047725591372,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "twin-b#11",
+     "emitter": "twin-b",
+     "bornS": 0,
+     "ageS": 0.733636037,
+     "at": {
+      "x": 0.979330215,
+      "y": 1.2,
+      "z": 0
+     },
+     "velocity": {
+      "x": 0.754306362581,
+      "y": 0,
+      "z": 0
+     },
+     "radiusM": 0.198858192693,
+     "excessK": 3.017225450325,
+     "vapourExcessKgPerKg": 0.001005741816775,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "twin-b#12",
+     "emitter": "twin-b",
+     "bornS": 0,
+     "ageS": 0.800355409,
+     "at": {
+      "x": 1.029657062,
+      "y": 1.2,
+      "z": 0
+     },
+     "velocity": {
+      "x": 0.726364557097,
+      "y": 0,
+      "z": 0
+     },
+     "radiusM": 0.206507873401,
+     "excessK": 2.905458228386,
+     "vapourExcessKgPerKg": 0.000968486076129,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "twin-b#13",
+     "emitter": "twin-b",
+     "bornS": 0,
+     "ageS": 0.867078912,
+     "at": {
+      "x": 1.07812265,
+      "y": 1.2,
+      "z": 0
+     },
+     "velocity": {
+      "x": 0.701345414657,
+      "y": 0,
+      "z": 0
+     },
+     "radiusM": 0.213874642744,
+     "excessK": 2.805381658627,
+     "vapourExcessKgPerKg": 0.000935127219542,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "twin-b#14",
+     "emitter": "twin-b",
+     "bornS": 0,
+     "ageS": 0.933806541,
+     "at": {
+      "x": 1.124921766,
+      "y": 1.2,
+      "z": 0
+     },
+     "velocity": {
+      "x": 0.678769554911,
+      "y": 0,
+      "z": 0
+     },
+     "radiusM": 0.22098810843,
+     "excessK": 2.715078219644,
+     "vapourExcessKgPerKg": 0.000905026073215,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "twin-b#15",
+     "emitter": "twin-b",
+     "bornS": 0,
+     "ageS": 1.00053829,
+     "at": {
+      "x": 1.170217246,
+      "y": 1.2,
+      "z": 0
+     },
+     "velocity": {
+      "x": 0.658261338322,
+      "y": 0,
+      "z": 0
+     },
+     "radiusM": 0.227873021348,
+     "excessK": 2.63304535329,
+     "vapourExcessKgPerKg": 0.00087768178443,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "twin-b#16",
+     "emitter": "twin-b",
+     "bornS": 0,
+     "ageS": 1.067274156,
+     "at": {
+      "x": 1.214146886,
+      "y": 1.2,
+      "z": 0
+     },
+     "velocity": {
+      "x": 0.639521599217,
+      "y": 0,
+      "z": 0
+     },
+     "radiusM": 0.234550326656,
+     "excessK": 2.55808639687,
+     "vapourExcessKgPerKg": 0.000852695465623,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "twin-b#17",
+     "emitter": "twin-b",
+     "bornS": 0,
+     "ageS": 1.134014134,
+     "at": {
+      "x": 1.256828543,
+      "y": 1.2,
+      "z": 0
+     },
+     "velocity": {
+      "x": 0.622308674175,
+      "y": 0,
+      "z": 0
+     },
+     "radiusM": 0.241037938606,
+     "excessK": 2.489234696701,
+     "vapourExcessKgPerKg": 0.0008297448989,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "twin-b#18",
+     "emitter": "twin-b",
+     "bornS": 0,
+     "ageS": 1.200758221,
+     "at": {
+      "x": 1.298363968,
+      "y": 1.2,
+      "z": 0
+     },
+     "velocity": {
+      "x": 0.606424894342,
+      "y": 0,
+      "z": 0
+     },
+     "radiusM": 0.247351323139,
+     "excessK": 2.42569957737,
+     "vapourExcessKgPerKg": 0.00080856652579,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "twin-b#19",
+     "emitter": "twin-b",
+     "bornS": 0,
+     "ageS": 1.267506415,
+     "at": {
+      "x": 1.338841734,
+      "y": 1.2,
+      "z": 0
+     },
+     "velocity": {
+      "x": 0.591706771334,
+      "y": 0,
+      "z": 0
+     },
+     "radiusM": 0.25350394362,
+     "excessK": 2.366827085337,
+     "vapourExcessKgPerKg": 0.000788942361779,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "twin-b#20",
+     "emitter": "twin-b",
+     "bornS": 0,
+     "ageS": 1.334258712,
+     "at": {
+      "x": 1.378339521,
+      "y": 1.2,
+      "z": 0
+     },
+     "velocity": {
+      "x": 0.578017737712,
+      "y": 0,
+      "z": 0
+     },
+     "radiusM": 0.259507607143,
+     "excessK": 2.312070950847,
+     "vapourExcessKgPerKg": 0.000770690316949,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "twin-b#21",
+     "emitter": "twin-b",
+     "bornS": 0,
+     "ageS": 1.401015111,
+     "at": {
+      "x": 1.416925903,
+      "y": 1.2,
+      "z": 0
+     },
+     "velocity": {
+      "x": 0.565242690484,
+      "y": 0,
+      "z": 0
+     },
+     "radiusM": 0.265372737278,
+     "excessK": 2.260970761936,
+     "vapourExcessKgPerKg": 0.000753656920645,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "twin-b#22",
+     "emitter": "twin-b",
+     "bornS": 0,
+     "ageS": 1.467775608,
+     "at": {
+      "x": 1.454661786,
+      "y": 1.2,
+      "z": 0
+     },
+     "velocity": {
+      "x": 0.553283830483,
+      "y": 0,
+      "z": 0
+     },
+     "radiusM": 0.271108591533,
+     "excessK": 2.213135321931,
+     "vapourExcessKgPerKg": 0.000737711773977,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "twin-b#23",
+     "emitter": "twin-b",
+     "bornS": 0,
+     "ageS": 1.534540203,
+     "at": {
+      "x": 1.491601557,
+      "y": 1.2,
+      "z": 0
+     },
+     "velocity": {
+      "x": 0.542057448428,
+      "y": 0,
+      "z": 0
+     },
+     "radiusM": 0.276723436667,
+     "excessK": 2.16822979371,
+     "vapourExcessKgPerKg": 0.00072274326457,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "twin-b#24",
+     "emitter": "twin-b",
+     "bornS": 0,
+     "ageS": 1.601308893,
+     "at": {
+      "x": 1.527794023,
+      "y": 1.2,
+      "z": 0
+     },
+     "velocity": {
+      "x": 0.531491412872,
+      "y": 0,
+      "z": 0
+     },
+     "radiusM": 0.282224691439,
+     "excessK": 2.125965651488,
+     "vapourExcessKgPerKg": 0.000708655217163,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "twin-b#25",
+     "emitter": "twin-b",
+     "bornS": 0,
+     "ageS": 1.668081676,
+     "at": {
+      "x": 1.563283184,
+      "y": 1.2,
+      "z": 0
+     },
+     "velocity": {
+      "x": 0.521523185557,
+      "y": 0,
+      "z": 0
+     },
+     "radiusM": 0.287619043897,
+     "excessK": 2.08609274223,
+     "vapourExcessKgPerKg": 0.00069536424741,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "twin-b#26",
+     "emitter": "twin-b",
+     "bornS": 0,
+     "ageS": 1.734858551,
+     "at": {
+      "x": 1.598108872,
+      "y": 1.2,
+      "z": 0
+     },
+     "velocity": {
+      "x": 0.512098237955,
+      "y": 0,
+      "z": 0
+     },
+     "radiusM": 0.292912548575,
+     "excessK": 2.048392951819,
+     "vapourExcessKgPerKg": 0.000682797650606,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "twin-b#27",
+     "emitter": "twin-b",
+     "bornS": 0,
+     "ageS": 1.801639517,
+     "at": {
+      "x": 1.632307287,
+      "y": 1.2,
+      "z": 0
+     },
+     "velocity": {
+      "x": 0.503168776427,
+      "y": 0,
+      "z": 0
+     },
+     "radiusM": 0.298110707634,
+     "excessK": 2.012675105708,
+     "vapourExcessKgPerKg": 0.000670891701903,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "twin-b#28",
+     "emitter": "twin-b",
+     "bornS": 0,
+     "ageS": 1.868424572,
+     "at": {
+      "x": 1.665911441,
+      "y": 1.2,
+      "z": 0
+     },
+     "velocity": {
+      "x": 0.494692707273,
+      "y": 0,
+      "z": 0
+     },
+     "radiusM": 0.303218539094,
+     "excessK": 1.978770829092,
+     "vapourExcessKgPerKg": 0.000659590276364,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "twin-b#29",
+     "emitter": "twin-b",
+     "bornS": 0,
+     "ageS": 1.935213715,
+     "at": {
+      "x": 1.698951543,
+      "y": 1.2,
+      "z": 0
+     },
+     "velocity": {
+      "x": 0.486632790011,
+      "y": 0,
+      "z": 0
+     },
+     "radiusM": 0.308240634579,
+     "excessK": 1.946531160046,
+     "vapourExcessKgPerKg": 0.000648843720015,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "twin-b#30",
+     "emitter": "twin-b",
+     "bornS": 0,
+     "ageS": 2.002006944,
+     "at": {
+      "x": 1.731455319,
+      "y": 1.2,
+      "z": 0
+     },
+     "velocity": {
+      "x": 0.478955939687,
+      "y": 0,
+      "z": 0
+     },
+     "radiusM": 0.31318120848,
+     "excessK": 1.91582375875,
+     "vapourExcessKgPerKg": 0.000638607919583,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "twin-b#31",
+     "emitter": "twin-b",
+     "bornS": 0,
+     "ageS": 2.068804259,
+     "at": {
+      "x": 1.76344829,
+      "y": 1.2,
+      "z": 0
+     },
+     "velocity": {
+      "x": 0.471632648137,
+      "y": 0,
+      "z": 0
+     },
+     "radiusM": 0.318044140058,
+     "excessK": 1.88653059255,
+     "vapourExcessKgPerKg": 0.00062884353085,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "twin-b#32",
+     "emitter": "twin-b",
+     "bornS": 0,
+     "ageS": 2.135605659,
+     "at": {
+      "x": 1.794954011,
+      "y": 1.2,
+      "z": 0
+     },
+     "velocity": {
+      "x": 0.464636500931,
+      "y": 0,
+      "z": 0
+     },
+     "radiusM": 0.322833009674,
+     "excessK": 1.858546003726,
+     "vapourExcessKgPerKg": 0.000619515334575,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "twin-b#33",
+     "emitter": "twin-b",
+     "bornS": 0,
+     "ageS": 2.202411143,
+     "at": {
+      "x": 1.825994277,
+      "y": 1.2,
+      "z": 0
+     },
+     "velocity": {
+      "x": 0.457943771829,
+      "y": 0,
+      "z": 0
+     },
+     "radiusM": 0.327551130133,
+     "excessK": 1.831775087317,
+     "vapourExcessKgPerKg": 0.000610591695772,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "twin-b#34",
+     "emitter": "twin-b",
+     "bornS": 0,
+     "ageS": 2.26922071,
+     "at": {
+      "x": 1.856589302,
+      "y": 1.2,
+      "z": 0
+     },
+     "velocity": {
+      "x": 0.45153308045,
+      "y": 0,
+      "z": 0
+     },
+     "radiusM": 0.332201573915,
+     "excessK": 1.8061323218,
+     "vapourExcessKgPerKg": 0.000602044107267,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "twin-b#35",
+     "emitter": "twin-b",
+     "bornS": 0,
+     "ageS": 2.336034358,
+     "at": {
+      "x": 1.886757875,
+      "y": 1.2,
+      "z": 0
+     },
+     "velocity": {
+      "x": 0.445385101821,
+      "y": 0,
+      "z": 0
+     },
+     "radiusM": 0.336787196937,
+     "excessK": 1.781540407285,
+     "vapourExcessKgPerKg": 0.000593846802428,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "twin-b#36",
+     "emitter": "twin-b",
+     "bornS": 0,
+     "ageS": 2.402852088,
+     "at": {
+      "x": 1.916517496,
+      "y": 1.2,
+      "z": 0
+     },
+     "velocity": {
+      "x": 0.439482318755,
+      "y": 0,
+      "z": 0
+     },
+     "radiusM": 0.34131065938,
+     "excessK": 1.757929275019,
+     "vapourExcessKgPerKg": 0.000585976425006,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "twin-b#37",
+     "emitter": "twin-b",
+     "bornS": 0,
+     "ageS": 2.469673898,
+     "at": {
+      "x": 1.9458845,
+      "y": 1.2,
+      "z": 0
+     },
+     "velocity": {
+      "x": 0.433808809775,
+      "y": 0,
+      "z": 0
+     },
+     "radiusM": 0.345774443995,
+     "excessK": 1.735235239099,
+     "vapourExcessKgPerKg": 0.000578411746366,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "twin-b#38",
+     "emitter": "twin-b",
+     "bornS": 0,
+     "ageS": 2.536499788,
+     "at": {
+      "x": 1.97487416,
+      "y": 1.2,
+      "z": 0
+     },
+     "velocity": {
+      "x": 0.428350066714,
+      "y": 0,
+      "z": 0
+     },
+     "radiusM": 0.350180872273,
+     "excessK": 1.713400266856,
+     "vapourExcessKgPerKg": 0.000571133422285,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "twin-b#39",
+     "emitter": "twin-b",
+     "bornS": 0,
+     "ageS": 2.603329756,
+     "at": {
+      "x": 2.003500781,
+      "y": 1.2,
+      "z": 0
+     },
+     "velocity": {
+      "x": 0.423092837189,
+      "y": 0,
+      "z": 0
+     },
+     "radiusM": 0.354532118758,
+     "excessK": 1.692371348755,
+     "vapourExcessKgPerKg": 0.000564123782918,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "twin-b#40",
+     "emitter": "twin-b",
+     "bornS": 0,
+     "ageS": 2.670163804,
+     "at": {
+      "x": 2.031777788,
+      "y": 1.2,
+      "z": 0
+     },
+     "velocity": {
+      "x": 0.418024988038,
+      "y": 0,
+      "z": 0
+     },
+     "radiusM": 0.358830223772,
+     "excessK": 1.672099952152,
+     "vapourExcessKgPerKg": 0.000557366650717,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "twin-b#41",
+     "emitter": "twin-b",
+     "bornS": 0,
+     "ageS": 2.737001929,
+     "at": {
+      "x": 2.059717794,
+      "y": 1.2,
+      "z": 0
+     },
+     "velocity": {
+      "x": 0.413135386503,
+      "y": 0,
+      "z": 0
+     },
+     "radiusM": 0.363077104747,
+     "excessK": 1.652541546013,
+     "vapourExcessKgPerKg": 0.000550847182004,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "twin-b#42",
+     "emitter": "twin-b",
+     "bornS": 0,
+     "ageS": 2.803844131,
+     "at": {
+      "x": 2.087332673,
+      "y": 1.2,
+      "z": 0
+     },
+     "velocity": {
+      "x": 0.408413796484,
+      "y": 0,
+      "z": 0
+     },
+     "radiusM": 0.367274566362,
+     "excessK": 1.633655185937,
+     "vapourExcessKgPerKg": 0.000544551728646,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "twin-b#43",
+     "emitter": "twin-b",
+     "bornS": 0,
+     "ageS": 2.87069041,
+     "at": {
+      "x": 2.114633616,
+      "y": 1.2,
+      "z": 0
+     },
+     "velocity": {
+      "x": 0.403850787664,
+      "y": 0,
+      "z": 0
+     },
+     "radiusM": 0.371424309626,
+     "excessK": 1.615403150655,
+     "vapourExcessKgPerKg": 0.000538467716885,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "twin-b#44",
+     "emitter": "twin-b",
+     "bornS": 0,
+     "ageS": 2.937540765,
+     "at": {
+      "x": 2.141631184,
+      "y": 1.2,
+      "z": 0
+     },
+     "velocity": {
+      "x": 0.399437655649,
+      "y": 0,
+      "z": 0
+     },
+     "radiusM": 0.375527940039,
+     "excessK": 1.597750622596,
+     "vapourExcessKgPerKg": 0.000532583540865,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "twin-b#45",
+     "emitter": "twin-b",
+     "bornS": 0,
+     "ageS": 3.004395195,
+     "at": {
+      "x": 2.168335361,
+      "y": 1.2,
+      "z": 0
+     },
+     "velocity": {
+      "x": 0.395166351589,
+      "y": 0,
+      "z": 0
+     },
+     "radiusM": 0.379586974945,
+     "excessK": 1.580665406357,
+     "vapourExcessKgPerKg": 0.000526888468786,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "twin-b#46",
+     "emitter": "twin-b",
+     "bornS": 0,
+     "ageS": 3.071253701,
+     "at": {
+      "x": 2.194755593,
+      "y": 1.2,
+      "z": 0
+     },
+     "velocity": {
+      "x": 0.391029419965,
+      "y": 0,
+      "z": 0
+     },
+     "radiusM": 0.383602850173,
+     "excessK": 1.564117679858,
+     "vapourExcessKgPerKg": 0.000521372559953,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "twin-b#47",
+     "emitter": "twin-b",
+     "bornS": 0,
+     "ageS": 3.138116281,
+     "at": {
+      "x": 2.220900829,
+      "y": 1.2,
+      "z": 0
+     },
+     "velocity": {
+      "x": 0.387019943448,
+      "y": 0,
+      "z": 0
+     },
+     "radiusM": 0.387576926046,
+     "excessK": 1.548079773792,
+     "vapourExcessKgPerKg": 0.000516026591264,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "twin-b#48",
+     "emitter": "twin-b",
+     "bornS": 0,
+     "ageS": 3.204982936,
+     "at": {
+      "x": 2.246779558,
+      "y": 1.2,
+      "z": 0
+     },
+     "velocity": {
+      "x": 0.38313149391,
+      "y": 0,
+      "z": 0
+     },
+     "radiusM": 0.391510492832,
+     "excessK": 1.532525975638,
+     "vapourExcessKgPerKg": 0.000510841991879,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "twin-b#49",
+     "emitter": "twin-b",
+     "bornS": 0,
+     "ageS": 3.271853664,
+     "at": {
+      "x": 2.27239984,
+      "y": 1.2,
+      "z": 0
+     },
+     "velocity": {
+      "x": 0.379358088768,
+      "y": 0,
+      "z": 0
+     },
+     "radiusM": 0.395404775702,
+     "excessK": 1.517432355073,
+     "vapourExcessKgPerKg": 0.000505810785024,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "twin-b#50",
+     "emitter": "twin-b",
+     "bornS": 0,
+     "ageS": 3.338728466,
+     "at": {
+      "x": 2.297769337,
+      "y": 1.2,
+      "z": 0
+     },
+     "velocity": {
+      "x": 0.375694152015,
+      "y": 0,
+      "z": 0
+     },
+     "radiusM": 0.399260939238,
+     "excessK": 1.502776608061,
+     "vapourExcessKgPerKg": 0.00050092553602,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "twin-b#51",
+     "emitter": "twin-b",
+     "bornS": 0,
+     "ageS": 3.405607341,
+     "at": {
+      "x": 2.322895339,
+      "y": 1.2,
+      "z": 0
+     },
+     "velocity": {
+      "x": 0.37213447933,
+      "y": 0,
+      "z": 0
+     },
+     "radiusM": 0.403080091558,
+     "excessK": 1.488537917318,
+     "vapourExcessKgPerKg": 0.000496179305773,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "twin-b#52",
+     "emitter": "twin-b",
+     "bornS": 0,
+     "ageS": 3.472490288,
+     "at": {
+      "x": 2.34778479,
+      "y": 1.2,
+      "z": 0
+     },
+     "velocity": {
+      "x": 0.368674206785,
+      "y": 0,
+      "z": 0
+     },
+     "radiusM": 0.406863288072,
+     "excessK": 1.474696827141,
+     "vapourExcessKgPerKg": 0.000491565609047,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "twin-b#53",
+     "emitter": "twin-b",
+     "bornS": 0,
+     "ageS": 3.539377307,
+     "at": {
+      "x": 2.372444309,
+      "y": 1.2,
+      "z": 0
+     },
+     "velocity": {
+      "x": 0.365308782723,
+      "y": 0,
+      "z": 0
+     },
+     "radiusM": 0.410611534937,
+     "excessK": 1.461235130892,
+     "vapourExcessKgPerKg": 0.000487078376964,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "twin-b#54",
+     "emitter": "twin-b",
+     "bornS": 0,
+     "ageS": 3.606268399,
+     "at": {
+      "x": 2.396880212,
+      "y": 1.2,
+      "z": 0
+     },
+     "velocity": {
+      "x": 0.362033942413,
+      "y": 0,
+      "z": 0
+     },
+     "radiusM": 0.414325792218,
+     "excessK": 1.448135769652,
+     "vapourExcessKgPerKg": 0.000482711923217,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "twin-b#55",
+     "emitter": "twin-b",
+     "bornS": 0,
+     "ageS": 3.673163562,
+     "at": {
+      "x": 2.421098532,
+      "y": 1.2,
+      "z": 0
+     },
+     "velocity": {
+      "x": 0.358845685189,
+      "y": 0,
+      "z": 0
+     },
+     "radiusM": 0.41800697679,
+     "excessK": 1.435382740756,
+     "vapourExcessKgPerKg": 0.000478460913585,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "twin-b#56",
+     "emitter": "twin-b",
+     "bornS": 0,
+     "ageS": 3.740062796,
+     "at": {
+      "x": 2.445105033,
+      "y": 1.2,
+      "z": 0
+     },
+     "velocity": {
+      "x": 0.355740253771,
+      "y": 0,
+      "z": 0
+     },
+     "radiusM": 0.421655965019,
+     "excessK": 1.422961015085,
+     "vapourExcessKgPerKg": 0.000474320338362,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "twin-b#57",
+     "emitter": "twin-b",
+     "bornS": 0,
+     "ageS": 3.806966101,
+     "at": {
+      "x": 2.468905232,
+      "y": 1.2,
+      "z": 0
+     },
+     "velocity": {
+      "x": 0.352714115537,
+      "y": 0,
+      "z": 0
+     },
+     "radiusM": 0.425273595222,
+     "excessK": 1.410856462147,
+     "vapourExcessKgPerKg": 0.000470285487382,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    },
+    {
+     "id": "twin-b#58",
+     "emitter": "twin-b",
+     "bornS": 0,
+     "ageS": 3.873873476,
+     "at": {
+      "x": 2.492504408,
+      "y": 1.2,
+      "z": 0
+     },
+     "velocity": {
+      "x": 0.349763945523,
+      "y": 0,
+      "z": 0
+     },
+     "radiusM": 0.428860669946,
+     "excessK": 1.399055782092,
+     "vapourExcessKgPerKg": 0.000466351927364,
+     "condensateKgPerKg": 0,
+     "carries": "airflow"
+    }
+   ]
+  }
+ ],
+ "expected": {
+  "plume": {
+   "samples": [
+    {
+     "at": [
+      0,
+      1,
+      0
+     ],
+     "u": [
+      0.0,
+      0.6497661351195914,
+      0.0
+     ],
+     "inducedMS": 0.6497661351195914,
+     "excessK": 8.250423711654465,
+     "vapourExcessKgPerKg": 0.0
+    },
+    {
+     "at": [
+      0.05,
+      1,
+      0
+     ],
+     "u": [
+      -0.019186787339117623,
+      0.5055723607836229,
+      0.0
+     ],
+     "inducedMS": 0.5059363050787344,
+     "excessK": 6.380857029746831,
+     "vapourExcessKgPerKg": 0.0
+    },
+    {
+     "at": [
+      0.1,
+      1.2,
+      0
+     ],
+     "u": [
+      -0.0280102769176941,
+      0.3051026228235075,
+      0.0
+     ],
+     "inducedMS": 0.30638568188932946,
+     "excessK": 2.9914461319689045,
+     "vapourExcessKgPerKg": 0.0
+    },
+    {
+     "at": [
+      0,
+      1.6,
+      0.12
+     ],
+     "u": [
+      0.0,
+      0.31268223875223833,
+      -0.023075295301604393
+     ],
+     "inducedMS": 0.3135325368831248,
+     "excessK": 2.118186732543875,
+     "vapourExcessKgPerKg": 0.0
+    },
+    {
+     "at": [
+      0.3,
+      1,
+      0
+     ],
+     "u": [
+      -0.0166537498739371,
+      0.00405669931038885,
+      0.0
+     ],
+     "inducedMS": 0.017140717434184875,
+     "excessK": 0.0016527227439936901,
+     "vapourExcessKgPerKg": 0.0
+    },
+    {
+     "at": [
+      0.5,
+      1.4,
+      0.2
+     ],
+     "u": [
+      -0.009922883782226655,
+      0.0007641958931301685,
+      -0.003969153512890663
+     ],
+     "inducedMS": 0.010714560071582318,
+     "excessK": 7.729866954339542e-06,
+     "vapourExcessKgPerKg": 0.0
+    },
+    {
+     "at": [
+      1.5,
+      1,
+      0
+     ],
+     "u": [
+      -0.0025389191114340037,
+      -4.478590427839134e-05,
+      0.0
+     ],
+     "inducedMS": 0.0025393140868405517,
+     "excessK": 0.0,
+     "vapourExcessKgPerKg": 0.0
+    },
+    {
+     "at": [
+      3,
+      0.5,
+      1
+     ],
+     "u": [
+      -0.000863406971495105,
+      -6.693160568636195e-05,
+      -0.00028780232383170167
+     ],
+     "inducedMS": 0.0009125686910414094,
+     "excessK": 0.0,
+     "vapourExcessKgPerKg": 0.0
+    },
+    {
+     "at": [
+      0.4,
+      0,
+      0
+     ],
+     "u": [
+      -0.003122890392137043,
+      0.0,
+      0.0
+     ],
+     "inducedMS": 0.003122890392137043,
+     "excessK": 0.0,
+     "vapourExcessKgPerKg": 0.0
+    },
+    {
+     "at": [
+      0,
+      0.2,
+      0
+     ],
+     "u": [
+      0.0,
+      0.006898585550852339,
+      0.0
+     ],
+     "inducedMS": 0.006898585550852339,
+     "excessK": 0.0,
+     "vapourExcessKgPerKg": 0.0
+    },
+    {
+     "at": [
+      0.05,
+      2.39,
+      0
+     ],
+     "u": [
+      -0.003276739998568667,
+      0.45148312341460384,
+      0.0
+     ],
+     "inducedMS": 0.45149501409564274,
+     "excessK": 2.030784677126399,
+     "vapourExcessKgPerKg": 0.0
+    },
+    {
+     "at": [
+      0,
+      3,
+      0
+     ],
+     "u": [
+      0.0,
+      -0.0052086183447807525,
+      0.0
+     ],
+     "inducedMS": 0.0052086183447807525,
+     "excessK": 0.0,
+     "vapourExcessKgPerKg": 0.0
+    }
+   ],
+   "lineSink": [
+    {
+     "at": [
+      0.3,
+      1.2,
+      0
+     ],
+     "radialInflowMS": 0.01897057917853609
+    },
+    {
+     "at": [
+      0.45,
+      1.4,
+      0
+     ],
+     "radialInflowMS": 0.01330521241352435
+    },
+    {
+     "at": [
+      0.6,
+      1,
+      0
+     ],
+     "radialInflowMS": 0.007828286001604137
+    },
+    {
+     "at": [
+      0.9,
+      1.4,
+      0
+     ],
+     "radialInflowMS": 0.005570867431331818
+    }
+   ],
+   "flux": [
+    {
+     "heightM": 1,
+     "sampledM3S": 0.02361864674582445,
+     "similarityM3S": 0.01974539864812008,
+     "inducedM3S": 0.0034535202739116215
+    },
+    {
+     "heightM": 1.4,
+     "sampledM3S": 0.037579406965810885,
+     "similarityM3S": 0.034594944040753244,
+     "inducedM3S": 0.0022308047187408727
+    },
+    {
+     "heightM": 1.8,
+     "sampledM3S": 0.05022931251171481,
+     "similarityM3S": 0.05259204780313928,
+     "inducedM3S": -0.003536226859021426
+    }
+   ],
+   "streams": [
+    {
+     "seed": [
+      0.02,
+      0.6,
+      0
+     ],
+     "points": [
+      [
+       0.019574191933871922,
+       0.6199954627005037,
+       0.0
+      ],
+      [
+       0.019172566246604565,
+       0.639991429205671,
+       0.0
+      ],
+      [
+       0.01878853625410776,
+       0.6599877393183975,
+       0.0
+      ],
+      [
+       0.0184323684652268,
+       0.6799845672254239,
+       0.0
+      ],
+      [
+       0.018087105894355013,
+       0.6999815855711581,
+       0.0
+      ],
+      [
+       0.017765439604015137,
+       0.7199789982612578,
+       0.0
+      ],
+      [
+       0.017454495111437426,
+       0.7399765807171355,
+       0.0
+      ],
+      [
+       0.017161816689673627,
+       0.7599744383576068,
+       0.0
+      ],
+      [
+       0.01687911822593192,
+       0.779972440248167,
+       0.0
+      ],
+      [
+       0.01661140876780658,
+       0.7999706479079848,
+       0.0
+      ],
+      [
+       0.016353337050531734,
+       0.8199689827299694,
+       0.0
+      ],
+      [
+       0.016106512980254683,
+       0.8399674591456249,
+       0.0
+      ],
+      [
+       0.01586952128333354,
+       0.8599660549327918,
+       0.0
+      ],
+      [
+       0.015641646390036495,
+       0.8799647562622267,
+       0.0
+      ],
+      [
+       0.015422513571082052,
+       0.8999635556893192,
+       0.0
+      ],
+      [
+       0.015211136419981754,
+       0.919962438380572,
+       0.0
+      ],
+      [
+       0.015007942923117558,
+       0.9399614061218798,
+       0.0
+      ],
+      [
+       0.014811382750383278,
+       0.9599604399354015,
+       0.0
+      ],
+      [
+       0.014621865008509328,
+       0.9799595419566426,
+       0.0
+      ],
+      [
+       0.014438526031372538,
+       0.9999587014548956,
+       0.0
+      ],
+      [
+       0.01426143981557957,
+       1.0199579174228846,
+       0.0
+      ],
+      [
+       0.014089941333021494,
+       1.0399571819674418,
+       0.0
+      ],
+      [
+       0.013923717114539236,
+       1.0599564911730293,
+       0.0
+      ],
+      [
+       0.013762906240423015,
+       1.0799558445765545,
+       0.0
+      ],
+      [
+       0.013606672286470866,
+       1.0999552343232142,
+       0.0
+      ],
+      [
+       0.01345549300271034,
+       1.1199546628629342,
+       0.0
+      ],
+      [
+       0.013308178012169596,
+       1.1399541202892503,
+       0.0
+      ],
+      [
+       0.013165657037276053,
+       1.1599536124380665,
+       0.0
+      ],
+      [
+       0.013026604040135798,
+       1.1799531290148095,
+       0.0
+      ],
+      [
+       0.012891969053678056,
+       1.199952675814652,
+       0.0
+      ],
+      [
+       0.012760442859970942,
+       1.2199522432930534,
+       0.0
+      ],
+      [
+       0.012632864709435223,
+       1.2399518363655164,
+       0.0
+      ],
+      [
+       0.012508301368610752,
+       1.259951448426631,
+       0.0
+      ],
+      [
+       0.01238719628176559,
+       1.2799510817517086,
+       0.0
+      ],
+      [
+       0.012269104452501055,
+       1.2999507330725149,
+       0.0
+      ],
+      [
+       0.012153888154138008,
+       1.31995040118944,
+       0.0
+      ],
+      [
+       0.012041715688403306,
+       1.339950086598156,
+       0.0
+      ],
+      [
+       0.011932021505173867,
+       1.3599497857635008,
+       0.0
+      ],
+      [
+       0.011825255238342785,
+       1.3799495007735063,
+       0.0
+      ],
+      [
+       0.011720773534607936,
+       1.3999492278444443,
+       0.0
+      ],
+      [
+       0.011618919585121314,
+       1.4199489684781057,
+       0.0
+      ],
+      [
+       0.011519310564443466,
+       1.4399487204082264,
+       0.0
+      ],
+      [
+       0.011421945158219362,
+       1.4599484833999958,
+       0.0
+      ],
+      [
+       0.011326908824531029,
+       1.4799482575895624,
+       0.0
+      ],
+      [
+       0.011233819385622155,
+       1.499948040939224,
+       0.0
+      ],
+      [
+       0.011142960964923529,
+       1.519947834550069,
+       0.0
+      ],
+      [
+       0.011053948993724827,
+       1.5399476364592137,
+       0.0
+      ],
+      [
+       0.0109668967454253,
+       1.5599474470010297,
+       0.0
+      ],
+      [
+       0.01088174782073409,
+       1.579947265731803,
+       0.0
+      ],
+      [
+       0.010798295355126683,
+       1.5999470916172143,
+       0.0
+      ],
+      [
+       0.010716724168651924,
+       1.6199469252644878,
+       0.0
+      ],
+      [
+       0.01063674473106978,
+       1.6399467653383728,
+       0.0
+      ],
+      [
+       0.010558455342348071,
+       1.6599466121038235,
+       0.0
+      ],
+      [
+       0.010481818502098252,
+       1.6799464652667822,
+       0.0
+      ],
+      [
+       0.010406666686222199,
+       1.6999463240666939,
+       0.0
+      ],
+      [
+       0.01033313617395214,
+       1.7199461888934717,
+       0.0
+      ],
+      [
+       0.010261030855347178,
+       1.73994605890693,
+       0.0
+      ],
+      [
+       0.010190384113489697,
+       1.7599459341292651,
+       0.0
+      ],
+      [
+       0.010121231525639509,
+       1.7799458145721911,
+       0.0
+      ],
+      [
+       0.01005340731535721,
+       1.7999456995641434,
+       0.0
+      ]
+     ],
+     "travelS": [
+      0.028850801921321403,
+      0.05770572482568294,
+      0.08664075320200171,
+      0.11561515885834064,
+      0.1447137970148761,
+      0.17387642485561117,
+      0.20319769425352685,
+      0.23261198918369752,
+      0.26218472906064677,
+      0.291891186540421,
+      0.3217542203980668,
+      0.351766703274205,
+      0.3819417072561986,
+      0.41228324639472497,
+      0.4427825002416469,
+      0.47345637872375257,
+      0.5042961526731518,
+      0.5353111118892016,
+      0.5664913352411899,
+      0.5978497916719361,
+      0.6293799524840876,
+      0.6610834477950799,
+      0.6929602524775327,
+      0.7250088287086709,
+      0.7572366034404494,
+      0.7896303499484677,
+      0.8222037570267954,
+      0.8549408425782353,
+      0.8878601740412286,
+      0.9209415069942806,
+      0.9542021802509859,
+      0.9876241507714079,
+      1.0212231005272248,
+      1.054986635204535,
+      1.088921102900792,
+      1.1230232477449025,
+      1.1572882955602184,
+      1.1917248222371115,
+      1.2263211399176837,
+      1.2610885926927675,
+      1.2960159260165425,
+      1.3311089596583694,
+      1.3663655872689133,
+      1.4017812906451066,
+      1.4373638479472848,
+      1.4731031963189885,
+      1.5090078896518389,
+      1.5450715230359744,
+      1.58129405000927,
+      1.617679558326848,
+      1.6542207436704681,
+      1.6909251144083106,
+      1.727787665519269,
+      1.7648085947191208,
+      1.8019916637844142,
+      1.8393310831776457,
+      1.8768324085697468,
+      1.914493974300819,
+      1.9523137241895387,
+      1.9902976775495633
+     ],
+     "advected": [
+      {
+       "timeS": 0.5,
+       "at": [
+        0.015035971296516055,
+        0.937183110576921,
+        0.0
+       ]
+      },
+      {
+       "timeS": 1,
+       "at": [
+        0.01258644689446755,
+        1.2473285483938434,
+        0.0
+       ]
+      },
+      {
+       "timeS": 2,
+       "at": [
+        0.01003637782769808,
+        1.8050410864568147,
+        0.0
+       ]
+      },
+      {
+       "timeS": 4,
+       "at": [
+        0.008433822423300895,
+        2.7177533573425805,
+        0.0
+       ]
+      }
+     ]
+    },
+    {
+     "seed": [
+      0.4,
+      0.9,
+      0
+     ],
+     "points": [
+      [
+       0.3807434177172531,
+       0.9054022128950251,
+       0.0
+      ],
+      [
+       0.36147452574436884,
+       0.9107603452424748,
+       0.0
+      ],
+      [
+       0.3421905394797795,
+       0.9160638871114265,
+       0.0
+      ],
+      [
+       0.3228893028696085,
+       0.9213042951333054,
+       0.0
+      ],
+      [
+       0.30357077794413656,
+       0.9264806136243148,
+       0.0
+      ],
+      [
+       0.2842406733872946,
+       0.9316135480787963,
+       0.0
+      ],
+      [
+       0.26492016756772446,
+       0.9367823911557408,
+       0.0
+      ],
+      [
+       0.24566936087103697,
+       0.9422035816065811,
+       0.0
+      ],
+      [
+       0.22664665897077987,
+       0.9483696529360655,
+       0.0
+      ],
+      [
+       0.2082432973652577,
+       0.9561696530271998,
+       0.0
+      ],
+      [
+       0.19125728872384498,
+       0.9666743255450667,
+       0.0
+      ],
+      [
+       0.17665515402844192,
+       0.9802923893439929,
+       0.0
+      ],
+      [
+       0.16475166077090844,
+       0.9963375870493386,
+       0.0
+      ],
+      [
+       0.15511378557228012,
+       1.013850379976882,
+       0.0
+      ],
+      [
+       0.14713338288548625,
+       1.0321840317738753,
+       0.0
+      ],
+      [
+       0.14037797818216474,
+       1.0510053187351966,
+       0.0
+      ],
+      [
+       0.13469819932025737,
+       1.0701796301165527,
+       0.0
+      ],
+      [
+       0.12987243314776745,
+       1.089587459217678,
+       0.0
+      ],
+      [
+       0.12571451445043907,
+       1.1091496744849767,
+       0.0
+      ],
+      [
+       0.12209076951635019,
+       1.12881818055413,
+       0.0
+      ],
+      [
+       0.11887486677771446,
+       1.1485576706782725,
+       0.0
+      ],
+      [
+       0.11599353723910492,
+       1.16834880847962,
+       0.0
+      ],
+      [
+       0.11339390414255324,
+       1.188179006585631,
+       0.0
+      ],
+      [
+       0.11101625474570691,
+       1.208037069482656,
+       0.0
+      ],
+      [
+       0.10884046916506333,
+       1.2279182969182663,
+       0.0
+      ],
+      [
+       0.10682383858465236,
+       1.247816317388021,
+       0.0
+      ],
+      [
+       0.1049566657616212,
+       1.2677289307402266,
+       0.0
+      ],
+      [
+       0.10320908767688826,
+       1.2876524072751891,
+       0.0
+      ],
+      [
+       0.10157615490973955,
+       1.3075856122128848,
+       0.0
+      ],
+      [
+       0.10003603157095227,
+       1.3275262075708383,
+       0.0
+      ],
+      [
+       0.09858633930400819,
+       1.3474735837612264,
+       0.0
+      ],
+      [
+       0.09721042031376055,
+       1.367426186390797,
+       0.0
+      ],
+      [
+       0.09590755870449336,
+       1.3873836960801398,
+       0.0
+      ],
+      [
+       0.09466523482032434,
+       1.4073450657557167,
+       0.0
+      ],
+      [
+       0.09348269786784968,
+       1.4273100699594774,
+       0.0
+      ],
+      [
+       0.0923513541287441,
+       1.4472780394709537,
+       0.0
+      ],
+      [
+       0.09126899087382125,
+       1.4672487268263903,
+       0.0
+      ],
+      [
+       0.09023140333257693,
+       1.4872217893042945,
+       0.0
+      ],
+      [
+       0.0892339546269286,
+       1.5071968984420274,
+       0.0
+      ],
+      [
+       0.08827607572839377,
+       1.5271739438032212,
+       0.0
+      ],
+      [
+       0.08735201689411527,
+       1.5471525827569128,
+       0.0
+      ],
+      [
+       0.08646255671877295,
+       1.5671327925066842,
+       0.0
+      ],
+      [
+       0.08560282322217729,
+       1.5871143031806132,
+       0.0
+      ],
+      [
+       0.08477265122847842,
+       1.6070970648840186,
+       0.0
+      ],
+      [
+       0.08396989730184022,
+       1.6270809463349913,
+       0.0
+      ],
+      [
+       0.08319217793762197,
+       1.647065818347207,
+       0.0
+      ],
+      [
+       0.08243975179973248,
+       1.6670516585224848,
+       0.0
+      ],
+      [
+       0.08170926624284411,
+       1.687038312608187,
+       0.0
+      ],
+      [
+       0.08100118154530385,
+       1.7070257732690028,
+       0.0
+      ],
+      [
+       0.08031364947400572,
+       1.7270139511690652,
+       0.0
+      ],
+      [
+       0.07964550166041344,
+       1.74700278684448,
+       0.0
+      ],
+      [
+       0.07899695633360491,
+       1.7669922680912145,
+       0.0
+      ],
+      [
+       0.07836576454291151,
+       1.7869823047900006,
+       0.0
+      ],
+      [
+       0.077752279507737,
+       1.8069728930148647,
+       0.0
+      ],
+      [
+       0.07715558391777849,
+       1.8269639892480585,
+       0.0
+      ],
+      [
+       0.0765746019465657,
+       1.8469555484963065,
+       0.0
+      ],
+      [
+       0.07600981377617042,
+       1.8669475718147444,
+       0.0
+      ],
+      [
+       0.07545979523091408,
+       1.8869400068065654,
+       0.0
+      ],
+      [
+       0.07492460781452763,
+       1.906932844514709,
+       0.0
+      ],
+      [
+       0.07440432437366662,
+       1.92692607552865,
+       0.0
+      ]
+     ],
+     "travelS": [
+      1.648551859417163,
+      3.203672008837124,
+      4.666935057112223,
+      6.039834350426525,
+      7.323688328601012,
+      8.519452166542308,
+      9.627272882454708,
+      10.645567682903966,
+      11.568977341105425,
+      12.384543213955624,
+      13.06938359388768,
+      13.605518681732173,
+      14.006036217361633,
+      14.305874574659267,
+      14.537355752998229,
+      14.722946548631208,
+      14.877776842507592,
+      15.010969191882333,
+      15.128318856894127,
+      15.233672234304642,
+      15.329756829411485,
+      15.418462555010727,
+      15.501184937856776,
+      15.57901651150113,
+      15.65273201881567,
+      15.72301416733141,
+      15.79033437304535,
+      15.855141707867224,
+      15.917741500309244,
+      15.97844490151467,
+      16.037456683156574,
+      16.095001863306116,
+      16.15122532625614,
+      16.20629458068112,
+      16.260316896440678,
+      16.313415777135962,
+      16.365678512078237,
+      16.417190690896497,
+      16.46803071323692,
+      16.5182547560828,
+      16.56793526807227,
+      16.617111222121594,
+      16.6658428147271,
+      16.71416441031944,
+      16.762117563109197,
+      16.80974059312418,
+      16.857058178449524,
+      16.904108966675032,
+      16.950912315612108,
+      16.997497185089376,
+      17.043887720043212,
+      17.0900997009567,
+      17.13616088069967,
+      17.182084148201387,
+      17.227888576303005,
+      17.27359354348076,
+      17.319208884150168,
+      17.36475555851326,
+      17.4102450458867,
+      17.455688936845494
+     ],
+     "advected": [
+      {
+       "timeS": 0.5,
+       "at": [
+        0.3942757761515901,
+        0.9016101406239864,
+        0.0
+       ]
+      },
+      {
+       "timeS": 1,
+       "at": [
+        0.3884524492004742,
+        0.9032445865534601,
+        0.0
+       ]
+      },
+      {
+       "timeS": 2,
+       "at": [
+        0.37648883428126695,
+        0.9065897843111663,
+        0.0
+       ]
+      },
+      {
+       "timeS": 4,
+       "at": [
+        0.35113117988744214,
+        0.9136129759220485,
+        0.0
+       ]
+      }
+     ]
+    },
+    {
+     "seed": [
+      0.5,
+      1.3,
+      0.3
+     ],
+     "points": [
+      [
+       0.4829422580810855,
+       1.3020700712244846,
+       0.2897653548486513
+      ],
+      [
+       0.4658896398833813,
+       1.304196785193248,
+       0.2795337839300288
+      ],
+      [
+       0.4488420099546518,
+       1.3063772156045876,
+       0.2693052059727911
+      ],
+      [
+       0.43179922020987566,
+       1.3086085167887824,
+       0.2590795321259253
+      ],
+      [
+       0.4147611483840692,
+       1.3108882967012585,
+       0.24885668903044145
+      ],
+      [
+       0.39772778222571536,
+       1.3132154074541382,
+       0.2386366693354292
+      ],
+      [
+       0.380699426797357,
+       1.3155918596953164,
+       0.2284196560784141
+      ],
+      [
+       0.36367705145026324,
+       1.3180258532998106,
+       0.2182062308701579
+      ],
+      [
+       0.3466631430689041,
+       1.3205389830226477,
+       0.2079978858413424
+      ],
+      [
+       0.32966336914596156,
+       1.3231787169750453,
+       0.19779802148757683
+      ],
+      [
+       0.3126900964465234,
+       1.326040121225724,
+       0.18761405786791394
+      ],
+      [
+       0.2957702152617102,
+       1.32930083562629,
+       0.17746212915702597
+      ],
+      [
+       0.2789630541828628,
+       1.3332698441143684,
+       0.16737783250971758
+      ],
+      [
+       0.2624007082863808,
+       1.338440230800298,
+       0.15744042497182825
+      ],
+      [
+       0.24635517926470948,
+       1.3454680048792917,
+       0.14781310755882549
+      ],
+      [
+       0.23129213590825667,
+       1.3549877184373877,
+       0.1387752815449538
+      ],
+      [
+       0.21775474445323198,
+       1.367228782822416,
+       0.130652846671939
+      ],
+      [
+       0.20604475396406371,
+       1.3818157030839429,
+       0.12362685237843804
+      ],
+      [
+       0.1960879867233999,
+       1.3980859031068629,
+       0.11765279203403972
+      ],
+      [
+       0.18759534052699353,
+       1.415454171514806,
+       0.11255720431619588
+      ],
+      [
+       0.18024903807359385,
+       1.4335224867887262,
+       0.10814942284415607
+      ],
+      [
+       0.1737862451927061,
+       1.452045896025076,
+       0.1042717471156235
+      ],
+      [
+       0.1680775316063001,
+       1.4709034721179746,
+       0.10084651896377987
+      ],
+      [
+       0.16305724195590945,
+       1.4900260621857477,
+       0.09783434517354553
+      ],
+      [
+       0.1586192203849064,
+       1.5093439068930687,
+       0.09517153223094367
+      ],
+      [
+       0.1546657860201788,
+       1.5288046446151478,
+       0.0927994716121071
+      ],
+      [
+       0.15111218548532132,
+       1.5483701804947727,
+       0.09066731129119263
+      ],
+      [
+       0.14788884505456779,
+       1.568013469349457,
+       0.08873330703274049
+      ],
+      [
+       0.1449522436804141,
+       1.5877178801030347,
+       0.08697134620824827
+      ],
+      [
+       0.1422551360528354,
+       1.607468865978055,
+       0.08535308163170108
+      ],
+      [
+       0.1397646820347398,
+       1.6272567471365544,
+       0.0838588092208437
+      ],
+      [
+       0.13745534854850983,
+       1.647074518251817,
+       0.0824732091291057
+      ],
+      [
+       0.13530140236191474,
+       1.6669160816771644,
+       0.08118084141714864
+      ],
+      [
+       0.13328768069546346,
+       1.6867776850293001,
+       0.0799726084172779
+      ],
+      [
+       0.1313953460161762,
+       1.7066555187184413,
+       0.07883720760970558
+      ],
+      [
+       0.12961383273244922,
+       1.726547288885876,
+       0.07776829963946941
+      ],
+      [
+       0.12793028692135056,
+       1.7464506609208468,
+       0.07675817215281022
+      ],
+      [
+       0.1263358061616523,
+       1.7663640144458452,
+       0.07580148369699127
+      ],
+      [
+       0.12482285090997866,
+       1.7862860169082018,
+       0.0748937105459871
+      ],
+      [
+       0.12338271441215369,
+       1.8062153631618045,
+       0.07402962864729215
+      ],
+      [
+       0.1220116680463135,
+       1.826151336194142,
+       0.07320700082778804
+      ],
+      [
+       0.12070162790924915,
+       1.8460928891963337,
+       0.07242097674554944
+      ],
+      [
+       0.1194505488199802,
+       1.8660395929245779,
+       0.07167032929198808
+      ],
+      [
+       0.1182524181659731,
+       1.885990716840705,
+       0.07095145089958378
+      ],
+      [
+       0.11710466585880068,
+       1.9059458710774337,
+       0.07026279951528033
+      ],
+      [
+       0.11600466302044865,
+       1.9259046819364187,
+       0.06960279781226911
+      ],
+      [
+       0.11494844106287572,
+       1.9458667099421636,
+       0.06896906463772536
+      ],
+      [
+       0.11393546048199601,
+       1.9658317862840748,
+       0.06836127628919755
+      ],
+      [
+       0.112962377299178,
+       1.9857995609350914,
+       0.06777742637950676
+      ],
+      [
+       0.11202837434736447,
+       2.0057698748215524,
+       0.06721702460841864
+      ],
+      [
+       0.11113276564370438,
+       2.025742580082104,
+       0.0666796593862226
+      ],
+      [
+       0.11027366018758537,
+       2.0457174661764315,
+       0.0661641961125512
+      ],
+      [
+       0.10945187058303334,
+       2.0656944878891847,
+       0.06567112234981999
+      ],
+      [
+       0.10866691267049892,
+       2.0856735231685914,
+       0.06520014760229936
+      ],
+      [
+       0.10791886130545668,
+       2.105654484747814,
+       0.06475131678327402
+      ],
+      [
+       0.10720689381781857,
+       2.125637239467944,
+       0.06432413629069117
+      ],
+      [
+       0.10652835529148606,
+       2.1456215758562207,
+       0.06391701317489167
+      ],
+      [
+       0.1058820224024372,
+       2.1656073648551746,
+       0.06352921344146235
+      ],
+      [
+       0.1052668430601636,
+       2.1855944909765492,
+       0.06316010583609818
+      ],
+      [
+       0.1046806509982921,
+       2.2055828019266386,
+       0.06280839059897529
+      ]
+     ],
+     "travelS": [
+      2.0829317859777623,
+      4.077434625405682,
+      5.98491790389552,
+      7.80678158844387,
+      9.544409711132449,
+      11.199160268626096,
+      12.77234549449979,
+      14.265204491581272,
+      15.67884158794471,
+      17.014120725840737,
+      18.27146222838729,
+      19.450427656219613,
+      20.548848693126804,
+      21.561057049662644,
+      22.47558460460567,
+      23.274977130433527,
+      23.944345242568932,
+      24.485593801074323,
+      24.91797275228098,
+      25.26635007814045,
+      25.552404269607717,
+      25.7922642545308,
+      25.99797143457227,
+      26.17825743806788,
+      26.338980692478728,
+      26.484275392525,
+      26.617196016254695,
+      26.740019971743184,
+      26.854469863547315,
+      26.961905930112216,
+      27.063395814582872,
+      27.15978198280576,
+      27.251773810769677,
+      27.339923687204642,
+      27.424721043307297,
+      27.50655046888319,
+      27.585756271169235,
+      27.662622987582,
+      27.737394704827423,
+      27.810293712454932,
+      27.88149595461044,
+      27.951182165803115,
+      28.019484425735286,
+      28.0865436908877,
+      28.152470901856898,
+      28.21736994985954,
+      28.281342672690784,
+      28.344467817112445,
+      28.40683392394604,
+      28.468511128512972,
+      28.52956788823123,
+      28.590075191191325,
+      28.650089918488867,
+      28.709675660422175,
+      28.76888698701158,
+      28.8277507184974,
+      28.886296989936994,
+      28.944547328828406,
+      29.002519755636012,
+      29.060237772272533
+     ],
+     "advected": [
+      {
+       "timeS": 0.5,
+       "at": [
+        0.4959708182481714,
+        1.3004836478782347,
+        0.2975824909489028
+       ]
+      },
+      {
+       "timeS": 1,
+       "at": [
+        0.4919010833280041,
+        1.3009755319577436,
+        0.2951406499968024
+       ]
+      },
+      {
+       "timeS": 2,
+       "at": [
+        0.48363550796375965,
+        1.3019848042664894,
+        0.29018130477825577
+       ]
+      },
+      {
+       "timeS": 4,
+       "at": [
+        0.46656584264568507,
+        1.3041114070257473,
+        0.27993950558741104
+       ]
+      }
+     ]
+    },
+    {
+     "seed": [
+      0.6,
+      0.05,
+      0
+     ],
+     "points": [
+      [
+       0.580064065701811,
+       0.05159895883422183,
+       0.0
+      ],
+      [
+       0.5601414901760011,
+       0.05335639829066849,
+       0.0
+      ],
+      [
+       0.5402356502599849,
+       0.055294033248708095,
+       0.0
+      ],
+      [
+       0.5203509292675593,
+       0.05743734794933005,
+       0.0
+      ],
+      [
+       0.5004930575507849,
+       0.059816328721039994,
+       0.0
+      ],
+      [
+       0.48066957779559394,
+       0.06246632577584733,
+       0.0
+      ],
+      [
+       0.4608904806855145,
+       0.06542904483354633,
+       0.0
+      ],
+      [
+       0.44116906991866134,
+       0.06875364673887,
+       0.0
+      ],
+      [
+       0.4215231279788484,
+       0.0724978894458566,
+       0.0
+      ],
+      [
+       0.4019764578115408,
+       0.07672916861991638,
+       0.0
+      ],
+      [
+       0.38256085454603034,
+       0.0815251846183705,
+       0.0
+      ],
+      [
+       0.36331848333139366,
+       0.08697377102656023,
+       0.0
+      ],
+      [
+       0.3443044537935783,
+       0.09317117573122405,
+       0.0
+      ],
+      [
+       0.32558902987560917,
+       0.10021787079060321,
+       0.0
+      ],
+      [
+       0.30725838747810114,
+       0.1082109922843182,
+       0.0
+      ],
+      [
+       0.2894123036407321,
+       0.11723313667197054,
+       0.0
+      ],
+      [
+       0.27215712923930396,
+       0.12733876927949536,
+       0.0
+      ],
+      [
+       0.2555935683785841,
+       0.13854164127917432,
+       0.0
+      ],
+      [
+       0.23980132674160773,
+       0.15080797462787926,
+       0.0
+      ],
+      [
+       0.22482526505595912,
+       0.16405894484153039,
+       0.0
+      ],
+      [
+       0.21066797262888665,
+       0.17818205831599862,
+       0.0
+      ],
+      [
+       0.1972908139631112,
+       0.19304701331165583,
+       0.0
+      ],
+      [
+       0.18462157677590865,
+       0.20852050969163213,
+       0.0
+      ],
+      [
+       0.1725647111242477,
+       0.22447641671868354,
+       0.0
+      ],
+      [
+       0.16101054870130008,
+       0.24080052526187842,
+       0.0
+      ],
+      [
+       0.14984154188269236,
+       0.2573908984414071,
+       0.0
+      ],
+      [
+       0.13893504134851103,
+       0.2741552500583927,
+       0.0
+      ],
+      [
+       0.12816299729530092,
+       0.2910064364606642,
+       0.0
+      ],
+      [
+       0.11739188104117222,
+       0.30785821713588424,
+       0.0
+      ],
+      [
+       0.10650338977631359,
+       0.3246343305147145,
+       0.0
+      ],
+      [
+       0.09554381023098396,
+       0.3413641177913593,
+       0.0
+      ],
+      [
+       0.0852242125769081,
+       0.35849042748307597,
+       0.0
+      ],
+      [
+       0.0767075525903783,
+       0.37657675306500943,
+       0.0
+      ],
+      [
+       0.0694047320271355,
+       0.39519352859014073,
+       0.0
+      ],
+      [
+       0.06298855859766013,
+       0.41413458529552066,
+       0.0
+      ],
+      [
+       0.057470062485445755,
+       0.4333555551984636,
+       0.0
+      ],
+      [
+       0.05315014292857807,
+       0.4528808168958659,
+       0.0
+      ],
+      [
+       0.049793219401467075,
+       0.47259598228267025,
+       0.0
+      ],
+      [
+       0.04704393972887632,
+       0.49240508691190565,
+       0.0
+      ],
+      [
+       0.044897034770816836,
+       0.5122891074937702,
+       0.0
+      ],
+      [
+       0.04309552334826208,
+       0.532207700074104,
+       0.0
+      ],
+      [
+       0.04150602021348969,
+       0.5521442279412145,
+       0.0
+      ],
+      [
+       0.04016383485219773,
+       0.5720990902536868,
+       0.0
+      ],
+      [
+       0.03894556271308991,
+       0.5920619364085586,
+       0.0
+      ],
+      [
+       0.03786089791931905,
+       0.6120324464865184,
+       0.0
+      ],
+      [
+       0.03688034636344821,
+       0.6320083890275884,
+       0.0
+      ],
+      [
+       0.035969718203717575,
+       0.6519876217358884,
+       0.0
+      ],
+      [
+       0.03514465051000726,
+       0.6719705877847589,
+       0.0
+      ],
+      [
+       0.03436434116403846,
+       0.6919553557047301,
+       0.0
+      ],
+      [
+       0.03365126525728321,
+       0.7119426328155252,
+       0.0
+      ],
+      [
+       0.0329732144848794,
+       0.7319311341705499,
+       0.0
+      ],
+      [
+       0.03234209514369169,
+       0.7519211690852345,
+       0.0
+      ],
+      [
+       0.03174593670917907,
+       0.7719122810919102,
+       0.0
+      ],
+      [
+       0.03118068877820438,
+       0.7919042865947595,
+       0.0
+      ],
+      [
+       0.030647160213993753,
+       0.8118971684179997,
+       0.0
+      ],
+      [
+       0.030137610984043894,
+       0.8318906735350894,
+       0.0
+      ],
+      [
+       0.02965570006545902,
+       0.8518848658931848,
+       0.0
+      ],
+      [
+       0.029192015147890143,
+       0.8718794882259578,
+       0.0
+      ],
+      [
+       0.028752758026439455,
+       0.8918746635486784,
+       0.0
+      ],
+      [
+       0.028329076735831515,
+       0.9118701741821647,
+       0.0
+      ]
+     ],
+     "travelS": [
+      6.102149918348457,
+      12.184761125983876,
+      18.251558659894318,
+      24.30630693647957,
+      30.35271309880166,
+      36.394275415670265,
+      42.43405171714767,
+      48.474313198535455,
+      54.51603735339361,
+      60.55818271733834,
+      66.59668339992047,
+      72.6231169848206,
+      78.62306043973845,
+      84.57429092083929,
+      90.44523925994561,
+      96.19442420129631,
+      101.77179375030181,
+      107.12262626436879,
+      112.19366479368838,
+      116.93985124904901,
+      121.32939927494066,
+      125.34568137811377,
+      128.9859678565724,
+      132.2582393911557,
+      135.17750288599382,
+      137.76257213770614,
+      140.03368917372543,
+      142.0109485869327,
+      143.71290572355105,
+      145.15294130002496,
+      146.32527120232294,
+      147.1809342432194,
+      147.7010620918294,
+      148.0185016503878,
+      148.22173903074938,
+      148.35897714812816,
+      148.45889011304376,
+      148.53737521670908,
+      148.60246795520507,
+      148.6584988440343,
+      148.70861782668058,
+      148.75456335794905,
+      148.79730013345525,
+      148.8378703870122,
+      148.87664660735174,
+      148.9140817585409,
+      148.9505467227329,
+      148.98612753384634,
+      149.02112823147758,
+      149.05557695914004,
+      149.08964101763695,
+      149.12336297467039,
+      149.15684002900625,
+      149.19011833619072,
+      149.22323147040686,
+      149.25625598011047,
+      149.2891802912963,
+      149.32207467930698,
+      149.35492605422925,
+      149.38779749918845
+     ],
+     "advected": [
+      {
+       "timeS": 0.5,
+       "at": [
+        0.5983687325412524,
+        0.0501253129505711,
+        0.0
+       ]
+      },
+      {
+       "timeS": 1,
+       "at": [
+        0.5967370380896152,
+        0.05025160903323057,
+        0.0
+       ]
+      },
+      {
+       "timeS": 2,
+       "at": [
+        0.5934723975330892,
+        0.05050719058774784,
+        0.0
+       ]
+      },
+      {
+       "timeS": 4,
+       "at": [
+        0.5869383187820041,
+        0.05103059814177008,
+        0.0
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  "jet": {
+   "samples": [
+    {
+     "at": [
+      0.5,
+      1.2,
+      0
+     ],
+     "u": [
+      2.477349763336753,
+      -0.002231677035993913,
+      0.0
+     ],
+     "inducedMS": 2.4773507685200857,
+     "excessK": 9.896354208845338,
+     "vapourExcessKgPerKg": 0.0032987847362816692
+    },
+    {
+     "at": [
+      1,
+      1.25,
+      0
+     ],
+     "u": [
+      1.2925954085188356,
+      -0.024600758892179466,
+      0.0
+     ],
+     "inducedMS": 1.2928294889358174,
+     "excessK": 5.174091085410057,
+     "vapourExcessKgPerKg": 0.0017246970284701619
+    },
+    {
+     "at": [
+      1.5,
+      1.2,
+      0.1
+     ],
+     "u": [
+      0.819059671079936,
+      -0.002521341498147958,
+      -0.025143466217449402
+     ],
+     "inducedMS": 0.8194493857743451,
+     "excessK": 3.290800712171056,
+     "vapourExcessKgPerKg": 0.0010969335707236134
+    },
+    {
+     "at": [
+      1,
+      1.6,
+      0
+     ],
+     "u": [
+      0.0055221482317902425,
+      -0.031439848900224616,
+      0.0
+     ],
+     "inducedMS": 0.03192112497959336,
+     "excessK": 0.004977339010069377,
+     "vapourExcessKgPerKg": 1.6591130033564124e-06
+    },
+    {
+     "at": [
+      1,
+      0.6,
+      0
+     ],
+     "u": [
+      0.0035925568878577203,
+      0.014646245332852971,
+      0.0
+     ],
+     "inducedMS": 0.01508041668332183,
+     "excessK": 2.9529493459641716e-06,
+     "vapourExcessKgPerKg": 9.843164486546034e-10
+    },
+    {
+     "at": [
+      2,
+      1.2,
+      0.5
+     ],
+     "u": [
+      0.013446216488082446,
+      -0.0022478513848844806,
+      -0.02528630871443406
+     ],
+     "inducedMS": 0.02872718193792373,
+     "excessK": 0.07604156013545642,
+     "vapourExcessKgPerKg": 2.534718671181351e-05
+    },
+    {
+     "at": [
+      -0.5,
+      1.2,
+      0
+     ],
+     "u": [
+      0.01013087113699053,
+      -0.0014819898190970922,
+      0.0
+     ],
+     "inducedMS": 0.01023869346245971,
+     "excessK": 0.0,
+     "vapourExcessKgPerKg": 0.0
+    },
+    {
+     "at": [
+      4,
+      1.2,
+      0
+     ],
+     "u": [
+      -0.0039125823296049566,
+      -0.0009559587002450068,
+      0.0
+     ],
+     "inducedMS": 0.004027673959310891,
+     "excessK": 0.0,
+     "vapourExcessKgPerKg": 0.0
+    },
+    {
+     "at": [
+      1,
+      0,
+      0.3
+     ],
+     "u": [
+      0.002424823686247125,
+      0.0,
+      -0.0035032800801456767
+     ],
+     "inducedMS": 0.004260603387940562,
+     "excessK": 0.0,
+     "vapourExcessKgPerKg": 0.0
+    }
+   ],
+   "streams": [
+    {
+     "seed": [
+      0.3,
+      1.21,
+      0
+     ],
+     "points": [
+      [
+       0.31999964286627525,
+       1.2098804890534505,
+       0.0
+      ],
+      [
+       0.3399992424042529,
+       1.2097539523116074,
+       0.0
+      ],
+      [
+       0.35999888462685803,
+       1.2096345570411562,
+       0.0
+      ],
+      [
+       0.3799986228369156,
+       1.2095322672140258,
+       0.0
+      ],
+      [
+       0.3999983891153079,
+       1.209435579737358,
+       0.0
+      ],
+      [
+       0.41999815208678654,
+       1.2093382108399209,
+       0.0
+      ],
+      [
+       0.4399979095722748,
+       1.2092397204787946,
+       0.0
+      ],
+      [
+       0.4599976549105203,
+       1.2091387977348735,
+       0.0
+      ],
+      [
+       0.4799973850230415,
+       1.2090349049527283,
+       0.0
+      ],
+      [
+       0.49999715406405815,
+       1.2089388151708773,
+       0.0
+      ],
+      [
+       0.5199969451018089,
+       1.2088473926088772,
+       0.0
+      ],
+      [
+       0.5399967368553504,
+       1.2087561255609802,
+       0.0
+      ],
+      [
+       0.55999652438622,
+       1.2086639376948454,
+       0.0
+      ],
+      [
+       0.5799963029056282,
+       1.2085698177237845,
+       0.0
+      ],
+      [
+       0.599996087966263,
+       1.208477111320651,
+       0.0
+      ],
+      [
+       0.6199958928620749,
+       1.2083887734660288,
+       0.0
+      ],
+      [
+       0.6399957023542191,
+       1.2083014793995006,
+       0.0
+      ],
+      [
+       0.6599955090731048,
+       1.2082135522522532,
+       0.0
+      ],
+      [
+       0.6799953113976706,
+       1.208124631902772,
+       0.0
+      ],
+      [
+       0.6999951227062717,
+       1.208037760579353,
+       0.0
+      ],
+      [
+       0.7199949445208369,
+       1.2079533376657665,
+       0.0
+      ],
+      [
+       0.739994768037365,
+       1.207869318076458,
+       0.0
+      ],
+      [
+       0.7599945897288729,
+       1.2077848652879875,
+       0.0
+      ],
+      [
+       0.7799944135889775,
+       1.2077009310226685,
+       0.0
+      ],
+      [
+       0.7999942464172072,
+       1.2076191592613,
+       0.0
+      ],
+      [
+       0.8199940824628046,
+       1.2075381768741067,
+       0.0
+      ],
+      [
+       0.8399939174136352,
+       1.207456924616454,
+       0.0
+      ],
+      [
+       0.8599937543719587,
+       1.207376170180448,
+       0.0
+      ],
+      [
+       0.8799935974545907,
+       1.207296945368032,
+       0.0
+      ],
+      [
+       0.8999934427011569,
+       1.2072182681052714,
+       0.0
+      ],
+      [
+       0.91999328681817,
+       1.2071393042775838,
+       0.0
+      ],
+      [
+       0.9399931343773588,
+       1.2070612181577711,
+       0.0
+      ],
+      [
+       0.9599929854466986,
+       1.2069840354169277,
+       0.0
+      ],
+      [
+       0.9799928370420101,
+       1.206906988946933,
+       0.0
+      ],
+      [
+       0.9999926885719961,
+       1.2068299260097697,
+       0.0
+      ],
+      [
+       1.0199925437358641,
+       1.206753811651084,
+       0.0
+      ],
+      [
+       1.0399924002436378,
+       1.2066780510592114,
+       0.0
+      ],
+      [
+       1.0599922561328938,
+       1.2066021274220997,
+       0.0
+      ],
+      [
+       1.079992114543931,
+       1.2065268712479111,
+       0.0
+      ],
+      [
+       1.0999919743993225,
+       1.2064519996086958,
+       0.0
+      ],
+      [
+       1.1199918339687494,
+       1.2063770516605319,
+       0.0
+      ],
+      [
+       1.1399916950051985,
+       1.2063024964657432,
+       0.0
+      ],
+      [
+       1.1599915574442208,
+       1.2062283181725135,
+       0.0
+      ],
+      [
+       1.179991419699286,
+       1.206154090320333,
+       0.0
+      ],
+      [
+       1.1999912829959931,
+       1.206080143829767,
+       0.0
+      ],
+      [
+       1.2199911474102867,
+       1.2060065000275024,
+       0.0
+      ],
+      [
+       1.239991011602321,
+       1.2059327959042176,
+       0.0
+      ],
+      [
+       1.2599908768009236,
+       1.2058593655111038,
+       0.0
+      ],
+      [
+       1.2799907426907524,
+       1.2057861235243847,
+       0.0
+      ],
+      [
+       1.2999906083697763,
+       1.205712824012661,
+       0.0
+      ],
+      [
+       1.3199904750516855,
+       1.2056397986757956,
+       0.0
+      ],
+      [
+       1.3399903419875756,
+       1.205566842896452,
+       0.0
+      ],
+      [
+       1.3599902089164306,
+       1.2054938852343007,
+       0.0
+      ],
+      [
+       1.3799900766698439,
+       1.2054211539161086,
+       0.0
+      ],
+      [
+       1.3999899442859656,
+       1.2053483848591118,
+       0.0
+      ],
+      [
+       1.4199898123512624,
+       1.2052757393767113,
+       0.0
+      ],
+      [
+       1.4399896807971744,
+       1.2052031987256033,
+       0.0
+      ],
+      [
+       1.4599895490895218,
+       1.205130615765563,
+       0.0
+      ],
+      [
+       1.4799894179686488,
+       1.205058194655162,
+       0.0
+      ],
+      [
+       1.499989286771648,
+       1.2049857525298537,
+       0.0
+      ]
+     ],
+     "travelS": [
+      0.006190021846661645,
+      0.012579929373920051,
+      0.019144377151043317,
+      0.025868661945841583,
+      0.03277677250734795,
+      0.03988334854676949,
+      0.047221876663923384,
+      0.05480805657693518,
+      0.0626452436143078,
+      0.07070047084891387,
+      0.07898650434073722,
+      0.08751509381874244,
+      0.09630668087692114,
+      0.10537217273430344,
+      0.11468213590567694,
+      0.12422209398971118,
+      0.13400008464403257,
+      0.14403248865179652,
+      0.1543196958630926,
+      0.16482557368862258,
+      0.17554996038822385,
+      0.1864933952282028,
+      0.19766828881291174,
+      0.20906111319927825,
+      0.22064777244264916,
+      0.23244252680727906,
+      0.24445162610624926,
+      0.25667236681205774,
+      0.26908603580210333,
+      0.2817067302124197,
+      0.29454219221714506,
+      0.30758131924674714,
+      0.32081824570401135,
+      0.33426685089386404,
+      0.3479287871557096,
+      0.3617874034483143,
+      0.37585262842125694,
+      0.3901328185524624,
+      0.4046150664969964,
+      0.41930002665412125,
+      0.4341991008678487,
+      0.44930372846540345,
+      0.46461067983917476,
+      0.4801314869638356,
+      0.4958577791715122,
+      0.5117885439209103,
+      0.5279328187505014,
+      0.5442812596500817,
+      0.5608370635707727,
+      0.5776063102186555,
+      0.5945788533597239,
+      0.6117613711357396,
+      0.6291563648859239,
+      0.6467553842353455,
+      0.6645674857795779,
+      0.682588092452943,
+      0.7008168331533734,
+      0.7192592528857054,
+      0.7379083632628718,
+      0.7567706967832473
+     ],
+     "advected": [
+      {
+       "timeS": 0.5,
+       "at": [
+        1.2052161106465245,
+        1.2060608954383119,
+        0.0
+       ]
+      },
+      {
+       "timeS": 1,
+       "at": [
+        1.740289172003771,
+        1.2041191261143442,
+        0.0
+       ]
+      },
+      {
+       "timeS": 2,
+       "at": [
+        2.5259025267481148,
+        1.201445002304653,
+        0.0
+       ]
+      },
+      {
+       "timeS": 4,
+       "at": [
+        3.0687503344999927,
+        1.1979823735838324,
+        0.0
+       ]
+      }
+     ]
+    },
+    {
+     "seed": [
+      1,
+      1.7,
+      0
+     ],
+     "points": [
+      [
+       1.002944468453084,
+       1.6802179361567648,
+       0.0
+      ],
+      [
+       1.0058759964543142,
+       1.6604339491672726,
+       0.0
+      ],
+      [
+       1.008834488952749,
+       1.640653983642092,
+       0.0
+      ],
+      [
+       1.0118933143552094,
+       1.6208893281417065,
+       0.0
+      ],
+      [
+       1.0151814626798237,
+       1.6011617004307082,
+       0.0
+      ],
+      [
+       1.0189185994129075,
+       1.5815147438868051,
+       0.0
+      ],
+      [
+       1.0234553020309132,
+       1.5620384609314706,
+       0.0
+      ],
+      [
+       1.0293012596884665,
+       1.5429181262181253,
+       0.0
+      ],
+      [
+       1.037082175556553,
+       1.5245073429300708,
+       0.0
+      ],
+      [
+       1.047322801138501,
+       1.5073503962086197,
+       0.0
+      ],
+      [
+       1.0601127579954106,
+       1.4920014479552506,
+       0.0
+      ],
+      [
+       1.0750532139398699,
+       1.4787296243008001,
+       0.0
+      ],
+      [
+       1.0915323839005215,
+       1.4674145785829849,
+       0.0
+      ],
+      [
+       1.1090297007659524,
+       1.457739286276184,
+       0.0
+      ],
+      [
+       1.1271883447463742,
+       1.4493648743095542,
+       0.0
+      ],
+      [
+       1.145782385450777,
+       1.4420038522086565,
+       0.0
+      ],
+      [
+       1.164671774519251,
+       1.4354353713040424,
+       0.0
+      ],
+      [
+       1.1837690327086687,
+       1.429496948640749,
+       0.0
+      ],
+      [
+       1.2030332484024882,
+       1.4241245605800308,
+       0.0
+      ],
+      [
+       1.222436165350911,
+       1.419276267805282,
+       0.0
+      ],
+      [
+       1.2419461900636157,
+       1.4148780750009853,
+       0.0
+      ],
+      [
+       1.2615387996405216,
+       1.4108632640495753,
+       0.0
+      ],
+      [
+       1.2811977814844653,
+       1.4071868442845652,
+       0.0
+      ],
+      [
+       1.3009089960799305,
+       1.4038013168882841,
+       0.0
+      ],
+      [
+       1.3206610955025726,
+       1.4006628418473486,
+       0.0
+      ],
+      [
+       1.3404453778018879,
+       1.3977338510461017,
+       0.0
+      ],
+      [
+       1.360256845097205,
+       1.3949947200655888,
+       0.0
+      ],
+      [
+       1.3800914474108101,
+       1.3924283059799443,
+       0.0
+      ],
+      [
+       1.3999444040426756,
+       1.3900078521559156,
+       0.0
+      ],
+      [
+       1.4198125736336316,
+       1.3877156148432641,
+       0.0
+      ],
+      [
+       1.439694680172051,
+       1.3855475021705639,
+       0.0
+      ],
+      [
+       1.4595879990582339,
+       1.383484713931962,
+       0.0
+      ],
+      [
+       1.4794908444112114,
+       1.3815159678864026,
+       0.0
+      ],
+      [
+       1.4994026288776945,
+       1.3796397388667692,
+       0.0
+      ],
+      [
+       1.519321566347704,
+       1.3778409900632564,
+       0.0
+      ],
+      [
+       1.5392470057256789,
+       1.376115776429147,
+       0.0
+      ],
+      [
+       1.5591783724361028,
+       1.3744603957485744,
+       0.0
+      ],
+      [
+       1.5791145561293716,
+       1.3728640554486884,
+       0.0
+      ],
+      [
+       1.599055494983867,
+       1.37132825448945,
+       0.0
+      ],
+      [
+       1.6190004093863195,
+       1.3698449469816487,
+       0.0
+      ],
+      [
+       1.63894890499403,
+       1.3684106238016027,
+       0.0
+      ],
+      [
+       1.6589008045519373,
+       1.3670244270212617,
+       0.0
+      ],
+      [
+       1.6788555156358098,
+       1.3656793050198128,
+       0.0
+      ],
+      [
+       1.6988130760438518,
+       1.3643771343435793,
+       0.0
+      ],
+      [
+       1.7187729868913337,
+       1.3631114861140092,
+       0.0
+      ],
+      [
+       1.7387352232939333,
+       1.3618830709364056,
+       0.0
+      ],
+      [
+       1.75869950485754,
+       1.3606883379672097,
+       0.0
+      ],
+      [
+       1.7786656747195007,
+       1.359525599592986,
+       0.0
+      ],
+      [
+       1.7986336467411586,
+       1.358394217278524,
+       0.0
+      ],
+      [
+       1.8186031934395093,
+       1.3572909844242422,
+       0.0
+      ],
+      [
+       1.8385743231180198,
+       1.3562167777560208,
+       0.0
+      ],
+      [
+       1.8585468075180165,
+       1.355168062943466,
+       0.0
+      ],
+      [
+       1.8785206842220816,
+       1.3541462031102054,
+       0.0
+      ],
+      [
+       1.8984957531721118,
+       1.353147920300545,
+       0.0
+      ],
+      [
+       1.9184720577007155,
+       1.3521746724198938,
+       0.0
+      ],
+      [
+       1.938449431969714,
+       1.3512236346780195,
+       0.0
+      ],
+      [
+       1.958427918662442,
+       1.3502962577959925,
+       0.0
+      ],
+      [
+       1.9784073832919242,
+       1.349390193716298,
+       0.0
+      ],
+      [
+       1.9983878677054019,
+       1.3485069022615994,
+       0.0
+      ],
+      [
+       2.018369265247409,
+       1.3476445150228984,
+       0.0
+      ]
+     ],
+     "travelS": [
+      0.7796511391219894,
+      1.5252877985123023,
+      2.237058334016658,
+      2.9149494576242847,
+      3.558663118782679,
+      4.16734640777725,
+      4.739058797161184,
+      5.2698025162546225,
+      5.752363800422412,
+      6.176914105938652,
+      6.536117182348158,
+      6.830947130751375,
+      7.0706902893620365,
+      7.267150441327042,
+      7.430795245028802,
+      7.569700352129934,
+      7.689726837819513,
+      7.7951027394754435,
+      7.889061477667584,
+      7.9740490743064845,
+      8.051819565892092,
+      8.123687893687222,
+      8.190654483835521,
+      8.25352160846843,
+      8.31291889274301,
+      8.369353156803673,
+      8.42323062687332,
+      8.474885780075,
+      8.524609026192836,
+      8.572637491110168,
+      8.619159593612276,
+      8.664356963085524,
+      8.70837900438696,
+      8.751342542890065,
+      8.793369150599267,
+      8.834551455966249,
+      8.874972602306542,
+      8.914718256860805,
+      8.953844995461411,
+      8.992421185113322,
+      9.030499559233029,
+      9.068124830727253,
+      9.105349954505996,
+      9.14220520584347,
+      9.178736563069771,
+      9.214971173619372,
+      9.25094331041639,
+      9.286681071247521,
+      9.32220774439057,
+      9.357551887173948,
+      9.392730516893755,
+      9.427770287520941,
+      9.462684575834631,
+      9.497497400296078,
+      9.532219815858875,
+      9.566873310241402,
+      9.601467273997589,
+      9.636020886569188,
+      9.670542388292594,
+      9.705048957476352
+     ],
+     "advected": [
+      {
+       "timeS": 0.5,
+       "at": [
+        1.0018762638917578,
+        1.6874141023647884,
+        0.0
+       ]
+      },
+      {
+       "timeS": 1,
+       "at": [
+        1.0037970944940509,
+        1.6744642554930724,
+        0.0
+       ]
+      },
+      {
+       "timeS": 2,
+       "at": [
+        1.0078265815524525,
+        1.6473460412425003,
+        0.0
+       ]
+      },
+      {
+       "timeS": 4,
+       "at": [
+        1.0178061098835756,
+        1.5870211094612183,
+        0.0
+       ]
+      }
+     ]
+    },
+    {
+     "seed": [
+      1.2,
+      0.8,
+      0.2
+     ],
+     "points": [
+      [
+       1.203775469003027,
+       0.8169029854573053,
+       0.19000062897583056
+      ],
+      [
+       1.2084634060391346,
+       0.8337228901933497,
+       0.18025387364853385
+      ],
+      [
+       1.2145206776635022,
+       0.8502889281925744,
+       0.17083938873287474
+      ],
+      [
+       1.2224480763385908,
+       0.8663123017032978,
+       0.16189698198347727
+      ],
+      [
+       1.2326350382728064,
+       0.8813837446958889,
+       0.15362395554796404
+      ],
+      [
+       1.2451457486816466,
+       0.8950894640614149,
+       0.14621050872655422
+      ],
+      [
+       1.2596675234394181,
+       0.9072019992199299,
+       0.13974175271615105
+      ],
+      [
+       1.2757127200165397,
+       0.9177447883927461,
+       0.13417203355142746
+      ],
+      [
+       1.292823155708293,
+       0.9269090913749427,
+       0.1293748462751653
+      ],
+      [
+       1.3106578264215507,
+       0.9349345183669332,
+       0.12520663812992738
+      ],
+      [
+       1.3289873608898983,
+       0.942040968715666,
+       0.12154065768201064
+      ],
+      [
+       1.3476616588801813,
+       0.9484090520966917,
+       0.11827503970888593
+      ],
+      [
+       1.3665814833075822,
+       0.9541824808166522,
+       0.11532996564632625
+      ],
+      [
+       1.3856809208286416,
+       0.959471889067324,
+       0.11264459737670073
+      ],
+      [
+       1.4049196204445968,
+       0.9643478312041228,
+       0.11017918363961825
+      ],
+      [
+       1.4242818987092096,
+       0.9688198160630739,
+       0.10792386944978773
+      ],
+      [
+       1.4437476512871417,
+       0.972919776176535,
+       0.10585964847761035
+      ],
+      [
+       1.4632970986056364,
+       0.9766899016081247,
+       0.10396369807540616
+      ],
+      [
+       1.482914674953062,
+       0.980166897919399,
+       0.10221643983347689
+      ],
+      [
+       1.5025874531311159,
+       0.9833857955393949,
+       0.10059960024796438
+      ],
+      [
+       1.5223048372430015,
+       0.9863792018964862,
+       0.09909644401509127
+      ],
+      [
+       1.5420582056841134,
+       0.9891770221740154,
+       0.09769179039304168
+      ],
+      [
+       1.5618414630124997,
+       0.9918008514623534,
+       0.09637456604835092
+      ],
+      [
+       1.5816506465041293,
+       0.9942635009247164,
+       0.09513796951757277
+      ],
+      [
+       1.6014809409663657,
+       0.9965865229764126,
+       0.09397126721020518
+      ],
+      [
+       1.6213288717135912,
+       0.9987859252992823,
+       0.0928664273997574
+      ],
+      [
+       1.6411927140383331,
+       1.0008673185761523,
+       0.09182034318947026
+      ],
+      [
+       1.6610696342897686,
+       1.002846444622925,
+       0.09082527035648384
+      ],
+      [
+       1.6809579169568964,
+       1.0047320786553793,
+       0.08987676844258471
+      ],
+      [
+       1.7008564932304342,
+       1.006528769123049,
+       0.08897240656812501
+      ],
+      [
+       1.7207635460809265,
+       1.008248773247147,
+       0.08810622191197087
+      ],
+      [
+       1.7406785402915839,
+       1.009893560183798,
+       0.08727728730380098
+      ],
+      [
+       1.7606003166471085,
+       1.0114713131384894,
+       0.08648159736731194
+      ],
+      [
+       1.7805281056249573,
+       1.0129870935220386,
+       0.08571661588277944
+      ],
+      [
+       1.8004614688179914,
+       1.0144430586703974,
+       0.0849811737205898
+      ],
+      [
+       1.8203995541984057,
+       1.015846358467463,
+       0.0842718129134551
+      ],
+      [
+       1.840342207001799,
+       1.0171967111709872,
+       0.08358852303346082
+      ],
+      [
+       1.8602887180790197,
+       1.0185006975911615,
+       0.08292814399494587
+      ],
+      [
+       1.8802389780886044,
+       1.019757926834099,
+       0.08229073883957203
+      ],
+      [
+       1.9001924771314966,
+       1.020973350489894,
+       0.08167392457080773
+      ],
+      [
+       1.9201490908425274,
+       1.0221471100901527,
+       0.08107753758946933
+      ],
+      [
+       1.9401084757508578,
+       1.0232825480122425,
+       0.08049995355187722
+      ],
+      [
+       1.9600704988674233,
+       1.024380212762312,
+       0.07994083752084932
+      ],
+      [
+       1.9800349305681466,
+       1.025442242992684,
+       0.07939913135802025
+      ],
+      [
+       2.0000016510178,
+       1.0264692261052837,
+       0.07887449423721109
+      ],
+      [
+       2.0199704980583464,
+       1.0274625554293002,
+       0.07836621975600834
+      ],
+      [
+       2.0399413847627206,
+       1.0284224602409966,
+       0.07787413959562889
+      ],
+      [
+       2.059914184525923,
+       1.02934993680702,
+       0.0773977364884737
+      ],
+      [
+       2.0798888542462963,
+       1.0302445407333207,
+       0.07693715539082469
+      ],
+      [
+       2.09986528659094,
+       1.0311070269464833,
+       0.07649199413451419
+      ],
+      [
+       2.119843483491835,
+       1.0319360752562088,
+       0.07606279986972013
+      ],
+      [
+       2.1398233251170105,
+       1.0327327181963737,
+       0.07564905193537576
+      ],
+      [
+       2.1598047464815506,
+       1.0334969402444796,
+       0.07525072590555901
+      ],
+      [
+       2.1797875700101423,
+       1.0342312203627786,
+       0.0748666631500895
+      ],
+      [
+       2.199771745438305,
+       1.0349354358460994,
+       0.07449689390183742
+      ],
+      [
+       2.2197571256431443,
+       1.0356117560940732,
+       0.07414040623194344
+      ],
+      [
+       2.239743659019344,
+       1.036260276855694,
+       0.07379713492089553
+      ],
+      [
+       2.2597312413069437,
+       1.0368824447484006,
+       0.07346640164377569
+      ],
+      [
+       2.2797198020933878,
+       1.037479017544962,
+       0.07314784349559199
+      ],
+      [
+       2.299709284897842,
+       1.0380504292716521,
+       0.07284124607250007
+      ]
+     ],
+     "travelS": [
+      0.7832215322390657,
+      1.5155165575719223,
+      2.192659078133204,
+      2.8074585235199483,
+      3.350804883345706,
+      3.8162772868071855,
+      4.205401684737777,
+      4.5273760628432465,
+      4.794756154186388,
+      5.019445935560189,
+      5.2110797873670816,
+      5.37698626232201,
+      5.522669140761881,
+      5.652204108905642,
+      5.768700087818134,
+      5.874723427739697,
+      5.972181418514297,
+      6.062524115264157,
+      6.146893692614042,
+      6.226198756227009,
+      6.301166063979871,
+      6.3723967638483305,
+      6.440380555594421,
+      6.505513115854353,
+      6.568148176524014,
+      6.628579206076571,
+      6.6870391903891955,
+      6.743754012403455,
+      6.798905857475242,
+      6.852646792590565,
+      6.905130206305542,
+      6.9564683454151846,
+      7.006776944437421,
+      7.0561552431159775,
+      7.104684154799827,
+      7.152451039235425,
+      7.199517160348124,
+      7.245954848839787,
+      7.291815259629446,
+      7.337156715391879,
+      7.3820237789610035,
+      7.426464266209273,
+      7.4705167928490495,
+      7.514221498642397,
+      7.557611923683274,
+      7.600722783324253,
+      7.643583182942686,
+      7.686224163922852,
+      7.728671056396712,
+      7.770952648825609,
+      7.813091092509946,
+      7.855110950988776,
+      7.89702023797208,
+      7.938833050264099,
+      7.980554228044261,
+      8.022195165998353,
+      8.06375967075044,
+      8.10525527925276,
+      8.146686638878066,
+      8.188056550558846
+     ],
+     "advected": [
+      {
+       "timeS": 0.5,
+       "at": [
+        1.2022970480979571,
+        0.8106692501054411,
+        0.19366371584233832
+       ]
+      },
+      {
+       "timeS": 1,
+       "at": [
+        1.2050167586529423,
+        0.8217731584684523,
+        0.18715822578149427
+       ]
+      },
+      {
+       "timeS": 2,
+       "at": [
+        1.2125712213672044,
+        0.8454674928710096,
+        0.17356117411702277
+       ]
+      },
+      {
+       "timeS": 4,
+       "at": [
+        1.251442938734897,
+        0.9007282282795134,
+        0.1431896396600083
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  "twin": {
+   "samples": [
+    {
+     "at": [
+      0.5,
+      1.2,
+      0
+     ],
+     "u": [
+      4.954699526673509,
+      -0.0044633540719878255,
+      0.0
+     ],
+     "inducedMS": 4.954701537040174,
+     "excessK": 9.896354208845338,
+     "vapourExcessKgPerKg": 0.0032987847362816692
+    },
+    {
+     "at": [
+      1,
+      1.2,
+      0
+     ],
+     "u": [
+      2.913404259828827,
+      -0.00494087125657206,
+      0.0
+     ],
+     "inducedMS": 2.9134084494621635,
+     "excessK": 5.834864968862667,
+     "vapourExcessKgPerKg": 0.0019449549896210542
+    },
+    {
+     "at": [
+      1,
+      1.25,
+      0
+     ],
+     "u": [
+      2.5851908170376716,
+      -0.049201517784358925,
+      0.0
+     ],
+     "inducedMS": 2.5856589778716352,
+     "excessK": 5.826536433018298,
+     "vapourExcessKgPerKg": 0.0019421788110062603
+    },
+    {
+     "at": [
+      1.5,
+      1.2,
+      0.1
+     ],
+     "u": [
+      1.6381193421598719,
+      -0.005042682996295919,
+      -0.05028693243489882
+     ],
+     "inducedMS": 1.6388987715486898,
+     "excessK": 4.2274616371317055,
+     "vapourExcessKgPerKg": 0.0014091538790438095
+    },
+    {
+     "at": [
+      2,
+      1.2,
+      0
+     ],
+     "u": [
+      1.6425829129073812,
+      -0.0047640369904792135,
+      0.0
+     ],
+     "inducedMS": 1.642589821539067,
+     "excessK": 3.3414008047466686,
+     "vapourExcessKgPerKg": 0.001113800268248595
+    },
+    {
+     "at": [
+      1,
+      1.6,
+      0
+     ],
+     "u": [
+      0.011044296463580483,
+      -0.06287969780044925,
+      0.0
+     ],
+     "inducedMS": 0.06384224995918673,
+     "excessK": 0.009954678020138753,
+     "vapourExcessKgPerKg": 3.3182260067128248e-06
+    },
+    {
+     "at": [
+      1,
+      0.6,
+      0
+     ],
+     "u": [
+      0.007185113775715439,
+      0.02929249066570594,
+      0.0
+     ],
+     "inducedMS": 0.030160833366643658,
+     "excessK": 5.905898691928343e-06,
+     "vapourExcessKgPerKg": 1.968632897309207e-09
+    },
+    {
+     "at": [
+      2,
+      1.2,
+      0.5
+     ],
+     "u": [
+      0.026892432976164893,
+      -0.004495702769768961,
+      -0.05057261742886812
+     ],
+     "inducedMS": 0.05745436387584746,
+     "excessK": 0.15208312027091284,
+     "vapourExcessKgPerKg": 5.069437342362702e-05
+    },
+    {
+     "at": [
+      -0.5,
+      1.2,
+      0
+     ],
+     "u": [
+      0.02026174227398106,
+      -0.0029639796381941844,
+      0.0
+     ],
+     "inducedMS": 0.02047738692491942,
+     "excessK": 0.0,
+     "vapourExcessKgPerKg": 0.0
+    },
+    {
+     "at": [
+      4,
+      1.2,
+      0
+     ],
+     "u": [
+      -0.007825164659209911,
+      -0.0019119174004900133,
+      0.0
+     ],
+     "inducedMS": 0.00805534791862178,
+     "excessK": 0.0,
+     "vapourExcessKgPerKg": 0.0
+    },
+    {
+     "at": [
+      1,
+      0,
+      0.3
+     ],
+     "u": [
+      0.004849647372494252,
+      0.0,
+      -0.0070065601602913525
+     ],
+     "inducedMS": 0.008521206775881125,
+     "excessK": 0.0,
+     "vapourExcessKgPerKg": 0.0
+    }
+   ],
+   "streams": [
+    {
+     "seed": [
+      0.3,
+      1.21,
+      0
+     ],
+     "points": [
+      [
+       0.31999964286627547,
+       1.209880489053463,
+       0.0
+      ],
+      [
+       0.3399992424042528,
+       1.2097539523116052,
+       0.0
+      ],
+      [
+       0.35999888462691787,
+       1.2096345570502225,
+       0.0
+      ],
+      [
+       0.3799986228369801,
+       1.2095322672237718,
+       0.0
+      ],
+      [
+       0.3999983891153653,
+       1.2094355797464678,
+       0.0
+      ],
+      [
+       0.4199981520869763,
+       1.2093382108754314,
+       0.0
+      ],
+      [
+       0.439997909572463,
+       1.2092397205139798,
+       0.0
+      ],
+      [
+       0.4599976549107068,
+       1.2091387977697265,
+       0.0
+      ],
+      [
+       0.4799973850232632,
+       1.209034904994408,
+       0.0
+      ],
+      [
+       0.49999715406427114,
+       1.2089388152117015,
+       0.0
+      ],
+      [
+       0.5199969451020272,
+       1.2088473926499714,
+       0.0
+      ],
+      [
+       0.5399967368555015,
+       1.2087561255874175,
+       0.0
+      ],
+      [
+       0.5599965243863644,
+       1.2086639377197823,
+       0.0
+      ],
+      [
+       0.5799963029057714,
+       1.2085698177485042,
+       0.0
+      ],
+      [
+       0.599996087966471,
+       1.2084771113587254,
+       0.0
+      ],
+      [
+       0.6199958928622803,
+       1.2083887735036691,
+       0.0
+      ],
+      [
+       0.6399957023544318,
+       1.20830147943871,
+       0.0
+      ],
+      [
+       0.659995509073513,
+       1.2082135523360193,
+       0.0
+      ],
+      [
+       0.6799953113979801,
+       1.2081246319645627,
+       0.0
+      ],
+      [
+       0.6999951227068163,
+       1.2080377606951893,
+       0.0
+      ],
+      [
+       0.719994944521402,
+       1.2079533377864187,
+       0.0
+      ],
+      [
+       0.7399947680379574,
+       1.2078693182035694,
+       0.0
+      ],
+      [
+       0.7599945897294749,
+       1.2077848654173773,
+       0.0
+      ],
+      [
+       0.7799944135895308,
+       1.2077009311406703,
+       0.0
+      ],
+      [
+       0.7999942464178331,
+       1.2076191593968515,
+       0.0
+      ],
+      [
+       0.8199940824634091,
+       1.2075381770043938,
+       0.0
+      ],
+      [
+       0.839993917414521,
+       1.2074569248160447,
+       0.0
+      ],
+      [
+       0.8599937543729335,
+       1.2073761704018373,
+       0.0
+      ],
+      [
+       0.8799935974555403,
+       1.2072969455830396,
+       0.0
+      ],
+      [
+       0.8999934427020984,
+       1.207218268318199,
+       0.0
+      ],
+      [
+       0.9199932868192116,
+       1.207139304515698,
+       0.0
+      ],
+      [
+       0.9399931343784117,
+       1.2070612183987923,
+       0.0
+      ],
+      [
+       0.9599929854477561,
+       1.206984035659172,
+       0.0
+      ],
+      [
+       0.9799928370430888,
+       1.2069069891946747,
+       0.0
+      ],
+      [
+       0.9999926885731397,
+       1.206829926274296,
+       0.0
+      ],
+      [
+       1.0199925437369106,
+       1.206753811890002,
+       0.0
+      ],
+      [
+       1.0399924002446628,
+       1.206678051292401,
+       0.0
+      ],
+      [
+       1.0599922561338662,
+       1.206602127641517,
+       0.0
+      ],
+      [
+       1.0799921145448927,
+       1.2065268714644217,
+       0.0
+      ],
+      [
+       1.0999919744002848,
+       1.2064519998255332,
+       0.0
+      ],
+      [
+       1.1199918339696833,
+       1.206377051869872,
+       0.0
+      ],
+      [
+       1.139991695006139,
+       1.2063024966768774,
+       0.0
+      ],
+      [
+       1.1599915574451622,
+       1.2062283183838332,
+       0.0
+      ],
+      [
+       1.1799914197002361,
+       1.2061540905339094,
+       0.0
+      ],
+      [
+       1.1999912829969694,
+       1.2060801440505082,
+       0.0
+      ],
+      [
+       1.2199911474112608,
+       1.206006500247624,
+       0.0
+      ],
+      [
+       1.2399910116032438,
+       1.2059327961104676,
+       0.0
+      ],
+      [
+       1.2599908768018204,
+       1.2058593657104075,
+       0.0
+      ],
+      [
+       1.2799907426916572,
+       1.2057861237258922,
+       0.0
+      ],
+      [
+       1.2999906083708306,
+       1.2057128242549175,
+       0.0
+      ],
+      [
+       1.3199904750526843,
+       1.2056397989029688,
+       0.0
+      ],
+      [
+       1.3399903419885562,
+       1.2055668431187299,
+       0.0
+      ],
+      [
+       1.3599902089175344,
+       1.2054938854902537,
+       0.0
+      ],
+      [
+       1.3799900766709237,
+       1.2054211541653692,
+       0.0
+      ],
+      [
+       1.399989944286961,
+       1.2053483850851943,
+       0.0
+      ],
+      [
+       1.419989812352257,
+       1.2052757396025726,
+       0.0
+      ],
+      [
+       1.4399896807981887,
+       1.2052031989568384,
+       0.0
+      ],
+      [
+       1.4599895490904773,
+       1.2051306159807205,
+       0.0
+      ],
+      [
+       1.479989417969576,
+       1.2050581948624783,
+       0.0
+      ],
+      [
+       1.4999892867719793,
+       1.2049857525728003,
+       0.0
+      ]
+     ],
+     "travelS": [
+      0.0030950109233488397,
+      0.006289964686958764,
+      0.009572188584952809,
+      0.01293433096116667,
+      0.01638838624248186,
+      0.019941674346101418,
+      0.023610938405129164,
+      0.027404028362063525,
+      0.031322621911552155,
+      0.035350235529572394,
+      0.039493252267911165,
+      0.043757546948317946,
+      0.048153340538882365,
+      0.052686086467799036,
+      0.05734106831169803,
+      0.06211104735411636,
+      0.06700004250517709,
+      0.0720162449190237,
+      0.0771598484555407,
+      0.08241278778941048,
+      0.0877749807811104,
+      0.09324669817980981,
+      0.09883414475838458,
+      0.10453055697054492,
+      0.11032388674681025,
+      0.11622126424453219,
+      0.1222258141603835,
+      0.12833618437886885,
+      0.1345430184478016,
+      0.14085336570655613,
+      0.14727109628598326,
+      0.1537906594309573,
+      0.16040912304645402,
+      0.1671334257356684,
+      0.17396439360819582,
+      0.18089370196503404,
+      0.18792631485074504,
+      0.19506641044173104,
+      0.20230753456704298,
+      0.20965001458835494,
+      0.21709955193742386,
+      0.22465186542972854,
+      0.2323053422349073,
+      0.2400657457590856,
+      0.24792889093108153,
+      0.2558942732140496,
+      0.263966409527125,
+      0.2721406299598578,
+      0.2804185321113164,
+      0.2888031551259134,
+      0.2972894275966704,
+      0.3058806863219654,
+      0.31457818174643554,
+      0.3233776921072703,
+      0.33228374431934116,
+      0.3412940480584172,
+      0.35040841741792356,
+      0.35962962936053966,
+      0.36895418451641515,
+      0.3783853507964871
+     ],
+     "advected": [
+      {
+       "timeS": 0.5,
+       "at": [
+        1.740289568281546,
+        1.204119127579778,
+        0.0
+       ]
+      },
+      {
+       "timeS": 1,
+       "at": [
+        2.525902591912137,
+        1.2014450028801025,
+        0.0
+       ]
+      },
+      {
+       "timeS": 2,
+       "at": [
+        3.068752317212874,
+        1.1979823745255627,
+        0.0
+       ]
+      },
+      {
+       "timeS": 4,
+       "at": [
+        3.137656143786797,
+        1.1918439599023527,
+        0.0
+       ]
+      }
+     ]
+    },
+    {
+     "seed": [
+      1,
+      1.7,
+      0
+     ],
+     "points": [
+      [
+       1.0029444684533106,
+       1.6802179361567793,
+       0.0
+      ],
+      [
+       1.0058759964539,
+       1.6604339491663587,
+       0.0
+      ],
+      [
+       1.0088344893394487,
+       1.6406539837006509,
+       0.0
+      ],
+      [
+       1.0118933147489146,
+       1.620889328195242,
+       0.0
+      ],
+      [
+       1.0151814630659346,
+       1.6011617004892018,
+       0.0
+      ],
+      [
+       1.0189185997968735,
+       1.5815147439476307,
+       0.0
+      ],
+      [
+       1.0234553024191124,
+       1.562038460918622,
+       0.0
+      ],
+      [
+       1.0293012600671925,
+       1.5429181262797336,
+       0.0
+      ],
+      [
+       1.0370821777933479,
+       1.524507343807403,
+       0.0
+      ],
+      [
+       1.047322803107155,
+       1.5073503969278441,
+       0.0
+      ],
+      [
+       1.0601127606119252,
+       1.49200144930657,
+       0.0
+      ],
+      [
+       1.0750532164337907,
+       1.478729625515867,
+       0.0
+      ],
+      [
+       1.0915323450033196,
+       1.467414517486479,
+       0.0
+      ],
+      [
+       1.109029665210744,
+       1.4577392311974593,
+       0.0
+      ],
+      [
+       1.1271882853109596,
+       1.4493647715798033,
+       0.0
+      ],
+      [
+       1.1457823285895952,
+       1.4420037559713712,
+       0.0
+      ],
+      [
+       1.164671719703709,
+       1.4354352809189603,
+       0.0
+      ],
+      [
+       1.183768979728635,
+       1.429496864176755,
+       0.0
+      ],
+      [
+       1.2030331952422904,
+       1.4241244753829159,
+       0.0
+      ],
+      [
+       1.2224361070726817,
+       1.419276162959857,
+       0.0
+      ],
+      [
+       1.2419461271254113,
+       1.4148779498524782,
+       0.0
+      ],
+      [
+       1.261538737985031,
+       1.410863145113947,
+       0.0
+      ],
+      [
+       1.281197725178184,
+       1.4071867527653439,
+       0.0
+      ],
+      [
+       1.3009089362185693,
+       1.4038012040573222,
+       0.0
+      ],
+      [
+       1.32066103818303,
+       1.4006627443380504,
+       0.0
+      ],
+      [
+       1.3404453210480085,
+       1.3977337573504645,
+       0.0
+      ],
+      [
+       1.3602567888177801,
+       1.3949946298021239,
+       0.0
+      ],
+      [
+       1.3800913915319704,
+       1.3924282188361818,
+       0.0
+      ],
+      [
+       1.3999443488084158,
+       1.390007770245923,
+       0.0
+      ],
+      [
+       1.4198125187831614,
+       1.38771553623775,
+       0.0
+      ],
+      [
+       1.439694625481658,
+       1.3855474250391264,
+       0.0
+      ],
+      [
+       1.4595879448369593,
+       1.3834846413324278,
+       0.0
+      ],
+      [
+       1.4794907901117575,
+       1.381515894501325,
+       0.0
+      ],
+      [
+       1.4994025743493733,
+       1.3796396631099224,
+       0.0
+      ],
+      [
+       1.5193215118829293,
+       1.3778409150225601,
+       0.0
+      ],
+      [
+       1.5392469512953337,
+       1.37611570179147,
+       0.0
+      ],
+      [
+       1.5591783174277563,
+       1.3744603141661467,
+       0.0
+      ],
+      [
+       1.5791145012056613,
+       1.3728639749216516,
+       0.0
+      ],
+      [
+       1.5990554401424526,
+       1.3713281750374062,
+       0.0
+      ],
+      [
+       1.6190003546391318,
+       1.369844868794871,
+       0.0
+      ],
+      [
+       1.6389488506809422,
+       1.3684105515630136,
+       0.0
+      ],
+      [
+       1.6589007503352151,
+       1.3670243561702882,
+       0.0
+      ],
+      [
+       1.6788554616781162,
+       1.3656792379935367,
+       0.0
+      ],
+      [
+       1.6988130222142497,
+       1.3643770692532502,
+       0.0
+      ],
+      [
+       1.7187729331931456,
+       1.36311142310086,
+       0.0
+      ],
+      [
+       1.7387351696210842,
+       1.3618830083333442,
+       0.0
+      ],
+      [
+       1.758699451172412,
+       1.3606882751564782,
+       0.0
+      ],
+      [
+       1.7786656210934886,
+       1.359525537792572,
+       0.0
+      ],
+      [
+       1.7986335932170336,
+       1.3583941572621212,
+       0.0
+      ],
+      [
+       1.8186031399999292,
+       1.3572909259287649,
+       0.0
+      ],
+      [
+       1.838574269696641,
+       1.3562167195937995,
+       0.0
+      ],
+      [
+       1.8585467541558525,
+       1.3551680059037576,
+       0.0
+      ],
+      [
+       1.8785206308049243,
+       1.3541461450018726,
+       0.0
+      ],
+      [
+       1.8984956998737814,
+       1.353147864592691,
+       0.0
+      ],
+      [
+       1.9184720043854337,
+       1.3521746163560542,
+       0.0
+      ],
+      [
+       1.9384493786785142,
+       1.3512235791203022,
+       0.0
+      ],
+      [
+       1.9584278653012896,
+       1.3502962007310442,
+       0.0
+      ],
+      [
+       1.9784073299824199,
+       1.3493901377871713,
+       0.0
+      ],
+      [
+       1.9983878144839202,
+       1.3485068483234797,
+       0.0
+      ],
+      [
+       2.0183692121107764,
+       1.3476444630508937,
+       0.0
+      ]
+     ],
+     "travelS": [
+      0.38982556956098,
+      0.7626438992545999,
+      1.1185291659607026,
+      1.4574747279184168,
+      1.7793315583881149,
+      2.0836732029983587,
+      2.3695293985024026,
+      2.634901257155452,
+      2.87618188884674,
+      3.0884570440184254,
+      3.2680585753962785,
+      3.415473551820212,
+      3.5353457779147743,
+      3.633575771681447,
+      3.715398615276292,
+      3.784851080194781,
+      3.8448642467515244,
+      3.897552128498517,
+      3.9445314364079125,
+      3.9870253956920156,
+      4.025910831772182,
+      4.061844943156241,
+      4.095327985560215,
+      4.126761751423776,
+      4.1564602510189985,
+      4.184677352551032,
+      4.211616061559443,
+      4.237443619478197,
+      4.262305194505064,
+      4.286319406740617,
+      4.3095804434355705,
+      4.332179085959677,
+      4.354190088913232,
+      4.37567188992182,
+      4.39668518332048,
+      4.417276321207079,
+      4.437486880017709,
+      4.4573596933052215,
+      4.476923055167977,
+      4.4962111395002475,
+      4.515250322193799,
+      4.534062945915738,
+      4.552675505330018,
+      4.571103099671139,
+      4.589368772400742,
+      4.6074860723932645,
+      4.625472137404365,
+      4.643341012168223,
+      4.661104340616731,
+      4.678776407996235,
+      4.696365726039839,
+      4.7138856021480775,
+      4.731342737209338,
+      4.748749148327006,
+      4.766110348839174,
+      4.7834370908018204,
+      4.8007340627526665,
+      4.818010865054923,
+      4.835271613880622,
+      4.852524893956519
+     ],
+     "advected": [
+      {
+       "timeS": 0.5,
+       "at": [
+        1.0037970944934544,
+        1.6744642554932918,
+        0.0
+       ]
+      },
+      {
+       "timeS": 1,
+       "at": [
+        1.007826578798445,
+        1.6473460412444536,
+        0.0
+       ]
+      },
+      {
+       "timeS": 2,
+       "at": [
+        1.0178061071111522,
+        1.5870211095035103,
+        0.0
+       ]
+      },
+      {
+       "timeS": 4,
+       "at": [
+        1.2287541555379686,
+        1.417804151281193,
+        0.0
+       ]
+      }
+     ]
+    }
+   ]
+  }
+ }
 }

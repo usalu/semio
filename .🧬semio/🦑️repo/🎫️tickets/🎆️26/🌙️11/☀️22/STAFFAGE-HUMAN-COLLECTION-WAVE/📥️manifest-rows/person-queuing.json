@@ -1,0 +1,53 @@
+{
+  "id": "person-queuing",
+  "category": "humans",
+  "title": {
+    "en": "Person Queuing",
+    "de": "Person in der Warteschlange"
+  },
+  "heightM": 1.808,
+  "widthM": 0.437,
+  "powerW": 136.7,
+  "poses": [
+    "hands-in-pockets",
+    "weight-on-left",
+    "weight-on-right",
+    "hands-in-hoodie-pocket",
+    "looking-ahead"
+  ],
+  "clips": [
+    "weight-shift",
+    "idle-breathing"
+  ],
+  "representations": {
+    "50": "authored",
+    "100": "authored",
+    "200": "authored",
+    "500": "authored"
+  },
+  "symbols": [],
+  "analytics": [
+    "thermal",
+    "transport",
+    "structural"
+  ],
+  "exports": [
+    "svg",
+    "pdf",
+    "dxf",
+    "dwg",
+    "png-sequence",
+    "mp4",
+    "webm",
+    "component",
+    "glb",
+    "fbx",
+    "model",
+    "model-zip"
+  ],
+  "distinction": {
+    "en": "A man of 1.78 m and 78 kg waiting in a queue outdoors in a charcoal hooded sweatshirt, jeans and white sneakers with an 18 litre daypack on his back: hands in the jeans pockets, weight on the left or on the right leg, hands in the hoodie pocket and looking ahead, with an eight-second weight-shift loop and idle breathing.",
+    "de": "Ein Mann von 1,78 m und 78 kg, der im Freien in einer Schlange wartet, in anthrazitfarbenem Kapuzenpullover, Jeans und weißen Sneakern mit einem 18-Liter-Tagesrucksack auf dem Rücken: Hände in den Hosentaschen, Gewicht auf dem linken oder dem rechten Bein, Hände in der Bauchtasche und nach vorn blickend, mit einer achtsekündigen Schleife der Gewichtsverlagerung und ruhigem Atmen."
+  },
+  "completion": "authored"
+}

@@ -34,8 +34,10 @@ pub fn native_work(tool: &'static str) -> Box<dyn ArtifactCommandWork<App>> {
                 Ok((target(*page, *operator, [*x, *y, *width, *height]), guard.as_str())),
             _ => Err(Fault::from("PDF image picker command mismatch")),
         }))
+    } else if let Some(authoring) = semio_s_artifact_stdio_pdf_page_editor_authoring::TOOLS.iter().find(|candidate| **candidate == tool) {
+        Box::new(semio_s_artifact_stdio_pdf_page_editor_authoring::PageAuthoringWork::<App>::new(authoring, |command| match command { Command::Native(Pdf17EditorCommand::PageEdit { payload, .. }) => Some(payload.as_str()), _ => None }, <Pdf17Editor as semio_s_artifact_stdio_contract::editing::BoundedNativeEditingEditor>::NATIVE_MAXIMUM_WORK_ITEMS))
     } else {
-        semio_s_artifact_stdio_contract::editing::bounded_native_edit_work::<Pdf17Editor>(tool)
+        semio_s_artifact_stdio_pdf_view_lane::bounded_view_work::<Pdf17Editor>(tool)
     }
 }
 

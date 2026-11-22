@@ -22,6 +22,7 @@ workspace = true
 path = "../../🦀️.rs"
 
 [dependencies]
+semio-ui-wgpu-layout = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🧱️layout-stack/📦️packages/🦀️rust" }
 semio-renderer-wgpu-host-base = { path = "../../../🏛️host-base/📦️packages/🦀️rust" }
 semio-renderer-wgpu-shell-actions = { path = "../../../🔀️shell-actions/📦️packages/🦀️rust" }
 semio-renderer-wgpu-shell-async = { path = "../../../⏳️shell-async/📦️packages/🦀️rust" }

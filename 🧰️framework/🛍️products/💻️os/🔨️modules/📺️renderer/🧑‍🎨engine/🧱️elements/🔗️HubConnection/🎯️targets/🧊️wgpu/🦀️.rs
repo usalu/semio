@@ -382,6 +382,7 @@ pub struct HubArtifactCreation {
     pub cancel_sent: bool,
     pub ready: Option<SpaceArtifactCreationReadyV1>,
     pub opening: HubArtifactOpening,
+    pub issued_at_ms: u64,
     pub last_answered_at_ms: u64,
     pub polls: u32,
     pub next_poll_at_ms: u64,
@@ -500,6 +501,7 @@ pub enum HubArtifactCreationLabel {
     CatalogLoading,
     CatalogReady,
     CatalogUnavailable,
+    Waiting,
 }
 
 /// 🏷️ One door text in both languages this product owns, byte-identical to React's
@@ -529,7 +531,22 @@ pub fn hub_artifact_creation_label(key: HubArtifactCreationLabel, locale: Locale
         (HubArtifactCreationLabel::CatalogReady, Locale::En) => "The available artifact kinds are current.",
         (HubArtifactCreationLabel::CatalogReady, Locale::De) => "Die verfügbaren Artefaktarten sind aktuell.",
         (HubArtifactCreationLabel::CatalogUnavailable, Locale::En) => "Artifact kinds are unavailable. Reopen the space before creating an artifact.",
+        (HubArtifactCreationLabel::Waiting, Locale::En) => "The hub has been working on it for {elapsed}. You can keep waiting or cancel.",
+        (HubArtifactCreationLabel::Waiting, Locale::De) => "Der Hub arbeitet seit {elapsed} daran. Du kannst weiter warten oder abbrechen.",
         (HubArtifactCreationLabel::CatalogUnavailable, Locale::De) => "Artefaktarten sind nicht verfügbar. Öffne den Space erneut, bevor du ein Artefakt erstellst.",
+    }
+}
+
+/// ⏱️ React's `ARTIFACT_CREATION_WAITING_AFTER_MS`: how long a creation runs before its notice names the elapsed time.
+pub const ARTIFACT_CREATION_WAITING_AFTER_MS: u64 = 10_000;
+
+/// ⏱️ React's `artifactCreationElapsedTextV1`: `2 min 5 s` / `2 Min. 5 s`.
+pub fn hub_artifact_creation_elapsed_text(elapsed_ms: u64, locale: Locale) -> String {
+    let (minutes, rest) = (elapsed_ms / 1_000 / 60, elapsed_ms / 1_000 % 60);
+    match (minutes, locale) {
+        (0, _) => format!("{rest} s"),
+        (_, Locale::De) => format!("{minutes} Min. {rest} s"),
+        (_, Locale::En) => format!("{minutes} min {rest} s"),
     }
 }
 

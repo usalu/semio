@@ -145,6 +145,10 @@ impl<'a> StepBuilder<'a> {
         let p0 = self.body.vertices.get(v0).unwrap().position;
         let p1 = self.body.vertices.get(v1).unwrap().position;
         let curve = match entity_type.as_str() {
+            "SURFACE_CURVE" | "SEAM_CURVE" => {
+                let curve_3d = parse_refs(&attrs).first().copied().ok_or(StepError::Syntax(format!("{entity_type} #{curve_ref} missing curve_3d")))?;
+                return self.build_curve_geometry(curve_3d, v0, v1);
+            }
             "LINE" => Curve3::Line { origin: p0, dir: p1 - p0 },
             "CIRCLE" => {
                 let axis_ref = parse_refs(&attrs).first().copied().ok_or(StepError::Syntax("CIRCLE missing axis".to_string()))?;

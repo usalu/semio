@@ -60,9 +60,12 @@ pub(super) fn admit_drawing_envelope(app: &mut DrawingAppFixture, wire: &[u8]) -
     handle
 }
 
+/// ⏱️ Turn budget for one live Drawing envelope load. An accepted load ends by retiring the DISPLACED boot store one item per maintenance turn (the GIS twin measured 121 160 turns to `Ready`), so 100 000 could cut a correct load off mid-retirement. The bound asserts termination, not speed.
+const DRAWING_LIVE_LOAD_TURN_BUDGET: usize = 1_000_000;
+
 pub(super) async fn drive_drawing_load(app: &mut DrawingAppFixture, handle: semio_plugin::ArtifactEnvelopeDecodeOperationHandle) -> semio_plugin::ArtifactEnvelopeDecodeOperationPoll {
     let mut identity = artifact_laws::fixture_identity();
-    for _ in 0..100_000 {
+    for _ in 0..DRAWING_LIVE_LOAD_TURN_BUDGET {
         app.0.advance_typed_operation_publication(&mut identity, app.1.cx()).await.expect("one Drawing original decode publication turn");
         app.0.maintenance_step(app.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.maintenance).expect("one Drawing maintenance turn");
         let poll = app.0.advance_artifact_envelope_load(handle, app.1.cx()).expect("Drawing load advancement");

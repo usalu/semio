@@ -1,0 +1,12 @@
+[
+{"op":"region-set","id":"violin","set":{"areaM2":0.2123}},
+{"op":"region-set","id":"bow","set":{"areaM2":0.04541}},
+{"op":"set","path":["poses",{"id":"playing"},"thermal","regions","violin","exposedFraction"],"value":0.7207},
+{"op":"set","path":["poses",{"id":"bow-at-frog"},"thermal","regions","violin","exposedFraction"],"value":0.7207},
+{"op":"set","path":["poses",{"id":"bow-at-tip"},"thermal","regions","violin","exposedFraction"],"value":0.7207},
+{"op":"set","path":["poses",{"id":"holding-between-phrases"},"thermal","regions","violin","exposedFraction"],"value":0.7207},
+{"op":"set","path":["poses",{"id":"playing"},"thermal","regions","bow","exposedFraction"],"value":0.4699},
+{"op":"set","path":["poses",{"id":"bow-at-frog"},"thermal","regions","bow","exposedFraction"],"value":0.4699},
+{"op":"set","path":["poses",{"id":"bow-at-tip"},"thermal","regions","bow","exposedFraction"],"value":0.4699},
+{"op":"set","path":["poses",{"id":"holding-between-phrases"},"thermal","regions","bow","exposedFraction"],"value":0.4699}
+]

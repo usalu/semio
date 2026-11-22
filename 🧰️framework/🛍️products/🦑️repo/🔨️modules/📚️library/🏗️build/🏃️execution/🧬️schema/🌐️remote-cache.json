@@ -106,7 +106,7 @@
       "description": "The bounds, switches and tokens of the repository's own cache server (repo remote-cache serve). The store is finite: it evicts least recently used entries beyond maximumBytes and entries idle for more than maximumAgeDays. actionResults says how far uploaded Bazel action results are checked: off, structure (a well-formed message) or complete (additionally every blob they name is stored, and a result is answered only while that holds).",
       "type": "object",
       "additionalProperties": false,
-      "required": ["host", "port", "fleetArea", "directory", "maximumBytes", "maximumEntryBytes", "maximumAgeDays", "readOnly", "tls", "actionResults", "maximumActionResultBytes", "maintenanceSeconds", "graceSeconds", "environment", "tokenEnvironment"],
+      "required": ["host", "port", "fleetArea", "directory", "maximumBytes", "maximumEntryBytes", "maximumAgeDays", "readOnly", "tls", "actionResults", "maximumActionResultBytes", "maintenanceSeconds", "graceSeconds", "staleness", "environment", "tokenEnvironment"],
       "properties": {
         "host": { "type": "string", "minLength": 1, "maxLength": 253 },
         "port": { "type": "integer", "minimum": 0, "maximum": 65535 },
@@ -134,12 +134,26 @@
         "maximumActionResultBytes": { "type": "integer", "minimum": 1024, "maximum": 67108864 },
         "fleetArea": { "description": "The area of the cache ledger (`⚡️caching/💾️storage/🧾️ledger`) where that server keeps its index: local state of the group server, never replicated, inside a partition image that the file event service does not log. The ledger resolves its directory and its budget; the server never holds more than the budget.", "type": "string", "pattern": "^[a-z][a-z0-9-]{0,39}$" },
         "maintenanceSeconds": { "description": "How often a running server re-reads its directory, so entries collected by another process stop counting; 0 switches it off.", "type": "integer", "minimum": 0, "maximum": 86400 },
-        "graceSeconds": { "description": "How long a superseded entry (an older key of a slot whose newer key was stored) stays readable before it is reclaimed; 0 reclaims at the next collection.", "type": "integer", "minimum": 0, "maximum": 604800 },
+        "graceSeconds": { "description": "How long a stored entry is protected from retirement (builds in flight read it meanwhile, a registry entry no live entry consumes stays that long); 0 protects nothing.", "type": "integer", "minimum": 0, "maximum": 604800 },
+        "staleness": {
+          "description": "How the server keeps only builds of the synchronized tree it runs on (the replica worktree of the coordinator): mode off (judge nothing), dry-run (judge, only record what would be retired or refused: counts and the first examples in GET /status, `repo remote-cache status` and `.retention/sweeps.jsonl`) or enforce (retire stale entries, refuse entries that are stale on arrival); recheckSeconds the time after which an entry that looks stale on arrival is looked at again (the replica may lag); manifestNames the files of an action result that carry the declaration of the entry; generatedRoots the first path segments that never belong to the synchronized tree; examples how many example lines a report keeps. Entries stored within graceSeconds are never retired.",
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["mode", "recheckSeconds", "manifestNames", "generatedRoots", "examples"],
+          "properties": {
+            "mode": { "enum": ["off", "dry-run", "enforce"] },
+            "recheckSeconds": { "type": "integer", "minimum": 0, "maximum": 60 },
+            "manifestNames": { "type": "array", "items": { "type": "string", "minLength": 1, "maxLength": 128 } },
+            "generatedRoots": { "type": "array", "items": { "type": "string", "minLength": 1, "maxLength": 128 } },
+            "examples": { "type": "integer", "minimum": 0, "maximum": 100 }
+          }
+        },
         "environment": {
           "type": "object",
           "additionalProperties": false,
-          "required": ["readOnly", "tlsCertificate", "tlsKey"],
+          "required": ["readOnly", "tlsCertificate", "tlsKey", "toolchains"],
           "properties": {
+            "toolchains": { "$ref": "#/definitions/EnvironmentName" },
             "readOnly": { "$ref": "#/definitions/EnvironmentName" },
             "tlsCertificate": { "$ref": "#/definitions/EnvironmentName" },
             "tlsKey": { "$ref": "#/definitions/EnvironmentName" }
@@ -314,13 +328,33 @@
         "entries": { "type": "integer", "minimum": 0 },
         "bytes": { "type": "integer", "minimum": 0 },
         "evicted": {
-          "description": "Entries and bytes the server's retention removed since it started (age, budget, superseded slot, dangling).",
+          "description": "Entries and bytes the server's retention removed since it started (age, budget, stale against the synchronized tree, dangling).",
           "type": "object",
           "additionalProperties": false,
           "required": ["entries", "bytes"],
           "properties": {
             "entries": { "type": "integer", "minimum": 0 },
             "bytes": { "type": "integer", "minimum": 0 }
+          }
+        },
+        "retention": {
+          "description": "What the last staleness sweep of the server found and what its publish gate refused since it started; absent before the first sweep or while staleness is off.",
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["version", "mode", "sweptAt", "entries", "declared", "live", "grace", "stale", "unreached", "retired", "refused", "examples"],
+          "properties": {
+            "version": { "const": 1 },
+            "mode": { "enum": ["off", "dry-run", "enforce"] },
+            "sweptAt": { "type": "integer", "minimum": 0 },
+            "entries": { "type": "integer", "minimum": 0 },
+            "declared": { "type": "integer", "minimum": 0 },
+            "live": { "type": "integer", "minimum": 0 },
+            "grace": { "type": "integer", "minimum": 0 },
+            "stale": { "type": "object", "additionalProperties": { "type": "integer", "minimum": 0 } },
+            "unreached": { "type": "integer", "minimum": 0 },
+            "retired": { "type": "integer", "minimum": 0 },
+            "refused": { "type": "object", "additionalProperties": { "type": "integer", "minimum": 0 } },
+            "examples": { "type": "array", "items": { "type": "string" } }
           }
         },
         "reservedBytes": { "type": "integer", "minimum": 0 },
@@ -374,6 +408,8 @@
             "count": { "type": "integer", "minimum": 0 },
             "since": { "type": "integer", "minimum": 0 },
             "byClass": { "type": "object", "additionalProperties": { "type": "integer", "minimum": 0 } },
+            "current": { "description": "The divergences recorded since this server process started (the code it runs now; `since` is its start): what the code of today still produces. The lifetime count above also holds every divergence of code fixed since, which the history of the group keeps as evidence.", "type": "object", "additionalProperties": false, "required": ["since", "count", "byClass"], "properties": { "since": { "type": "integer", "minimum": 0 }, "count": { "type": "integer", "minimum": 0 }, "byClass": { "type": "object", "additionalProperties": { "type": "integer", "minimum": 0 } } } },
+            "lastHour": { "description": "The divergences of the last hour (a sliding window over the kept rows; `since` is 0).", "type": "object", "additionalProperties": false, "required": ["since", "count", "byClass"], "properties": { "since": { "type": "integer", "minimum": 0 }, "count": { "type": "integer", "minimum": 0 }, "byClass": { "type": "object", "additionalProperties": { "type": "integer", "minimum": 0 } } } },
             "advisory": { "type": "object", "additionalProperties": { "type": "integer", "minimum": 0 } },
             "superseded": { "description": "Writes that replaced a different result of the same key because the newest result of that class wins (graph project records), by class; the replaced result is kept as evidence.", "type": "object", "additionalProperties": { "type": "integer", "minimum": 0 } },
             "evidence": {
@@ -484,15 +520,15 @@
       "properties": { "entries": { "type": "integer", "minimum": 0 }, "bytes": { "type": "integer", "minimum": 0 } }
     },
     "Removed": {
-      "description": "What a collection removes, or would remove, by reason: dangling (unusable action results), superseded (a newer key of the slot replaced it and the grace passed), age (idle for too long, entries without a slot) and budget (least valuable beyond the bound).",
+      "description": "What a collection removes, or would remove, by reason: dangling (unusable action results), stale (stale against the synchronized tree, or unreached, and the grace passed), age (idle for too long, entries that declared nothing) and budget (least valuable beyond the bound).",
       "type": "object",
       "additionalProperties": false,
-      "required": ["entries", "bytes", "dangling", "superseded", "age", "budget"],
+      "required": ["entries", "bytes", "dangling", "stale", "age", "budget"],
       "properties": {
         "entries": { "type": "integer", "minimum": 0 },
         "bytes": { "type": "integer", "minimum": 0 },
         "dangling": { "type": "integer", "minimum": 0 },
-        "superseded": { "type": "integer", "minimum": 0 },
+        "stale": { "type": "integer", "minimum": 0 },
         "age": { "type": "integer", "minimum": 0 },
         "budget": { "type": "integer", "minimum": 0 }
       }
@@ -509,7 +545,7 @@
         "removed": { "$ref": "#/definitions/Removed" },
         "remaining": { "$ref": "#/definitions/Fill" },
         "reclaimed": { "description": "Blobs of the host store that no remaining entry references any more, and their bytes.", "$ref": "#/definitions/Fill" },
-        "deferred": { "description": "true when a running server owns the directory and supersession was left to its own collector.", "type": "boolean" }
+        "deferred": { "description": "true when a running server owns the directory and retirement was left to its own collector.", "type": "boolean" }
       }
     },
     "GcResult": {

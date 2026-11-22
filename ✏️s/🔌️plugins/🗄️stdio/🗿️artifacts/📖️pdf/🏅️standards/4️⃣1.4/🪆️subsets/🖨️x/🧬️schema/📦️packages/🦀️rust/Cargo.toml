@@ -9,6 +9,25 @@ description = "Component crate of semio-s-artifact-stdio-pdf: schema"
 [package.metadata.semio]
 role = "library"
 
+[package.metadata.semio.carve]
+owned = [
+  "editor::pdf14::modes::edit",
+  "editor::pdf14::modes::edit::windows",
+  "editor::pdf14::modes::edit::windows::main",
+  "editor::pdf14::modes::edit::windows::main::tests",
+  "editor::pdf14::page",
+  "editor::pdf14a::modes::edit",
+  "editor::pdf14a::modes::edit::windows",
+  "editor::pdf14a::modes::edit::windows::main",
+  "editor::pdf14a::modes::edit::windows::main::tests",
+  "editor::pdf14x::modes::edit",
+  "editor::pdf14x::modes::edit::windows",
+  "editor::pdf14x::modes::edit::windows::main",
+  "editor::pdf14x::modes::edit::windows::main::tests",
+  "standards::v1_4::subsets::a::schema::mutations::tests",
+  "standards::v1_4::subsets::x::schema",
+]
+
 [lints]
 workspace = true
 

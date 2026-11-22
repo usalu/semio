@@ -80,11 +80,53 @@ export function laneRestoreV1(text:string,laneRoot:string|undefined):string{
  return text.split(policy.key.laneToken).join(laneRoot);
 }
 
+const identityCodegenV1=/^(?:metadata|extra-filename)=/u;
+const identitySpanV1=(args:readonly string[],index:number):number=>{
+ const argument=args[index]!;
+ if((argument==="-C"||argument==="--codegen")&&identityCodegenV1.test(args[index+1]??""))return 2;
+ if(argument.startsWith("--codegen=")?identityCodegenV1.test(argument.slice(10)):argument.startsWith("-C")&&argument.length>2&&identityCodegenV1.test(argument.slice(2)))return 1;
+ return 0;
+};
+
+/** 🆔️ The crate identity Cargo derives from the workspace (`-C metadata`, which seeds the stable crate id and every symbol hash) and the file-name suffix derived from it (`-C extra-filename`): both are left out of the key, because they differ between Cargo workspaces that compile the very same unit; the compiler is given {@link canonicalMetadataV1} instead. */
+export function cargoIdentityArgumentsV1(args:readonly string[]):readonly string[]{
+ const rows:string[]=[];
+ for(let index=0;index<args.length;index++){const span=identitySpanV1(args,index);if(span>0){rows.push(args.slice(index,index+span).join(" ").replace(/^(?:-C|--codegen)[ =]?/u,""));index+=span-1;}}
+ return rows;
+}
+
+/** 🆔️ The metadata every compilation of one unit gets, whoever compiles it and in whichever workspace: a short hash of the portable key of the unit (its key without Cargo's identity, see {@link cargoIdentityArgumentsV1}), so equal units carry equal stable crate ids and distinct units (other sources, features, dependencies, flags) distinct ones. */
+export function canonicalMetadataV1(portableKey:string):string{return sha256V1(JSON.stringify([policy.namespace,"metadata",portableKey])).slice(0,policy.key.metadataCharacters);}
+
+/** 🔁️ The command line with the value of every `-C metadata=` replaced by `metadata` (in the spelling it had); `extra-filename` stays as Cargo gave it, because the file names Cargo looks for derive from it. */
+export function withCanonicalMetadataV1(args:readonly string[],metadata:string):readonly string[]{
+ return args.map((argument,index)=>{
+  const previous=args[index-1];
+  if((previous==="-C"||previous==="--codegen")&&argument.startsWith("metadata="))return"metadata="+metadata;
+  if(argument.startsWith("-Cmetadata="))return"-Cmetadata="+metadata;
+  if(argument.startsWith("--codegen=metadata="))return"--codegen=metadata="+metadata;
+  return argument;
+ });
+}
+
+/** 🏷️ The text with this unit's file-name suffix (`-C extra-filename`) replaced by its token, so an entry names its files the same in every workspace; ignored when the suffix is shorter than five characters. */
+export function extraNeutralV1(text:string,extra:string):string{return extra.length<5?text:text.split(extra).join(policy.key.extraToken);}
+
+/** 🏠️ Puts this unit's file-name suffix back where the token stands. */
+export function extraRestoreV1(text:string,extra:string):string{return extra.length<5?text:text.split(policy.key.extraToken).join(extra);}
+
+/** 🔖️ The file-name suffix (`-C extra-filename`) of a command line, `""` when it has none. */
+export function extraFilenameV1(args:readonly string[]):string{
+ for(const row of cargoIdentityArgumentsV1(args))if(row.startsWith("extra-filename="))return row.slice("extra-filename=".length);
+ return"";
+}
+
 /** ✂️ Rewrites a command line without the parts that differ between lanes or between terminals: the output directory, the incremental directory, `-L dependency` search paths, extern paths, `--diagnostic-width` and `--color` and the rendering words of `--json` (`diagnostic-rendered-ansi`, `diagnostic-short`): Cargo sets them by terminal, colour and message format of the invocation, they change only the text of the compiler's rendered messages and nothing else, so each of their combinations would otherwise be a unit of its own on every machine that built it another way. */
 export function normalizeRustcArgumentsV1(args:readonly string[],externDigests:ReadonlyMap<string,string>,laneRoot:string|undefined):string[]{
  const result:string[]=[];
  for(let index=0;index<args.length;index++){
   const argument=args[index]!;
+  const identity=identitySpanV1(args,index);if(identity>0){index+=identity-1;continue;}
   const take=(flag:string):string|undefined=>{if(argument===flag){index++;return args[index]??"";}if(argument.startsWith(flag+"="))return argument.slice(flag.length+1);return undefined;};
   if(take("--out-dir")!==undefined)continue;
   if(argument==="-C"&&(args[index+1]??"").startsWith("incremental=")){index++;continue;}
@@ -117,7 +159,11 @@ export function neutralRustflagsV1(encoded:string):string{
  return parts.map((part,index)=>parts[index-1]==="--remap-path-prefix"?machineNeutralRemapV1("--remap-path-prefix="+part).slice("--remap-path-prefix=".length):machineNeutralRemapV1(part)).join("\u001f");
 }
 
-const machineValueV1=(name:string,value:string):string=>name==="SDKROOT"?"⟨sdk⟩"+sdkIdentityV1(value):name==="CARGO_ENCODED_RUSTFLAGS"?neutralRustflagsV1(value):value;
+/** 🛠️ What a tool path of the environment (`RUSTC`, `RUSTDOC`, `RUSTC_LINKER`, `RUSTC_WRAPPER`, `RUSTC_WORKSPACE_WRAPPER`) is for the key: the file name of the program without its directory or extension (`rustc`, `cc`, `semio-unit-cache`), never where it is installed; the compiler build itself is the toolchain part of the key. */
+export const toolIdentityV1=(path:string):string=>path.replace(/[\\/]+$/u,"").split(/[\\/]/u).at(-1)!.replace(/\.exe$/iu,"");
+
+const TOOL_NAMES_V1=new Set(["RUSTC","RUSTDOC","RUSTC_LINKER","RUSTC_WRAPPER","RUSTC_WORKSPACE_WRAPPER"]);
+const machineValueV1=(name:string,value:string):string=>name==="SDKROOT"?"⟨sdk⟩"+sdkIdentityV1(value):name==="CARGO_ENCODED_RUSTFLAGS"?neutralRustflagsV1(value):TOOL_NAMES_V1.has(name)?"⟨tool⟩"+toolIdentityV1(value):value;
 
 /** 🚫️ The command line without its incremental session (`-C incremental=DIR` in the three spellings): an incremental compilation names its object files with a name that differs on every run, so its rlib has other bytes every time and other bytes than a compilation without a session, while the key of the unit leaves the session out. A unit that is shared through the fleet is compiled without one. */
 export function withoutIncrementalV1(args:readonly string[]):readonly string[]{
@@ -202,10 +248,10 @@ export function admitFactsV1(args:readonly string[],environment:Readonly<Record<
  return Object.freeze({crate:unit.crateName,package:environment.CARGO_PKG_NAME??"",version:environment.CARGO_PKG_VERSION??"",target:unit.target??"host",crateTypes:Object.freeze(unit.crateTypes.length?[...unit.crateTypes]:["lib"]),outDir:absolute(unit.outDir),extraFilename,source:absolute(unit.source),manifestDir:environment.CARGO_MANIFEST_DIR??"",primary:environment.CARGO_PRIMARY_PACKAGE!==undefined,buildScriptOutDir:environment.OUT_DIR??null,externs:Object.freeze(unit.externs.filter(row=>row.path!=="").map(row=>absolute(row.path)))});
 }
 
-/** 🧪️ The environment a build script run is keyed by: Cargo's per-package, per-feature, per-cfg and dependency-metadata variables with the lane neutralised; never `NUM_JOBS` or the job server. */
+/** 🧪️ The environment a build script run is keyed by: Cargo's per-package, per-feature, per-cfg and dependency-metadata variables with the lane neutralised, the compiler flags with the machine-specific part of their path remappings reduced to its role and the compiler, wrapper and linker paths reduced to the program's name (the same neutralisation as {@link keyEnvironmentV1}); never `NUM_JOBS` or the job server. */
 export function buildKeyEnvironmentV1(environment:Readonly<Record<string,string|undefined>>,laneRoot:string|undefined):Array<[string,string]>{
  const names=new Set(policy.buildScript.environmentNames),rows:Array<[string,string]>=[];
- for(const name of Object.keys(environment).sort()){const value=environment[name];if(value===undefined)continue;if(names.has(name)||policy.buildScript.environmentPrefixes.some(prefix=>name.startsWith(prefix)))rows.push([name,laneNeutralV1(value,laneRoot)]);}
+ for(const name of Object.keys(environment).sort()){const value=environment[name];if(value===undefined)continue;if(names.has(name)||policy.buildScript.environmentPrefixes.some(prefix=>name.startsWith(prefix)))rows.push([name,machineValueV1(name,laneNeutralV1(value,laneRoot))]);}
  return rows;
 }
 

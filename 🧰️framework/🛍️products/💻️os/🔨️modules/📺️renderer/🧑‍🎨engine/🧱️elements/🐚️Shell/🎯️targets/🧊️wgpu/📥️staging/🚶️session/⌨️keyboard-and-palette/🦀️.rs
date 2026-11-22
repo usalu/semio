@@ -105,7 +105,7 @@ impl<'ctx> SessionCtx<'ctx> {
             }
         };
         let inset = theme.control_height;
-        let dialog_width = SHELL_PALETTE_DESKTOP_MAX_WIDTH_PX.min((width - inset * 2.0).max(1.0));
+        let dialog_width = shell_palette_desktop_max_width_px().min((width - inset * 2.0).max(1.0));
         let input_height = theme.navbar_height;
         let body_line = theme.font_size_body * 1.5;
         let small_line = theme.font_size_small * (10.0 / 7.0);
@@ -183,7 +183,6 @@ impl<'ctx> SessionCtx<'ctx> {
         Some(ShellPalettePlan { kind, dialog, list: Rect::new(dialog.x, list_top, dialog.w, viewport_list_height), entries })
     }
 
-    //#region ⌨️ShellShortcutDispatch
     /// 🪟️ Closes one window wherever it sits — the ONE close lane React's `closeWindow(windowId)`
     /// (`🖱️ui/🧱️elements/🎨️Canvas/🟦️.tsx:1475-1485`) is: the tab's own chip, the `mod+shift+w` chord
     /// and any future caller collapse the layout by the same rule, refocus `children[0]`, and tear
@@ -327,7 +326,6 @@ impl<'ctx> SessionCtx<'ctx> {
             ShellShortcut::ModeStep(_) | ShellShortcut::SurfaceRole(_) | ShellShortcut::TimeTravel(_) => false,
         }
     }
-    //#endregion ⌨️ShellShortcutDispatch
 }
 
 //#endregion ShellInput

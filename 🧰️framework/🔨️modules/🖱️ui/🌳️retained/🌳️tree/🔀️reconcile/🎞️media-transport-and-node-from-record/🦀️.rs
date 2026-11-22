@@ -116,9 +116,44 @@ fn media_transport_value_valid(value: &serde_json::Value) -> bool {
     reason_valid && height_valid && trim_valid && (capability_status != "ready" || root.get("resource").is_some_and(serde_json::Value::is_object))
 }
 
-fn media_transport_host_status(extension: &str, params_json: &str) -> Option<String> {
+/// 🎛️ The host of one extension id: a function of its authored props (`ExtensionHostV1`) answering the controls it renders.
+type ExtensionHost = std::rc::Rc<dyn Fn(&str) -> Vec<UiNode>>;
+
+thread_local! {
+    static EXTENSION_HOSTS: std::cell::RefCell<Vec<(String, String, ExtensionHost)>> = const { std::cell::RefCell::new(Vec::new()) };
+}
+
+/// 🧩️ Registers the host of the extension `extension_id` (React's `registerExtensionHostV1`): `label` names what it renders to a reader and `host` maps the node's authored props (JSON) to the controls it renders, mounted under the extension's node as ordinary retained children stacked top to bottom (see [`extension_row_key`]). Replaces an earlier registration of the same id; the dynamic extension door calls this once an install lands.
+pub fn register_extension_host(extension_id: &str, label: &str, host: impl Fn(&str) -> Vec<UiNode> + 'static) {
+    EXTENSION_HOSTS.with_borrow_mut(|hosts| {
+        hosts.retain(|(id, ..)| id != extension_id);
+        hosts.push((extension_id.to_string(), label.to_string(), std::rc::Rc::new(host)));
+    });
+}
+
+/// 🗑️ Retires the host registered for `extension_id`, so its nodes show `Extension unavailable: <id>` again.
+pub fn retire_extension_host(extension_id: &str) {
+    EXTENSION_HOSTS.with_borrow_mut(|hosts| hosts.retain(|(id, ..)| id != extension_id));
+}
+
+/// 🧱️ The controls the host of `extension_id` renders for `params_json`, in order; empty for an unhosted extension.
+pub fn extension_host_rows(extension_id: &str, params_json: &str) -> Vec<UiNode> {
+    let host = EXTENSION_HOSTS.with_borrow(|hosts| hosts.iter().find(|(id, ..)| id == extension_id).map(|(.., host)| host.clone()));
+    host.map_or_else(Vec::new, |host| host(params_json))
+}
+
+/// 🔑️ The key of row `index` of the extension `extension_id` — the explicit key its retained child and its accessibility node carry.
+pub fn extension_row_key(extension_id: &str, index: usize) -> String {
+    format!("{extension_id}.row.{index}")
+}
+
+fn registered_extension_host(extension: &str) -> Option<String> {
+    EXTENSION_HOSTS.with_borrow(|hosts| hosts.iter().find(|(id, ..)| id == extension).map(|(_, label, _)| label.clone()))
+}
+
+fn extension_host_status(extension: &str, params_json: &str) -> Option<String> {
     if extension != MEDIA_TRANSPORT_EXTENSION_ID {
-        return None;
+        return registered_extension_host(extension);
     }
     let Ok(value) = serde_json::from_str::<serde_json::Value>(params_json) else { return Some(format!("{MEDIA_TRANSPORT_EXTENSION_ID} · invalid-contract")) };
     let locale = value.get("locale").and_then(serde_json::Value::as_str);
@@ -132,6 +167,8 @@ fn media_transport_host_status(extension: &str, params_json: &str) -> Option<Str
     })
 }
 
+/// 🔌️ An `Extension` record that carries children is the host's own document spliced in by the program bridge (React mounts the host in place): it maps to a plain stack around that subtree, not to a slot.
+///
 /// 🧩️ Projects ONE published record onto the retained `UiNode` this target paints — the missing half
 /// of the retained-document pipeline (`📓️wgpu-blank-paint-2026-09-12.md` §5).
 ///
@@ -253,10 +290,14 @@ pub fn ui_node_from_record(document: &UiDocumentTree, record: &UiNodeRecord, sur
             interaction_domain: None,
         }),
         ui_contract::Component::Surface(props) => UiNode::ComponentScene(surface_scene_node(document, record, props, surface, controller)),
+        ui_contract::Component::Extension(_) if !record.children.is_empty() => {
+            let (direction, gap, padding) = stack_metrics(&record.layout);
+            UiNode::Stack(UiStackNode { direction, gap, padding, id: Some(record.key.as_str().to_string()), presence, activate: None, drop_action: None, drop_overlay: None, menu, children: Vec::new() })
+        }
         ui_contract::Component::Extension(props) => {
             let body_key = props.extension.as_str().to_string();
             let params_json = serde_json::to_string(&props.props).unwrap_or_else(|_| "null".to_string());
-            let host_status = media_transport_host_status(&body_key, &params_json);
+            let host_status = extension_host_status(&body_key, &params_json);
             UiNode::ExternalSlot(semio_ui_declaration::ui::UiExternalSlotNode { plugin_id: surface_plugin_id(surface), app_id: controller.to_string(), body_key, params_json, host_status, presence, menu })
         }
     }

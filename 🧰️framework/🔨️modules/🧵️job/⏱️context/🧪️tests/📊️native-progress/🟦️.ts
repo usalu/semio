@@ -6,6 +6,8 @@ import corpus from "./🧫️fixtures/🔣️.json";
 import schema from "./🧫️fixtures/🧬️.json";
 import chargeCases from "./🧫️fixtures/retained-charge.json";
 import chargeSchema from "./🧫️fixtures/retained-charge.schema.json";
+import floorLaw from "./🧫️fixtures/receiving-floor.json";
+import floorSchema from "./🧫️fixtures/receiving-floor.schema.json";
 test("one retained item and one fuel are admitted together", () => {
  expect(new Ajv().compile(chargeSchema)(chargeCases)).toBe(true);
  using db = new Database(":memory:");
@@ -35,4 +37,12 @@ test("the actual fixture hook is scoped and returns no callback verdict",async()
  const state=await Bun.file(new URL("../../../🛬️receiving/🎟️state/🦀️.rs",import.meta.url)).text();
  for(const proof of ["pub fn with_native_decode_progress","FnMut(semio_framework_value_native_owned::native_decoding::NativeDecodeProgress)","impl Drop for NativeProgressObserverScope"])expect(source.includes(proof)).toBe(true);
  expect(state.includes("testkit::observe_native_decode_progress(progress)")).toBe(true);
+});
+test("a receiving floor keeps the half share, raises it up to the whole turn and refuses beyond it",()=>{
+ expect(new Ajv().compile(floorSchema)(floorLaw)).toBe(true);
+ using db=new Database(":memory:");
+ const rows=db.query("select case when json_extract(value,'$.floorCopyBytes')<=(?2+1)/2 then 'share' when json_extract(value,'$.floorCopyBytes')<=?2 then 'floor' else 'refused' end as expect from json_each(?1,'$.cases')").all(JSON.stringify(floorLaw),floorLaw.turnCopyBytes);
+ expect(rows).toEqual(floorLaw.cases.map(({expect:kind})=>({expect:kind})));
+ expect(new Set(floorLaw.cases.map(({expect:kind})=>kind))).toEqual(new Set(["share","floor","refused"]));
+ expect(floorLaw.settlingTurns).toBeLessThan(floorLaw.refusalTurns);
 });

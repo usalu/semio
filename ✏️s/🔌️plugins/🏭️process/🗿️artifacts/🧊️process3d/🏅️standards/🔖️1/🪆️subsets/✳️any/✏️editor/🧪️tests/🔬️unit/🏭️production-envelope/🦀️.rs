@@ -90,13 +90,13 @@ fn production_envelope_wire(label: &str) -> (Vec<u8>, Process3dSnapshot, [u8; 32
     .expect("schema-first Process3d production fixture envelope");
     let envelope = store::os_store::document_materialize::create_document_envelope(semio_s_artifact_process_process3d_model::snapshot::PROCESS_3D_SCHEMA, "process3d-production-mounted-law", snapshot, None, &::semio_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
     let owners = store::os_store::document_store_owners::funded_bounded_artifact_store_owners::<Process3dSnapshot, Process3dMutation>().expect("Process3d fixture funds its bounded catalog");
-    let funded = semio_s_artifact_process_process3d_host::process3d_demand_grant(owners.uninstalled_envelope_retirement_demands(&envelope));
+    let funded = semio_plugin::plugin_self_funded_grant(owners.uninstalled_envelope_retirement_demands(&envelope), semio_plugin::PLUGIN_SELF_FUNDED_BODY_BYTES);
     let (mut retirement, _) = owners.retire_envelope_uninstalled(envelope, funded).map_err(|(error, _, _)| error).expect("Process3d fixture envelope retirement admission");
     let mut caller = semio_plugin::artifact_app_laws::OriginalFixtureScope::admit();
     let page_bytes = store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES;
     for _ in 0..100_000 {
         let demand = retirement.next_demand(page_bytes).expect("Process3d fixture envelope retirement demand");
-        let grant = semio_s_artifact_process_process3d_host::process3d_demand_grant(demand);
+        let grant = semio_plugin::plugin_self_funded_grant(demand, semio_plugin::PLUGIN_SELF_FUNDED_BODY_BYTES);
         let mut complete = false;
         caller.cx().with_retained_loan(grant, |cx| {
             semio_framework_job::close_original_effect_step(cx, demand, |effect| {

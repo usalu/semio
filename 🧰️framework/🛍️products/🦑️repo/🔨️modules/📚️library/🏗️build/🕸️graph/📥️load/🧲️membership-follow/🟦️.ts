@@ -15,26 +15,25 @@ export function membershipChangePathsV1(root:string,error:unknown):string[]{
   return Array.isArray(named)?named.filter((path):path is string=>typeof path==="string").map(path=>isAbsolute(path)?path:join(root,path)):[];
 }
 
-/** 👻️ Answers a path that vanished under the walk of the inventory (`ENOENT`/`ENOTDIR` of a path below `root`) as the typed `BUILD_MEMBERSHIP_CHANGED` refusal that names it, so the follow-up rounds treat it as absent instead of an internal error; any other error is returned as it is.
+const insideRootV1=(root:string,path:string):boolean=>{const distance=relative(root,path);return distance!==""&&distance!==".."&&!distance.startsWith(".."+sep)&&!isAbsolute(distance);};
+
+/** 👻️ The absolute member path below `root` that a vanished-path failure (`ENOENT`/`ENOTDIR`) of the inventory walk names; the root itself, paths outside it and every other error answer none.
  * @see ./🧪️tests/🧲️membership-follow */
-export function vanishedMemberAsChangeV1(root:string,error:unknown):unknown{
+export function vanishedMemberPathV1(root:string,error:unknown):string|undefined{
   const failure=error as NodeJS.ErrnoException|null,path=failure?.path;
-  if(failure?.code!=="ENOENT"&&failure?.code!=="ENOTDIR"||typeof path!=="string"||!isAbsolute(path))return error;
-  const distance=relative(root,path);
-  if(distance===".."||distance.startsWith(".."+sep)||isAbsolute(distance))return error;
-  return Object.assign(new Error(`Build member removed during discovery: ${path}`,{cause:error}),{code:"BUILD_MEMBERSHIP_CHANGED",paths:[path]});
+  if(failure?.code!=="ENOENT"&&failure?.code!=="ENOTDIR"||typeof path!=="string"||!isAbsolute(path))return undefined;
+  return insideRootV1(root,path)?path:undefined;
 }
 
 /** 🌊️ The absolute paths below `root` that a failure of the inventory names as moved under the walk (a vanished or retyped member, a directory that disappeared between its listing and its read, a typed concurrent edit, also as the cause of a wrapper), so the follow-up rounds re-observe only the owners that read them instead of ending the process; a stale implementation, an error that names no path of the tree and every other failure answer none and stay fatal.
  * @see ./🧪️tests/🌊️vanished-directory */
 export function followedPathsV1(root:string,error:unknown):string[]{
-  const inside=(path:string)=>{const distance=relative(root,path);return distance!==""&&distance!==".."&&!distance.startsWith(".."+sep)&&!isAbsolute(distance);};
   for(let depth=0,value:unknown=error;value!==null&&typeof value==="object"&&depth<=4;depth++,value=(value as {cause?:unknown}).cause){
     if(STALE_IMPLEMENTATION_CODES_V1.has(String((value as {code?:unknown}).code)))return [];
-    const named=vanishedMemberAsChangeV1(root,value);if(named!==value)return membershipChangePathsV1(root,named);
+    const vanished=vanishedMemberPathV1(root,value);if(vanished!==undefined)return [vanished];
   }
   const edit=concurrentEditOfV1(error);
-  return edit!==undefined&&isAbsolute(edit.path)&&inside(edit.path)?[edit.path]:[];
+  return edit!==undefined&&isAbsolute(edit.path)&&insideRootV1(root,edit.path)?[edit.path]:[];
 }
 
 /** 🗣️ The bilingual line of one membership follow-up round.

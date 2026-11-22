@@ -1261,6 +1261,12 @@ const closureStoreOfV1 = workspaceRoot => {
 const closureBundlesV1 = createBoundedCacheV1({ name: "inference:closure-bundles", maxEntries: 512, maxBytes: INFERENCE_LIMITS_V1.closureBundleCacheBytes, sizeOf: row => INFERENCE_LIMITS_V1.closureEntryBaseBytes + INFERENCE_LIMITS_V1.closureEntryRowBytes * (row.bundle.rows.length + row.layerCount) });
 /** 🌊️ The entry of a store as a bundle whose layers are read from the store one at a time while it is iterated: nothing of the layers is held, however many there are. */
 const lazyBundleV1 = (store, entry) => ({ version: 1, recipe: entry.recipe, value: entry.value, rows: entry.rows, sidecar: entry.sidecar, layers: { [Symbol.iterator]: () => store.layersSync(entry.digests) } });
+/** 🔢️ The sidecar of an exported bundle as a function of the entry: the walk members of each layer are the walks that include it which the process knew (every walk it derived or loaded before, so another machine knows another set); only the walks that are facts of this entry's own layers can matter when the entry is resolved, so the exported members are those, in code unit order, and two machines that derived the entry after different prior walks export the same bytes. */
+export function canonicalSidecarV1(sidecar) {
+  if (sidecar === null || sidecar === undefined || !Array.isArray(sidecar.members)) return sidecar;
+  const own = new Set((sidecar.facts ?? []).flatMap(fact => fact?.row?.path === undefined ? [] : [fact.row.path]));
+  return { ...sidecar, members: sidecar.members.map(list => list ? list.filter(walk => own.has(walk)).sort() : list) };
+}
 const TRAVEL_DIGEST_V1 = /^[0-9a-f]{64}$/u;
 /** 🧪️ Whether the own rows of a bundle hold in this tree (true while no scripts are bound, where nothing can be decided): a bundle whose own rows do not hold is stale and is not stored, since every consumer checks the rows of a stored entry against its own tree and derives it again when they do not hold, so storing it only costs the write; its layers are left to that check, which a bundle that holds pays anyway. */
 async function bundleRowsHoldV1(workspaceRoot, bundle) {
@@ -1319,7 +1325,7 @@ export const closureTravelV1 = Object.freeze({
       for (const reference of sharedReferencesOfV1(described.bundle.value)) await visit(reference.recipe);
     };
     for (const recipe of Object.values(table ?? {})) await visit(recipe);
-    return [...seen].filter(([, described]) => described !== undefined).map(([recipeKey, described]) => ({ recipeKey, stamp: described.stamp, bundle: described.bundle }));
+    return [...seen].filter(([, described]) => described !== undefined).map(([recipeKey, described]) => ({ recipeKey, stamp: described.stamp, bundle: { ...described.bundle, sidecar: canonicalSidecarV1(described.bundle.sidecar) } }));
   },
   async import(workspaceRoot, bundles) {
     const directory = closureStoreBindingsV1.get(workspaceRoot)?.directory ?? closureStoreDirectoryV1(workspaceRoot);

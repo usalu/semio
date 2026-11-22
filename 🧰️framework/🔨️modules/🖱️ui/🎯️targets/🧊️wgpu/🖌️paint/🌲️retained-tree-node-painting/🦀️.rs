@@ -43,6 +43,7 @@ pub(super) fn retained_tree_node_step(
     driver_drag: UiDriverDrag,
     reversed: bool,
     inline: ui_contract::FlowInline,
+    locale: Option<semio_ui_locale::Locale>,
     atlas: &mut FontAtlas,
     icons: Option<&IconAtlas>,
     draw: &mut DrawList,
@@ -67,6 +68,9 @@ pub(super) fn retained_tree_node_step(
             }
         }
         1 => {
+            if tree.sections.is_empty() && semio_ui_wgpu_mounted_layout::document_table(retained, tree_id).is_none() {
+                return retained_tree_status_step(tree, bounds, theme, inline, locale, &metrics, atlas, icons, draw, cursor);
+            }
             let Some(section) = retained_tree_section_at(tree, cursor.section, reversed) else {
                 cursor.advance(10);
                 return RetainedNodePaintStep::Pending;
@@ -91,8 +95,12 @@ pub(super) fn retained_tree_node_step(
                 if section.label.is_none() {
                     return RetainedNodePaintStep::Pending;
                 }
-                let color = theme.text_element;
+                let ready = retained.drop_ready().is_some_and(|(owner, _)| owner == tree_id);
+                let color = if ready { foreground_on_fill(theme, theme.text_element, false, true) } else { theme.text_element };
                 let result = retained_fixed_output(draw, |draw| {
+                    if ready {
+                        draw.push_rounded([bounds.x, header_y, bounds.w, header_height], theme.celebrate[1], theme.border_radius);
+                    }
                     if open && !section.items.is_empty() {
                         let center = header_y + header_height * 0.5;
                         let (y, h) = if reversed { (header_y, center - header_y) } else { (center, header_y + header_height - center) };
@@ -113,7 +121,7 @@ pub(super) fn retained_tree_node_step(
                 cursor.advance(2);
                 return RetainedNodePaintStep::Pending;
             };
-            let color = theme.text_element;
+            let color = if retained.drop_ready().is_some_and(|(owner, _)| owner == tree_id) { foreground_on_fill(theme, theme.text_element, false, true) } else { theme.text_element };
             let offset = TREE_TOGGLE_WIDTH + TREE_ICON_SIZE + theme.gap_standard * 2.0;
             let toolbar_reserve = section.header_toolbar.as_ref().map_or(0.0, |_| metrics.control_width + theme.gap_standard);
             let header_font_size = if tree.presentation == ui_contract::TreePresentation::Compact { SIZE_TINY } else { theme.font_size_small };
@@ -168,9 +176,15 @@ pub(super) fn retained_tree_node_step(
             let selected = item.presence.selected;
             let previewed = item.presence.state == UiState::Previewed;
             let on_hover_fill = previewed || item.presence.hover;
-            let focus_ring = retained_tree_item_node_at(retained, tree_id, tree, cursor, reversed).and_then(|id| retained.node(id)).is_some_and(|node| focus_ring_visible(node.flags));
+            let row_node = retained_tree_item_node_at(retained, tree_id, tree, cursor, reversed);
+            let focus_ring = row_node.and_then(|id| retained.node(id)).is_some_and(|node| focus_ring_visible(node.flags));
+            let drop_ready = retained.drop_ready().is_some_and(|(owner, source)| owner == tree_id && Some(source) != row_node);
+            let detail_open = item.detail.is_some() && row_node.and_then(|id| retained.disclosure_open(id)).unwrap_or(false);
+            let (ink_selected, ink_hover) = if drop_ready { (false, true) } else { (selected, on_hover_fill) };
             let result = retained_fixed_output(draw, |draw| {
-                if selected {
+                if drop_ready {
+                    draw.push_rounded([row.x, row.y, row.w, row.h], theme.celebrate[1], theme.border_radius);
+                } else if selected {
                     draw.push_rounded([row.x, row.y, row.w, row.h], theme.selected, theme.border_radius);
                 } else if on_hover_fill {
                     draw.push_rounded([row.x, row.y, row.w, row.h], theme.row_hover, theme.border_radius);
@@ -187,15 +201,15 @@ pub(super) fn retained_tree_node_step(
                     draw.push_shared_border_effect(row, theme.selected, theme.border_radius, theme.stroke_hairline, semio_ui_draw_contract::SharedBorderState::Focus);
                 }
                 let indent = bounds.x + cursor.depth as f32 * TREE_INDENT_PER_LEVEL + TREE_TOGGLE_WIDTH;
-                if item.items.as_ref().is_some_and(|items| !items.is_empty()) {
+                if item.items.as_ref().is_some_and(|items| !items.is_empty()) || item.detail.is_some() {
                     if let Some(icons) = icons {
-                        let chevron = retained_fold_chevron(open, reversed, inline);
+                        let chevron = retained_fold_chevron(open || detail_open, reversed, inline);
                         let x = if inline.is_rtl() { bounds.x + bounds.w - (indent - bounds.x) } else { indent - TREE_TOGGLE_WIDTH };
-                        push_icon(draw, icons, chevron, x, row.y + (row.h - SIZE_TINY) * 0.5, SIZE_TINY, foreground_on_fill(theme, theme.text_element, selected, on_hover_fill));
+                        push_icon(draw, icons, chevron, x, row.y + (row.h - SIZE_TINY) * 0.5, SIZE_TINY, foreground_on_fill(theme, theme.text_element, ink_selected, ink_hover));
                     }
                 }
                 if let (Some(icons), Some(icon_id)) = (icons, item.icon_id) {
-                    let color = foreground_on_fill(theme, item.tone.and_then(|tone| theme.tone_ink(tone)).unwrap_or(theme.text_element), selected, on_hover_fill);
+                    let color = foreground_on_fill(theme, item.tone.and_then(|tone| theme.tone_ink(tone)).unwrap_or(theme.text_element), ink_selected, ink_hover);
                     let x = if inline.is_rtl() { bounds.x + bounds.w - (indent - bounds.x) - TREE_ICON_SIZE } else { indent };
                     push_icon(draw, icons, icon_id.as_str(), x, row.y + (row.h - TREE_ICON_SIZE) * 0.5, TREE_ICON_SIZE, color);
                 }
@@ -222,7 +236,9 @@ pub(super) fn retained_tree_node_step(
             let selected = item.presence.selected;
             let previewed = item.presence.state == UiState::Previewed;
             let on_hover_fill = previewed || item.presence.hover;
-            let color = foreground_on_fill(theme, item.tone.and_then(|tone| theme.tone_ink(tone)).unwrap_or(theme.text_element), selected, on_hover_fill);
+            let drop_ready = retained.drop_ready().is_some_and(|(owner, source)| owner == tree_id && Some(source) != retained_tree_item_node_at(retained, tree_id, tree, cursor, reversed));
+            let (ink_selected, ink_hover) = if drop_ready { (false, true) } else { (selected, on_hover_fill) };
+            let color = foreground_on_fill(theme, item.tone.and_then(|tone| theme.tone_ink(tone)).unwrap_or(theme.text_element), ink_selected, ink_hover);
             let color = if item.dimmed.unwrap_or(false) || item.presence.state == UiState::Disabled { color.with_alpha(color.a * 0.5) } else { color };
             let trailing = if driver_drag == UiDriverDrag::Handle && tree_drag_role(item).is_some() { tree_drag_handle_reservation(&metrics) } else { 0.0 };
             let value_width = if item.control.is_some() || item.content_lines.is_some() || item.inline_toolbar.is_some() { metrics.control_width + metrics.gap * 2.0 } else { 0.0 };
@@ -326,8 +342,10 @@ pub(super) fn retained_tree_node_step(
             let hair = theme.stroke_hairline;
             let column_x = |column: usize| bounds.x + column as f32 * TREE_INDENT_PER_LEVEL + TREE_GUIDE_INSET;
             let center = row.y + row.h * 0.5;
+            let detail_open = item.detail.is_some() && retained_tree_item_node_at(retained, tree_id, tree, cursor, reversed).and_then(|id| retained.disclosure_open(id)).unwrap_or(false);
+            let detail = if detail_open { semio_ui_wgpu_mounted_layout::TREE_DETAIL_HEIGHT } else { 0.0 };
             let toward_children = |draw: &mut DrawList, x: f32| {
-                let (y, h) = if reversed { (row.y, center - row.y) } else { (center, row.y + row.h - center) };
+                let (y, h) = if reversed { (row.y - detail, center - row.y + detail) } else { (center, row.y + row.h - center + detail) };
                 draw.push_solid([x, y, hair, h], color);
             };
             let result = retained_fixed_output(draw, |draw| {
@@ -345,9 +363,9 @@ pub(super) fn retained_tree_node_step(
                         draw.push_solid([x, row.y, hair, center - row.y], color);
                     }
                     let own_slot = bounds.x + depth as f32 * TREE_INDENT_PER_LEVEL;
-                    let end = if item.items.as_ref().is_some_and(|items| !items.is_empty()) { own_slot } else { column_x(depth) };
+                    let end = if item.items.as_ref().is_some_and(|items| !items.is_empty()) || item.detail.is_some() { own_slot } else { column_x(depth) };
                     draw.push_solid([x, center, (end - x).max(0.0), hair], color);
-                } else if open {
+                } else if open || detail_open {
                     toward_children(draw, column_x(depth));
                 }
             });
@@ -392,7 +410,7 @@ pub(super) fn retained_tree_node_step(
                 cursor.depth -= 1;
                 if reversed && cursor.depth > 0 {
                     let Some(parent) = retained_tree_item_at(tree, cursor, reversed) else { return RetainedNodePaintStep::Fault };
-                    cursor.row_y += metrics.for_item(parent).row_height;
+                    cursor.row_y += retained_tree_row_band(retained, retained_tree_item_node_at(retained, tree_id, tree, cursor, reversed), parent, &metrics);
                 }
                 if cursor.depth == 0 {
                     if reversed {
@@ -416,6 +434,68 @@ pub(super) fn retained_tree_node_step(
             }
         }
         _ => retained_presence_step(draw, bounds, theme, &tree.presence),
+    }
+}
+
+/// 🦴 The one section a tree with no sections paints — React's `treeStatusSection`: an open header (chevron, uppercase semibold label, loading or waiting border) saying "Loading surface…" or "No data", and under an idle one the helper row repeating "No data" in small muted ink.
+#[allow(clippy::too_many_arguments, reason = "one retained paint context")]
+fn retained_tree_status_step(
+    tree: &UiTreeNode,
+    bounds: Rect,
+    theme: &Theme,
+    inline: ui_contract::FlowInline,
+    locale: Option<semio_ui_locale::Locale>,
+    metrics: &TreeRowMetrics,
+    atlas: &mut FontAtlas,
+    icons: Option<&IconAtlas>,
+    draw: &mut DrawList,
+    cursor: &mut RetainedNodePaintCursor,
+) -> RetainedNodePaintStep {
+    let busy = matches!(tree.presence.status, UiStatus::Loading | UiStatus::Waiting);
+    let text = super::node_painting_with_driver::ui_common_label(locale, |labels| if busy { labels.loading_surface } else { labels.no_data });
+    let header = metrics.header_height;
+    let header_rect = Rect::new(bounds.x, cursor.row_y, bounds.w, header);
+    if cursor.item == 0 {
+        if !cursor.chrome {
+            cursor.chrome = true;
+            let result = retained_fixed_output(draw, |draw| {
+                match tree.presence.status {
+                    UiStatus::Loading => paint_loading_border(draw, header_rect, theme.border_normal, theme),
+                    UiStatus::Waiting => paint_waiting_border(draw, header_rect, theme.border_normal, theme),
+                    UiStatus::Finished | UiStatus::Idle => {}
+                }
+                if let Some(icons) = icons {
+                    let size = TREE_SECTION_CHEVRON_SIZE;
+                    push_icon(draw, icons, retained_fold_chevron(true, false, inline), bounds.x, header_rect.y + (header - size) * 0.5, size, theme.text_element);
+                    push_icon(draw, icons, "folder", bounds.x + TREE_TOGGLE_WIDTH + theme.gap_standard, header_rect.y + (header - TREE_ICON_SIZE) * 0.5, TREE_ICON_SIZE, theme.text_element);
+                }
+            });
+            return if result.is_err() { RetainedNodePaintStep::Fault } else { RetainedNodePaintStep::Pending };
+        }
+        let offset = TREE_TOGGLE_WIDTH + TREE_ICON_SIZE + theme.gap_standard * 2.0;
+        let font_size = if tree.presentation == ui_contract::TreePresentation::Compact { SIZE_TINY } else { theme.font_size_small };
+        let label_bounds = Rect::new(bounds.x + offset, header_rect.y + (header - font_size) * 0.5, (bounds.w - offset).max(0.0), font_size);
+        return match paint_retained_glyph_step_tracked(&text.to_uppercase(), label_bounds, font_size, theme.text_element, RetainedTextFlow::Clip, semio_ui_text::TextWeight::Semibold, theme.tracking_wide * font_size, atlas, draw, &mut cursor.glyph) {
+            RetainedGlyphStep::Complete => {
+                cursor.next_part();
+                RetainedNodePaintStep::Pending
+            }
+            RetainedGlyphStep::Pending => RetainedNodePaintStep::Pending,
+            RetainedGlyphStep::Fault => RetainedNodePaintStep::Fault,
+        };
+    }
+    if busy {
+        cursor.advance(10);
+        return RetainedNodePaintStep::Pending;
+    }
+    let x = bounds.x + TREE_INDENT_PER_LEVEL + TREE_TOGGLE_WIDTH;
+    let row = Rect::new(x, cursor.row_y + header, (bounds.x + bounds.w - x).max(0.0), metrics.row_height);
+    match retained_tree_text_step(text, row, theme.font_size_small, theme.text_muted, inline, atlas, draw, cursor) {
+        RetainedNodePaintStep::Complete => {
+            cursor.advance(10);
+            RetainedNodePaintStep::Pending
+        }
+        step => step,
     }
 }
 

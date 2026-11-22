@@ -1,0 +1,286 @@
+{
+ "sources": [
+  {
+   "name": "hermetic",
+   "source": "use std::{env,fs};\nfn main(){let o=env::var(\"OUT_DIR\").unwrap();let t=std::env::var_os(\"TARGET\");let f=env::var(\"CARGO_FEATURE_X\");fs::write(format!(\"{}/a\",o),b\"1\").unwrap();println!(\"cargo:rerun-if-changed=build.rs\");}\n",
+   "reason": null
+  },
+  {
+   "name": "comment only",
+   "source": "// Command::new(\"cc\") is not used\nfn main(){}\n",
+   "reason": null
+  },
+  {
+   "name": "spawns",
+   "source": "fn main(){std::process::Command::new(\"sh\").status().unwrap();}",
+   "reason": "spawns-process"
+  },
+  {
+   "name": "network",
+   "source": "use std::net::TcpStream;fn main(){}",
+   "reason": "network"
+  },
+  {
+   "name": "pkg-config",
+   "source": "fn main(){pkg_config::probe_library(\"zlib\").unwrap();}",
+   "reason": "host-probing"
+  },
+  {
+   "name": "cc crate",
+   "source": "fn main(){cc::Build::new().file(\"a.c\").compile(\"a\");}",
+   "reason": "host-probing"
+  },
+  {
+   "name": "absolute path",
+   "source": "fn main(){let _=std::fs::read_to_string(\"/etc/hosts\");}",
+   "reason": "reads-outside-manifest"
+  },
+  {
+   "name": "parent path",
+   "source": "fn main(){let _=std::fs::read_to_string(\"../proto/a.proto\");}",
+   "reason": "reads-outside-manifest"
+  },
+  {
+   "name": "home path",
+   "source": "fn main(){let _=std::fs::read_to_string(\"~/.config/x\");}",
+   "reason": "reads-outside-manifest"
+  },
+  {
+   "name": "relative path",
+   "source": "fn main(){let _=std::fs::read_to_string(\"data/a.txt\");let _=\"/\";}",
+   "reason": null
+  },
+  {
+   "name": "undeclared variable",
+   "source": "fn main(){let _=std::env::var(\"RUSTC\");}",
+   "reason": "undeclared-environment:RUSTC"
+  },
+  {
+   "name": "undeclared os variable",
+   "source": "fn main(){let _=env::var_os(\"HOME\");}",
+   "reason": "undeclared-environment:HOME"
+  },
+  {
+   "name": "all variables",
+   "source": "fn main(){for (k,v) in std::env::vars(){}}",
+   "reason": "reads-all-environment"
+  },
+  {
+   "name": "declared prefixes",
+   "source": "fn main(){let _=env::var(\"CARGO_PKG_VERSION\");let _=env::var(\"CARGO_CFG_TARGET_OS\");let _=env::var(\"CARGO_MANIFEST_DIR\");let _=env::var(\"NUM_JOBS\");}",
+   "reason": null
+  }
+ ],
+ "binaries": [
+  {
+   "name": "plain",
+   "text": "hello MACH-O \u0000 /rustc/abc/library/std/src/io.rs RUST_BACKTRACE",
+   "reason": null
+  },
+  {
+   "name": "pkg-config",
+   "text": "x PKG_CONFIG_PATH y",
+   "reason": "host-probing"
+  },
+  {
+   "name": "compiler variable",
+   "text": "x RUSTC_WRAPPER y",
+   "reason": "compiler-environment"
+  },
+  {
+   "name": "flags",
+   "text": "CARGO_ENCODED_RUSTFLAGS",
+   "reason": "compiler-environment"
+  },
+  {
+   "name": "socket",
+   "text": "std::net::tcp::TcpStream",
+   "reason": "network"
+  }
+ ],
+ "environments": [
+  {
+   "name": "declared",
+   "environment": {
+    "TARGET": "aarch64-apple-darwin",
+    "HOST": "aarch64-apple-darwin",
+    "PROFILE": "release",
+    "OPT_LEVEL": "3",
+    "DEBUG": "false",
+    "CARGO_PKG_NAME": "x",
+    "CARGO_CFG_TARGET_OS": "macos",
+    "CARGO_FEATURE_STD": "1",
+    "OUT_DIR": "/a/out",
+    "CARGO_MANIFEST_DIR": "/a/m",
+    "RUSTC": "/x/rustc",
+    "CARGO_ENCODED_RUSTFLAGS": "",
+    "HOME": "/h",
+    "PATH": "/p"
+   },
+   "source": "",
+   "variables": [
+    [
+     "CARGO_CFG_TARGET_OS",
+     "macos"
+    ],
+    [
+     "CARGO_FEATURE_STD",
+     "1"
+    ],
+    [
+     "CARGO_MANIFEST_DIR",
+     "@root/in/manifest"
+    ],
+    [
+     "CARGO_PKG_NAME",
+     "x"
+    ],
+    [
+     "DEBUG",
+     "false"
+    ],
+    [
+     "HOST",
+     "aarch64-apple-darwin"
+    ],
+    [
+     "OPT_LEVEL",
+     "3"
+    ],
+    [
+     "OUT_DIR",
+     "@root/out/out-dir"
+    ],
+    [
+     "PATH",
+     "/usr/bin:/bin:/usr/sbin:/sbin"
+    ],
+    [
+     "PROFILE",
+     "release"
+    ],
+    [
+     "TARGET",
+     "aarch64-apple-darwin"
+    ]
+   ],
+   "refusal": null
+  },
+  {
+   "name": "dependency metadata",
+   "environment": {
+    "DEP_Z_ROOT": "/z"
+   },
+   "source": "",
+   "variables": null,
+   "refusal": "environment:DEP_Z_ROOT"
+  },
+  {
+   "name": "links",
+   "environment": {
+    "CARGO_MANIFEST_LINKS": "z"
+   },
+   "source": "",
+   "variables": null,
+   "refusal": "environment:CARGO_MANIFEST_LINKS"
+  },
+  {
+   "name": "multi-line description unread",
+   "environment": {
+    "CARGO_PKG_DESCRIPTION": "a\nb"
+   },
+   "source": "fn main(){}",
+   "variables": [
+    [
+     "OUT_DIR",
+     "@root/out/out-dir"
+    ],
+    [
+     "CARGO_MANIFEST_DIR",
+     "@root/in/manifest"
+    ],
+    [
+     "PATH",
+     "/usr/bin:/bin:/usr/sbin:/sbin"
+    ]
+   ],
+   "refusal": null
+  },
+  {
+   "name": "multi-line description read",
+   "environment": {
+    "CARGO_PKG_DESCRIPTION": "a\nb"
+   },
+   "source": "fn main(){let _=env::var(\"CARGO_PKG_DESCRIPTION\");}",
+   "variables": null,
+   "refusal": "unsafe-environment:CARGO_PKG_DESCRIPTION"
+  }
+ ],
+ "translations": [
+  {
+   "name": "link search and rerun",
+   "roots": [
+    "/w/r"
+   ],
+   "text": "cargo:rustc-link-search=native=/w/r/out/out-dir/lib\ncargo:rerun-if-changed=/w/r/in/manifest/build.rs\ncargo:rustc-env=G=/w/r/out/out-dir\n",
+   "outDir": "/Users/a/target/out",
+   "manifest": "/Users/a/pkg",
+   "answer": "cargo:rustc-link-search=native=/Users/a/target/out/lib\ncargo:rerun-if-changed=/Users/a/pkg/build.rs\ncargo:rustc-env=G=/Users/a/target/out\n"
+  },
+  {
+   "name": "both spellings of the root",
+   "roots": [
+    "/var/x/r",
+    "/private/var/x/r"
+   ],
+   "text": "a=/var/x/r/out/out-dir b=/private/var/x/r/in/manifest/src/lib.rs",
+   "outDir": "/o",
+   "manifest": "/m",
+   "answer": "a=/o b=/m/src/lib.rs"
+  },
+  {
+   "name": "another directory of the worker",
+   "roots": [
+    "/w/r"
+   ],
+   "text": "tmp=/w/r/.tmp/x\n",
+   "outDir": "/o",
+   "manifest": "/m",
+   "answer": null
+  },
+  {
+   "name": "sibling name is not the directory",
+   "roots": [
+    "/w/r"
+   ],
+   "text": "/w/r/out/out-dir2",
+   "outDir": "/o",
+   "manifest": "/m",
+   "answer": null
+  },
+  {
+   "name": "nothing to translate",
+   "roots": [
+    "/w/r"
+   ],
+   "text": "cargo:rerun-if-changed=build.rs\n",
+   "outDir": "/o",
+   "manifest": "/m",
+   "answer": "cargo:rerun-if-changed=build.rs\n"
+  }
+ ],
+ "manifests": [
+  {
+   "manifest": "[package]\nname=\"a\"\n",
+   "path": "build.rs"
+  },
+  {
+   "manifest": "[package]\nbuild = \"gen/build.rs\"\n",
+   "path": "gen/build.rs"
+  },
+  {
+   "manifest": "[package]\nbuild = false\n",
+   "path": null
+  }
+ ]
+}

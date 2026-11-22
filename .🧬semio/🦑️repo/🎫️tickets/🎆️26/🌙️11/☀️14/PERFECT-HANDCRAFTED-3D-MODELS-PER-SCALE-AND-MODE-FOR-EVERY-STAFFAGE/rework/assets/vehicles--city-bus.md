@@ -34,3 +34,47 @@ No earlier report existed for this asset and no batch report `T/rework/*.md` men
 - **Thermal 1:50** (166 solids): nested skin and lining plates, double panes with gap, door region, roof units, drive axle, tyres, brakes; the sheet reads as the same bus and the cut shows the nesting.
 - **Structure 1:50** (189 solids): welded tube frame (longerons, sills, ring frames at every post, waist and cant rails, door portals, A-pillars), roof unit rails, axle beams with air springs and king pins, wheels with hubs, masses at the centres of mass.
 - **1:100 / 1:200 / 1:500**: each is modelled for its feature size (wall thickness 60 / 80 / 100 mm, glazing per bay → bands, twins merged at 1:500, ring frames 8 / 5 / 3), same bones and ids.
+
+### Defects found (measured, `r3-validate.ts vehicles/city-bus --volumes` at the start: INVALID, 15 findings, all `volumes-connected`)
+
+The form was right, but many parts hung in the air (full list from `rework-10-connected.ts`):
+
+- **Body 1:50**: wheel discs 25 mm clear of the hubs (bore radius 105 mm, hub 80 mm), brake discs loose around nothing, rear twin wheels 5 mm clear of the spindle, console, driver's seat and steering wheel rim floating, kerb-side mirror arm ending 10 mm before the wall, all four door leaves hanging 3 mm outside the wall with nothing carrying them.
+- **Body 1:100**: same hubs; both axle assemblies ended under the wheelhouses without spring seats. **Body 1:200**: front beam 74 mm short of the wheels, no springs at all between axles and body, leaves loose. **Body 1:500**: beams short of the wheel discs, no connection axle to body, both mirror ears floating in front of the window frame.
+- **Structure, every scale**: roof unit rails 8 … 450 mm above or beside the roof bows, door leaf frames with no header to hang from, air springs ending in the air (no member between spring head and frame), axle beams short of springs and hubs; at 1:50 also bumper beams, screen sill and header beams, rear corner posts not meeting the frame.
+- **Rig (not changed)**: the front leaf of the front door slides 0.55 m forward and so runs past the nose in `kneeling-at-stop` (seen in the right-side render); a real front door of this class swings in or slides only backwards. One wheel bone per axle, no steering pivot; kneeling is a pitch, not a roll to the kerb.
+- **Tool**: `r3-sheet --list thermal` draws solids without `layer` of a region that has layers at finer scales in grey (1:500 thermal sheet all grey except roof units and tyres), so the coarse thermal sheets cannot be read by region.
+
+### What I rebuilt
+
+Scripts (hand-chosen numbers, idempotent): `T/rework-city-bus-body-joints.py`, `T/rework-city-bus-structure-path.py`.
+
+- **Body 1:50** (213 → 219 solids): hubs remodelled as real hubs (pilot through the disc bore at r 105 mm, bolting flange r 200 mm behind the disc, barrel r 110 mm on the stub axle / spindle carrying the brake disc; rear hub passes both twin discs); guide rail over each doorway (`door-track-m` x 5.05 … 8.125 m, `door-track-f` x 9.65 … 11.47 m, y 2.385 … 2.445 m) from which the leaves hang over their whole travel; `dashboard-plinth`, `driver-seat-pedestal`, dished `steering-wheel-hub`, `mirror-base-r`.
+- **Body 1:100** (123 → 131): the same hubs for 15 mm features, six spring seats, guide rails.
+- **Body 1:200** (79 → 97): stub axles, one air spring cylinder per side at the front, carrier with two cylinders per side at the rear, six spring seats, guide rails.
+- **Body 1:500** (40 → 46): axle beams lengthened into the wheel discs, one suspension strut per side and axle up into the wheelhouse arch, a short arm for each mirror ear.
+- **Structure 1:100** (134 → 154), **1:200** (100 → 106), **1:500** (73 → 85): roof unit rails lowered onto the roof bows; `door-header-m` / `door-header-f` spanning from post to post and carrying the leaf carriages; top and bottom rails of the leaf frames at 1:100; spring carriers as members at 1:100; inclined `spring-strut-*` from the longerons to every spring head; front air spring joint lengthened onto the dropped beam at 1:200; a fourth ring frame at x = 8.25 m at 1:500 (under the heat pump rails and at the end of the centre door header).
+- **Decisions** (en, de) extended at all four scales for body and at 1:100, 1:200, 1:500 for structure.
+- Thermal lists, rig, poses, clips and 2D drawings: not changed in this pass.
+
+### Proof
+
+- After the body work: `rework-10-connected.ts` reports no body finding at any scale; the full `r3-validate.ts vehicles/city-bus --volumes` went from 15 findings to 3, and after the 1:100 structure block `--scale 100 --rules connected` is `VALID` (partial) and `rework-10-connected.ts --scale 100` prints `CONNECTED`. 1:200 and 1:500 passed every rule in the full run.
+- Last scoped run `--volumes --scale 50 --rules silhouette,connected`: **INVALID, 2 findings** (below). A full unscoped run after the last two edits (1:100 structure block, mirror base) was not made.
+- Published with `volumes-insert.py` (`volumes spliced: 1:50 … 1:500 authored`); `r3-validate.ts vehicles/city-bus --catalog-only`: `VALID … schema 0, validateAsset 0, checkVolumes not run`. Published although not `VALID` with `--volumes`, because the catalog held the state with 15 findings and source and catalog must agree.
+- Rendered and read after the changes: 1:50 body from below (turn 300, tilt −20), 1:50 `kneeling-at-stop` right side, 1:500 structure sheet, 1:200 structure three-quarter. Not re-read after the changes: the other poses, the clips, 1:100 and 1:200 body, all thermal sheets, the 2D drawings.
+
+### What remains imperfect (for the next pass)
+
+1. **1:50 body, front drawing**: `volumes-silhouette` p95 31.9 mm (limit 30.0), largest distance 39.4 mm. New in this pass; not caused by the guide rail thickness or the mirror arm (both varied, number unchanged). Suspects: hub flange / barrel seen under the floor between the twin tyres, guide rail height band y 2.39 … 2.445 m outside the leaning wall. Either redraw the front elevation (rail, hubs) or find the part with `r3-project2d --view front --check`.
+2. **1:50 structure**: `volumes-connected`, 17 loose groups: `bumper-beam-front`, `screen-header-beam`, `screen-sill-beam`, `bumper-beam-rear`, `rear-header-beam`, `rear-corner-post-l/r` (≥ 45 mm from the frame), `axle-f-beam` with king pins 34 mm from `axle-f-spring-l/r`, `axle-r-beam` and carriers from their springs, `hvac-rail-*` and `battery-rail-*` with their mounts (17 … 29 mm above the bows), all four leaf frames (3 mm from the door headers), wheel hubs. Same recipe as at 1:100 (rails onto bows, struts to spring heads, carriages into the headers) plus joining the end beams to the A-pillars and corner posts.
+3. **Rig**: front door front leaf leaves the body when open (travel 0.55 m forward of x = 11.45 m); needs an inward-swinging or rearward-sliding front door, with poses, clips and 2D leaf shapes rebound. No steering pivot, one wheel bone per axle, kneeling as pitch instead of roll.
+4. **2D drawings**: guide rails, mirror arms at 1:500 and suspension struts are not drawn; 1:100 … 1:500 pass the silhouette rule without them.
+5. **Thermal**: new exposed body parts (guide rails, 1:500 mirror arms) have no thermal solid; coverage passed at 1:200 and 1:500 in the full run, 1:50 and 1:100 passed too, but the panels region does not include them.
+6. Poses `braking`, `arriving`, `pull-away-8`, `pull-away-18`, `at-stop-level` and the three clips were not rendered and read in this pass.
+
+### Fundamental issues (outside this asset)
+
+- `r3-sheet.ts --list thermal`: layerless solids of a layered region are drawn grey and have no legend entry (coarse scales unreadable).
+- `volumes-silhouette` names the view and p95 but not the place or the solids of the largest boundary distance; with one number it is not possible to tell which part to redraw.
+- Host load (load average about 29): a full `r3-validate --volumes` of this asset took over ten minutes, a single sheet 30 … 60 s.

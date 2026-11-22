@@ -68,7 +68,7 @@ test("a second checkout poisons a shared build-dir, the gate names it and the re
       spawnSync(registeredToolExecutableV1("cargo"), ["-Zchecksum-freshness", "-Zbuild-dir-new-layout", "check", "--quiet"], {
         cwd: join(checkout, "crate"),
         encoding: "utf8",
-        env: { ...process.env, RUSTUP_TOOLCHAIN: toolchain.toolchain.channel, CARGO_BUILD_BUILD_DIR: build, CARGO_TARGET_DIR: join(root, "target"), CARGO_INCREMENTAL: "0" },
+        env: { ...process.env, RUSTUP_TOOLCHAIN: toolchain.toolchain.channel, CARGO_BUILD_BUILD_DIR: build, CARGO_TARGET_DIR: join(root, "target"), CARGO_INCREMENTAL: "0", CARGO_BUILD_RUSTC: "rustc", CARGO_BUILD_RUSTC_WRAPPER: "" },
       });
     expect(cargo(first).status).toBe(0);
     const unit = readdirSync(join(build, "debug", "build", "poison"))[0]!;
@@ -93,7 +93,7 @@ test("a second checkout poisons a shared build-dir, the gate names it and the re
 }, { timeout: 240_000 });
 
 test("the issued profile selectors give every unit the incremental setting the policy declares (cargo unit-graph oracle)", () => {
-  const toolchain = { ...process.env, RUSTUP_TOOLCHAIN: process.env.RUSTUP_TOOLCHAIN ?? "nightly-2026-07-20" } as NodeJS.ProcessEnv;
+  const toolchain = { ...process.env, RUSTUP_TOOLCHAIN: process.env.RUSTUP_TOOLCHAIN ?? "nightly-2026-07-20", CARGO_BUILD_RUSTC: "rustc", CARGO_BUILD_RUSTC_WRAPPER: "" } as NodeJS.ProcessEnv;
   const host = /^host: (\S+)$/mu.exec(spawnSync("rustc", ["-vV"], { encoding: "utf8", env: toolchain }).stdout)?.[1];
   expect(host).toBeDefined();
   const scratch = mkdtempSync(join(tmpdir(), "semio-profile-graph-"));

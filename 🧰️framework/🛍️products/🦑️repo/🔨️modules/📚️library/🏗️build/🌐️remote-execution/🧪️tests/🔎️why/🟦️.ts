@@ -136,6 +136,15 @@ test("a machine lends nothing while a request of its own waits, and lends again 
  expect(admitRemoteExecutionActionV1({view:{...view,waiters:[]} as never,running:0,concurrency:4,nowMs})).toEqual({admit:true});
 });
 
+test("a 16 GB machine with free memory keeps lending beside its running remote actions: what they hold is in the sample already and counts once, and a machine whose room is really used up still refuses",()=>{
+ const nowMs=Date.now(),sixteen=(availableMegabytes:number):RemoteExecutionHostViewV1=>({...view,host:{...view.host,cores:10,totalMegabytes:16384,availableMegabytes}}) as RemoteExecutionHostViewV1;
+ expect(admitRemoteExecutionActionV1({view:sixteen(6000),running:0,concurrency:10,nowMs})).toEqual({admit:true});
+ expect(admitRemoteExecutionActionV1({view:sixteen(6000),running:1,concurrency:10,nowMs}),"one running action beside 6000 MB free").toEqual({admit:true});
+ expect(admitRemoteExecutionActionV1({view:sixteen(6000),running:2,concurrency:10,nowMs}),"two running actions beside 6000 MB free").toEqual({admit:true});
+ expect(admitRemoteExecutionActionV1({view:sixteen(3000),running:1,concurrency:10,nowMs})).toEqual({admit:false,reason:"memory"});
+ expect(admitRemoteExecutionActionV1({view:sixteen(6000),running:10,concurrency:10,nowMs})).toEqual({admit:false,reason:"slots"});
+});
+
 test("an agent whose offered toolchain is gone refuses every action, reports no headroom and says why; once ready it reports headroom again",async()=>{
  const root=temporary(),fake=await fakeScheduler(403),controller=new AbortController();let ready=false;
  const agent=runRemoteExecutionAgentV1({...agentOptions(root,fake.url,controller.signal),ready:()=>ready});

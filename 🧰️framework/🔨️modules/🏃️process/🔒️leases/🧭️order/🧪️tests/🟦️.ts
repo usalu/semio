@@ -277,6 +277,23 @@ test("a private artifact scratch claim may wait for the toolchain, a shared one 
  const edge=policy.allowed.find(row=>row.from==="artifact"&&row.to==="toolchain")!;expect(edge.binding).toEqual({kind:"held-prefix",fromPrefix:"artifact-scratch-private:"});expect(edge.reason.en.length).toBeGreaterThan(100);expect(edge.reason.de.length).toBeGreaterThan(100);
 });
 
+/** 🪢️ A publisher of one artifact holds its private scratch claim and the exclusive source capture of the destination while it waits for the destination lease of a concurrent publisher: declared, bound to the private prefix and to the same path, and still refused for every other hold. */
+test("a private scratch claim and the capture of the same destination may wait for the destination lease of a concurrent publisher, nothing else may",()=>{
+ const live=readLeaseOrderPolicyV1(authored),directory="/l",hash="a".repeat(64),destination="/w/.cache/b/p/m/browser/release/components/c42e";
+ const at=(...resources:string[])=>resources.map((resource,index)=>({directory,resource,mode:"exclusive" as const,atMs:index+1,task:1})),request=(resource:string)=>({directory,resource,mode:"exclusive" as const,nonblocking:false});
+ const both=at("artifact-scratch-private:"+hash,"artifact-capture:"+destination);
+ expect(checkHoldAndWaitV1(live,both,request("artifact:"+destination),60000)).toBeUndefined();
+ expect(checkHoldAndWaitV1(live,both,request("artifact-capture:"+destination),60000)).toBeUndefined();
+ expect(checkLeaseOrderV1(live,both,request("artifact:"+destination))).toBeUndefined();
+ expect(checkHoldAndWaitV1(live,at("artifact-scratch:"+hash),request("artifact:"+destination),60000)?.kind,"shared scratch").toBe("hold-and-wait");
+ expect(checkHoldAndWaitV1(live,at("artifact-capture:"+destination),request("artifact:"+destination+"-other"),60000)?.kind,"capture of another path").toBe("hold-and-wait");
+ expect(checkHoldAndWaitV1(live,at("artifact:"+destination),request("artifact-capture:"+destination),60000)?.kind,"the destination never waits for its capture").toBe("hold-and-wait");
+ expect(checkHoldAndWaitV1(live,at("artifact:/x/y"),request("artifact:"+destination),60000)?.kind,"every other artifact lease").toBe("hold-and-wait");
+ const edges=live.allowed.filter(row=>row.from==="artifact"&&row.to==="artifact");expect(edges.map(row=>row.binding)).toEqual([{kind:"held-prefix",fromPrefix:"artifact-scratch-private:"},{kind:"same-directory-suffix",fromPrefix:"artifact-capture:",toPrefix:"artifact:"}]);
+ for(const edge of edges){expect(edge.reason.en.length).toBeGreaterThan(100);expect(edge.reason.de.length).toBeGreaterThan(100);}
+ expect(validatePolicy(authored)).toBe(true);
+});
+
 /** 🛠️ The tools partition image is the store every managed-tooling operation runs in: provision registry and SDK snapshot requests under it are declared; the Cargo configuration publication and view stay ordered before the compiler writer image and the registry, which the code honours by taking no publication lease and opening views first. */
 test("the authored policy declares the tools image to tool singleton nesting and still refuses the Cargo orders the code no longer produces",()=>{
  const live=readLeaseOrderPolicyV1(authored),directory="/w/.cache/b/l/m/data",held=(resource:string,mode:"shared"|"exclusive")=>[{directory,resource,mode,atMs:1,task:1}],request=(resource:string,mode:"shared"|"exclusive")=>({directory,resource,mode,nonblocking:false});

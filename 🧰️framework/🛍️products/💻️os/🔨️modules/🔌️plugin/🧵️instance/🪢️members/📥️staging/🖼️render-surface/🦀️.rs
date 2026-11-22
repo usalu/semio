@@ -81,7 +81,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'sta
             let cfg = ConfigView { snapshot: &config, window: window_config.as_ref().map(|authority| &authority.snapshot) };
             let transient = self.stores.transient_store.current_root();
             let transient = TransientView { snapshot: transient.as_ref(), window: window_transient.as_ref().map(|authority| &authority.snapshot) };
-            let Some(node) = A::render_with_request_context(&self.tools.instance_operation_owner, body_key, &doc, &cfg, view_state, &transient, &interaction,cx).await? else{return Ok(None)};
+            let Some(node) = A::render_with_peers(&self.tools.instance_operation_owner, body_key, &doc, &cfg, view_state, &transient, &interaction, &PresencePeersView::new(self.stores.presence_store.peers_root().as_ref()),cx).await? else{return Ok(None)};
             self.pending.retain_pending_render_tree(node);
             self.as_render().stamp_pending_render_interaction_ui(&interaction_state, body_key).await?;
             self.pending.pending_render_tree_ready=true;
@@ -141,7 +141,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'sta
                 let retained=self.pending.pending_render_source.as_mut().ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original render source loan is missing"))?.snapshot_loan(identity,doc.snapshot,cx)?;
                 A::render_with_work_context(work,&self.tools.instance_operation_owner,body_key,retained,&doc,&cfg,view_state,&transient,&interaction,cx).await?
             }else{
-                A::render_with_request_context(&self.tools.instance_operation_owner, body_key, &doc, &cfg, view_state, &transient, &interaction,cx).await?
+                A::render_with_peers(&self.tools.instance_operation_owner, body_key, &doc, &cfg, view_state, &transient, &interaction, &PresencePeersView::new(self.stores.presence_store.peers_root().as_ref()),cx).await?
             }
         }) else{return Ok(None)};
         self.pending.retain_pending_render_tree(node);

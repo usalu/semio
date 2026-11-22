@@ -9,6 +9,9 @@
     { "$ref": "#/definitions/Meta" },
     { "$ref": "#/definitions/Claim" },
     { "$ref": "#/definitions/AuditReport" },
+    { "$ref": "#/definitions/Declaration" },
+    { "$ref": "#/definitions/Staleness" },
+    { "$ref": "#/definitions/StalenessReport" },
     { "$ref": "#/definitions/TextCatalogue" }
   ],
   "definitions": {
@@ -38,7 +41,8 @@
         "version": { "const": 1 },
         "slot": { "$ref": "#/definitions/SlotId" },
         "storedAt": { "type": "integer", "minimum": 0 },
-        "refs": { "type": "array", "maxItems": 100000, "items": { "type": "string", "pattern": "^[0-9a-f]{64}$" } }
+        "refs": { "type": "array", "maxItems": 100000, "items": { "type": "string", "pattern": "^[0-9a-f]{64}$" } },
+        "declaration": { "$ref": "#/definitions/Declaration" }
       }
     },
     "Claim": {
@@ -77,6 +81,68 @@
         "unslotted": { "type": "integer", "minimum": 0 }
       }
     },
+    "Declaration": {
+      "description": "What a published entry was built from, so retention can decide against the coordinator's synchronized tree whether it is still current: the toolchain identity (SHA-256 of the compiler identity text the key carries), the workspace sources it read (portable path below the workspace root with forward slashes, and the SHA-256 of the file) and the SHA-256 digests of the files of other entries it consumed (extern libraries of a unit, input blobs of a stage). It is a field `retention` of the entry manifest, so it travels with the entry and the server reads it when the entry arrives.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "kind", "toolchain", "sources", "externs"],
+      "properties": {
+        "version": { "const": 1 },
+        "kind": { "enum": ["rust-unit", "build-script-run", "stage-output"] },
+        "toolchain": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+        "sources": {
+          "type": "array",
+          "maxItems": 20000,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["path", "sha256"],
+            "properties": {
+              "path": { "type": "string", "minLength": 1, "maxLength": 1024 },
+              "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+            }
+          }
+        },
+        "externs": { "type": "array", "maxItems": 20000, "items": { "type": "string", "pattern": "^[0-9a-f]{64}$" } }
+      }
+    },
+    "Mode": {
+      "description": "off judges nothing; dry-run judges and only records what it would retire or refuse; enforce retires stale entries and refuses entries that are stale on arrival.",
+      "enum": ["off", "dry-run", "enforce"]
+    },
+    "Staleness": {
+      "description": "The authored staleness policy of one cache: the mode (the grace of the cache's own retention protects entries of builds in flight: an entry stored within it is never retired and a registry entry unreached for less than it stays), the seconds after which an entry that looks stale on arrival is looked at again (the replica of the synchronized tree may lag by about a second), the manifest names of an action result that carry a declaration, the first path segments that never belong to the synchronized tree and how many example lines a status keeps.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["mode", "recheckSeconds", "manifestNames", "generatedRoots", "examples"],
+      "properties": {
+        "mode": { "$ref": "#/definitions/Mode" },
+        "recheckSeconds": { "type": "integer", "minimum": 0, "maximum": 60 },
+        "manifestNames": { "type": "array", "items": { "type": "string", "minLength": 1, "maxLength": 128 } },
+        "generatedRoots": { "type": "array", "items": { "type": "string", "minLength": 1, "maxLength": 128 } },
+        "examples": { "type": "integer", "minimum": 0, "maximum": 100 }
+      }
+    },
+    "StalenessReport": {
+      "description": "What the last staleness sweep of a cache found (and, in enforce mode, retired) and what the publish gate refused since the server started. Reasons: edited (a recorded source digest differs from the tree), deleted (a recorded source is gone), toolchain (not the fleet's), extern (an entry it consumed is stale or gone), unreached (no live entry consumes it and the grace passed), stale-on-arrival (refused at publish).",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "mode", "sweptAt", "entries", "declared", "live", "grace", "stale", "unreached", "retired", "refused", "examples"],
+      "properties": {
+        "version": { "const": 1 },
+        "mode": { "$ref": "#/definitions/Mode" },
+        "sweptAt": { "type": "integer", "minimum": 0 },
+        "entries": { "type": "integer", "minimum": 0 },
+        "declared": { "type": "integer", "minimum": 0 },
+        "live": { "type": "integer", "minimum": 0 },
+        "grace": { "type": "integer", "minimum": 0 },
+        "stale": { "type": "object", "additionalProperties": { "type": "integer", "minimum": 0 } },
+        "unreached": { "type": "integer", "minimum": 0 },
+        "retired": { "type": "integer", "minimum": 0 },
+        "refused": { "type": "object", "additionalProperties": { "type": "integer", "minimum": 0 } },
+        "examples": { "type": "array", "items": { "type": "string" } }
+      }
+    },
     "TextCatalogue": {
       "type": "object",
       "additionalProperties": false,
@@ -94,6 +160,14 @@
         "audit.stray": {
           "en": "  stray: {key}",
           "de": "  verwaist: {key}"
+        },
+        "staleness.title": {
+          "en": "Staleness ({mode}): {declared} declared entries, {live} live, {grace} within grace, {stale} stale, {unreached} unreached, {retired} retired.",
+          "de": "Veraltung ({mode}): {declared} deklarierte Einträge, {live} aktuell, {grace} in Schonfrist, {stale} veraltet, {unreached} unerreicht, {retired} entfernt."
+        },
+        "staleness.example": {
+          "en": "  would retire: {line}",
+          "de": "  würde entfernen: {line}"
         },
         "audit.unknown": {
           "en": "The current key set cannot be enumerated here; nothing was audited.",

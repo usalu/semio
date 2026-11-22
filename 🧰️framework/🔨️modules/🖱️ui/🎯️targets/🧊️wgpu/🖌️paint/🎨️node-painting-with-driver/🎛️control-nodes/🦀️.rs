@@ -17,15 +17,17 @@ pub(super) fn paint_button_node_step(
     flags: NodeFlags,
     labels: UiDriverLabels,
 ) -> RetainedNodePaintStep {
-    let icon_only = labels == UiDriverLabels::Icons;
+    let icon_only = labels == UiDriverLabels::Icons && !button.icon_id.as_str().is_empty();
+    let picked = presence.selected && button.id.as_deref().is_some_and(|id| id.starts_with("picker."));
+    let ringed = flags.contains(NodeFlags::PICKER_FOCUS);
+    let hovered = presence.state != UiState::Disabled && hover_owner(flags);
     match cursor.phase {
         0 => {
-            let hovered = presence.state != UiState::Disabled && hover_owner(flags);
             let result = retained_fixed_output(draw, |draw| {
-                push_control_border(draw, bounds, theme, if hovered { theme.border_emphasized } else if focus_ring_visible(flags) { theme.selected } else { theme.border_normal }, item_bg(theme, false, hovered), if hovered { semio_ui_draw_contract::SharedBorderState::Hover } else if focus_ring_visible(flags) { semio_ui_draw_contract::SharedBorderState::Focus } else { semio_ui_draw_contract::SharedBorderState::Normal });
+                push_control_border(draw, bounds, theme, if hovered { theme.border_emphasized } else if ringed || focus_ring_visible(flags) { theme.selected } else { theme.border_normal }, item_bg(theme, picked, hovered), if hovered { semio_ui_draw_contract::SharedBorderState::Hover } else if ringed || focus_ring_visible(flags) { semio_ui_draw_contract::SharedBorderState::Focus } else { semio_ui_draw_contract::SharedBorderState::Normal });
                 if let Some(icons) = icons {
                     let icon_x = if icon_only { bounds.x + (bounds.w - ICON_TINY) * 0.5 } else { bounds.x + theme.padding_standard };
-                    push_icon(draw, icons, button.icon_id.as_str(), icon_x, bounds.y + (bounds.h - ICON_TINY) * 0.5, ICON_TINY, item_text(theme, false, hovered));
+                    push_icon(draw, icons, button.icon_id.as_str(), icon_x, bounds.y + (bounds.h - ICON_TINY) * 0.5, ICON_TINY, item_text(theme, picked, hovered));
                 }
             });
             cursor.advance(1);
@@ -39,7 +41,7 @@ pub(super) fn paint_button_node_step(
             cursor.advance(2);
             RetainedNodePaintStep::Pending
         }
-        1 => match retained_text_node_step(button.label.as_str(), bounds, theme.font_size_body, theme.text, atlas, draw, cursor) {
+        1 => match retained_text_node_step(button.label.as_str(), bounds, theme.font_size_body, item_text(theme, picked, hovered), atlas, draw, cursor) {
             RetainedNodePaintStep::Complete => {
                 cursor.advance(2);
                 RetainedNodePaintStep::Pending
@@ -67,10 +69,13 @@ pub(super) fn paint_input_node_step(
     let edit = node.state.edit.as_ref();
     let refusal = node.state.number_refusal.as_deref().filter(|_| edit.is_some());
     let refused = refusal.is_some();
-    let published = if input_node.value.is_empty() { input_node.placeholder.as_ref().map_or("", Label::as_str) } else { shown.as_deref().unwrap_or(input_node.value.as_str()) };
+    let ringed = flags.contains(NodeFlags::PICKER_FOCUS);
+    let file_chrome = node.state.file_chrome.filter(|_| input_node.input_kind == "file");
+    let date_text = node.state.date_display.as_deref().filter(|_| input_node.input_kind == "date");
+    let published = if let Some(text) = date_text { text } else if input_node.value.is_empty() { file_chrome.map(|chrome| chrome.1).unwrap_or_else(|| input_node.placeholder.as_ref().map_or("", Label::as_str)) } else { shown.as_deref().unwrap_or(input_node.value.as_str()) };
     let view = edit_view(edit, node.state.composition_cursor, published);
     let row = input_refusal_row(node, theme);
-    let (frame, swatch, geometry) = input_geometry(input_node, &view.display, bounds, row, theme);
+    let (frame, swatch, geometry) = input_geometry(input_node, &view.display, file_chrome.map_or("", |chrome| chrome.0), bounds, row, theme);
     let scroll = if geometry.multi { (0.0, node.state.scroll_offset.1) } else if view.editing { (node.state.scroll_offset.0, 0.0) } else { (0.0, 0.0) };
     let typed_empty = edit.map_or(input_node.value.is_empty(), |edit| edit.text.is_empty() && edit.composition.as_deref().is_none_or(str::is_empty));
     let color = if refused { theme.error } else if typed_empty { theme.text_muted } else { theme.text };
@@ -80,10 +85,13 @@ pub(super) fn paint_input_node_step(
     };
     match cursor.phase {
         0 => {
-            let result = retained_fixed_output(draw, |draw| {
-                push_control_border(draw, frame, theme, if refused { theme.error } else if focus_ring_visible(flags) { theme.selected } else { theme.border_normal }, theme.input_bg, if refused { semio_ui_draw_contract::SharedBorderState::Invalid } else if focus_ring_visible(flags) { semio_ui_draw_contract::SharedBorderState::Focus } else { semio_ui_draw_contract::SharedBorderState::Normal });
+            let result = retained_fixed_output_budgeted(draw, if file_chrome.is_some() { 64 } else { RETAINED_NODE_FIXED_OUTPUT_ITEMS }, |draw| {
+                push_control_border(draw, frame, theme, if refused { theme.error } else if ringed || focus_ring_visible(flags) { theme.selected } else { theme.border_normal }, theme.input_bg, if refused { semio_ui_draw_contract::SharedBorderState::Invalid } else if ringed || focus_ring_visible(flags) { semio_ui_draw_contract::SharedBorderState::Focus } else { semio_ui_draw_contract::SharedBorderState::Normal });
                 if let Some((swatch, color, _)) = swatch {
                     draw.push_rounded([swatch.x, swatch.y, swatch.w, swatch.h], color, 2.0);
+                    if let Some((caption, _)) = file_chrome {
+                        draw_text_on(draw, atlas, caption, swatch.x + theme.padding_standard, swatch.y + swatch.h * 0.65, theme.font_size_small, theme.text);
+                    }
                 }
                 draw.push_scissor(frame);
             });

@@ -20,6 +20,7 @@ pub mod standards {
                 pub mod schema {
                     #[path = "../../../../🧭️content-mapping/🦀️.rs"]
                     pub mod content_mapping;
+                    pub use semio_s_artifact_stdio_pdf_diff::standards::v1_7::subsets::base::schema::stream_roles;
                     #[path = "."]
                     pub mod snapshot {
                         pub use semio_s_artifact_stdio_pdf_snapshot_2::standards::v1_7::subsets::base::schema::snapshot::*;

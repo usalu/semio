@@ -20,11 +20,36 @@ fn original_emission_turn<T>(scope:&mut artifact_app_laws::OriginalFixtureScope,
     value
 }
 
+#[derive(Clone,Copy,PartialEq,Eq)]
+enum EmissionLane{Foreground,Maintenance,DeadlineAfterReads(u64)}
+
 #[semio_framework_async_macros::async_test]
 async fn genuine_original_emission_intake_publishes_with_borrowed_caller_and_retires_real_ack(){
+    original_emission_law(EmissionLane::Foreground).await;
+}
+
+/// 🪜️ LAW: maintenance interleaved between every turn of a multi-turn emission build never touches the in-flight construction,
+/// and the foreground hands the receipt back only with its emission construction already retired.
+#[semio_framework_async_macros::async_test]
+async fn maintenance_between_emission_turns_leaves_the_construction_to_the_foreground(){
+    original_emission_law(EmissionLane::Maintenance).await;
+}
+
+/// ⏰️ LAW: a turn whose deadline runs out between building the receipt result and retiring the emission construction holds the
+/// built result across turns; the ingress hands out exactly that result once retirement completes and never builds it again.
+#[semio_framework_async_macros::async_test]
+async fn a_deadline_between_receipt_build_and_retirement_holds_the_built_result(){
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("🔣️.json")).unwrap();
+    let mut held=0;
+    for reads in fixture["deadlineClockReads"].as_array().unwrap(){held+=original_emission_law(EmissionLane::DeadlineAfterReads(reads.as_u64().unwrap())).await;}
+    assert!(held>0,"some authored deadline must run out between the receipt build and the construction retirement");
+}
+
+async fn original_emission_law(lane:EmissionLane)->usize{
+    let mut held=0;
     let fixture:serde_json::Value=serde_json::from_str(include_str!("🔣️.json")).unwrap();
     let value=fixture["mutationValue"].as_i64().unwrap()as i32;
-    for row in fixture["modes"].as_array().unwrap().iter().filter(|row|row["mode"]=="borrowed"&&row["cancellationScope"]!="context"){
+    for row in fixture["modes"].as_array().unwrap().iter().filter(|row|row["mode"]=="borrowed"&&row["cancellationScope"]!="context"&&(row["cancellationScope"]=="none"||!matches!(lane,EmissionLane::DeadlineAfterReads(_)))){
         let cancellation=row["cancellationScope"].as_str().unwrap();
         let policy=artifact_app_laws::fixture_mounted_policy();
         let mut identity=artifact_app_laws::fixture_identity();
@@ -35,16 +60,35 @@ async fn genuine_original_emission_intake_publishes_with_borrowed_caller_and_ret
         let mut input=Some(OriginalEmissionInput::<TestApp>{verb:"increment".into(),meta:meta(),emit:Emit::mutations(vec![TestMutation::SetCount(SetCount{value})])});
         let mut receipt=None;
         let mut admitted=false;
+        let mut built=None;
+        macro_rules! emission_turn{($cx:expr)=>{{
+            let mut task=std::task::Context::from_waker(std::task::Waker::noop());
+            let mut dispatch=app.dispatch_ctx();
+            let mut future=std::pin::pin!(dispatch.dispatch_original_emission(&mut input,&mut receipt,$cx));
+            match std::future::Future::poll(future.as_mut(),&mut task){std::task::Poll::Ready(result)=>result,std::task::Poll::Pending=>panic!("original emission intake suspended outside its source turn")}
+        }}}
         for _ in 0..artifact_app_laws::OriginalFixtureCaller::maximum_turns(){
-            admitted=original_emission_turn(&mut scope,|cx|{
-                let mut task=std::task::Context::from_waker(std::task::Waker::noop());
-                let mut dispatch=app.dispatch_ctx();
-                let mut future=std::pin::pin!(dispatch.dispatch_original_emission(&mut input,&mut receipt,cx));
-                match std::future::Future::poll(future.as_mut(),&mut task){std::task::Poll::Ready(result)=>result,std::task::Poll::Pending=>panic!("original emission intake suspended outside its source turn")}
-            });
+            let handoff=app.tools.original_emission_admission.is_none()&&app.tools.original_emission_receipt.is_some()&&built.is_none();
+            let deadline=match lane{EmissionLane::DeadlineAfterReads(reads) if handoff=>Some(reads),_=>None};
+            admitted=match deadline{
+                Some(reads)=>scope.with_deadline_after_clock_reads(reads,|cx|emission_turn!(cx)).unwrap(),
+                None=>original_emission_turn(&mut scope,|cx|emission_turn!(cx)),
+            };
+            if let Some(result)=app.tools.original_emission_result.as_ref(){
+                let address=result.inverse_group.invocation_id.0.as_ptr();
+                assert!(built.is_none_or(|built|built==address),"a held receipt result is never rebuilt");
+                if built.is_none()&&deadline.is_some(){held+=1}
+                built=Some(address);
+            }
             if admitted{break}
+            assert!(receipt.is_none(),"a pending handoff hands out nothing");
+            if lane==EmissionLane::Maintenance{app.maintenance_step(scope.cx(),policy.maintenance).unwrap();}
         }
         assert!(admitted&&input.is_none(),"the actual original input moves exactly once");
+        if let Some(built)=built{assert_eq!(receipt.as_ref().unwrap().inverse_group.invocation_id.0.as_ptr(),built,"the ingress hands out the very result it built and held");}
+        assert!(app.tools.original_emission_result.is_none(),"the handoff empties its held result slot");
+        assert!(app.tools.original_emission_receipt.is_none(),"the handoff clears its in-flight receipt");
+        assert!(app.tools.original_emission_construction.as_ref().is_none_or(|construction|construction.terminal_is_empty()),"the foreground retires the emission construction at the receipt handoff");
         let operation=match &receipt.as_ref().expect("actual admission receipt").output{
             DslValue::Object(fields)=>fields.iter().find_map(|(key,value)|match(key.as_str(),value){("operationId",DslValue::String(id))=>id.parse::<u64>().ok(),_=>None}).unwrap(),
             _=>panic!("actual original emission receipt lacks its operation identity"),
@@ -137,4 +181,5 @@ async fn genuine_original_emission_intake_publishes_with_borrowed_caller_and_ret
         assert!(app.close_terminal_is_empty(),"all original source, mounted and cancellation owners physically close");
         scope.retire();
     }
+    held
 }

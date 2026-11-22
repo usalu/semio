@@ -263,9 +263,9 @@ impl UiTreeItemNode {
     }
 
     /// 🗂️ Whether the item discloses rows: materialised `items`, or a tree window over rows not streamed yet
-    /// (`window.total > 0` with no children — React's `TreeDataWindow` reads it the same way).
+    /// (`window.total > 0` with no children — React's `TreeDataWindow` reads it the same way), or a detail band: React's `hasNonEmptyChildren(children)` counts the row's `content`, so a detail-only row folds and shows a chevron.
     pub fn has_rows(&self) -> bool {
-        self.items.as_deref().is_some_and(|items| !items.is_empty()) || self.window.is_some_and(|window| window.total > 0)
+        self.items.as_deref().is_some_and(|items| !items.is_empty()) || self.window.is_some_and(|window| window.total > 0) || self.detail.is_some()
     }
 }
 

@@ -7,6 +7,8 @@ use semio_plugin::__value::{RetainedCloneProgress, RetirementDemand, ValueError,
 use semio_plugin::original_media::{OriginalGuestMediaInput, OriginalMediaLoan, RawMediaTarget, RAW_MEDIA_BYTES};
 use semio_s_artifact_stdio_pdf_inferences::standards::v1_7::subsets::base::io::foreign_artifacts::png_source::{PNG_GRAPH_MAXIMUM_BYTES, PNG_GRAPH_MAXIMUM_PIXELS};
 use semio_framework_pixels::png_decoding::PngDecodeLimits;
+use semio_s_artifact_stdio_pdf_image_route::{select_picked_raster_route, PickedRasterFormat, PickedRasterRoute};
+use semio_plugin::__value::paged::ByteReadSource;
 
 type Work = super::RawPngWork<RawMediaTarget, RAW_MEDIA_BYTES>;
 type Rows = ArtifactMutationPages<PdfMutation>;
@@ -78,6 +80,10 @@ impl PngFormatWork {
         }
         let Some(source) = self.decoder.source(input, live, cx)? else { return Ok(false); };
         let Some(graph) = self.graph.as_mut() else {
+            if !matches!(select_picked_raster_route(PickedRasterFormat::Png, self.size.0, self.size.1, source.byte_len()),
+                PickedRasterRoute::Inline | PickedRasterRoute::PagedPng) {
+                return Err(ValueError::literal(ValueRefusalKind::InvalidValue, "picked PNG exceeds the paged placement lane").into());
+            }
             PngGraphEdit::admit(source, *live.base_revision, self.placement.expect("PNG placement was checked"), self.size, self.alpha, &mut self.graph, cx)?;
             return Ok(false);
         };

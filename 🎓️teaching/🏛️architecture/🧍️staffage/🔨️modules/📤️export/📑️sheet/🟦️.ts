@@ -12,6 +12,7 @@
  *
  * All three views are drawn at one paper scale (`mmPerMetre`), share the world origins that align them, and carry overall dimensions measured on the drawn figure, the view captions, the scale bar and the projection symbol.
  * The sheet states widthM (ahead), depthM (lateral) and heightM per view in `sheet.extentsM`, measured on the drawn figure without ground.
+ * The thermodynamic air flow (`options.flow` of the thermal mode) is drawn in every cell from one developed field at one instant; its marks widen the cells but never the measured figure, and its legends stand once, under the elevation.
  *
  * @see ../../🎨️depiction/🔭️views/🟦️.ts — the cameras
  * @see ../🖼️svg/🟦️.ts — `writeSvg` (writes the sheet metadata)
@@ -23,6 +24,7 @@ import { resolveViewpoints, type DrawOptions, type DrawingSource, type DrawingUn
 import { Canvas } from "../../🎨️depiction/🧱️canvas/🟦️.ts";
 import { type Analysis, AXONOMETRIC_NAMES, VIEW_TITLES, depict, modelScene } from "../../🎨️depiction/🟦️.ts";
 import { THEMES, tx } from "../../🎨️depiction/🖍️palette/🟦️.ts";
+import type { ModelFlow } from "../../🎨️depiction/🌊️flow-view/📐️model/🟦️.ts";
 import { viewpointCaption } from "../../🎨️depiction/✂️section/🟦️.ts";
 import { scaleBarMetres } from "../../🎨️depiction/🏷️annotations/🟦️.ts";
 import { circleCommands, commandsOf } from "../../🎨️depiction/📐️geometry/🟦️.ts";
@@ -89,7 +91,7 @@ function figureBox(scene: DrawingScene): Box {
   const reach = (x: number, y: number): void => void (box = box === null ? { minX: x, minY: y, maxX: x, maxY: y } : { minX: Math.min(box.minX, x), minY: Math.min(box.minY, y), maxX: Math.max(box.maxX, x), maxY: Math.max(box.maxY, y) });
   for (const layer of scene.layers) {
     if (OVERLAYS.includes(layer.id)) continue;
-    for (const item of layer.items) if (item.kind === "path") for (const c of item.commands) if (c.op !== "Z") reach(c.x, c.y);
+    for (const item of layer.items) if (item.kind === "path" && !item.id.startsWith("flow-")) for (const c of item.commands) if (c.op !== "Z") reach(c.x, c.y);
   }
   if (box === null) throw new Error(`the ${scene.metadata.viewpoint} view of ${scene.metadata.asset} draws no figure`);
   return box;
@@ -279,10 +281,11 @@ export function resolveSheet(asset: Asset, query: EvaluationQuery, source: Drawi
 
 const CAD_PREFIX: Readonly<Record<PlanarViewpoint, string>> = { elevation: "ELEVATION", front: "FRONT", plan: "PLAN" };
 
-/** 🪜️ The CAD model-space sheet in metres at full size: the model scenes of the three viewpoints of one state, translated into the projection arrangement with a gap of the paper gaps of the printed sheet at `denominator`, every layer prefixed by its view (`PLAN-STAFFAGE-BODY`) and one `SHEET-LABELS` layer with the localized captions at the text height of 2.5 mm paper. The ground layers stay in their views. */
-export function modelSheet(state: EvaluatedState, options: { readonly projection: Projection; readonly denominator: number; readonly language: Language; readonly analysis?: Analysis; readonly diagrams?: Parameters<typeof modelScene>[1]["diagrams"]; readonly axonometric?: AxonometricSpec | false }): ModelScene {
+/** 🪜️ The CAD model-space sheet in metres at full size: the model scenes of the three viewpoints of one state, translated into the projection arrangement with a gap of the paper gaps of the printed sheet at `denominator`, every layer prefixed by its view (`PLAN-STAFFAGE-BODY`) and one `SHEET-LABELS` layer with the localized captions at the text height of 2.5 mm paper. The ground layers stay in their views. `flow` adds the air flow of one field at one instant to every cell (`PLAN-FLOW-STREAMS-WARM`, …), generalised for `denominator`; the cells are spaced by their flow too. */
+export function modelSheet(state: EvaluatedState, options: { readonly projection: Projection; readonly denominator: number; readonly language: Language; readonly analysis?: Analysis; readonly diagrams?: Parameters<typeof modelScene>[1]["diagrams"]; readonly axonometric?: AxonometricSpec | false; readonly flow?: Omit<ModelFlow, "denominator"> }): ModelScene {
+  const flow = options.flow === undefined ? {} : { flow: { ...options.flow, denominator: options.denominator } };
   const first = options.projection === "first";
-  const scenes = Object.fromEntries(PLANAR_VIEWPOINTS.map((viewpoint) => [viewpoint, modelScene(state, { viewpoint, ...(options.analysis ? { analysis: options.analysis } : {}), ...(options.diagrams ? { diagrams: options.diagrams } : {}) })])) as Record<PlanarViewpoint, ModelScene>;
+  const scenes = Object.fromEntries(PLANAR_VIEWPOINTS.map((viewpoint) => [viewpoint, modelScene(state, { viewpoint, ...(options.analysis ? { analysis: options.analysis } : {}), ...(options.diagrams ? { diagrams: options.diagrams } : {}), ...flow })])) as Record<PlanarViewpoint, ModelScene>;
   const boxOf = (scene: ModelScene): Box => {
     const points = scene.layers.flatMap((layer) => layer.polylines.flatMap((line) => line.points));
     if (points.length === 0) throw new Error(`the ${scene.asset} model scene of a sheet has no outline`);
@@ -300,7 +303,7 @@ export function modelSheet(state: EvaluatedState, options: { readonly projection
     plan: { x: 0, y: first ? Math.min(e.minY, f.minY) - gapY - p.maxY : Math.max(e.maxY, f.maxY) + gapY - p.minY },
   };
   const layers: ModelLayer[] = PLANAR_VIEWPOINTS.flatMap((viewpoint) => scenes[viewpoint].layers.map((layer) => ({ ...layer, name: `${CAD_PREFIX[viewpoint]}-${layer.name}`, polylines: layer.polylines.map((line) => ({ closed: line.closed, points: line.points.map((q) => ({ x: q.x + shift[viewpoint].x, y: q.y + shift[viewpoint].y })) })) })));
-  const axo = options.axonometric === undefined || options.axonometric === false ? undefined : modelScene(state, { viewpoint: "axonometric", ...(options.analysis ? { analysis: options.analysis } : {}), axonometric: options.axonometric });
+  const axo = options.axonometric === undefined || options.axonometric === false ? undefined : modelScene(state, { viewpoint: "axonometric", ...(options.analysis ? { analysis: options.analysis } : {}), axonometric: options.axonometric, ...flow });
   const axoBox = axo === undefined ? undefined : boxOf(axo);
   const axoShift = axoBox === undefined ? undefined : first ? { x: Math.min(e.minX, p.minX) - gapX - axoBox.maxX, y: Math.min(e.minY, f.minY) - gapY - axoBox.maxY } : { x: Math.max(e.maxX, p.maxX) + gapX - axoBox.minX, y: Math.max(e.maxY, f.maxY) + gapY - axoBox.minY };
   if (axo !== undefined && axoShift !== undefined) layers.push(...axo.layers.map((layer) => ({ ...layer, name: `AXONOMETRIC-${layer.name}`, polylines: layer.polylines.map((line) => ({ closed: line.closed, points: line.points.map((q) => ({ x: q.x + axoShift.x, y: q.y + axoShift.y })) })) })));

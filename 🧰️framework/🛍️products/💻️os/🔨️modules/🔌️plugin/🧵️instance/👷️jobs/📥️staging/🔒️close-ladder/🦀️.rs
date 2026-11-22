@@ -79,6 +79,7 @@ impl<A: ArtifactApp> ToolOperations<A> {
     pub fn close_typed_operation_demands<M: SpaceMember + MemberFactory + 'static>(&self, child_composition: &ChildComposition<M>, stores:&semio_plugin_instance_stores::stores_components::InstanceStores<A>, body: usize) -> Result<RetirementDemand, Fault> {
         if self.original_emission_construction.as_ref().is_some_and(|admission|!admission.terminal_is_empty()){return Ok(Default::default())}
         if let Some(source)=self.original_emission_admission.as_ref(){return if source.terminal_is_empty(){Ok(RetirementDemand{copy_bytes:std::mem::size_of::<Box<semio_plugin_retained_command::typed_operation::original_emission::OriginalEmissionAdmission<A>>>(),release_bytes:std::mem::size_of_val(&**source),depth:1,..Default::default()})}else{source.close_demands(&self.tool_cancellations,body).map_err(plugin_retirement_fault)}}
+        if self.original_emission_result.is_some(){return Ok(RetirementDemand{copy_bytes:size_of::<Option<semio_framework::kernel::InvocationResult>>(),depth:1,..Default::default()})}
         if self.original_emission_receipt.is_some(){return Ok(RetirementDemand{copy_bytes:size_of::<Option<semio_plugin_job::original_emission::OriginalEmissionReceipt>>(),depth:1,..Default::default()})}
         let Some((_, operation_id)) = self.tool_operations.next_id_from(0) else { return Ok(RetirementDemand::default()) };
         let operation = self.tool_operations.get(operation_id).ok_or_else(|| plugin_sdk_fault("typed operation owner changed during bounded close"))?;

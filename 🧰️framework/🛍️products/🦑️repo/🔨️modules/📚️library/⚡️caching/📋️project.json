@@ -304,6 +304,7 @@
         "test-nx-bounded-image",
         "test-nx-output-observation",
         "test-package-manager-seam",
+        "test-patch-loader-processes",
         "test-playground-preparation-source",
         "test-process-watchdog-linux",
         "test-pruning",
@@ -6016,6 +6017,33 @@
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching",
         "command": "repo ./📜️script.ts test storage-ledger-oracle-processes",
+        "forwardAllArgs": false
+      },
+      "metadata": {
+        "semio": {
+          "execution": {
+            "version": 1,
+            "kind": "source"
+          },
+          "cache": {
+            "version": 1,
+            "class": "live",
+            "reason": "exercises-host-resources"
+          }
+        }
+      }
+    },
+    "test-patch-loader-processes": {
+      "executor": "repo:script",
+      "cache": false,
+      "dependsOn": [],
+      "inputs": [
+        "{projectRoot}/**/*"
+      ],
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching",
+        "command": "repo ./📜️script.ts test patch-loader-processes",
         "forwardAllArgs": false
       },
       "metadata": {

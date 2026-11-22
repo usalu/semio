@@ -7,7 +7,7 @@ import {dirname,isAbsolute,join,relative,resolve} from "node:path";
 import Ajv from "ajv";
 import ts from "typescript";
 import {requireTestToolV1} from "../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";
-import {evaluateExtractedFunctionV1} from "../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧩️extracted-function/🟦️.ts";
+import {loadProductFunctionsV1} from "../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧩️extracted-function/🟦️.ts";
 import {declaredTypeScriptProjectsV1} from "../../🟨️.mjs";
 import {readPhysicalSource,requirePhysicalSourceV1} from "../../../📍️coordinates/🟨️.mjs";
 import {observationLayerHoldsV1,observeDetachedV1} from "../../../../../👁️observation/🟨️.mjs";
@@ -23,7 +23,6 @@ type Row={kind:string;path:string;fact:unknown};
 const python=requireTestToolV1("python"),sandbox=realpathSync(mkdtempSync(join(tmpdir(),"program-reads-")));
 afterAll(()=>rmSync(sandbox,{recursive:true,force:true}));
 const oracle=():Verdict[]=>{const run=spawnSync(python,["-I",join(import.meta.dir,"🐍️oracle","🐍️.py")],{input:JSON.stringify(corpus),encoding:"utf8"});expect(run.status,run.stderr).toBe(0);return JSON.parse(run.stdout);};
-const declaration=():string=>{const text=readFileSync(new URL("../../🟨️.mjs",import.meta.url),"utf8"),file=ts.createSourceFile("inputs.mjs",text,ts.ScriptTarget.Latest,true,ts.ScriptKind.JS),node=file.statements.find(node=>ts.isFunctionDeclaration(node)&&node.name?.text==="declaredProjectClosureV1");if(!node)throw Error("Actual declared program closure required");return node.getText(file);};
 const workspace=(id:string):string=>{const root=join(sandbox,id);for(const[path,text]of Object.entries(corpus.files)){mkdirSync(dirname(join(root,path)),{recursive:true});writeFileSync(join(root,path),text);}return root;};
 const listing=(path:string)=>{try{return readdirSync(path,{withFileTypes:true}).map(entry=>({name:entry.name,directory:entry.isDirectory(),file:entry.isFile()}));}catch{return undefined;}};
 const programOf=(root:string)=>declaredTypeScriptProjectsV1(["{projectRoot}/"+corpus.config],root,".",{compiler:ts,host:ts.sys,readdir:listing,join,dirname,isAbsolute});
@@ -42,7 +41,7 @@ const mutate=(root:string,mutation:Mutation)=>{
 const observeClosure=async(root:string,closure:readonly string[])=>{
  const program=programOf(root),compiledNames=new Map([[closure,new Set<string>()]]),cache={declared:new Map(),compiledNames,generatedImports:new Map()};
  const ports={resolve,memoDigestV1:(...parts:unknown[])=>JSON.stringify(parts),memoizedObservedComputationV1:(store:Map<string,{value:unknown;observations:object}>,key:string,body:()=>unknown)=>{let entry=store.get(key);if(!entry)store.set(key,entry={value:body(),observations:{}});return entry.value;},typescriptProgramV1:()=>program,walkFactsV1:new WeakMap(),programQuestionV1:()=>"question",programAnswerV1:()=>"answer",readPhysicalSource,requirePhysicalSourceV1,closurePathNameV1:(_cache:unknown,base:string,file:string)=>"{workspaceRoot}/"+relative(base,file).split("\\").join("/")};
- const closureOf=evaluateExtractedFunctionV1(declaration(),"declaredProjectClosureV1",ports);
+ const closureOf=(await loadProductFunctionsV1(new URL("../../🟨️.mjs",import.meta.url),["declaredProjectClosureV1"],ports)).declaredProjectClosureV1;
  const {value,rows}=await observeDetachedV1(async()=>closureOf(["{projectRoot}/"+corpus.config],root,".",cache,closure));
  return {program,value:value as {closure:string[]},rows:rows as Row[]};
 };

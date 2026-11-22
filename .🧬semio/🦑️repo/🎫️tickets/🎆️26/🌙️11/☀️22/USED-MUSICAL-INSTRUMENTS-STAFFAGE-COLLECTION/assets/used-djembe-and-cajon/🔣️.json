@@ -1,0 +1,8384 @@
+{
+ "$schema": "../../../🧬️schema/🔣️.json#/$defs/AssetDocument",
+ "version": "semio.staffage/v2",
+ "asset": {
+  "id": "used-djembe-and-cajon",
+  "category": "objects",
+  "title": {
+   "en": "Used Djembe and Cajón",
+   "de": "Gebrauchte Djembe und Cajón"
+  },
+  "summary": {
+   "en": "A second-hand pair of hand drums as a used-instrument dealer offers it: a rope-tuned West African djembe 0.60 m high, carved from one log of lenke with a 0.32 m bowl and a shaved goatskin head darkened by the hands at the playing zones, laced with faded 5 mm rope in 24 verticals and a Mali weave between steel crown and bottom ring, its foot ring scuffed; and a cajon box drum 0.30 x 0.30 x 0.48 m of birch plywood with a 110 mm sound port in the back, a guitar-string snare behind the 3 mm front plate, which is played through to bare wood at both upper corners and in the middle, the top back edge worn round and a dealer sticker on the side; 11.7 kg together. Poses: stored side by side on the floor, carried by two helpers by the port and the crown ring, and played seated on the cajon with the djembe tilted between the knees.",
+   "de": "Ein gebrauchtes Paar Handtrommeln, wie es ein Gebrauchtinstrumentenhandel anbietet: eine seilgestimmte westafrikanische Djembe von 0,60 m Höhe, aus einem Stamm Lenke geschnitzt, mit einer Schale von 0,32 m und einem rasierten Ziegenfell, das an den Schlagzonen von den Händen nachgedunkelt ist, mit ausgeblichenem 5-mm-Seil in 24 Vertikalen und Mali-Flechtung zwischen stählernem Kronen- und unterem Ring geschnürt, der Fußring verschrammt; und ein Cajón 0,30 x 0,30 x 0,48 m aus Birkensperrholz mit einer 110-mm-Schallöffnung in der Rückwand, einem Gitarrensaiten-Snare hinter der 3-mm-Schlagplatte, die an beiden oberen Ecken und in der Mitte bis aufs blanke Holz abgespielt ist, der hinteren Oberkante rund abgegriffen und einem Händleraufkleber an der Seite; zusammen 11.7 kg. Posen: nebeneinander auf dem Boden gelagert, von zwei Helfern an Schallöffnung und Kronenring getragen und auf dem Cajón sitzend gespielt, die Djembe zwischen den Knien gekippt."
+  },
+  "tags": [
+   "used",
+   "instrument",
+   "music",
+   "second-hand",
+   "percussion",
+   "folk",
+   "hand-drum",
+   "djembe",
+   "cajon",
+   "goblet-drum",
+   "box-drum",
+   "membranophone",
+   "idiophone",
+   "goatskin",
+   "rope-tuned",
+   "lenke",
+   "hardwood",
+   "birch-plywood",
+   "passive"
+  ],
+  "provenance": {
+   "author": "Semio staffage instrument authors (used instruments wave, author 20)",
+   "method": "handcrafted",
+   "created": "2026-11-22",
+   "references": [
+    {
+     "id": "hornbostel-sachs-1914",
+     "citation": "Hornbostel, E. M. von, Sachs, C. (1914). Systematik der Musikinstrumente. Ein Versuch. Zeitschrift fuer Ethnologie 46, 553-590; English: Baines, A., Wachsmann, K. P. (1961). Classification of Musical Instruments. Galpin Society Journal 14, 3-29 (djembe 211.261.1: directly struck single-skin goblet drum with open foot, cord-tensioned by rings; cajon 111.24: percussion box, directly struck idiophone)."
+    },
+    {
+     "id": "charry-2000",
+     "citation": "Charry, E. (2000). Mande Music: Traditional and Modern Music of the Maninka and Mandinka of Western Africa. University of Chicago Press, Chicago (djembe carved from one log of hardwood such as lenke, Afzelia africana; goatskin head; iron rings and rope lacing; played seated, tilted away from the player's lap or standing on a strap)."
+    },
+    {
+     "id": "feldman-2006",
+     "citation": "Feldman, H. C. (2006). Black Rhythms of Peru: Reviving African Musical Heritage in the Black Pacific. Wesleyan University Press, Middletown CT (the Afro-Peruvian cajon: a wooden box played sitting astride it, striking the front plate, the sound port in the back)."
+    },
+    {
+     "id": "fletcher-rossing-1998",
+     "citation": "Fletcher, N. H., Rossing, T. D. (1998). The Physics of Musical Instruments, 2nd ed. Springer, New York, chapter 18 (membranes under tension, drum heads, tension per unit length of the order of a few kN/m)."
+    },
+    {
+     "id": "wood-handbook-2010",
+     "citation": "Forest Products Laboratory (2010). Wood Handbook - Wood as an Engineering Material, General Technical Report FPL-GTR-190. USDA Forest Service, Madison WI (densities, elastic moduli, strengths and thermal properties of wood, birch, beech and plywood)."
+    },
+    {
+     "id": "cirad-tropix-doussie",
+     "citation": "CIRAD (2011). Tropix 7: Doussie / Afzelia africana and Afzelia bipindensis (lenke). Montpellier (air-dry density about 0.80, modulus of elasticity about 13 GPa, modulus of rupture about 100 MPa)."
+    },
+    {
+     "id": "iso-10456-2007",
+     "citation": "EN ISO 10456:2007 Building materials and products - Hygrothermal properties - Tabulated design values (thermal conductivity and specific heat of plywood, timber, rubbers and polymers)."
+    },
+    {
+     "id": "incropera-2018",
+     "citation": "Incropera, F. P., DeWitt, D. P., Bergman, T. L., Lavine, A. S. (2018). Fundamentals of Heat and Mass Transfer, 8th ed. Wiley (emissivities of wood, lacquer, leather and polymers; free convection on plates and cylinders)."
+    },
+    {
+     "id": "percussion-catalogues",
+     "citation": "Catalogue data of standard cajons and West African djembes as music shops and used-instrument dealers list them (cajon 300 x 300 x 480 mm, 4 to 5 kg, 9 to 12 mm birch plywood body, 3 to 4 mm front plate screwed on, sound port 100 to 120 mm in the back, guitar-string or snare-wire snare behind the plate; djembe 58 to 62 cm high, 30 to 33 cm head, 7 to 10 kg, carved lenke or iroko shell, goatskin head, steel crown, flesh and bottom rings, 4 to 6 mm low-stretch polyester rope with Mali weave); the pair of this asset is a typical member of these families, not one model (authored-estimate)."
+    },
+    {
+     "id": "din-33402-2",
+     "citation": "DIN 33402-2:2020 Ergonomics - Human body dimensions - Part 2: Values (seated knee height about 0.50 to 0.56 m and buttock-to-knee length about 0.55 to 0.62 m of adults; the seat load of a sitting adult)."
+    }
+   ],
+   "notes": {
+    "en": "Djembe (Hornbostel-Sachs 211.261.1): 0.60 m to the head, foot ring 0.229 m, waist 0.140 m at 0.32 m, bowl 0.317 m, bearing edge 0.294 m; lenke wall 23 mm at the waist and 18 to 22 mm in the bowl, shell 6.09 kg; shaved goatskin 1.2 mm, crown ring 0.343 m and bottom ring 0.205 m of 6 and 8 mm steel wrapped in rope, 24 verticals of 5 mm polyester rope with a Mali weave on the upper half and the excess coiled at the bottom ring; 6.94 kg. Cajon (Hornbostel-Sachs 111.24): 300 x 300 x 480 mm of 12 mm birch plywood with a 9 mm back and a 110 mm port at 0.32 m, 3 mm birch front plate with ten screws, four guitar strings on two beech battens behind it; 4.80 kg. Traces of use: the plate played through to bare wood in the upper corners and in the middle, the top back edge worn to an 8 mm round, scuffs at the bottom corners, a dealer sticker, the head darkened by the hands on the player's side, faded and frayed rope, scuffed foot ring. Nothing that stops it from being played.",
+    "de": "Djembe (Hornbostel-Sachs 211.261.1): 0,60 m bis zum Fell, Fußring 0,229 m, Taille 0,140 m auf 0,32 m, Schale 0,317 m, Gratkante 0,294 m; Lenke-Wand 23 mm an der Taille und 18 bis 22 mm in der Schale, Korpus 6.09 kg; rasiertes Ziegenfell 1,2 mm, Kronenring 0,343 m und unterer Ring 0,205 m aus 6- und 8-mm-Stahl in Seil gewickelt, 24 Vertikalen aus 5-mm-Polyesterseil mit Mali-Flechtung auf der oberen Hälfte und dem am unteren Ring aufgewickelten Restseil; 6.94 kg. Cajón (Hornbostel-Sachs 111.24): 300 x 300 x 480 mm aus 12-mm-Birkensperrholz mit 9-mm-Rückwand und 110-mm-Öffnung auf 0,32 m, 3-mm-Birken-Schlagplatte mit zehn Schrauben, dahinter vier Gitarrensaiten an zwei Buchenleisten; 4.80 kg. Gebrauchsspuren: die Platte in den oberen Ecken und in der Mitte bis aufs blanke Holz abgespielt, die hintere Oberkante zu 8 mm Radius abgegriffen, Schrammen an den unteren Ecken, ein Händleraufkleber, das Fell auf der Seite des Spielers von den Händen nachgedunkelt, ausgeblichenes und ausgefranstes Seil, verschrammter Fußring. Nichts, was das Spielen verhindert."
+   }
+  },
+  "dimensions": {
+   "heightM": 0.599,
+   "widthM": 0.763,
+   "depthM": 0.343,
+   "massKg": 11.74
+  },
+  "materials": [
+   {
+    "id": "birch-ply",
+    "title": {
+     "en": "Birch plywood 12 mm, clear lacquer worn matt",
+     "de": "Birkensperrholz 12 mm, Klarlack matt abgegriffen"
+    },
+    "emissivity": 0.9,
+    "solarAbsorptivity": 0.5,
+    "densityKgM3": 680.0,
+    "conductivityWmK": 0.17,
+    "specificHeatJKgK": 1600,
+    "elasticModulusPa": 8000000000.0,
+    "strengthPa": 40000000.0,
+    "source": "literature",
+    "reference": "wood-handbook-2010"
+   },
+   {
+    "id": "birch-tapa",
+    "title": {
+     "en": "Birch front plate 3 mm, lacquer rubbed through to bare wood",
+     "de": "Birken-Schlagplatte 3 mm, Lack bis aufs Holz durchgespielt"
+    },
+    "emissivity": 0.9,
+    "solarAbsorptivity": 0.55,
+    "densityKgM3": 680.0,
+    "conductivityWmK": 0.17,
+    "specificHeatJKgK": 1600,
+    "elasticModulusPa": 8000000000.0,
+    "strengthPa": 40000000.0,
+    "source": "authored-estimate",
+    "reference": "wood-handbook-2010"
+   },
+   {
+    "id": "beech",
+    "title": {
+     "en": "Beech battens of the snare",
+     "de": "Buchenleisten des Snares"
+    },
+    "emissivity": 0.9,
+    "solarAbsorptivity": 0.5,
+    "densityKgM3": 720.0,
+    "conductivityWmK": 0.17,
+    "specificHeatJKgK": 1600,
+    "elasticModulusPa": 14000000000.0,
+    "strengthPa": 100000000.0,
+    "source": "literature",
+    "reference": "wood-handbook-2010"
+   },
+   {
+    "id": "snare-steel",
+    "title": {
+     "en": "Steel guitar strings of the snare",
+     "de": "Stahl-Gitarrensaiten des Snares"
+    },
+    "emissivity": 0.3,
+    "solarAbsorptivity": 0.5,
+    "densityKgM3": 7850.0,
+    "conductivityWmK": 50,
+    "specificHeatJKgK": 450,
+    "elasticModulusPa": 200000000000.0,
+    "strengthPa": 2000000000.0,
+    "source": "literature",
+    "reference": "incropera-2018"
+   },
+   {
+    "id": "lenke",
+    "title": {
+     "en": "Lenke (Afzelia africana) carved shell, palm-oiled, darkened and scuffed",
+     "de": "Lenke (Afzelia africana), geschnitzter Korpus, mit Palmöl behandelt, nachgedunkelt und verschrammt"
+    },
+    "emissivity": 0.9,
+    "solarAbsorptivity": 0.65,
+    "densityKgM3": 800.0,
+    "conductivityWmK": 0.2,
+    "specificHeatJKgK": 1600,
+    "elasticModulusPa": 13000000000.0,
+    "strengthPa": 100000000.0,
+    "source": "literature",
+    "reference": "cirad-tropix-doussie"
+   },
+   {
+    "id": "goatskin",
+    "title": {
+     "en": "Shaved goatskin head 1.2 mm, hand-darkened at the playing zones",
+     "de": "Rasiertes Ziegenfell 1,2 mm, an den Schlagzonen von den Händen nachgedunkelt"
+    },
+    "emissivity": 0.95,
+    "solarAbsorptivity": 0.6,
+    "densityKgM3": 1100.0,
+    "conductivityWmK": 0.2,
+    "specificHeatJKgK": 1500,
+    "elasticModulusPa": 400000000.0,
+    "strengthPa": 25000000.0,
+    "source": "authored-estimate",
+    "reference": "fletcher-rossing-1998"
+   },
+   {
+    "id": "polyester-rope",
+    "title": {
+     "en": "Low-stretch polyester rope 5 mm, faded and frayed at the knots",
+     "de": "Dehnungsarmes Polyesterseil 5 mm, ausgeblichen und an den Knoten ausgefranst"
+    },
+    "emissivity": 0.9,
+    "solarAbsorptivity": 0.6,
+    "densityKgM3": 870.0,
+    "conductivityWmK": 0.15,
+    "specificHeatJKgK": 1100,
+    "elasticModulusPa": 3000000000.0,
+    "strengthPa": 300000000.0,
+    "source": "authored-estimate",
+    "reference": "iso-10456-2007"
+   },
+   {
+    "id": "ring-rope",
+    "title": {
+     "en": "Steel ring 6 to 8 mm wrapped in rope loops (composite)",
+     "de": "Stahlring 6 bis 8 mm in Seilschlaufen gewickelt (Verbund)"
+    },
+    "emissivity": 0.9,
+    "solarAbsorptivity": 0.6,
+    "densityKgM3": 2615.0,
+    "conductivityWmK": 0.3,
+    "specificHeatJKgK": 700,
+    "elasticModulusPa": 200000000000.0,
+    "strengthPa": 235000000.0,
+    "source": "authored-estimate",
+    "reference": "percussion-catalogues"
+   }
+  ],
+  "rig": {
+   "kind": "mechanical",
+   "root": "floor",
+   "bones": [
+    {
+     "id": "floor",
+     "parent": null,
+     "title": {
+      "en": "Floor mark at the back of the cajon footprint centre",
+      "de": "Bodenmarke in der Mitte der Cajón-Standfläche"
+     },
+     "x": 0,
+     "y": 0,
+     "angleDeg": 0,
+     "lengthM": 0,
+     "joint": {
+      "type": "fixed"
+     }
+    },
+    {
+     "id": "cajon",
+     "parent": "floor",
+     "title": {
+      "en": "Cajon box, from its bottom to its seat; lifted when carried",
+      "de": "Cajón-Kasten, vom Boden bis zur Sitzfläche; beim Tragen angehoben"
+     },
+     "x": 0,
+     "y": 0,
+     "angleDeg": 90,
+     "lengthM": 0.48,
+     "joint": {
+      "type": "prismatic",
+      "axisDeg": 90,
+      "minM": 0,
+      "maxM": 0.4
+     },
+     "mass": {
+      "kg": 4.799,
+      "comX": 0.239759,
+      "comY": 0.009995,
+      "distribution": "point",
+      "source": "authored-estimate",
+      "reference": "wood-handbook-2010"
+     },
+     "section": {
+      "areaM2": 0.013824,
+      "secondMomentM4": 0.00019143,
+      "extremeFibreM": 0.15,
+      "material": "birch-ply",
+      "title": {
+       "en": "Box section 300 x 300 mm of 12 mm birch plywood",
+       "de": "Kastenquerschnitt 300 x 300 mm aus 12-mm-Birkensperrholz"
+      }
+     }
+    },
+    {
+     "id": "djembe-lift",
+     "parent": "floor",
+     "title": {
+      "en": "Lift of the djembe off the floor when carried",
+      "de": "Anheben der Djembe vom Boden beim Tragen"
+     },
+     "x": 0.3281,
+     "y": 0,
+     "angleDeg": 0,
+     "lengthM": 0,
+     "joint": {
+      "type": "prismatic",
+      "axisDeg": 90,
+      "minM": 0,
+      "maxM": 0.3
+     }
+    },
+    {
+     "id": "djembe-tilt",
+     "parent": "djembe-lift",
+     "title": {
+      "en": "Tilting edge of the djembe foot on the floor, on the side of the player",
+      "de": "Kippkante des Djembe-Fußes auf dem Boden, auf der Seite des Spielers"
+     },
+     "x": 0,
+     "y": 0,
+     "angleDeg": 0,
+     "lengthM": 0,
+     "joint": {
+      "type": "revolute",
+      "minDeg": 0,
+      "maxDeg": 20
+     }
+    },
+    {
+     "id": "djembe",
+     "parent": "djembe-tilt",
+     "title": {
+      "en": "Djembe axis from the centre of the foot to the bearing edge",
+      "de": "Djembe-Achse von der Fußmitte zur Gratkante"
+     },
+     "x": 0.113,
+     "y": 0,
+     "angleDeg": 90,
+     "lengthM": 0.598,
+     "joint": {
+      "type": "fixed"
+     },
+     "mass": {
+      "kg": 6.861,
+      "comX": 0.333427,
+      "comY": 0,
+      "distribution": "point",
+      "source": "authored-estimate",
+      "reference": "cirad-tropix-doussie"
+     },
+     "section": {
+      "areaM2": 0.008454,
+      "secondMomentM4": 1.5025e-05,
+      "extremeFibreM": 0.07,
+      "material": "lenke",
+      "title": {
+       "en": "Carved tube at the waist, 140 mm outside, 94 mm bore",
+       "de": "Geschnitztes Rohr an der Taille, außen 140 mm, Bohrung 94 mm"
+      }
+     }
+    },
+    {
+     "id": "djembe-head",
+     "parent": "djembe",
+     "title": {
+      "en": "Goatskin head, dips under a stroke and rebounds",
+      "de": "Ziegenfell, gibt beim Schlag nach und federt zurück"
+     },
+     "x": 0.598,
+     "y": 0,
+     "angleDeg": 0,
+     "lengthM": 0,
+     "joint": {
+      "type": "prismatic",
+      "axisDeg": 0,
+      "minM": -0.003,
+      "maxM": 0.001
+     },
+     "mass": {
+      "kg": 0.082,
+      "comX": 0.0006,
+      "comY": 0,
+      "distribution": "point",
+      "source": "authored-estimate",
+      "reference": "fletcher-rossing-1998"
+     }
+    }
+   ]
+  },
+  "anchors": [
+   {
+    "id": "cajon-base",
+    "bone": "cajon",
+    "x": 0,
+    "y": 0,
+    "kind": "contact",
+    "title": {
+     "en": "Bottom of the cajon on the floor",
+     "de": "Boden des Cajón auf dem Fußboden"
+    },
+    "support": "contact",
+    "footprintLengthM": 0.297,
+    "footprintWidthM": 0.3,
+    "frictionCoefficient": 0.4
+   },
+   {
+    "id": "djembe-foot",
+    "bone": "djembe",
+    "x": 0,
+    "y": 0,
+    "kind": "contact",
+    "title": {
+     "en": "Foot ring of the djembe on the floor",
+     "de": "Fußring der Djembe auf dem Boden"
+    },
+    "support": "contact",
+    "footprintLengthM": 0.226,
+    "footprintWidthM": 0.226,
+    "frictionCoefficient": 0.5
+   },
+   {
+    "id": "djembe-edge",
+    "bone": "djembe-tilt",
+    "x": 0,
+    "y": 0,
+    "kind": "contact",
+    "title": {
+     "en": "Edge of the foot ring on which the tilted djembe rests",
+     "de": "Kante des Fußrings, auf der die gekippte Djembe ruht"
+    },
+    "support": "contact",
+    "footprintLengthM": 0.02,
+    "footprintWidthM": 0.08,
+    "frictionCoefficient": 0.5
+   },
+   {
+    "id": "knee-left",
+    "bone": "djembe",
+    "x": 0.46,
+    "y": 0.096962,
+    "z": 0.096962,
+    "kind": "contact",
+    "title": {
+     "en": "Left inner knee of the player against the bowl",
+     "de": "Linkes inneres Knie des Spielers an der Schale"
+    },
+    "support": "contact",
+    "normalDeg": 0,
+    "footprintLengthM": 0.06,
+    "footprintWidthM": 0.06,
+    "frictionCoefficient": 0.5
+   },
+   {
+    "id": "knee-right",
+    "bone": "djembe",
+    "x": 0.46,
+    "y": 0.096962,
+    "z": -0.096962,
+    "kind": "contact",
+    "title": {
+     "en": "Right inner knee of the player against the bowl",
+     "de": "Rechtes inneres Knie des Spielers an der Schale"
+    },
+    "support": "contact",
+    "normalDeg": 0,
+    "footprintLengthM": 0.06,
+    "footprintWidthM": 0.06,
+    "frictionCoefficient": 0.5
+   },
+   {
+    "id": "cajon-grip",
+    "bone": "cajon",
+    "x": 0.375,
+    "y": 0.15,
+    "kind": "support",
+    "title": {
+     "en": "Fingers hooked into the sound port",
+     "de": "In die Schallöffnung gehakte Finger"
+    },
+    "support": "fixed"
+   },
+   {
+    "id": "djembe-grip",
+    "bone": "djembe",
+    "x": 0.562,
+    "y": 0,
+    "z": -0.1653,
+    "kind": "support",
+    "title": {
+     "en": "Hand round the crown ring and its rope loops",
+     "de": "Hand um den Kronenring und seine Seilschlaufen"
+    },
+    "support": "fixed"
+   },
+   {
+    "id": "seat",
+    "bone": "cajon",
+    "x": 0.48,
+    "y": 0.03,
+    "kind": "load",
+    "title": {
+     "en": "Seat point of the player on the top",
+     "de": "Sitzpunkt des Spielers auf der Sitzfläche"
+    }
+   },
+   {
+    "id": "strike",
+    "bone": "djembe-head",
+    "x": 0.0012,
+    "y": 0.1,
+    "kind": "load",
+    "title": {
+     "en": "Tone and slap zone of the head on the player's side",
+     "de": "Ton- und Slapzone des Fells auf der Seite des Spielers"
+    }
+   }
+  ],
+  "representations": {
+   "50": {
+    "status": "authored",
+    "denominator": 50,
+    "validRange": {
+     "minDenominator": 20,
+     "maxDenominator": 75
+    },
+    "pens": {
+     "body": 0.25,
+     "detail": 0.18,
+     "texture": 0.1,
+     "glazing": null,
+     "ground": 0.35
+    },
+    "hatches": [],
+    "geometry": {
+     "elevation": [
+      {
+       "id": "carcass",
+       "bone": "cajon",
+       "role": "body",
+       "z": 2.0,
+       "filled": true,
+       "tone": 0.6,
+       "kind": "poly",
+       "points": [
+        [
+         0.0,
+         -0.147
+        ],
+        [
+         0.0,
+         0.15
+        ],
+        [
+         0.472,
+         0.15
+        ],
+        [
+         0.475061,
+         0.149391
+        ],
+        [
+         0.477657,
+         0.147657
+        ],
+        [
+         0.479391,
+         0.145061
+        ],
+        [
+         0.48,
+         0.142
+        ],
+        [
+         0.48,
+         -0.147
+        ]
+       ],
+       "closed": true,
+       "region": "cajon-carcass",
+       "material": "birch-ply",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.15,
+        "z1": 0.15
+       }
+      },
+      {
+       "id": "tapa",
+       "bone": "cajon",
+       "role": "body",
+       "z": 2.2,
+       "filled": true,
+       "tone": 0.74,
+       "kind": "poly",
+       "points": [
+        [
+         0.0,
+         -0.15
+        ],
+        [
+         0.0,
+         -0.147
+        ],
+        [
+         0.48,
+         -0.147
+        ],
+        [
+         0.48,
+         -0.15
+        ]
+       ],
+       "closed": true,
+       "region": "cajon-tapa",
+       "material": "birch-tapa",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.15,
+        "z1": 0.15
+       }
+      },
+      {
+       "id": "dealer-sticker",
+       "bone": "cajon",
+       "role": "texture",
+       "z": 2.4,
+       "filled": false,
+       "tone": 0.95,
+       "kind": "poly",
+       "points": [
+        [
+         0.36,
+         0.04
+        ],
+        [
+         0.4,
+         0.04
+        ],
+        [
+         0.4,
+         0.1
+        ],
+        [
+         0.36,
+         0.1
+        ]
+       ],
+       "closed": true,
+       "region": "cajon-carcass"
+      },
+      {
+       "id": "sticker-print",
+       "bone": "cajon",
+       "role": "texture",
+       "z": 2.45,
+       "filled": false,
+       "tone": 0.5,
+       "kind": "path",
+       "d": "M 0.388 0.05 L 0.388 0.09 M 0.376 0.05 L 0.376 0.078",
+       "region": "cajon-carcass"
+      },
+      {
+       "id": "side-scuffs",
+       "bone": "cajon",
+       "role": "texture",
+       "z": 2.5,
+       "filled": false,
+       "tone": 0.4,
+       "kind": "path",
+       "d": "M 0.004 0.11 L 0.012 0.135 M 0.003 0.125 L 0.016 0.146 M 0.006 -0.12 L 0.02 -0.141 M 0.47 0.06 L 0.476 0.1",
+       "region": "cajon-carcass"
+      },
+      {
+       "id": "ply-edge-front",
+       "bone": "cajon",
+       "role": "detail",
+       "z": 2.3,
+       "filled": false,
+       "tone": 0.3,
+       "kind": "path",
+       "d": "M 0.0 -0.147 L 0.48 -0.147",
+       "region": "cajon-tapa"
+      },
+      {
+       "id": "shell",
+       "bone": "djembe",
+       "role": "body",
+       "z": 3.0,
+       "filled": true,
+       "tone": 0.38,
+       "kind": "poly",
+       "points": [
+        [
+         0.0,
+         0.0
+        ],
+        [
+         0.0,
+         0.113
+        ],
+        [
+         0.008,
+         0.1145
+        ],
+        [
+         0.03,
+         0.1125
+        ],
+        [
+         0.07,
+         0.1045
+        ],
+        [
+         0.12,
+         0.0935
+        ],
+        [
+         0.18,
+         0.0835
+        ],
+        [
+         0.24,
+         0.0755
+        ],
+        [
+         0.29,
+         0.0705
+        ],
+        [
+         0.322,
+         0.07
+        ],
+        [
+         0.35,
+         0.076
+        ],
+        [
+         0.375,
+         0.09
+        ],
+        [
+         0.405,
+         0.11
+        ],
+        [
+         0.445,
+         0.131
+        ],
+        [
+         0.485,
+         0.146
+        ],
+        [
+         0.525,
+         0.155
+        ],
+        [
+         0.56,
+         0.1585
+        ],
+        [
+         0.582,
+         0.158
+        ],
+        [
+         0.592,
+         0.1545
+        ],
+        [
+         0.597,
+         0.1505
+        ],
+        [
+         0.598,
+         0.147
+        ],
+        [
+         0.598,
+         0.0
+        ]
+       ],
+       "closed": true,
+       "region": "djembe-shell",
+       "material": "lenke",
+       "solid": {
+        "kind": "revolved",
+        "axisBone": "djembe",
+        "axis": "u",
+        "axisX": 0,
+        "axisZ": 0,
+        "mirror": true
+       }
+      },
+      {
+       "id": "head-collar",
+       "bone": "djembe",
+       "role": "body",
+       "z": 3.4,
+       "filled": true,
+       "tone": 0.84,
+       "kind": "poly",
+       "points": [
+        [
+         0.54,
+         0.1565
+        ],
+        [
+         0.56,
+         0.1585
+        ],
+        [
+         0.575,
+         0.158159
+        ],
+        [
+         0.582,
+         0.158
+        ],
+        [
+         0.588,
+         0.1559
+        ],
+        [
+         0.592,
+         0.1545
+        ],
+        [
+         0.597,
+         0.1505
+        ],
+        [
+         0.598,
+         0.147
+        ],
+        [
+         0.598,
+         0.139
+        ],
+        [
+         0.5992,
+         0.139
+        ],
+        [
+         0.5992,
+         0.1475
+        ],
+        [
+         0.5977,
+         0.1518
+        ],
+        [
+         0.5925,
+         0.1558
+        ],
+        [
+         0.588,
+         0.1571
+        ],
+        [
+         0.582,
+         0.1592
+        ],
+        [
+         0.575,
+         0.159359
+        ],
+        [
+         0.56,
+         0.1597
+        ],
+        [
+         0.54,
+         0.1577
+        ]
+       ],
+       "closed": true,
+       "region": "djembe-head",
+       "material": "goatskin",
+       "solid": {
+        "kind": "revolved",
+        "axisBone": "djembe",
+        "axis": "u",
+        "axisX": 0,
+        "axisZ": 0,
+        "mirror": true
+       }
+      },
+      {
+       "id": "head",
+       "bone": "djembe-head",
+       "role": "body",
+       "z": 3.5,
+       "filled": true,
+       "tone": 0.88,
+       "kind": "poly",
+       "points": [
+        [
+         0.0,
+         0.0
+        ],
+        [
+         0.0,
+         0.141
+        ],
+        [
+         0.0012,
+         0.141
+        ],
+        [
+         0.0012,
+         0.0
+        ]
+       ],
+       "closed": true,
+       "region": "djembe-head",
+       "material": "goatskin",
+       "solid": {
+        "kind": "revolved",
+        "axisBone": "djembe-head",
+        "axis": "u",
+        "axisX": 0,
+        "axisZ": 0,
+        "mirror": true
+       }
+      },
+      {
+       "id": "crown-ring",
+       "bone": "djembe",
+       "role": "body",
+       "z": 3.6,
+       "filled": true,
+       "tone": 0.25,
+       "kind": "poly",
+       "points": [
+        [
+         0.562,
+         0.1653
+        ],
+        [
+         0.561543,
+         0.167596
+        ],
+        [
+         0.560243,
+         0.169543
+        ],
+        [
+         0.558296,
+         0.170843
+        ],
+        [
+         0.556,
+         0.1713
+        ],
+        [
+         0.553704,
+         0.170843
+        ],
+        [
+         0.551757,
+         0.169543
+        ],
+        [
+         0.550457,
+         0.167596
+        ],
+        [
+         0.55,
+         0.1653
+        ],
+        [
+         0.550457,
+         0.163004
+        ],
+        [
+         0.551757,
+         0.161057
+        ],
+        [
+         0.553704,
+         0.159757
+        ],
+        [
+         0.556,
+         0.1593
+        ],
+        [
+         0.558296,
+         0.159757
+        ],
+        [
+         0.560243,
+         0.161057
+        ],
+        [
+         0.561543,
+         0.163004
+        ]
+       ],
+       "closed": true,
+       "region": "djembe-rope",
+       "material": "ring-rope",
+       "solid": {
+        "kind": "revolved",
+        "axisBone": "djembe",
+        "axis": "u",
+        "axisX": 0,
+        "axisZ": 0,
+        "mirror": true
+       }
+      },
+      {
+       "id": "bottom-ring",
+       "bone": "djembe",
+       "role": "body",
+       "z": 3.2,
+       "filled": true,
+       "tone": 0.25,
+       "kind": "poly",
+       "points": [
+        [
+         0.3875,
+         0.1025
+        ],
+        [
+         0.386929,
+         0.10537
+        ],
+        [
+         0.385303,
+         0.107803
+        ],
+        [
+         0.38287,
+         0.109429
+        ],
+        [
+         0.38,
+         0.11
+        ],
+        [
+         0.37713,
+         0.109429
+        ],
+        [
+         0.374697,
+         0.107803
+        ],
+        [
+         0.373071,
+         0.10537
+        ],
+        [
+         0.3725,
+         0.1025
+        ],
+        [
+         0.373071,
+         0.09963
+        ],
+        [
+         0.374697,
+         0.097197
+        ],
+        [
+         0.37713,
+         0.095571
+        ],
+        [
+         0.38,
+         0.095
+        ],
+        [
+         0.38287,
+         0.095571
+        ],
+        [
+         0.385303,
+         0.097197
+        ],
+        [
+         0.386929,
+         0.09963
+        ]
+       ],
+       "closed": true,
+       "region": "djembe-rope",
+       "material": "ring-rope",
+       "solid": {
+        "kind": "revolved",
+        "axisBone": "djembe",
+        "axis": "u",
+        "axisX": 0,
+        "axisZ": 0,
+        "mirror": true
+       }
+      },
+      {
+       "id": "verticals-front",
+       "bone": "djembe",
+       "role": "detail",
+       "z": 3.7,
+       "filled": false,
+       "tone": 0.3,
+       "kind": "path",
+       "d": "M 0.5509 -0.022007 L 0.53 -0.021034 L 0.515 -0.020336 L 0.5 -0.01985 L 0.485 -0.019409 L 0.47 -0.018675 L 0.455 -0.017941 L 0.44 -0.017109 L 0.425 -0.016148 L 0.41 -0.01545 L 0.398 -0.014892 L 0.383375 -0.014211 M 0.5509 -0.06452 L 0.53 -0.061669 L 0.515 -0.059623 L 0.5 -0.058197 L 0.485 -0.056905 L 0.47 -0.054752 L 0.455 -0.0526 L 0.44 -0.05016 L 0.425 -0.047344 L 0.41 -0.045297 L 0.398 -0.04366 L 0.383375 -0.041665 M 0.5509 -0.102637 L 0.53 -0.098101 L 0.515 -0.094846 L 0.5 -0.092577 L 0.485 -0.090523 L 0.47 -0.087099 L 0.455 -0.083674 L 0.44 -0.079793 L 0.425 -0.075313 L 0.41 -0.072057 L 0.398 -0.069453 L 0.383375 -0.066279 M 0.5509 -0.133759 L 0.53 -0.127848 L 0.515 -0.123605 L 0.5 -0.120649 L 0.485 -0.117972 L 0.47 -0.113509 L 0.455 -0.109046 L 0.44 -0.103989 L 0.425 -0.09815 L 0.41 -0.093907 L 0.398 -0.090513 L 0.383375 -0.086376 M 0.5509 -0.155766 L 0.53 -0.148882 L 0.515 -0.143941 L 0.5 -0.140499 L 0.485 -0.137381 L 0.47 -0.132184 L 0.455 -0.126987 L 0.44 -0.121098 L 0.425 -0.114298 L 0.41 -0.109357 L 0.398 -0.105405 L 0.383375 -0.100587 M 0.5509 -0.167158 L 0.53 -0.15977 L 0.515 -0.154468 L 0.5 -0.150774 L 0.485 -0.147428 L 0.47 -0.141851 L 0.455 -0.136274 L 0.44 -0.129954 L 0.425 -0.122656 L 0.41 -0.117355 L 0.398 -0.113113 L 0.383375 -0.107944",
+       "region": "djembe-rope"
+      },
+      {
+       "id": "verticals-back",
+       "bone": "djembe",
+       "role": "detail",
+       "z": 3.7,
+       "filled": false,
+       "tone": 0.3,
+       "kind": "path",
+       "d": "M 0.5509 0.167158 L 0.53 0.15977 L 0.515 0.154468 L 0.5 0.150774 L 0.485 0.147428 L 0.47 0.141851 L 0.455 0.136274 L 0.44 0.129954 L 0.425 0.122656 L 0.41 0.117355 L 0.398 0.113113 L 0.383375 0.107944 M 0.5509 0.155766 L 0.53 0.148882 L 0.515 0.143941 L 0.5 0.140499 L 0.485 0.137381 L 0.47 0.132184 L 0.455 0.126987 L 0.44 0.121098 L 0.425 0.114298 L 0.41 0.109357 L 0.398 0.105405 L 0.383375 0.100587 M 0.5509 0.133759 L 0.53 0.127848 L 0.515 0.123605 L 0.5 0.120649 L 0.485 0.117972 L 0.47 0.113509 L 0.455 0.109046 L 0.44 0.103989 L 0.425 0.09815 L 0.41 0.093907 L 0.398 0.090513 L 0.383375 0.086376 M 0.5509 0.102637 L 0.53 0.098101 L 0.515 0.094846 L 0.5 0.092577 L 0.485 0.090523 L 0.47 0.087099 L 0.455 0.083674 L 0.44 0.079793 L 0.425 0.075313 L 0.41 0.072057 L 0.398 0.069453 L 0.383375 0.066279 M 0.5509 0.06452 L 0.53 0.061669 L 0.515 0.059623 L 0.5 0.058197 L 0.485 0.056905 L 0.47 0.054752 L 0.455 0.0526 L 0.44 0.05016 L 0.425 0.047344 L 0.41 0.045297 L 0.398 0.04366 L 0.383375 0.041665 M 0.5509 0.022007 L 0.53 0.021034 L 0.515 0.020336 L 0.5 0.01985 L 0.485 0.019409 L 0.47 0.018675 L 0.455 0.017941 L 0.44 0.017109 L 0.425 0.016148 L 0.41 0.01545 L 0.398 0.014892 L 0.383375 0.014211",
+       "region": "djembe-rope"
+      },
+      {
+       "id": "mali-weave",
+       "bone": "djembe",
+       "role": "texture",
+       "z": 3.8,
+       "filled": false,
+       "tone": 0.5,
+       "kind": "path",
+       "d": "M 0.514 0.101944 L 0.526 0.113944 M 0.494 0.101944 L 0.506 0.113944 M 0.514 0.094587 L 0.526 0.106587 M 0.494 0.094587 L 0.506 0.106587 M 0.514 0.080376 L 0.526 0.092376 M 0.494 0.080376 L 0.506 0.092376 M 0.514 0.060279 L 0.526 0.072279 M 0.494 0.060279 L 0.506 0.072279 M 0.514 0.035665 L 0.526 0.047665 M 0.494 0.035665 L 0.506 0.047665 M 0.514 0.008211 L 0.526 0.020211 M 0.494 0.008211 L 0.506 0.020211 M 0.514 -0.020211 L 0.526 -0.008211 M 0.494 -0.020211 L 0.506 -0.008211 M 0.514 -0.047665 L 0.526 -0.035665 M 0.494 -0.047665 L 0.506 -0.035665 M 0.514 -0.072279 L 0.526 -0.060279 M 0.494 -0.072279 L 0.506 -0.060279 M 0.514 -0.092376 L 0.526 -0.080376 M 0.494 -0.092376 L 0.506 -0.080376 M 0.514 -0.106587 L 0.526 -0.094587 M 0.494 -0.106587 L 0.506 -0.094587 M 0.514 -0.113944 L 0.526 -0.101944 M 0.494 -0.113944 L 0.506 -0.101944",
+       "region": "djembe-rope"
+      },
+      {
+       "id": "foot-grooves",
+       "bone": "djembe",
+       "role": "texture",
+       "z": 3.1,
+       "filled": false,
+       "tone": 0.3,
+       "kind": "path",
+       "d": "M 0.03 -0.1125 L 0.03 0.1125 M 0.05 -0.1085 L 0.05 0.1085",
+       "region": "djembe-shell"
+      },
+      {
+       "id": "shell-scuffs",
+       "bone": "djembe",
+       "role": "texture",
+       "z": 3.15,
+       "filled": false,
+       "tone": 0.3,
+       "kind": "path",
+       "d": "M 0.004 0.09 L 0.016 0.105 M 0.006 -0.08 L 0.02 -0.098 M 0.15 0.03 L 0.175 0.05 M 0.44 -0.06 L 0.46 -0.09",
+       "region": "djembe-shell"
+      },
+      {
+       "id": "rope-coil",
+       "bone": "djembe",
+       "role": "texture",
+       "z": 3.25,
+       "filled": false,
+       "tone": 0.4,
+       "kind": "path",
+       "d": "M 0.376 -0.1025 L 0.384 -0.0905 M 0.376 0.0905 L 0.384 0.1025 M 0.375 -0.03 L 0.385 0.03",
+       "region": "djembe-rope"
+      }
+     ],
+     "front": [
+      {
+       "id": "carcass",
+       "bone": "cajon",
+       "role": "body",
+       "z": 2.0,
+       "filled": true,
+       "tone": 0.6,
+       "kind": "poly",
+       "points": [
+        [
+         0.0,
+         -0.147
+        ],
+        [
+         0.0,
+         0.15
+        ],
+        [
+         0.472,
+         0.15
+        ],
+        [
+         0.475061,
+         0.149391
+        ],
+        [
+         0.477657,
+         0.147657
+        ],
+        [
+         0.479391,
+         0.145061
+        ],
+        [
+         0.48,
+         0.142
+        ],
+        [
+         0.48,
+         -0.147
+        ]
+       ],
+       "closed": true,
+       "region": "cajon-carcass",
+       "material": "birch-ply",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.15,
+        "z1": 0.15
+       }
+      },
+      {
+       "id": "tapa",
+       "bone": "cajon",
+       "role": "body",
+       "z": 2.2,
+       "filled": true,
+       "tone": 0.74,
+       "kind": "poly",
+       "points": [
+        [
+         0.0,
+         -0.15
+        ],
+        [
+         0.0,
+         -0.147
+        ],
+        [
+         0.48,
+         -0.147
+        ],
+        [
+         0.48,
+         -0.15
+        ]
+       ],
+       "closed": true,
+       "region": "cajon-tapa",
+       "material": "birch-tapa",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.15,
+        "z1": 0.15
+       }
+      },
+      {
+       "id": "tapa-screws",
+       "bone": "cajon",
+       "role": "texture",
+       "z": 2.6,
+       "filled": false,
+       "tone": 0.2,
+       "kind": "path",
+       "d": "M -0.1345 0.04 A 0.0035 0.0035 0 1 0 -0.1415 0.04 A 0.0035 0.0035 0 1 0 -0.1345 0.04 Z M 0.1415 0.04 A 0.0035 0.0035 0 1 0 0.1345 0.04 A 0.0035 0.0035 0 1 0 0.1415 0.04 Z M -0.1345 0.16 A 0.0035 0.0035 0 1 0 -0.1415 0.16 A 0.0035 0.0035 0 1 0 -0.1345 0.16 Z M 0.1415 0.16 A 0.0035 0.0035 0 1 0 0.1345 0.16 A 0.0035 0.0035 0 1 0 0.1415 0.16 Z M -0.1345 0.28 A 0.0035 0.0035 0 1 0 -0.1415 0.28 A 0.0035 0.0035 0 1 0 -0.1345 0.28 Z M 0.1415 0.28 A 0.0035 0.0035 0 1 0 0.1345 0.28 A 0.0035 0.0035 0 1 0 0.1415 0.28 Z M -0.1345 0.4 A 0.0035 0.0035 0 1 0 -0.1415 0.4 A 0.0035 0.0035 0 1 0 -0.1345 0.4 Z M 0.1415 0.4 A 0.0035 0.0035 0 1 0 0.1345 0.4 A 0.0035 0.0035 0 1 0 0.1415 0.4 Z M -0.0565 0.02 A 0.0035 0.0035 0 1 0 -0.0635 0.02 A 0.0035 0.0035 0 1 0 -0.0565 0.02 Z M 0.0635 0.02 A 0.0035 0.0035 0 1 0 0.0565 0.02 A 0.0035 0.0035 0 1 0 0.0635 0.02 Z",
+       "region": "cajon-tapa"
+      },
+      {
+       "id": "tapa-wear-centre",
+       "bone": "cajon",
+       "role": "texture",
+       "z": 2.7,
+       "filled": false,
+       "tone": 0.9,
+       "kind": "poly",
+       "points": [
+        [
+         -0.055,
+         0.33
+        ],
+        [
+         0.055,
+         0.33
+        ],
+        [
+         0.05,
+         0.462
+        ],
+        [
+         -0.05,
+         0.462
+        ]
+       ],
+       "closed": true,
+       "region": "cajon-tapa"
+      },
+      {
+       "id": "tapa-wear-left",
+       "bone": "cajon",
+       "role": "texture",
+       "z": 2.7,
+       "filled": false,
+       "tone": 0.9,
+       "kind": "poly",
+       "points": [
+        [
+         0.08,
+         0.405
+        ],
+        [
+         0.144,
+         0.405
+        ],
+        [
+         0.144,
+         0.472
+        ],
+        [
+         0.086,
+         0.468
+        ]
+       ],
+       "closed": true,
+       "region": "cajon-tapa"
+      },
+      {
+       "id": "tapa-wear-right",
+       "bone": "cajon",
+       "role": "texture",
+       "z": 2.7,
+       "filled": false,
+       "tone": 0.9,
+       "kind": "poly",
+       "points": [
+        [
+         -0.144,
+         0.405
+        ],
+        [
+         -0.08,
+         0.405
+        ],
+        [
+         -0.086,
+         0.468
+        ],
+        [
+         -0.144,
+         0.472
+        ]
+       ],
+       "closed": true,
+       "region": "cajon-tapa"
+      },
+      {
+       "id": "tapa-grain",
+       "bone": "cajon",
+       "role": "texture",
+       "z": 2.65,
+       "filled": false,
+       "tone": 0.6,
+       "kind": "path",
+       "d": "M -0.11 0.03 L -0.112 0.3 M 0.02 0.03 L 0.016 0.31 M 0.105 0.04 L 0.108 0.36",
+       "region": "cajon-tapa"
+      },
+      {
+       "id": "shell",
+       "bone": "djembe",
+       "role": "body",
+       "z": 3.0,
+       "filled": true,
+       "tone": 0.38,
+       "kind": "poly",
+       "points": [
+        [
+         0.0,
+         0.0
+        ],
+        [
+         0.0,
+         0.113
+        ],
+        [
+         0.008,
+         0.1145
+        ],
+        [
+         0.03,
+         0.1125
+        ],
+        [
+         0.07,
+         0.1045
+        ],
+        [
+         0.12,
+         0.0935
+        ],
+        [
+         0.18,
+         0.0835
+        ],
+        [
+         0.24,
+         0.0755
+        ],
+        [
+         0.29,
+         0.0705
+        ],
+        [
+         0.322,
+         0.07
+        ],
+        [
+         0.35,
+         0.076
+        ],
+        [
+         0.375,
+         0.09
+        ],
+        [
+         0.405,
+         0.11
+        ],
+        [
+         0.445,
+         0.131
+        ],
+        [
+         0.485,
+         0.146
+        ],
+        [
+         0.525,
+         0.155
+        ],
+        [
+         0.56,
+         0.1585
+        ],
+        [
+         0.582,
+         0.158
+        ],
+        [
+         0.592,
+         0.1545
+        ],
+        [
+         0.597,
+         0.1505
+        ],
+        [
+         0.598,
+         0.147
+        ],
+        [
+         0.598,
+         0.0
+        ]
+       ],
+       "closed": true,
+       "region": "djembe-shell",
+       "material": "lenke",
+       "solid": {
+        "kind": "revolved",
+        "axisBone": "djembe",
+        "axis": "u",
+        "axisX": 0,
+        "axisZ": 0,
+        "mirror": true
+       }
+      },
+      {
+       "id": "head-collar",
+       "bone": "djembe",
+       "role": "body",
+       "z": 3.4,
+       "filled": true,
+       "tone": 0.84,
+       "kind": "poly",
+       "points": [
+        [
+         0.54,
+         0.1565
+        ],
+        [
+         0.56,
+         0.1585
+        ],
+        [
+         0.575,
+         0.158159
+        ],
+        [
+         0.582,
+         0.158
+        ],
+        [
+         0.588,
+         0.1559
+        ],
+        [
+         0.592,
+         0.1545
+        ],
+        [
+         0.597,
+         0.1505
+        ],
+        [
+         0.598,
+         0.147
+        ],
+        [
+         0.598,
+         0.139
+        ],
+        [
+         0.5992,
+         0.139
+        ],
+        [
+         0.5992,
+         0.1475
+        ],
+        [
+         0.5977,
+         0.1518
+        ],
+        [
+         0.5925,
+         0.1558
+        ],
+        [
+         0.588,
+         0.1571
+        ],
+        [
+         0.582,
+         0.1592
+        ],
+        [
+         0.575,
+         0.159359
+        ],
+        [
+         0.56,
+         0.1597
+        ],
+        [
+         0.54,
+         0.1577
+        ]
+       ],
+       "closed": true,
+       "region": "djembe-head",
+       "material": "goatskin",
+       "solid": {
+        "kind": "revolved",
+        "axisBone": "djembe",
+        "axis": "u",
+        "axisX": 0,
+        "axisZ": 0,
+        "mirror": true
+       }
+      },
+      {
+       "id": "head",
+       "bone": "djembe-head",
+       "role": "body",
+       "z": 3.5,
+       "filled": true,
+       "tone": 0.88,
+       "kind": "poly",
+       "points": [
+        [
+         0.0,
+         0.0
+        ],
+        [
+         0.0,
+         0.141
+        ],
+        [
+         0.0012,
+         0.141
+        ],
+        [
+         0.0012,
+         0.0
+        ]
+       ],
+       "closed": true,
+       "region": "djembe-head",
+       "material": "goatskin",
+       "solid": {
+        "kind": "revolved",
+        "axisBone": "djembe-head",
+        "axis": "u",
+        "axisX": 0,
+        "axisZ": 0,
+        "mirror": true
+       }
+      },
+      {
+       "id": "crown-ring",
+       "bone": "djembe",
+       "role": "body",
+       "z": 3.6,
+       "filled": true,
+       "tone": 0.25,
+       "kind": "poly",
+       "points": [
+        [
+         0.562,
+         0.1653
+        ],
+        [
+         0.561543,
+         0.167596
+        ],
+        [
+         0.560243,
+         0.169543
+        ],
+        [
+         0.558296,
+         0.170843
+        ],
+        [
+         0.556,
+         0.1713
+        ],
+        [
+         0.553704,
+         0.170843
+        ],
+        [
+         0.551757,
+         0.169543
+        ],
+        [
+         0.550457,
+         0.167596
+        ],
+        [
+         0.55,
+         0.1653
+        ],
+        [
+         0.550457,
+         0.163004
+        ],
+        [
+         0.551757,
+         0.161057
+        ],
+        [
+         0.553704,
+         0.159757
+        ],
+        [
+         0.556,
+         0.1593
+        ],
+        [
+         0.558296,
+         0.159757
+        ],
+        [
+         0.560243,
+         0.161057
+        ],
+        [
+         0.561543,
+         0.163004
+        ]
+       ],
+       "closed": true,
+       "region": "djembe-rope",
+       "material": "ring-rope",
+       "solid": {
+        "kind": "revolved",
+        "axisBone": "djembe",
+        "axis": "u",
+        "axisX": 0,
+        "axisZ": 0,
+        "mirror": true
+       }
+      },
+      {
+       "id": "bottom-ring",
+       "bone": "djembe",
+       "role": "body",
+       "z": 3.2,
+       "filled": true,
+       "tone": 0.25,
+       "kind": "poly",
+       "points": [
+        [
+         0.3875,
+         0.1025
+        ],
+        [
+         0.386929,
+         0.10537
+        ],
+        [
+         0.385303,
+         0.107803
+        ],
+        [
+         0.38287,
+         0.109429
+        ],
+        [
+         0.38,
+         0.11
+        ],
+        [
+         0.37713,
+         0.109429
+        ],
+        [
+         0.374697,
+         0.107803
+        ],
+        [
+         0.373071,
+         0.10537
+        ],
+        [
+         0.3725,
+         0.1025
+        ],
+        [
+         0.373071,
+         0.09963
+        ],
+        [
+         0.374697,
+         0.097197
+        ],
+        [
+         0.37713,
+         0.095571
+        ],
+        [
+         0.38,
+         0.095
+        ],
+        [
+         0.38287,
+         0.095571
+        ],
+        [
+         0.385303,
+         0.097197
+        ],
+        [
+         0.386929,
+         0.09963
+        ]
+       ],
+       "closed": true,
+       "region": "djembe-rope",
+       "material": "ring-rope",
+       "solid": {
+        "kind": "revolved",
+        "axisBone": "djembe",
+        "axis": "u",
+        "axisX": 0,
+        "axisZ": 0,
+        "mirror": true
+       }
+      },
+      {
+       "id": "verticals-front",
+       "bone": "djembe",
+       "role": "detail",
+       "z": 3.7,
+       "filled": false,
+       "tone": 0.3,
+       "kind": "path",
+       "d": "M -0.167158 0.5509 L -0.15977 0.53 L -0.154468 0.515 L -0.150774 0.5 L -0.147428 0.485 L -0.141851 0.47 L -0.136274 0.455 L -0.129954 0.44 L -0.122656 0.425 L -0.117355 0.41 L -0.113113 0.398 L -0.107944 0.383375 M -0.155766 0.5509 L -0.148882 0.53 L -0.143941 0.515 L -0.140499 0.5 L -0.137381 0.485 L -0.132184 0.47 L -0.126987 0.455 L -0.121098 0.44 L -0.114298 0.425 L -0.109357 0.41 L -0.105405 0.398 L -0.100587 0.383375 M -0.133759 0.5509 L -0.127848 0.53 L -0.123605 0.515 L -0.120649 0.5 L -0.117972 0.485 L -0.113509 0.47 L -0.109046 0.455 L -0.103989 0.44 L -0.09815 0.425 L -0.093907 0.41 L -0.090513 0.398 L -0.086376 0.383375 M -0.102637 0.5509 L -0.098101 0.53 L -0.094846 0.515 L -0.092577 0.5 L -0.090523 0.485 L -0.087099 0.47 L -0.083674 0.455 L -0.079793 0.44 L -0.075313 0.425 L -0.072057 0.41 L -0.069453 0.398 L -0.066279 0.383375 M -0.06452 0.5509 L -0.061669 0.53 L -0.059623 0.515 L -0.058197 0.5 L -0.056905 0.485 L -0.054752 0.47 L -0.0526 0.455 L -0.05016 0.44 L -0.047344 0.425 L -0.045297 0.41 L -0.04366 0.398 L -0.041665 0.383375 M -0.022007 0.5509 L -0.021034 0.53 L -0.020336 0.515 L -0.01985 0.5 L -0.019409 0.485 L -0.018675 0.47 L -0.017941 0.455 L -0.017109 0.44 L -0.016148 0.425 L -0.01545 0.41 L -0.014892 0.398 L -0.014211 0.383375",
+       "region": "djembe-rope"
+      },
+      {
+       "id": "verticals-left",
+       "bone": "djembe",
+       "role": "detail",
+       "z": 3.7,
+       "filled": false,
+       "tone": 0.3,
+       "kind": "path",
+       "d": "M 0.022007 0.5509 L 0.021034 0.53 L 0.020336 0.515 L 0.01985 0.5 L 0.019409 0.485 L 0.018675 0.47 L 0.017941 0.455 L 0.017109 0.44 L 0.016148 0.425 L 0.01545 0.41 L 0.014892 0.398 L 0.014211 0.383375 M 0.06452 0.5509 L 0.061669 0.53 L 0.059623 0.515 L 0.058197 0.5 L 0.056905 0.485 L 0.054752 0.47 L 0.0526 0.455 L 0.05016 0.44 L 0.047344 0.425 L 0.045297 0.41 L 0.04366 0.398 L 0.041665 0.383375 M 0.102637 0.5509 L 0.098101 0.53 L 0.094846 0.515 L 0.092577 0.5 L 0.090523 0.485 L 0.087099 0.47 L 0.083674 0.455 L 0.079793 0.44 L 0.075313 0.425 L 0.072057 0.41 L 0.069453 0.398 L 0.066279 0.383375 M 0.133759 0.5509 L 0.127848 0.53 L 0.123605 0.515 L 0.120649 0.5 L 0.117972 0.485 L 0.113509 0.47 L 0.109046 0.455 L 0.103989 0.44 L 0.09815 0.425 L 0.093907 0.41 L 0.090513 0.398 L 0.086376 0.383375 M 0.155766 0.5509 L 0.148882 0.53 L 0.143941 0.515 L 0.140499 0.5 L 0.137381 0.485 L 0.132184 0.47 L 0.126987 0.455 L 0.121098 0.44 L 0.114298 0.425 L 0.109357 0.41 L 0.105405 0.398 L 0.100587 0.383375 M 0.167158 0.5509 L 0.15977 0.53 L 0.154468 0.515 L 0.150774 0.5 L 0.147428 0.485 L 0.141851 0.47 L 0.136274 0.455 L 0.129954 0.44 L 0.122656 0.425 L 0.117355 0.41 L 0.113113 0.398 L 0.107944 0.383375",
+       "region": "djembe-rope"
+      },
+      {
+       "id": "foot-grooves",
+       "bone": "djembe",
+       "role": "texture",
+       "z": 3.1,
+       "filled": false,
+       "tone": 0.3,
+       "kind": "path",
+       "d": "M -0.1125 0.03 L 0.1125 0.03 M -0.1085 0.05 L 0.1085 0.05",
+       "region": "djembe-shell"
+      }
+     ],
+     "plan": [
+      {
+       "id": "carcass",
+       "bone": "cajon",
+       "role": "body",
+       "z": 2.0,
+       "filled": true,
+       "tone": 0.6,
+       "kind": "poly",
+       "points": [
+        [
+         0.0,
+         -0.147
+        ],
+        [
+         0.0,
+         0.15
+        ],
+        [
+         0.472,
+         0.15
+        ],
+        [
+         0.475061,
+         0.149391
+        ],
+        [
+         0.477657,
+         0.147657
+        ],
+        [
+         0.479391,
+         0.145061
+        ],
+        [
+         0.48,
+         0.142
+        ],
+        [
+         0.48,
+         -0.147
+        ]
+       ],
+       "closed": true,
+       "region": "cajon-carcass",
+       "material": "birch-ply",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.15,
+        "z1": 0.15
+       }
+      },
+      {
+       "id": "tapa",
+       "bone": "cajon",
+       "role": "body",
+       "z": 2.2,
+       "filled": true,
+       "tone": 0.74,
+       "kind": "poly",
+       "points": [
+        [
+         0.0,
+         -0.15
+        ],
+        [
+         0.0,
+         -0.147
+        ],
+        [
+         0.48,
+         -0.147
+        ],
+        [
+         0.48,
+         -0.15
+        ]
+       ],
+       "closed": true,
+       "region": "cajon-tapa",
+       "material": "birch-tapa",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.15,
+        "z1": 0.15
+       }
+      },
+      {
+       "id": "top-seams",
+       "bone": "cajon",
+       "role": "detail",
+       "z": 2.5,
+       "filled": false,
+       "tone": 0.3,
+       "kind": "path",
+       "d": "M -0.15 -0.138 L 0.147 -0.138 M -0.15 0.138 L 0.147 0.138 M -0.141 -0.138 L -0.141 0.138 M -0.142 -0.15 L -0.142 0.15",
+       "region": "cajon-carcass"
+      },
+      {
+       "id": "seat-wear",
+       "bone": "cajon",
+       "role": "texture",
+       "z": 2.6,
+       "filled": false,
+       "tone": 0.35,
+       "kind": "poly",
+       "points": [
+        [
+         -0.11,
+         -0.11
+        ],
+        [
+         0.04,
+         -0.11
+        ],
+        [
+         0.04,
+         0.11
+        ],
+        [
+         -0.11,
+         0.11
+        ]
+       ],
+       "closed": true,
+       "region": "cajon-carcass"
+      },
+      {
+       "id": "head-collar",
+       "bone": "djembe",
+       "role": "body",
+       "z": 3.4,
+       "filled": true,
+       "tone": 0.84,
+       "kind": "poly",
+       "points": [
+        [
+         0.54,
+         0.1565
+        ],
+        [
+         0.56,
+         0.1585
+        ],
+        [
+         0.575,
+         0.158159
+        ],
+        [
+         0.582,
+         0.158
+        ],
+        [
+         0.588,
+         0.1559
+        ],
+        [
+         0.592,
+         0.1545
+        ],
+        [
+         0.597,
+         0.1505
+        ],
+        [
+         0.598,
+         0.147
+        ],
+        [
+         0.598,
+         0.139
+        ],
+        [
+         0.5992,
+         0.139
+        ],
+        [
+         0.5992,
+         0.1475
+        ],
+        [
+         0.5977,
+         0.1518
+        ],
+        [
+         0.5925,
+         0.1558
+        ],
+        [
+         0.588,
+         0.1571
+        ],
+        [
+         0.582,
+         0.1592
+        ],
+        [
+         0.575,
+         0.159359
+        ],
+        [
+         0.56,
+         0.1597
+        ],
+        [
+         0.54,
+         0.1577
+        ]
+       ],
+       "closed": true,
+       "region": "djembe-head",
+       "material": "goatskin",
+       "solid": {
+        "kind": "revolved",
+        "axisBone": "djembe",
+        "axis": "u",
+        "axisX": 0,
+        "axisZ": 0,
+        "mirror": true
+       }
+      },
+      {
+       "id": "head",
+       "bone": "djembe-head",
+       "role": "body",
+       "z": 3.5,
+       "filled": true,
+       "tone": 0.88,
+       "kind": "poly",
+       "points": [
+        [
+         0.0,
+         0.0
+        ],
+        [
+         0.0,
+         0.141
+        ],
+        [
+         0.0012,
+         0.141
+        ],
+        [
+         0.0012,
+         0.0
+        ]
+       ],
+       "closed": true,
+       "region": "djembe-head",
+       "material": "goatskin",
+       "solid": {
+        "kind": "revolved",
+        "axisBone": "djembe-head",
+        "axis": "u",
+        "axisX": 0,
+        "axisZ": 0,
+        "mirror": true
+       }
+      },
+      {
+       "id": "crown-ring",
+       "bone": "djembe",
+       "role": "body",
+       "z": 3.3,
+       "filled": true,
+       "tone": 0.25,
+       "kind": "poly",
+       "points": [
+        [
+         0.562,
+         0.1653
+        ],
+        [
+         0.561543,
+         0.167596
+        ],
+        [
+         0.560243,
+         0.169543
+        ],
+        [
+         0.558296,
+         0.170843
+        ],
+        [
+         0.556,
+         0.1713
+        ],
+        [
+         0.553704,
+         0.170843
+        ],
+        [
+         0.551757,
+         0.169543
+        ],
+        [
+         0.550457,
+         0.167596
+        ],
+        [
+         0.55,
+         0.1653
+        ],
+        [
+         0.550457,
+         0.163004
+        ],
+        [
+         0.551757,
+         0.161057
+        ],
+        [
+         0.553704,
+         0.159757
+        ],
+        [
+         0.556,
+         0.1593
+        ],
+        [
+         0.558296,
+         0.159757
+        ],
+        [
+         0.560243,
+         0.161057
+        ],
+        [
+         0.561543,
+         0.163004
+        ]
+       ],
+       "closed": true,
+       "region": "djembe-rope",
+       "material": "ring-rope",
+       "solid": {
+        "kind": "revolved",
+        "axisBone": "djembe",
+        "axis": "u",
+        "axisX": 0,
+        "axisZ": 0,
+        "mirror": true
+       }
+      },
+      {
+       "id": "head-grease",
+       "bone": "djembe-head",
+       "role": "texture",
+       "z": 3.9,
+       "filled": false,
+       "tone": 0.55,
+       "kind": "poly",
+       "points": [
+        [
+         0.3161,
+         -0.07
+        ],
+        [
+         0.3861,
+         -0.07
+        ],
+        [
+         0.3861,
+         0.07
+        ],
+        [
+         0.3161,
+         0.07
+        ]
+       ],
+       "closed": true,
+       "region": "djembe-head"
+      },
+      {
+       "id": "head-spine",
+       "bone": "djembe-head",
+       "role": "texture",
+       "z": 3.95,
+       "filled": false,
+       "tone": 0.4,
+       "kind": "path",
+       "d": "M 0.3211 0.01 L 0.4411 0.004 L 0.5611 -0.008",
+       "region": "djembe-head"
+      },
+      {
+       "id": "collar-hair",
+       "bone": "djembe-head",
+       "role": "texture",
+       "z": 3.65,
+       "filled": false,
+       "tone": 0.5,
+       "kind": "path",
+       "d": "M 0.609929 0.0 L 0.6025 0.0 M 0.607364 0.029317 L 0.600048 0.028027 M 0.599747 0.057743 L 0.592766 0.055202 M 0.58731 0.084414 L 0.580877 0.0807 M 0.570431 0.108521 L 0.56474 0.103746 M 0.549621 0.129331 L 0.544846 0.12364 M 0.525514 0.14621 L 0.5218 0.139777 M 0.498843 0.158647 L 0.496302 0.151666 M 0.470417 0.166264 L 0.469127 0.158948 M 0.4411 0.168829 L 0.4411 0.1614 M 0.411783 0.166264 L 0.413073 0.158948 M 0.383357 0.158647 L 0.385898 0.151666 M 0.356685 0.14621 L 0.3604 0.139777 M 0.332579 0.129331 L 0.337354 0.12364 M 0.311769 0.108521 L 0.31746 0.103746 M 0.29489 0.084415 L 0.301323 0.0807 M 0.282453 0.057743 L 0.289434 0.055202 M 0.274836 0.029317 L 0.282152 0.028027 M 0.272271 0.0 L 0.2797 0.0 M 0.274836 -0.029317 L 0.282152 -0.028027 M 0.282453 -0.057743 L 0.289434 -0.055202 M 0.29489 -0.084415 L 0.301323 -0.0807 M 0.311769 -0.108521 L 0.31746 -0.103746 M 0.332579 -0.129331 L 0.337354 -0.12364 M 0.356685 -0.14621 L 0.3604 -0.139777 M 0.383357 -0.158647 L 0.385898 -0.151666 M 0.411783 -0.166264 L 0.413073 -0.158948 M 0.4411 -0.168829 L 0.4411 -0.1614 M 0.470417 -0.166264 L 0.469127 -0.158948 M 0.498843 -0.158647 L 0.496302 -0.151666 M 0.525514 -0.14621 L 0.5218 -0.139777 M 0.549621 -0.129331 L 0.544846 -0.12364 M 0.570431 -0.108521 L 0.56474 -0.103746 M 0.58731 -0.084414 L 0.580877 -0.0807 M 0.599747 -0.057743 L 0.592766 -0.055202 M 0.607364 -0.029317 L 0.600048 -0.028027",
+       "region": "djembe-head"
+      }
+     ]
+    },
+    "decisions": {
+     "silhouette": {
+      "en": "The pair as the dealer set it down: the 0.30 x 0.30 x 0.48 m cajon on its flat bottom with its 3 mm front plate ahead and the top back edge worn round, and 0.12 m ahead of it the 0.60 m djembe on its carved foot, its goblet bowl laced with 24 rope verticals between the crown ring and the bottom ring. Front: the plate with its screws and the three worn patches, the djembe in front of it; plan: the square top with the seams of the top panel, the head with the collar, crown ring and the hand-darkened zone.",
+      "de": "Das Paar, wie der Händler es abgestellt hat: das Cajón 0,30 x 0,30 x 0,48 m auf seinem flachen Boden mit der 3-mm-Schlagplatte vorn und abgegriffener hinterer Oberkante, und 0,12 m davor die 0,60 m hohe Djembe auf ihrem geschnitzten Fuß, die Kelchschale mit 24 Seilvertikalen zwischen Kronenring und unterem Ring geschnürt. Vorderansicht: die Platte mit ihren Schrauben und den drei abgespielten Stellen, davor die Djembe; Draufsicht: die quadratische Sitzfläche mit den Fugen des Deckels, das Fell mit Kragen, Kronenring und der von den Händen nachgedunkelten Zone."
+     },
+     "retained": {
+      "en": "Carcass, front plate, the worn top back edge, the dealer sticker, scuffs, plate screws and the three worn patches; shell, foot grooves, skin collar, head, crown and bottom ring, the rope verticals with their Mali weave and the excess rope coiled at the bottom ring.",
+      "de": "Korpus, Schlagplatte, die abgegriffene hintere Oberkante, der Händleraufkleber, Schrammen, Plattenschrauben und die drei abgespielten Stellen; Korpus der Djembe, Fußrillen, Fellkragen, Fell, Kronen- und unterer Ring, die Seilvertikalen mit ihrer Mali-Flechtung und das am unteren Ring aufgewickelte Restseil."
+     },
+     "merged": {
+      "en": "The flesh ring hidden under the skin is one shape with the crown ring and its rope loops; the inner snare is not drawn because no view sees it.",
+      "de": "Der unter dem Fell verborgene Fellring ist eine Form mit dem Kronenring und seinen Seilschlaufen; das innere Snare ist nicht gezeichnet, da keine Ansicht es sieht."
+     },
+     "omitted": {
+      "en": "The sound port in the back of the cajon (no view looks at the back), the knots of the weave and the hair fringe below the crown ring in the elevations.",
+      "de": "Die Schallöffnung in der Rückwand des Cajón (keine Ansicht blickt auf die Rückseite), die Knoten der Flechtung und der Haarsaum unter dem Kronenring in den Ansichten."
+     },
+     "thinElements": {
+      "en": "The front plate is drawn at its true 3 mm (0.06 mm), the skin at 1.2 mm and the ropes at 5 mm as 0.18 mm strokes; screws, worn patches, grooves and scuffs are 0.1 mm texture.",
+      "de": "Die Schlagplatte ist mit ihren wahren 3 mm (0,06 mm) gezeichnet, das Fell mit 1,2 mm und die Seile mit 5 mm als Striche von 0,18 mm; Schrauben, abgespielte Stellen, Rillen und Schrammen sind Textur von 0,1 mm."
+     },
+     "hatching": {
+      "en": "None.",
+      "de": "Keine."
+     },
+     "styles": {
+      "en": "Body pen 0.25 mm, detail 0.18 mm, texture 0.1 mm, ground 0.35 mm; the bare wood of the worn patches and the pale skin are light, rings and ropes dark.",
+      "de": "Körperstift 0,25 mm, Detail 0,18 mm, Textur 0,1 mm, Boden 0,35 mm; das blanke Holz der abgespielten Stellen und das helle Fell sind hell, Ringe und Seile dunkel."
+     },
+     "overlays": {
+      "en": "Six regions: cajon carcass, cajon front plate, djembe shell, head, rope and rings; each drawn shape names its region.",
+      "de": "Sechs Regionen: Cajón-Korpus, Cajón-Schlagplatte, Djembe-Korpus, Fell, Seil und Ringe; jede gezeichnete Form nennt ihre Region."
+     }
+    }
+   },
+   "100": {
+    "status": "authored",
+    "denominator": 100,
+    "validRange": {
+     "minDenominator": 75,
+     "maxDenominator": 150
+    },
+    "pens": {
+     "body": 0.18,
+     "detail": 0.13,
+     "texture": null,
+     "glazing": null,
+     "ground": 0.25
+    },
+    "hatches": [],
+    "geometry": {
+     "elevation": [
+      {
+       "id": "carcass",
+       "bone": "cajon",
+       "role": "body",
+       "z": 2.0,
+       "filled": true,
+       "tone": 0.6,
+       "kind": "poly",
+       "points": [
+        [
+         0.0,
+         -0.147
+        ],
+        [
+         0.0,
+         0.15
+        ],
+        [
+         0.472,
+         0.15
+        ],
+        [
+         0.477657,
+         0.147657
+        ],
+        [
+         0.48,
+         0.142
+        ],
+        [
+         0.48,
+         -0.147
+        ]
+       ],
+       "closed": true,
+       "region": "cajon-carcass",
+       "material": "birch-ply",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.15,
+        "z1": 0.15
+       }
+      },
+      {
+       "id": "tapa",
+       "bone": "cajon",
+       "role": "body",
+       "z": 2.2,
+       "filled": true,
+       "tone": 0.74,
+       "kind": "poly",
+       "points": [
+        [
+         0.0,
+         -0.15
+        ],
+        [
+         0.0,
+         -0.147
+        ],
+        [
+         0.48,
+         -0.147
+        ],
+        [
+         0.48,
+         -0.15
+        ]
+       ],
+       "closed": true,
+       "region": "cajon-tapa",
+       "material": "birch-tapa",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.15,
+        "z1": 0.15
+       },
+       "penMm": 0.25
+      },
+      {
+       "id": "ply-edge-front",
+       "bone": "cajon",
+       "role": "detail",
+       "z": 2.3,
+       "filled": false,
+       "tone": 0.3,
+       "kind": "path",
+       "d": "M 0.0 -0.147 L 0.48 -0.147",
+       "region": "cajon-tapa"
+      },
+      {
+       "id": "shell",
+       "bone": "djembe",
+       "role": "body",
+       "z": 3.0,
+       "filled": true,
+       "tone": 0.38,
+       "kind": "poly",
+       "points": [
+        [
+         0.0,
+         0.0
+        ],
+        [
+         0.0,
+         0.113
+        ],
+        [
+         0.03,
+         0.1125
+        ],
+        [
+         0.12,
+         0.0935
+        ],
+        [
+         0.24,
+         0.0755
+        ],
+        [
+         0.322,
+         0.07
+        ],
+        [
+         0.375,
+         0.09
+        ],
+        [
+         0.445,
+         0.131
+        ],
+        [
+         0.525,
+         0.155
+        ],
+        [
+         0.57,
+         0.1586
+        ],
+        [
+         0.592,
+         0.1545
+        ],
+        [
+         0.598,
+         0.147
+        ],
+        [
+         0.598,
+         0.0
+        ]
+       ],
+       "closed": true,
+       "region": "djembe-shell",
+       "material": "lenke",
+       "solid": {
+        "kind": "revolved",
+        "axisBone": "djembe",
+        "axis": "u",
+        "axisX": 0,
+        "axisZ": 0,
+        "mirror": true
+       }
+      },
+      {
+       "id": "head-collar",
+       "bone": "djembe",
+       "role": "body",
+       "z": 3.4,
+       "filled": true,
+       "tone": 0.84,
+       "kind": "poly",
+       "points": [
+        [
+         0.54,
+         0.1565
+        ],
+        [
+         0.565,
+         0.158386
+        ],
+        [
+         0.582,
+         0.158
+        ],
+        [
+         0.592,
+         0.1545
+        ],
+        [
+         0.597,
+         0.1505
+        ],
+        [
+         0.598,
+         0.147
+        ],
+        [
+         0.598,
+         0.139
+        ],
+        [
+         0.5992,
+         0.139
+        ],
+        [
+         0.5992,
+         0.1475
+        ],
+        [
+         0.5977,
+         0.1518
+        ],
+        [
+         0.5925,
+         0.1558
+        ],
+        [
+         0.582,
+         0.1592
+        ],
+        [
+         0.565,
+         0.159586
+        ],
+        [
+         0.54,
+         0.1577
+        ]
+       ],
+       "closed": true,
+       "region": "djembe-head",
+       "material": "goatskin",
+       "solid": {
+        "kind": "revolved",
+        "axisBone": "djembe",
+        "axis": "u",
+        "axisX": 0,
+        "axisZ": 0,
+        "mirror": true
+       }
+      },
+      {
+       "id": "head",
+       "bone": "djembe-head",
+       "role": "body",
+       "z": 3.5,
+       "filled": true,
+       "tone": 0.88,
+       "kind": "poly",
+       "points": [
+        [
+         0.0,
+         0.0
+        ],
+        [
+         0.0,
+         0.141
+        ],
+        [
+         0.0012,
+         0.141
+        ],
+        [
+         0.0012,
+         0.0
+        ]
+       ],
+       "closed": true,
+       "region": "djembe-head",
+       "material": "goatskin",
+       "solid": {
+        "kind": "revolved",
+        "axisBone": "djembe-head",
+        "axis": "u",
+        "axisX": 0,
+        "axisZ": 0,
+        "mirror": true
+       },
+       "penMm": 0.25
+      },
+      {
+       "id": "crown-ring",
+       "bone": "djembe",
+       "role": "body",
+       "z": 3.6,
+       "filled": true,
+       "tone": 0.25,
+       "kind": "poly",
+       "points": [
+        [
+         0.562,
+         0.1653
+        ],
+        [
+         0.560854,
+         0.168827
+        ],
+        [
+         0.557854,
+         0.171006
+        ],
+        [
+         0.554146,
+         0.171006
+        ],
+        [
+         0.551146,
+         0.168827
+        ],
+        [
+         0.55,
+         0.1653
+        ],
+        [
+         0.551146,
+         0.161773
+        ],
+        [
+         0.554146,
+         0.159594
+        ],
+        [
+         0.557854,
+         0.159594
+        ],
+        [
+         0.560854,
+         0.161773
+        ]
+       ],
+       "closed": true,
+       "region": "djembe-rope",
+       "material": "ring-rope",
+       "solid": {
+        "kind": "revolved",
+        "axisBone": "djembe",
+        "axis": "u",
+        "axisX": 0,
+        "axisZ": 0,
+        "mirror": true
+       }
+      },
+      {
+       "id": "bottom-ring",
+       "bone": "djembe",
+       "role": "body",
+       "z": 3.2,
+       "filled": true,
+       "tone": 0.25,
+       "kind": "poly",
+       "points": [
+        [
+         0.3875,
+         0.1025
+        ],
+        [
+         0.386068,
+         0.106908
+        ],
+        [
+         0.382318,
+         0.109633
+        ],
+        [
+         0.377682,
+         0.109633
+        ],
+        [
+         0.373932,
+         0.106908
+        ],
+        [
+         0.3725,
+         0.1025
+        ],
+        [
+         0.373932,
+         0.098092
+        ],
+        [
+         0.377682,
+         0.095367
+        ],
+        [
+         0.382318,
+         0.095367
+        ],
+        [
+         0.386068,
+         0.098092
+        ]
+       ],
+       "closed": true,
+       "region": "djembe-rope",
+       "material": "ring-rope",
+       "solid": {
+        "kind": "revolved",
+        "axisBone": "djembe",
+        "axis": "u",
+        "axisX": 0,
+        "axisZ": 0,
+        "mirror": true
+       }
+      },
+      {
+       "id": "verticals-front",
+       "bone": "djembe",
+       "role": "detail",
+       "z": 3.7,
+       "filled": false,
+       "tone": 0.3,
+       "kind": "path",
+       "d": "M 0.5509 -0.022007 L 0.505 -0.019997 L 0.47 -0.018675 L 0.43 -0.016423 L 0.383375 -0.014211 M 0.5509 -0.06452 L 0.505 -0.058627 L 0.47 -0.054752 L 0.43 -0.048151 L 0.383375 -0.041665 M 0.5509 -0.102637 L 0.505 -0.093262 L 0.47 -0.087099 L 0.43 -0.076597 L 0.383375 -0.066279 M 0.5509 -0.133759 L 0.505 -0.121542 L 0.47 -0.113509 L 0.43 -0.099824 L 0.383375 -0.086376 M 0.5509 -0.155766 L 0.505 -0.141538 L 0.47 -0.132184 L 0.43 -0.116247 L 0.383375 -0.100587 M 0.5509 -0.167158 L 0.505 -0.151889 L 0.47 -0.141851 L 0.43 -0.124749 L 0.383375 -0.107944",
+       "region": "djembe-rope"
+      },
+      {
+       "id": "verticals-back",
+       "bone": "djembe",
+       "role": "detail",
+       "z": 3.7,
+       "filled": false,
+       "tone": 0.3,
+       "kind": "path",
+       "d": "M 0.5509 0.167158 L 0.505 0.151889 L 0.47 0.141851 L 0.43 0.124749 L 0.383375 0.107944 M 0.5509 0.155766 L 0.505 0.141538 L 0.47 0.132184 L 0.43 0.116247 L 0.383375 0.100587 M 0.5509 0.133759 L 0.505 0.121542 L 0.47 0.113509 L 0.43 0.099824 L 0.383375 0.086376 M 0.5509 0.102637 L 0.505 0.093262 L 0.47 0.087099 L 0.43 0.076597 L 0.383375 0.066279 M 0.5509 0.06452 L 0.505 0.058627 L 0.47 0.054752 L 0.43 0.048151 L 0.383375 0.041665 M 0.5509 0.022007 L 0.505 0.019997 L 0.47 0.018675 L 0.43 0.016423 L 0.383375 0.014211",
+       "region": "djembe-rope"
+      }
+     ],
+     "front": [
+      {
+       "id": "carcass",
+       "bone": "cajon",
+       "role": "body",
+       "z": 2.0,
+       "filled": true,
+       "tone": 0.6,
+       "kind": "poly",
+       "points": [
+        [
+         0.0,
+         -0.147
+        ],
+        [
+         0.0,
+         0.15
+        ],
+        [
+         0.472,
+         0.15
+        ],
+        [
+         0.477657,
+         0.147657
+        ],
+        [
+         0.48,
+         0.142
+        ],
+        [
+         0.48,
+         -0.147
+        ]
+       ],
+       "closed": true,
+       "region": "cajon-carcass",
+       "material": "birch-ply",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.15,
+        "z1": 0.15
+       }
+      },
+      {
+       "id": "tapa",
+       "bone": "cajon",
+       "role": "body",
+       "z": 2.2,
+       "filled": true,
+       "tone": 0.74,
+       "kind": "poly",
+       "points": [
+        [
+         0.0,
+         -0.15
+        ],
+        [
+         0.0,
+         -0.147
+        ],
+        [
+         0.48,
+         -0.147
+        ],
+        [
+         0.48,
+         -0.15
+        ]
+       ],
+       "closed": true,
+       "region": "cajon-tapa",
+       "material": "birch-tapa",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.15,
+        "z1": 0.15
+       },
+       "penMm": 0.25
+      },
+      {
+       "id": "tapa-wear",
+       "bone": "cajon",
+       "role": "detail",
+       "z": 2.7,
+       "filled": false,
+       "tone": 0.9,
+       "kind": "poly",
+       "points": [
+        [
+         -0.144,
+         0.405
+        ],
+        [
+         0.144,
+         0.405
+        ],
+        [
+         0.144,
+         0.472
+        ],
+        [
+         -0.144,
+         0.472
+        ]
+       ],
+       "closed": true,
+       "region": "cajon-tapa"
+      },
+      {
+       "id": "shell",
+       "bone": "djembe",
+       "role": "body",
+       "z": 3.0,
+       "filled": true,
+       "tone": 0.38,
+       "kind": "poly",
+       "points": [
+        [
+         0.0,
+         0.0
+        ],
+        [
+         0.0,
+         0.113
+        ],
+        [
+         0.03,
+         0.1125
+        ],
+        [
+         0.12,
+         0.0935
+        ],
+        [
+         0.24,
+         0.0755
+        ],
+        [
+         0.322,
+         0.07
+        ],
+        [
+         0.375,
+         0.09
+        ],
+        [
+         0.445,
+         0.131
+        ],
+        [
+         0.525,
+         0.155
+        ],
+        [
+         0.57,
+         0.1586
+        ],
+        [
+         0.592,
+         0.1545
+        ],
+        [
+         0.598,
+         0.147
+        ],
+        [
+         0.598,
+         0.0
+        ]
+       ],
+       "closed": true,
+       "region": "djembe-shell",
+       "material": "lenke",
+       "solid": {
+        "kind": "revolved",
+        "axisBone": "djembe",
+        "axis": "u",
+        "axisX": 0,
+        "axisZ": 0,
+        "mirror": true
+       }
+      },
+      {
+       "id": "head-collar",
+       "bone": "djembe",
+       "role": "body",
+       "z": 3.4,
+       "filled": true,
+       "tone": 0.84,
+       "kind": "poly",
+       "points": [
+        [
+         0.54,
+         0.1565
+        ],
+        [
+         0.565,
+         0.158386
+        ],
+        [
+         0.582,
+         0.158
+        ],
+        [
+         0.592,
+         0.1545
+        ],
+        [
+         0.597,
+         0.1505
+        ],
+        [
+         0.598,
+         0.147
+        ],
+        [
+         0.598,
+         0.139
+        ],
+        [
+         0.5992,
+         0.139
+        ],
+        [
+         0.5992,
+         0.1475
+        ],
+        [
+         0.5977,
+         0.1518
+        ],
+        [
+         0.5925,
+         0.1558
+        ],
+        [
+         0.582,
+         0.1592
+        ],
+        [
+         0.565,
+         0.159586
+        ],
+        [
+         0.54,
+         0.1577
+        ]
+       ],
+       "closed": true,
+       "region": "djembe-head",
+       "material": "goatskin",
+       "solid": {
+        "kind": "revolved",
+        "axisBone": "djembe",
+        "axis": "u",
+        "axisX": 0,
+        "axisZ": 0,
+        "mirror": true
+       }
+      },
+      {
+       "id": "head",
+       "bone": "djembe-head",
+       "role": "body",
+       "z": 3.5,
+       "filled": true,
+       "tone": 0.88,
+       "kind": "poly",
+       "points": [
+        [
+         0.0,
+         0.0
+        ],
+        [
+         0.0,
+         0.141
+        ],
+        [
+         0.0012,
+         0.141
+        ],
+        [
+         0.0012,
+         0.0
+        ]
+       ],
+       "closed": true,
+       "region": "djembe-head",
+       "material": "goatskin",
+       "solid": {
+        "kind": "revolved",
+        "axisBone": "djembe-head",
+        "axis": "u",
+        "axisX": 0,
+        "axisZ": 0,
+        "mirror": true
+       },
+       "penMm": 0.25
+      },
+      {
+       "id": "crown-ring",
+       "bone": "djembe",
+       "role": "body",
+       "z": 3.6,
+       "filled": true,
+       "tone": 0.25,
+       "kind": "poly",
+       "points": [
+        [
+         0.562,
+         0.1653
+        ],
+        [
+         0.560854,
+         0.168827
+        ],
+        [
+         0.557854,
+         0.171006
+        ],
+        [
+         0.554146,
+         0.171006
+        ],
+        [
+         0.551146,
+         0.168827
+        ],
+        [
+         0.55,
+         0.1653
+        ],
+        [
+         0.551146,
+         0.161773
+        ],
+        [
+         0.554146,
+         0.159594
+        ],
+        [
+         0.557854,
+         0.159594
+        ],
+        [
+         0.560854,
+         0.161773
+        ]
+       ],
+       "closed": true,
+       "region": "djembe-rope",
+       "material": "ring-rope",
+       "solid": {
+        "kind": "revolved",
+        "axisBone": "djembe",
+        "axis": "u",
+        "axisX": 0,
+        "axisZ": 0,
+        "mirror": true
+       }
+      },
+      {
+       "id": "bottom-ring",
+       "bone": "djembe",
+       "role": "body",
+       "z": 3.2,
+       "filled": true,
+       "tone": 0.25,
+       "kind": "poly",
+       "points": [
+        [
+         0.3875,
+         0.1025
+        ],
+        [
+         0.386068,
+         0.106908
+        ],
+        [
+         0.382318,
+         0.109633
+        ],
+        [
+         0.377682,
+         0.109633
+        ],
+        [
+         0.373932,
+         0.106908
+        ],
+        [
+         0.3725,
+         0.1025
+        ],
+        [
+         0.373932,
+         0.098092
+        ],
+        [
+         0.377682,
+         0.095367
+        ],
+        [
+         0.382318,
+         0.095367
+        ],
+        [
+         0.386068,
+         0.098092
+        ]
+       ],
+       "closed": true,
+       "region": "djembe-rope",
+       "material": "ring-rope",
+       "solid": {
+        "kind": "revolved",
+        "axisBone": "djembe",
+        "axis": "u",
+        "axisX": 0,
+        "axisZ": 0,
+        "mirror": true
+       }
+      },
+      {
+       "id": "verticals-front",
+       "bone": "djembe",
+       "role": "detail",
+       "z": 3.7,
+       "filled": false,
+       "tone": 0.3,
+       "kind": "path",
+       "d": "M -0.167158 0.5509 L -0.151889 0.505 L -0.141851 0.47 L -0.124749 0.43 L -0.107944 0.383375 M -0.155766 0.5509 L -0.141538 0.505 L -0.132184 0.47 L -0.116247 0.43 L -0.100587 0.383375 M -0.133759 0.5509 L -0.121542 0.505 L -0.113509 0.47 L -0.099824 0.43 L -0.086376 0.383375 M -0.102637 0.5509 L -0.093262 0.505 L -0.087099 0.47 L -0.076597 0.43 L -0.066279 0.383375 M -0.06452 0.5509 L -0.058627 0.505 L -0.054752 0.47 L -0.048151 0.43 L -0.041665 0.383375 M -0.022007 0.5509 L -0.019997 0.505 L -0.018675 0.47 L -0.016423 0.43 L -0.014211 0.383375",
+       "region": "djembe-rope"
+      },
+      {
+       "id": "verticals-left",
+       "bone": "djembe",
+       "role": "detail",
+       "z": 3.7,
+       "filled": false,
+       "tone": 0.3,
+       "kind": "path",
+       "d": "M 0.022007 0.5509 L 0.019997 0.505 L 0.018675 0.47 L 0.016423 0.43 L 0.014211 0.383375 M 0.06452 0.5509 L 0.058627 0.505 L 0.054752 0.47 L 0.048151 0.43 L 0.041665 0.383375 M 0.102637 0.5509 L 0.093262 0.505 L 0.087099 0.47 L 0.076597 0.43 L 0.066279 0.383375 M 0.133759 0.5509 L 0.121542 0.505 L 0.113509 0.47 L 0.099824 0.43 L 0.086376 0.383375 M 0.155766 0.5509 L 0.141538 0.505 L 0.132184 0.47 L 0.116247 0.43 L 0.100587 0.383375 M 0.167158 0.5509 L 0.151889 0.505 L 0.141851 0.47 L 0.124749 0.43 L 0.107944 0.383375",
+       "region": "djembe-rope"
+      }
+     ],
+     "plan": [
+      {
+       "id": "carcass",
+       "bone": "cajon",
+       "role": "body",
+       "z": 2.0,
+       "filled": true,
+       "tone": 0.6,
+       "kind": "poly",
+       "points": [
+        [
+         0.0,
+         -0.147
+        ],
+        [
+         0.0,
+         0.15
+        ],
+        [
+         0.472,
+         0.15
+        ],
+        [
+         0.477657,
+         0.147657
+        ],
+        [
+         0.48,
+         0.142
+        ],
+        [
+         0.48,
+         -0.147
+        ]
+       ],
+       "closed": true,
+       "region": "cajon-carcass",
+       "material": "birch-ply",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.15,
+        "z1": 0.15
+       }
+      },
+      {
+       "id": "tapa",
+       "bone": "cajon",
+       "role": "body",
+       "z": 2.2,
+       "filled": true,
+       "tone": 0.74,
+       "kind": "poly",
+       "points": [
+        [
+         0.0,
+         -0.15
+        ],
+        [
+         0.0,
+         -0.147
+        ],
+        [
+         0.48,
+         -0.147
+        ],
+        [
+         0.48,
+         -0.15
+        ]
+       ],
+       "closed": true,
+       "region": "cajon-tapa",
+       "material": "birch-tapa",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.15,
+        "z1": 0.15
+       },
+       "penMm": 0.25
+      },
+      {
+       "id": "top-seams",
+       "bone": "cajon",
+       "role": "detail",
+       "z": 2.5,
+       "filled": false,
+       "tone": 0.3,
+       "kind": "path",
+       "d": "M -0.142 -0.15 L -0.142 0.15",
+       "region": "cajon-carcass"
+      },
+      {
+       "id": "head-collar",
+       "bone": "djembe",
+       "role": "body",
+       "z": 3.4,
+       "filled": true,
+       "tone": 0.84,
+       "kind": "poly",
+       "points": [
+        [
+         0.54,
+         0.1565
+        ],
+        [
+         0.565,
+         0.158386
+        ],
+        [
+         0.582,
+         0.158
+        ],
+        [
+         0.592,
+         0.1545
+        ],
+        [
+         0.597,
+         0.1505
+        ],
+        [
+         0.598,
+         0.147
+        ],
+        [
+         0.598,
+         0.139
+        ],
+        [
+         0.5992,
+         0.139
+        ],
+        [
+         0.5992,
+         0.1475
+        ],
+        [
+         0.5977,
+         0.1518
+        ],
+        [
+         0.5925,
+         0.1558
+        ],
+        [
+         0.582,
+         0.1592
+        ],
+        [
+         0.565,
+         0.159586
+        ],
+        [
+         0.54,
+         0.1577
+        ]
+       ],
+       "closed": true,
+       "region": "djembe-head",
+       "material": "goatskin",
+       "solid": {
+        "kind": "revolved",
+        "axisBone": "djembe",
+        "axis": "u",
+        "axisX": 0,
+        "axisZ": 0,
+        "mirror": true
+       }
+      },
+      {
+       "id": "head",
+       "bone": "djembe-head",
+       "role": "body",
+       "z": 3.5,
+       "filled": true,
+       "tone": 0.88,
+       "kind": "poly",
+       "points": [
+        [
+         0.0,
+         0.0
+        ],
+        [
+         0.0,
+         0.141
+        ],
+        [
+         0.0012,
+         0.141
+        ],
+        [
+         0.0012,
+         0.0
+        ]
+       ],
+       "closed": true,
+       "region": "djembe-head",
+       "material": "goatskin",
+       "solid": {
+        "kind": "revolved",
+        "axisBone": "djembe-head",
+        "axis": "u",
+        "axisX": 0,
+        "axisZ": 0,
+        "mirror": true
+       },
+       "penMm": 0.25
+      },
+      {
+       "id": "crown-ring",
+       "bone": "djembe",
+       "role": "body",
+       "z": 3.3,
+       "filled": true,
+       "tone": 0.25,
+       "kind": "poly",
+       "points": [
+        [
+         0.562,
+         0.1653
+        ],
+        [
+         0.560854,
+         0.168827
+        ],
+        [
+         0.557854,
+         0.171006
+        ],
+        [
+         0.554146,
+         0.171006
+        ],
+        [
+         0.551146,
+         0.168827
+        ],
+        [
+         0.55,
+         0.1653
+        ],
+        [
+         0.551146,
+         0.161773
+        ],
+        [
+         0.554146,
+         0.159594
+        ],
+        [
+         0.557854,
+         0.159594
+        ],
+        [
+         0.560854,
+         0.161773
+        ]
+       ],
+       "closed": true,
+       "region": "djembe-rope",
+       "material": "ring-rope",
+       "solid": {
+        "kind": "revolved",
+        "axisBone": "djembe",
+        "axis": "u",
+        "axisX": 0,
+        "axisZ": 0,
+        "mirror": true
+       }
+      }
+     ]
+    },
+    "decisions": {
+     "silhouette": {
+      "en": "The cajon box with its plate and the worn top back edge, the djembe as shell, skin collar, head, the two rings and the rope verticals as strokes; front with the worn band below the top of the plate.",
+      "de": "Der Cajón-Kasten mit Platte und abgegriffener hinterer Oberkante, die Djembe als Korpus, Fellkragen, Fell, die zwei Ringe und die Seilvertikalen als Striche; vorn mit dem abgespielten Band unter der Oberkante der Platte."
+     },
+     "retained": {
+      "en": "Carcass, plate edge, the worn band, the back edge seam in plan; shell, collar, head, crown and bottom ring and the verticals.",
+      "de": "Korpus, Plattenkante, das abgespielte Band, die hintere Kante in der Draufsicht; Korpus, Kragen, Fell, Kronen- und unterer Ring und die Vertikalen."
+     },
+     "merged": {
+      "en": "The three worn patches are one band, the shell profile is generalised to 11 points.",
+      "de": "Die drei abgespielten Stellen sind ein Band, das Korpusprofil ist auf 11 Punkte verallgemeinert."
+     },
+     "omitted": {
+      "en": "Sticker, scuffs, screws, grain, grooves, the weave, the coil and the head markings.",
+      "de": "Aufkleber, Schrammen, Schrauben, Maserung, Rillen, Flechtung, Seilwicklung und Fellzeichnung."
+     },
+     "thinElements": {
+      "en": "Plate 3 mm and skin 1.2 mm at their true size through the 0.18 mm pen, ropes as 0.13 mm strokes.",
+      "de": "Platte 3 mm und Fell 1,2 mm in wahrer Größe über den 0,18-mm-Stift, Seile als Striche von 0,13 mm."
+     },
+     "hatching": {
+      "en": "None.",
+      "de": "Keine."
+     },
+     "styles": {
+      "en": "Body pen 0.18 mm, detail 0.13 mm, ground 0.25 mm.",
+      "de": "Körperstift 0,18 mm, Detail 0,13 mm, Boden 0,25 mm."
+     },
+     "overlays": {
+      "en": "The same six regions as at 1:50.",
+      "de": "Dieselben sechs Regionen wie bei 1:50."
+     }
+    }
+   },
+   "200": {
+    "status": "authored",
+    "denominator": 200,
+    "validRange": {
+     "minDenominator": 150,
+     "maxDenominator": 350
+    },
+    "pens": {
+     "body": 0.18,
+     "detail": null,
+     "texture": null,
+     "glazing": null,
+     "ground": 0.25
+    },
+    "hatches": [],
+    "geometry": {
+     "elevation": [
+      {
+       "id": "carcass",
+       "bone": "cajon",
+       "role": "body",
+       "z": 2.0,
+       "filled": true,
+       "tone": 0.6,
+       "kind": "poly",
+       "points": [
+        [
+         0.0,
+         -0.147
+        ],
+        [
+         0.0,
+         0.15
+        ],
+        [
+         0.48,
+         0.15
+        ],
+        [
+         0.48,
+         -0.147
+        ]
+       ],
+       "closed": true,
+       "region": "cajon-carcass",
+       "material": "birch-ply",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.15,
+        "z1": 0.15
+       }
+      },
+      {
+       "id": "tapa",
+       "bone": "cajon",
+       "role": "body",
+       "z": 2.2,
+       "filled": true,
+       "tone": 0.74,
+       "kind": "poly",
+       "points": [
+        [
+         0.0,
+         -0.15
+        ],
+        [
+         0.0,
+         -0.147
+        ],
+        [
+         0.48,
+         -0.147
+        ],
+        [
+         0.48,
+         -0.15
+        ]
+       ],
+       "closed": true,
+       "region": "cajon-tapa",
+       "material": "birch-tapa",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.15,
+        "z1": 0.15
+       },
+       "penMm": 0.25
+      },
+      {
+       "id": "shell",
+       "bone": "djembe",
+       "role": "body",
+       "z": 3.0,
+       "filled": true,
+       "tone": 0.38,
+       "kind": "poly",
+       "points": [
+        [
+         0.0,
+         0.0
+        ],
+        [
+         0.0,
+         0.113
+        ],
+        [
+         0.06,
+         0.1065
+        ],
+        [
+         0.2,
+         0.081
+        ],
+        [
+         0.322,
+         0.07
+        ],
+        [
+         0.4,
+         0.1065
+        ],
+        [
+         0.48,
+         0.1445
+        ],
+        [
+         0.565,
+         0.1586
+        ],
+        [
+         0.598,
+         0.147
+        ],
+        [
+         0.598,
+         0.0
+        ]
+       ],
+       "closed": true,
+       "region": "djembe-shell",
+       "material": "lenke",
+       "solid": {
+        "kind": "revolved",
+        "axisBone": "djembe",
+        "axis": "u",
+        "axisX": 0,
+        "axisZ": 0,
+        "mirror": true
+       }
+      },
+      {
+       "id": "head-collar",
+       "bone": "djembe",
+       "role": "body",
+       "z": 3.4,
+       "filled": true,
+       "tone": 0.84,
+       "kind": "poly",
+       "points": [
+        [
+         0.54,
+         0.1565
+        ],
+        [
+         0.57,
+         0.158273
+        ],
+        [
+         0.59,
+         0.1552
+        ],
+        [
+         0.597,
+         0.1505
+        ],
+        [
+         0.598,
+         0.147
+        ],
+        [
+         0.598,
+         0.139
+        ],
+        [
+         0.5992,
+         0.139
+        ],
+        [
+         0.5992,
+         0.1475
+        ],
+        [
+         0.5977,
+         0.1518
+        ],
+        [
+         0.5925,
+         0.1558
+        ],
+        [
+         0.57,
+         0.159473
+        ],
+        [
+         0.54,
+         0.1577
+        ]
+       ],
+       "closed": true,
+       "region": "djembe-head",
+       "material": "goatskin",
+       "solid": {
+        "kind": "revolved",
+        "axisBone": "djembe",
+        "axis": "u",
+        "axisX": 0,
+        "axisZ": 0,
+        "mirror": true
+       }
+      },
+      {
+       "id": "head",
+       "bone": "djembe-head",
+       "role": "body",
+       "z": 3.5,
+       "filled": true,
+       "tone": 0.88,
+       "kind": "poly",
+       "points": [
+        [
+         0.0,
+         0.0
+        ],
+        [
+         0.0,
+         0.141
+        ],
+        [
+         0.0012,
+         0.141
+        ],
+        [
+         0.0012,
+         0.0
+        ]
+       ],
+       "closed": true,
+       "region": "djembe-head",
+       "material": "goatskin",
+       "solid": {
+        "kind": "revolved",
+        "axisBone": "djembe-head",
+        "axis": "u",
+        "axisX": 0,
+        "axisZ": 0,
+        "mirror": true
+       },
+       "penMm": 0.25
+      },
+      {
+       "id": "crown-ring",
+       "bone": "djembe",
+       "role": "body",
+       "z": 3.6,
+       "filled": true,
+       "tone": 0.25,
+       "kind": "poly",
+       "points": [
+        [
+         0.562,
+         0.1653
+        ],
+        [
+         0.560243,
+         0.169543
+        ],
+        [
+         0.556,
+         0.1713
+        ],
+        [
+         0.551757,
+         0.169543
+        ],
+        [
+         0.55,
+         0.1653
+        ],
+        [
+         0.551757,
+         0.161057
+        ],
+        [
+         0.556,
+         0.1593
+        ],
+        [
+         0.560243,
+         0.161057
+        ]
+       ],
+       "closed": true,
+       "region": "djembe-rope",
+       "material": "ring-rope",
+       "solid": {
+        "kind": "revolved",
+        "axisBone": "djembe",
+        "axis": "u",
+        "axisX": 0,
+        "axisZ": 0,
+        "mirror": true
+       }
+      },
+      {
+       "id": "bottom-ring",
+       "bone": "djembe",
+       "role": "body",
+       "z": 3.2,
+       "filled": true,
+       "tone": 0.25,
+       "kind": "poly",
+       "points": [
+        [
+         0.3875,
+         0.1025
+        ],
+        [
+         0.385303,
+         0.107803
+        ],
+        [
+         0.38,
+         0.11
+        ],
+        [
+         0.374697,
+         0.107803
+        ],
+        [
+         0.3725,
+         0.1025
+        ],
+        [
+         0.374697,
+         0.097197
+        ],
+        [
+         0.38,
+         0.095
+        ],
+        [
+         0.385303,
+         0.097197
+        ]
+       ],
+       "closed": true,
+       "region": "djembe-rope",
+       "material": "ring-rope",
+       "solid": {
+        "kind": "revolved",
+        "axisBone": "djembe",
+        "axis": "u",
+        "axisX": 0,
+        "axisZ": 0,
+        "mirror": true
+       }
+      }
+     ],
+     "front": [
+      {
+       "id": "carcass",
+       "bone": "cajon",
+       "role": "body",
+       "z": 2.0,
+       "filled": true,
+       "tone": 0.6,
+       "kind": "poly",
+       "points": [
+        [
+         0.0,
+         -0.147
+        ],
+        [
+         0.0,
+         0.15
+        ],
+        [
+         0.48,
+         0.15
+        ],
+        [
+         0.48,
+         -0.147
+        ]
+       ],
+       "closed": true,
+       "region": "cajon-carcass",
+       "material": "birch-ply",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.15,
+        "z1": 0.15
+       }
+      },
+      {
+       "id": "tapa",
+       "bone": "cajon",
+       "role": "body",
+       "z": 2.2,
+       "filled": true,
+       "tone": 0.74,
+       "kind": "poly",
+       "points": [
+        [
+         0.0,
+         -0.15
+        ],
+        [
+         0.0,
+         -0.147
+        ],
+        [
+         0.48,
+         -0.147
+        ],
+        [
+         0.48,
+         -0.15
+        ]
+       ],
+       "closed": true,
+       "region": "cajon-tapa",
+       "material": "birch-tapa",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.15,
+        "z1": 0.15
+       },
+       "penMm": 0.25
+      },
+      {
+       "id": "shell",
+       "bone": "djembe",
+       "role": "body",
+       "z": 3.0,
+       "filled": true,
+       "tone": 0.38,
+       "kind": "poly",
+       "points": [
+        [
+         0.0,
+         0.0
+        ],
+        [
+         0.0,
+         0.113
+        ],
+        [
+         0.06,
+         0.1065
+        ],
+        [
+         0.2,
+         0.081
+        ],
+        [
+         0.322,
+         0.07
+        ],
+        [
+         0.4,
+         0.1065
+        ],
+        [
+         0.48,
+         0.1445
+        ],
+        [
+         0.565,
+         0.1586
+        ],
+        [
+         0.598,
+         0.147
+        ],
+        [
+         0.598,
+         0.0
+        ]
+       ],
+       "closed": true,
+       "region": "djembe-shell",
+       "material": "lenke",
+       "solid": {
+        "kind": "revolved",
+        "axisBone": "djembe",
+        "axis": "u",
+        "axisX": 0,
+        "axisZ": 0,
+        "mirror": true
+       }
+      },
+      {
+       "id": "head-collar",
+       "bone": "djembe",
+       "role": "body",
+       "z": 3.4,
+       "filled": true,
+       "tone": 0.84,
+       "kind": "poly",
+       "points": [
+        [
+         0.54,
+         0.1565
+        ],
+        [
+         0.57,
+         0.158273
+        ],
+        [
+         0.59,
+         0.1552
+        ],
+        [
+         0.597,
+         0.1505
+        ],
+        [
+         0.598,
+         0.147
+        ],
+        [
+         0.598,
+         0.139
+        ],
+        [
+         0.5992,
+         0.139
+        ],
+        [
+         0.5992,
+         0.1475
+        ],
+        [
+         0.5977,
+         0.1518
+        ],
+        [
+         0.5925,
+         0.1558
+        ],
+        [
+         0.57,
+         0.159473
+        ],
+        [
+         0.54,
+         0.1577
+        ]
+       ],
+       "closed": true,
+       "region": "djembe-head",
+       "material": "goatskin",
+       "solid": {
+        "kind": "revolved",
+        "axisBone": "djembe",
+        "axis": "u",
+        "axisX": 0,
+        "axisZ": 0,
+        "mirror": true
+       }
+      },
+      {
+       "id": "head",
+       "bone": "djembe-head",
+       "role": "body",
+       "z": 3.5,
+       "filled": true,
+       "tone": 0.88,
+       "kind": "poly",
+       "points": [
+        [
+         0.0,
+         0.0
+        ],
+        [
+         0.0,
+         0.141
+        ],
+        [
+         0.0012,
+         0.141
+        ],
+        [
+         0.0012,
+         0.0
+        ]
+       ],
+       "closed": true,
+       "region": "djembe-head",
+       "material": "goatskin",
+       "solid": {
+        "kind": "revolved",
+        "axisBone": "djembe-head",
+        "axis": "u",
+        "axisX": 0,
+        "axisZ": 0,
+        "mirror": true
+       },
+       "penMm": 0.25
+      },
+      {
+       "id": "crown-ring",
+       "bone": "djembe",
+       "role": "body",
+       "z": 3.6,
+       "filled": true,
+       "tone": 0.25,
+       "kind": "poly",
+       "points": [
+        [
+         0.562,
+         0.1653
+        ],
+        [
+         0.560243,
+         0.169543
+        ],
+        [
+         0.556,
+         0.1713
+        ],
+        [
+         0.551757,
+         0.169543
+        ],
+        [
+         0.55,
+         0.1653
+        ],
+        [
+         0.551757,
+         0.161057
+        ],
+        [
+         0.556,
+         0.1593
+        ],
+        [
+         0.560243,
+         0.161057
+        ]
+       ],
+       "closed": true,
+       "region": "djembe-rope",
+       "material": "ring-rope",
+       "solid": {
+        "kind": "revolved",
+        "axisBone": "djembe",
+        "axis": "u",
+        "axisX": 0,
+        "axisZ": 0,
+        "mirror": true
+       }
+      },
+      {
+       "id": "bottom-ring",
+       "bone": "djembe",
+       "role": "body",
+       "z": 3.2,
+       "filled": true,
+       "tone": 0.25,
+       "kind": "poly",
+       "points": [
+        [
+         0.3875,
+         0.1025
+        ],
+        [
+         0.385303,
+         0.107803
+        ],
+        [
+         0.38,
+         0.11
+        ],
+        [
+         0.374697,
+         0.107803
+        ],
+        [
+         0.3725,
+         0.1025
+        ],
+        [
+         0.374697,
+         0.097197
+        ],
+        [
+         0.38,
+         0.095
+        ],
+        [
+         0.385303,
+         0.097197
+        ]
+       ],
+       "closed": true,
+       "region": "djembe-rope",
+       "material": "ring-rope",
+       "solid": {
+        "kind": "revolved",
+        "axisBone": "djembe",
+        "axis": "u",
+        "axisX": 0,
+        "axisZ": 0,
+        "mirror": true
+       }
+      }
+     ],
+     "plan": [
+      {
+       "id": "carcass",
+       "bone": "cajon",
+       "role": "body",
+       "z": 2.0,
+       "filled": true,
+       "tone": 0.6,
+       "kind": "poly",
+       "points": [
+        [
+         0.0,
+         -0.147
+        ],
+        [
+         0.0,
+         0.15
+        ],
+        [
+         0.48,
+         0.15
+        ],
+        [
+         0.48,
+         -0.147
+        ]
+       ],
+       "closed": true,
+       "region": "cajon-carcass",
+       "material": "birch-ply",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.15,
+        "z1": 0.15
+       }
+      },
+      {
+       "id": "tapa",
+       "bone": "cajon",
+       "role": "body",
+       "z": 2.2,
+       "filled": true,
+       "tone": 0.74,
+       "kind": "poly",
+       "points": [
+        [
+         0.0,
+         -0.15
+        ],
+        [
+         0.0,
+         -0.147
+        ],
+        [
+         0.48,
+         -0.147
+        ],
+        [
+         0.48,
+         -0.15
+        ]
+       ],
+       "closed": true,
+       "region": "cajon-tapa",
+       "material": "birch-tapa",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.15,
+        "z1": 0.15
+       },
+       "penMm": 0.25
+      },
+      {
+       "id": "head-collar",
+       "bone": "djembe",
+       "role": "body",
+       "z": 3.4,
+       "filled": true,
+       "tone": 0.84,
+       "kind": "poly",
+       "points": [
+        [
+         0.54,
+         0.1565
+        ],
+        [
+         0.57,
+         0.158273
+        ],
+        [
+         0.59,
+         0.1552
+        ],
+        [
+         0.597,
+         0.1505
+        ],
+        [
+         0.598,
+         0.147
+        ],
+        [
+         0.598,
+         0.139
+        ],
+        [
+         0.5992,
+         0.139
+        ],
+        [
+         0.5992,
+         0.1475
+        ],
+        [
+         0.5977,
+         0.1518
+        ],
+        [
+         0.5925,
+         0.1558
+        ],
+        [
+         0.57,
+         0.159473
+        ],
+        [
+         0.54,
+         0.1577
+        ]
+       ],
+       "closed": true,
+       "region": "djembe-head",
+       "material": "goatskin",
+       "solid": {
+        "kind": "revolved",
+        "axisBone": "djembe",
+        "axis": "u",
+        "axisX": 0,
+        "axisZ": 0,
+        "mirror": true
+       }
+      },
+      {
+       "id": "head",
+       "bone": "djembe-head",
+       "role": "body",
+       "z": 3.5,
+       "filled": true,
+       "tone": 0.88,
+       "kind": "poly",
+       "points": [
+        [
+         0.0,
+         0.0
+        ],
+        [
+         0.0,
+         0.141
+        ],
+        [
+         0.0012,
+         0.141
+        ],
+        [
+         0.0012,
+         0.0
+        ]
+       ],
+       "closed": true,
+       "region": "djembe-head",
+       "material": "goatskin",
+       "solid": {
+        "kind": "revolved",
+        "axisBone": "djembe-head",
+        "axis": "u",
+        "axisX": 0,
+        "axisZ": 0,
+        "mirror": true
+       },
+       "penMm": 0.25
+      },
+      {
+       "id": "crown-ring",
+       "bone": "djembe",
+       "role": "body",
+       "z": 3.3,
+       "filled": true,
+       "tone": 0.25,
+       "kind": "poly",
+       "points": [
+        [
+         0.562,
+         0.1653
+        ],
+        [
+         0.560243,
+         0.169543
+        ],
+        [
+         0.556,
+         0.1713
+        ],
+        [
+         0.551757,
+         0.169543
+        ],
+        [
+         0.55,
+         0.1653
+        ],
+        [
+         0.551757,
+         0.161057
+        ],
+        [
+         0.556,
+         0.1593
+        ],
+        [
+         0.560243,
+         0.161057
+        ]
+       ],
+       "closed": true,
+       "region": "djembe-rope",
+       "material": "ring-rope",
+       "solid": {
+        "kind": "revolved",
+        "axisBone": "djembe",
+        "axis": "u",
+        "axisX": 0,
+        "axisZ": 0,
+        "mirror": true
+       }
+      }
+     ]
+    },
+    "decisions": {
+     "silhouette": {
+      "en": "A square-edged box and a goblet drum: the cajon with its plate line, the djembe with its rope rings and skin collar; the head is the collar's top.",
+      "de": "Ein scharfkantiger Kasten und eine Kelchtrommel: das Cajón mit seiner Plattenlinie, die Djembe mit ihren Seilringen und dem Fellkragen; das Fell ist die Oberseite des Kragens."
+     },
+     "retained": {
+      "en": "Carcass, plate, shell, collar, head, crown and bottom ring.",
+      "de": "Korpus, Platte, Korpus der Djembe, Kragen, Fell, Kronen- und unterer Ring."
+     },
+     "merged": {
+      "en": "The worn edge is square, the shell outline has 8 points; the 24 verticals are not drawn and stay inside the bowl outline.",
+      "de": "Die abgegriffene Kante ist scharf, der Korpusumriss hat 8 Punkte; die 24 Vertikalen sind nicht gezeichnet und liegen im Umriss der Schale."
+     },
+     "omitted": {
+      "en": "All texture and detail strokes.",
+      "de": "Alle Textur- und Detailstriche."
+     },
+     "thinElements": {
+      "en": "Plate and skin at true size through the 0.18 mm pen.",
+      "de": "Platte und Fell in wahrer Größe über den 0,18-mm-Stift."
+     },
+     "hatching": {
+      "en": "None.",
+      "de": "Keine."
+     },
+     "styles": {
+      "en": "Body pen 0.18 mm, ground 0.25 mm.",
+      "de": "Körperstift 0,18 mm, Boden 0,25 mm."
+     },
+     "overlays": {
+      "en": "The same six regions as at 1:50.",
+      "de": "Dieselben sechs Regionen wie bei 1:50."
+     }
+    }
+   },
+   "500": {
+    "status": "unavailable",
+    "denominator": 500,
+    "cause": "below-printable-feature",
+    "reason": {
+     "en": "At 1:500 the pair is only 1.53 mm long and 1.2 mm high on paper, below the 3 mm under which an asset is not drawn; its parts (the 3 mm front plate, the 5 mm ropes, the 12 mm rings) are far below every print profile.",
+     "de": "Bei 1:500 ist das Paar auf dem Papier nur 1.53 mm lang und 1,2 mm hoch, unter den 3 mm, unter denen ein Asset nicht gezeichnet wird; seine Teile (die 3-mm-Schlagplatte, die 5-mm-Seile, die 12-mm-Ringe) liegen weit unter jedem Druckprofil."
+    },
+    "limitingFeature": {
+     "en": "The 0.77 m length of the whole pair",
+     "de": "Die Länge des ganzen Paars von 0,77 m"
+    },
+    "limitingSizeM": 0.763,
+    "alternatives": [
+     {
+      "kind": "scale",
+      "denominator": 200
+     },
+     {
+      "kind": "scale",
+      "denominator": 100
+     }
+    ]
+   }
+  },
+  "symbols": [],
+  "poses": [
+   {
+    "id": "stored",
+    "title": {
+     "en": "Stored at the dealer",
+     "de": "Beim Händler abgestellt"
+    },
+    "description": {
+     "en": "The cajon stands on its bottom, the djembe upright on its foot 0.12 m ahead of it, as the dealer set the pair down for sale.",
+     "de": "Das Cajón steht auf seinem Boden, die Djembe aufrecht auf ihrem Fuß 0,12 m davor, wie der Händler das Paar zum Verkauf abgestellt hat."
+    },
+    "bones": {},
+    "ground": "authored",
+    "contacts": [
+     "cajon-base",
+     "djembe-foot"
+    ],
+    "thermal": {
+     "regions": {
+      "cajon-carcass": {
+       "exposedFraction": 0.92,
+       "sunlitFraction": 0,
+       "contact": {
+        "fraction": 0.08,
+        "tempC": 19
+       }
+      },
+      "cajon-tapa": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0
+      },
+      "djembe-shell": {
+       "exposedFraction": 0.996,
+       "sunlitFraction": 0,
+       "contact": {
+        "fraction": 0.004,
+        "tempC": 19
+       }
+      },
+      "djembe-head": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0
+      },
+      "djembe-rope": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0
+      }
+     },
+     "emitters": {}
+    },
+    "loads": []
+   },
+   {
+    "id": "carried",
+    "title": {
+     "en": "Carried",
+     "de": "Getragen"
+    },
+    "description": {
+     "en": "Two helpers carry the pair to the car, each by one hand: the cajon hangs from the fingers hooked into its sound port, the djembe from the hand round its crown ring; both clear the floor.",
+     "de": "Zwei Helfer tragen das Paar zum Auto, jeder mit einer Hand: das Cajón hängt an den in die Schallöffnung gehakten Fingern, die Djembe an der Hand um ihren Kronenring; beide sind frei vom Boden."
+    },
+    "bones": {
+     "cajon": {
+      "dy": 0.345
+     },
+     "djembe-lift": {
+      "dy": 0.158
+     }
+    },
+    "ground": "authored",
+    "contacts": [
+     "cajon-grip",
+     "djembe-grip"
+    ],
+    "thermal": {
+     "regions": {
+      "cajon-carcass": {
+       "exposedFraction": 0.99,
+       "sunlitFraction": 0,
+       "contact": {
+        "fraction": 0.01,
+        "tempC": 32
+       }
+      },
+      "cajon-tapa": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0
+      },
+      "djembe-shell": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0
+      },
+      "djembe-head": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0
+      },
+      "djembe-rope": {
+       "exposedFraction": 0.97,
+       "sunlitFraction": 0,
+       "contact": {
+        "fraction": 0.03,
+        "tempC": 32
+       }
+      }
+     },
+     "emitters": {}
+    },
+    "loads": []
+   },
+   {
+    "id": "played",
+    "title": {
+     "en": "Played seated on the cajon",
+     "de": "Auf dem Cajón sitzend gespielt"
+    },
+    "description": {
+     "en": "The player sits on the cajon and holds the djembe between the knees, tilted 12 degrees towards the lap on the near edge of its foot so the open foot speaks; the hands strike the head on the near side.",
+     "de": "Der Spieler sitzt auf dem Cajón und hält die Djembe zwischen den Knien, um 12 Grad zum Schoß gekippt auf der nahen Kante ihres Fußes, damit der offene Fuß klingt; die Hände schlagen das Fell auf der nahen Seite."
+    },
+    "bones": {
+     "djembe-tilt": {
+      "angleDeg": 12.0
+     }
+    },
+    "ground": "authored",
+    "contacts": [
+     "cajon-base",
+     "djembe-edge",
+     "knee-left",
+     "knee-right"
+    ],
+    "thermal": {
+     "regions": {
+      "cajon-carcass": {
+       "exposedFraction": 0.84,
+       "sunlitFraction": 0,
+       "contact": {
+        "fraction": 0.16,
+        "tempC": 25.5
+       }
+      },
+      "cajon-tapa": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0
+      },
+      "djembe-shell": {
+       "exposedFraction": 0.97,
+       "sunlitFraction": 0,
+       "contact": {
+        "fraction": 0.03,
+        "tempC": 31
+       }
+      },
+      "djembe-head": {
+       "exposedFraction": 0.94,
+       "sunlitFraction": 0,
+       "contact": {
+        "fraction": 0.06,
+        "tempC": 33
+       }
+      },
+      "djembe-rope": {
+       "exposedFraction": 0.96,
+       "sunlitFraction": 0,
+       "contact": {
+        "fraction": 0.04,
+        "tempC": 31
+       }
+      }
+     },
+     "emitters": {}
+    },
+    "loads": [
+     {
+      "id": "sitter",
+      "kind": "occupant",
+      "title": {
+       "en": "Seated player on the top (75 % of 75 kg)",
+       "de": "Sitzender Spieler auf der Sitzfläche (75 % von 75 kg)"
+      },
+      "anchor": "seat",
+      "fxN": 0,
+      "fyN": -551.6,
+      "source": "authored-estimate",
+      "reference": "din-33402-2"
+     },
+     {
+      "id": "strike",
+      "kind": "live",
+      "title": {
+       "en": "Hand stroke on the head along the drum axis (150 N peak)",
+       "de": "Handschlag auf das Fell entlang der Trommelachse (150 N Spitze)"
+      },
+      "anchor": "strike",
+      "fxN": 31.2,
+      "fyN": -146.7,
+      "source": "authored-estimate",
+      "reference": "fletcher-rossing-1998"
+     }
+    ]
+   }
+  ],
+  "clips": [
+   {
+    "id": "carry",
+    "title": {
+     "en": "Carry away",
+     "de": "Wegtragen"
+    },
+    "description": {
+     "en": "The helpers take hold of the sound port and the crown ring, lift both drums clear of the floor in 1.4 s and hold them at carrying height.",
+     "de": "Die Helfer greifen Schallöffnung und Kronenring, heben beide Trommeln in 1,4 s vom Boden und halten sie auf Tragehöhe."
+    },
+    "durationS": 3.0,
+    "fps": 30,
+    "loop": false,
+    "rootMotion": "none",
+    "keys": [
+     {
+      "t": 0,
+      "pose": "stored",
+      "ease": "smooth"
+     },
+     {
+      "t": 0.8,
+      "pose": "stored",
+      "ease": "smooth"
+     },
+     {
+      "t": 2.2,
+      "pose": "carried",
+      "ease": "smooth"
+     },
+     {
+      "t": 3.0,
+      "pose": "carried",
+      "ease": "smooth"
+     }
+    ],
+    "contacts": [
+     {
+      "anchor": "cajon-base",
+      "fromS": 0,
+      "toS": 0.85
+     },
+     {
+      "anchor": "djembe-foot",
+      "fromS": 0,
+      "toS": 0.85
+     },
+     {
+      "anchor": "cajon-grip",
+      "fromS": 0.6,
+      "toS": 3.0
+     },
+     {
+      "anchor": "djembe-grip",
+      "fromS": 0.6,
+      "toS": 3.0
+     }
+    ],
+    "phases": [
+     {
+      "id": "grip",
+      "fromS": 0,
+      "toS": 0.8,
+      "title": {
+       "en": "Taking hold",
+       "de": "Zugreifen"
+      }
+     },
+     {
+      "id": "lift",
+      "fromS": 0.8,
+      "toS": 2.2,
+      "title": {
+       "en": "Lifting",
+       "de": "Anheben"
+      }
+     },
+     {
+      "id": "hold",
+      "fromS": 2.2,
+      "toS": 3.0,
+      "title": {
+       "en": "Carrying",
+       "de": "Tragen"
+      }
+     }
+    ],
+    "events": [
+     {
+      "t": 0.6,
+      "kind": "contact-on",
+      "title": {
+       "en": "Hands take hold",
+       "de": "Hände greifen zu"
+      },
+      "target": "cajon-grip"
+     },
+     {
+      "t": 0.85,
+      "kind": "contact-off",
+      "title": {
+       "en": "Drums leave the floor",
+       "de": "Trommeln verlassen den Boden"
+      },
+      "target": "cajon-base"
+     }
+    ],
+    "tracks": []
+   },
+   {
+    "id": "play",
+    "title": {
+     "en": "Bass, tone and slap",
+     "de": "Bass, Ton und Slap"
+    },
+    "description": {
+     "en": "Four strokes in 2 s on the djembe held between the knees: the head dips up to 2.5 mm under each stroke and rebounds, the drum rocks between 11 and 13 degrees on the edge of its foot, the player sits on the cajon.",
+     "de": "Vier Schläge in 2 s auf der zwischen den Knien gehaltenen Djembe: das Fell gibt unter jedem Schlag bis zu 2,5 mm nach und federt zurück, die Trommel wiegt zwischen 11 und 13 Grad auf der Kante ihres Fußes, der Spieler sitzt auf dem Cajón."
+    },
+    "durationS": 2.0,
+    "fps": 30,
+    "loop": true,
+    "rootMotion": "none",
+    "keys": [
+     {
+      "t": 0.0,
+      "pose": "played",
+      "ease": "smooth",
+      "bones": {
+       "djembe-tilt": {
+        "angleDeg": 12.0
+       },
+       "djembe-head": {
+        "dx": 0.0
+       }
+      }
+     },
+     {
+      "t": 0.12,
+      "pose": "played",
+      "ease": "smooth",
+      "bones": {
+       "djembe-tilt": {
+        "angleDeg": 12.8
+       },
+       "djembe-head": {
+        "dx": -0.0025
+       }
+      }
+     },
+     {
+      "t": 0.25,
+      "pose": "played",
+      "ease": "smooth",
+      "bones": {
+       "djembe-tilt": {
+        "angleDeg": 12.4
+       },
+       "djembe-head": {
+        "dx": 0.0005
+       }
+      }
+     },
+     {
+      "t": 0.5,
+      "pose": "played",
+      "ease": "smooth",
+      "bones": {
+       "djembe-tilt": {
+        "angleDeg": 11.6
+       },
+       "djembe-head": {
+        "dx": -0.0018
+       }
+      }
+     },
+     {
+      "t": 0.62,
+      "pose": "played",
+      "ease": "smooth",
+      "bones": {
+       "djembe-tilt": {
+        "angleDeg": 11.4
+       },
+       "djembe-head": {
+        "dx": 0.0004
+       }
+      }
+     },
+     {
+      "t": 1.0,
+      "pose": "played",
+      "ease": "smooth",
+      "bones": {
+       "djembe-tilt": {
+        "angleDeg": 12.6
+       },
+       "djembe-head": {
+        "dx": -0.0025
+       }
+      }
+     },
+     {
+      "t": 1.12,
+      "pose": "played",
+      "ease": "smooth",
+      "bones": {
+       "djembe-tilt": {
+        "angleDeg": 12.9
+       },
+       "djembe-head": {
+        "dx": 0.0005
+       }
+      }
+     },
+     {
+      "t": 1.5,
+      "pose": "played",
+      "ease": "smooth",
+      "bones": {
+       "djembe-tilt": {
+        "angleDeg": 11.5
+       },
+       "djembe-head": {
+        "dx": -0.0015
+       }
+      }
+     },
+     {
+      "t": 1.62,
+      "pose": "played",
+      "ease": "smooth",
+      "bones": {
+       "djembe-tilt": {
+        "angleDeg": 11.3
+       },
+       "djembe-head": {
+        "dx": 0.0003
+       }
+      }
+     },
+     {
+      "t": 2.0,
+      "pose": "played",
+      "ease": "smooth",
+      "bones": {
+       "djembe-tilt": {
+        "angleDeg": 12.0
+       },
+       "djembe-head": {
+        "dx": 0.0
+       }
+      }
+     }
+    ],
+    "contacts": [
+     {
+      "anchor": "cajon-base",
+      "fromS": 0,
+      "toS": 2.0
+     },
+     {
+      "anchor": "djembe-edge",
+      "fromS": 0,
+      "toS": 2.0
+     },
+     {
+      "anchor": "knee-left",
+      "fromS": 0,
+      "toS": 2.0
+     },
+     {
+      "anchor": "knee-right",
+      "fromS": 0,
+      "toS": 2.0
+     }
+    ],
+    "phases": [
+     {
+      "id": "bass",
+      "fromS": 0,
+      "toS": 0.5,
+      "title": {
+       "en": "Bass stroke",
+       "de": "Bassschlag"
+      }
+     },
+     {
+      "id": "tone",
+      "fromS": 0.5,
+      "toS": 1.0,
+      "title": {
+       "en": "Tone",
+       "de": "Ton"
+      }
+     },
+     {
+      "id": "slap",
+      "fromS": 1.0,
+      "toS": 1.5,
+      "title": {
+       "en": "Slap",
+       "de": "Slap"
+      }
+     },
+     {
+      "id": "tone-2",
+      "fromS": 1.5,
+      "toS": 2.0,
+      "title": {
+       "en": "Tone",
+       "de": "Ton"
+      }
+     }
+    ],
+    "events": [
+     {
+      "t": 0.12,
+      "kind": "load-on",
+      "title": {
+       "en": "Bass stroke",
+       "de": "Bassschlag"
+      },
+      "target": "strike"
+     },
+     {
+      "t": 0.5,
+      "kind": "load-on",
+      "title": {
+       "en": "Tone",
+       "de": "Ton"
+      },
+      "target": "strike"
+     },
+     {
+      "t": 1.0,
+      "kind": "load-on",
+      "title": {
+       "en": "Slap",
+       "de": "Slap"
+      },
+      "target": "strike"
+     },
+     {
+      "t": 1.5,
+      "kind": "load-on",
+      "title": {
+       "en": "Tone",
+       "de": "Ton"
+      },
+      "target": "strike"
+     }
+    ],
+    "tracks": [
+     {
+      "target": "load:strike",
+      "ease": "linear",
+      "keys": [
+       {
+        "t": 0.0,
+        "v": 0.0
+       },
+       {
+        "t": 0.12,
+        "v": 1.0
+       },
+       {
+        "t": 0.2,
+        "v": 0.0
+       },
+       {
+        "t": 0.5,
+        "v": 0.7
+       },
+       {
+        "t": 0.58,
+        "v": 0.0
+       },
+       {
+        "t": 1.0,
+        "v": 1.0
+       },
+       {
+        "t": 1.08,
+        "v": 0.0
+       },
+       {
+        "t": 1.5,
+        "v": 0.6
+       },
+       {
+        "t": 1.58,
+        "v": 0.0
+       },
+       {
+        "t": 2.0,
+        "v": 0.0
+       }
+      ]
+     }
+    ]
+   }
+  ],
+  "thermal": {
+   "environment": {
+    "airTempC": 21,
+    "meanRadiantTempC": 21,
+    "relativeHumidity": 0.45,
+    "windMS": 0.1,
+    "windDirectionDeg": 0,
+    "solarWM2": 0,
+    "diffuseFraction": 0,
+    "pressurePa": 101325
+   },
+   "passengers": [],
+   "operating": [],
+   "regions": [
+    {
+     "id": "cajon-carcass",
+     "title": {
+      "en": "Cajon carcass: sides, top, bottom and back, inside and out",
+      "de": "Cajón-Korpus: Seiten, Deckel, Boden und Rückwand, innen und außen"
+     },
+     "kind": "surface",
+     "model": "passive",
+     "material": "birch-ply",
+     "areaM2": 1.1323,
+     "characteristicLengthM": 0.48,
+     "geometry": "vertical-plate",
+     "skyViewFactor": 0.5,
+     "layers": [
+      {
+       "id": "carcass-ply",
+       "title": {
+        "en": "Birch plywood 12 mm",
+        "de": "Birkensperrholz 12 mm"
+       },
+       "kind": "timber",
+       "material": "birch-ply",
+       "thicknessM": 0.012,
+       "resistanceM2KW": 0.07059,
+       "heatCapacityJM2K": 13056,
+       "source": "literature",
+       "reference": "iso-10456-2007"
+      }
+     ],
+     "heatCapacityJM2K": 13056,
+     "source": "literature",
+     "reference": "wood-handbook-2010",
+     "ratedPowerW": 0,
+     "ratedPowerBasis": "passive"
+    },
+    {
+     "id": "cajon-tapa",
+     "title": {
+      "en": "Cajon front plate, played to bare wood",
+      "de": "Cajón-Schlagplatte, bis aufs Holz abgespielt"
+     },
+     "kind": "surface",
+     "model": "passive",
+     "material": "birch-tapa",
+     "areaM2": 0.2927,
+     "characteristicLengthM": 0.48,
+     "geometry": "vertical-plate",
+     "skyViewFactor": 0.5,
+     "layers": [
+      {
+       "id": "tapa-ply",
+       "title": {
+        "en": "Birch plywood 3 mm",
+        "de": "Birkensperrholz 3 mm"
+       },
+       "kind": "timber",
+       "material": "birch-tapa",
+       "thicknessM": 0.003,
+       "resistanceM2KW": 0.01765,
+       "heatCapacityJM2K": 3264,
+       "source": "literature",
+       "reference": "iso-10456-2007"
+      }
+     ],
+     "heatCapacityJM2K": 3264,
+     "source": "authored-estimate",
+     "reference": "iso-10456-2007"
+    },
+    {
+     "id": "djembe-shell",
+     "title": {
+      "en": "Carved djembe shell with its open bore",
+      "de": "Geschnitzter Djembe-Korpus mit offener Bohrung"
+     },
+     "kind": "surface",
+     "model": "passive",
+     "material": "lenke",
+     "areaM2": 0.7671,
+     "characteristicLengthM": 0.3,
+     "geometry": "cylinder",
+     "skyViewFactor": 0.5,
+     "layers": [
+      {
+       "id": "shell-wood",
+       "title": {
+        "en": "Lenke wall 18 mm (mean)",
+        "de": "Lenke-Wand 18 mm (Mittel)"
+       },
+       "kind": "timber",
+       "material": "lenke",
+       "thicknessM": 0.018,
+       "resistanceM2KW": 0.09,
+       "heatCapacityJM2K": 23040,
+       "source": "literature",
+       "reference": "cirad-tropix-doussie"
+      }
+     ],
+     "heatCapacityJM2K": 23040,
+     "source": "literature",
+     "reference": "cirad-tropix-doussie",
+     "ratedPowerW": 0,
+     "ratedPowerBasis": "passive"
+    },
+    {
+     "id": "djembe-head",
+     "title": {
+      "en": "Goatskin head and collar",
+      "de": "Ziegenfell und Kragen"
+     },
+     "kind": "surface",
+     "model": "passive",
+     "material": "goatskin",
+     "areaM2": 0.2684,
+     "characteristicLengthM": 0.3,
+     "geometry": "horizontal-plate-up",
+     "skyViewFactor": 0.5,
+     "layers": [
+      {
+       "id": "head-skin",
+       "title": {
+        "en": "Goatskin 1.2 mm",
+        "de": "Ziegenfell 1,2 mm"
+       },
+       "kind": "shell",
+       "material": "goatskin",
+       "thicknessM": 0.0012,
+       "resistanceM2KW": 0.006,
+       "heatCapacityJM2K": 1980,
+       "source": "literature",
+       "reference": "fletcher-rossing-1998"
+      }
+     ],
+     "heatCapacityJM2K": 1980,
+     "source": "authored-estimate",
+     "reference": "fletcher-rossing-1998"
+    },
+    {
+     "id": "djembe-rope",
+     "title": {
+      "en": "Rope lacing with crown and bottom ring",
+      "de": "Seilschnürung mit Kronen- und unterem Ring"
+     },
+     "kind": "surface",
+     "model": "passive",
+     "material": "polyester-rope",
+     "areaM2": 0.1367,
+     "characteristicLengthM": 0.012,
+     "geometry": "cylinder",
+     "skyViewFactor": 0.5,
+     "layers": [],
+     "heatCapacityJM2K": 10983,
+     "source": "authored-estimate",
+     "reference": "percussion-catalogues"
+    }
+   ],
+   "emitters": [],
+   "assumptions": [
+    {
+     "en": "Both drums are acoustic and draw no power: the cajon carcass and the djembe shell each state their nameplate as 0 W passive. All five regions are inert passive surfaces in a shop at 21 degC without sun; the cajon carcass counts its inside, which the room air reaches through the 110 mm port, and the shell its open bore.",
+     "de": "Beide Trommeln sind akustisch und nehmen keine Leistung auf: Cajón-Korpus und Djembe-Korpus nennen ihr Typenschild als 0 W passiv. Alle fünf Regionen sind träge passive Flächen in einem Laden bei 21 °C ohne Sonne; der Cajón-Korpus zählt seine Innenseite, die die Raumluft durch die 110-mm-Öffnung erreicht, der Korpus seine offene Bohrung."
+    },
+    {
+     "en": "Played: the thighs and seat of the player cover the top (about 8 % of the carcass area at 32 degC) and the floor the bottom (8 % at 19 degC), stated together as 16 % at 25.5 degC; the hands cover about 6 % of the head at 33 degC and the knees 3 % of the shell and 4 % of the ropes at 31 degC. Old lacquer and palm oil are matt (emissivity 0.9), the hand-darkened goatskin absorbs more than new skin.",
+     "de": "Gespielt: Oberschenkel und Gesäß des Spielers bedecken die Sitzfläche (etwa 8 % der Korpusfläche bei 32 °C) und der Boden die Unterseite (8 % bei 19 °C), zusammen als 16 % bei 25,5 °C angegeben; die Hände bedecken etwa 6 % des Fells bei 33 °C, die Knie 3 % des Korpus und 4 % der Seile bei 31 °C. Alter Lack und Palmöl sind matt (Emissionsgrad 0,9), das von den Händen nachgedunkelte Ziegenfell absorbiert mehr als neues Fell."
+    }
+   ]
+  },
+  "structure": {
+   "gravityMS2": 9.80665,
+   "dynamics": "quasi-static",
+   "supports": [],
+   "assumptions": [
+    {
+     "en": "Two free rigid bodies. Stored, the cajon stands on its whole bottom (0.297 x 0.300 m contact) and the djembe on its foot ring (0.226 m); carried, each hangs from one hand, the cajon from the fingers in its port, the djembe from the crown ring (fixed grips that also take the moment of the offset centre of mass); played, the cajon carries the seated player (75 % of 75 kg, the feet carry the rest) on its bottom, and the djembe rests on the near edge of its foot and on the two inner knees, which hold it at its 12 degree tilt, while a 150 N stroke drives the head along the drum axis.",
+     "de": "Zwei freie starre Körper. Gelagert steht das Cajón auf seinem ganzen Boden (Kontakt 0,297 x 0,300 m) und die Djembe auf ihrem Fußring (0,226 m); getragen hängt jedes an einer Hand, das Cajón an den Fingern in der Öffnung, die Djembe am Kronenring (feste Griffe, die auch das Moment des versetzten Schwerpunkts aufnehmen); gespielt trägt das Cajón den sitzenden Spieler (75 % von 75 kg, die Füße tragen den Rest) auf seinem Boden, und die Djembe ruht auf der nahen Kante ihres Fußes und an den zwei inneren Knien, die sie in ihrer Neigung von 12 Grad halten, während ein Schlag von 150 N das Fell entlang der Trommelachse treibt."
+    },
+    {
+     "en": "The rope lacing is a self-equilibrated tension system: at a membrane tension of about 2.5 kN/m (order of Fletcher and Rossing for a tight hand drum) the 0.89 m circumference of the bearing edge carries about 2.2 kN, which the 24 verticals (about 93 N each) pull from the crown ring to the bottom ring and the shell takes in compression between bearing edge and bowl; it is internal and not a load of the global equilibrium. Masses are the modelled volumes times the densities: birch plywood 680, beech 720, lenke 800, goatskin 1100, rope 870 and the rope-wrapped steel rings 2615 kg/m3.",
+     "de": "Die Seilschnürung ist ein in sich ausgeglichenes Zugsystem: bei einer Fellspannung von etwa 2,5 kN/m (Größenordnung nach Fletcher und Rossing für eine straffe Handtrommel) trägt der Umfang der Gratkante von 0,89 m etwa 2,2 kN, die die 24 Vertikalen (je etwa 93 N) vom Kronenring zum unteren Ring ziehen und die der Korpus zwischen Gratkante und Schale als Druck aufnimmt; sie ist innerlich und keine Last des globalen Gleichgewichts. Massen sind die modellierten Volumina mal Dichten: Birkensperrholz 680, Buche 720, Lenke 800, Ziegenfell 1100, Seil 870 und die seilumwickelten Stahlringe 2615 kg/m3."
+    }
+   ],
+   "clinical": false
+  },
+  "volumes": {
+   "50": {
+    "status": "authored",
+    "denominator": 50,
+    "body": [
+     {
+      "id": "side-right",
+      "kind": "extrude",
+      "bone": "cajon",
+      "material": "birch-ply",
+      "role": "body",
+      "tone": 0.6,
+      "profile": [
+       [
+        0.0,
+        -0.147
+       ],
+       [
+        0.0,
+        0.15
+       ],
+       [
+        0.472,
+        0.15
+       ],
+       [
+        0.475061,
+        0.149391
+       ],
+       [
+        0.477657,
+        0.147657
+       ],
+       [
+        0.479391,
+        0.145061
+       ],
+       [
+        0.48,
+        0.142
+       ],
+       [
+        0.48,
+        -0.147
+       ]
+      ],
+      "plane": "xy",
+      "from": -0.15,
+      "to": -0.138
+     },
+     {
+      "id": "side-left",
+      "kind": "extrude",
+      "bone": "cajon",
+      "material": "birch-ply",
+      "role": "body",
+      "tone": 0.6,
+      "profile": [
+       [
+        0.0,
+        -0.147
+       ],
+       [
+        0.0,
+        0.15
+       ],
+       [
+        0.472,
+        0.15
+       ],
+       [
+        0.475061,
+        0.149391
+       ],
+       [
+        0.477657,
+        0.147657
+       ],
+       [
+        0.479391,
+        0.145061
+       ],
+       [
+        0.48,
+        0.142
+       ],
+       [
+        0.48,
+        -0.147
+       ]
+      ],
+      "plane": "xy",
+      "from": 0.138,
+      "to": 0.15
+     },
+     {
+      "id": "top",
+      "kind": "extrude",
+      "bone": "cajon",
+      "material": "birch-ply",
+      "role": "body",
+      "tone": 0.64,
+      "profile": [
+       [
+        0.468,
+        -0.147
+       ],
+       [
+        0.468,
+        0.15
+       ],
+       [
+        0.472,
+        0.15
+       ],
+       [
+        0.475061,
+        0.149391
+       ],
+       [
+        0.477657,
+        0.147657
+       ],
+       [
+        0.479391,
+        0.145061
+       ],
+       [
+        0.48,
+        0.142
+       ],
+       [
+        0.48,
+        -0.147
+       ]
+      ],
+      "plane": "xy",
+      "from": -0.138,
+      "to": 0.138
+     },
+     {
+      "id": "bottom",
+      "kind": "box",
+      "bone": "cajon",
+      "material": "birch-ply",
+      "role": "body",
+      "tone": 0.56,
+      "size": [
+       0.012,
+       0.297,
+       0.276
+      ],
+      "transform": {
+       "translation": [
+        0.006,
+        0.0015,
+        0.0
+       ]
+      }
+     },
+     {
+      "id": "back",
+      "kind": "extrude",
+      "bone": "cajon",
+      "material": "birch-ply",
+      "role": "body",
+      "tone": 0.56,
+      "profile": [
+       [
+        -0.138,
+        0.012
+       ],
+       [
+        0.138,
+        0.012
+       ],
+       [
+        0.138,
+        0.468
+       ],
+       [
+        -0.138,
+        0.468
+       ]
+      ],
+      "plane": "zx",
+      "from": 0.141,
+      "to": 0.15,
+      "holes": [
+       [
+        [
+         0.053126,
+         0.305765
+        ],
+        [
+         0.047631,
+         0.2925
+        ],
+        [
+         0.038891,
+         0.281109
+        ],
+        [
+         0.0275,
+         0.272369
+        ],
+        [
+         0.014235,
+         0.266874
+        ],
+        [
+         -0.0,
+         0.265
+        ],
+        [
+         -0.014235,
+         0.266874
+        ],
+        [
+         -0.0275,
+         0.272369
+        ],
+        [
+         -0.038891,
+         0.281109
+        ],
+        [
+         -0.047631,
+         0.2925
+        ],
+        [
+         -0.053126,
+         0.305765
+        ],
+        [
+         -0.055,
+         0.32
+        ],
+        [
+         -0.053126,
+         0.334235
+        ],
+        [
+         -0.047631,
+         0.3475
+        ],
+        [
+         -0.038891,
+         0.358891
+        ],
+        [
+         -0.0275,
+         0.367631
+        ],
+        [
+         -0.014235,
+         0.373126
+        ],
+        [
+         0.0,
+         0.375
+        ],
+        [
+         0.014235,
+         0.373126
+        ],
+        [
+         0.0275,
+         0.367631
+        ],
+        [
+         0.038891,
+         0.358891
+        ],
+        [
+         0.047631,
+         0.3475
+        ],
+        [
+         0.053126,
+         0.334235
+        ],
+        [
+         0.055,
+         0.32
+        ]
+       ]
+      ]
+     },
+     {
+      "id": "tapa",
+      "kind": "box",
+      "bone": "cajon",
+      "material": "birch-tapa",
+      "role": "body",
+      "tone": 0.74,
+      "size": [
+       0.48,
+       0.003,
+       0.3
+      ],
+      "transform": {
+       "translation": [
+        0.24,
+        -0.1485,
+        0.0
+       ]
+      },
+      "sheet": true
+     },
+     {
+      "id": "snare-bar",
+      "kind": "box",
+      "bone": "cajon",
+      "material": "beech",
+      "role": "detail",
+      "tone": 0.45,
+      "size": [
+       0.018,
+       0.018,
+       0.276
+      ],
+      "transform": {
+       "translation": [
+        0.439,
+        -0.136,
+        0.0
+       ]
+      }
+     },
+     {
+      "id": "snare-block",
+      "kind": "box",
+      "bone": "cajon",
+      "material": "beech",
+      "role": "detail",
+      "tone": 0.45,
+      "size": [
+       0.018,
+       0.018,
+       0.276
+      ],
+      "transform": {
+       "translation": [
+        0.021,
+        -0.136,
+        0.0
+       ]
+      }
+     },
+     {
+      "id": "snare-strings",
+      "kind": "capsule",
+      "bone": "cajon",
+      "material": "snare-steel",
+      "role": "detail",
+      "tone": 0.3,
+      "slender": true,
+      "p0": [
+       0.03,
+       -0.1455,
+       -0.06
+      ],
+      "p1": [
+       0.43,
+       -0.1455,
+       -0.06
+      ],
+      "r0": 0.0005,
+      "r1": 0.0005,
+      "repeat": {
+       "count": 4,
+       "translation": [
+        0.0,
+        0.0,
+        0.04
+       ]
+      }
+     },
+     {
+      "id": "tapa-wear-centre",
+      "kind": "box",
+      "bone": "cajon",
+      "material": "birch-tapa",
+      "role": "texture",
+      "tone": 0.92,
+      "size": [
+       0.132,
+       0.0004,
+       0.11
+      ],
+      "transform": {
+       "translation": [
+        0.396,
+        -0.1502,
+        0.0
+       ]
+      },
+      "texture": true
+     },
+     {
+      "id": "tapa-wear-left",
+      "kind": "box",
+      "bone": "cajon",
+      "material": "birch-tapa",
+      "role": "texture",
+      "tone": 0.92,
+      "size": [
+       0.067,
+       0.0004,
+       0.064
+      ],
+      "transform": {
+       "translation": [
+        0.4385,
+        -0.1502,
+        0.112
+       ]
+      },
+      "texture": true
+     },
+     {
+      "id": "tapa-wear-right",
+      "kind": "box",
+      "bone": "cajon",
+      "material": "birch-tapa",
+      "role": "texture",
+      "tone": 0.92,
+      "size": [
+       0.067,
+       0.0004,
+       0.064
+      ],
+      "transform": {
+       "translation": [
+        0.4385,
+        -0.1502,
+        -0.112
+       ]
+      },
+      "texture": true
+     },
+     {
+      "id": "seat-wear",
+      "kind": "box",
+      "bone": "cajon",
+      "material": "birch-ply",
+      "role": "texture",
+      "tone": 0.45,
+      "size": [
+       0.0004,
+       0.15,
+       0.22
+      ],
+      "transform": {
+       "translation": [
+        0.4802,
+        0.035,
+        0.0
+       ]
+      },
+      "texture": true
+     },
+     {
+      "id": "dealer-sticker",
+      "kind": "box",
+      "bone": "cajon",
+      "material": "birch-ply",
+      "role": "texture",
+      "tone": 0.95,
+      "size": [
+       0.04,
+       0.06,
+       0.0004
+      ],
+      "transform": {
+       "translation": [
+        0.38,
+        0.07,
+        -0.1502
+       ]
+      },
+      "texture": true
+     },
+     {
+      "id": "shell",
+      "kind": "revolve",
+      "bone": "djembe",
+      "material": "lenke",
+      "role": "body",
+      "tone": 0.38,
+      "profile": [
+       [
+        0.0,
+        0.113
+       ],
+       [
+        0.008,
+        0.1145
+       ],
+       [
+        0.03,
+        0.1125
+       ],
+       [
+        0.07,
+        0.1045
+       ],
+       [
+        0.12,
+        0.0935
+       ],
+       [
+        0.18,
+        0.0835
+       ],
+       [
+        0.24,
+        0.0755
+       ],
+       [
+        0.29,
+        0.0705
+       ],
+       [
+        0.322,
+        0.07
+       ],
+       [
+        0.35,
+        0.076
+       ],
+       [
+        0.375,
+        0.09
+       ],
+       [
+        0.405,
+        0.11
+       ],
+       [
+        0.445,
+        0.131
+       ],
+       [
+        0.485,
+        0.146
+       ],
+       [
+        0.525,
+        0.155
+       ],
+       [
+        0.56,
+        0.1585
+       ],
+       [
+        0.582,
+        0.158
+       ],
+       [
+        0.592,
+        0.1545
+       ],
+       [
+        0.597,
+        0.1505
+       ],
+       [
+        0.598,
+        0.147
+       ],
+       [
+        0.598,
+        0.143
+       ],
+       [
+        0.59,
+        0.1425
+       ],
+       [
+        0.56,
+        0.142
+       ],
+       [
+        0.525,
+        0.136
+       ],
+       [
+        0.485,
+        0.126
+       ],
+       [
+        0.445,
+        0.109
+       ],
+       [
+        0.405,
+        0.087
+       ],
+       [
+        0.375,
+        0.066
+       ],
+       [
+        0.35,
+        0.052
+       ],
+       [
+        0.322,
+        0.047
+       ],
+       [
+        0.29,
+        0.047
+       ],
+       [
+        0.24,
+        0.052
+       ],
+       [
+        0.18,
+        0.06
+       ],
+       [
+        0.12,
+        0.07
+       ],
+       [
+        0.07,
+        0.081
+       ],
+       [
+        0.03,
+        0.09
+       ],
+       [
+        0.0,
+        0.094
+       ],
+       [
+        0.0,
+        0.113
+       ]
+      ],
+      "axis": [
+       1.0,
+       0.0,
+       0.0
+      ],
+      "origin": [
+       0.0,
+       0.0,
+       0.0
+      ]
+     },
+     {
+      "id": "head-collar",
+      "kind": "revolve",
+      "bone": "djembe",
+      "material": "goatskin",
+      "role": "body",
+      "tone": 0.84,
+      "profile": [
+       [
+        0.54,
+        0.1565
+       ],
+       [
+        0.56,
+        0.1585
+       ],
+       [
+        0.575,
+        0.158159
+       ],
+       [
+        0.582,
+        0.158
+       ],
+       [
+        0.588,
+        0.1559
+       ],
+       [
+        0.592,
+        0.1545
+       ],
+       [
+        0.597,
+        0.1505
+       ],
+       [
+        0.598,
+        0.147
+       ],
+       [
+        0.598,
+        0.139
+       ],
+       [
+        0.5992,
+        0.139
+       ],
+       [
+        0.5992,
+        0.1475
+       ],
+       [
+        0.5977,
+        0.1518
+       ],
+       [
+        0.5925,
+        0.1558
+       ],
+       [
+        0.588,
+        0.1571
+       ],
+       [
+        0.582,
+        0.1592
+       ],
+       [
+        0.575,
+        0.159359
+       ],
+       [
+        0.56,
+        0.1597
+       ],
+       [
+        0.54,
+        0.1577
+       ],
+       [
+        0.54,
+        0.1565
+       ]
+      ],
+      "axis": [
+       1.0,
+       0.0,
+       0.0
+      ],
+      "origin": [
+       0.0,
+       0.0,
+       0.0
+      ]
+     },
+     {
+      "id": "head",
+      "kind": "revolve",
+      "bone": "djembe-head",
+      "material": "goatskin",
+      "role": "body",
+      "tone": 0.88,
+      "profile": [
+       [
+        0.0,
+        0.0
+       ],
+       [
+        0.0,
+        0.141
+       ],
+       [
+        0.0012,
+        0.141
+       ],
+       [
+        0.0012,
+        0.0
+       ]
+      ],
+      "axis": [
+       1.0,
+       0.0,
+       0.0
+      ],
+      "origin": [
+       0.0,
+       0.0,
+       0.0
+      ],
+      "sheet": true
+     },
+     {
+      "id": "crown-ring",
+      "kind": "revolve",
+      "bone": "djembe",
+      "material": "ring-rope",
+      "role": "body",
+      "tone": 0.25,
+      "profile": [
+       [
+        0.562,
+        0.1653
+       ],
+       [
+        0.561543,
+        0.167596
+       ],
+       [
+        0.560243,
+        0.169543
+       ],
+       [
+        0.558296,
+        0.170843
+       ],
+       [
+        0.556,
+        0.1713
+       ],
+       [
+        0.553704,
+        0.170843
+       ],
+       [
+        0.551757,
+        0.169543
+       ],
+       [
+        0.550457,
+        0.167596
+       ],
+       [
+        0.55,
+        0.1653
+       ],
+       [
+        0.550457,
+        0.163004
+       ],
+       [
+        0.551757,
+        0.161057
+       ],
+       [
+        0.553704,
+        0.159757
+       ],
+       [
+        0.556,
+        0.1593
+       ],
+       [
+        0.558296,
+        0.159757
+       ],
+       [
+        0.560243,
+        0.161057
+       ],
+       [
+        0.561543,
+        0.163004
+       ],
+       [
+        0.562,
+        0.1653
+       ]
+      ],
+      "axis": [
+       1.0,
+       0.0,
+       0.0
+      ],
+      "origin": [
+       0.0,
+       0.0,
+       0.0
+      ],
+      "slender": true
+     },
+     {
+      "id": "bottom-ring",
+      "kind": "revolve",
+      "bone": "djembe",
+      "material": "ring-rope",
+      "role": "body",
+      "tone": 0.25,
+      "profile": [
+       [
+        0.3875,
+        0.1025
+       ],
+       [
+        0.386929,
+        0.10537
+       ],
+       [
+        0.385303,
+        0.107803
+       ],
+       [
+        0.38287,
+        0.109429
+       ],
+       [
+        0.38,
+        0.11
+       ],
+       [
+        0.37713,
+        0.109429
+       ],
+       [
+        0.374697,
+        0.107803
+       ],
+       [
+        0.373071,
+        0.10537
+       ],
+       [
+        0.3725,
+        0.1025
+       ],
+       [
+        0.373071,
+        0.09963
+       ],
+       [
+        0.374697,
+        0.097197
+       ],
+       [
+        0.37713,
+        0.095571
+       ],
+       [
+        0.38,
+        0.095
+       ],
+       [
+        0.38287,
+        0.095571
+       ],
+       [
+        0.385303,
+        0.097197
+       ],
+       [
+        0.386929,
+        0.09963
+       ],
+       [
+        0.3875,
+        0.1025
+       ]
+      ],
+      "axis": [
+       1.0,
+       0.0,
+       0.0
+      ],
+      "origin": [
+       0.0,
+       0.0,
+       0.0
+      ],
+      "slender": true
+     },
+     {
+      "id": "verticals",
+      "kind": "loft",
+      "bone": "djembe",
+      "material": "polyester-rope",
+      "role": "detail",
+      "tone": 0.3,
+      "slender": true,
+      "sections": [
+       {
+        "at": [
+         0.5509,
+         0.167158,
+         0.022007
+        ],
+        "rx": 0.0025,
+        "ry": 0.0025,
+        "rotation": [
+         0.5,
+         0.5,
+         0.5,
+         0.5
+        ]
+       },
+       {
+        "at": [
+         0.53,
+         0.15977,
+         0.021034
+        ],
+        "rx": 0.0025,
+        "ry": 0.0025,
+        "rotation": [
+         0.5,
+         0.5,
+         0.5,
+         0.5
+        ]
+       },
+       {
+        "at": [
+         0.515,
+         0.154468,
+         0.020336
+        ],
+        "rx": 0.0025,
+        "ry": 0.0025,
+        "rotation": [
+         0.5,
+         0.5,
+         0.5,
+         0.5
+        ]
+       },
+       {
+        "at": [
+         0.5,
+         0.150774,
+         0.01985
+        ],
+        "rx": 0.0025,
+        "ry": 0.0025,
+        "rotation": [
+         0.5,
+         0.5,
+         0.5,
+         0.5
+        ]
+       },
+       {
+        "at": [
+         0.485,
+         0.147428,
+         0.019409
+        ],
+        "rx": 0.0025,
+        "ry": 0.0025,
+        "rotation": [
+         0.5,
+         0.5,
+         0.5,
+         0.5
+        ]
+       },
+       {
+        "at": [
+         0.47,
+         0.141851,
+         0.018675
+        ],
+        "rx": 0.0025,
+        "ry": 0.0025,
+        "rotation": [
+         0.5,
+         0.5,
+         0.5,
+         0.5
+        ]
+       },
+       {
+        "at": [
+         0.455,
+         0.136274,
+         0.017941
+        ],
+        "rx": 0.0025,
+        "ry": 0.0025,
+        "rotation": [
+         0.5,
+         0.5,
+         0.5,
+         0.5
+        ]
+       },
+       {
+        "at": [
+         0.44,
+         0.129954,
+         0.017109
+        ],
+        "rx": 0.0025,
+        "ry": 0.0025,
+        "rotation": [
+         0.5,
+         0.5,
+         0.5,
+         0.5
+        ]
+       },
+       {
+        "at": [
+         0.425,
+         0.122656,
+         0.016148
+        ],
+        "rx": 0.0025,
+        "ry": 0.0025,
+        "rotation": [
+         0.5,
+         0.5,
+         0.5,
+         0.5
+        ]
+       },
+       {
+        "at": [
+         0.41,
+         0.117355,
+         0.01545
+        ],
+        "rx": 0.0025,
+        "ry": 0.0025,
+        "rotation": [
+         0.5,
+         0.5,
+         0.5,
+         0.5
+        ]
+       },
+       {
+        "at": [
+         0.398,
+         0.113113,
+         0.014892
+        ],
+        "rx": 0.0025,
+        "ry": 0.0025,
+        "rotation": [
+         0.5,
+         0.5,
+         0.5,
+         0.5
+        ]
+       },
+       {
+        "at": [
+         0.383375,
+         0.107944,
+         0.014211
+        ],
+        "rx": 0.0025,
+        "ry": 0.0025,
+        "rotation": [
+         0.5,
+         0.5,
+         0.5,
+         0.5
+        ]
+       }
+      ],
+      "capStart": true,
+      "capEnd": true,
+      "repeat": {
+       "count": 24,
+       "rotationAxis": [
+        1.0,
+        0.0,
+        0.0
+       ],
+       "rotationRad": 0.261799,
+       "origin": [
+        0.0,
+        0.0,
+        0.0
+       ]
+      }
+     },
+     {
+      "id": "head-grease",
+      "kind": "box",
+      "bone": "djembe-head",
+      "material": "goatskin",
+      "role": "texture",
+      "tone": 0.6,
+      "size": [
+       0.0004,
+       0.07,
+       0.14
+      ],
+      "transform": {
+       "translation": [
+        0.0014,
+        0.09,
+        0.0
+       ]
+      },
+      "texture": true
+     },
+     {
+      "id": "foot-groove-low",
+      "kind": "revolve",
+      "bone": "djembe",
+      "material": "lenke",
+      "role": "texture",
+      "tone": 0.25,
+      "profile": [
+       [
+        0.0315,
+        0.112
+       ],
+       [
+        0.031061,
+        0.113061
+       ],
+       [
+        0.03,
+        0.1135
+       ],
+       [
+        0.028939,
+        0.113061
+       ],
+       [
+        0.0285,
+        0.112
+       ],
+       [
+        0.028939,
+        0.110939
+       ],
+       [
+        0.03,
+        0.1105
+       ],
+       [
+        0.031061,
+        0.110939
+       ],
+       [
+        0.0315,
+        0.112
+       ]
+      ],
+      "axis": [
+       1.0,
+       0.0,
+       0.0
+      ],
+      "origin": [
+       0.0,
+       0.0,
+       0.0
+      ],
+      "texture": true
+     },
+     {
+      "id": "foot-groove-high",
+      "kind": "revolve",
+      "bone": "djembe",
+      "material": "lenke",
+      "role": "texture",
+      "tone": 0.25,
+      "profile": [
+       [
+        0.0515,
+        0.108
+       ],
+       [
+        0.051061,
+        0.109061
+       ],
+       [
+        0.05,
+        0.1095
+       ],
+       [
+        0.048939,
+        0.109061
+       ],
+       [
+        0.0485,
+        0.108
+       ],
+       [
+        0.048939,
+        0.106939
+       ],
+       [
+        0.05,
+        0.1065
+       ],
+       [
+        0.051061,
+        0.106939
+       ],
+       [
+        0.0515,
+        0.108
+       ]
+      ],
+      "axis": [
+       1.0,
+       0.0,
+       0.0
+      ],
+      "origin": [
+       0.0,
+       0.0,
+       0.0
+      ],
+      "texture": true
+     }
+    ],
+    "thermal": [
+     {
+      "id": "th-side-right",
+      "of": "side-right",
+      "region": "cajon-carcass"
+     },
+     {
+      "id": "th-side-left",
+      "of": "side-left",
+      "region": "cajon-carcass"
+     },
+     {
+      "id": "th-top",
+      "of": "top",
+      "region": "cajon-carcass"
+     },
+     {
+      "id": "th-bottom",
+      "of": "bottom",
+      "region": "cajon-carcass"
+     },
+     {
+      "id": "th-back",
+      "of": "back",
+      "region": "cajon-carcass"
+     },
+     {
+      "id": "th-tapa",
+      "of": "tapa",
+      "region": "cajon-tapa"
+     },
+     {
+      "id": "th-shell",
+      "of": "shell",
+      "region": "djembe-shell"
+     },
+     {
+      "id": "th-head-collar",
+      "of": "head-collar",
+      "region": "djembe-head"
+     },
+     {
+      "id": "th-head",
+      "of": "head",
+      "region": "djembe-head"
+     },
+     {
+      "id": "th-crown-ring",
+      "of": "crown-ring",
+      "region": "djembe-rope"
+     },
+     {
+      "id": "th-bottom-ring",
+      "of": "bottom-ring",
+      "region": "djembe-rope"
+     },
+     {
+      "id": "th-verticals",
+      "of": "verticals",
+      "region": "djembe-rope"
+     }
+    ],
+    "structure": [
+     {
+      "id": "st-side-right",
+      "of": "side-right",
+      "member": "cajon",
+      "part": "member"
+     },
+     {
+      "id": "st-side-left",
+      "of": "side-left",
+      "member": "cajon",
+      "part": "member"
+     },
+     {
+      "id": "st-top",
+      "of": "top",
+      "member": "cajon",
+      "part": "member"
+     },
+     {
+      "id": "st-bottom",
+      "of": "bottom",
+      "member": "cajon",
+      "part": "member"
+     },
+     {
+      "id": "st-back",
+      "of": "back",
+      "member": "cajon",
+      "part": "member"
+     },
+     {
+      "id": "st-tapa",
+      "of": "tapa",
+      "member": "cajon",
+      "part": "member"
+     },
+     {
+      "id": "st-shell",
+      "of": "shell",
+      "member": "djembe",
+      "part": "member"
+     },
+     {
+      "id": "st-head-collar",
+      "of": "head-collar",
+      "member": "djembe",
+      "part": "member"
+     },
+     {
+      "id": "st-head",
+      "of": "head",
+      "member": "djembe-head",
+      "part": "member"
+     },
+     {
+      "id": "st-crown-ring",
+      "of": "crown-ring",
+      "member": "djembe",
+      "part": "member"
+     },
+     {
+      "id": "st-bottom-ring",
+      "of": "bottom-ring",
+      "member": "djembe",
+      "part": "member"
+     },
+     {
+      "id": "st-verticals",
+      "of": "verticals",
+      "member": "djembe",
+      "part": "member"
+     },
+     {
+      "id": "joint-tilt-pivot",
+      "kind": "ellipsoid",
+      "bone": "djembe",
+      "material": "lenke",
+      "role": "detail",
+      "tone": 0.25,
+      "radii": [
+       0.008,
+       0.008,
+       0.008
+      ],
+      "transform": {
+       "translation": [
+        0.0048,
+        0.109,
+        0.0
+       ]
+      },
+      "member": "djembe",
+      "part": "joint"
+     },
+     {
+      "id": "joint-head",
+      "kind": "ellipsoid",
+      "bone": "djembe-head",
+      "material": "goatskin",
+      "role": "detail",
+      "tone": 0.25,
+      "radii": [
+       0.008,
+       0.008,
+       0.008
+      ],
+      "transform": {
+       "translation": [
+        0.0,
+        0.0,
+        0.0
+       ]
+      },
+      "member": "djembe-head",
+      "part": "joint"
+     },
+     {
+      "id": "mass-cajon",
+      "kind": "ellipsoid",
+      "bone": "cajon",
+      "material": "birch-ply",
+      "role": "detail",
+      "tone": 0.2,
+      "radii": [
+       0.015,
+       0.015,
+       0.015
+      ],
+      "transform": {
+       "translation": [
+        0.239759,
+        0.009995,
+        0.0
+       ]
+      },
+      "member": "cajon",
+      "part": "mass"
+     },
+     {
+      "id": "mass-djembe",
+      "kind": "ellipsoid",
+      "bone": "djembe",
+      "material": "lenke",
+      "role": "detail",
+      "tone": 0.2,
+      "radii": [
+       0.015,
+       0.015,
+       0.015
+      ],
+      "transform": {
+       "translation": [
+        0.333427,
+        0.0,
+        0.0
+       ]
+      },
+      "member": "djembe",
+      "part": "mass"
+     }
+    ],
+    "decisions": [
+     {
+      "en": "Body: the cajon built panel by panel: two 12 mm birch-ply sides with the top back edge worn to an 8 mm round, the top panel with the same round, the bottom, the 9 mm back with its 110 mm sound port (24-gon), the 3 mm front plate as a declared sheet, the snare behind it (two 18 mm beech battens and four 1 mm guitar strings, slender) and the traces of use as declared texture sheets 0.4 mm proud: the three worn patches of bare birch on the plate, the polished seat and the dealer sticker on the right side. The djembe: the carved lenke shell as one closed-loop revolve of 37 points (foot 0.229 m, waist 0.140 m at 0.32 m, bowl 0.317 m, 4 to 23 mm wall), the shaved goatskin as the 1.2 mm head disc on its own bone and the collar over the bearing edge down to 0.54 m, the crown ring and the bottom ring as rope-wrapped steel hoops (slender), 24 rope verticals of 5 mm that run straight between the rings and lie on the bowl where it bulges (slender lofts, repeated about the axis), the hand-darkened zone of the head and two carved foot grooves as texture.",
+      "de": "Körper: das Cajón Platte für Platte: zwei Seiten aus 12-mm-Birkensperrholz mit der zu 8 mm Radius abgegriffenen hinteren Oberkante, der Deckel mit derselben Rundung, der Boden, die 9-mm-Rückwand mit ihrer 110-mm-Schallöffnung (24-Eck), die 3-mm-Schlagplatte als deklarierte Platte, dahinter das Snare (zwei Buchenleisten 18 mm und vier Gitarrensaiten 1 mm, schlank) und die Gebrauchsspuren als deklarierte Texturfolien 0,4 mm erhaben: die drei abgespielten Stellen blanker Birke auf der Platte, die polierte Sitzfläche und der Händleraufkleber auf der rechten Seite. Die Djembe: der geschnitzte Lenke-Korpus als ein geschlossenes Rotationsprofil aus 37 Punkten (Fuß 0,229 m, Taille 0,140 m auf 0,32 m, Schale 0,317 m, Wand 4 bis 23 mm), das rasierte Ziegenfell als 1,2-mm-Fellscheibe an eigenem Knochen und der Kragen über die Gratkante bis 0,54 m hinab, Kronenring und unterer Ring als seilumwickelte Stahlreifen (schlank), 24 Seilvertikalen von 5 mm, die gerade zwischen den Ringen laufen und dort auf der Schale aufliegen, wo sie sich wölbt (schlanke Lofts, um die Achse wiederholt), die von den Händen nachgedunkelte Zone des Fells und zwei geschnitzte Fußrillen als Textur."
+     },
+     {
+      "en": "Thermal: the carcass panels with their inside, which the air reaches through the port, the plate, the shell with its open bore, the head disc and collar, the rings and verticals are the five regions; texture sheets and the snare are no thermal surfaces.",
+      "de": "Thermik: die Korpusplatten mit ihrer Innenseite, die die Luft durch die Schallöffnung erreicht, die Platte, der Korpus mit offener Bohrung, Fellscheibe und Kragen, Ringe und Vertikalen sind die fünf Regionen; Texturfolien und Snare sind keine thermischen Flächen."
+     },
+     {
+      "en": "Structure: the cajon box (panels and plate) and the djembe shell are the members, the rings, verticals and collar the tension system that holds the head, the head disc its own member; joints at the tilting edge of the foot and under the head centre, mass markers at the two centres of mass.",
+      "de": "Tragwerk: der Cajón-Kasten (Platten und Schlagplatte) und der Djembe-Korpus sind die Stäbe, Ringe, Vertikalen und Kragen das Zugsystem, das das Fell hält, die Fellscheibe ein eigener Stab; Gelenke an der Kippkante des Fußes und unter der Fellmitte, Massemarken in den zwei Schwerpunkten."
+     }
+    ]
+   },
+   "100": {
+    "status": "authored",
+    "denominator": 100,
+    "body": [
+     {
+      "id": "carcass",
+      "kind": "extrude",
+      "bone": "cajon",
+      "material": "birch-ply",
+      "role": "body",
+      "tone": 0.6,
+      "profile": [
+       [
+        -0.15,
+        0.0
+       ],
+       [
+        0.15,
+        0.0
+       ],
+       [
+        0.15,
+        0.48
+       ],
+       [
+        -0.15,
+        0.48
+       ]
+      ],
+      "plane": "zx",
+      "from": -0.147,
+      "to": 0.15,
+      "holes": [
+       [
+        [
+         -0.138,
+         0.012
+        ],
+        [
+         -0.138,
+         0.468
+        ],
+        [
+         0.138,
+         0.468
+        ],
+        [
+         0.138,
+         0.012
+        ]
+       ]
+      ]
+     },
+     {
+      "id": "back",
+      "kind": "extrude",
+      "bone": "cajon",
+      "material": "birch-ply",
+      "role": "body",
+      "tone": 0.56,
+      "profile": [
+       [
+        -0.138,
+        0.012
+       ],
+       [
+        0.138,
+        0.012
+       ],
+       [
+        0.138,
+        0.468
+       ],
+       [
+        -0.138,
+        0.468
+       ]
+      ],
+      "plane": "zx",
+      "from": 0.141,
+      "to": 0.15,
+      "holes": [
+       [
+        [
+         0.050813,
+         0.298952
+        ],
+        [
+         0.038891,
+         0.281109
+        ],
+        [
+         0.021048,
+         0.269187
+        ],
+        [
+         -0.0,
+         0.265
+        ],
+        [
+         -0.021048,
+         0.269187
+        ],
+        [
+         -0.038891,
+         0.281109
+        ],
+        [
+         -0.050813,
+         0.298952
+        ],
+        [
+         -0.055,
+         0.32
+        ],
+        [
+         -0.050813,
+         0.341048
+        ],
+        [
+         -0.038891,
+         0.358891
+        ],
+        [
+         -0.021048,
+         0.370813
+        ],
+        [
+         0.0,
+         0.375
+        ],
+        [
+         0.021048,
+         0.370813
+        ],
+        [
+         0.038891,
+         0.358891
+        ],
+        [
+         0.050813,
+         0.341048
+        ],
+        [
+         0.055,
+         0.32
+        ]
+       ]
+      ]
+     },
+     {
+      "id": "tapa",
+      "kind": "box",
+      "bone": "cajon",
+      "material": "birch-tapa",
+      "role": "body",
+      "tone": 0.74,
+      "size": [
+       0.48,
+       0.003,
+       0.3
+      ],
+      "transform": {
+       "translation": [
+        0.24,
+        -0.1485,
+        0.0
+       ]
+      },
+      "sheet": true
+     },
+     {
+      "id": "shell",
+      "kind": "revolve",
+      "bone": "djembe",
+      "material": "lenke",
+      "role": "body",
+      "tone": 0.38,
+      "profile": [
+       [
+        0.0,
+        0.113
+       ],
+       [
+        0.03,
+        0.1125
+       ],
+       [
+        0.12,
+        0.0935
+       ],
+       [
+        0.24,
+        0.0755
+       ],
+       [
+        0.322,
+        0.07
+       ],
+       [
+        0.375,
+        0.09
+       ],
+       [
+        0.445,
+        0.131
+       ],
+       [
+        0.525,
+        0.155
+       ],
+       [
+        0.57,
+        0.1586
+       ],
+       [
+        0.592,
+        0.1545
+       ],
+       [
+        0.598,
+        0.147
+       ],
+       [
+        0.598,
+        0.143
+       ],
+       [
+        0.56,
+        0.142
+       ],
+       [
+        0.485,
+        0.126
+       ],
+       [
+        0.405,
+        0.087
+       ],
+       [
+        0.35,
+        0.052
+       ],
+       [
+        0.3,
+        0.047
+       ],
+       [
+        0.18,
+        0.06
+       ],
+       [
+        0.07,
+        0.081
+       ],
+       [
+        0.0,
+        0.094
+       ],
+       [
+        0.0,
+        0.113
+       ]
+      ],
+      "axis": [
+       1.0,
+       0.0,
+       0.0
+      ],
+      "origin": [
+       0.0,
+       0.0,
+       0.0
+      ]
+     },
+     {
+      "id": "head-collar",
+      "kind": "revolve",
+      "bone": "djembe",
+      "material": "goatskin",
+      "role": "body",
+      "tone": 0.84,
+      "profile": [
+       [
+        0.54,
+        0.1565
+       ],
+       [
+        0.565,
+        0.158386
+       ],
+       [
+        0.582,
+        0.158
+       ],
+       [
+        0.592,
+        0.1545
+       ],
+       [
+        0.597,
+        0.1505
+       ],
+       [
+        0.598,
+        0.147
+       ],
+       [
+        0.598,
+        0.139
+       ],
+       [
+        0.5992,
+        0.139
+       ],
+       [
+        0.5992,
+        0.1475
+       ],
+       [
+        0.5977,
+        0.1518
+       ],
+       [
+        0.5925,
+        0.1558
+       ],
+       [
+        0.582,
+        0.1592
+       ],
+       [
+        0.565,
+        0.159586
+       ],
+       [
+        0.54,
+        0.1577
+       ],
+       [
+        0.54,
+        0.1565
+       ]
+      ],
+      "axis": [
+       1.0,
+       0.0,
+       0.0
+      ],
+      "origin": [
+       0.0,
+       0.0,
+       0.0
+      ]
+     },
+     {
+      "id": "head",
+      "kind": "revolve",
+      "bone": "djembe-head",
+      "material": "goatskin",
+      "role": "body",
+      "tone": 0.88,
+      "profile": [
+       [
+        0.0,
+        0.0
+       ],
+       [
+        0.0,
+        0.141
+       ],
+       [
+        0.0012,
+        0.141
+       ],
+       [
+        0.0012,
+        0.0
+       ]
+      ],
+      "axis": [
+       1.0,
+       0.0,
+       0.0
+      ],
+      "origin": [
+       0.0,
+       0.0,
+       0.0
+      ],
+      "sheet": true
+     },
+     {
+      "id": "crown-ring",
+      "kind": "revolve",
+      "bone": "djembe",
+      "material": "ring-rope",
+      "role": "body",
+      "tone": 0.25,
+      "profile": [
+       [
+        0.562,
+        0.1653
+       ],
+       [
+        0.560854,
+        0.168827
+       ],
+       [
+        0.557854,
+        0.171006
+       ],
+       [
+        0.554146,
+        0.171006
+       ],
+       [
+        0.551146,
+        0.168827
+       ],
+       [
+        0.55,
+        0.1653
+       ],
+       [
+        0.551146,
+        0.161773
+       ],
+       [
+        0.554146,
+        0.159594
+       ],
+       [
+        0.557854,
+        0.159594
+       ],
+       [
+        0.560854,
+        0.161773
+       ],
+       [
+        0.562,
+        0.1653
+       ]
+      ],
+      "axis": [
+       1.0,
+       0.0,
+       0.0
+      ],
+      "origin": [
+       0.0,
+       0.0,
+       0.0
+      ],
+      "slender": true
+     },
+     {
+      "id": "bottom-ring",
+      "kind": "revolve",
+      "bone": "djembe",
+      "material": "ring-rope",
+      "role": "body",
+      "tone": 0.25,
+      "profile": [
+       [
+        0.3875,
+        0.1025
+       ],
+       [
+        0.386068,
+        0.106908
+       ],
+       [
+        0.382318,
+        0.109633
+       ],
+       [
+        0.377682,
+        0.109633
+       ],
+       [
+        0.373932,
+        0.106908
+       ],
+       [
+        0.3725,
+        0.1025
+       ],
+       [
+        0.373932,
+        0.098092
+       ],
+       [
+        0.377682,
+        0.095367
+       ],
+       [
+        0.382318,
+        0.095367
+       ],
+       [
+        0.386068,
+        0.098092
+       ],
+       [
+        0.3875,
+        0.1025
+       ]
+      ],
+      "axis": [
+       1.0,
+       0.0,
+       0.0
+      ],
+      "origin": [
+       0.0,
+       0.0,
+       0.0
+      ],
+      "slender": true
+     },
+     {
+      "id": "verticals",
+      "kind": "loft",
+      "bone": "djembe",
+      "material": "polyester-rope",
+      "role": "detail",
+      "tone": 0.3,
+      "slender": true,
+      "sections": [
+       {
+        "at": [
+         0.5509,
+         0.167158,
+         0.022007
+        ],
+        "rx": 0.0025,
+        "ry": 0.0025,
+        "rotation": [
+         0.5,
+         0.5,
+         0.5,
+         0.5
+        ]
+       },
+       {
+        "at": [
+         0.505,
+         0.151889,
+         0.019997
+        ],
+        "rx": 0.0025,
+        "ry": 0.0025,
+        "rotation": [
+         0.5,
+         0.5,
+         0.5,
+         0.5
+        ]
+       },
+       {
+        "at": [
+         0.47,
+         0.141851,
+         0.018675
+        ],
+        "rx": 0.0025,
+        "ry": 0.0025,
+        "rotation": [
+         0.5,
+         0.5,
+         0.5,
+         0.5
+        ]
+       },
+       {
+        "at": [
+         0.43,
+         0.124749,
+         0.016423
+        ],
+        "rx": 0.0025,
+        "ry": 0.0025,
+        "rotation": [
+         0.5,
+         0.5,
+         0.5,
+         0.5
+        ]
+       },
+       {
+        "at": [
+         0.383375,
+         0.107944,
+         0.014211
+        ],
+        "rx": 0.0025,
+        "ry": 0.0025,
+        "rotation": [
+         0.5,
+         0.5,
+         0.5,
+         0.5
+        ]
+       }
+      ],
+      "capStart": true,
+      "capEnd": true,
+      "repeat": {
+       "count": 24,
+       "rotationAxis": [
+        1.0,
+        0.0,
+        0.0
+       ],
+       "rotationRad": 0.261799,
+       "origin": [
+        0.0,
+        0.0,
+        0.0
+       ]
+      }
+     }
+    ],
+    "thermal": [
+     {
+      "id": "th-carcass",
+      "of": "carcass",
+      "region": "cajon-carcass"
+     },
+     {
+      "id": "th-back",
+      "of": "back",
+      "region": "cajon-carcass"
+     },
+     {
+      "id": "th-tapa",
+      "of": "tapa",
+      "region": "cajon-tapa"
+     },
+     {
+      "id": "th-shell",
+      "of": "shell",
+      "region": "djembe-shell"
+     },
+     {
+      "id": "th-head-collar",
+      "of": "head-collar",
+      "region": "djembe-head"
+     },
+     {
+      "id": "th-head",
+      "of": "head",
+      "region": "djembe-head"
+     },
+     {
+      "id": "th-crown-ring",
+      "of": "crown-ring",
+      "region": "djembe-rope"
+     },
+     {
+      "id": "th-bottom-ring",
+      "of": "bottom-ring",
+      "region": "djembe-rope"
+     },
+     {
+      "id": "th-verticals",
+      "of": "verticals",
+      "region": "djembe-rope"
+     }
+    ],
+    "structure": [
+     {
+      "id": "st-carcass",
+      "of": "carcass",
+      "member": "cajon",
+      "part": "member"
+     },
+     {
+      "id": "st-back",
+      "of": "back",
+      "member": "cajon",
+      "part": "member"
+     },
+     {
+      "id": "st-tapa",
+      "of": "tapa",
+      "member": "cajon",
+      "part": "member"
+     },
+     {
+      "id": "st-shell",
+      "of": "shell",
+      "member": "djembe",
+      "part": "member"
+     },
+     {
+      "id": "st-head-collar",
+      "of": "head-collar",
+      "member": "djembe",
+      "part": "member"
+     },
+     {
+      "id": "st-head",
+      "of": "head",
+      "member": "djembe-head",
+      "part": "member"
+     },
+     {
+      "id": "st-crown-ring",
+      "of": "crown-ring",
+      "member": "djembe",
+      "part": "member"
+     },
+     {
+      "id": "st-bottom-ring",
+      "of": "bottom-ring",
+      "member": "djembe",
+      "part": "member"
+     },
+     {
+      "id": "st-verticals",
+      "of": "verticals",
+      "member": "djembe",
+      "part": "member"
+     },
+     {
+      "id": "joint-tilt-pivot",
+      "kind": "ellipsoid",
+      "bone": "djembe",
+      "material": "lenke",
+      "role": "detail",
+      "tone": 0.25,
+      "radii": [
+       0.015,
+       0.015,
+       0.015
+      ],
+      "transform": {
+       "translation": [
+        0.009,
+        0.1055,
+        0.0
+       ]
+      },
+      "member": "djembe",
+      "part": "joint"
+     },
+     {
+      "id": "joint-head",
+      "kind": "ellipsoid",
+      "bone": "djembe-head",
+      "material": "goatskin",
+      "role": "detail",
+      "tone": 0.25,
+      "radii": [
+       0.015,
+       0.015,
+       0.015
+      ],
+      "transform": {
+       "translation": [
+        0.0,
+        0.0,
+        0.0
+       ]
+      },
+      "member": "djembe-head",
+      "part": "joint"
+     },
+     {
+      "id": "mass-cajon",
+      "kind": "ellipsoid",
+      "bone": "cajon",
+      "material": "birch-ply",
+      "role": "detail",
+      "tone": 0.2,
+      "radii": [
+       0.03,
+       0.03,
+       0.03
+      ],
+      "transform": {
+       "translation": [
+        0.239759,
+        0.009995,
+        0.0
+       ]
+      },
+      "member": "cajon",
+      "part": "mass"
+     },
+     {
+      "id": "mass-djembe",
+      "kind": "ellipsoid",
+      "bone": "djembe",
+      "material": "lenke",
+      "role": "detail",
+      "tone": 0.2,
+      "radii": [
+       0.03,
+       0.03,
+       0.03
+      ],
+      "transform": {
+       "translation": [
+        0.333427,
+        0.0,
+        0.0
+       ]
+      },
+      "member": "djembe",
+      "part": "mass"
+     }
+    ],
+    "decisions": [
+     {
+      "en": "Body for the 15 mm feature: the four 12 mm panels of sides, top and bottom are one carcass tube (an extrusion with its hollow), the back keeps its port as a 16-gon, the plate stays a 3 mm sheet; snare, texture sheets and the worn round are left out. The djembe shell is generalised to 20 points, the collar to 4 heights, the rings to 10-gon hoops, the 24 verticals to 5 sections each.",
+      "de": "Körper für das Merkmal von 15 mm: die vier 12-mm-Platten von Seiten, Deckel und Boden sind ein Korpusrohr (eine Extrusion mit ihrem Hohlraum), die Rückwand behält ihre Öffnung als 16-Eck, die Platte bleibt ein 3-mm-Blatt; Snare, Texturfolien und die Kantenrundung entfallen. Der Djembe-Korpus ist auf 20 Punkte verallgemeinert, der Kragen auf 4 Höhen, die Ringe auf 10-eckige Reifen, die 24 Vertikalen auf je 5 Querschnitte."
+     },
+     {
+      "en": "Thermal and structure follow the body: the carcass tube and the back are the carcass region and members.",
+      "de": "Thermik und Tragwerk folgen dem Körper: Korpusrohr und Rückwand sind Korpusregion und Stäbe."
+     }
+    ]
+   },
+   "200": {
+    "status": "authored",
+    "denominator": 200,
+    "body": [
+     {
+      "id": "carcass",
+      "kind": "extrude",
+      "bone": "cajon",
+      "material": "birch-ply",
+      "role": "body",
+      "tone": 0.6,
+      "profile": [
+       [
+        -0.15,
+        0.0
+       ],
+       [
+        0.15,
+        0.0
+       ],
+       [
+        0.15,
+        0.48
+       ],
+       [
+        -0.15,
+        0.48
+       ]
+      ],
+      "plane": "zx",
+      "from": -0.147,
+      "to": 0.141,
+      "holes": [
+       [
+        [
+         -0.138,
+         0.012
+        ],
+        [
+         -0.138,
+         0.468
+        ],
+        [
+         0.138,
+         0.468
+        ],
+        [
+         0.138,
+         0.012
+        ]
+       ]
+      ]
+     },
+     {
+      "id": "back",
+      "kind": "extrude",
+      "bone": "cajon",
+      "material": "birch-ply",
+      "role": "body",
+      "tone": 0.56,
+      "profile": [
+       [
+        -0.15,
+        0.0
+       ],
+       [
+        0.15,
+        0.0
+       ],
+       [
+        0.15,
+        0.48
+       ],
+       [
+        -0.15,
+        0.48
+       ]
+      ],
+      "plane": "zx",
+      "from": 0.141,
+      "to": 0.15,
+      "holes": [
+       [
+        [
+         0.038891,
+         0.281109
+        ],
+        [
+         -0.0,
+         0.265
+        ],
+        [
+         -0.038891,
+         0.281109
+        ],
+        [
+         -0.055,
+         0.32
+        ],
+        [
+         -0.038891,
+         0.358891
+        ],
+        [
+         0.0,
+         0.375
+        ],
+        [
+         0.038891,
+         0.358891
+        ],
+        [
+         0.055,
+         0.32
+        ]
+       ]
+      ]
+     },
+     {
+      "id": "tapa",
+      "kind": "box",
+      "bone": "cajon",
+      "material": "birch-tapa",
+      "role": "body",
+      "tone": 0.74,
+      "size": [
+       0.48,
+       0.003,
+       0.3
+      ],
+      "transform": {
+       "translation": [
+        0.24,
+        -0.1485,
+        0.0
+       ]
+      },
+      "sheet": true
+     },
+     {
+      "id": "shell",
+      "kind": "revolve",
+      "bone": "djembe",
+      "material": "lenke",
+      "role": "body",
+      "tone": 0.38,
+      "profile": [
+       [
+        0.0,
+        0.113
+       ],
+       [
+        0.06,
+        0.1065
+       ],
+       [
+        0.2,
+        0.081
+       ],
+       [
+        0.322,
+        0.07
+       ],
+       [
+        0.4,
+        0.1065
+       ],
+       [
+        0.48,
+        0.1445
+       ],
+       [
+        0.565,
+        0.1586
+       ],
+       [
+        0.598,
+        0.147
+       ],
+       [
+        0.598,
+        0.14
+       ],
+       [
+        0.5,
+        0.13
+       ],
+       [
+        0.38,
+        0.069
+       ],
+       [
+        0.3,
+        0.048
+       ],
+       [
+        0.15,
+        0.065
+       ],
+       [
+        0.0,
+        0.094
+       ],
+       [
+        0.0,
+        0.113
+       ]
+      ],
+      "axis": [
+       1.0,
+       0.0,
+       0.0
+      ],
+      "origin": [
+       0.0,
+       0.0,
+       0.0
+      ]
+     },
+     {
+      "id": "head-collar",
+      "kind": "revolve",
+      "bone": "djembe",
+      "material": "goatskin",
+      "role": "body",
+      "tone": 0.84,
+      "profile": [
+       [
+        0.54,
+        0.1565
+       ],
+       [
+        0.57,
+        0.158273
+       ],
+       [
+        0.59,
+        0.1552
+       ],
+       [
+        0.597,
+        0.1505
+       ],
+       [
+        0.598,
+        0.147
+       ],
+       [
+        0.598,
+        0.139
+       ],
+       [
+        0.5992,
+        0.139
+       ],
+       [
+        0.5992,
+        0.1475
+       ],
+       [
+        0.5977,
+        0.1518
+       ],
+       [
+        0.5925,
+        0.1558
+       ],
+       [
+        0.57,
+        0.159473
+       ],
+       [
+        0.54,
+        0.1577
+       ],
+       [
+        0.54,
+        0.1565
+       ]
+      ],
+      "axis": [
+       1.0,
+       0.0,
+       0.0
+      ],
+      "origin": [
+       0.0,
+       0.0,
+       0.0
+      ]
+     },
+     {
+      "id": "head",
+      "kind": "revolve",
+      "bone": "djembe-head",
+      "material": "goatskin",
+      "role": "body",
+      "tone": 0.88,
+      "profile": [
+       [
+        0.0,
+        0.0
+       ],
+       [
+        0.0,
+        0.141
+       ],
+       [
+        0.0012,
+        0.141
+       ],
+       [
+        0.0012,
+        0.0
+       ]
+      ],
+      "axis": [
+       1.0,
+       0.0,
+       0.0
+      ],
+      "origin": [
+       0.0,
+       0.0,
+       0.0
+      ],
+      "sheet": true
+     },
+     {
+      "id": "crown-ring",
+      "kind": "revolve",
+      "bone": "djembe",
+      "material": "ring-rope",
+      "role": "body",
+      "tone": 0.25,
+      "profile": [
+       [
+        0.562,
+        0.1653
+       ],
+       [
+        0.560243,
+        0.169543
+       ],
+       [
+        0.556,
+        0.1713
+       ],
+       [
+        0.551757,
+        0.169543
+       ],
+       [
+        0.55,
+        0.1653
+       ],
+       [
+        0.551757,
+        0.161057
+       ],
+       [
+        0.556,
+        0.1593
+       ],
+       [
+        0.560243,
+        0.161057
+       ],
+       [
+        0.562,
+        0.1653
+       ]
+      ],
+      "axis": [
+       1.0,
+       0.0,
+       0.0
+      ],
+      "origin": [
+       0.0,
+       0.0,
+       0.0
+      ],
+      "slender": true
+     },
+     {
+      "id": "bottom-ring",
+      "kind": "revolve",
+      "bone": "djembe",
+      "material": "ring-rope",
+      "role": "body",
+      "tone": 0.25,
+      "profile": [
+       [
+        0.3875,
+        0.1025
+       ],
+       [
+        0.385303,
+        0.107803
+       ],
+       [
+        0.38,
+        0.11
+       ],
+       [
+        0.374697,
+        0.107803
+       ],
+       [
+        0.3725,
+        0.1025
+       ],
+       [
+        0.374697,
+        0.097197
+       ],
+       [
+        0.38,
+        0.095
+       ],
+       [
+        0.385303,
+        0.097197
+       ],
+       [
+        0.3875,
+        0.1025
+       ]
+      ],
+      "axis": [
+       1.0,
+       0.0,
+       0.0
+      ],
+      "origin": [
+       0.0,
+       0.0,
+       0.0
+      ],
+      "slender": true
+     },
+     {
+      "id": "verticals",
+      "kind": "loft",
+      "bone": "djembe",
+      "material": "polyester-rope",
+      "role": "detail",
+      "tone": 0.3,
+      "slender": true,
+      "sections": [
+       {
+        "at": [
+         0.5509,
+         0.162855,
+         0.043637
+        ],
+        "rx": 0.0025,
+        "ry": 0.0025,
+        "rotation": [
+         0.5,
+         0.5,
+         0.5,
+         0.5
+        ]
+       },
+       {
+        "at": [
+         0.48,
+         0.141822,
+         0.038001
+        ],
+        "rx": 0.0025,
+        "ry": 0.0025,
+        "rotation": [
+         0.5,
+         0.5,
+         0.5,
+         0.5
+        ]
+       },
+       {
+        "at": [
+         0.383375,
+         0.105165,
+         0.028179
+        ],
+        "rx": 0.0025,
+        "ry": 0.0025,
+        "rotation": [
+         0.5,
+         0.5,
+         0.5,
+         0.5
+        ]
+       }
+      ],
+      "capStart": true,
+      "capEnd": true,
+      "repeat": {
+       "count": 12,
+       "rotationAxis": [
+        1.0,
+        0.0,
+        0.0
+       ],
+       "rotationRad": 0.523599,
+       "origin": [
+        0.0,
+        0.0,
+        0.0
+       ]
+      }
+     }
+    ],
+    "thermal": [
+     {
+      "id": "th-carcass",
+      "of": "carcass",
+      "region": "cajon-carcass"
+     },
+     {
+      "id": "th-back",
+      "of": "back",
+      "region": "cajon-carcass"
+     },
+     {
+      "id": "th-tapa",
+      "of": "tapa",
+      "region": "cajon-tapa"
+     },
+     {
+      "id": "th-shell",
+      "of": "shell",
+      "region": "djembe-shell"
+     },
+     {
+      "id": "th-head-collar",
+      "of": "head-collar",
+      "region": "djembe-head"
+     },
+     {
+      "id": "th-head",
+      "of": "head",
+      "region": "djembe-head"
+     },
+     {
+      "id": "th-crown-ring",
+      "of": "crown-ring",
+      "region": "djembe-rope"
+     },
+     {
+      "id": "th-bottom-ring",
+      "of": "bottom-ring",
+      "region": "djembe-rope"
+     },
+     {
+      "id": "th-verticals",
+      "of": "verticals",
+      "region": "djembe-rope"
+     }
+    ],
+    "structure": [
+     {
+      "id": "st-carcass",
+      "of": "carcass",
+      "member": "cajon",
+      "part": "member"
+     },
+     {
+      "id": "st-back",
+      "of": "back",
+      "member": "cajon",
+      "part": "member"
+     },
+     {
+      "id": "st-tapa",
+      "of": "tapa",
+      "member": "cajon",
+      "part": "member"
+     },
+     {
+      "id": "st-shell",
+      "of": "shell",
+      "member": "djembe",
+      "part": "member"
+     },
+     {
+      "id": "st-head-collar",
+      "of": "head-collar",
+      "member": "djembe",
+      "part": "member"
+     },
+     {
+      "id": "st-head",
+      "of": "head",
+      "member": "djembe-head",
+      "part": "member"
+     },
+     {
+      "id": "st-crown-ring",
+      "of": "crown-ring",
+      "member": "djembe",
+      "part": "member"
+     },
+     {
+      "id": "st-bottom-ring",
+      "of": "bottom-ring",
+      "member": "djembe",
+      "part": "member"
+     },
+     {
+      "id": "st-verticals",
+      "of": "verticals",
+      "member": "djembe",
+      "part": "member"
+     },
+     {
+      "id": "joint-tilt-pivot",
+      "kind": "ellipsoid",
+      "bone": "djembe",
+      "material": "lenke",
+      "role": "detail",
+      "tone": 0.25,
+      "radii": [
+       0.03,
+       0.03,
+       0.03
+      ],
+      "transform": {
+       "translation": [
+        0.018,
+        0.098,
+        0.0
+       ]
+      },
+      "member": "djembe",
+      "part": "joint"
+     },
+     {
+      "id": "joint-head",
+      "kind": "ellipsoid",
+      "bone": "djembe-head",
+      "material": "goatskin",
+      "role": "detail",
+      "tone": 0.25,
+      "radii": [
+       0.03,
+       0.03,
+       0.03
+      ],
+      "transform": {
+       "translation": [
+        0.0,
+        0.0,
+        0.0
+       ]
+      },
+      "member": "djembe-head",
+      "part": "joint"
+     },
+     {
+      "id": "mass-cajon",
+      "kind": "ellipsoid",
+      "bone": "cajon",
+      "material": "birch-ply",
+      "role": "detail",
+      "tone": 0.2,
+      "radii": [
+       0.06,
+       0.06,
+       0.06
+      ],
+      "transform": {
+       "translation": [
+        0.239759,
+        0.009995,
+        0.0
+       ]
+      },
+      "member": "cajon",
+      "part": "mass"
+     },
+     {
+      "id": "mass-djembe",
+      "kind": "ellipsoid",
+      "bone": "djembe",
+      "material": "lenke",
+      "role": "detail",
+      "tone": 0.2,
+      "radii": [
+       0.06,
+       0.06,
+       0.06
+      ],
+      "transform": {
+       "translation": [
+        0.333427,
+        0.0,
+        0.0
+       ]
+      },
+      "member": "djembe",
+      "part": "mass"
+     }
+    ],
+    "decisions": [
+     {
+      "en": "Body for the 30 mm feature: carcass tube and back are cut square, the port is an octagon, the plate a 3 mm sheet; the djembe shell has 14 points, the rings are octagon hoops and the rope lacing is typified to 12 of the 24 verticals with 3 sections, kept at their true 5 mm section as slender parts.",
+      "de": "Körper für das Merkmal von 30 mm: Korpusrohr und Rückwand sind scharfkantig, die Öffnung ein Achteck, die Platte ein 3-mm-Blatt; der Djembe-Korpus hat 14 Punkte, die Ringe sind achteckige Reifen und die Schnürung ist auf 12 der 24 Vertikalen mit 3 Querschnitten typisiert, im wahren Querschnitt von 5 mm als schlanke Teile."
+     },
+     {
+      "en": "Thermal and structure follow the body; the joints and mass markers are 30 mm.",
+      "de": "Thermik und Tragwerk folgen dem Körper; Gelenke und Massemarken messen 30 mm."
+     }
+    ]
+   },
+   "500": {
+    "status": "unavailable",
+    "denominator": 500
+   }
+  },
+  "presentation": {
+   "defaultPose": "stored",
+   "defaultClip": "play",
+   "defaultScale": 50
+  },
+  "exports": [
+   "svg",
+   "pdf",
+   "dxf",
+   "dwg",
+   "png-sequence",
+   "mp4",
+   "webm",
+   "component",
+   "glb",
+   "fbx",
+   "model",
+   "model-zip"
+  ],
+  "completion": "authored"
+ }
+}

@@ -120,15 +120,14 @@ function world(options:Readonly<{outcomes?:Outcome[];server?:boolean;human?:bool
  return{ports,controller,shared,sleeps,updates,said,digest,last:()=>Object.assign({},...updates) as Partial<ReadyStatusV1>};
 }
 
-test("a pending supervisor restart publishes the current wait after a workspace timeout",async()=>{
+test("a deferred supervisor restart holds no stage back: the stale stage starts, the status never names a restart as the reason for waiting, and the failure record is untouched by the wait",async()=>{
  const w=world({repo:true,stopAfterSleeps:1});
  const stages=Object.fromEntries(w.digest.stages.filter(row=>row.name!=="workspace").map(row=>[row.name,{digest:row.digest,doneMs:1}]));
  const failure={stage:"workspace",digest:w.digest.digest,attempts:1,exit:1,code:"stage-timeout" as const,atMs:10,nextAttemptMs:20,tail:[]};
  w.shared.state={...w.shared.state,stages,failure,attempts:1};
- await runReadyV1({...w.ports,restartPending:()=>true},w.controller.signal);
- expect(w.shared.calls).toEqual([]);
- expect(w.last()).toMatchObject({state:"waiting",stage:"workspace",refusal:{code:"sidecar-restarting"}});
- expect(w.shared.state.failure).toEqual(failure);
+ await runReadyV1(w.ports,w.controller.signal);
+ expect(w.shared.calls).toEqual(["workspace"]);
+ expect(JSON.stringify(w.updates)).not.toContain("restart");
 });
 
 test("a ready machine does nothing: no stage, no marker write, status ready",async()=>{
@@ -567,6 +566,17 @@ posix("a failed stage mirror keeps the first error lines whole and the last line
   expect(rows.length).toBeLessThanOrEqual(P.mirrorLines+2);
   const independent=spawnSync("python3",["-I","-c","import sys; rows=sys.stdin.read().split('\\n'); print(sum(1 for r in rows if r.startswith('[DATA] Store dependency installer failed ') and len(r)>400))"],{input:rows.join("\n"),encoding:"utf8"});
   expect(independent.stdout.trim()).toBe("1");
+ }finally{home.restore();}
+});
+
+posix("the move failure probe of a failed installer stays whole in the mirror, longer than an ordinary mirrored line",async()=>{
+ const probe='[DATA] Store dependency installer move failure {"version":1,"purpose":"current-dependency-installer-move-failure","moves":[{"package":"@noble/hashes","from":"tmp/x","fromExists":false,"fromParentExists":true,"to":"bun-cache/@noble/hashes@2.4.0","toExists":false,"toParentExists":false,"sameDevice":null,"toParentKind":"missing","toParentCreate":"ok"},{"package":"@isaacs/cliui","from":"tmp/y","fromExists":false,"fromParentExists":true,"to":"bun-cache/@isaacs/cliui@8.0.2","toExists":false,"toParentExists":false,"sameDevice":null,"toParentKind":"missing","toParentCreate":"ok"}]}';
+ expect(probe.length).toBeGreaterThan(P.mirrorLineCharacters);
+ const home=fakeHome("#!/bin/sh\nprintf '%s\\n' '"+probe+"'\nexit 1\n");
+ try{
+  const result=await runReadyStageV1({home:home.home,root:temp("move-probe"),environment:{},stage:stageOf("dependencies",600000),signal:new AbortController().signal,jobs:1,onLine:()=>undefined});
+  expect(result.exit).toBe(1);
+  expect(result.failure??[]).toContain(probe);
  }finally{home.restore();}
 });
 

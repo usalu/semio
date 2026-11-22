@@ -1,0 +1,51 @@
+{
+  "id": "surveyor-with-total-station",
+  "category": "humans",
+  "title": {
+    "en": "Surveyor with Total Station",
+    "de": "Vermessende Person mit Tachymeter"
+  },
+  "heightM": 1.683,
+  "widthM": 1.067,
+  "powerW": 185,
+  "poses": [
+    "sighting",
+    "reading-display",
+    "standing-by"
+  ],
+  "clips": [
+    "measuring-cycle",
+    "idle-breathing"
+  ],
+  "representations": {
+    "50": "authored",
+    "100": "authored",
+    "200": "authored",
+    "500": "authored"
+  },
+  "symbols": [],
+  "analytics": [
+    "thermal",
+    "transport",
+    "structural"
+  ],
+  "exports": [
+    "svg",
+    "pdf",
+    "dxf",
+    "dwg",
+    "png-sequence",
+    "mp4",
+    "webm",
+    "component",
+    "glb",
+    "fbx",
+    "model",
+    "model-zip"
+  ],
+  "distinction": {
+    "en": "A surveyor in hi-vis vest and hard hat behind a total station on an aluminium tripod, bent from the hips to the eyepiece with a hand on each drive knob, straightening to read the display and waiting with a hand on the carrying handle; tripod and instrument stand on their own contacts, the battery-powered instrument carries a 7 W nameplate.",
+    "de": "Eine vermessende Person in Warnweste und Schutzhelm hinter einem Tachymeter auf einem Aluminiumstativ, aus der Hüfte zum Okular gebeugt mit je einer Hand an einem Feintrieb, zum Ablesen der Anzeige aufgerichtet und mit einer Hand am Tragegriff wartend; Stativ und Instrument stehen auf eigenen Kontakten, das akkubetriebene Instrument trägt ein Typenschild von 7 W."
+  },
+  "completion": "authored"
+}

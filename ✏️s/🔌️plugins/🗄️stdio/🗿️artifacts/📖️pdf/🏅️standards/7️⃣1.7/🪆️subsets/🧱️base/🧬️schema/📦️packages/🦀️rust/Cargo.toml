@@ -9,6 +9,46 @@ description = "Component crate of semio-s-artifact-stdio-pdf: schema"
 [package.metadata.semio]
 role = "library"
 
+[package.metadata.semio.carve]
+owned = [
+  "editor::pdf17::modes::edit",
+  "editor::pdf17::modes::edit::windows",
+  "editor::pdf17::modes::edit::windows::main",
+  "editor::pdf17e::modes::edit",
+  "editor::pdf17e::modes::edit::windows",
+  "editor::pdf17e::modes::edit::windows::main",
+  "editor::pdf17h::modes::edit",
+  "editor::pdf17h::modes::edit::windows",
+  "editor::pdf17h::modes::edit::windows::main",
+  "editor::pdf17ua::modes::edit",
+  "editor::pdf17ua::modes::edit::windows",
+  "editor::pdf17ua::modes::edit::windows::main",
+  "editor::pdf17vt::modes::edit",
+  "editor::pdf17vt::modes::edit::windows",
+  "editor::pdf17vt::modes::edit::windows::main",
+  "editor::pdf17x::modes::edit",
+  "editor::pdf17x::modes::edit::windows",
+  "editor::pdf17x::modes::edit::windows::main",
+  "standards::v1_7::subsets::base::io::export",
+  "standards::v1_7::subsets::base::io::export::encode_and_reconcile",
+  "standards::v1_7::subsets::base::io::export::graft",
+  "standards::v1_7::subsets::base::io::export::serializers::artifacts::binary",
+  "standards::v1_7::subsets::base::io::export::serializers::artifacts::binary::v_raw",
+  "standards::v1_7::subsets::base::io::export::serializers::artifacts::binary::v_raw::any",
+  "standards::v1_7::subsets::base::io::export::serializers::artifacts::deflate",
+  "standards::v1_7::subsets::base::io::export::serializers::artifacts::deflate::v_rfc1950",
+  "standards::v1_7::subsets::base::io::export::serializers::artifacts::deflate::v_rfc1950::any",
+  "standards::v1_7::subsets::base::io::export::streaming_and_builders",
+  "standards::v1_7::subsets::base::io::export::tests",
+  "standards::v1_7::subsets::base::schema",
+  "standards::v1_7::subsets::base::schema::conformance_support::tests",
+  "standards::v1_7::subsets::base::schema::diff::tests",
+  "standards::v1_7::subsets::base::schema::mutations::insert_page::tests",
+  "standards::v1_7::subsets::base::schema::mutations::remove_page::tests",
+  "standards::v1_7::subsets::base::schema::mutations::set_page_crop_box::tests",
+  "standards::v1_7::subsets::base::schema::mutations::set_page_media_box::tests",
+]
+
 [lints]
 workspace = true
 

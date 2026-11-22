@@ -46,6 +46,23 @@ test("the divergence count is the lifetime total beyond the 1000 kept rows, the 
  second.diverged(row(5000,"unit"));await second.flush();expect(second.summary().count).toBe(1101);expect(second.summary().byClass.unit).toBe(276);
 });
 
+test("a restart starts a new current window: the lifetime count keeps the history of fixed code, current counts only the divergences of this run, and the last hour slides over the kept rows (checked against a naive filter of the file)",async()=>{
+ const root=directory();let now=10_000_000;
+ const row=(index:number,sort:string)=>({namespace:"main",kind:"ac" as const,key:String(index).padStart(64,"0"),keptOrigin:"g1-m01",keptSha256:"a".repeat(64),refusedOrigin:"g1-m02",refusedSha256:"b".repeat(64),sort,differing:["x"]});
+ const first=await openProvenanceV1(root,{now:()=>now});
+ for(let index=0;index<6;index++){first.diverged(row(index,index<4?"unit":"owner-pool"));now+=1000;}
+ expect(first.summary().current).toEqual({since:10_000_000,count:6,byClass:{"owner-pool":2,unit:4}});
+ await first.flush();
+ now+=7_200_000;const second=await openProvenanceV1(root,{now:()=>now});
+ expect(second.summary().count).toBe(6);expect(second.summary().current).toEqual({since:now,count:0,byClass:{}});expect(second.summary().lastHour).toEqual({since:0,count:0,byClass:{}});
+ now+=500;second.diverged(row(9,"closure"));await second.flush();
+ expect(second.summary().current).toEqual({since:now-500,count:1,byClass:{closure:1}});expect(second.summary().count).toBe(7);
+ const file=JSON.parse(readFileSync(join(root,"fleet","divergences.json"),"utf8")) as {rows:{atMs:number;sort:string}[]};
+ const naive:Record<string,number>={};for(const entry of file.rows)if(entry.atMs>=now-3_600_000)naive[entry.sort]=(naive[entry.sort]??0)+1;
+ expect(second.summary().lastHour.byClass).toEqual(naive);expect(second.summary().lastHour.count).toBe(1);
+ now+=3_600_001;expect(second.summary().lastHour.count).toBe(0);expect(second.summary().count).toBe(7);
+});
+
 test("consumption counts producer>consumer pairs with the compiled units among them, survives a restart and stays bounded",async()=>{
  const root=directory();let now=1000;
  const first=await openProvenanceV1(root,{now:()=>now});

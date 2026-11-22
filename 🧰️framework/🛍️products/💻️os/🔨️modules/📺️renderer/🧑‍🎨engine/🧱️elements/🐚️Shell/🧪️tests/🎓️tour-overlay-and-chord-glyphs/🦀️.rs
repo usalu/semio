@@ -556,7 +556,7 @@ fn every_overlay_sheet_with_a_glass_region_encodes_its_glyphs_in_the_foreground_
     let icons = IconAtlas::default();
     let mut input = InputState::<ActionDescriptor>::default();
     let mut cursor = ShellChromeChildCursor::default();
-    let complete = (0..8192).any(|_| ChromeOverlaysCtx::of(&mut shell).render_context_menu_step(&mut cursor, &mut overlay, &mut atlas, &icons, &mut input, &theme, 1440.0, 900.0));
+    let complete = (0..8192).any(|_| OverlaysViewCtx::of(&mut shell).render_context_menu_levels_step(&mut cursor, &mut overlay, &mut atlas, &icons, &mut input, &theme, 1440.0, 900.0));
     assert!(complete, "🖱️ the context-menu walk terminates");
     let sheet = overlay.layers.iter().find_map(|layer| layer.foreground_of).expect("🫧 the context menu opens a glass-content layer");
     let menu = overlay.glass_regions[sheet].rect;
@@ -569,3 +569,18 @@ fn every_overlay_sheet_with_a_glass_region_encodes_its_glyphs_in_the_foreground_
 }
 
 //#endregion 🫧CrispnessLaw
+
+/// ⚖️ LAW: the production context menu paints every open level — an active parent row opens its submenu as a second glass region beside it, at the parent row's top.
+#[test]
+fn the_open_context_menu_paints_its_submenu_beside_the_parent_row() {
+    use semio_renderer_wgpu_shell_view_overlays::{ContextMenuPaintOp, context_menu_paint_ops};
+    let theme = Theme::light();
+    let child = ContextMenuItem { id: "menu.child".into(), label: "Child".into(), ..Default::default() };
+    let parent = ContextMenuItem { id: "menu.parent".into(), label: "Parent".into(), children: vec![child], ..Default::default() };
+    let menu = ContextMenuState { x: 100.0, y: 100.0, items: vec![parent], active: vec![0], ..Default::default() };
+    let ops = context_menu_paint_ops(&theme, &menu, (1440.0, 900.0));
+    let glass: Vec<_> = ops.iter().filter_map(|op| if let ContextMenuPaintOp::Glass(rect) = op { Some(*rect) } else { None }).collect();
+    assert_eq!(glass.len(), 2, "one region per open level");
+    assert!(glass[1].x >= glass[0].x + glass[0].w, "the submenu sits beside the parent level");
+    assert!((glass[1].y - (glass[0].y + 4.0)).abs() < 0.01, "and at the parent row's top");
+}

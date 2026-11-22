@@ -1,0 +1,14 @@
+# G11 Governed Lifter Extension Plan
+
+Status: **not implemented in the lifter.** The oracle exists (`g11-shape-oracle.py`, four shapes, runs with pikepdf or PyMuPDF; neither is installed on this machine, so only the PDFs were generated). Changing the governed lifter blind was refused: it is a 50 KB cursor inside a 215 KB source closure whose every allocation is quoted against a grant, and a mistake silently turns a governed open into an unbounded one or breaks the existing 13 to 15 focused cases. Each shape below is one edit plus one fixture run, in this order.
+
+Lifter: `🔨️modules/⬇️lift/🧩️lifter-and-document/🧭️document-lift/🧭️controlled/🦀️.rs`. Mounted error: `🚪️io/📥️import/🔁️controlled/🦀️.rs` (`Event::ReferenceRequired`).
+
+| Shape (oracle name) | Barrier today | Edit | Quote | Pass condition |
+|---|---|---|---|---|
+| `resources`: Helvetica font, RGB image, Text annotation on one page | `Barrier::Resources` (`bindings` of font and image must match, lines ~523 to 571) when the page also has annotations | Admit the annotation cursor after the page content turn when the resource bindings were already admitted; no new parsing | the existing per-annotation copy quote, up to the existing 8 annotations | lifted snapshot equals the cold `decode_pdf` snapshot; pikepdf lists `/F1`, `/Im1`, one `Text` annotation |
+| `text-program`: Courier-Bold TrueType, `TJ` with kerning, `'` operator | `Barrier::Program` (`PageContentEvent::Deferred`) for fonts outside the admitted set | Extend the admitted font set to base-14 TrueType by name with `Widths` and `WinAnsiEncoding`; operators `TJ`, `T*`, `'` are already tokenised by the page-content cursor | one font copy plus one `PdfOp` per operator | operator list equal to pikepdf's; text equal to PyMuPDF's |
+| `roles`: content array, indirect `/Length`, inherited `MediaBox`, `Resources` and `Rotate` | `Barrier::Roles` for non-canonical stream roles (line 179, 592, 627, 645) | Resolve an indirect `/Length` through the generation-exact position index (same lookup the array owners use) and allow inherited page keys already read by the page-tree cursor | one extra owner step per indirect length | two streams in authored order, rotate 90, media box 150 by 60 |
+| `reference-required`: xref stream plus object stream | mounted `Event::ReferenceRequired` | Not a lifter edit. Needs the controlled xref-stream and object-stream readers (`📥️controlled-xref-stream.md`) to feed the same cursor; until then the mounted error stays the correct, bounded refusal | n/a | opening this file reports the typed barrier, never a cold decode; once the readers land it equals pikepdf's projection |
+
+Governed run for each: `repo cargo ... -- test -p semio-s-artifact-stdio-pdf-testkit --lib <shape>`, plus `python3 g11-shape-oracle.py --write <dir>` to produce the inputs and `projection.json`.

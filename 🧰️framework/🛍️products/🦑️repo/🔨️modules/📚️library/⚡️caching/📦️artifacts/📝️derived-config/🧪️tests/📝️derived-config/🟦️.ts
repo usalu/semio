@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { test } from "bun:test";
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
+import { tmpdir } from "node:os";
 import { dirname, join, posix } from "node:path";
 import { Database } from "bun:sqlite";
 import { NEXTEST, NEXTEST_SCOPES, dependabotProblems, deriveNextest, nextestProblems, writeNextestConfig } from "../../🟦️.ts";
@@ -47,12 +48,20 @@ export async function testDerivedConfig(workspace: string): Promise<void> {
   } finally { rmSync(temporary, { recursive: true, force: true }); }
 }
 
-test("derived configuration remains editor-free and agrees with third-party parsers", async () => { await testDerivedConfig(process.cwd()); });
+/** 📍️ Finds the checkout from this file, never from the working directory, so a run started inside a member directory writes nothing there. */
+function checkoutRoot(): string {
+  for (let path = import.meta.dir; ; path = dirname(path)) {
+    if (existsSync(join(path, "bunfig.toml")) && existsSync(join(path, "bun.lock"))) return path;
+    if (dirname(path) === path) throw Error("Repository root not found");
+  }
+}
+
+test("derived configuration remains editor-free and agrees with third-party parsers", async () => { await testDerivedConfig(checkoutRoot()); });
 
 
 test("dependency-update action manifests agree with closed vectors and independent SQLite selection", () => {
   const fixture = JSON.parse(readFileSync(join(import.meta.dir, "../🧫️fixtures/📝️derived-config/🔣️.json"), "utf8")), yaml = createRequire(import.meta.url)("yaml"), database = new Database(":memory:");
-  const output = process.env.SEMIO_TEST_OUTPUT_DIR ?? join(process.cwd(), ".cache/test-sandbox");
+  const own = process.env.SEMIO_TEST_OUTPUT_DIR === undefined, output = own ? mkdtempSync(join(tmpdir(), "derived-config-")) : process.env.SEMIO_TEST_OUTPUT_DIR!;
   mkdirSync(output, { recursive: true });
   database.exec("CREATE TABLE entries(folder TEXT, name TEXT, kind TEXT)");
   const insert = database.prepare("INSERT INTO entries VALUES(?,?,?)"), oracle = database.prepare("SELECT count(*)>0 AS valid FROM entries WHERE kind='file' AND ((?='/' AND ((folder='.' AND name IN('action.yml','action.yaml')) OR (folder='.github/workflows' AND (name GLOB '*.yml' OR name GLOB '*.yaml')))) OR (?<>'/' AND folder=? AND (name GLOB '*.yml' OR name GLOB '*.yaml')))");
@@ -71,5 +80,5 @@ test("dependency-update action manifests agree with closed vectors and independe
         assert.deepEqual(dependabotProblems(root),independent?[]:[".github/dependabot.yml: github-actions directory "+row.directory+" holds no manifest"],row.name);
       } finally {rmSync(root,{recursive:true,force:true});}
     }
-  } finally {database.close();}
+  } finally {database.close();if (own) rmSync(output, { recursive: true, force: true });}
 });

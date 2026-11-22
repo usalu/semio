@@ -47,11 +47,11 @@ export async function proveGisMapCreateRegionGroup(repoRoot: string): Promise<vo
   if (!admitted(fixture) || JSON.stringify(region) !== JSON.stringify(fixture.expected.region)) throw new Error("GIS Map group contract mismatch");
   const source = readFileSync(join(repoRoot, "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🦀️.rs"), "utf8");
   const owner = ["🦀️.rs", "🧩️map-composition/🦀️.rs"].map((file) => readFileSync(join(repoRoot, "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap", file), "utf8")).join("\n");
-  const schema = readFileSync(join(repoRoot, "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs"), "utf8");
+  const schema = ["🦀️.rs", "🖼️drawing-bridge/🦀️.rs"].map((file) => readFileSync(join(repoRoot, "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema", file), "utf8")).join("\n");
   for (const symbol of ["GisMapCreateRegionGroupWorkV1", "create_region_group_work", "SemioDrawingMutation", "SemioValueMutation", "drawing_inverse", "value_inverse"]) {
     if (!source.includes(symbol)) throw new Error(`GIS Map typed group owner missing ${symbol}`);
   }
-  for (const fragment of ["after_children.starts_with(before_children)", "projected_drawing != after_drawing", "projected_value != after_value", "bytes > 65_536", '("id".into(), semio_framework_value::DslValue::String(id.clone()))']) {
+  for (const fragment of ["after_children.starts_with(before_children)", "inverse_semio_drawing_mutation(&drawing, &before_drawing)", "inverse_semio_value_mutation(&value, &before_value)", "bytes > 65_536", '("id".into(), semio_framework_value::DslValue::String(id.clone()))']) {
     if (!source.includes(fragment)) throw new Error(`GIS Map typed group invariant missing ${fragment}`);
   }
   if (!schema.includes('value.get("points").or_else(|| value.get("ring"))')) throw new Error("GIS Map ring geometry is not projected");

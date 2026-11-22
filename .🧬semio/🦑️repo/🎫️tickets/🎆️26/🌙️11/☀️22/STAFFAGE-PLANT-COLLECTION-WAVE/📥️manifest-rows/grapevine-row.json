@@ -1,0 +1,55 @@
+{
+ "id": "grapevine-row",
+ "category": "vegetation",
+ "title": {
+  "en": "Grapevine Row",
+  "de": "Rebzeile"
+ },
+ "heightM": 1.8,
+ "widthM": 4.0,
+ "powerW": 0,
+ "poses": [
+  "summer-calm",
+  "breezy",
+  "storm",
+  "ripe-harvest"
+ ],
+ "clips": [
+  "wind-sway",
+  "gust",
+  "diurnal-transpiration"
+ ],
+ "representations": {
+  "50": "authored",
+  "100": "authored",
+  "200": "authored",
+  "500": "authored"
+ },
+ "symbols": [
+  "grapevine-row-symbol"
+ ],
+ "analytics": [
+  "thermal",
+  "transport",
+  "structural"
+ ],
+ "exports": [
+  "svg",
+  "pdf",
+  "dxf",
+  "dwg",
+  "png-sequence",
+  "mp4",
+  "webm",
+  "component",
+  "glb",
+  "fbx",
+  "model",
+  "model-zip"
+ ],
+ "distinction": {
+  "en": "A vineyard row of four cordon-trained grapevines (Vitis vinifera) on a vertical-shoot-positioned wire trellis between two pine posts, 4.0 m long and 1.8 m high: a hedged leaf wall 0.56 m thick above the fruiting wire and two bunches per vine in the open fruit zone. Trellis and vines are one asset.",
+  "de": "Eine Weinbergzeile aus vier kordonerzogenen Weinreben (Vitis vinifera) an einem Drahtrahmen mit senkrechter Triebführung zwischen zwei Kiefernpfählen, 4,0 m lang und 1,8 m hoch: eine gestutzte Laubwand von 0,56 m Dicke über dem Biegedraht und je zwei Trauben in der offenen Traubenzone. Drahtrahmen und Reben sind ein Asset."
+ },
+ "completion": "authored"
+}

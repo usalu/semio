@@ -4,12 +4,13 @@ import {createHash} from "node:crypto";
 import {mkdirSync,mkdtempSync,renameSync,rmSync,writeFileSync} from "node:fs";
 import {join} from "node:path";
 import {withExactSourceReadBatchV1,readExactSourceFileV1} from "../../📥️read/🟨️.mjs";
-import {receiveScriptProcessInvocation,createIssuedResourceControlV1} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import {createIssuedResourceControlV1} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import {withBuildTestInvocationV1} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/📥️invocation/🟦️.ts";
 
 const hash=(text:string)=>createHash("sha256").update(text).digest("hex");
 const quiet=(): {restore:()=>void;lines:string[]}=>{const lines:string[]=[],write=process.stderr.write.bind(process.stderr);process.stderr.write=((chunk:string|Uint8Array)=>{lines.push(String(chunk));return true;}) as typeof process.stderr.write;return{lines,restore:()=>{process.stderr.write=write;}};};
 
-test("a batch hashes its inputs from one tree state: edits, replacements and creations during the batch run it again",()=>receiveScriptProcessInvocation(process.env,async original=>{
+test("a batch hashes its inputs from one tree state: edits, replacements and creations during the batch run it again",()=>withBuildTestInvocationV1(async original=>{
  const sink=process.env.SEMIO_TEST_ARTIFACT_DIR;if(!sink)throw Error("Ticket Source fixture sink required");
  const root=mkdtempSync(join(sink,"bs-")),control=createIssuedResourceControlV1(original,"source:batch-snapshot",120000);
  const saved={root:process.env.SEMIO_WORKSPACE_ROOT,language:process.env.SEMIO_LANGUAGE},capture=quiet();
@@ -31,7 +32,7 @@ test("a batch hashes its inputs from one tree state: edits, replacements and cre
  }finally{capture.restore();if(saved.root===undefined)delete process.env.SEMIO_WORKSPACE_ROOT;else process.env.SEMIO_WORKSPACE_ROOT=saved.root;if(saved.language!==undefined)process.env.SEMIO_LANGUAGE=saved.language;rmSync(root,{recursive:true,force:true});}
 }),120000);
 
-test("an entry edited a moment before the batch ends is waited out and announced in both languages, then the batch is accepted",()=>receiveScriptProcessInvocation(process.env,async original=>{
+test("an entry edited a moment before the batch ends is waited out and announced in both languages, then the batch is accepted",()=>withBuildTestInvocationV1(async original=>{
  const sink=process.env.SEMIO_TEST_ARTIFACT_DIR;if(!sink)throw Error("Ticket Source fixture sink required");
  const root=mkdtempSync(join(sink,"bs-")),control=createIssuedResourceControlV1(original,"source:batch-settle",120000);
  const saved=process.env.SEMIO_LANGUAGE,capture=quiet();

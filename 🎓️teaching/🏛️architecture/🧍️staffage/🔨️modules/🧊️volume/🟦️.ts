@@ -1,29 +1,31 @@
 /** 🧊️ The 3D volume of a staffage asset as neutral `semio.model/v1` models, one individually authored model per scale and mode.
  *
- * `asset.volumes[scale]` holds three lists, each drawn against the 2D shapes of its own scale: `body` carries the tone views (`dark-line`, `dark-solid`, `light-line`, `light-solid`), `thermal` the `thermal` view (one material per thermal region and layer, painted from the solved field, animated per clip) and `structure` the `forces` and `moments` views (member solids painted by N or M per member, plus the generated glyphs).
+ * `asset.volumes[scale]` holds three lists, each drawn against the 2D shapes of its own scale: `body` carries the tone views (`dark-line`, `dark-solid`, `light-line`, `light-solid`), `thermal` the `thermal` view (one material per thermal region and layer, painted from the solved field, animated per clip; with it the developed air flow of the static instant as stream tubes, arrow heads, vapour and fog puffs, see ./🌊️flow) and `structure` the `forces` and `moments` views (member solids painted by N or M per member, plus the generated glyphs).
  * {@link modelOf} builds the procedural model of one scale and one view: the nodes are the rig bones at rest in the neutral frame (right-handed, +Y up, +Z ahead, +X left, metres, radians, quaternions) with the joints as mechanism, the solids are the list of the view's mode carried from the bone-local `(u, v, w)` frame (see ./🧊️solids),
  * the poses are the asset poses, the animations the asset clips sampled with `evaluate`, and the variants are the views of that mode as looks of one geometry. {@link modelOfAsset} builds one document with one kernel scene per authored scale and mode (`s50-body`, `s50-thermal`, `s50-structure`, `s100-body`, …) over the one skeleton, the seven views as variants over all scenes.
  * A scale that is not authored is refused by name (`model-scale-unavailable`), never answered by another scale.
- * One source of truth: bone frames, thermal fields, structural results and emitter states come from `evaluate`, `solveThermalAt`, `solveStructure` and `solveTransport`, and the colours from the shared `thermalPaint` and `memberPaint` of the 2D views; nothing is solved twice or differently, and the analyses are solved once per instant for every scale and mode.
+ * One source of truth: bone frames, thermal fields, structural results and the flow field come from `evaluate`, `solveThermalAt`, `solveStructure` and `developTransport`, and the colours from the shared `thermalPaint`, `memberPaint` and `flowPaint` of the 2D views; nothing is solved twice or differently, and the analyses are solved once per instant for every scale and mode.
  *
- * Progress and cancellation flow through the kernel `Operation`: every evaluated frame reports and checks, and the work yields to the event loop between frames.
+ * Progress and cancellation flow through the kernel `Operation`: every evaluated frame and every slice of the developing air flow reports and checks, and the work yields to the event loop between them.
+ * A clip carries the flow of its first instant as static geometry, placed on the figure of that instant: the tubes do not follow the figure while the clip plays (the field of every frame would be a mesh per frame, which neither glTF nor FBX animates).
  *
  * @see ../../🧬️schema/🟦️.ts — `Volumes`
  * @see ../../../../../🧰️framework/🔨️modules/🧊️3d/🗿️model/🟦️.ts — the neutral kernel
  */
 import type { Asset, AuthoredVolume, Slug, Text } from "../../🧬️schema/🟦️.ts";
 import { CancelledError, silentOperation, type Animation, type Channel, type Material, type ModelDocument, type Node, type Operation, type Pose, type Primitive, type Scene, type Solid, type TransformPatch, type Variant } from "../../../../../🧰️framework/🔨️modules/🧊️3d/🗿️model/🟦️.ts";
-import { MODES, VIEWS, VIEWS_OF, modeOf, sceneIdOf, type DisplayRange, type EvaluatedState, type EvaluationQuery, type ForceQuantity, type Mode, type ThermalQuantity, type View } from "../🔗️contracts/🟦️.ts";
+import { MODES, VIEWS, VIEWS_OF, modeOf, sceneIdOf, type DisplayRange, type EvaluatedState, type EvaluationQuery, type FlowField, type ForceQuantity, type Mode, type ThermalQuantity, type Vec3, type View } from "../🔗️contracts/🟦️.ts";
 import { THEMES, type Theme } from "../🎨️depiction/🖍️palette/🟦️.ts";
-import { VIEW_TITLES } from "../🎨️depiction/🟦️.ts";
+import { FLOW_DEVELOP_S, VIEW_TITLES } from "../🎨️depiction/🟦️.ts";
 import { eligibleBones, longestArrowMm } from "../🎨️depiction/🏗️structural-view/🟦️.ts";
 import { solveStructure } from "../🏗️structure/🟦️.ts";
 import { solveThermalAt, thermalSession, type EnvironmentInput } from "../🌡️thermal/🟦️.ts";
-import { solveTransport } from "../💨️transport/🟦️.ts";
+import { developTransport, developedTimeS } from "../💨️transport/🟦️.ts";
 import { evaluate } from "../🧮️evaluation/🟦️.ts";
 import { type Local, animationOf, colourChannel, frameTimes, nodeChannels } from "./🎞️clips/🟦️.ts";
 import { type LookSpec, type Paint, type Surface, baseMaterial, linearOf, lineLook, materialIds, materialOf, solidLook, surfacesOf, variantOf } from "./🎨️looks/🟦️.ts";
 import { type Triple } from "./🧭️frame/🟦️.ts";
+import { FLOW_TAG, flowParts } from "./🌊️flow/🟦️.ts";
 import { type Analytic, type FrameData, type FrameSetup, Slots, frameDataOf, glyphOf, glyphPaintOf } from "./🧷️frames/🟦️.ts";
 import { ModelRequestError } from "./🚫️refusal/🟦️.ts";
 import { HIDDEN, glyphEdgeOf, modelSizing } from "./🪧️glyphs/🟦️.ts";
@@ -39,6 +41,7 @@ export { MODES, VIEWS_OF, modeOf, sceneIdOf, type Mode } from "../🔗️contrac
 export { toNeutral, pseudoToNeutral, basisOf, quaternionOf } from "./🧭️frame/🟦️.ts";
 export { skeletonOf, restPlacements, placementsOf, outOfPlaneBones, jointOf } from "./🦴️skeleton/🟦️.ts";
 export { hexOf, linearOf, surfacesOf, type Surface, type Paint } from "./🎨️looks/🟦️.ts";
+export { FLOW_MODEL, FLOW_TAG, flowParts, flowUnitOf, tubeStations, tubesOf, type FlowMaterial, type FlowParts } from "./🌊️flow/🟦️.ts";
 
 /** ⚙️ What the analytic looks of any model read besides the asset.
  * - `at`: the static state of the document (colours of the analytic variants, glyph placements): a pose or a clip instant; default the first named pose.
@@ -54,8 +57,8 @@ export type SharedModelOptions = {
   readonly thermalQuantity?: ThermalQuantity;
   readonly forceQuantity?: ForceQuantity;
   readonly theme?: Theme;
-  /** 🔥️ Whether the thermal view carries a cone at every flowing emitter (default true); a viewer that draws the air flow itself asks for none. */
-  readonly emitterMarkers?: boolean;
+  /** 🌊️ Whether the thermal scenes carry the developed air flow of the static instant as geometry (default true); a viewer that animates the flow itself asks for none and saves developing it. */
+  readonly flowGeometry?: boolean;
 };
 
 /** ⚙️ What one model contains: the preset denominator `scale` (1:`scale`, a key of `asset.volumes`; it sizes the glyphs in paper millimetres) and the `view` whose mode, and with it whose list of solids, the model is made of; the model carries every view of that mode as a variant. */
@@ -82,6 +85,7 @@ type Instants = {
   readonly poseIds: readonly Slug[];
   readonly clipIds: readonly Slug[];
   readonly staticInstant: Instant;
+  readonly flow: DevelopedFlow | null;
   readonly poses: readonly { readonly pose: Slug; readonly state: EvaluatedState }[];
   readonly clips: readonly { readonly clip: Slug; readonly times: readonly number[]; readonly instants: readonly Instant[] }[];
 };
@@ -102,10 +106,32 @@ function resolveRequest(asset: Asset, options: SharedModelOptions): Resolved {
 
 const boneFramesOf = (state: EvaluatedState): Record<Slug, EvaluatedState["bones"][Slug]["frame"]> => Object.fromEntries(Object.entries(state.bones).map(([bone, b]) => [bone, b.frame]));
 
-/** ⏱️ Evaluates and analyses every instant the models share (static state, poses, clip frames): the analyses are solved once whatever the number of scales and modes. */
+const FLOW_STEPS = 8;
+
+/** 🌬️ A developed flow field and what the rig root travelled while it developed (world metres): the field lies around the figure of the developed time, the model shows the figure of the static instant. */
+type DevelopedFlow = { readonly field: FlowField; readonly travel: Vec3 };
+
+/** 💨️ The flow field of the static instant, developed as the drawings develop theirs: `FLOW_DEVELOP_S` seconds of history before the instant (whole periods of a looping clip, so the pose stays; none for a clip that plays once, whose air is still at its first instant), in the environment of the thermal colours, slice by slice with `report` and the cancellation of the operation. */
+async function developedFlow(asset: Asset, at: EvaluationQuery, state: EvaluatedState, environment: EnvironmentInput, operation: Operation, report: (fraction: number) => void): Promise<DevelopedFlow | null> {
+  const clip = at.kind === "clip" ? asset.clips.find((c) => c.id === at.clip) : undefined;
+  const periodS = clip?.loop === true && clip.durationS > 0 ? clip.durationS : 0;
+  const query = { ...at, timeS: developedTimeS(Math.max(0, at.timeS ?? 0), clip !== undefined && periodS === 0 ? 0 : FLOW_DEVELOP_S, periodS) } as EvaluationQuery;
+  const pause = async (): Promise<void> => {
+    await yieldToLoop();
+    if (operation.cancelled()) throw new CancelledError();
+  };
+  const field = (await developTransport(asset, query, environment, { maxAgeS: FLOW_DEVELOP_S, ...(periodS > 0 ? { periodS } : {}), flow: true, pathlines: false, pause, progress: (done, total) => report(done / total) })).flow;
+  if (field === null) return null;
+  const from = state.bones[asset.rig.root]!.frame.o;
+  const to = evaluate(asset, query).bones[asset.rig.root]!.frame.o;
+  return { field, travel: { x: to.x - from.x, y: to.y - from.y, z: to.z - from.z } };
+}
+
+/** ⏱️ Evaluates and analyses every instant the models share (static state, poses, clip frames) and develops the air flow of the static instant: the analyses are solved once whatever the number of scales and modes. */
 async function instantsOf(asset: Asset, request: Resolved, options: SharedModelOptions, wants: { readonly thermal: boolean; readonly structure: boolean }, operation: Operation): Promise<Instants> {
   const session = thermalSession();
-  const total = 1 + request.poseIds.length + request.clipIds.reduce((n, id) => n + frameTimes(asset.clips.find((c) => c.id === id)!).length, 0);
+  const flowing = wants.thermal && options.flowGeometry !== false && asset.thermal.emitters.length > 0;
+  const total = (flowing ? FLOW_STEPS : 0) + 1 + request.poseIds.length + request.clipIds.reduce((n, id) => n + frameTimes(asset.clips.find((c) => c.id === id)!).length, 0);
   let done = 0;
   const step = async (): Promise<void> => {
     if (operation.cancelled()) throw new CancelledError();
@@ -118,11 +144,12 @@ async function instantsOf(asset: Asset, request: Resolved, options: SharedModelO
     const analytic: Analytic = {};
     if (wants.thermal) analytic.thermal = solveThermalAt(asset, query, options.environment, { session });
     if (wants.structure) analytic.structure = solveStructure(state);
-    if (wants.thermal && options.emitterMarkers !== false && asset.thermal.emitters.length > 0) analytic.emitters = solveTransport(asset, query, analytic.thermal!.environment, { maxAgeS: 0.5, pathlines: false, streamlines: false }).emitters;
     return { query, state, analytic };
   };
   await step();
   const staticInstant = analyse(request.at, evaluate(asset, request.at));
+  const flow = flowing ? await developedFlow(asset, request.at, staticInstant.state, options.environment ?? asset.thermal.environment, operation, (fraction) => operation.report(Math.min(1, (done + FLOW_STEPS * fraction) / total))) : null;
+  if (flowing) done += FLOW_STEPS;
   const poses: { pose: Slug; state: EvaluatedState }[] = [];
   for (const id of request.poseIds) {
     await step();
@@ -141,7 +168,7 @@ async function instantsOf(asset: Asset, request: Resolved, options: SharedModelO
     }
     clips.push({ clip: id, times, instants });
   }
-  return { ...request, staticInstant, poses, clips };
+  return { ...request, staticInstant, flow, poses, clips };
 }
 
 /** 🧩️ The geometry, materials, variants, glyphs, glyph poses and colour channels of one scale and mode, in the ids of a single model (no scene prefix yet). */
@@ -164,7 +191,7 @@ function titleOfSurface(asset: Asset, surface: Surface): Text {
   return { en: `${bone.en} (${suffix})`, de: `${bone.de} (${suffix})` };
 }
 
-/** 🏭️ The fragment of a scale and mode: the list of solids, its surfaces and base materials, the looks of the mode's views bound as variants, the glyphs the mode's analyses need and their placements and colours at every instant. */
+/** 🏭️ The fragment of a scale and mode: the list of solids, its surfaces and base materials, the looks of the mode's views bound as variants, the glyphs the mode's analyses need and their placements at every instant, and in the thermal mode the flow parts of the scale. */
 function fragmentOf(asset: Asset, volume: AuthoredVolume, mode: Mode, instants: Instants, options: SharedModelOptions): Fragment {
   const scale = volume.denominator;
   const theme: Theme = options.theme ?? "light";
@@ -201,6 +228,12 @@ function fragmentOf(asset: Asset, volume: AuthoredVolume, mode: Mode, instants: 
     nodes.push(...made.nodes);
     solids.push(...made.solids);
   }
+  const flow = mode === "thermal" && instants.flow !== null ? flowParts(instants.flow.field, scale, Math.max(asset.dimensions.heightM, asset.dimensions.widthM, asset.dimensions.depthM), theme, range, instants.flow.travel) : null;
+  if (flow !== null) {
+    nodes.push(...flow.nodes);
+    solids.push(...flow.solids);
+    for (const m of flow.materials) materials.push(materialOf(m.id, m.title, hidden, true));
+  }
 
   const edgeBase = "edge";
   materials.push(materialOf(edgeBase, { en: "Feature edge", de: "Kante" }, { hex: THEMES.light.ink, alpha: scale <= 100 ? 1 : 0 }, true));
@@ -223,17 +256,22 @@ function fragmentOf(asset: Asset, volume: AuthoredVolume, mode: Mode, instants: 
     bindings[edgeBase] = edgeId;
     for (const root of slots.order) {
       const s = slots.map.get(root)!;
-      const mine = (view === "forces" && (s.kind === "arrow" || s.kind === "mass")) || (view === "moments" && s.kind === "arc") || (view === "thermal" && s.kind === "emitter");
+      const mine = (view === "forces" && (s.kind === "arrow" || s.kind === "mass")) || (view === "moments" && s.kind === "arc");
       if (!mine) continue;
       const id = `${view}-${s.material}`;
-      if (!materials.some((m) => m.id === id)) materials.push(materialOf(id, { en: `Glyph ${s.detail}`, de: `Glyphe ${s.detail}` }, glyphPaintOf(s, theme, staticFrame.glyphPaints)));
+      if (!materials.some((m) => m.id === id)) materials.push(materialOf(id, { en: `Glyph ${s.detail}`, de: `Glyphe ${s.detail}` }, glyphPaintOf(s, theme)));
       bindings[s.material] = id;
       bindings[glyphEdgeOf(s.material)] = edgeId;
     }
+    if (view === "thermal" && flow !== null)
+      for (const m of flow.materials) {
+        materials.push(materialOf(`${view}-${m.id}`, m.title, m.paint, true));
+        bindings[m.id] = `${view}-${m.id}`;
+      }
     return variantOf(view, VIEW_TITLES[view], bindings);
   });
 
-  const glyphIds = nodes.filter((n) => n.tags?.includes("glyph")).map((n) => n.id);
+  const glyphIds = nodes.filter((n) => n.tags?.includes("glyph") === true && !(n.tags.includes(FLOW_TAG) && n.parent !== null)).map((n) => n.id);
   const baseOf = new Map(nodes.map((n) => [n.id, n]));
   const localOf = (id: Slug): Local => ({ translation: baseOf.get(id)!.translation as Triple, rotation: baseOf.get(id)!.rotation as Local["rotation"], scale: baseOf.get(id)!.scale as Triple });
 
@@ -260,15 +298,6 @@ function fragmentOf(asset: Asset, volume: AuthoredVolume, mode: Mode, instants: 
       for (const [key, materialId] of ids) {
         const channel = colourChannel(materialId, times, frames.map((f) => rgba(f.paints.get(view)?.get(key) ?? staticPaints.get(key)!)), rgba(staticPaints.get(key)!));
         if (channel !== null) out.push(channel);
-      }
-      if (view === "thermal") {
-        for (const root of slots.order) {
-          const s = slots.map.get(root)!;
-          if (s.kind !== "emitter") continue;
-          const staticPaint = glyphPaintOf(s, theme, staticFrame.glyphPaints);
-          const channel = colourChannel(`thermal-${s.material}`, times, frames.map((f) => rgba(f.glyphPaints.get(s.material) ?? staticPaint)), rgba(staticPaint));
-          if (channel !== null) out.push(channel);
-        }
       }
     }
     channels.set(clip, out);
@@ -414,9 +443,10 @@ export async function modelOfAsset(asset: Asset, options: AssetModelOptions = {}
   };
 }
 
-/** 🌟️ The edge material of the feature-edge pass for the primitives of a procedural document: the base `edge` material of the primitive's scene (`<scene>-edge`; plain `edge` without scenes), except for the primitives of glyph solids, whose edges follow their own glyph material ({@link glyphEdgeOf}). */
+/** 🌟️ The edge material of the feature-edge pass for the primitives of a procedural document: the base `edge` material of the primitive's scene (`<scene>-edge`; plain `edge` without scenes), except for the primitives of glyph solids, whose edges follow their own glyph material ({@link glyphEdgeOf}), and of the flow solids, whose edges (the rims of tube ends and arrow heads) keep the material of their solid and so show and hide with it. */
 export function edgeMaterialOf(document: ModelDocument): (source: Primitive) => Slug {
   const glyphs = new Set(document.solids.filter((solid) => solid.tags?.includes("glyph") === true).map((solid) => solid.material));
   const prefixes = (document.scenes ?? []).map((scene) => `${scene.id}-`);
-  return (source) => (glyphs.has(source.material) ? glyphEdgeOf(source.material) : `${prefixes.find((prefix) => source.material.startsWith(prefix)) ?? ""}edge`);
+  const flow = new Set(document.solids.filter((solid) => solid.tags?.includes(FLOW_TAG) === true).map((solid) => solid.material));
+  return (source) => (flow.has(source.material) ? source.material : glyphs.has(source.material) ? glyphEdgeOf(source.material) : `${prefixes.find((prefix) => source.material.startsWith(prefix)) ?? ""}edge`);
 }

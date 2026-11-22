@@ -1,0 +1,51 @@
+# Wave 3: Tree drag, drop preview, detail band, empty state (wgpu vs React)
+
+Status: CODE ONLY. Nothing Rust was compiled or run (the TS twin was run, see Follow-up) (my one cargo run was queued, then cancelled by the coordinator; integration lane E compiles). Every change below is unverified.
+
+## Audit finding that shaped the work
+Much of reorder already existed (before/after marker, `DropCommitted`, `targetId`/`dropPosition` args). Real divergences found against React (`🗣️Interpreter/🧱️node-tree` `dragController`, `🌳️Tree/🧲️drag-drop`, `🟦️.tsx handleDragOver*`):
+1. wgpu read the drop action from the ROW's `Trigger::Drop` binding; React and the production plugin (`window-kits/🌳️tree`) bind it on the TREE record. Production rows therefore never accepted a drop.
+2. Source row could be a drop target (React: `!draggedIds.includes`).
+3. Drop position used a different out-of-range rule and the whole subtree rect for open groups (React measures the row element only).
+4. No nest highlight for plain tree drags (React `isTreeReorderDragEvent`), no palette/plain drop onto rows or sections (React `handleDrop` fires the tree's `drop` binding with authored args only).
+5. Detail band: layout reserved 160 px (`TREE_DETAIL_HEIGHT`) but the painter row advance ignored it, so painted rows below drifted from layout.
+6. Sectionless Tree: React renders `treeStatusSection` (header "Loading surface…" / "No data" plus helper row); wgpu had height 0.
+
+## Changes
+Pure law + shared vectors:
+- `🧱️elements/🌳️Tree/🧲️drag-drop/🦀️.rs` (new, Rust twin of React drop rule): `tree_drop_position` (0.25/0.75), `tree_drag_kind`, `tree_drop_preview` (line 2 px / box), `tree_drop_box_border`, tokens (border 2, border alpha 0.8, fill alpha 0.1). Included by light tier as `tree_drop`.
+- Fixture `🧪️tests/🧫️fixtures/🧲️drag-drop/🔣️.json`, Rust test `🧪️tests/🧲️drag-drop/🦀️.rs`. TS twin NOT written (React's `resolveTreeDropPosition` takes a DOM event; vectors are ready for a fake-event vitest).
+
+Events / engine:
+- `reconcile::tree_item_drop_action` replaced by `tree_drop_action(document, key)` (owning Tree's Drop binding; items and sections). Test in `🧪️tests/🌳️document-tree-reconcile` rewritten.
+- `⚡️events/🫳️drag-drop`: accepts tree rows/sections of a tree with a drop binding for non-reorder drags; reorder excludes the source; new `EventRouter::tree_row_frame` (row band only).
+- `⚙️engine`: `tree_row_reorder_marker` -> `Ui::tree_drop_preview` (line or nest box, clipped), `Ui::tree_row_frame`; re-exports of the drop law.
+- Interpreter `receipts-drop-and-clipboard`: `apply_drop_committed` emits the tree binding. Reorder: payload + `targetId` + `dropPosition` (before/after only). Plain/palette: authored args only, no payload (React shape). `apply_tree_row_drop` aligned. `retained_tree_row_reorder_marker` -> `retained_tree_drop_preview`.
+- Shell overlay (`view-panels/⌨️keyboard-and-palette`): paints line, or nest box (fill + 4 border strips, accent tokens). Test `📐️retained-tree-reorder` rebound to the tree record.
+
+Painting / layout:
+- Detail band: `mounted_layout::live_tree_item_band`; painter row advance and reversed ascent include the band; the open-row child stem extends through it.
+- Empty state: `retained_tree_status_step` (open header with chevron/folder, uppercase semibold label, loading/waiting border, helper row when idle); `retained_tree_height` reserves header (+ row when idle); `retained_tree_node_step` gained a `locale` param; new labels `UiCommonLabels::{no_data, loading_surface}` (en + de).
+
+## Follow-up (coordinator request; code only, no cargo)
+- TS twin RUN and PASSING: `🌳️Tree/🧪️tests/🧲️drag-drop.tsx` via `repo test-file` (4 pass, 0 fail): `resolveTreeDropPosition`, `isTreeReorderDragEvent`, `CATALOGUE_DRAG_MIME`, `readEncodedDragPayload`, and the begin/cancel publication of `getActiveCatalogueDragPayload` / `getActiveCataloguePointerDragData` over the shared vectors (now including a `palette` block).
+- Palette pointer-drag: pure rule in `🧲️drag-drop/🦀️.rs` (`tree_palette_payload`, `tree_palette_drag_begins`, 6 px / 36 px² threshold, catalogue MIME) with vectors and Rust test. Router: a row whose drag data holds a non-blank catalogue payload arms a drag from anywhere on the row (React binds `onPointerDown` on the row, not the grip), and a catalogue drag promotes at 6 px instead of 4 px. The "active payload" React publishes for canvas hosts is the router `DragSession.payload`, already read by `active_retained_drag_sessions` / `canvas_catalogue_drag_over`; click suppression after a drag is the existing drag-capture path (no click is routed on release).
+- Drop-ready highlight (`isDropReady`): `UiTree::{drop_ready, set_drop_ready}` (ephemeral `(owning tree, dragged row)`), stamped by `EventRouter::sync_drop_ready` after every pointer dispatch (only for a row whose tree binds a drop action, like `handleDrop`). Painter: every other row of that tree fills with `theme.celebrate[1]` (React `--accent-secondary`) and inks `border_emphasized` (`text-emphasized`), overriding selected/hover as `cn` does; section headers likewise.
+- Detail band fold + default open as React: `UiTreeItemNode::has_rows` counts the detail (React `hasNonEmptyChildren` counts `content`), so a detail-only row has a chevron, folds and announces expanded; reconcile defaults `default_open` to `true` when a detail is present and none is authored (`defaultOpen ?? (content ? true : undefined)`); the band (`live_tree_item_band`, the `TreeDetail` flow box) is 0 when the row is folded, 160 px when open; painter chevron and the branch stem follow the detail-open state.
+
+## Last two (coordinator request; code only, no cargo)
+- Catalogue row-click fallback (tree without a drop binding): `EventRouter::catalogue_row_click` mirrors React's `catalogueTreeDragController.handleDrop` gate: some row of the tree carries the catalogue MIME in its drag data (`treeSectionsDragMime`, nested rows included), the drop carries a non-blank catalogue payload, the target is an item, and the tree binds no drop action. Such a row is an accepting drop target, and on release `commit_drag` (now returns `Vec<UiCommand>`) fires the row's own `onClick` equivalent via `select_tree_row(.., Replace, activating = true)`: its activation, else the domain `interactionSelect` pick; no `DropCommitted`, no selection merge/fold (React's synthetic `onClick` is the data callback, not `handleSelectItem`). Both divergences removed: the payload is validated with the repo's own JSON parser (`semio_framework_pack_json::parse`, `JsonMemberPolicy::Replace` = JS last-wins; new dep on `semio-ui-wgpu-events` and a hand edit of `Cargo.lock`), so a non-JSON catalogue payload is no accepting target and emits nothing, as React's throwing `JSON.parse`; `select_tree_row` gained an `anchor` flag and the fallback passes `false`, so no range anchor is recorded (keyboard/pointer picks pass `true`). Law: `🧪️tests/🌳️tree-keyboard-and-header/🦀️.rs` (engine test crate) `a_catalogue_drop_on_an_activatable_row_of_a_tree_without_a_drop_binding_clicks_the_row_like_react` (activation once, no `DropCommitted`/`DropCancelled`, empty `tree_anchor`) and `a_catalogue_payload_that_is_not_json_emits_nothing_like_react_whose_json_parse_throws`. The "tree binds a drop action, so no fallback" half cannot be built in that declarative harness (it has no document); cover it in the document-based Shell test.
+- Inline toolbar paint: no change. React has no dedicated toolbar path: `treeItemToTreeData` sends the toolbar record through `collectTreeItemControls` / `renderTreeItemControls` as an ordinary bordered `container` (role toolbar) in the row's control column (there is no `inlineToolbar` reference in the Interpreter, only in stories and contract). wgpu already mounts the toolbar as a horizontal `Stack` child of the row (`flow_for` pins it to the trailing control rect, `TreeRowMetrics::for_item` uses `control_height_small`, the painter reserves `control_width + 2 gap`), and its Buttons paint through the generic node walk. The audit's "no toolbar paint located" only searched the tree painter. Not verified visually; compare against React in lane E.
+
+## Still not done (honest)
+- Section reorder: React's document path sets `sortableSections={false}` and the contract has no section `draggable`; React emits nothing there, so there is nothing to match.
+- The legacy Shell `tree_drag` path only had its action lookup changed.
+
+## Tests to run (exact)
+Run from repo root: `repo cargo --store=shared --configuration=prototype -- test --manifest-path 🧰️framework/Cargo.toml -p <crate> [filter]`
+1. `semio-ui-wgpu-light` filter `tree_drop` (new vectors) and `tree_roving`.
+2. `semio-ui-retained-tree` / the `🧪️tests/🌳️document-tree-reconcile` suite: `a_tree_row_or_section_drops_through_its_trees_drop_binding`.
+3. `semio-ui-wgpu-events`, `semio-ui-wgpu-engine` check, `semio-ui-wgpu-mounted-layout` laws (empty tree now has height; detail band), `semio-ui-wgpu-paint` laws (tree guides, status step, `retained_tree_node_step` signature), `semio-ui-locale` laws (new labels; any label parity table).
+4. Interpreter retained-ui-engine tests (`window-action-drop-clipboard-and-noop-commands`) and Shell test `retained_tree_reorder_marker_follows_the_physical_pointer_and_clears` (tree-bound drop; Inside still draws nothing for a reorder drag).
+5. Also: events drag tests for the catalogue row-click (new engine laws added, see above; the with-binding case is still untested) and new `semio-framework-pack-json` dep / `Cargo.lock` edge on `semio-ui-wgpu-events` and `commit_drag` return-type change; `semio-ui-declaration` (has_rows), `semio-ui-retained-tree` reconcile (detail default_open) and the tree a11y/disclosure laws (detail-only rows now expandable). Expect fallout: any layout/paint fixture with a sectionless `Tree` (now non-zero height), `UiCommonLabels` field-count checks, callers of the removed `tree_row_reorder_position` / `tree_item_drop_action` / `retained_tree_row_reorder_marker`.
+6. Missing Rust tests to add (not written, cannot compile here): plain-drag nest box in the Shell test, palette drop emitting the bare tree action, drop-ready fill draw-list test, detail fold/default-open layout test, detail-band alignment draw-list test, empty-state draw-list test.

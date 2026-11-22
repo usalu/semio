@@ -1,0 +1,12 @@
+[
+{"op":"region-set","id":"coffee","set":{"areaM2":0.03044}},
+{"op":"region-set","id":"cup","set":{"areaM2":0.05955}},
+{"op":"set","path":["poses",{"id":"holding-cup"},"thermal","regions","coffee","exposedFraction"],"value":0.1905},
+{"op":"set","path":["poses",{"id":"sipping"},"thermal","regions","coffee","exposedFraction"],"value":0.1905},
+{"op":"set","path":["poses",{"id":"blowing-on-coffee"},"thermal","regions","coffee","exposedFraction"],"value":0.1905},
+{"op":"set","path":["poses",{"id":"warming-hands"},"thermal","regions","coffee","exposedFraction"],"value":0.1905},
+{"op":"set","path":["poses",{"id":"holding-cup"},"thermal","regions","cup","exposedFraction"],"value":0.4568},
+{"op":"set","path":["poses",{"id":"sipping"},"thermal","regions","cup","exposedFraction"],"value":0.4568},
+{"op":"set","path":["poses",{"id":"blowing-on-coffee"},"thermal","regions","cup","exposedFraction"],"value":0.4568},
+{"op":"set","path":["poses",{"id":"warming-hands"},"thermal","regions","cup","exposedFraction"],"value":0.3711}
+]

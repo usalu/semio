@@ -14,7 +14,9 @@ import { importObservedModuleV1, observedSourceAnalysisPairV1, observedRequireRe
 import { pathToFileURL } from "node:url";
 import * as loadedProjectInputs from "../../../../🏗️build/📥️inputs/🟨️.mjs";
 import ownerAdmissionSchema from "../../../🧬️schema/🚪️admission.json" with { type: "json" };
-import { registryOwnerIndexesV1, buildInputSourceRoleV1, buildSourceDemandV1, buildNativeSourceObservationV1 } from "../../🚪️admission/🟦️.ts";
+import { askOwnerRegistryV1, observeOwnerRegistryAnswerV1, observedOwnerRegistryViewV1, registerOwnerRegistryQuestionV1 } from "../../🧾️registry-reads/🟨️.mjs";
+import * as nodeFs from "node:fs";
+import { buildInputSourceRoleV1, buildSourceDemandV1, buildNativeSourceObservationV1 } from "../../🚪️admission/🟦️.ts";
 import {refuseBuildV1} from "../../../📖️texts/🟦️.ts";
 import {INFERENCE_LIMITS_V1} from "../🧬️schema/🟨️.mjs";
 import {isOpaqueSourcePathV1} from "../../../../⚡️caching/🔍️discovery/📂️source/🟦️.ts";
@@ -102,6 +104,7 @@ export function readVanishableTextV1(path){
 
 /** 🦉️ Projects native catalog manifest candidates from canonical owner identities. */
 export async function catalogNativeManifestCandidatesV1(workspaceRoot,registry,accept,context){
+ askOwnerRegistryV1(workspaceRoot,registry,["candidates"]);
  const manifest=root=>root==="."?"Cargo.toml":root+"/Cargo.toml",declared=new Set(registry.owners.flatMap(owner=>[...(owner.manifest.endsWith("Cargo.toml")?[owner.manifest]:[]),...(owner.nativeRoots??[]).map(manifest)])),candidates=[...new Set([...declared,...registry.owners.map(owner=>manifest(owner.root))])].filter(accept).sort(),result=[];let index=0;
  for(const path of candidates){
   await yieldInferenceV1(context,"build:catalog-manifests",++index);
@@ -284,11 +287,13 @@ export async function discoverBuildOwnerAdmissionFactsV1(owner,targets,registry,
  if(context.invocation){requireIssuedResourceControlInvocationV1(context.phaseControl,context.invocation);checkResourceLeaseControl(context.phaseControl);checkScriptInvocation(context.invocation);}
  const stage=async phase=>{context.onOwnerDiscoveryPhase?.(phase);await yieldInferenceV1(context,"build:selected-"+phase,0);};
  await stage("declaration");
+ askOwnerRegistryV1(workspaceRoot,registry,["row",owner.name]);
  const path=join(workspaceRoot,owner.manifest),source=readPhysicalSource(path);
  const declaration=owner.manifest.endsWith("Cargo.toml")?readToml(path):JSON.parse(source.toString("utf8"));
  const authoredTargets=owner.manifest.endsWith("Cargo.toml")?{}:declaration.targets??{},scripts=createScriptInputCache(context),nativeDeclarations=await cargoTargets(owner.root,workspaceRoot,undefined,scripts),json=owner.manifest.endsWith("Cargo.toml")?{name:declaration.package?.name,root:owner.root,targets:nativeDeclarations}:{...declaration,root:owner.root};
  if(json.name!==owner.name)throw Error("Admitted canonical build owner differs: "+owner.manifest);
  json.targets={...nativeDeclarations,...json.targets,...componentBuildTargets(owner.root,workspaceRoot)};
+ askOwnerRegistryV1(workspaceRoot,registry,["providers",owner.root,targets.length>0,[...inputNames]]);
  const contractsPath=join(workspaceRoot,"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json"),contracts=existsSync(contractsPath)?readTaxonomyProjectionV1(contractsPath).generatorContracts:{},providers=registry.catalogProviders.filter(provider=>targets.length&&provider.consumerRoots.some(root=>owned(owner.root,root))||inputNames.includes("{workspaceRoot}/"+provider.sourcePath)),catalogContributions=providers.length?await catalogBuildContributionsV1(workspaceRoot,providers.map(({ownerRoot,sourcePath})=>({ownerRoot,sourcePath}))):[];
  scripts.generatedOutput=(path,context)=>readBuildProducedCompileOutputV1(path,workspaceRoot,contracts,registry,context);
  const catalogFiles=catalogContributions.length?await catalogNativeManifestCandidatesV1(workspaceRoot,registry,path=>catalogBuildContributionForManifestV1(catalogContributions,path),context):[];
@@ -299,7 +304,7 @@ export async function discoverBuildOwnerAdmissionFactsV1(owner,targets,registry,
   const catalog=collectPlaygroundCatalog(catalogFiles,workspaceRoot,catalogContributions);json.targets={...json.targets,...playgroundSiteTargetsForAdmissionV1(owner.root,catalog,workspaceRoot,registry,targets),...authoredTargets};
  }
  const selected=Object.fromEntries(targets.map(name=>{if(!json.targets?.[name])throw Error("Unknown admitted build target: "+owner.name+":"+name);const target=targetWithDefaults(json.targets[name],owner.root,existsSync(join(workspaceRoot,owner.root,SCRIPT_BASENAME))),modes=loaded.targetBuildModes(name,target),configuration=(context.selection?.kind==="tasks"?context.selection.tasks.find(task=>task.project===owner.name&&task.target===name)?.configuration:undefined)??modes.defaultConfiguration,overrides=modes.configurations?.[configuration];if(!overrides)throw Error("Unknown selected build configuration: "+configuration);if(Object.keys(overrides).some(key=>["dependsOn","inputs","outputs","configurations","executor","metadata"].includes(key)))throw Error("Build configuration cannot change task identity");buildInputSourceRoleV1(true,false,[target.metadata?.semio?.sourceInputObservation]);return [name,target];})),files=new Set([owner.manifest]),observedFiles=new Set(),catalogProducers=new Set(),dependencies=new Set(),dependencyInputs=new Map(),caretInputs=new Set(),inputRole=buildInputSourceRoleV1(targets.length>0,false,Object.values(selected).map(target=>target.metadata?.semio?.sourceInputObservation));
- const {byName,byPackage,byRoot,relativeProject}=registryOwnerIndexesV1(registry);
+ const {byName,byPackage,byRoot,relativeProject}=observedOwnerRegistryViewV1(workspaceRoot,registry);
  const addFile=path=>files.add(path),addDependency=path=>{const name=relativeProject(path);if(name&&name!==json.name)dependencies.add(name);},addInput=(project,input)=>{if(!byName.has(project)||typeof input!=="string"||!input)throw Error("Canonical named input owner required");const selected=dependencyInputs.get(project)??new Set();selected.add(input);dependencyInputs.set(project,selected);};
  for(const provider of providers)addFile(provider.sourcePath);for(const file of catalogFiles){readPhysicalSource(join(workspaceRoot,file));observedFiles.add(file);}for(const contribution of catalogContributions){for(const input of contribution.inputs)addFile(input);addFile(contribution.projectRoot+"/"+PROJECT_BASENAME);if(contribution.project!==json.name)catalogProducers.add(contribution.project);}
  await stage("command-sources");
@@ -370,10 +375,17 @@ export function readBuildOwnerRegistrySourceV1(workspaceRoot, policy) {
 /** 📦️ Resolves an ignored generator or exact authored compiled-package publication to its actual producer. */
 const wasmCompileIndicesV1=new WeakMap();
 /** 🔌️ The part of a project declaration the Wasm compile index reads: the project name and, per target, its declared Wasm package producer and outputs; any other edit of the declaration moves nothing. */
-registerFieldExtractorV1("wasm-producer-declaration",text=>{const declaration=JSON.parse(text),targets={};for(const[name,target]of Object.entries(declaration.targets??{})){const producer=target?.metadata?.semio?.wasmPackageSourceV1;if(producer?.compileOutputs!==undefined)targets[name]={metadata:{semio:{wasmPackageSourceV1:producer}},outputs:target.outputs};}return{name:declaration.name,targets};});
-registerFieldExtractorV1("wasm-package-contract",text=>{const manifest=JSON.parse(text);return{name:manifest.name,exports:manifest.exports};});
+const wasmProducerDeclarationV1=text=>{const declaration=JSON.parse(text),targets={};for(const[name,target]of Object.entries(declaration.targets??{})){const producer=target?.metadata?.semio?.wasmPackageSourceV1;if(producer?.compileOutputs!==undefined)targets[name]={metadata:{semio:{wasmPackageSourceV1:producer}},outputs:target.outputs};}return{name:declaration.name,targets};};
+registerFieldExtractorV1("wasm-producer-declaration",wasmProducerDeclarationV1);
+const wasmPackageContractV1=text=>{const manifest=JSON.parse(text);return{name:manifest.name,exports:manifest.exports};};
+registerFieldExtractorV1("wasm-package-contract",wasmPackageContractV1);
+/** 🪞️ The digest of a Wasm compile output index: every key with its producer, and the namespaces. */
+const wasmIndexDigests=new WeakMap();
+const wasmIndexDigestV1=index=>{let known=wasmIndexDigests.get(index);if(known===undefined){known=createHash("sha256").update(JSON.stringify([[...index.outputs].map(([key,row])=>[key,row.project,row.target,row.manifest,row.output,row.declarations??null,row.sources]).sort((a,b)=>a[0]<b[0]?-1:a[0]>b[0]?1:0),[...index.namespaces].sort()])).digest("hex");wasmIndexDigests.set(index,known);}return known;};
+const wasmFileTextV1=file=>{if(!nodeFs.existsSync(file))return undefined;if(file.endsWith("📋️project.json")){try{return JSON.stringify(wasmProducerDeclarationV1(nodeFs.readFileSync(file,"utf8")));}catch{return undefined;}}if(file.endsWith("/package.json")){try{return JSON.stringify(wasmPackageContractV1(nodeFs.readFileSync(file,"utf8")));}catch{return undefined;}}return file.endsWith("/Cargo.toml")?"":nodeFs.readFileSync(file,"utf8");};
+registerOwnerRegistryQuestionV1("wasm-index",(registry,_arguments,workspaceRoot)=>wasmIndexDigestV1(wasmCompileOutputIndexV1(workspaceRoot,registry.owners,wasmFileTextV1)));
 const wasmDeclarationV1=(file,format)=>{requirePhysicalSourceV1(file);try{return JSON.stringify(observedFieldV1(file,format,""));}catch{return undefined;}};
-export function readBuildProducedCompileOutputV1(path,workspaceRoot,contracts,registry,context){if(registry){let cache=wasmCompileIndicesV1.get(registry);if(!cache){cache=new Map();wasmCompileIndicesV1.set(registry,cache);}const index=memoizedObservedComputationV1(cache,workspaceRoot,()=>wasmCompileOutputIndexV1(workspaceRoot,registry.owners,file=>!existsSync(file)?undefined:file.endsWith("📋️project.json")?wasmDeclarationV1(file,"wasm-producer-declaration"):file.endsWith("/package.json")?wasmDeclarationV1(file,"wasm-package-contract"):file.endsWith("/Cargo.toml")?(requirePhysicalSourceV1(file),""):readPhysicalSource(file).toString("utf8"))),wasm=wasmCompileOutputV1(index,path);if(wasm)return wasm;}
+export function readBuildProducedCompileOutputV1(path,workspaceRoot,contracts,registry,context){if(registry){let cache=wasmCompileIndicesV1.get(registry);if(!cache){cache=new Map();wasmCompileIndicesV1.set(registry,cache);}const index=memoizedObservedComputationV1(cache,workspaceRoot,()=>wasmCompileOutputIndexV1(workspaceRoot,registry.owners,file=>!existsSync(file)?undefined:file.endsWith("📋️project.json")?wasmDeclarationV1(file,"wasm-producer-declaration"):file.endsWith("/package.json")?wasmDeclarationV1(file,"wasm-package-contract"):file.endsWith("/Cargo.toml")?(requirePhysicalSourceV1(file),""):readPhysicalSource(file).toString("utf8")));observeOwnerRegistryAnswerV1(workspaceRoot,["wasm-index"],wasmIndexDigestV1(index));const wasm=wasmCompileOutputV1(index,path);if(wasm)return wasm;}
  if(!isAbsolute(path))return undefined;
  const generated=readBuildGeneratedCompileOutputV1(path,workspaceRoot,contracts,registry,context);if(generated)return generated;const local=buildPath(relative(workspaceRoot,path));const produced=typeScriptPackageOutputProducerV1(path,workspaceRoot,file=>existsSync(file)?readPhysicalSource(file).toString("utf8"):undefined);if(!produced)return undefined;
  const manifest=buildPath(relative(workspaceRoot,produced.manifest)),root=buildPath(relative(workspaceRoot,produced.packageRoot)),owner=registry?.owners.find(owner=>owner.name===produced.project);if(registry)recordRegistryOwnerV1(workspaceRoot,produced.project,owner);if(registry&&(!owner||owner.root!==root||owner.manifest!==manifest))throw Error("Canonical TypeScript artifact producer absent");

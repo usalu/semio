@@ -41837,9 +41837,9 @@
             "angleDeg": 0
           },
           "arm-l": {
-            "angleDeg": 13.809,
-            "abductionDeg": 150.063,
-            "twistDeg": -87.909
+            "angleDeg": 23.167,
+            "abductionDeg": 133.62,
+            "twistDeg": -82.836
           },
           "forearm-l": {
             "angleDeg": 134.34,
@@ -41864,6 +41864,9 @@
           },
           "lumbar": {
             "angleDeg": 8
+          },
+          "clavicle-l": {
+            "angleDeg": 18.0
           }
         },
         "ground": "authored",
@@ -53602,7 +53605,7 @@
             "part": "member"
           },
           {
-            "id": "face-bones",
+            "id": "maxilla",
             "kind": "loft",
             "bone": "head",
             "material": "bone",
@@ -53610,25 +53613,275 @@
             "tone": 0.56,
             "sections": [
               {
-                "at": [-0.05, -0.062, 0],
-                "rx": 0.036,
-                "ry": 0.03,
-                "exponent": 2,
-                "rotation": [0, -0.70711, 0, 0.70711]
-              },
-              {
-                "at": [-0.02, -0.068, 0],
-                "rx": 0.056,
-                "ry": 0.032,
-                "exponent": 2,
-                "rotation": [0, -0.70711, 0, 0.70711]
-              },
-              {
-                "at": [0.02, -0.074, 0],
-                "rx": 0.06,
+                "at": [-0.054, -0.066, 0],
+                "rx": 0.028,
                 "ry": 0.026,
-                "exponent": 2,
                 "rotation": [0, -0.70711, 0, 0.70711]
+              },
+              {
+                "at": [-0.046, -0.067, 0],
+                "rx": 0.034,
+                "ry": 0.03,
+                "rotation": [0, -0.70711, 0, 0.70711]
+              },
+              {
+                "at": [-0.03, -0.068, 0],
+                "rx": 0.042,
+                "ry": 0.031,
+                "rotation": [0, -0.70711, 0, 0.70711]
+              },
+              {
+                "at": [-0.014, -0.068, 0],
+                "rx": 0.05,
+                "ry": 0.03,
+                "rotation": [0, -0.70711, 0, 0.70711]
+              },
+              {
+                "at": [-0.006, -0.067, 0],
+                "rx": 0.047,
+                "ry": 0.026,
+                "rotation": [0, -0.70711, 0, 0.70711]
+              }
+            ],
+            "capStart": true,
+            "capEnd": true,
+            "member": "head",
+            "part": "member"
+          },
+          {
+            "id": "nasal-bridge",
+            "kind": "loft",
+            "bone": "head",
+            "material": "bone",
+            "role": "body",
+            "tone": 0.56,
+            "sections": [
+              {
+                "at": [-0.012, -0.082, 0],
+                "rx": 0.0125,
+                "ry": 0.016,
+                "rotation": [0, -0.70711, 0, 0.70711]
+              },
+              {
+                "at": [0.006, -0.083, 0],
+                "rx": 0.011,
+                "ry": 0.015,
+                "rotation": [0, -0.70711, 0, 0.70711]
+              },
+              {
+                "at": [0.022, -0.082, 0],
+                "rx": 0.0105,
+                "ry": 0.013,
+                "rotation": [0, -0.70711, 0, 0.70711]
+              },
+              {
+                "at": [0.036, -0.08, 0],
+                "rx": 0.013,
+                "ry": 0.011,
+                "rotation": [0, -0.70711, 0, 0.70711]
+              }
+            ],
+            "capStart": true,
+            "capEnd": true,
+            "member": "head",
+            "part": "member"
+          },
+          {
+            "id": "supraorbital",
+            "kind": "loft",
+            "bone": "head",
+            "material": "bone",
+            "role": "body",
+            "tone": 0.6,
+            "sections": [
+              {
+                "at": [0.03, -0.062, -0.062],
+                "rx": 0.007,
+                "ry": 0.007
+              },
+              {
+                "at": [0.037, -0.079, -0.044],
+                "rx": 0.0075,
+                "ry": 0.0075
+              },
+              {
+                "at": [0.039, -0.086, -0.022],
+                "rx": 0.0075,
+                "ry": 0.0075
+              },
+              {
+                "at": [0.036, -0.088, 0],
+                "rx": 0.008,
+                "ry": 0.008
+              },
+              {
+                "at": [0.039, -0.086, 0.022],
+                "rx": 0.0075,
+                "ry": 0.0075
+              },
+              {
+                "at": [0.037, -0.079, 0.044],
+                "rx": 0.0075,
+                "ry": 0.0075
+              },
+              {
+                "at": [0.03, -0.062, 0.062],
+                "rx": 0.007,
+                "ry": 0.007
+              }
+            ],
+            "capStart": true,
+            "capEnd": true,
+            "member": "head",
+            "part": "member"
+          },
+          {
+            "id": "zygomatic-l",
+            "kind": "ellipsoid",
+            "bone": "head",
+            "material": "bone",
+            "role": "body",
+            "tone": 0.56,
+            "radii": [0.014, 0.012, 0.012],
+            "transform": {
+              "translation": [-0.004, -0.076, 0.05]
+            },
+            "member": "head",
+            "part": "member"
+          },
+          {
+            "id": "zygomatic-arch-l",
+            "kind": "loft",
+            "bone": "head",
+            "material": "bone",
+            "role": "body",
+            "tone": 0.6,
+            "sections": [
+              {
+                "at": [-0.002, -0.07, 0.056],
+                "rx": 0.006,
+                "ry": 0.006
+              },
+              {
+                "at": [0.0, -0.045, 0.066],
+                "rx": 0.005,
+                "ry": 0.005
+              },
+              {
+                "at": [0.002, -0.018, 0.068],
+                "rx": 0.005,
+                "ry": 0.005
+              },
+              {
+                "at": [0.004, 0.0, 0.064],
+                "rx": 0.006,
+                "ry": 0.006
+              }
+            ],
+            "capStart": true,
+            "capEnd": true,
+            "member": "head",
+            "part": "member"
+          },
+          {
+            "id": "orbital-rim-l",
+            "kind": "loft",
+            "bone": "head",
+            "material": "bone",
+            "role": "body",
+            "tone": 0.6,
+            "sections": [
+              {
+                "at": [-0.004, -0.076, 0.05],
+                "rx": 0.007,
+                "ry": 0.007
+              },
+              {
+                "at": [0.014, -0.074, 0.056],
+                "rx": 0.0065,
+                "ry": 0.0065
+              },
+              {
+                "at": [0.03, -0.062, 0.062],
+                "rx": 0.007,
+                "ry": 0.007
+              }
+            ],
+            "capStart": true,
+            "capEnd": true,
+            "member": "head",
+            "part": "member"
+          },
+          {
+            "id": "zygomatic-r",
+            "kind": "ellipsoid",
+            "bone": "head",
+            "material": "bone",
+            "role": "body",
+            "tone": 0.56,
+            "radii": [0.014, 0.012, 0.012],
+            "transform": {
+              "translation": [-0.004, -0.076, -0.05]
+            },
+            "member": "head",
+            "part": "member"
+          },
+          {
+            "id": "zygomatic-arch-r",
+            "kind": "loft",
+            "bone": "head",
+            "material": "bone",
+            "role": "body",
+            "tone": 0.6,
+            "sections": [
+              {
+                "at": [-0.002, -0.07, -0.056],
+                "rx": 0.006,
+                "ry": 0.006
+              },
+              {
+                "at": [0.0, -0.045, -0.066],
+                "rx": 0.005,
+                "ry": 0.005
+              },
+              {
+                "at": [0.002, -0.018, -0.068],
+                "rx": 0.005,
+                "ry": 0.005
+              },
+              {
+                "at": [0.004, 0.0, -0.064],
+                "rx": 0.006,
+                "ry": 0.006
+              }
+            ],
+            "capStart": true,
+            "capEnd": true,
+            "member": "head",
+            "part": "member"
+          },
+          {
+            "id": "orbital-rim-r",
+            "kind": "loft",
+            "bone": "head",
+            "material": "bone",
+            "role": "body",
+            "tone": 0.6,
+            "sections": [
+              {
+                "at": [-0.004, -0.076, -0.05],
+                "rx": 0.007,
+                "ry": 0.007
+              },
+              {
+                "at": [0.014, -0.074, -0.056],
+                "rx": 0.0065,
+                "ry": 0.0065
+              },
+              {
+                "at": [0.03, -0.062, -0.062],
+                "rx": 0.007,
+                "ry": 0.007
               }
             ],
             "capStart": true,
@@ -57380,8 +57633,8 @@
         ],
         "decisions": [
           {
-            "en": "Body: a 1.78 m man in a long-sleeve shirt, belted suit trousers and leather shoes, every section stated by hand: trousers seat with gluteal mass flattened on the cushion, shirt from the tucked hem over the waist, chest and upper back to sloping shoulders, collar band with points, placket, buttons and breast pocket, neck, skull with jaw, chin, nose, lips, eyes, brows and ears, short hair with a hairline, deltoid caps, sleeves tapering to the elbow, forearm with the brachioradialis swell, cuffs, bare wrists, typing hands with palm, thenar, four fingers of three phalanges and a thumb of metacarpal and two phalanges, every segment a solid on its own bone, curled onto the home row and over the space bar, thighs widest at the gluteal fold and narrowing to the knee, trouser legs hanging from the knee over the shoe, shoes with heel counter, vamp, toe box, sole and heel block.",
-            "de": "Körper: ein 1,78 m großer Mann in Langarmhemd, Anzughose mit Gürtel und Lederschuhen, jeder Querschnitt von Hand angegeben: Hosengesäß mit auf dem Polster abgeflachter Gesäßmasse, Hemd vom eingesteckten Saum über Taille, Brust und oberen Rücken bis zu abfallenden Schultern, Kragensteg mit Spitzen, Knopfleiste, Knöpfe und Brusttasche, Hals, Schädel mit Kiefer, Kinn, Nase, Lippen, Augen, Brauen und Ohren, Kurzhaar mit Haaransatz, Deltoidkappen, zum Ellbogen schmaler werdende Ärmel, Unterarm mit Wulst des Brachioradialis, Manschetten, nackte Handgelenke, tippende Hände mit Handfläche, Daumenballen, vier Fingern aus je drei Gliedern und einem Daumen aus Mittelhandknochen und zwei Gliedern, jedes Glied ein Körper auf seinem eigenen Knochen, gekrümmt auf der Grundreihe und über der Leertaste, Oberschenkel am breitesten an der Gesäßfalte und zum Knie schmaler, vom Knie über den Schuh fallende Hosenbeine, Schuhe mit Fersenkappe, Blatt, Zehenkappe, Sohle und Absatz."
+            "en": "Body: a 1.78 m man in a long-sleeve shirt, belted suit trousers and leather shoes, every section stated by hand: trousers seat with gluteal mass flattened on the cushion, shirt from the tucked hem over the waist, chest and upper back to sloping shoulders, collar band with points, placket, buttons and breast pocket, neck, skull with jaw, chin, nose, lips, eyes, brows and ears, short hair with a hairline, deltoid caps, sleeves tapering to the elbow, forearm with the brachioradialis swell, cuffs, bare wrists, typing hands with palm, thenar, four fingers of three phalanges and a thumb of metacarpal and two phalanges, every segment a solid on its own bone, curled onto the home row and over the space bar, thighs widest at the gluteal fold and narrowing to the knee, trouser legs hanging from the knee over the shoe, shoes with heel counter, vamp, toe box, sole and heel block. The skull is the cranium with the maxilla, the nasal bridge, the zygomatic bones with their arches, the supraorbital bar and the mandible, so the orbits are open recesses; clavicle with scapula and each hip bone hang on their own laterally placed bones (sternoclavicular to acromioclavicular joint, sacroiliac joint to hip joint), from which arms and thighs leave at the true breadths.",
+            "de": "Körper: ein 1,78 m großer Mann in Langarmhemd, Anzughose mit Gürtel und Lederschuhen, jeder Querschnitt von Hand angegeben: Hosengesäß mit auf dem Polster abgeflachter Gesäßmasse, Hemd vom eingesteckten Saum über Taille, Brust und oberen Rücken bis zu abfallenden Schultern, Kragensteg mit Spitzen, Knopfleiste, Knöpfe und Brusttasche, Hals, Schädel mit Kiefer, Kinn, Nase, Lippen, Augen, Brauen und Ohren, Kurzhaar mit Haaransatz, Deltoidkappen, zum Ellbogen schmaler werdende Ärmel, Unterarm mit Wulst des Brachioradialis, Manschetten, nackte Handgelenke, tippende Hände mit Handfläche, Daumenballen, vier Fingern aus je drei Gliedern und einem Daumen aus Mittelhandknochen und zwei Gliedern, jedes Glied ein Körper auf seinem eigenen Knochen, gekrümmt auf der Grundreihe und über der Leertaste, Oberschenkel am breitesten an der Gesäßfalte und zum Knie schmaler, vom Knie über den Schuh fallende Hosenbeine, Schuhe mit Fersenkappe, Blatt, Zehenkappe, Sohle und Absatz. Der Schädel besteht aus Hirnschädel, Oberkiefer, Nasenrücken, Jochbeinen mit Jochbögen, Überaugenwulst und Unterkiefer, sodass die Augenhöhlen offene Vertiefungen sind; Schlüsselbein mit Schulterblatt und jedes Hüftbein hängen an eigenen, seitlich gelegten Knochen (Sternoklavikular- bis Akromioklavikulargelenk, Iliosakralgelenk bis Hüftgelenk), von denen Arme und Oberschenkel in den wahren Breiten abgehen."
           },
           {
             "en": "Furniture: a task chair after EN 1335-1 (five-star polyamide base of 0.61 m with tapered arms on their own bones, sockets, twin-wheel castors with polyamide cores, rubber tyres, hoods and stems, gas lift in a telescopic cover, steel synchro mechanism with paddle, seat shell under a cushion with waterfall front, backrest pad on its shell and a steel J-bar, two T-armrests), a 1200 x 800 x 720 mm desk with a 25 mm board, four 35 mm square steel legs with glides, side and back rails (open front for the knees), and a 15.6 inch notebook with base, keyboard field, touchpad, hinge barrel, lid and display.",

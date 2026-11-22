@@ -1,0 +1,51 @@
+{
+  "id": "picnicker-sitting-on-ground",
+  "category": "humans",
+  "title": {
+    "en": "Picnicker Sitting on the Ground",
+    "de": "Picknickende Person auf dem Boden"
+  },
+  "heightM": 0.92,
+  "widthM": 1.4,
+  "powerW": 135.2,
+  "poses": [
+    "cross-legged-eating",
+    "cross-legged-resting",
+    "leaning-back"
+  ],
+  "clips": [
+    "eating-an-apple",
+    "idle-breathing"
+  ],
+  "representations": {
+    "50": "authored",
+    "100": "authored",
+    "200": "authored",
+    "500": "authored"
+  },
+  "symbols": [],
+  "analytics": [
+    "thermal",
+    "transport",
+    "structural"
+  ],
+  "exports": [
+    "svg",
+    "pdf",
+    "dxf",
+    "dwg",
+    "png-sequence",
+    "mp4",
+    "webm",
+    "component",
+    "glb",
+    "fbx",
+    "model",
+    "model-zip"
+  ],
+  "distinction": {
+    "en": "A bearded man of 1.70 m sitting cross-legged on a gingham picnic blanket of 1.4 by 1.2 m and eating an apple, in a check shirt, jeans and leather boots: biting the apple, resting it on the knee and leaning back on one hand, with an eating loop and idle breathing.",
+    "de": "Ein bärtiger Mann von 1,70 m, der im Schneidersitz auf einer karierten Picknickdecke von 1,4 mal 1,2 m sitzt und einen Apfel isst, in kariertem Hemd, Jeans und Lederstiefeln: beim Abbeißen, mit dem Apfel auf dem Knie und auf eine Hand zurückgelehnt, mit einer Essschleife und ruhigem Atmen."
+  },
+  "completion": "authored"
+}

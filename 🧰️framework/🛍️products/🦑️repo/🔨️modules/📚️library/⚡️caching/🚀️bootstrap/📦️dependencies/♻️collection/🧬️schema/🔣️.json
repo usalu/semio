@@ -1,0 +1,85 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio:dependency-generation-collection:v1",
+  "$defs": {
+    "Policy": {
+      "const": {
+        "version": 1,
+        "holdDirectory": "hold",
+        "generationDirectory": "j",
+        "pointerDirectory": "pointer",
+        "readyMarker": "bindings.json",
+        "supersededGraceSeconds": 3600,
+        "unfinishedGraceSeconds": 21600,
+        "retainedGraceSeconds": 21600,
+        "rollbackSeconds": 86400,
+        "pressureFreeFraction": 0.25,
+        "tombstonePrefix": ".x",
+        "batchEntries": 256
+      }
+    },
+    "Key": {"type": "string", "pattern": "^[a-f0-9]{20}$"},
+    "Tombstone": {"type": "string", "pattern": "^\\.x[a-f0-9]{20}$"},
+    "Hold": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "purpose", "generation", "pid", "atMs"],
+      "properties": {
+        "version": {"const": 1},
+        "purpose": {"const": "dependency-generation-hold"},
+        "generation": {"$ref": "#/$defs/Key"},
+        "pid": {"type": "integer", "minimum": 1},
+        "atMs": {"type": "integer", "minimum": 0}
+      }
+    },
+    "Plan": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["generations", "current", "retained", "held", "bound", "pressure"],
+      "properties": {
+        "generations": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["key", "ready", "ageSeconds"],
+            "properties": {
+              "key": {"$ref": "#/$defs/Key"},
+              "ready": {"type": "boolean"},
+              "ageSeconds": {"type": "integer", "minimum": 0}
+            }
+          }
+        },
+        "current": {"type": "array", "items": {"$ref": "#/$defs/Key"}},
+        "retained": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["key", "retiredSeconds", "newest"],
+            "properties": {
+              "key": {"$ref": "#/$defs/Key"},
+              "retiredSeconds": {"type": "integer", "minimum": 0},
+              "newest": {"type": "boolean"}
+            }
+          }
+        },
+        "held": {"type": "array", "items": {"$ref": "#/$defs/Key"}},
+        "bound": {"type": "array", "items": {"$ref": "#/$defs/Key"}},
+        "pressure": {"type": "boolean"}
+      }
+    },
+    "Retirement": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["key", "reason"],
+        "properties": {
+          "key": {"$ref": "#/$defs/Key"},
+          "reason": {"enum": ["superseded", "unfinished"]}
+        }
+      }
+    }
+  }
+}

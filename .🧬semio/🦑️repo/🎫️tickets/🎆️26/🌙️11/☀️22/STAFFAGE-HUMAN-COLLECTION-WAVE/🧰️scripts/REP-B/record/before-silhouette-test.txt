@@ -1,0 +1,23 @@
+AssertionError: dancer 1:500 elevation: expected 0.9185774450163781 to be greater than or equal to 0.92
+AssertionError: painter-at-easel 1:100 elevation Hausdorff: expected 0.066344272548578 to be less than or equal to 0.03
+AssertionError: parent-with-child-on-shoulders 1:100 front Hausdorff: expected 0.03354101966249685 to be less than or equal to 0.03
+AssertionError: person-carrying-ladder 1:500 elevation: expected 0.8641800643086817 to be greater than or equal to 0.92
+AssertionError: person-carrying-shopping-bags 1:100 front Hausdorff: expected 0.033957694268015315 to be less than or equal to 0.03
+AssertionError: person-checking-watch 1:100 elevation Hausdorff: expected 0.0375 to be less than or equal to 0.03
+AssertionError: person-drinking-coffee 1:500 elevation: expected 0.9035433070866141 to be greater than or equal to 0.92
+AssertionError: person-eating-standing 1:500 plan Hausdorff: expected 0.1557909835896281 to be less than or equal to 0.15
+AssertionError: person-hanging-laundry 1:100 plan Hausdorff: expected 0.05736396952791883 to be less than or equal to 0.03
+AssertionError: person-in-winter-coat 1:50 elevation Hausdorff: expected 0.015461646096066227 to be less than or equal to 0.015
+AssertionError: person-queuing 1:100 elevation Hausdorff: expected 0.03204001404494074 to be less than or equal to 0.03
+AssertionError: person-signing 1:500 elevation: expected 0.8850456474218851 to be greater than or equal to 0.92
+AssertionError: person-sweeping 1:500 elevation: expected 0.8984153155628836 to be greater than or equal to 0.92
+AssertionError: person-taking-selfie 1:100 elevation Hausdorff: expected 0.0375 to be less than or equal to 0.03
+AssertionError: person-with-arm-sling 1:50 elevation Hausdorff: expected 0.04875 to be less than or equal to 0.015
+AssertionError: person-with-guide-dog 1:200 front Hausdorff: expected 0.09717301947357151 to be less than or equal to 0.06
+AssertionError: photographer-with-camera 1:200 elevation Hausdorff: expected 0.06254756653022228 to be less than or equal to 0.06
+AssertionError: picnicker-sitting-on-ground 1:200 elevation Hausdorff: expected 0.10855158803824566 to be less than or equal to 0.06
+AssertionError: postal-carrier 1:50 front Hausdorff: expected 0.018561553006146873 to be less than or equal to 0.015
+AssertionError: standing-violinist 1:100 elevation Hausdorff: expected 0.030923292192132454 to be less than or equal to 0.03
+AssertionError: sunbather-on-towel 1:100 front: expected 0.9000489955903969 to be greater than or equal to 0.92
+AssertionError: waving-person 1:500 elevation: expected 0.9051849694145062 to be greater than or equal to 0.92
+AssertionError: worker-with-pallet-jack 1:200 elevation Hausdorff: expected 0.1000624804809475 to be less than or equal to 0.06

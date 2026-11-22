@@ -189,7 +189,7 @@ fn shipped_extensions_replay_mixed_capabilities_on_one_workpiece() {
         assert_eq!(Some(origin.machine_id.as_str()), expected["machine"].as_str());
         assert_eq!(Some(origin.capability_id.as_str()), expected["capability"].as_str());
         assert_eq!(Some(step.measure.kind_slug()), expected["measure"].as_str());
-        assert_eq!(serde_json::json!(step.measure.pose().position), expected["positionMetres"]);
+        assert_eq!(step.measure.pose().position, serde_json::from_value::<[f64; 3]>(expected["positionMetres"].clone()).expect("expected position"));
     }
     for (prefix, expected) in fixture["prefixesCubicMetres"].as_array().expect("prefix volumes").iter().enumerate() {
         assert_volume(&scene, Some(prefix), expected);

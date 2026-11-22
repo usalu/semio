@@ -19,7 +19,8 @@ pub const TEST_APP_COMMAND_RAW_BYTES: usize = 65_536;
 
 /// 🪪️ Every tool id `TestApp::command_id` can answer — the app's own dispatch surface. A verb
 /// missing here has no exact owner-qualified reducer and is refused with
-/// `interactive-job.missing-factory` before it reaches `handle`.
+/// `interactive-job.missing-factory` before it reaches `handle`. The framework-reserved verbs
+/// (`setActiveUtility` included) are owned by `register_framework_reserved_factories` and never listed here.
 #[doc(hidden)]
 pub const TEST_APP_COMMAND_TOOL_IDS: &[&str] = &[
     "increment",
@@ -34,7 +35,6 @@ pub const TEST_APP_COMMAND_TOOL_IDS: &[&str] = &[
     "incrementViaCommand",
     "watchdogOverrun",
     "setLabelViaCommand",
-    "setActiveUtility",
     "targetWindow",
     "mode.increment",
     "compositeEdit",
@@ -61,7 +61,6 @@ pub const TEST_APP_COMMAND_PUBLICATION_CONTRACTS: &[ArtifactToolPublicationContr
     ArtifactToolPublicationContract { tool_id: "incrementViaCommand", lanes: &[ArtifactToolPublicationLane::Artifact] },
     ArtifactToolPublicationContract { tool_id: "watchdogOverrun", lanes: &[ArtifactToolPublicationLane::HostOnly] },
     ArtifactToolPublicationContract { tool_id: "setLabelViaCommand", lanes: &[ArtifactToolPublicationLane::Artifact] },
-    ArtifactToolPublicationContract { tool_id: "setActiveUtility", lanes: &[ArtifactToolPublicationLane::HostOnly] },
     ArtifactToolPublicationContract { tool_id: "targetWindow", lanes: &[ArtifactToolPublicationLane::Artifact] },
     ArtifactToolPublicationContract { tool_id: "mode.increment", lanes: &[ArtifactToolPublicationLane::Artifact] },
     ArtifactToolPublicationContract { tool_id: "compositeEdit", lanes: &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::Child] },
@@ -435,43 +434,7 @@ pub async fn reactor_native_lifecycle_finish(runtime: &semio_plugin_reactor_life
     assert!(runtime.guest_lifetimes.borrow().get(lifetime.instance_id).is_none(), "exact final ACK releases the structural owner");
 }
 
-macro_rules! recursive_fixture_snapshot {
-    ($snapshot:ty, $extension:literal) => {
-        impl pack::snapshot::ArtifactDsl for $snapshot {
-            const EXTENSION: &'static str = $extension;
-            fn parse_dsl(text: &str) -> Result<Self, TextError> {
-                let value = serde_json::from_str::<Value>(text).map_err(|error| TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, error.to_string(), TextSpan::at(1, 1)))?;
-                <Self as semio_framework_value::FromValue>::from_value(value.into()).map_err(|error| TextError::from_value_error(error, TextSpan::at(1, 1)))
-            }
-            fn print_dsl(&self) -> String { semio_framework_pack_json::to_json_string(self) }
-        }
-
-        impl ArtifactPack for $snapshot {
-            fn encode_pack_with(&self, _options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
-                Ok(semio_framework_pack_json::to_json_string(self).into_bytes())
-            }
-            fn decode_pack_with(bytes: &[u8], _options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
-                let value = serde_json::from_slice::<Value>(bytes).map_err(|error| match (u32::try_from(error.line()), u32::try_from(error.column())) { (Ok(line), Ok(column)) => store::PackError::from(semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, error.to_string(), semio_framework_diagnostic::TextSpan::at(line, column))), _ => store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::OwnershipLimit, error.to_string())) })?;
-                <Self as semio_framework_value::FromValue>::from_value(value.into()).map_err(|error| store::PackError::from(error))
-            }
-        }
-impl ::semio_os_kernel::os_store::serialization::ArtifactStoreSnapshot for $snapshot {
-    fn reference_snapshot_codec()->Option<::semio_os_kernel::os_store::serialization::ArtifactReferenceSnapshotCodec<Self>>{Some(::semio_os_kernel::os_store::serialization::reference_snapshot_codec::<Self>())}
-
-
-}
-
-        impl store::os_store::document_store_owners::MemberStoreProducer<$snapshot,RecursiveFixtureMutation> for RecursiveMemberStoreProducer<$snapshot> {
-            type SnapshotOpen = RecursiveBranchSnapshotOpen;
-            fn member_store_owners_birth_demand(&self) -> Result<semio_framework_value::retained_clone::RetainedCloneBirthDemand, semio_framework_value::ValueError> {
-                recursive_fixture_owners_birth_demand::<$snapshot>()
-            }
-            fn member_store_owners(&self,grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<(store::os_store::document_store_owners::DocumentStoreOwners<$snapshot, RecursiveFixtureMutation>, semio_framework_value::retained_clone::RetainedCloneProgress), store::os_store::document_store_owners::DocumentStoreOwnersAdmissionError<$snapshot, RecursiveFixtureMutation>> {
-                recursive_fixture_owners::<$snapshot>("recursive-member", grant)
-            }
-        }
-    };
-}// 🧾️ `Effect::LoadDocument` for a CHILDLESS single-document app — architect's, animate's and
+// 🧾️ `Effect::LoadDocument` for a CHILDLESS single-document app — architect's, animate's and
 // writer's exact shape. The composition suite next door only ever drives archives that carry owned
 // members; the whole-document swap a `setActiveExample` emits carries `members: []` and a bare
 // `store::os_store::text_format::empty_document_spr`, and that lane had no native coverage at all. Every batch-A plugin

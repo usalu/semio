@@ -33,7 +33,7 @@ mod draw_list_queries_and_push;
 
 #[path = "🫥️group-alpha/🦀️.rs"]
 mod group_alpha;
-pub use group_alpha::{GroupAlpha, GroupAlphaMark};
+pub use group_alpha::{GroupAlpha, GroupAlphaMark, GROUP_ALPHA_DEPTH};
 
 #[cfg(test)]
 #[path = "🫥️group-alpha-tests/🦀️.rs"]

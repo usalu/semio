@@ -4,7 +4,7 @@ import {casEnforceTickV1} from "../../🗄️cas/🚦️guard/🟦️.ts";
 import {casEffectiveCapBytesV1,measureCasPartitionV1} from "../../🗄️cas/🌡️partition/🟦️.ts";
 import {createFleetGateV1,type FleetAccessV1,type FleetGateV1} from "../🛰️fleet/🪪️identity/🛂️gate/🟦️.ts";
 import {readFleetOriginPrivateV1,createFleetRegistryV1,createFleetVerifierV1,fleetContentHashV1,FLEET_CONTENT_HEADER_V1} from "../🛰️fleet/🪪️identity/🟦️.ts";
-import {openProvenanceV1,PROVENANCE_SUPERSEDING_CLASSES_V1,PROVENANCE_VOLATILE_OUTPUTS_V1,provenanceClassV1,provenanceDifferingV1,provenanceFingerprintV1,type ConsumptionV1,type DivergenceV1,type ProvenanceV1} from "../🧾️provenance/🟦️.ts";
+import {openProvenanceV1,PROVENANCE_SUPERSEDING_CLASSES_V1,PROVENANCE_VOLATILE_OUTPUTS_V1,provenanceClassV1,provenanceDifferingV1,provenanceFingerprintV1,type ConsumptionV1,type DivergenceV1,type DivergenceWindowV1,type ProvenanceV1} from "../🧾️provenance/🟦️.ts";
 import {createMirrorHandlerV1} from "../🪞️mirror/🟦️.ts";
 import {createSealedHandlerV1,exchangePrivateKeyV1,isSealedRequestV1} from "../🔐️sealed/🟦️.ts";
 import {FLEET_HOP_HEADER_V1,type FleetPeerCountersV1,type FleetPeerReadThroughV1} from "../🧭️peers/🟦️.ts";
@@ -12,9 +12,10 @@ import {runtimeFileV1,runtimeServeV1} from "../../../../../../../📦️packages
 import {mkdir,stat} from "node:fs/promises";
 import {join} from "node:path";
 import {parseRemoteCacheActionResultV1,parseRemoteCacheStableResultV1,validateRemoteCacheActionResultV1,type RemoteCacheValidationV1} from "../🔬️action-result/🟦️.ts";
-import {acquireRemoteCacheLockV1,REMOTE_CACHE_COLLECTOR_LOCK_V1,REMOTE_CACHE_SERVER_LOCK_V1} from "../🧹️collector/🟦️.ts";
+import {acquireRemoteCacheLockV1,renewRemoteCacheLockV1,REMOTE_CACHE_COLLECTOR_LOCK_V1,REMOTE_CACHE_SERVER_LOCK_V1} from "../🧹️collector/🟦️.ts";
+import {openTreeDigestsV1,type TreeDigestsV1} from "../🏷️retention/🍂️staleness/🟦️.ts";
 import {RemoteCacheStoreV1,REMOTE_CACHE_KINDS_V1,type RemoteCacheKindV1,type RemoteCachePutModeV1,type RemoteCacheStoreEventV1} from "../💾️store/🟦️.ts";
-import {isSlotIdV1,requireSlotShapeV1,SLOT_HEADER_V1} from "../../🪢️slots/🟦️.ts";
+import {isSlotIdV1,requireSlotShapeV1,SLOT_HEADER_V1,type DeclarationV1,type StalenessModeV1} from "../../🪢️slots/🟦️.ts";
 import {readRemoteCacheEntryV1} from "../📂️entry/🟦️.ts";
 import {answerClaimRequestV1,CLAIM_POLICY_V1,createClaimTableV1,openClaimJournalV1,parseClaimPathV1,type ClaimSummaryV1,type ClaimTableV1} from "../🎟️claims/🟦️.ts";
 
@@ -33,7 +34,7 @@ export type RemoteCacheFleetStatusV1=Readonly<{origins:Readonly<Record<string,nu
 export type RemoteCacheCountersV1=Record<RemoteCacheKindV1,{hits:number;misses:number;puts:number;conflicts:number;rejected:number;stale:number}>;
 
 /** 📊️ The JSON document `GET /status` answers. */
-export type RemoteCacheServerStatusV1=Readonly<{version:1;protocols:readonly ["bazel-http","nx-self-hosted"];entries:number;bytes:number;evicted?:Readonly<{entries:number;bytes:number}>;reservedBytes:number;maximumBytes:number;maximumEntryBytes:number;readOnly:boolean;validation:RemoteCacheValidationV1;counters:RemoteCacheCountersV1;startedAt:string;fleet?:RemoteCacheFleetStatusV1|null;divergences?:Readonly<{count:number;recent:readonly DivergenceV1[];since?:number;byClass?:Readonly<Record<string,number>>;advisory?:Readonly<Record<string,number>>;superseded?:Readonly<Record<string,number>>;evidence?:Readonly<{count:number;bytes:number;byClass:Readonly<Record<string,number>>}>}>;consumption?:ConsumptionV1;claims?:ClaimSummaryV1;peers?:FleetPeerCountersV1}>;
+export type RemoteCacheServerStatusV1=Readonly<{version:1;protocols:readonly ["bazel-http","nx-self-hosted"];entries:number;bytes:number;evicted?:Readonly<{entries:number;bytes:number}>;reservedBytes:number;maximumBytes:number;maximumEntryBytes:number;readOnly:boolean;validation:RemoteCacheValidationV1;counters:RemoteCacheCountersV1;startedAt:string;fleet?:RemoteCacheFleetStatusV1|null;divergences?:Readonly<{count:number;recent:readonly DivergenceV1[];since?:number;byClass?:Readonly<Record<string,number>>;current?:DivergenceWindowV1;lastHour?:DivergenceWindowV1;advisory?:Readonly<Record<string,number>>;superseded?:Readonly<Record<string,number>>;evidence?:Readonly<{count:number;bytes:number;byClass:Readonly<Record<string,number>>}>}>;consumption?:ConsumptionV1;claims?:ClaimSummaryV1;peers?:FleetPeerCountersV1;retention?:ReturnType<RemoteCacheStoreV1["stalenessStatus"]>}>;
 
 /** 📜️ One answered request, published after the response head is decided. */
 export type RemoteCacheRequestEventV1=Readonly<{stage:"request";method:string;path:string;status:number;milliseconds:number}>;
@@ -137,13 +138,21 @@ export function createRemoteCacheHandlerV1(options:RemoteCacheHandlerOptionsV1):
   }
   counter.hits++;return new Response((method==="GET"?bytes:null) as BodyInit|null,{headers:{"content-type":"application/octet-stream","content-length":String(bytes.byteLength)}});
  };
+ const declarationOf=async(namespace:string,action:Uint8Array,names:readonly string[]):Promise<DeclarationV1|undefined>=>{
+  try{
+   const named=parseRemoteCacheStableResultV1(action,[]).named.find(row=>names.includes(row.path));if(named===undefined)return undefined;
+   const bytes=await blobs(namespace).read(named.hash);if(bytes===undefined)return undefined;
+   const value=(JSON.parse(new TextDecoder().decode(bytes)) as {retention?:unknown}).retention;if(value===undefined)return undefined;
+   requireSlotShapeV1("Declaration",value,"declaration");return value as DeclarationV1;
+  }catch{return undefined;}
+ };
  const answer=async(request:Request,body:RemoteCacheBodyV1,peer:string|undefined):Promise<Response>=>{
   const url=new URL(request.url),method=request.method;
   if(options.mirror!==undefined&&url.pathname.startsWith("/mirror/")){const mirrored=await options.mirror(request);if(mirrored)return mirrored;}
   if(url.pathname==="/healthz")return method==="GET"||method==="HEAD"?new Response(method==="GET"?'{"status":"ok"}\n':null,{headers:{"content-type":"application/json"}}):text(405,"Method not allowed",{allow:"GET, HEAD"});
   if(url.pathname==="/status"){
    const guard=await authenticate(request,url,peer,false);if("denied" in guard)return guard.denied;
-   const usage=options.store.usage(),status:RemoteCacheServerStatusV1={version:1,protocols:["bazel-http","nx-self-hosted"],entries:usage.entries,bytes:usage.bytes,evicted:{entries:usage.evictedEntries,bytes:usage.evictedBytes},reservedBytes:usage.reservedBytes,maximumBytes:usage.maximumBytes,maximumEntryBytes:usage.maximumEntryBytes,readOnly,validation,counters,startedAt,fleet:options.fleetStatus?.()??null,divergences:options.provenance?.summary()??{count:0,recent:[],since:0,byClass:{}},consumption:options.provenance?.consumption()??{since:0,total:0,pairs:{}},claims:claims.summary(),...(options.peers===undefined?{}:{peers:options.peers.counters()})};
+   const usage=options.store.usage(),status:RemoteCacheServerStatusV1={version:1,protocols:["bazel-http","nx-self-hosted"],entries:usage.entries,bytes:usage.bytes,evicted:{entries:usage.evictedEntries,bytes:usage.evictedBytes},reservedBytes:usage.reservedBytes,maximumBytes:usage.maximumBytes,maximumEntryBytes:usage.maximumEntryBytes,readOnly,validation,counters,startedAt,fleet:options.fleetStatus?.()??null,divergences:options.provenance?.summary()??{count:0,recent:[],since:0,byClass:{}},consumption:options.provenance?.consumption()??{since:0,total:0,pairs:{}},claims:claims.summary(),...(options.peers===undefined?{}:{peers:options.peers.counters()}),...(options.store.stalenessStatus()===undefined?{}:{retention:options.store.stalenessStatus()})};
    return Response.json(status);
   }
   if(url.pathname==="/evidence"||url.pathname.startsWith("/evidence/")){
@@ -215,7 +224,13 @@ export function createRemoteCacheHandlerV1(options:RemoteCacheHandlerOptionsV1):
   let nxHash:ReturnType<typeof createHash>|undefined;
   if(address.kind===NX_KIND&&signed&&access!.content!=="-"){const hash=nxHash=createHash("sha256"),chunks=body.chunks;source=(async function*(){for await(const chunk of chunks){hash.update(chunk);yield chunk;}})();}
   const commit=async()=>{
-   let fingerprint:string|undefined,unitShaped=false,prior:ReturnType<ProvenanceV1["of"]>;
+   let fingerprint:string|undefined,unitShaped=false,prior:ReturnType<ProvenanceV1["of"]>,declaration:DeclarationV1|undefined;
+   const staleness=options.store.stalenessPolicy;
+   if(action!==undefined&&staleness!==undefined){
+    declaration=await declarationOf(address.namespace,action,staleness.manifestNames);
+    const stale=declaration===undefined?undefined:await options.store.staleOnArrival(declaration);
+    if(stale!==undefined){counter.rejected++;return text(422,`stale-on-arrival: ${stale.reason} ${stale.detail}`);}
+   }
    if(action!==undefined&&signed&&options.provenance!==undefined){
     const parsed=parseRemoteCacheStableResultV1(action,PROVENANCE_VOLATILE_OUTPUTS_V1);fingerprint=provenanceFingerprintV1([...parsed.stable,...parsed.trees].map(row=>row.hash));unitShaped=parsed.manifest;
     const held=await options.store.readBytes(address.namespace,"ac",address.key,limit),before=options.provenance.of(address.namespace,"ac",address.key),expect=request.headers.get("x-semio-expect");
@@ -239,7 +254,7 @@ export function createRemoteCacheHandlerV1(options:RemoteCacheHandlerOptionsV1):
     }
     prior=sort.advisory||superseding?undefined:before;
    }
-   const outcome=await options.store.put(address.namespace,address.kind,address.key,source,{mode:mode(address.kind),verify:address.kind==="cas",declaredLength:known,...(slotHeader!==null&&address.kind!=="cas"?{slot:{slot:slotHeader}}:{})});
+   const outcome=await options.store.put(address.namespace,address.kind,address.key,source,{mode:mode(address.kind),verify:address.kind==="cas",declaredLength:known,...(slotHeader!==null&&address.kind!=="cas"?{slot:{slot:slotHeader,...(declaration===undefined?{}:{declaration})}}:{})});
    if(nxHash!==undefined&&(outcome==="created"||outcome==="replaced")&&nxHash.digest("hex")!==access!.content){await options.store.remove(address.namespace,NX_KIND,address.key);counter.rejected++;return text(400,"Content hash mismatch");}
    if(signed&&options.provenance!==undefined&&(outcome==="created"||outcome==="replaced")&&(prior===undefined||prior.origin===access!.origin||outcome==="created"))options.provenance.record(address.namespace,address.kind,address.key,access!.origin,fingerprint,unitShaped);
    switch(outcome){
@@ -267,7 +282,7 @@ export function createRemoteCacheHandlerV1(options:RemoteCacheHandlerOptionsV1):
 export type RemoteCacheTlsV1=Readonly<{certificate:string;key:string}>;
 
 /** ⚙️ Authors one running server: where to listen, what to store, who may use it and what it checks. */
-export type RemoteCacheServerOptionsV1=Readonly<{fileBudget?:number;maximumConcurrentRequests?:number;reusePort?:boolean;successor?:boolean;startupScan?:"await"|"background";stopGraceMilliseconds?:number;onActivity?:(active:number)=>void;fleet?:RemoteCacheFleetOptionsV1;peers?:FleetPeerReadThroughV1;allowWildcard?:boolean;mirror?:Readonly<{directory:string;maximumBytes?:number}>;hostStore?:import("../../🗄️cas/🗃️store/🟦️.ts").CasStoreV1;directory:string;host:string;additionalHosts?:readonly string[];port:number;maximumBytes:number;maximumEntryBytes:number;maximumAgeDays:number;defaultInstance:string;tokens:RemoteCacheTokensV1;readOnly?:boolean;tls?:RemoteCacheTlsV1|undefined;validation?:RemoteCacheValidationV1;maximumActionResultBytes?:number;maintenanceSeconds?:number;graceMilliseconds?:number;claimed?:(namespace:string,kind:RemoteCacheKindV1,key:string)=>boolean;signal?:AbortSignal;onEvent?:(event:RemoteCacheStoreEventV1|RemoteCacheRequestEventV1|Readonly<{stage:"listening";url:string}>|Readonly<{stage:"stopped"}>)=>void}>;
+export type RemoteCacheServerOptionsV1=Readonly<{fileBudget?:number;maximumConcurrentRequests?:number;reusePort?:boolean;successor?:boolean;startupScan?:"await"|"background";stopGraceMilliseconds?:number;onActivity?:(active:number)=>void;fleet?:RemoteCacheFleetOptionsV1;peers?:FleetPeerReadThroughV1;allowWildcard?:boolean;mirror?:Readonly<{directory:string;maximumBytes?:number}>;hostStore?:import("../../🗄️cas/🗃️store/🟦️.ts").CasStoreV1;directory:string;host:string;additionalHosts?:readonly string[];port:number;maximumBytes:number;maximumEntryBytes:number;maximumAgeDays:number;defaultInstance:string;tokens:RemoteCacheTokensV1;readOnly?:boolean;tls?:RemoteCacheTlsV1|undefined;validation?:RemoteCacheValidationV1;maximumActionResultBytes?:number;maintenanceSeconds?:number;graceMilliseconds?:number;staleness?:Readonly<{mode:StalenessModeV1;workspace:string;recheckSeconds:number;manifestNames:readonly string[];examples:number;toolchains?:()=>ReadonlySet<string>|undefined}>;claimed?:(namespace:string,kind:RemoteCacheKindV1,key:string)=>boolean;signal?:AbortSignal;onEvent?:(event:RemoteCacheStoreEventV1|RemoteCacheRequestEventV1|Readonly<{stage:"listening";url:string}>|Readonly<{stage:"stopped"}>)=>void}>;
 
 /** 🛰️ A started server: its address, a live status and an orderly stop. */
 export interface RemoteCacheServerV1{readonly url:string;readonly port:number;readonly store:RemoteCacheStoreV1;readonly claims:ClaimTableV1;readonly stopped:Promise<void>;stop():Promise<void>}
@@ -292,22 +307,24 @@ export async function startRemoteCacheServerV1(options:RemoteCacheServerOptionsV
  if(owner.held&&options.successor!==true)throw new RemoteCacheDirectoryBusyV1(options.directory);
  const release=async():Promise<void>=>{if(!owner.held)await owner.release();};
  const listeners:Awaited<ReturnType<typeof runtimeServeV1>>[]=[];
- let store:RemoteCacheStoreV1|undefined,timer:ReturnType<typeof setInterval>|undefined,enforceTimer:ReturnType<typeof setInterval>|undefined;
+ let store:RemoteCacheStoreV1|undefined,timer:ReturnType<typeof setInterval>|undefined,enforceTimer:ReturnType<typeof setInterval>|undefined,beatTimer:ReturnType<typeof setInterval>|undefined;
+ const tree:TreeDigestsV1|undefined=options.staleness===undefined||options.staleness.mode==="off"?undefined:await openTreeDigestsV1(options.staleness.workspace,join(root,".retention","digests.jsonl"));
  const table=createClaimTableV1({journal:openClaimJournalV1(join(root,CLAIM_POLICY_V1.journalFile))});
  const provenance=await openProvenanceV1(options.directory);
  await registry?.refresh(true);
  const originPrivate=options.fleet?.root===undefined?undefined:readFleetOriginPrivateV1(options.fleet.root),exchangeKey=originPrivate===undefined?undefined:exchangePrivateKeyV1(originPrivate);
  const fleetStatus=():RemoteCacheFleetStatusV1=>{const origins:Record<string,number>={};for(const row of Object.values(registry?.origins()??{}))origins[row.status]=(origins[row.status]??0)+1;return {origins,denied:verifier?.denied()??{},transport:{crossGroup:"sealed",inGroup:options.fleet?.inGroup??"trusted-lan",sealedRoute:exchangeKey!==undefined}};};
  try{
-  store=await RemoteCacheStoreV1.open({directory:options.directory,...options.fileBudget===undefined?{}:{fileBudget:options.fileBudget},...options.startupScan===undefined?{}:{startupScan:options.startupScan},...(options.hostStore?{host:options.hostStore,pinBudgetBytes:()=>{const host=options.hostStore!,partition=measureCasPartitionV1(host.root);return partition===undefined?undefined:Math.floor(casEffectiveCapBytesV1(host.policy,partition)*0.8);}}:{}),maximumBytes:options.maximumBytes,maximumEntryBytes:options.maximumEntryBytes,maximumAgeMilliseconds:options.maximumAgeDays*86400000,...(options.graceMilliseconds===undefined?{}:{graceMilliseconds:options.graceMilliseconds}),claimed:(namespace,kind,key)=>kind!=="cas"&&(table.claimed(namespace,kind,key)||options.claimed?.(namespace,kind,key)===true),...(options.signal?{signal:options.signal}:{}),...(options.onEvent?{onEvent:options.onEvent}:{})});
+  store=await RemoteCacheStoreV1.open({directory:options.directory,...options.fileBudget===undefined?{}:{fileBudget:options.fileBudget},...options.startupScan===undefined?{}:{startupScan:options.startupScan},...(options.hostStore?{host:options.hostStore,pinBudgetBytes:()=>{const host=options.hostStore!,partition=measureCasPartitionV1(host.root);return partition===undefined?undefined:Math.floor(casEffectiveCapBytesV1(host.policy,partition)*0.8);}}:{}),maximumBytes:options.maximumBytes,maximumEntryBytes:options.maximumEntryBytes,maximumAgeMilliseconds:options.maximumAgeDays*86400000,...(tree===undefined||options.staleness===undefined?{}:{staleness:{mode:options.staleness.mode,tree,examples:options.staleness.examples,recheckMilliseconds:options.staleness.recheckSeconds*1000,manifestNames:options.staleness.manifestNames,...options.staleness.toolchains===undefined?{}:{toolchains:options.staleness.toolchains}}}),...(options.graceMilliseconds===undefined?{}:{graceMilliseconds:options.graceMilliseconds}),claimed:(namespace,kind,key)=>kind!=="cas"&&(table.claimed(namespace,kind,key)||options.claimed?.(namespace,kind,key)===true),...(options.signal?{signal:options.signal}:{}),...(options.onEvent?{onEvent:options.onEvent}:{})});
   const opened=store,handler=createRemoteCacheHandlerV1({store:opened,claims:table,gate,provenance,...(options.peers===undefined?{}:{peers:options.peers}),...(registry===undefined?{}:{fleetStatus}),...(options.mirror?{mirror:createMirrorHandlerV1(options.mirror)}:{}),tokens:options.tokens,defaultInstance:options.defaultInstance,...(options.readOnly===undefined?{}:{readOnly:options.readOnly}),...(options.validation===undefined?{}:{validation:options.validation}),...(options.maximumActionResultBytes===undefined?{}:{maximumActionResultBytes:options.maximumActionResultBytes}),...(options.onEvent?{onRequest:options.onEvent}:{})});
   const sealed=exchangeKey===undefined||options.fleet===undefined?undefined:createSealedHandlerV1({privateKey:exchangeKey,group:options.fleet.group,maximumBytes:options.maximumEntryBytes,handle:handler}),answer=async(request:Request,peer?:string):Promise<Response>=>{if(sealed!==undefined&&!gate.network(peer))return new Response("Forbidden\n",{status:403});return (await sealed?.(request,peer))??handler(request,peer);};
   let active=0;const ceiling=options.maximumConcurrentRequests??Math.max(16,Math.floor((options.fileBudget??remoteCacheFileBudgetOfMachineV1())/4));const entry=async(request:Request,peer?:string):Promise<Response>=>{if(active>=ceiling)return new Response("Busy\n",{status:503,headers:{"retry-after":"1"}});active++;options.onActivity?.(active);try{return await answer(request,peer);}finally{active--;options.onActivity?.(active);}};
   for(const hostname of hosts)listeners.push(await runtimeServeV1({hostname,port:listeners[0]?.port??options.port,idleTimeoutSeconds:60,maximumRequestBodyBytes:options.maximumEntryBytes*2,...options.reusePort===true||options.successor===true?{reusePort:true}:{},...(options.tls?{tls:{certificate:options.tls.certificate,key:options.tls.key}}:{}),fetch:(request,peer)=>entry(request,peer)}));
   const host=options.host.includes(":")&&!options.host.startsWith("[")?`[${options.host}]`:options.host,port=listeners[0]!.port,url=`${options.tls?"https":"http"}://${host}:${port}`;
   let finish!:()=>void;const stopped=new Promise<void>(resolve=>{finish=resolve;});let closing:Promise<void>|undefined;
-  const stop=():Promise<void>=>closing??=(async()=>{if(timer)clearInterval(timer);if(enforceTimer)clearInterval(enforceTimer);table.close();await table.flush();const graceful=Promise.all(listeners.map(listener=>listener.stop(false))),limit=options.stopGraceMilliseconds??20000;await Promise.race([graceful,new Promise<void>(done=>{const wait=setTimeout(done,limit);wait.unref();})]);await Promise.all(listeners.map(listener=>listener.stop(true)));closed=true;await opened.close();await provenance.flush();await release();options.onEvent?.({stage:"stopped"});finish();})();
+  const stop=():Promise<void>=>closing??=(async()=>{if(timer)clearInterval(timer);if(enforceTimer)clearInterval(enforceTimer);if(beatTimer)clearInterval(beatTimer);table.close();await table.flush();const graceful=Promise.all(listeners.map(listener=>listener.stop(false))),limit=options.stopGraceMilliseconds??20000;await Promise.race([graceful,new Promise<void>(done=>{const wait=setTimeout(done,limit);wait.unref();})]);await Promise.all(listeners.map(listener=>listener.stop(true)));closed=true;await opened.close();await provenance.flush();await release();options.onEvent?.({stage:"stopped"});finish();})();
   if(owner.held)void(async()=>{while(!closed){await new Promise<void>(done=>{const wait=setTimeout(done,500);wait.unref();});if(closed)return;const next=await acquireRemoteCacheLockV1(root,REMOTE_CACHE_SERVER_LOCK_V1).catch(()=>undefined);if(next!==undefined&&!next.held){if(closed)await next.release();else owner=next;return;}}})();
+  beatTimer=setInterval(()=>{if(!owner.held)void renewRemoteCacheLockV1(root,REMOTE_CACHE_SERVER_LOCK_V1).catch(()=>{});},60000);beatTimer.unref();
   const maintenance=(options.maintenanceSeconds??0)*1000;
   if(maintenance>0){
    let running=false;

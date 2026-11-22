@@ -5,7 +5,11 @@ async fn primary_asset_decodes_and_evaluates_claimed_verdict() {
     let text = crate::noncompliant_detached::PRIMARY_TEXT;
     let doc = <semio_s_artifact_norm_din18599_model::Din18599Snapshot as ArtifactDsl>::parse_dsl(text).expect("parse noncompliant-detached");
     let report = evaluate_document(&doc);
-    assert!(!report.complies()); assert!(report.failing().count() >= 2);
+    assert!(!report.complies());
+    assert!(report.failing().count() >= 2, "fail_count={}", report.failing().count());
+    for check in report.failing() {
+        assert!(!check.remedies.is_empty(), "{} has no remedy", check.id);
+    }
 }
 
 #[semio_framework_async_macros::async_test]

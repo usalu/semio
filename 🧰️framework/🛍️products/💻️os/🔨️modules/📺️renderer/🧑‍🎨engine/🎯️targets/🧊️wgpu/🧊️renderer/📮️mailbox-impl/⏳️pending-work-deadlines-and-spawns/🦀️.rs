@@ -303,18 +303,16 @@ impl<R: MailboxRuntime> RuntimeMailbox<R> {
                 };
                 let cancelled = cursor.cancel.as_ref().is_none_or(|cancel| cancel.is_cancelled_now());
                 stale = !mailbox.0.frame_maintenance.is_live(generation) || mailbox.0.presentation_authority.witness_for(generation).is_none();
-                let deadline_exceeded = deadline_ms.is_none_or(|deadline| worker_pool.now_ms() > deadline);
-                if let Some(fault) = frame_maintenance_terminal_fault(cancelled, stale, deadline_exceeded) {
+                let deadline_passed = deadline_ms.is_some_and(|deadline| worker_pool.now_ms() > deadline);
+                if let Some(fault) = frame_maintenance_terminal_fault(cancelled, stale) {
                     cursor.begin_close();
                     interaction.frame_fault = Some(fault.to_string());
+                } else if deadline_passed {
+                    cursor.shell_maintenance = false;
                 } else {
                     cursor.shell_maintenance = semio_renderer_wgpu_shell_view_chrome::ChromeViewCtx::of(&mut interaction.shell).advance_chrome_maintenance_step();
                     if cursor.shell_maintenance {
                         cursor.phase = 0;
-                    }
-                    if deadline_ms.is_some_and(|deadline| worker_pool.now_ms() > deadline) {
-                        interaction.frame_fault = Some("frame maintenance bounded field exceeded its deadline".to_string());
-                        cursor.begin_close();
                     }
                 }
                 *restart = false;

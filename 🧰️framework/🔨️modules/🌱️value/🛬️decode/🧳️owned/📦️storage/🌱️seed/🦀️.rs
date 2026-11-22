@@ -1,4 +1,4 @@
-//! 🌱️ Native vacant byte and field plans initialize only their funded metadata part.
+//! 🌱️ Native vacant byte and field plans initialize only their funded metadata part; each part is funded by whichever live effect admits it, while the template and monotonic cursor stay pinned.
 use super::*;
 use std::mem::{MaybeUninit,size_of};
 enum SeedKind<T>{Bytes(unsafe fn(*mut MaybeUninit<T>,usize,usize)),Fields{parts:usize,size:unsafe fn(*mut MaybeUninit<T>,usize)->Option<usize>,write:unsafe fn(*mut MaybeUninit<T>,usize)->bool}}
@@ -36,7 +36,7 @@ impl<T> NativeSeedTemplate<T>{
  }}
  unsafe fn write(self,target:*mut MaybeUninit<T>,cursor:usize,bytes:usize)->bool{unsafe{match self.kind{SeedKind::Bytes(copy)=>{copy(target,cursor,bytes);true},SeedKind::Fields{write,..}=>write(target,cursor)}}}
 }
-pub(super) struct SeedState<T>{template:NativeSeedTemplate<T>,pub(super) work:crate::OriginalWorkBindingIdentity,cursor:usize,copied:usize}
+pub(super) struct SeedState<T>{template:NativeSeedTemplate<T>,cursor:usize,copied:usize}
 impl<T> NativeOwnedStorage<T>{
  /// 📍️ Reports committed vacant metadata bytes; typed access stays unavailable until completion.
  pub fn seeded_bytes(&self)->usize{if self.initialized{size_of::<T>()}else{self.seed.as_ref().map_or(0,|seed|seed.copied)}}
@@ -56,10 +56,10 @@ impl<T> NativeOwnedStorage<T>{
  }
  fn initialize_template_at(&mut self,template:NativeSeedTemplate<T>,effect:&mut crate::RetainedAllocationEffect<'_>,between_source_actions:bool)->RetainedWorkOutcome{
   let before=effect.performed_boundary();let result=(||{
-   if (between_source_actions&&effect.work_source_turn().is_none())||self.seed.as_ref().is_some_and(|seed|if between_source_actions{!seed.work.admits_between_actions(effect,false)}else{!seed.work.matches_effect(effect)}){return Err(invalid("native partial template changed its original Work"))}let demand=self.template_seed_demand(template)?;if !admitted(effect.grant(),demand)||effect.remaining_work_units()?<1{return Ok(RetainedCloneStep::Progress(Default::default()))}
+   if between_source_actions&&effect.work_source_turn().is_none(){return Err(invalid("native partial template requires its resident Source Work"))}let demand=self.template_seed_demand(template)?;if !admitted(effect.grant(),demand)||effect.remaining_work_units()?<1{return Ok(RetainedCloneStep::Progress(Default::default()))}
    let cursor=self.seed.as_ref().map_or(0,|seed|seed.cursor);let target=self.pointer.ok_or_else(||invalid("native template backing disappeared"))?.as_ptr().cast::<MaybeUninit<T>>();let(bytes,next,complete)=template.part(target,cursor)?;let copied=self.seed.as_ref().map_or(0,|seed|seed.copied).checked_add(bytes).ok_or_else(||invalid("native field seed copy extent overflow"))?;if !effect.performed(1)?{return Err(ValueError::literal(ValueRefusalKind::WorkLimit,"native template exceeded its original Work"))}
    let progress=RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()};if !unsafe{template.write(target,cursor,bytes)}{return Err(invalid("native field seed violated its quoted plan").with_retained_progress(progress))}
-   if complete{self.seed=None;self.initialized=true}else{self.seed=Some(SeedState{template,work:crate::OriginalWorkBindingIdentity::from_effect(effect),cursor:next,copied})}Ok(if complete{RetainedCloneStep::Complete(progress)}else{RetainedCloneStep::Progress(progress)})
+   if complete{self.seed=None;self.initialized=true}else{self.seed=Some(SeedState{template,cursor:next,copied})}Ok(if complete{RetainedCloneStep::Complete(progress)}else{RetainedCloneStep::Progress(progress)})
   })();RetainedWorkOutcome{result,work:effect.performed_since(before).expect("same native template Work receipt")}
  }
 }

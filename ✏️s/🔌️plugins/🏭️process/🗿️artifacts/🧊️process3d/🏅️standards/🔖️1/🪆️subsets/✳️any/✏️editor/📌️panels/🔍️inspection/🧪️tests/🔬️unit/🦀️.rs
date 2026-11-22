@@ -29,10 +29,7 @@ async fn definition_binds_the_framework_inspection_tab_to_this_body_key() {
 }
 
 //#region 🔖️AddStepDispatch
-/// 🌉️ `AddStep` dispatches a real `CreateStep` mutation against `step_payloads`.
-/// `add_step::handle`'s own capability-dimension VALIDATION gate is a documented gap (no
-/// resolvable stock extent — see its own doc comment), so every resolvable machine/capability
-/// pair succeeds unconditionally.
+/// 🌉️ A measure-routed `AddStep` dispatches a real `CreateStep` mutation against `step_payloads`.
 #[semio_framework_async_macros::async_test]
 async fn add_step_dispatches_its_mutation() {
     let mut app = context::app();
@@ -40,15 +37,22 @@ async fn add_step_dispatches_its_mutation() {
     assert!(context::published_a_document_mutation(&receipt), "AddStep must dispatch its CreateStep mutation");
 }
 
-/// 🌉️ Same documented gap as above, from the catalogue-routed (machine/capability-addressed)
-/// entry point: even a stock the pre-migration code would have rejected (circular saw needs
-/// height ≤ 0.065m; the default timber beam is 0.24m) now succeeds, since the dimension gate
-/// can no longer read real stock extents.
+/// 🪚️ The catalogue-routed (machine/capability-addressed) `AddStep` checks the capability rules against the
+/// stock: the default circular saw cuts at most 65 mm deep, the default timber beam is 240 mm high, so
+/// `add_step::handle` refuses with `process3d.capability.stock-limit` and the document keeps its steps.
 #[semio_framework_async_macros::async_test]
-async fn add_step_via_catalogue_no_longer_gates_on_stock_dimensions() {
+async fn add_step_via_catalogue_refuses_a_stock_beyond_the_capability_rules() {
+    use semio_plugin::artifact_app_laws::{dispatch_original_fixture_command, fixture_identity, meta, settle_registered_typed_operation};
     let mut app = context::app();
-    let (_, receipt) = context::settled_dispatch(&mut app, Process3dCommand::AddStep(add_step::AddStep { measure: None, machine_id: Some("circularSaw".into()), capability_id: Some("crosscut".into()), position: None }));
-    assert!(context::published_a_document_mutation(&receipt), "documented gap: the dimension-validation gate can no longer reject an oversized stock");
+    let before = app.snapshot().expect("document").step_payloads.len();
+    let command = Process3dCommand::AddStep(add_step::AddStep { measure: None, machine_id: Some("circularSaw".into()), capability_id: Some("crosscut".into()), position: None });
+    let meta = meta("local");
+    let outcome = match ::semio_framework_async::poll::resolve_ready(dispatch_original_fixture_command(&mut app.0, &command, &meta, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut fixture_identity(), app.1.cx())) {
+        Err(fault) => format!("{fault:?}"),
+        Ok(result) => format!("{result:?} {:?}", ::semio_framework_async::poll::resolve_ready(settle_registered_typed_operation(&mut app.0, meta.instance_id, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut fixture_identity(), app.1.cx())).err()),
+    };
+    assert!(outcome.contains("process3d.capability.stock-limit"), "expected stock-limit refusal: {outcome}");
+    assert_eq!(app.snapshot().expect("document").step_payloads.len(), before);
 }
 
 #[semio_framework_async_macros::async_test]

@@ -98,7 +98,7 @@ fn flow_eval_session_invalidates_only_when_the_flow_extension_registry_generatio
         if session.terminal_is_empty() {
             break;
         }
-        let _ = session.close_step(FIXTURE_SESSION_GRANT);
+        let _ = session.close_step_cold(FIXTURE_SESSION_GRANT);
     }
     assert!(session.terminal_is_empty(), "an invalidated session still reaches terminal-empty through its own close ladder");
     host.retire_cold();
@@ -147,7 +147,7 @@ fn an_invalidated_session_hands_an_ephemeral_host_a_re_dispatching_baseline() {
     session.begin_close();
     for _ in 0..1_000_000 {
         if session.terminal_is_empty() { break; }
-        let _ = session.close_step(FIXTURE_SESSION_GRANT);
+        let _ = session.close_step_cold(FIXTURE_SESSION_GRANT);
     }
     assert!(session.terminal_is_empty());
     settled.retire_cold();

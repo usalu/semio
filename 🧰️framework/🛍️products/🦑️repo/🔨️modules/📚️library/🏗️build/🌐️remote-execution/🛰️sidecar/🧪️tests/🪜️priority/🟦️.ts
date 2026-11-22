@@ -2,7 +2,7 @@
 import {afterAll,expect,test} from "bun:test";
 import {spawn,spawnSync} from "node:child_process";
 import {fileURLToPath} from "node:url";
-import {applyServicePriorityV1,launchdPriorityKeysV1,servicePriorityOfRoleV1,servicePriorityOfServiceV1,servicePriorityTextV1,servicePriorityV1,systemdPriorityLinesV1,taskPriorityXmlV1,realServicePriorityPortsV1,type ServicePriorityPortsV1} from "../../🪜️priority/🟦️.ts";
+import {applyServicePriorityV1,launchdPriorityKeysV1,servicePriorityOfRoleV1,servicePriorityOfServiceV1,servicePriorityTextV1,servicePriorityV1,shellPriorityLinesV1,taskPriorityXmlV1,realServicePriorityPortsV1,type ServicePriorityPortsV1} from "../../🪜️priority/🟦️.ts";
 
 const schemaPath=fileURLToPath(new URL("../../🪜️priority/🧬️schema/🔣️.json",import.meta.url)),oracle=fileURLToPath(new URL("./🐍️.py",import.meta.url));
 const ROLES=["agent","scheduler","cache","graph","pool","ready"],SERVICES=["replica","cache","relay","compact"];
@@ -52,8 +52,9 @@ test("the renderers produce the documented keys of each platform",()=>{
  expect(launchdPriorityKeysV1("interactive")).toEqual(["<key>ProcessType</key><string>Interactive</string>"]);
  expect(launchdPriorityKeysV1("standard")).toEqual(["<key>ProcessType</key><string>Standard</string>"]);
  expect(launchdPriorityKeysV1("background")).toEqual(["<key>ProcessType</key><string>Background</string>","<key>LowPriorityIO</key><true/>","<key>Nice</key><integer>10</integer>"]);
- expect(systemdPriorityLinesV1("interactive")).toEqual(["Nice=-5","CPUSchedulingPolicy=other","IOSchedulingClass=best-effort","IOSchedulingPriority=2"]);
- expect(systemdPriorityLinesV1("background")).toEqual(["Nice=10","CPUSchedulingPolicy=idle","IOSchedulingClass=idle"]);
+ expect(shellPriorityLinesV1("interactive")).toEqual(["renice -n -5 -p $$ >/dev/null 2>&1 || :","ionice -c 2 -n 2 -p $$ >/dev/null 2>&1 || :"]);
+ expect(shellPriorityLinesV1("background")).toEqual(["renice -n 10 -p $$ >/dev/null 2>&1 || :","chrt --idle -p 0 $$ >/dev/null 2>&1 || :","ionice -c 3 -p $$ >/dev/null 2>&1 || :"]);
+ for(const name of Object.keys(servicePriorityV1.classes) as (keyof typeof servicePriorityV1.classes)[])expect(spawnSync("sh",["-n"],{input:shellPriorityLinesV1(name).join("\n")}).status).toBe(0);
  expect(taskPriorityXmlV1("interactive")).toBe("<Priority>3</Priority>");
  expect(taskPriorityXmlV1("background")).toBe("<Priority>8</Priority>");
 });

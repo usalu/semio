@@ -1,0 +1,56 @@
+{
+  "id": "yucca",
+  "category": "vegetation",
+  "title": {
+    "en": "Yucca",
+    "de": "Palmlilie"
+  },
+  "heightM": 2.8606,
+  "widthM": 1.9821,
+  "powerW": 0,
+  "poses": [
+    "calm",
+    "night",
+    "windy",
+    "storm",
+    "snow"
+  ],
+  "clips": [
+    "wind-sway",
+    "gust",
+    "diurnal-transpiration"
+  ],
+  "representations": {
+    "50": "authored",
+    "100": "authored",
+    "200": "authored",
+    "500": "authored"
+  },
+  "symbols": [
+    "yucca-symbol"
+  ],
+  "analytics": [
+    "thermal",
+    "transport",
+    "structural"
+  ],
+  "exports": [
+    "svg",
+    "pdf",
+    "dxf",
+    "dwg",
+    "png-sequence",
+    "mp4",
+    "webm",
+    "component",
+    "glb",
+    "fbx",
+    "model",
+    "model-zip"
+  ],
+  "distinction": {
+    "en": "A tree-like spineless yucca of 3 m: an elephant-foot base, a trunk forked into four stems, and four rosettes of twenty thin strap leaves each on their own bones; a C3 plant that transpires by day, the counterpart of the CAM cacti.",
+    "de": "Eine baumartige Riesen-Palmlilie von 3 m: ein Elefantenfuß, ein in vier Stämme gegabelter Stamm und vier Rosetten aus je zwanzig dünnen Riemenblättern an eigenen Knochen; eine C3-Pflanze, die tagsüber transpiriert, das Gegenstück zu den CAM-Kakteen."
+  },
+  "completion": "authored"
+}

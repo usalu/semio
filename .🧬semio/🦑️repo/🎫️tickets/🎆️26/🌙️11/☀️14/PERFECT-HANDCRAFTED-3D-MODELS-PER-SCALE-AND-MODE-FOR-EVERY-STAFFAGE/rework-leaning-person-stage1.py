@@ -15,21 +15,21 @@ def cap(sid, bone, p0, p1, r0, r1=None, **flags):
 
 
 def skull(m, scale):
-    out = [m.local_ball("cranium", "head", [0.07, 0.012, 0], [0.066, 0.09, 0.072])]
+    out = [m.local_ball("cranium", "head", [0.066, 0.008, 0], [0.07, 0.092, 0.073])]
     if scale in ("200", "500"):
-        out.append(m.local_ball("face-skeleton", "head", [-0.034, -0.05, 0], [0.046, 0.042, 0.046]))
+        out.append(m.barrel("face-skeleton", "head", [(0.03, -0.056, 0.05, 0.032), (-0.02, -0.06, 0.046, 0.038), (-0.06, -0.058, 0.04, 0.038), (-0.082, -0.06, 0.038, 0.0375)]))
         return out
     floor = m.HALF[scale]
-    out.append(m.local_ball("maxilla", "head", [-0.02, -0.068, 0], [0.026, 0.024, 0.03]))
+    out.append(m.barrel("facial-skeleton", "head", [(0.034, -0.06, 0.048, 0.026), (0.0, -0.066, 0.042, 0.026), (-0.03, -0.066, 0.032, 0.026), (-0.046, -0.064, 0.028, 0.024)]))
     out.append(cap("brow-ridge", "head", [0.052, -0.078, -0.044], [0.052, -0.078, 0.044], max(0.008, floor)))
     out.append(cap("nasal-bone", "head", [0.044, -0.082, 0], [0.01, -0.094, 0], max(0.006, floor)))
-    jaw = [(0.012, 0.0, 0.052, 0.007), (-0.02, -0.006, 0.05, 0.0075), (-0.05, -0.012, 0.046, 0.009), (-0.064, -0.05, 0.034, 0.008), (-0.076, -0.08, 0.0, 0.0095)]
+    jaw = [(0.016, -0.004, 0.05, 0.007), (-0.02, -0.006, 0.05, 0.0075), (-0.05, -0.012, 0.046, 0.009), (-0.064, -0.05, 0.034, 0.008), (-0.076, -0.08, 0.0, 0.0095)]
     path = jaw + [(x, y, -z, r) for x, y, z, r in reversed(jaw[:-1])]
     out.append(m.local_rod("mandible", "head", [(x, y, z, max(r, floor)) for x, y, z, r in path]))
     for s, sg in (("l", 1), ("r", -1)):
         out.append(m.local_ball(f"zygomatic-{s}", "head", [0.01, -0.062, 0.05 * sg], [0.014, 0.016, 0.014]))
-        out.append(cap(f"zygomatic-arch-{s}", "head", [0.014, -0.055, 0.058 * sg], [0.012, -0.004, 0.066 * sg], max(0.005, floor)))
-        out.append(m.local_ball(f"mastoid-{s}", "head", [0.0, 0.022, 0.05 * sg], [0.014, 0.012, 0.01]))
+        out.append(cap(f"zygomatic-arch-{s}", "head", [0.014, -0.055, 0.058 * sg], [0.016, -0.006, 0.058 * sg], max(0.005, floor)))
+        out.append(m.local_ball(f"mastoid-{s}", "head", [0.008, 0.03, 0.05 * sg], [0.014, 0.012, 0.012]))
     return out
 
 
@@ -54,6 +54,42 @@ def apply(a, m):
         if scale != "500":
             lst[:] = [s for s in lst if s["id"] not in ("ilium-l", "ilium-r")]
             lst.extend(wings(m, m.Kit(fr, m.HALF[scale]), scale))
+        for s in lst:
+            if s["id"].startswith("patella-"):
+                s["transform"]["translation"][1] = 0.034
+        if scale == "200":
+            print("[DEBUG] 1:200 structure:", " ".join(s["id"] for s in lst))
+        if scale in ("50", "100"):
+            for sd, sg in (("l", 1), ("r", -1)):
+                lst.append(m.local_ball(f"calcaneal-tuber-{sd}", f"foot-{sd}", [-0.05, -0.052, 0.004 * sg], [0.02, 0.02, 0.02]))
+
+
+def reach(a, m):
+    ends = {"humerus-": 0.292, "ulna-": 0.25, "radius-": 0.249}
+    for s in a["volumes"]["50"]["structure"] + a["volumes"]["100"]["structure"]:
+        for prefix, x in ends.items():
+            if s["id"] in (prefix + "l", prefix + "r"):
+                s["sections"][-1]["at"][0] = x
+    for s in a["volumes"]["200"]["body"]:
+        if s["id"] in ("shank-l", "shank-r"):
+            s["sections"][-1]["at"][0] = max(s["sections"][-1]["at"][0], 0.405)
+    anchor = next(x for x in a["anchors"] if x["id"] == "wall-shoulder")
+    for scale in m.SCALES:
+        ap = max(0.02, m.HALF[scale])
+        pad = {"id": "bearing-wall-shoulder", "kind": "ellipsoid", "bone": "torso", "material": "bone", "role": "body", "tone": 0.7, "radii": [0.06, ap, 0.11], "transform": {"translation": [anchor["x"], round(anchor["y"] - ap, 5), 0]}, "member": "torso", "part": "member"}
+        a["volumes"][scale]["structure"].append(pad)
+    fine = a["volumes"]["50"]["structure"]
+    for rib in [s for s in fine if s["id"] in ("rib-12-l", "rib-12-r")]:
+        head = rib["sections"][0]["at"]
+        fine.append(cap("costovertebral-12-" + rib["id"][-1], "torso", [0.0127, round(m.spine_back(0.1827), 4), 0], [round(c, 5) for c in head], 0.006))
+    for scale in ("200", "500"):
+        lst = a["volumes"][scale]["structure"]
+        lst[:] = [s for s in lst if s["id"] == "rib-cage" or not s["id"].startswith(("rib-", "sternum", "costal", "cartilage"))]
+        for s in a["volumes"][scale]["thermal"]:
+            if s["id"] == "th-cervical-skin":
+                keep = {k: s[k] for k in ("id", "region", "layer", "tags") if k in s}
+                s.clear()
+                s.update({"id": keep.pop("id"), "of": "neck", **keep})
 
 
 def nowall(doc, path):

@@ -103,6 +103,27 @@ fn copy_over_a_selection_emits_a_clipboard_command_without_mutating_the_buffer()
     assert_eq!(tree.node(input).unwrap().state.edit.as_ref().unwrap().text, "hello", "copy must not mutate the buffer");
 }
 
+/// 📋️ LAW: a text-selection menu verb focuses its field and answers the field's own chord, so Select all, Copy and Cut reach the clipboard commands a typed chord does, and Paste asks the host for the clipboard.
+#[test]
+fn a_text_selection_verb_runs_the_fields_own_chord_even_on_an_unfocused_field() {
+    let mut tree = UiTree::new();
+    let root = leaf(&mut tree, None, 0, stack_ui(), (0.0, 0.0, 200.0, 200.0));
+    let input = leaf(&mut tree, Some(root), 1, input_ui("name", "hello"), (0.0, 0.0, 100.0, 20.0));
+    let mut router = EventRouter::new("main");
+    assert!(tree.node(input).unwrap().state.edit.is_none(), "the field was never focused");
+
+    assert!(router.run_text_selection_verb(&mut tree, input, "a").is_empty());
+    let edit = tree.node(input).unwrap().state.edit.clone().unwrap();
+    assert_eq!((edit.anchor, edit.caret), (0, 5), "Select all focuses the field and selects its text");
+
+    let copied = router.run_text_selection_verb(&mut tree, input, "c");
+    assert!(copied.iter().any(|command| matches!(command, UiCommand::ClipboardCopy { text, .. } if text == "hello")));
+    let cut = router.run_text_selection_verb(&mut tree, input, "x");
+    assert!(cut.iter().any(|command| matches!(command, UiCommand::ClipboardCut { text, .. } if text == "hello")));
+    assert_eq!(tree.node(input).unwrap().state.edit.as_ref().unwrap().text, "");
+    assert!(router.run_text_selection_verb(&mut tree, input, "v").iter().any(|command| matches!(command, UiCommand::ClipboardPasteRequested { .. })));
+}
+
 #[test]
 fn ime_commit_inserts_the_composed_text_and_clears_composition() {
     let mut tree = UiTree::new();

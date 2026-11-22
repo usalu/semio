@@ -9,6 +9,28 @@ description = "Component crate of semio-s-artifact-stdio-pdf: mut-base"
 [package.metadata.semio]
 role = "library"
 
+[package.metadata.semio.carve]
+owned = [
+  "standards::v1_4::subsets::base::io::binary::mutations",
+  "standards::v1_4::subsets::base::io::binary::mutations::borrowed_operation_source",
+  "standards::v1_4::subsets::base::io::binary::mutations::insert_page",
+  "standards::v1_4::subsets::base::io::binary::mutations::move_page",
+  "standards::v1_4::subsets::base::io::binary::mutations::receiving",
+  "standards::v1_4::subsets::base::io::binary::mutations::remove_page",
+  "standards::v1_4::subsets::base::io::binary::mutations::replace_page_text",
+  "standards::v1_4::subsets::base::io::binary::mutations::resize_page",
+  "standards::v1_4::subsets::base::io::text::mutations",
+  "standards::v1_4::subsets::base::io::text::mutations::insert_page",
+  "standards::v1_4::subsets::base::io::text::mutations::move_page",
+  "standards::v1_4::subsets::base::io::text::mutations::remove_page",
+  "standards::v1_4::subsets::base::io::text::mutations::replace_page_text",
+  "standards::v1_4::subsets::base::io::text::mutations::resize_page",
+  "standards::v1_4::subsets::base::schema::mutations",
+  "standards::v1_4::subsets::base::schema::mutations::history_target",
+  "standards::v1_4::subsets::base::schema::mutations::insert_page",
+  "standards::v1_4::subsets::base::schema::mutations::remove_page",
+]
+
 [lints]
 workspace = true
 

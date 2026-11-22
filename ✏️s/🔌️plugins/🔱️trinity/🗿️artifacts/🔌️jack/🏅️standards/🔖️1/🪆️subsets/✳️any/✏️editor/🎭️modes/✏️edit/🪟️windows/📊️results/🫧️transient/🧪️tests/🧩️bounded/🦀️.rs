@@ -17,13 +17,13 @@ fn maintenance_grant(bytes: usize) -> semio_framework_value::retained_clone::Ret
 
 fn close_publication(turn: &mut OriginalRetirementTurn, publication: &mut store::ArtifactEphemeralOneItemPublication<JackResultsWindowTransient, JackResultsWindowTransientMutation>) {
     publication.begin_close();
-    let body = crate::standards::v1::subsets::any::schema::content::JACK_SELF_FUNDED_BODY_BYTES;
+    let body = semio_plugin::PLUGIN_SELF_FUNDED_BODY_BYTES;
     for _ in 0..65_536 {
         if publication.terminal_is_empty() {
             return;
         }
         let demand = publication.retirement_demands(body).expect("Jack results publication close quote");
-        let grant = crate::standards::v1::subsets::any::schema::content::jack_self_funded_grant(demand);
+        let grant = semio_plugin::plugin_self_funded_grant(demand, semio_plugin::PLUGIN_SELF_FUNDED_BODY_BYTES);
         assert!(retirement_turn(turn, grant, |effect| publication.close_step(body, effect)).progress().fits(grant));
     }
     assert!(publication.terminal_is_empty());
@@ -110,13 +110,13 @@ fn results_window_large_output_preserves_alias_cancel_and_bounded_disposal() {
     drop(published);
 
     let mut retirement = state.begin_retirement(Default::default(), owners.state_retirement.clone());
-    let body = crate::standards::v1::subsets::any::schema::content::JACK_SELF_FUNDED_BODY_BYTES;
+    let body = semio_plugin::PLUGIN_SELF_FUNDED_BODY_BYTES;
     for _ in 0..65_536 {
         if retirement.terminal_is_empty() {
             break;
         }
         let demand = retirement.retirement_demands(body).expect("all Jack results aliases were returned");
-        let grant = crate::standards::v1::subsets::any::schema::content::jack_self_funded_grant(demand);
+        let grant = semio_plugin::plugin_self_funded_grant(demand, semio_plugin::PLUGIN_SELF_FUNDED_BODY_BYTES);
         assert!(retirement_turn(&mut pump, grant, |effect| retirement.close_step(body, effect)).progress().fits(grant));
     }
     assert!(retirement.terminal_is_empty());

@@ -1,0 +1,1226 @@
+{
+ "version": 1,
+ "description": "Which native units may be linked on another machine: the crate types a requester offloads, the `-l` and `-L` values, the directories that every machine has, the whole argument lists a worker accepts (taken from the command lines of the release build: a native cdylib with libraries, a wasm cdylib with stack size, memory maximum and exports, a build-script bin, the self-contained lld flags of Linux) and the `--check-cfg` texts that Cargo writes for crates with many features. Language neutral: any implementation of the policy must give these answers.",
+ "requester": [
+  {
+   "id": "host-cdylib",
+   "crateTypes": [
+    "cdylib"
+   ],
+   "target": null,
+   "offload": true
+  },
+  {
+   "id": "darwin-dylib",
+   "crateTypes": [
+    "dylib"
+   ],
+   "target": "aarch64-apple-darwin",
+   "offload": true
+  },
+  {
+   "id": "linux-staticlib",
+   "crateTypes": [
+    "staticlib"
+   ],
+   "target": "x86_64-unknown-linux-gnu",
+   "offload": true
+  },
+  {
+   "id": "cdylib-and-rlib",
+   "crateTypes": [
+    "cdylib",
+    "rlib"
+   ],
+   "target": null,
+   "offload": true
+  },
+  {
+   "id": "wasip2-cdylib",
+   "crateTypes": [
+    "cdylib"
+   ],
+   "target": "wasm32-wasip2",
+   "offload": true
+  },
+  {
+   "id": "wasip2-staticlib",
+   "crateTypes": [
+    "staticlib"
+   ],
+   "target": "wasm32-wasip2",
+   "offload": false
+  },
+  {
+   "id": "emscripten-cdylib",
+   "crateTypes": [
+    "cdylib"
+   ],
+   "target": "wasm32-unknown-emscripten",
+   "offload": false
+  },
+  {
+   "id": "unknown-type",
+   "crateTypes": [
+    "cdylib-evil"
+   ],
+   "target": null,
+   "offload": false
+  }
+ ],
+ "libraries": [
+  {
+   "spec": "static=zstd",
+   "allowed": true
+  },
+  {
+   "spec": "static=zstd_static",
+   "allowed": true
+  },
+  {
+   "spec": "static:-bundle=psm_s",
+   "allowed": true
+  },
+  {
+   "spec": "static:+whole-archive,-bundle=foo",
+   "allowed": true
+  },
+  {
+   "spec": "static=foo:bar",
+   "allowed": true
+  },
+  {
+   "spec": "static:+verbatim=libfoo.a",
+   "allowed": true
+  },
+  {
+   "spec": "dylib=objc",
+   "allowed": true
+  },
+  {
+   "spec": "objc",
+   "allowed": true
+  },
+  {
+   "spec": "System",
+   "allowed": true
+  },
+  {
+   "spec": "c++",
+   "allowed": true
+  },
+  {
+   "spec": "iconv",
+   "allowed": true
+  },
+  {
+   "spec": "z",
+   "allowed": true
+  },
+  {
+   "spec": "framework=CoreFoundation",
+   "allowed": true
+  },
+  {
+   "spec": "framework=Metal",
+   "allowed": true
+  },
+  {
+   "spec": "dylib=jvm",
+   "allowed": false
+  },
+  {
+   "spec": "crypto",
+   "allowed": false
+  },
+  {
+   "spec": "framework=Evil",
+   "allowed": false
+  },
+  {
+   "spec": "framework=CoreFoundation:alias",
+   "allowed": false
+  },
+  {
+   "spec": "dylib=objc:alias",
+   "allowed": false
+  },
+  {
+   "spec": "kind=foo",
+   "allowed": false
+  },
+  {
+   "spec": "raw-dylib=kernel32",
+   "allowed": false
+  },
+  {
+   "spec": "",
+   "allowed": false
+  },
+  {
+   "spec": "-evil",
+   "allowed": false
+  },
+  {
+   "spec": "static=",
+   "allowed": false
+  },
+  {
+   "spec": "static=a/b",
+   "allowed": false
+  },
+  {
+   "spec": "static=../x",
+   "allowed": false
+  },
+  {
+   "spec": "/usr/lib/libx.dylib",
+   "allowed": false
+  },
+  {
+   "spec": "static=a b",
+   "allowed": false
+  },
+  {
+   "spec": "static=a;b",
+   "allowed": false
+  },
+  {
+   "spec": "static:bundle=x",
+   "allowed": false
+  },
+  {
+   "spec": "static:+bundle,=x",
+   "allowed": false
+  },
+  {
+   "spec": "static=a\nb",
+   "allowed": false
+  }
+ ],
+ "searchDirectories": [
+  {
+   "value": "native=.semio-offload/n0",
+   "allowed": true
+  },
+  {
+   "value": "all=.semio-offload/n7",
+   "allowed": true
+  },
+  {
+   "value": "framework=.semio-offload/n12",
+   "allowed": true
+  },
+  {
+   "value": "native=.semio-offload/n123",
+   "allowed": true
+  },
+  {
+   "value": "native=/usr/lib",
+   "allowed": false
+  },
+  {
+   "value": "native=.semio-offload/n",
+   "allowed": false
+  },
+  {
+   "value": "native=.semio-offload/n1234",
+   "allowed": false
+  },
+  {
+   "value": "native=.semio-offload/d",
+   "allowed": false
+  },
+  {
+   "value": "native=.semio-offload/n0/..",
+   "allowed": false
+  },
+  {
+   "value": "native=.semio-offload/n0/x",
+   "allowed": false
+  },
+  {
+   "value": "native=../x",
+   "allowed": false
+  },
+  {
+   "value": "crate=.semio-offload/n0",
+   "allowed": false
+  },
+  {
+   "value": "dependency=.semio-offload/n0",
+   "allowed": false
+  },
+  {
+   "value": ".semio-offload/n0",
+   "allowed": false
+  },
+  {
+   "value": "native=",
+   "allowed": false
+  }
+ ],
+ "systemDirectories": [
+  {
+   "path": "/usr/lib",
+   "system": true
+  },
+  {
+   "path": "/usr/lib/system",
+   "system": true
+  },
+  {
+   "path": "/System/Library/Frameworks",
+   "system": true
+  },
+  {
+   "path": "/Library/Developer/CommandLineTools/SDKs/MacOSX15.4.sdk/usr/lib",
+   "system": true
+  },
+  {
+   "path": "/usr/libx",
+   "system": false
+  },
+  {
+   "path": "/opt/homebrew/lib",
+   "system": false
+  },
+  {
+   "path": "/usr/local/lib",
+   "system": false
+  },
+  {
+   "path": "/Users/x/ws/out",
+   "system": false
+  },
+  {
+   "path": "/usr",
+   "system": false
+  }
+ ],
+ "worker": [
+  {
+   "id": "native-cdylib-with-libraries",
+   "arguments": [
+    "--crate-name",
+    "semio_node_addon",
+    "--edition=2021",
+    ".semio-offload/p/src/lib.rs",
+    "--error-format=json",
+    "--json=diagnostic-rendered-ansi,artifacts,future-incompat",
+    "--crate-type",
+    "cdylib",
+    "--emit=dep-info,link",
+    "-C",
+    "opt-level=3",
+    "-C",
+    "strip=symbols",
+    "--out-dir",
+    ".semio-offload/o",
+    "-L",
+    "dependency=.semio-offload/d",
+    "-L",
+    "native=.semio-offload/n0",
+    "-l",
+    "static=zstd_static",
+    "-l",
+    "static:-bundle=psm_s",
+    "-l",
+    "framework=CoreFoundation",
+    "-l",
+    "dylib=objc",
+    "-l",
+    "c++",
+    "-l",
+    "iconv",
+    "-C",
+    "link-arg=-Wl,-undefined,dynamic_lookup",
+    "-C",
+    "metadata=0123456789abcdef",
+    "-C",
+    "extra-filename=-0123456789abcdef"
+   ],
+   "refused": null
+  },
+  {
+   "id": "native-dylib",
+   "arguments": [
+    "--crate-name",
+    "t",
+    "--edition=2021",
+    ".semio-offload/p/src/lib.rs",
+    "--error-format=json",
+    "--json=diagnostic-rendered-ansi,artifacts,future-incompat",
+    "--crate-type",
+    "dylib",
+    "--emit=dep-info,link",
+    "-C",
+    "opt-level=3",
+    "-C",
+    "strip=symbols",
+    "--out-dir",
+    ".semio-offload/o",
+    "-L",
+    "dependency=.semio-offload/d",
+    "-l",
+    "c",
+    "-C",
+    "metadata=0123456789abcdef",
+    "-C",
+    "extra-filename=-0123456789abcdef"
+   ],
+   "refused": null
+  },
+  {
+   "id": "native-staticlib",
+   "arguments": [
+    "--crate-name",
+    "t",
+    "--edition=2021",
+    ".semio-offload/p/src/lib.rs",
+    "--error-format=json",
+    "--json=diagnostic-rendered-ansi,artifacts,future-incompat",
+    "--crate-type",
+    "staticlib",
+    "--emit=dep-info,link",
+    "-C",
+    "opt-level=3",
+    "-C",
+    "strip=symbols",
+    "--out-dir",
+    ".semio-offload/o",
+    "-L",
+    "dependency=.semio-offload/d",
+    "-C",
+    "metadata=0123456789abcdef",
+    "-C",
+    "extra-filename=-0123456789abcdef"
+   ],
+   "refused": null
+  },
+  {
+   "id": "native-bin-with-static-library",
+   "arguments": [
+    "--crate-name",
+    "semio_s_artifact_stdio_pdf_view_lane",
+    "--edition=2021",
+    ".semio-offload/p/src/lib.rs",
+    "--error-format=json",
+    "--json=diagnostic-rendered-ansi,artifacts,future-incompat",
+    "--crate-type",
+    "bin",
+    "--emit=dep-info,link",
+    "-C",
+    "opt-level=3",
+    "-C",
+    "strip=symbols",
+    "--out-dir",
+    ".semio-offload/o",
+    "-L",
+    "dependency=.semio-offload/d",
+    "-L",
+    "native=.semio-offload/n0",
+    "-L",
+    "all=.semio-offload/n1",
+    "-L",
+    "framework=.semio-offload/n2",
+    "-l",
+    "static=psm_s",
+    "-C",
+    "metadata=0123456789abcdef",
+    "-C",
+    "extra-filename=-0123456789abcdef"
+   ],
+   "refused": null
+  },
+  {
+   "id": "wasm-cdylib-release-link-arguments",
+   "arguments": [
+    "--crate-name",
+    "semio_plugin_job_receiving",
+    "--edition=2021",
+    ".semio-offload/p/src/lib.rs",
+    "--error-format=json",
+    "--json=diagnostic-rendered-ansi,artifacts,future-incompat",
+    "--crate-type",
+    "cdylib",
+    "--emit=dep-info,link",
+    "-C",
+    "opt-level=3",
+    "-C",
+    "strip=symbols",
+    "--out-dir",
+    ".semio-offload/o",
+    "-L",
+    "dependency=.semio-offload/d",
+    "--target",
+    "wasm32-wasip2",
+    "-C",
+    "link-arg=--max-memory=536870912",
+    "-C",
+    "link-arg=-zstack-size=8388608",
+    "-C",
+    "link-arg=-Wl,--export=__instance_terminated",
+    "-C",
+    "metadata=0123456789abcdef",
+    "-C",
+    "extra-filename=-0123456789abcdef"
+   ],
+   "refused": null
+  },
+  {
+   "id": "wasm-static-library",
+   "arguments": [
+    "--crate-name",
+    "t",
+    "--edition=2021",
+    ".semio-offload/p/src/lib.rs",
+    "--error-format=json",
+    "--json=diagnostic-rendered-ansi,artifacts,future-incompat",
+    "--crate-type",
+    "cdylib",
+    "--emit=dep-info,link",
+    "-C",
+    "opt-level=3",
+    "-C",
+    "strip=symbols",
+    "--out-dir",
+    ".semio-offload/o",
+    "-L",
+    "dependency=.semio-offload/d",
+    "--target",
+    "wasm32-wasip2",
+    "-C",
+    "link-arg=--max-memory=536870912",
+    "-C",
+    "link-arg=-zstack-size=8388608",
+    "-C",
+    "link-arg=-Wl,--export=__instance_terminated",
+    "-l",
+    "static=psm_s",
+    "-L",
+    "native=.semio-offload/n0",
+    "-C",
+    "metadata=0123456789abcdef",
+    "-C",
+    "extra-filename=-0123456789abcdef"
+   ],
+   "refused": null
+  },
+  {
+   "id": "build-script-bin",
+   "arguments": [
+    "--crate-name",
+    "build_script_build",
+    "--edition=2021",
+    ".semio-offload/p/build.rs",
+    "--error-format=json",
+    "--json=diagnostic-rendered-ansi,artifacts,future-incompat",
+    "--crate-type",
+    "bin",
+    "--emit=dep-info,link",
+    "-C",
+    "opt-level=3",
+    "-C",
+    "strip=symbols",
+    "--out-dir",
+    ".semio-offload/o",
+    "-L",
+    "dependency=.semio-offload/d",
+    "--cfg",
+    "feature=\"default\"",
+    "--check-cfg",
+    "cfg(docsrs,test)",
+    "--check-cfg",
+    "cfg(feature, values(\"default\", \"std\"))",
+    "-C",
+    "metadata=0123456789abcdef",
+    "-C",
+    "extra-filename=-0123456789abcdef"
+   ],
+   "refused": null
+  },
+  {
+   "id": "linux-self-contained-lld",
+   "arguments": [
+    "--crate-name",
+    "t",
+    "--edition=2021",
+    ".semio-offload/p/src/lib.rs",
+    "--error-format=json",
+    "--json=diagnostic-rendered-ansi,artifacts,future-incompat",
+    "--crate-type",
+    "bin",
+    "--emit=dep-info,link",
+    "-C",
+    "opt-level=3",
+    "-C",
+    "strip=symbols",
+    "--out-dir",
+    ".semio-offload/o",
+    "-L",
+    "dependency=.semio-offload/d",
+    "-C",
+    "linker-features=+lld",
+    "-C",
+    "link-self-contained=+linker",
+    "-Z",
+    "unstable-options",
+    "-C",
+    "metadata=0123456789abcdef",
+    "-C",
+    "extra-filename=-0123456789abcdef"
+   ],
+   "refused": null
+  },
+  {
+   "id": "wasm-export-for-a-native-target",
+   "arguments": [
+    "--crate-name",
+    "t",
+    "--edition=2021",
+    ".semio-offload/p/src/lib.rs",
+    "--error-format=json",
+    "--json=diagnostic-rendered-ansi,artifacts,future-incompat",
+    "--crate-type",
+    "cdylib",
+    "--emit=dep-info,link",
+    "-C",
+    "opt-level=3",
+    "-C",
+    "strip=symbols",
+    "--out-dir",
+    ".semio-offload/o",
+    "-L",
+    "dependency=.semio-offload/d",
+    "-C",
+    "link-arg=-Wl,--export=__instance_terminated",
+    "-C",
+    "metadata=0123456789abcdef",
+    "-C",
+    "extra-filename=-0123456789abcdef"
+   ],
+   "refused": "wasm linker argument"
+  },
+  {
+   "id": "dynamic-lookup-for-a-wasm-target",
+   "arguments": [
+    "--crate-name",
+    "t",
+    "--edition=2021",
+    ".semio-offload/p/src/lib.rs",
+    "--error-format=json",
+    "--json=diagnostic-rendered-ansi,artifacts,future-incompat",
+    "--crate-type",
+    "cdylib",
+    "--emit=dep-info,link",
+    "-C",
+    "opt-level=3",
+    "-C",
+    "strip=symbols",
+    "--out-dir",
+    ".semio-offload/o",
+    "-L",
+    "dependency=.semio-offload/d",
+    "--target",
+    "wasm32-wasip2",
+    "-C",
+    "link-arg=-Wl,-undefined,dynamic_lookup",
+    "-C",
+    "metadata=0123456789abcdef",
+    "-C",
+    "extra-filename=-0123456789abcdef"
+   ],
+   "refused": "native linker argument"
+  },
+  {
+   "id": "emscripten-static-library",
+   "arguments": [
+    "--crate-name",
+    "t",
+    "--edition=2021",
+    ".semio-offload/p/src/lib.rs",
+    "--error-format=json",
+    "--json=diagnostic-rendered-ansi,artifacts,future-incompat",
+    "--crate-type",
+    "staticlib",
+    "--emit=dep-info,link",
+    "-C",
+    "opt-level=3",
+    "-C",
+    "strip=symbols",
+    "--out-dir",
+    ".semio-offload/o",
+    "-L",
+    "dependency=.semio-offload/d",
+    "--target",
+    "wasm32-unknown-emscripten",
+    "-C",
+    "metadata=0123456789abcdef",
+    "-C",
+    "extra-filename=-0123456789abcdef"
+   ],
+   "refused": "--crate-type staticlib"
+  },
+  {
+   "id": "wasm-dylib",
+   "arguments": [
+    "--crate-name",
+    "t",
+    "--edition=2021",
+    ".semio-offload/p/src/lib.rs",
+    "--error-format=json",
+    "--json=diagnostic-rendered-ansi,artifacts,future-incompat",
+    "--crate-type",
+    "dylib",
+    "--emit=dep-info,link",
+    "-C",
+    "opt-level=3",
+    "-C",
+    "strip=symbols",
+    "--out-dir",
+    ".semio-offload/o",
+    "-L",
+    "dependency=.semio-offload/d",
+    "--target",
+    "wasm32-wasip2",
+    "-C",
+    "metadata=0123456789abcdef",
+    "-C",
+    "extra-filename=-0123456789abcdef"
+   ],
+   "refused": "--crate-type dylib"
+  },
+  {
+   "id": "library-outside-the-sdk",
+   "arguments": [
+    "--crate-name",
+    "t",
+    "--edition=2021",
+    ".semio-offload/p/src/lib.rs",
+    "--error-format=json",
+    "--json=diagnostic-rendered-ansi,artifacts,future-incompat",
+    "--crate-type",
+    "bin",
+    "--emit=dep-info,link",
+    "-C",
+    "opt-level=3",
+    "-C",
+    "strip=symbols",
+    "--out-dir",
+    ".semio-offload/o",
+    "-L",
+    "dependency=.semio-offload/d",
+    "-l",
+    "dylib=jvm",
+    "-C",
+    "metadata=0123456789abcdef",
+    "-C",
+    "extra-filename=-0123456789abcdef"
+   ],
+   "refused": "-l dylib jvm"
+  },
+  {
+   "id": "default-kind-library-outside-the-sdk",
+   "arguments": [
+    "--crate-name",
+    "t",
+    "--edition=2021",
+    ".semio-offload/p/src/lib.rs",
+    "--error-format=json",
+    "--json=diagnostic-rendered-ansi,artifacts,future-incompat",
+    "--crate-type",
+    "bin",
+    "--emit=dep-info,link",
+    "-C",
+    "opt-level=3",
+    "-C",
+    "strip=symbols",
+    "--out-dir",
+    ".semio-offload/o",
+    "-L",
+    "dependency=.semio-offload/d",
+    "-lcrypto",
+    "-C",
+    "metadata=0123456789abcdef",
+    "-C",
+    "extra-filename=-0123456789abcdef"
+   ],
+   "refused": "-l dylib crypto"
+  },
+  {
+   "id": "framework-outside-the-sdk",
+   "arguments": [
+    "--crate-name",
+    "t",
+    "--edition=2021",
+    ".semio-offload/p/src/lib.rs",
+    "--error-format=json",
+    "--json=diagnostic-rendered-ansi,artifacts,future-incompat",
+    "--crate-type",
+    "bin",
+    "--emit=dep-info,link",
+    "-C",
+    "opt-level=3",
+    "-C",
+    "strip=symbols",
+    "--out-dir",
+    ".semio-offload/o",
+    "-L",
+    "dependency=.semio-offload/d",
+    "-l",
+    "framework=Evil",
+    "-C",
+    "metadata=0123456789abcdef",
+    "-C",
+    "extra-filename=-0123456789abcdef"
+   ],
+   "refused": "-l framework Evil"
+  },
+  {
+   "id": "static-library-with-a-path",
+   "arguments": [
+    "--crate-name",
+    "t",
+    "--edition=2021",
+    ".semio-offload/p/src/lib.rs",
+    "--error-format=json",
+    "--json=diagnostic-rendered-ansi,artifacts,future-incompat",
+    "--crate-type",
+    "bin",
+    "--emit=dep-info,link",
+    "-C",
+    "opt-level=3",
+    "-C",
+    "strip=symbols",
+    "--out-dir",
+    ".semio-offload/o",
+    "-L",
+    "dependency=.semio-offload/d",
+    "-l",
+    "static=../../etc/x",
+    "-C",
+    "metadata=0123456789abcdef",
+    "-C",
+    "extra-filename=-0123456789abcdef"
+   ],
+   "refused": "-l static=../../etc/x"
+  },
+  {
+   "id": "library-with-an-absolute-path",
+   "arguments": [
+    "--crate-name",
+    "t",
+    "--edition=2021",
+    ".semio-offload/p/src/lib.rs",
+    "--error-format=json",
+    "--json=diagnostic-rendered-ansi,artifacts,future-incompat",
+    "--crate-type",
+    "bin",
+    "--emit=dep-info,link",
+    "-C",
+    "opt-level=3",
+    "-C",
+    "strip=symbols",
+    "--out-dir",
+    ".semio-offload/o",
+    "-L",
+    "dependency=.semio-offload/d",
+    "-l",
+    "/usr/lib/libx.dylib",
+    "-C",
+    "metadata=0123456789abcdef",
+    "-C",
+    "extra-filename=-0123456789abcdef"
+   ],
+   "refused": "-l /usr/lib/libx.dylib"
+  },
+  {
+   "id": "search-directory-of-the-worker",
+   "arguments": [
+    "--crate-name",
+    "t",
+    "--edition=2021",
+    ".semio-offload/p/src/lib.rs",
+    "--error-format=json",
+    "--json=diagnostic-rendered-ansi,artifacts,future-incompat",
+    "--crate-type",
+    "bin",
+    "--emit=dep-info,link",
+    "-C",
+    "opt-level=3",
+    "-C",
+    "strip=symbols",
+    "--out-dir",
+    ".semio-offload/o",
+    "-L",
+    "dependency=.semio-offload/d",
+    "-L",
+    "native=/usr/lib",
+    "-C",
+    "metadata=0123456789abcdef",
+    "-C",
+    "extra-filename=-0123456789abcdef"
+   ],
+   "refused": "-L native=/usr/lib"
+  },
+  {
+   "id": "search-directory-of-the-dependencies",
+   "arguments": [
+    "--crate-name",
+    "t",
+    "--edition=2021",
+    ".semio-offload/p/src/lib.rs",
+    "--error-format=json",
+    "--json=diagnostic-rendered-ansi,artifacts,future-incompat",
+    "--crate-type",
+    "bin",
+    "--emit=dep-info,link",
+    "-C",
+    "opt-level=3",
+    "-C",
+    "strip=symbols",
+    "--out-dir",
+    ".semio-offload/o",
+    "-L",
+    "dependency=.semio-offload/d",
+    "-L",
+    "native=.semio-offload/d",
+    "-C",
+    "metadata=0123456789abcdef",
+    "-C",
+    "extra-filename=-0123456789abcdef"
+   ],
+   "refused": "-L native=.semio-offload/d"
+  },
+  {
+   "id": "search-directory-without-a-kind",
+   "arguments": [
+    "--crate-name",
+    "t",
+    "--edition=2021",
+    ".semio-offload/p/src/lib.rs",
+    "--error-format=json",
+    "--json=diagnostic-rendered-ansi,artifacts,future-incompat",
+    "--crate-type",
+    "bin",
+    "--emit=dep-info,link",
+    "-C",
+    "opt-level=3",
+    "-C",
+    "strip=symbols",
+    "--out-dir",
+    ".semio-offload/o",
+    "-L",
+    "dependency=.semio-offload/d",
+    "-L",
+    ".semio-offload/n0",
+    "-C",
+    "metadata=0123456789abcdef",
+    "-C",
+    "extra-filename=-0123456789abcdef"
+   ],
+   "refused": "-L .semio-offload/n0"
+  },
+  {
+   "id": "rpath-argument",
+   "arguments": [
+    "--crate-name",
+    "t",
+    "--edition=2021",
+    ".semio-offload/p/src/lib.rs",
+    "--error-format=json",
+    "--json=diagnostic-rendered-ansi,artifacts,future-incompat",
+    "--crate-type",
+    "cdylib",
+    "--emit=dep-info,link",
+    "-C",
+    "opt-level=3",
+    "-C",
+    "strip=symbols",
+    "--out-dir",
+    ".semio-offload/o",
+    "-L",
+    "dependency=.semio-offload/d",
+    "-C",
+    "link-arg=-Wl,-rpath,/tmp",
+    "-C",
+    "metadata=0123456789abcdef",
+    "-C",
+    "extra-filename=-0123456789abcdef"
+   ],
+   "refused": "-C link-arg"
+  },
+  {
+   "id": "alternative-linker",
+   "arguments": [
+    "--crate-name",
+    "t",
+    "--edition=2021",
+    ".semio-offload/p/src/lib.rs",
+    "--error-format=json",
+    "--json=diagnostic-rendered-ansi,artifacts,future-incompat",
+    "--crate-type",
+    "bin",
+    "--emit=dep-info,link",
+    "-C",
+    "opt-level=3",
+    "-C",
+    "strip=symbols",
+    "--out-dir",
+    ".semio-offload/o",
+    "-L",
+    "dependency=.semio-offload/d",
+    "-C",
+    "link-arg=-fuse-ld=/tmp/x",
+    "-C",
+    "metadata=0123456789abcdef",
+    "-C",
+    "extra-filename=-0123456789abcdef"
+   ],
+   "refused": "-C link-arg"
+  },
+  {
+   "id": "linker-path",
+   "arguments": [
+    "--crate-name",
+    "t",
+    "--edition=2021",
+    ".semio-offload/p/src/lib.rs",
+    "--error-format=json",
+    "--json=diagnostic-rendered-ansi,artifacts,future-incompat",
+    "--crate-type",
+    "bin",
+    "--emit=dep-info,link",
+    "-C",
+    "opt-level=3",
+    "-C",
+    "strip=symbols",
+    "--out-dir",
+    ".semio-offload/o",
+    "-L",
+    "dependency=.semio-offload/d",
+    "-C",
+    "linker=/bin/sh",
+    "-C",
+    "metadata=0123456789abcdef",
+    "-C",
+    "extra-filename=-0123456789abcdef"
+   ],
+   "refused": "-C linker"
+  }
+ ],
+ "checkConfiguration": {
+  "maximumBytes": 1048576,
+  "objc2Metal": {
+   "crate": "objc2-metal 0.3.2",
+   "features": [
+    "MTL4AccelerationStructure",
+    "MTL4Archive",
+    "MTL4ArgumentTable",
+    "MTL4BinaryFunction",
+    "MTL4BinaryFunctionDescriptor",
+    "MTL4BufferRange",
+    "MTL4CommandAllocator",
+    "MTL4CommandBuffer",
+    "MTL4CommandEncoder",
+    "MTL4CommandQueue",
+    "MTL4CommitFeedback",
+    "MTL4Compiler",
+    "MTL4CompilerTask",
+    "MTL4ComputeCommandEncoder",
+    "MTL4ComputePipeline",
+    "MTL4Counters",
+    "MTL4FunctionDescriptor",
+    "MTL4LibraryDescriptor",
+    "MTL4LibraryFunctionDescriptor",
+    "MTL4LinkingDescriptor",
+    "MTL4MachineLearningCommandEncoder",
+    "MTL4MachineLearningPipeline",
+    "MTL4MeshRenderPipeline",
+    "MTL4PipelineDataSetSerializer",
+    "MTL4PipelineState",
+    "MTL4RenderCommandEncoder",
+    "MTL4RenderPass",
+    "MTL4RenderPipeline",
+    "MTL4SpecializedFunctionDescriptor",
+    "MTL4StitchedFunctionDescriptor",
+    "MTL4TileRenderPipeline",
+    "MTLAccelerationStructure",
+    "MTLAccelerationStructureCommandEncoder",
+    "MTLAccelerationStructureTypes",
+    "MTLAllocation",
+    "MTLArgument",
+    "MTLArgumentEncoder",
+    "MTLBinaryArchive",
+    "MTLBlitCommandEncoder",
+    "MTLBlitPass",
+    "MTLBuffer",
+    "MTLCaptureManager",
+    "MTLCaptureScope",
+    "MTLCommandBuffer",
+    "MTLCommandEncoder",
+    "MTLCommandQueue",
+    "MTLComputeCommandEncoder",
+    "MTLComputePass",
+    "MTLComputePipeline",
+    "MTLCounters",
+    "MTLDataType",
+    "MTLDefines",
+    "MTLDepthStencil",
+    "MTLDevice",
+    "MTLDeviceCertification",
+    "MTLDrawable",
+    "MTLDynamicLibrary",
+    "MTLEvent",
+    "MTLFence",
+    "MTLFunctionConstantValues",
+    "MTLFunctionDescriptor",
+    "MTLFunctionHandle",
+    "MTLFunctionLog",
+    "MTLFunctionStitching",
+    "MTLGPUAddress",
+    "MTLHeap",
+    "MTLIOCommandBuffer",
+    "MTLIOCommandQueue",
+    "MTLIOCompressor",
+    "MTLIndirectCommandBuffer",
+    "MTLIndirectCommandEncoder",
+    "MTLIntersectionFunctionTable",
+    "MTLLibrary",
+    "MTLLinkedFunctions",
+    "MTLLogState",
+    "MTLParallelRenderCommandEncoder",
+    "MTLPipeline",
+    "MTLPixelFormat",
+    "MTLRasterizationRate",
+    "MTLRenderCommandEncoder",
+    "MTLRenderPass",
+    "MTLRenderPipeline",
+    "MTLResidencySet",
+    "MTLResource",
+    "MTLResourceStateCommandEncoder",
+    "MTLResourceStatePass",
+    "MTLResourceViewPool",
+    "MTLSampler",
+    "MTLStageInputOutputDescriptor",
+    "MTLTensor",
+    "MTLTexture",
+    "MTLTextureViewPool",
+    "MTLTypes",
+    "MTLVertexDescriptor",
+    "MTLVisibleFunctionTable",
+    "alloc",
+    "bitflags",
+    "block2",
+    "default",
+    "dispatch2",
+    "objc2-core-foundation",
+    "objc2-io-surface",
+    "std",
+    "unstable-darwin-objc",
+    "unstable-private"
+   ]
+  },
+  "scaled": {
+   "prefix": "Feature",
+   "count": 3000
+  },
+  "refused": [
+   {
+    "id": "semicolon",
+    "text": "cfg(feature, values(\"a;b\"))"
+   },
+   {
+    "id": "backtick",
+    "text": "cfg(feature, values(\"a`b\"))"
+   },
+   {
+    "id": "dollar",
+    "text": "cfg(feature, values(\"$(touch x)\"))"
+   },
+   {
+    "id": "backslash",
+    "text": "cfg(feature, values(\"a\\\\b\"))"
+   },
+   {
+    "id": "pipe",
+    "text": "cfg(feature, values(\"a|b\"))"
+   },
+   {
+    "id": "newline",
+    "text": "cfg(feature, values(\"a\\nb\"))"
+   },
+   {
+    "id": "empty",
+    "text": ""
+   }
+  ]
+ },
+ "environment": {
+  "accepted": [
+   {
+    "name": "CARGO_PKG_DESCRIPTION",
+    "value": "The asynchronous `Sink` trait for the futures-rs library."
+   },
+   {
+    "name": "CARGO_PKG_DESCRIPTION",
+    "value": "Bindings to Core Graphics for macOS"
+   },
+   {
+    "name": "CARGO_PKG_DESCRIPTION",
+    "value": "A substitute implementation of the compiler's `proc_macro` API to decouple token-based libraries from the procedural macro use case."
+   },
+   {
+    "name": "CARGO_PKG_DESCRIPTION",
+    "value": "Fowler–Noll–Vo hash function"
+   },
+   {
+    "name": "CARGO_PKG_DESCRIPTION",
+    "value": "Extra methods for raw pointers and `NonNull<T>`.\n\nFor example `.post_inc()` and `.pre_dec()` (c.f. \"x\" $y; a|b)"
+   },
+   {
+    "name": "CARGO_PKG_DESCRIPTION",
+    "value": "    A macro which makes error types pleasant to write.\n"
+   },
+   {
+    "name": "CARGO_PKG_AUTHORS",
+    "value": "Alex Crichton <alex@alexcrichton.com>:The Rust Project Developers"
+   },
+   {
+    "name": "CARGO_PKG_LICENSE",
+    "value": "MIT OR Apache-2.0"
+   },
+   {
+    "name": "CARGO_PKG_RUST_VERSION",
+    "value": "1.71"
+   },
+   {
+    "name": "CARGO_CRATE_NAME",
+    "value": "core_graphics"
+   },
+   {
+    "name": "CARGO_PRIMARY_PACKAGE",
+    "value": "1"
+   }
+  ],
+  "refused": [
+   {
+    "name": "CARGO_PKG_DESCRIPTION",
+    "value": "a\u0000b"
+   },
+   {
+    "name": "CARGO_CRATE_NAME",
+    "value": "a\nb"
+   },
+   {
+    "name": "CARGO_PKG_X",
+    "value": "a",
+    "also": {
+     "name": "LD_PRELOAD",
+     "value": "/tmp/x.so"
+    }
+   }
+  ]
+ }
+}

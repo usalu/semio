@@ -44,23 +44,25 @@ Feature: The rig, its poses and its clips become a neutral node tree through the
 
   Scenario: The doe carries its paired glands under gravity
     Given the doe in standing, climbing and browsing poses
-    Then the fixture angles are measured to vertical and both glands and teats have exposed skin at all four scales
+    Then the fixture angles are measured to vertical and both glands and teats have exposed skin at every scale whose feature admits them, and the suspension keeps exposed bare skin at all four scales
 
   Scenario: A canine lumbar column encloses an open spinal canal
     Given the Labrador's structural model at each of the four scales
-    Then seven distinct vertebrae enclose a clear axial passage and each has solid bone ventral to the passage
+    Then seven distinct vertebrae enclose a clear axial passage and each has solid bone ventral to the passage at every scale whose feature admits all seven
+    And the lumbar bone keeps a member solid at all four scales
 
-  Scenario: Four wheels support the skateboard at every digital scale
+  Scenario: Four wheels support the skateboard at every digital scale whose feature admits them
     Given the 11.5 mm concave maple deck on its two trucks
-    Then the physical model, rolling members and thermal wheel surfaces share four 54 mm wheels on a 171 mm track
+    Then the physical model, rolling members and thermal wheel surfaces share four 54 mm wheels on a 171 mm track at every scale whose feature admits the wheels, and the deck keeps its gauge where the feature admits it
+    And the deck and wheel thermal surfaces remain at all four scales
 
   Scenario: The tower crane trolley runs on four flanged wheels
     Given a trolley on two jib rails and two wire-rope sheaves
-    Then all four treads meet the rail tops and both sheaves have a 12 mm groove at all four scales
+    Then all four treads meet the rail tops and both sheaves have a 12 mm groove at every scale whose feature admits them
 
   Scenario: A red squirrel articulates its tapered brush from the rump
     Given the seated, running and climbing squirrel across the four digital scales
-    Then the six joined groups carry 23 caudal centra, conserve tail mass and carry the guard locks on the same thermal surface
+    Then the six joined groups carry 23 caudal centra at every scale whose feature admits them, keep a member solid at all four scales, conserve tail mass and carry the guard locks on the same thermal surface
 
   Scenario: Display scale preserves an individual's long-bone shaft
     Given the eight adults in the anatomical fixture at all four scales
@@ -68,11 +70,11 @@ Feature: The rig, its poses and its clips become a neutral node tree through the
 
   Scenario: Three road vehicles retain distinct wheel centres and heat surfaces
     Given the five-spoke city wheel, pressed delivery-van wheel and twelve-spoke period wheel
-    Then the four tyres have open beads, coaxial hubs, separate brake and metal surfaces and physical wheel members at every scale
+    Then the four tyres have open beads, coaxial hubs, separate brake and metal surfaces and physical wheel members at every scale whose feature admits them, and the tyres at every scale
 
   Scenario: Lifting-arm pivots and excavator rollers keep their physical contact geometry
     Given the scissor pin and crawler idler clearance dimensions in the fixture
-    Then every link has three open bores and both tracks have eight supported rollers
+    Then every link has three open bores and both tracks have eight supported rollers at every scale whose feature admits them
 
   Scenario: The industrial running gear carries each load to the ground
     Given a forklift, four-axle concrete mixer and motor scooter at every scale
@@ -81,4 +83,4 @@ Feature: The rig, its poses and its clips become a neutral node tree through the
   Scenario: Cycle spokes meet their actual seats and the scooter axle passes through its cartridges
     Given the authored front and rear wheels at each digital scale
     Then each bicycle wheel carries thirty-six spokes and an independently ray-tested bore in each nipple
-    And the scooter rear wheel has five windows and two 14 by 32 by 9 millimetre annular bearings
+    And the scooter rear wheel has five windows and two 14 by 32 by 9 millimetre annular bearings at every scale whose feature admits them

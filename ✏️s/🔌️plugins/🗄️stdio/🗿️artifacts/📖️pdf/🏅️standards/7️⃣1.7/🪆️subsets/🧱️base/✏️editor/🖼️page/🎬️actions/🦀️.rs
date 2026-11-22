@@ -12,6 +12,10 @@ pub fn edit_from_action(action: &str, args: Option<&semio_framework_value::DslVa
     let object_id = || req_text(args, "object");
     let text_value = || req_text(args, "text");
     let (page, object, text, extra, x, y, width, height, red, green, blue) = match action {
+        view if is_view_action(view) => (opt_index(args, "page"), String::new(), text_arg(args, "text"), String::new(), 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
+        "presence-pointer" => (opt_index(args, "page"), String::new(), String::new(), String::new(), opt_num(args, "x", 0.0), opt_num(args, "y", 0.0), 0.0, 0.0, 0.0, 0.0, 0.0),
+        "presence-caret" => (0, text_arg(args, "object"), String::new(), String::new(), opt_num(args, "offset", 0.0), opt_num(args, "anchor", opt_num(args, "offset", 0.0)), 0.0, 0.0, 0.0, 0.0, 0.0),
+        "presence-pointer-leave" | "presence-caret-clear" => (0, String::new(), String::new(), String::new(), 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
         "move-page" => (req_index(args, "page").or_else(|error| text_arg(args, "page").trim().parse().map_err(|_| error))?, String::new(), String::new(), String::new(), req_num(args, "x")?, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
         "set-font-size" => (page_index()?, object_id()?, String::new(), String::new(), 0.0, 0.0, 0.0, req_num(args, "size")?, 0.0, 0.0, 0.0),
         "set-text" => (page_index()?, object_id()?, text_value()?, String::new(), 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
@@ -65,6 +69,7 @@ pub fn edit_from_action(action: &str, args: Option<&semio_framework_value::DslVa
         "set-glyph" => (0, object_id()?, text_value()?, String::new(), opt_num(args, "x", 0.0), opt_num(args, "y", 0.0), opt_num(args, "width", 10.0), opt_num(args, "height", 10.0), 0.0, 0.0, 0.0),
         "set-indirect-object" => (0, String::new(), text_arg(args, "text"), String::new(), req_num(args, "x")?, opt_num(args, "y", 0.0), 0.0, 0.0, 0.0, 0.0, 0.0),
         "set-mesh-reference" => (0, object_id()?, text_arg(args, "text"), text_arg(args, "extra"), 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
+        "set-entry" => (0, object_id()?, text_arg(args, "text"), text_arg(args, "extra"), 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
         "create-annotation" => (page_index()?, object_id()?, text_arg(args, "text"), text_arg(args, "extra"), opt_num(args, "x", 0.0), opt_num(args, "y", 0.0), opt_num(args, "width", 0.0), opt_num(args, "height", 0.0), opt_num(args, "red", 0.0), opt_num(args, "green", 0.0), opt_num(args, "blue", 0.0)),
         "fill-form-field" => (0, object_id()?, text_arg(args, "text"), String::new(), 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
         "replace-page" | "merge-document" => (page_index()?, String::new(), text_arg(args, "payload"), text_arg(args, "extra"), 0.0, 0.0, opt_num(args, "width", 0.0), opt_num(args, "height", 0.0), 0.0, 0.0, 0.0),
@@ -176,6 +181,7 @@ pub fn apply_payload(snapshot: &PdfSnapshot, action: &str, payload: &str) -> Res
         "set-indirect-object" => set_indirect_object(snapshot, x, y, &text),
         "set-mesh-reference" => set_mesh_reference(snapshot, &object, &text, &extra),
         "set-annotation" => edit_annotation(snapshot, page, &object, &text, x, y, width, height),
+        "set-entry" => set_entry(snapshot, &object, &extra, &text),
         "create-annotation" => create_annotation(snapshot, page, &object, &text, &extra, x, y, width, height, [red, green, blue]),
         "fill-form-field" => fill_form_field(snapshot, &object, &text),
         "replace-page" => replace_page_with(snapshot, page, &text, &extra, width, height),

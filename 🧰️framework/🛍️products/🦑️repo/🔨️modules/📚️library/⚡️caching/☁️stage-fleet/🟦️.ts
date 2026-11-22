@@ -2,9 +2,10 @@ import {createHash,randomBytes} from "node:crypto";
 import {hostname} from "node:os";
 import {mkdir,readdir,readFile,rename,rm,stat,writeFile} from "node:fs/promises";
 import {dirname,join} from "node:path";
-import {fileSha256V1,stageKeyDigestV1,type StageCacheStatsV1,type StageCacheV1,type StageEntryV1,type StageFileV1,type StageKeyV1,type StageResultV1} from "../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🗃️stage-cache/🟦️.ts";
+import {fileSha256V1,stageKeyDigestV1,type StageCacheStatsV1,type StageCacheV1,type StageEntryV1,type StageRemoteV1,type StageFileV1,type StageKeyV1,type StageResultV1} from "../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🗃️stage-cache/🟦️.ts";
 import {validateJsonSchemaSubset} from "../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
-import {classifySlotsV1,slotIdV1} from "../../🏗️build/🪢️slots/🟦️.ts";
+import {classifySlotsV1,slotIdV1,type DeclarationV1} from "../../🏗️build/🪢️slots/🟦️.ts";
+import {declareV1} from "../../🏗️build/🌐️remote-cache/🏷️retention/🍂️staleness/🟦️.ts";
 import {createFleetClientV1,readFleetSettingsV1,type FleetClientV1} from "../🦀️cargo/🗃️unit-cache/🛰️fleet/📡️client/🟦️.ts";
 import {fleetRemoteEnvironmentV1} from "../🦀️cargo/🗃️unit-cache/🚪️launch/🟦️.ts";
 import {decodeActionResultV1,encodeActionResultV1,wireDigestOfV1,type WireFileV1} from "../🦀️cargo/🗃️unit-cache/🛰️fleet/📦️wire/🟦️.ts";
@@ -48,7 +49,7 @@ export interface SharedStageCacheV1 extends StageCacheV1{fleet():StageFleetStats
 /** ⚙️ How the tier is wired: the client (none = local only), the platform in the keys, the claim owner, the clock, the reporter and policy overrides for tests. */
 export type SharedStageOptionsV1=Readonly<{client?:FleetClientV1;platform?:string;owner?:string;now?:()=>number;report?:(event:StageFleetEventV1)=>void;claim?:Partial<typeof policy.claim>;graceMilliseconds?:number}>;
 
-type Manifest=StageEntryV1;
+type Manifest=StageEntryV1&{retention?:DeclarationV1};
 
 /** 🏷️ The owner name a process claims under: machine, process and a random suffix, so a restarted process never inherits a dead one's claim. */
 export const stageFleetOwnerV1=():string=>`${hostname().replace(/[^A-Za-z0-9._-]/gu,"-").slice(0,60)}:${process.pid}:${randomBytes(3).toString("hex")}`;
@@ -118,7 +119,7 @@ async function fetchStage(client:FleetClientV1,remote:string,digest:string,direc
 async function publishStage(client:FleetClientV1,remote:string,key:StageKeyV1,digest:string,slotId:string,directory:string,signal:AbortSignal):Promise<{files:number;bytes:number}|undefined>{
  const files=await filesOf(directory);
  if(files.length===0||files.length>policy.limits.maximumFiles||files.some(file=>file.bytes>policy.limits.maximumFileBytes))return undefined;
- const manifest:Manifest={version:1,key,digest,files},text=new TextEncoder().encode(`${JSON.stringify(manifest)}\n`),head=wireDigestOfV1(text);
+ const retention=declareV1({kind:"stage-output",toolchain:JSON.stringify(Object.entries(key.tools).sort(([left],[right])=>left<right?-1:1)),sources:[],externs:Object.values(key.inputs)}),manifest:Manifest={version:1,key,digest,files,retention},text=new TextEncoder().encode(`${JSON.stringify(manifest)}\n`),head=wireDigestOfV1(text);
  const wire:WireFileV1[]=[{path:policy.manifestName,digest:head,executable:false},...files.map(file=>({path:policy.outputPrefix+file.path,digest:{hash:file.sha256,size:file.bytes},executable:false}))];
  const blobs=new Map<string,string|Uint8Array>([[head.hash,text],...files.map(file=>[file.sha256,join(directory,...file.path.split("/"))] as const)]);
  await pool([...blobs],policy.limits.uploadConcurrency,async([hash,source])=>{
@@ -159,7 +160,7 @@ export async function settleStageSlotV1(root:string,input:Readonly<{stage:string
 export function sharedStageCacheV1(inner:StageCacheV1,options:SharedStageOptionsV1={}):SharedStageCacheV1{
  const client=options.client,now=options.now??Date.now,owner=options.owner??stageFleetOwnerV1(),grace=options.graceMilliseconds??policy.localGraceMilliseconds,counters={served:0,shared:0,waited:0,skipped:0};
  const report=(event:StageFleetEventV1)=>{try{options.report?.(event);}catch{}};
- async function run(key:StageKeyV1,output:string,produce:(directory:string)=>Promise<void>,signal?:AbortSignal,slot?:string):Promise<StageResultV1>{
+ async function run(key:StageKeyV1,output:string,produce:(directory:string)=>Promise<void>,signal?:AbortSignal,slot?:string,offload?:StageRemoteV1):Promise<StageResultV1>{
   if(slot===undefined)return inner.run(key,output,produce,signal);
   const digest=stageKeyDigestV1(key),slotId=stageSlotIdV1(key.stage,key.schemaVersion,slot),remote=stageRemoteKeyV1(digest,options.platform),stopping=signal??new AbortController().signal;
   let served:readonly StageFileV1[]|undefined,shared:{files:number;bytes:number}|undefined,waitedMs=0,why:string|undefined;
@@ -169,7 +170,7 @@ export function sharedStageCacheV1(inner:StageCacheV1,options:SharedStageOptions
    if(decision.outcome==="hit"){waitedMs=decision.via==="wait"?decision.waitedMs:0;return;}
    why=decision.reason;
    try{
-    await produce(directory);
+    if(offload===undefined||!await offload(directory,stopping).catch(()=>false))await produce(directory);
     if(client.settings.upload)try{shared=await publishStage(client,remote,key,digest,slotId,directory,AbortSignal.any([stopping,AbortSignal.timeout(policy.timeouts.publishMilliseconds)]));}catch{shared=undefined;}
    }finally{await (decision.hold as FlightHoldV1|undefined)?.release();}
   };
@@ -188,7 +189,7 @@ export function sharedStageCacheV1(inner:StageCacheV1,options:SharedStageOptions
  return {
   root:inner.root,
   run,
-  stats():StageCacheStatsV1{const local=inner.stats();return Object.freeze({...local,hits:local.hits+counters.served,misses:Math.max(0,local.misses-counters.served)});},
+  stats():StageCacheStatsV1{const local=inner.stats();return Object.freeze({...local,fleetHits:counters.served,misses:Math.max(0,local.misses-counters.served)});},
   fleet:()=>Object.freeze({...counters}),
  };
  async function offer(shareClient:FleetClientV1,remote:string,key:StageKeyV1,digest:string,slotId:string,directory:string,stopping:AbortSignal,root:string):Promise<void>{

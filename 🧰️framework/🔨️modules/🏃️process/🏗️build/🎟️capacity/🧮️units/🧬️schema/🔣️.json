@@ -19,7 +19,9 @@
         },
         "unitQuantileBasisPoints": 7500,
         "minimumUnitMegabytes": 256,
-        "minimumUnitSamples": 8
+        "minimumUnitSamples": 8,
+        "fleetJobsMaximum": 48,
+        "lightUnitMegabytes": 96
       }
     },
     "Pressure": {
@@ -161,12 +163,18 @@
             "memory": "the free memory carries fewer compile units",
             "pressure-warn": "memory pressure is raised",
             "pressure-critical": "memory pressure is critical",
-            "fixed": "a fixed class gets a small counted slot"
+            "fixed": "a fixed class gets a small counted slot",
+            "fleet-local-only": "no idle fleet slot is known, so only the local grant runs",
+            "fleet-all": "every idle fleet slot of the same platform is used",
+            "fleet-cap": "the authored job cap bounds the fleet share",
+            "fleet-memory": "the free memory carries fewer light remote jobs",
+            "fleet-pressure": "memory pressure is raised, so fewer remote jobs wait here"
           },
           "errors": {
             "definitionRequired": "Closed compile units value required: {detail}",
             "grantedMoreThanPlanned": "Granted compile units exceed the planned maximum"
-          }
+          },
+          "fleet": "[compile-units] {operation}: fleet-sized {jobs} jobs = {local} local + {remote} remote ({idle} idle on the fleet; {reason})"
         },
         "de": {
           "planned": "[compile-units] {operation}: {preferred} von {cores} Kernen geplant (mindestens {minimum} zum Start; {reason})",
@@ -180,12 +188,18 @@
             "memory": "der freie Speicher trägt weniger Compile-Einheiten",
             "pressure-warn": "der Speicherdruck ist erhöht",
             "pressure-critical": "der Speicherdruck ist kritisch",
-            "fixed": "eine feste Klasse erhält einen kleinen gezählten Slot"
+            "fixed": "eine feste Klasse erhält einen kleinen gezählten Slot",
+            "fleet-local-only": "kein freier Flottenplatz bekannt, daher läuft nur die lokale Zuteilung",
+            "fleet-all": "jeder freie Flottenplatz derselben Plattform wird genutzt",
+            "fleet-cap": "die festgelegte Job-Obergrenze begrenzt den Flottenanteil",
+            "fleet-memory": "der freie Speicher trägt weniger leichte entfernte Jobs",
+            "fleet-pressure": "der Speicherdruck ist erhöht, daher warten weniger entfernte Jobs hier"
           },
           "errors": {
             "definitionRequired": "Geschlossener Compile-Einheiten-Wert erforderlich: {detail}",
             "grantedMoreThanPlanned": "Zugeteilte Compile-Einheiten übersteigen das geplante Maximum"
-          }
+          },
+          "fleet": "[compile-units] {operation}: flottengroße {jobs} Jobs = {local} lokal + {remote} entfernt ({idle} frei auf der Flotte; {reason})"
         }
       }
     },
@@ -193,6 +207,94 @@
       "enum": [
         "bun-bundle"
       ]
+    },
+    "FleetReason": {
+      "enum": [
+        "fleet-local-only",
+        "fleet-all",
+        "fleet-cap",
+        "fleet-memory",
+        "fleet-pressure"
+      ]
+    },
+    "FleetHost": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "local",
+        "fleetIdle",
+        "availableMegabytes",
+        "pressure",
+        "unitMegabytes"
+      ],
+      "properties": {
+        "local": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1024
+        },
+        "fleetIdle": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0,
+          "maximum": 65536
+        },
+        "availableMegabytes": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0,
+          "maximum": 1048576
+        },
+        "pressure": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/Pressure"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "unitMegabytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1048576
+        }
+      }
+    },
+    "FleetDecision": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "jobs",
+        "local",
+        "remote",
+        "reason"
+      ],
+      "properties": {
+        "jobs": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 65536
+        },
+        "local": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1024
+        },
+        "remote": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65536
+        },
+        "reason": {
+          "$ref": "#/definitions/FleetReason"
+        }
+      }
     }
   }
 }

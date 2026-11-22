@@ -1,0 +1,24 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["turnCopyBytes", "refusalTurns", "settlingTurns", "cases"],
+  "properties": {
+    "turnCopyBytes": {"type": "integer", "minimum": 2},
+    "refusalTurns": {"type": "integer", "minimum": 2},
+    "settlingTurns": {"type": "integer", "minimum": 0},
+    "cases": {
+      "type": "array",
+      "minItems": 3,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "floorCopyBytes", "expect"],
+        "properties": {
+          "id": {"type": "string"},
+          "floorCopyBytes": {"type": "integer", "minimum": 0},
+          "expect": {"enum": ["share", "floor", "refused"]}
+        }
+      }
+    }
+  }
+}

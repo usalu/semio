@@ -324,3 +324,51 @@ impl semio_s_artifact_stdio_pdf_testkit::standards::v1_7::subsets::base::schema:
         read(self.0.iter().find(|object| object.id == reference).map(|object| &object.value));
     }
 }
+
+#[test]
+fn controlled_shapes_match_the_independent_reader_and_the_cold_lift() {
+    use semio_s_artifact_stdio_pdf_testkit::standards::v1_7::subsets::base::{
+        io::text::snapshot::retained_text::admit_retained_text,
+        modules::{
+            lexer::{parse_indirect_at, CosGrant},
+            lift::{lift_document, ControlledLiftEvent, DocumentLiftCursor},
+        },
+        schema::graph_source::GraphSource,
+    };
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/📌️controlled-shapes/🔣️.json")).unwrap();
+    for (shape, case) in fixture.as_object().unwrap() {
+        let mut objects: Vec<_> = case["objects"].as_array().unwrap().iter().map(|row| {
+            let authored = format!("{} {} obj\n{}\nendobj\n", row[0], row[1], row[2].as_str().unwrap());
+            let (id, value) = parse_indirect_at(authored.as_bytes(), 0).unwrap();
+            PdfIndirectObject { id, value }
+        }).collect();
+        let mut root = [PdfDictEntry::new("Root", PdfObject::Ref(objects[0].id))];
+        let count = objects.len();
+        admit_retained_text(&mut objects, &mut root, |id| ((id.num as usize) <= count).then(|| id.num as usize - 1)).unwrap();
+        let cold = lift_document(&root, "1.7", &mut GraphSource::new(&objects)).unwrap();
+        let expected = &case["projection"]["pages"];
+        assert_eq!(cold.pages.len(), expected.as_array().unwrap().len(), "{shape}: page count");
+        for (page, reference) in cold.pages.iter().zip(expected.as_array().unwrap()) {
+            let media: Vec<f64> = reference["mediaBox"].as_array().unwrap().iter().map(|value| value.as_f64().unwrap()).collect();
+            assert_eq!(page.media_box.to_vec(), media, "{shape}: media box");
+            assert_eq!(i64::from(page.rotate), reference["rotate"].as_i64().unwrap(), "{shape}: rotation");
+            assert_eq!(page.annotations.len(), reference["annotations"].as_array().unwrap().len(), "{shape}: annotations");
+        }
+        let mut graph = BorrowedAnnotationGraph(objects.clone());
+        let mut cursor = DocumentLiftCursor::controlled();
+        let mut grant = CosGrant { work: 1, ..Default::default() };
+        let mut finished = false;
+        for _ in 0..8192 {
+            let receipt = cursor.advance(&root, "1.7", &mut graph, grant, false);
+            match receipt.event.unwrap() {
+                ControlledLiftEvent::NeedsAllocation { bytes } => grant.allocation_bytes = bytes,
+                ControlledLiftEvent::NeedsRelease { bytes } => grant.release_bytes = bytes,
+                ControlledLiftEvent::More => { grant.allocation_bytes = 0; grant.release_bytes = 0; }
+                ControlledLiftEvent::Complete => { assert_eq!(cursor.take_result().unwrap(), cold, "{shape}: controlled lift differs from the cold lift"); finished = true; break; }
+                ControlledLiftEvent::Deferred(barrier) => panic!("{shape}: the governed lifter still defers at {barrier:?}"),
+                event => panic!("{shape}: unexpected controlled event {event:?}"),
+            }
+        }
+        assert!(finished, "{shape}: the controlled lift did not finish");
+    }
+}

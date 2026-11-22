@@ -57,3 +57,56 @@ Read after the cuts: 1:50 body six views (twice), three-quarter and front close-
 - `rework-07-2d.py` runs `main()` on import (no guard), so its `splice` helper cannot be imported; `rework-p1-horse-2d.py` executes its head instead.
 - `S/README.md` line 133 states loft `rx` along w and `ry` along v; with the limb and trunk rotations used in the catalog `rx` is the sagittal and `ry` the lateral half extent (already noted in `rework/07.md`).
 - A loft section is a symmetric superellipse, so an egg-shaped barrel or a withers ridge needs a second solid and leaves a seam; and loft ends are flat caps that cannot go below the feature at 1:500, so a domed end is impossible there.
+
+## Pass 2 (second round), 2026-11-22
+
+Status: **partial**. The girdles are on the lateral rest placement (`rig-lateral-rest.md` existed at the start and was followed); source and catalog agree; `r3-validate.ts animals/horse --catalog-only --volumes` → `VALID … schema 0, validateAsset 0, checkVolumes 0`.
+
+Scripts (ticket folder): `rework-p2-horse-rig.py` (rig, re-binding, pelvis), `rework-p2-horse-detail.py` (skull, nuchal bridge), `rework-p2-horse-coarse.py` (1:500 ears), `rework-p2-horse-decisions.py`.
+
+### Rig (stage 1, published)
+
+| Joint | Breadth beside the midline, real | Before | Now |
+|---|---|---|---|
+| Scapular cartilage (top of the blade) | 0.07–0.10 m | 0 (bone in the median plane, solids pushed out by a local offset) | 0.09 m |
+| Shoulder joint | 0.17–0.20 m | 0 | 0.19 m |
+| Elbow / carpus / fore fetlock / fore hoof | 0.18 / 0.15 / 0.14 / 0.13–0.15 m | 0 | 0.186 / 0.156 / 0.144 / 0.142 m |
+| Sacroiliac joint | 0.05–0.07 m | no bone | 0.06 m |
+| Hip joint | 0.12–0.15 m | 0 | 0.15 m |
+| Stifle / hock / hind fetlock / hind hoof | 0.19 / 0.15 / 0.15 / 0.14–0.15 m | 0 | 0.19 / 0.155 / 0.147 / 0.146 m |
+
+- New bones `hip-bone-hn`, `hip-bone-hf` (0.221 m, sacroiliac joint to hip joint, 24° out of the median plane, joint ±3°); the thighs hang from their tips. The scapulae rest 11.7° out of the plane and are 0.493 m long (0.483 m in the side view as before). No clavicle (the horse has none).
+- Every limb bone now runs joint to joint in 3D (rest `abductionDeg` / `twistDeg` solved from the joint points, mirrored exactly near/far); sagittal projection of every bone is unchanged, so the side elevation is the same drawing.
+- Re-bound: all body, thermal and structure solids of the 22 limb bones at four scales (rigid transform old frame → new frame, world position unchanged); elevation shapes of these bones (u scaled by the cosine of the tilt); mass centres; anchors; every pose and every clip key re-solved so each limb bone keeps the sagittal direction it had (largest change of an offset 0.97°, no joint limit touched). Front and plan drawings are world-rest drawings and did not move.
+- First try with the hip joint at 0.14 m gave `lateral-ambiguous` on the thigh shapes (plane 6.8° against the paper, 0.21 mm on paper); the hip joint is at 0.15 m, where the femoral head of the skeleton already was.
+- Read after the change: 1:50 structure six views and three-quarter, walk-cycle t = 0.7 s, grazing-head-down, standing-rest, graze-and-swish t = 1 s, default pose, 2D sheet of walk-phase-3: limbs leave from the girdle tips, hooves on the ground, all read naturally.
+
+### Structure (stage 2, published)
+
+- Pelvis 1:50 / 1:100 / 1:200: rods replaced per side by an ilium wing (loft from the crest between tuber sacrale and tuber coxae down to the shaft and the hip socket), an ischial plate back to the seat bone, the iliac crest and a sacroiliac bridge onto the sacrum, all on the hip bone; pubis and ischial arch stay on the pelvis. 1:500: the hip-bone bar re-bound to the new bone.
+- Skull 1:50: one wedge replaced by brain case, deep face narrowing to the incisors (nine sections), nuchal crest, zygomatic arches and facial crests. The first cut was too shallow (read in the side view), deepened to 0.17 m at the orbit.
+
+### Body (stages 1 and 3, published)
+
+- 1:50: `nuchal-bridge` (rounded mass on the thorax under the front of the withers) closes the notch between withers and crest in the grazing poses (read from the left in grazing-head-down).
+- 1:500: ears are pointed buds (ellipsoids of 75 mm) instead of capped tubes. Spheres at the tail joints were tried and dropped: no visible gain and more triangles than 1:200 (`volumes-monotonic`).
+
+### Read this pass
+
+1:50 body default, grazing-head-down (sheet and left close-up), standing-rest, walk-cycle t = 0.7 s, graze-and-swish t = 1 s; 1:50 structure (six views, left, three-quarter twice); 1:100 body; 1:500 body (twice); 1:200 and 1:500 structure; 1:100 thermal cut; 2D 1:50 walk-phase-3. **Not read:** 1:200 body, 1:100 structure, thermal 1:200 / 1:500, 2D at 1:100 / 1:200 / 1:500, walk-cycle t = 0.3 s after the last change.
+
+### Remaining (next pass)
+
+- Rig: cervical chord C7 to poll still 0.98 m against 0.75–0.85 m (needs the neck, head, mane and their 2D re-cut at all scales; not started). Hooves in the re-solved poses were checked by eye and by the validator only, not measured to the millimetre.
+- 1:50 body: neck pieces step at the neck-1 / neck-2 joint when the neck is lowered; mane crest is a flat board that overhangs the poll in standing-rest and steps in grazing; mane fall angular plates; upper arm still a bolster from three-quarter front; pectorals cushions; hock tendon a thin stick; ergots and coronets slivers; head, ears, forearm, cannon, pastern, hoof, thigh, gaskin not re-cut.
+- 1:100 / 1:200 / 1:500 body: tail steps at its joints; neck pieces 2–3, head and legs not re-cut; 1:500 upper hind leg a wedge.
+- 1:50 structure: ribs are 18 slanted bars whose sternal ends were not checked one by one; `tail-hair-core-1/2` are members of hair (kept because `volumes-structure-coverage` asks a member for bones of 0.22–0.24 m; the caudal vertebrae end with the dock); cervical vertebrae are thick capsules; skull without orbit rims, nasal notch and teeth; femoral head sits 10 mm lateral of where a head on a neck would be.
+- 1:100 structure: skull still the old wedge. 1:200 / 1:500 structure: cervical spine three straight capsules; 1:500 ribcage two hoops, leg bones end above the hooves (no coffin-bone member), ear members are tubes.
+- Thermal: follows the body by reference; only the 1:100 cut was read this pass.
+- 2D: redrawn shapes of pass 1 are still ruler outlines; 2D of tail, head and legs untouched; 2D not re-checked with `r3-project2d --check` after the rig change (elevation is unchanged by construction, front and plan were not touched).
+
+### Fundamental issues (outside this asset)
+
+- Lofts cannot be bound to two bones (no section weights in the schema), so a neck, tail or mane over several bones always steps at the joints in a pose; the nuchal bridge is a workaround with a rigid mass.
+- `volumes-monotonic` counts triangles, and an ellipsoid costs several times a three-section loft, so rounding a coarse scale with ellipsoids is punished.
+- `rig-lateral-compare.ts` prints its source instead of a usage line when called without arguments.

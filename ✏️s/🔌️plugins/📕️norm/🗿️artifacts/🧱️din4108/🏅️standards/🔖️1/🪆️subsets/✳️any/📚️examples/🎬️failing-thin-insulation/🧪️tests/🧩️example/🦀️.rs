@@ -14,4 +14,7 @@ async fn failing_dsl_decodes_with_named_failures() {
     assert!(fails.iter().any(|id| *id == "din4108-7.n50" || id.contains("summer") || id.contains("frsi")), "{fails:?}");
     let frsi = report.checks.iter().find(|c| c.id == "din4108-2.frsi.wall-north").expect("frsi");
     assert_eq!(frsi.status, CheckStatus::Fail);
+    for check in report.failing() {
+        assert!(!check.remedies.is_empty(), "{} has no remedy", check.id);
+    }
 }

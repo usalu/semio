@@ -1,0 +1,55 @@
+{
+  "id": "privet-hedge",
+  "category": "vegetation",
+  "title": {
+    "en": "Privet Hedge",
+    "de": "Ligusterhecke"
+  },
+  "heightM": 2,
+  "widthM": 4,
+  "powerW": 0,
+  "poses": [
+    "calm",
+    "windy",
+    "storm",
+    "snow"
+  ],
+  "clips": [
+    "wind-sway",
+    "gust",
+    "diurnal-transpiration"
+  ],
+  "representations": {
+    "50": "authored",
+    "100": "authored",
+    "200": "authored",
+    "500": "authored"
+  },
+  "symbols": [
+    "privet-hedge-symbol"
+  ],
+  "analytics": [
+    "thermal",
+    "transport",
+    "structural"
+  ],
+  "exports": [
+    "svg",
+    "pdf",
+    "dxf",
+    "dwg",
+    "png-sequence",
+    "mp4",
+    "webm",
+    "component",
+    "glb",
+    "fbx",
+    "model",
+    "model-zip"
+  ],
+  "distinction": {
+    "en": "A clipped hedge of eight multi-stemmed privet plants, taller and squarer than the hornbeam hedge and leafy almost to the ground, whose snow pose loads the flat top.",
+    "de": "Eine geschnittene Hecke aus acht mehrstämmigen Ligusterpflanzen, höher und kantiger als die Hainbuchenhecke und fast bis zum Boden belaubt; in der Schneepose lastet Schnee auf der ebenen Oberseite."
+  },
+  "completion": "authored"
+}

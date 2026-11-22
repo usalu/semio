@@ -1,12 +1,7 @@
+use semio_s_artifact_norm_en1991_io::text::snapshot::decode_en1991_dsl;
 
-use semio_framework_test_fixtures::fixture_path;
-
-#[semio_framework_async_macros::async_test]
-async fn dump_example_dsl_and_pack_assets() {
-    use crate::example_subjects::{de_office_compliant, multi_fail_noncompliant};
-    use crate::standards::v1::subsets::any::io::binary::snapshot::{encode_en1991_pack};
-    use crate::standards::v1::subsets::any::io::text::snapshot::{encode_en1991_dsl};
-    use std::path::PathBuf;
-    let root = fixture_path!("../../🏅️standards/🔖️1/Nest");
-    let any = fixture_path!("../../🏅️standards/🔖️1/Nest");
+#[test]
+fn committed_example_assets_decode_to_their_named_subjects() {
+    assert_eq!(decode_en1991_dsl(crate::de_office_compliant::PRIMARY_TEXT).expect("de-office-compliant DSL decodes"), crate::example_subjects::de_office_compliant());
+    assert_eq!(decode_en1991_dsl(crate::multi_fail_noncompliant::PRIMARY_TEXT).expect("multi-fail-noncompliant DSL decodes"), crate::example_subjects::multi_fail_noncompliant());
 }

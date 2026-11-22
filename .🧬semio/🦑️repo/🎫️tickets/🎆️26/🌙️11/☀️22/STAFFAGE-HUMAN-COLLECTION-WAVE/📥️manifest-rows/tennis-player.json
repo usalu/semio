@@ -1,0 +1,55 @@
+{
+  "id": "tennis-player",
+  "category": "humans",
+  "title": {
+    "en": "Tennis Player",
+    "de": "Tennisspielende Person"
+  },
+  "heightM": 1.603,
+  "widthM": 0.789,
+  "powerW": 762,
+  "poses": [
+    "ready-stance",
+    "forehand-backswing",
+    "forehand-contact",
+    "follow-through",
+    "standing-between-points"
+  ],
+  "clips": [
+    "forehand-swing",
+    "idle-breathing"
+  ],
+  "representations": {
+    "50": "authored",
+    "100": "authored",
+    "200": "authored",
+    "500": "authored"
+  },
+  "symbols": [
+    "player-position-mark"
+  ],
+  "analytics": [
+    "thermal",
+    "transport",
+    "structural"
+  ],
+  "exports": [
+    "svg",
+    "pdf",
+    "dxf",
+    "dwg",
+    "png-sequence",
+    "mp4",
+    "webm",
+    "component",
+    "glb",
+    "fbx",
+    "model",
+    "model-zip"
+  ],
+  "distinction": {
+    "en": "A racket sport figure: the forehand turns the shoulders out of the side plane and swings a 0.3 kg racket from behind the body to over the opposite shoulder, while both feet stay planted; no other person in the catalog holds a striking implement.",
+    "de": "Eine Rückschlagsportfigur: die Vorhand dreht die Schultern aus der Seitenebene und schwingt einen 0,3 kg schweren Schläger von hinter dem Körper bis über die Gegenschulter, während beide Füsse stehen bleiben; keine andere Person im Katalog hält ein Schlaggerät."
+  },
+  "completion": "authored"
+}

@@ -14,6 +14,7 @@ type Source = { path: string; text: string };
 const cases = fixture<Data>("🎓️course-coverage");
 const architecture = join(STAFFAGE_ROOT, "..");
 const enums = cases.enums;
+const FLOW_OPTIONS: string[] = cases.flow_options;
 const finite = (value: unknown, minimum = 0, strict = false): value is number => typeof value === "number" && Number.isFinite(value) && (strict ? value > minimum : value >= minimum);
 const same = (a: unknown, b: unknown): boolean => isDeepStrictEqual(a, b);
 const read = (path: string): Data => JSON.parse(readFileSync(path, "utf8"));
@@ -85,12 +86,13 @@ function issues(manifest: Data, entries: Entry[], environments: Set<string>): st
       if (times.some((time: unknown) => !finite(time)) || new Set(times).size !== times.length) issue("timeline-key");
       if (!asset.thermal?.regions?.length) issue("thermal-regions");
       if ("thermalSpanK" in cast && !finite(cast.thermalSpanK, 0, true)) issue("span-range");
-      if ("transport" in cast && (!Array.isArray(cast.transport) || cast.transport.some((layer: unknown) => !enums.transport.includes(layer)) || new Set(cast.transport).size !== cast.transport.length)) issue("transport-layer");
-      if ("transport" in cast && !("transportAgeS" in cast)) issue("transport-age");
-      if (["transportAgeS", "transportStrokeMm", "transportTrailS"].some((key) => key in cast) && (!cast.transport?.length || ("transportAgeS" in cast && (!("clip" in cast) || !finite(cast.transportAgeS, 0, true))) || ["transportStrokeMm", "transportTrailS"].some((key) => key in cast && !finite(cast[key], 0, true)))) issue("transport-age");
-    } else for (const key of ["environment", "timeline", "thermalSpanK", "transport", "transportAgeS", "transportStrokeMm", "transportTrailS"]) if (key in cast) issue("scenario-forbidden");
+      const layers: unknown[] = Array.isArray(cast.flow) ? cast.flow : [];
+      if ("flow" in cast && (layers.length === 0 || layers.some((layer) => !enums.flow.includes(layer)) || new Set(layers).size !== layers.length)) issue("flow-layer");
+      if ("flow" in cast && !("flowDevelopS" in cast)) issue("flow-options");
+      if (FLOW_OPTIONS.some((key) => key in cast) && (layers.length === 0 || FLOW_OPTIONS.some((key) => key in cast && !finite(cast[key], 0, true)) || ("flowTrailS" in cast && !layers.includes("pathlines")))) issue("flow-options");
+    } else for (const key of ["environment", "timeline", "thermalSpanK", "flow", ...FLOW_OPTIONS]) if (key in cast) issue("scenario-forbidden");
     if (["forces", "moments"].includes(cast.view) && (!enums.dynamics.includes(asset.structure?.dynamics) || !finite(asset.structure?.gravityMS2, 0, true))) issue("structural-model");
-    for (const [name, required] of [["thermal", cast.view === "thermal"], ["transport", !!cast.transport?.length], ["structural", ["forces", "moments"].includes(cast.view)]]) if (required && row && !row.analytics?.includes(name)) issue("analytics");
+    for (const [name, required] of [["thermal", cast.view === "thermal"], ["transport", Array.isArray(cast.flow) && cast.flow.length > 0], ["structural", ["forces", "moments"].includes(cast.view)]]) if (required && row && !row.analytics?.includes(name)) issue("analytics");
   }
   return found;
 }
@@ -130,7 +132,7 @@ describe("🎓️ course staffage coverage", () => {
   });
   it("agrees with the independent schema oracle on invalid cast syntax", () => {
     const validate = new Ajv({ strict: true, allErrors: true }).compile(read(join(STAFFAGE_ROOT, "🔨️modules/📤️export/🎭️cast/🧬️schema/🔣️.schema.json")));
-    const codes = new Set(["scale-missing", "scale-preset", "viewpoint-unknown", "view-style", "theme-unknown", "mirror-viewpoint", "state-count", "fps-missing", "fps-forbidden", "fps-range", "thermal-scenario", "scenario-forbidden", "ease-missing", "span-range", "transport-layer", "transport-age", "field-unknown"]);
+    const codes = new Set(["scale-missing", "scale-preset", "viewpoint-unknown", "view-style", "theme-unknown", "mirror-viewpoint", "state-count", "fps-missing", "fps-forbidden", "fps-range", "thermal-scenario", "scenario-forbidden", "ease-missing", "span-range", "flow-layer", "flow-options", "field-unknown"]);
     for (const vector of synthetic.invalid.filter((vector: Data) => codes.has(vector.code))) {
       const cast = { ...structuredClone(synthetic.valid.casts[vector.cast]), ...vector.patch };
       for (const key of vector.remove ?? []) delete cast[key];

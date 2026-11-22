@@ -1,19 +1,47 @@
-# Native XLSX history green: status (incomplete)
+# Native XLSX history green: final report
 
 ## Result
-Not green. Base was last executed at 46 tests with `history_edits_end_to_end` and `conflict_history_edits_end_to_end` failing (the other 44 not re-verified after later edits). Strict, Transitional, Strict mutations and Base mutations were not run. The repo cargo MCP tool stopped answering (PreToolUse hook timeout) after a 2h38m build, so no further runs were possible.
+All five native XLSX suites are green (`repo cargo --store=shared --configuration=prototype -- test -p … --lib --no-fail-fast`, run with no diagnostics left in the tree):
 
-## Environment repairs (concurrent-edit collisions)
-- `OriginalOperationReceivingAdmission::binary` built the struct with `comparison_source`; the field is `pack_value`. Fixed in `...operation-wire/receiving/binary`.
-- `plugin-app-impl/rs` had been overwritten by a stale copy that declared five modules that now live in `members/staging`. Restored from the index (stale copy kept at `generated/plugin-app-impl-stale-working.rs.txt`).
-- `pack/value/decode/receiving/rs` lost its `close_work_demand` quote and call site that `semio-os-dsl` uses; re-added, other agent's two unrelated hunks kept.
-- Xlsx editor unit tests lost three imports (`XlsxCell`, `build_minimal_xlsx`, `apply_xlsx_mutation`); added at the file top. Not yet compiled.
+| Package | Passed | Failed |
+|---|---|---|
+| `semio-s-artifact-stdio-xlsx-base` | 46 | 0 |
+| `semio-s-artifact-stdio-xlsx-base-mutations` | 1 | 0 |
+| `semio-s-artifact-stdio-xlsx-strict` | 21 | 0 |
+| `semio-s-artifact-stdio-xlsx-strict-mutations` | 12 | 0 |
+| `semio-s-artifact-stdio-xlsx-transitional` | 28 | 0 |
 
-## Diagnosis so far
-Both failures are the same. The captured run shows stage Finalizing, pending history work, and a close ladder quote of release 848, depth 3 with `sessionRetired=false`, `sessionOwner=false`, `closing=true`. The session retirement demand (4224 copy bytes, depth 1) is never reached because `time_travel_close_demands` and `time_travel_close_step_context` take the `owners().any(finalizing)` branch first and only drive `StepCommit`. In `step_commit`, `close_commit` runs only when `commit_closing` is set (cancel, failure or stage 4 completion). A close (not a cancel) while a finalize is in flight therefore keeps running the forward stage machine, which never completes. The primary test also stalls in Finalizing before any close, so the stage machine itself stalls; which stage is not yet known.
+`history_edits_end_to_end` and `conflict_history_edits_end_to_end` now pass. The overwrite edit of `insert-cell` previews, withdraws and restores without a trace, finalizes, and folds and reloads alike. The conflict withdrawal is classified, named, resolved, restored and finalized.
 
-## Next step
-A `[DEBUG] step_commit` line (first 12 calls, then every 2000th) is in `time-travel/store-state/finalize/rs`. Run the base suite with `-- history_edits_end_to_end`, read the stage and publisher state, fix, then remove that line and `commit_debug`.
+## Root cause
+The TimeTravel finalize stage machine (`step_commit`, stages 0–5 over `OriginalReplayPublication`) never finished, for four separate framework reasons. Each one only showed up after the one before it was fixed:
 
-## Update: close-safety change (unverified)
-Added `TimeTravelStoreCommand::CloseCommit` (store-state `rs`): sets `commit_closing=true` and drives `step_commit`, so `close_commit` retires any in-flight finalization. The close ladder's finalizing branch (`time_travel_close_step_context`) now issues `CloseCommit` instead of `StepCommit`. This guarantees a close arriving mid-finalize completes, but it is not compiled or tested: every `mcp__repo__*` call has failed with a PreToolUse hook timeout for over 10 minutes, including after three 2-minute waits. The primary-test stall in Finalizing (before any close) is still undiagnosed; the `[DEBUG] step_commit` print and `commit_debug` remain and must be removed when done.
+1. **Original Source reads ran outside a Source effect.** Stage 1, metadata phase 4, reads the history ledger root and returns it through `RetainedOriginalSlot`. Its birth, advance and return authenticate `effect.work_source_turn()`. The replay engine drove those reads through `effected` (`StepContext::with_original_effect`, which has no Source turn), so the read birth refused with "original read birth inputs or actual Source changed". The native VCS command's stage 4 root read had the same defect.
+2. **`publish` reported completion before its resident construction settled.** The publication action placed the receipt, but `OriginalReplayResident` could still be `constructing`. `publish` returned `true` anyway. `take_receipt` then took the settle branch and reported `true` without taking the receipt, so `acknowledge` refused with "completed replay acknowledgement changed its original recipient".
+3. **Settling a publish re-checked the pre-publication frontier.** After the visible decision, the Store generation and revision are the publication's own. The settle call still validated the old frontier and refused with "completed replay publication frontier changed".
+4. **The close path could never finish after a forward failure.**
+   - `close_factory_ticket_controlled` closes the raw `EditReplay` retirement. It requires a terminal ticket to declare its native header lifecycle. `ArtifactStoreSupersessionRetirement` and `ArtifactStoreStringVectorRetirement` did not declare one, so every close turn refused with "terminal ticket has no explicit native header lifecycle".
+   - `step_commit` overwrote the retained failure on every turn, so that refusal looped forever and the publisher never retired.
+   - The ladder's finalizing branch drove `StepCommit` (forward) while it quoted the close.
+   - Together these gave the observed TimeTravel close quote (release 848, depth 3, `sessionRetired=false`) that never moved.
+
+## Fix (framework, at the root)
+- `🏪️store/🕰️history/🏁️replay/🦀️.rs`:
+  - New `source_effected`, sharing one private `effect_turn` with `effected`, runs Source reads and returns under `with_original_source_effect`. The metadata root read and return use it.
+  - `publish` completes only via `published()` (receipt present and resident settled), and validates the frontier only while no receipt exists.
+  - Dropped two unused locals in phase 4.
+- `🏪️store/🕰️history/🎮️command/🦀️.rs`: the native VCS command's root read uses `source_effected`.
+- `🏪️store/🔁️replay/📥️lifted/🔗️read/🦀️.rs`: `ArtifactStoreSupersessionRetirement` and `ArtifactStoreStringVectorRetirement` declare `native_header_release` when terminal. This follows the convention of every other erased retirement: both own nothing once terminal, since their `ManuallyDrop` fields are `None` and the controlled child is terminal.
+- `⏪️time-travel/🗄️store-state/📬️finalize/🦀️.rs`: a step failure goes through `retain_commit_failure`. A second failure while one is already retained is returned instead of overwriting and dropping the first.
+- `⏪️time-travel/🗄️store-state/🦀️.rs` and `🧵️instance/🧹️owners-and-retirement/🦀️.rs`:
+  - `TimeTravelStoreCommand::CloseCommit` is now verified. It sets `commit_closing` and drives `step_commit`, so a runtime close arriving mid-finalize retires the finalization through `close_commit` and matches the close quote.
+  - The close ladder issues `CloseCommit`.
+
+## Environment state and cleanup
+- The earlier `semio-plugin-testing-caller` failure (`unresolved import semio_framework_value::RetainedCloneClose`) had already been fixed by a concurrent edit (14:06). The file now imports `retained_clone::RetainedCloneClose`.
+- Removed every diagnostic from this investigation:
+  - `[DEBUG] step_commit`, the failure print and the `commit_debug` helper (finalize).
+  - The type-name diagnostic in `🌱️value/♻️retirement/🏭️factory/🦀️.rs`.
+  - The backtrace diagnostics in `🎟️tickets/🦀️.rs` and `📦️original-slot/🌱️birth/🦀️.rs`.
+  - The `[DEBUG]` prints in the history-edit acceptance harness: primary and alternative failure, seed failure, and the `SEMIO_XLSX_ARCHIVE_PROGRESS` conflict-withdrawal print.
+- `[DEBUG]` lines belonging to other agents' active work (for example `🏪️store/🧩️composition/🚪️open/🏭️operation/🫴️record/🦀️.rs`) were left alone.

@@ -884,12 +884,9 @@ fn uncontended(step: Result<UiDocumentAssemblyProgress, UiDocumentAssemblyError>
 //#endregion 🧾️RightSizedPublication
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🎟️assembly/🧪️tests/🎟️assembly/🦀️.rs"]
-mod document_assembly_tests;
-#[cfg(test)]
-#[path = "../⚖️compare/📃️document/🧪️tests/📃️document/🦀️.rs"]
-mod document_component_compare_tests;
+#[cfg(feature = "testkit")]
+#[path = "../🧪️testkit/🦀️.rs"]
+pub mod arena_testkit;
 
 #[cfg(test)]
 #[path = "../🧪️tests/🔬️document-unit/🦀️.rs"]

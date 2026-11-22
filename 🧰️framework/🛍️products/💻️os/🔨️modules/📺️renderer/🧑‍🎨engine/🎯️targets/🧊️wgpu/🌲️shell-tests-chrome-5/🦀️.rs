@@ -48,7 +48,7 @@ use semio_renderer_wgpu_shell_view_paint::{
     SHELL_WINDOW_PAINT_OPPORTUNITIES, ShellChromeBandSpan, ShellNavbarWidthPolicy, WORLD_PROJECTION_PANE_PAINT_OPPORTUNITIES, flowed_anchor_tab_divider_y, flowed_anchor_tab_row_y, shell_surface_role_chip_text,
 };
 use semio_renderer_wgpu_shell_view_panels::PanelsViewCtx;
-use semio_renderer_wgpu_shell_window_actions::WINDOW_PANE_BODY_WIDTH_PX;
+use semio_renderer_wgpu_shell_window_actions::window_pane_body_width_px;
 use semio_renderer_wgpu_shell_windows::{PanelAnchor, WORLD_PROJECTION_DEFAULT_TEMPLATE_ID, WORLD_PROJECTION_PANE_PARENT, WindowPaneChip};
 use semio_renderer_wgpu_test_support::shell_source;
 use semio_renderer_wgpu_ui_engine::retained_ui_engine;

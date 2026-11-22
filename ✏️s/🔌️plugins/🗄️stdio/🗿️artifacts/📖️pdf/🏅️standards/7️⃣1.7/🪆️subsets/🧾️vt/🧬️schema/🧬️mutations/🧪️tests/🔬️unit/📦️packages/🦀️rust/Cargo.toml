@@ -9,6 +9,22 @@ description = "Component crate of semio-s-artifact-stdio-pdf: tests"
 [package.metadata.semio]
 role = "library"
 
+[package.metadata.semio.carve]
+owned = [
+  "standards::v1_7::subsets::base::io",
+  "standards::v1_7::subsets::base::io::derived_construction",
+  "standards::v1_7::subsets::base::io::import::deserializers::artifacts::binary",
+  "standards::v1_7::subsets::base::io::import::deserializers::artifacts::binary::v_raw",
+  "standards::v1_7::subsets::base::io::import::deserializers::artifacts::binary::v_raw::any",
+  "standards::v1_7::subsets::base::io::import::deserializers::artifacts::deflate",
+  "standards::v1_7::subsets::base::io::import::deserializers::artifacts::deflate::v_rfc1950",
+  "standards::v1_7::subsets::base::io::import::deserializers::artifacts::deflate::v_rfc1950::any",
+  "standards::v1_7::subsets::base::io::mutation_bridge",
+  "standards::v1_7::subsets::h::schema::mutations::tests",
+  "standards::v1_7::subsets::vt::io::text",
+  "standards::v1_7::subsets::vt::schema::mutations::tests",
+]
+
 [lints]
 workspace = true
 

@@ -481,15 +481,15 @@
             },
             {
               "id": "rotor-disc-section",
-              "bone": "blower-wheel",
+              "bone": "canopy",
               "role": "detail",
               "z": 9,
               "filled": true,
               "tone": 0.38,
               "material": "galvanised-steel",
               "kind": "rect",
-              "x": 0.0327,
-              "y": -0.065,
+              "x": 0.1377,
+              "y": 0.07,
               "w": 0.0013,
               "h": 0.13,
               "penMm": 0.2
@@ -522,14 +522,14 @@
             },
             {
               "id": "blower-wheel",
-              "bone": "blower-wheel",
+              "bone": "canopy",
               "role": "detail",
               "z": 9.1,
               "filled": false,
               "tone": 0.3,
               "kind": "rect",
-              "x": -0.034,
-              "y": -0.067,
+              "x": 0.071,
+              "y": 0.068,
               "w": 0.068,
               "h": 0.134
             },
@@ -883,14 +883,14 @@
             },
             {
               "id": "blower-wheel",
-              "bone": "blower-wheel",
+              "bone": "canopy",
               "role": "detail",
               "z": 9.1,
               "filled": false,
               "tone": 0.3,
               "kind": "rect",
-              "x": -0.034,
-              "y": -0.067,
+              "x": 0.071,
+              "y": 0.068,
               "w": 0.068,
               "h": 0.134
             }
@@ -2383,6 +2383,21 @@
             ]
           },
           {
+            "id": "rim-upstand",
+            "bone": "canopy",
+            "material": "stainless-steel",
+            "role": "body",
+            "tone": 0.72,
+            "kind": "extrude",
+            "profile": [[-0.438, 0.012], [0.438, 0.012], [0.438, 0.488], [-0.438, 0.488]],
+            "plane": "zx",
+            "from": 0.0006,
+            "to": 0.006,
+            "holes": [
+              [[-0.4374, 0.0126], [0.4374, 0.0126], [0.4374, 0.4874], [-0.4374, 0.4874]]
+            ]
+          },
+          {
             "id": "slope-front",
             "bone": "canopy",
             "material": "stainless-steel",
@@ -3580,10 +3595,113 @@
             "material": "galvanised-steel",
             "role": "body",
             "tone": 0.43,
-            "kind": "revolve",
-            "profile": [[-0.031, 0.052], [-0.034, 0.05], [-0.034, 0.067], [-0.0325, 0.067], [-0.0325, 0.053], [-0.031, 0.052]],
-            "axis": [1, 0, 0],
-            "origin": [0.0, 0.0, 0.0]
+            "kind": "extrude",
+            "profile": [
+              [0.067, 0.0],
+              [0.06643, 0.00875],
+              [0.06472, 0.01734],
+              [0.0619, 0.02564],
+              [0.05802, 0.0335],
+              [0.05315, 0.04079],
+              [0.04738, 0.04738],
+              [0.04079, 0.05315],
+              [0.0335, 0.05802],
+              [0.02564, 0.0619],
+              [0.01734, 0.06472],
+              [0.00875, 0.06643],
+              [0.0, 0.067],
+              [-0.00875, 0.06643],
+              [-0.01734, 0.06472],
+              [-0.02564, 0.0619],
+              [-0.0335, 0.05802],
+              [-0.04079, 0.05315],
+              [-0.04738, 0.04738],
+              [-0.05315, 0.04079],
+              [-0.05802, 0.0335],
+              [-0.0619, 0.02564],
+              [-0.06472, 0.01734],
+              [-0.06643, 0.00875],
+              [-0.067, 0.0],
+              [-0.06643, -0.00875],
+              [-0.06472, -0.01734],
+              [-0.0619, -0.02564],
+              [-0.05802, -0.0335],
+              [-0.05315, -0.04079],
+              [-0.04738, -0.04738],
+              [-0.04079, -0.05315],
+              [-0.0335, -0.05802],
+              [-0.02564, -0.0619],
+              [-0.01734, -0.06472],
+              [-0.00875, -0.06643],
+              [-0.0, -0.067],
+              [0.00875, -0.06643],
+              [0.01734, -0.06472],
+              [0.02564, -0.0619],
+              [0.0335, -0.05802],
+              [0.04079, -0.05315],
+              [0.04738, -0.04738],
+              [0.05315, -0.04079],
+              [0.05802, -0.0335],
+              [0.0619, -0.02564],
+              [0.06472, -0.01734],
+              [0.06643, -0.00875]
+            ],
+            "plane": "yz",
+            "from": -0.034,
+            "to": -0.0325,
+            "holes": [
+              [
+                [0.051, 0.0],
+                [0.05056, 0.00666],
+                [0.04926, 0.0132],
+                [0.04712, 0.01952],
+                [0.04417, 0.0255],
+                [0.04046, 0.03105],
+                [0.03606, 0.03606],
+                [0.03105, 0.04046],
+                [0.0255, 0.04417],
+                [0.01952, 0.04712],
+                [0.0132, 0.04926],
+                [0.00666, 0.05056],
+                [0.0, 0.051],
+                [-0.00666, 0.05056],
+                [-0.0132, 0.04926],
+                [-0.01952, 0.04712],
+                [-0.0255, 0.04417],
+                [-0.03105, 0.04046],
+                [-0.03606, 0.03606],
+                [-0.04046, 0.03105],
+                [-0.04417, 0.0255],
+                [-0.04712, 0.01952],
+                [-0.04926, 0.0132],
+                [-0.05056, 0.00666],
+                [-0.051, 0.0],
+                [-0.05056, -0.00666],
+                [-0.04926, -0.0132],
+                [-0.04712, -0.01952],
+                [-0.04417, -0.0255],
+                [-0.04046, -0.03105],
+                [-0.03606, -0.03606],
+                [-0.03105, -0.04046],
+                [-0.0255, -0.04417],
+                [-0.01952, -0.04712],
+                [-0.0132, -0.04926],
+                [-0.00666, -0.05056],
+                [-0.0, -0.051],
+                [0.00666, -0.05056],
+                [0.0132, -0.04926],
+                [0.01952, -0.04712],
+                [0.0255, -0.04417],
+                [0.03105, -0.04046],
+                [0.03606, -0.03606],
+                [0.04046, -0.03105],
+                [0.04417, -0.0255],
+                [0.04712, -0.01952],
+                [0.04926, -0.0132],
+                [0.05056, -0.00666]
+              ]
+            ],
+            "sheet": true
           },
           {
             "id": "wheel-vane",
@@ -3840,6 +3958,12 @@
               [[-0.438, 0.012], [0.438, 0.012], [0.438, 0.488], [-0.438, 0.488]]
             ],
             "sectionFaces": ["+v"],
+            "region": "canopy",
+            "layer": "shell"
+          },
+          {
+            "id": "th-rim-upstand",
+            "of": "rim-upstand",
             "region": "canopy",
             "layer": "shell"
           },
@@ -4148,44 +4272,26 @@
             "part": "member"
           },
           {
-            "id": "member-hip-left",
-            "bone": "canopy",
-            "material": "stainless-steel",
-            "role": "body",
-            "tone": 0.6,
-            "kind": "extrude",
-            "profile": [[0.025, 0.0], [0.0, 0.0], [-0.01759, -0.01777], [-0.01673, -0.01861], [0.0005, -0.0012], [0.025, -0.0012]],
-            "plane": "yz",
-            "from": 0.0,
-            "to": 0.43849,
-            "transform": {
-              "translation": [0.20746, 0.241, 0.13796],
-              "rotation": [-0.7055011, -0.0476251, -0.4322586, 0.5596003]
-            },
-            "member": "canopy",
-            "part": "member"
-          },
-          {
-            "id": "member-hip-right",
-            "bone": "canopy",
-            "material": "stainless-steel",
-            "role": "body",
-            "tone": 0.6,
-            "kind": "extrude",
-            "profile": [[0.025, 0.0], [0.0, 0.0], [-0.01759, 0.01777], [-0.01673, 0.01861], [0.0005, 0.0012], [0.025, 0.0012]],
-            "plane": "yz",
-            "from": 0.0,
-            "to": 0.43849,
-            "transform": {
-              "translation": [0.20746, 0.241, -0.13796],
-              "rotation": [0.7055011, 0.0476251, -0.4322586, 0.5596003]
-            },
-            "member": "canopy",
-            "part": "member"
-          },
-          {
             "id": "member-rim",
             "of": "rim",
+            "member": "canopy",
+            "part": "member"
+          },
+          {
+            "id": "member-skin-front",
+            "of": "slope-front",
+            "member": "canopy",
+            "part": "member"
+          },
+          {
+            "id": "member-skin-left",
+            "of": "slope-left",
+            "member": "canopy",
+            "part": "member"
+          },
+          {
+            "id": "member-skin-right",
+            "of": "slope-right",
             "member": "canopy",
             "part": "member"
           },
@@ -4388,8 +4494,8 @@
             "de": "Körper: eine 0,9 m breite Pyramiden-Kaminhaube, wie sie aus 0,6-mm-Blech gebaut ist. Der Haubenkörper besteht aus dem gekanteten Randband von 45 mm mit 12 mm Umbug, drei geneigten Blechen (Front und zwei Seiten), die sich in zwei Graten treffen, der Deckplatte von 0,26 m mal 0,2 m mit dem 150-mm-Auslass und dem Rückblech an der Wand; jedes geneigte Blech ist ein Trapez in seiner eigenen Ebene, sodass Flächen und Grate exakt sind."
           },
           {
-            "en": "Underside, 6 mm above the rim edge: the base panel with three grease filter cassettes of 0.28 m by 0.32 m (frame, mesh pack, latch) and two lamp modules of 0.12 m by 0.05 m in the front strip. The switch panel with four buttons sits on the front rim.",
-            "de": "Unterseite, 6 mm über der Randkante: das Bodenblech mit drei Fettfilterkassetten von 0,28 m mal 0,32 m (Rahmen, Gitterpaket, Riegel) und zwei Lampenmodulen von 0,12 m mal 0,05 m im vorderen Streifen. Die Schalterblende mit vier Tasten sitzt am vorderen Rand."
+            "en": "Underside, 6 mm above the rim edge: the 12 mm return flange of the rim is folded up 5.4 mm to a hem that carries the base panel with three grease filter cassettes of 0.28 m by 0.32 m (frame, mesh pack, latch) and two lamp modules of 0.12 m by 0.05 m in the front strip. The switch panel with four buttons sits on the front rim.",
+            "de": "Unterseite, 6 mm über der Randkante: der 12 mm breite Umbug des Rands ist 5,4 mm hochgekantet und trägt als Falz das Bodenblech mit drei Fettfilterkassetten von 0,28 m mal 0,32 m (Rahmen, Gitterpaket, Riegel) und zwei Lampenmodulen von 0,12 m mal 0,05 m im vorderen Streifen. Die Schalterblende mit vier Tasten sitzt am vorderen Rand."
           },
           {
             "en": "Inside: the scroll housing of the centrifugal blower with its inlet ring towards the wall, the forward-curved wheel of 134 mm with 24 vanes on its own bone, the external-rotor motor on the room side, the transition to the round outlet, the 73 mm duct spigot above the top plate and the two backdraft leaves on their spindle inside it, each on its own bone.",
@@ -4404,8 +4510,8 @@
             "de": "Thermisch: Die Haubenschale ist jedes Außenblech, dessen Innenseite als Schnittfläche markiert ist, Kassetten und Lampenmodule sind die verdeckten Regionen darunter, der Kamin sind beide Schächte mit den Klappen, die Scheibe an der Rohrmündung ist der Abluft-Emitter und der Motor die Wärmequelle im Haubenkörper."
           },
           {
-            "en": "Structure: the load path of a hung sheet box. The back sheet hangs on two keyhole screws and bears on two spacer pads; rim band, top plate and the two folded hips stiffen it; the chimney channels stand on the top plate (seat joint), slide in each other (telescope joint) and are held by the wall bracket. The masses are the scroll housing, the motor and the transition themselves, the wheel on its bone and the two chimney channels.",
-            "de": "Tragwerk: der Lastpfad eines aufgehängten Blechkastens. Das Rückblech hängt an zwei Schlüssellochschrauben und stützt sich auf zwei Distanzpuffer; Randband, Deckplatte und die zwei gekanteten Grate steifen es aus; die Kaminschächte stehen auf der Deckplatte (Sitzfuge), stecken ineinander (Teleskopfuge) und werden vom Wandwinkel gehalten. Die Massen sind Spiralgehäuse, Motor und Übergangsstück selbst, das Laufrad auf seinem Knochen und die zwei Kaminschächte."
+            "en": "Structure: the load path of a hung sheet box, a stressed skin. The back sheet hangs on two keyhole screws and bears on two spacer pads; the three sloping sheets, folded to each other along the two hips, carry rim band and top plate as a pyramid shell; the chimney channels stand on the top plate (seat joint), slide in each other (telescope joint) and are held by the wall bracket. The masses are the scroll housing, the motor and the transition themselves, the wheel on its bone and the two chimney channels.",
+            "de": "Tragwerk: der Lastpfad eines aufgehängten Blechkastens, eine tragende Haut. Das Rückblech hängt an zwei Schlüssellochschrauben und stützt sich auf zwei Distanzpuffer; die drei geneigten Bleche, an den zwei Graten miteinander gekantet, tragen Randband und Deckplatte als Pyramidenschale; die Kaminschächte stehen auf der Deckplatte (Sitzfuge), stecken ineinander (Teleskopfuge) und werden vom Wandwinkel gehalten. Die Massen sind Spiralgehäuse, Motor und Übergangsstück selbst, das Laufrad auf seinem Knochen und die zwei Kaminschächte."
           }
         ]
       },
@@ -4614,7 +4720,7 @@
             "role": "body",
             "tone": 0.43,
             "kind": "revolve",
-            "profile": [[0.04, 0.0], [0.04, 0.04], [0.094, 0.04], [0.094, 0.0]],
+            "profile": [[0.034, 0.0], [0.034, 0.02], [0.04, 0.02], [0.04, 0.04], [0.094, 0.04], [0.094, 0.0]],
             "axis": [1, 0, 0],
             "origin": [0.105, 0.135, 0.08]
           },
@@ -4797,42 +4903,6 @@
             "part": "member"
           },
           {
-            "id": "member-hip-left",
-            "bone": "canopy",
-            "material": "stainless-steel",
-            "role": "body",
-            "tone": 0.6,
-            "kind": "extrude",
-            "profile": [[0.03, 0.0], [0.0, 0.0], [-0.02111, -0.02132], [-0.01897, -0.02343], [0.00125, -0.003], [0.03, -0.003]],
-            "plane": "yz",
-            "from": 0.0,
-            "to": 0.42749,
-            "transform": {
-              "translation": [0.20933, 0.23975, 0.13995],
-              "rotation": [-0.7055011, -0.0476251, -0.4322586, 0.5596003]
-            },
-            "member": "canopy",
-            "part": "member"
-          },
-          {
-            "id": "member-hip-right",
-            "bone": "canopy",
-            "material": "stainless-steel",
-            "role": "body",
-            "tone": 0.6,
-            "kind": "extrude",
-            "profile": [[0.03, 0.0], [0.0, 0.0], [-0.02111, 0.02132], [-0.01897, 0.02343], [0.00125, 0.003], [0.03, 0.003]],
-            "plane": "yz",
-            "from": 0.0,
-            "to": 0.42749,
-            "transform": {
-              "translation": [0.20933, 0.23975, -0.13995],
-              "rotation": [0.7055011, 0.0476251, -0.4322586, 0.5596003]
-            },
-            "member": "canopy",
-            "part": "member"
-          },
-          {
             "id": "member-rim",
             "bone": "canopy",
             "material": "stainless-steel",
@@ -4846,6 +4916,24 @@
             "holes": [
               [[-0.435, 0.015], [0.435, 0.015], [0.435, 0.485], [-0.435, 0.485]]
             ],
+            "member": "canopy",
+            "part": "member"
+          },
+          {
+            "id": "member-skin-front",
+            "of": "slope-front",
+            "member": "canopy",
+            "part": "member"
+          },
+          {
+            "id": "member-skin-left",
+            "of": "slope-left",
+            "member": "canopy",
+            "part": "member"
+          },
+          {
+            "id": "member-skin-right",
+            "of": "slope-right",
             "member": "canopy",
             "part": "member"
           },
@@ -5024,8 +5112,8 @@
             "de": "Thermisch: Die Haubenschale sind der Randblock und die fünf Platten mit ihren Innenseiten als Schnittflächen, Filterfeld und die zwei 2 mm dicken Diffusorscheiben sind die verdeckten Regionen, der Kamin sind beide Schächte, der Emitter ist eine 15 mm dicke Scheibe an der Rohrmündung und der Motor die Wärmequelle im Inneren."
           },
           {
-            "en": "Structure: back plate on two screws and two pads, rim frame, top plate and the two hips as angles of 15 mm, the chimney channels with their seat on the top plate and the wall bracket; the masses are the blower housing and the motor themselves, the wheel drum and the two chimney channels. The two backdraft leaves are posed bones and stay as half-octagon plates of 15 mm inside the duct.",
-            "de": "Tragwerk: Rückplatte an zwei Schrauben und zwei Puffern, Randrahmen, Deckplatte und die zwei Grate als Winkel von 15 mm, die Kaminschächte mit ihrem Sitz auf der Deckplatte und dem Wandwinkel; die Massen sind Gebläsegehäuse und Motor selbst, die Laufradtrommel und die zwei Kaminschächte. Die zwei Rückstauklappen sind gestellte Knochen und bleiben als 15 mm dicke Halbachteck-Platten im Rohr."
+            "en": "Structure: back plate on two screws and two pads, rim frame, top plate and the three sloping plates of 15 mm as the stressed skin (the hips are their folds, not separate bars), the chimney channels with their seat on the top plate and the wall bracket; the masses are the blower housing and the motor themselves, the wheel drum and the two chimney channels. The two backdraft leaves are posed bones and stay as half-octagon plates of 15 mm inside the duct.",
+            "de": "Tragwerk: Rückplatte an zwei Schrauben und zwei Puffern, Randrahmen, Deckplatte und die drei geneigten Platten von 15 mm als tragende Haut (die Grate sind ihre Kantungen, keine eigenen Stäbe), die Kaminschächte mit ihrem Sitz auf der Deckplatte und der Wandwinkel; die Massen sind Gebläsegehäuse und Motor selbst, die Laufradtrommel und die zwei Kaminschächte. Die zwei Rückstauklappen sind gestellte Knochen und bleiben als Halbachteckplatten von 15 mm im Rohr."
           }
         ]
       },
@@ -5280,38 +5368,20 @@
             "part": "member"
           },
           {
-            "id": "member-hip-left",
-            "bone": "canopy",
-            "material": "stainless-steel",
-            "role": "body",
-            "tone": 0.6,
-            "kind": "extrude",
-            "profile": [[0.045, 0.0], [0.0, 0.0], [-0.03166, -0.03198], [-0.01034, -0.05309], [0.01252, -0.03], [0.045, -0.03]],
-            "plane": "yz",
-            "from": 0.0,
-            "to": 0.40249,
-            "transform": {
-              "translation": [0.21865, 0.2335, 0.1499],
-              "rotation": [-0.7055011, -0.0476251, -0.4322586, 0.5596003]
-            },
+            "id": "member-skin-front",
+            "of": "pyramid-front",
             "member": "canopy",
             "part": "member"
           },
           {
-            "id": "member-hip-right",
-            "bone": "canopy",
-            "material": "stainless-steel",
-            "role": "body",
-            "tone": 0.6,
-            "kind": "extrude",
-            "profile": [[0.045, 0.0], [0.0, 0.0], [-0.03166, 0.03198], [-0.01034, 0.05309], [0.01252, 0.03], [0.045, 0.03]],
-            "plane": "yz",
-            "from": 0.0,
-            "to": 0.40249,
-            "transform": {
-              "translation": [0.21865, 0.2335, -0.1499],
-              "rotation": [0.7055011, 0.0476251, -0.4322586, 0.5596003]
-            },
+            "id": "member-skin-left",
+            "of": "pyramid-left",
+            "member": "canopy",
+            "part": "member"
+          },
+          {
+            "id": "member-skin-right",
+            "of": "pyramid-right",
             "member": "canopy",
             "part": "member"
           },
@@ -5425,8 +5495,8 @@
             "de": "Thermisch: Die Haubenschale sind Randplatte und Pyramide ohne ihre verdeckte Grundfläche, das Filterfeld und je eine 2 mm dicke Diffusorscheibe pro Lampenmodul sind die verdeckten Regionen im Rand, der Kamin sind beide Blöcke, der Emitter ist eine 30 mm dicke Scheibe unter der Rohrmündung und der Motor ein Zylinder in der Pyramide."
           },
           {
-            "en": "Structure: back plate and top plate of 30 mm, the rim frame and the two hips as angles, both chimney blocks, the two screw and pad supports as bars on the wall, and two masses where they are: the fan unit as an ellipsoid at the blower, 70 mm left of the centre line, and the wheel on its bone.",
-            "de": "Tragwerk: Rück- und Deckplatte von 30 mm, der Randrahmen und die zwei Grate als Winkel, beide Kaminblöcke, die Schrauben- und Pufferauflager als Leisten an der Wand und zwei Massen an ihrem Ort: die Lüftereinheit als Ellipsoid am Gebläse, 70 mm links der Mittellinie, und das Laufrad auf seinem Knochen."
+            "en": "Structure: back plate and top plate of 30 mm, the rim frame and the three pyramid wedges as the stiff canopy body that carries rim and top plate to the back plate, both chimney blocks, the two screw and pad supports as bars on the wall, and two masses where they are: the fan unit as an ellipsoid at the blower, 70 mm left of the centre line, and the wheel on its bone.",
+            "de": "Tragwerk: Rück- und Deckplatte von 30 mm, der Randrahmen und die drei Pyramidenkeile als steifer Haubenkörper, der Rand und Deckplatte an die Rückplatte bringt, beide Kaminblöcke, die zwei Schrauben- und Pufferauflager als Stäbe an der Wand und zwei Massen an ihrem Ort: die Lüftereinheit als Ellipsoid am Gebläse, 70 mm links der Mittellinie, und das Laufrad auf seinem Knochen."
           }
         ]
       },
@@ -5649,38 +5719,20 @@
             "part": "member"
           },
           {
-            "id": "member-hip-left",
-            "bone": "canopy",
-            "material": "stainless-steel",
-            "role": "body",
-            "tone": 0.6,
-            "kind": "extrude",
-            "profile": [[0.06, 0.0], [0.0, 0.0], [-0.04221, -0.04264], [-0.00668, -0.07782], [0.02086, -0.05], [0.06, -0.05]],
-            "plane": "yz",
-            "from": 0.0,
-            "to": 0.36249,
-            "transform": {
-              "translation": [0.23109, 0.22517, 0.16316],
-              "rotation": [-0.7055011, -0.0476251, -0.4322586, 0.5596003]
-            },
+            "id": "member-skin-front",
+            "of": "pyramid-front",
             "member": "canopy",
             "part": "member"
           },
           {
-            "id": "member-hip-right",
-            "bone": "canopy",
-            "material": "stainless-steel",
-            "role": "body",
-            "tone": 0.6,
-            "kind": "extrude",
-            "profile": [[0.06, 0.0], [0.0, 0.0], [-0.04221, 0.04264], [-0.00668, 0.07782], [0.02086, 0.05], [0.06, 0.05]],
-            "plane": "yz",
-            "from": 0.0,
-            "to": 0.36249,
-            "transform": {
-              "translation": [0.23109, 0.22517, -0.16316],
-              "rotation": [0.7055011, 0.0476251, -0.4322586, 0.5596003]
-            },
+            "id": "member-skin-left",
+            "of": "pyramid-left",
+            "member": "canopy",
+            "part": "member"
+          },
+          {
+            "id": "member-skin-right",
+            "of": "pyramid-right",
             "member": "canopy",
             "part": "member"
           },
@@ -5810,8 +5862,8 @@
             "de": "Thermisch: Randplatte und Pyramidenmassen ohne ihre verdeckten Grundflächen sind die Schale, das Filterfeld und ein Lampenstreifen sind verdeckte Regionen im Rand, der Kamin sind beide Blöcke, der Emitter ist eine 75 mm dicke Scheibe unter der Rohrmündung und der Motor ein Block im Haubenkörper."
           },
           {
-            "en": "Structure: a hanger angle (back sheet and top plate), the rim frame, the two hips, both chimney channels, two wall supports and the fan unit and wheel masses at the blower, 70 mm left of the centre line.",
-            "de": "Tragwerk: ein Hängewinkel (Rückblech und Deckplatte), der Randrahmen, die zwei Grate, beide Kaminschächte, zwei Wandauflager sowie die Massen von Lüftereinheit und Laufrad am Gebläse, 70 mm links der Mittellinie."
+            "en": "Structure: a hanger angle (back sheet and top plate), the rim frame, the three pyramid wedges as the stiff canopy body, both chimney channels, two wall supports and the fan unit and wheel masses at the blower, 70 mm left of the centre line.",
+            "de": "Tragwerk: ein Hängewinkel (Rückblech und Deckplatte), der Randrahmen, die drei Pyramidenkeile als steifer Haubenkörper, beide Kaminschächte, zwei Wandauflager und die Massen von Lüftereinheit und Laufrad am Gebläse, 70 mm links der Mittellinie."
           }
         ]
       }

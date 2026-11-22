@@ -123,7 +123,7 @@
       }
     },
     {
-      "name": "transport with its start",
+      "name": "flow layers with the time the air has developed",
       "cast": {
         "asset": "walking-commuter",
         "viewpoint": "elevation",
@@ -133,10 +133,12 @@
         "environment": "winter-overcast",
         "clip": "walk-cycle",
         "fps": 15,
-        "transport": [
+        "flow": [
+          "moisture",
           "pathlines"
         ],
-        "transportAgeS": 3
+        "flowDevelopS": 3,
+        "flowTrailS": 1
       }
     }
   ],
@@ -239,7 +241,7 @@
       "issue": "the thermal view needs an environment or a timeline"
     },
     {
-      "name": "transport without its start",
+      "name": "flow layers without the time the air has developed",
       "cast": {
         "asset": "walking-commuter",
         "viewpoint": "elevation",
@@ -249,14 +251,14 @@
         "environment": "winter-overcast",
         "clip": "walk-cycle",
         "fps": 15,
-        "transport": [
+        "flow": [
           "pathlines"
         ]
       },
-      "issue": "need transportAgeS"
+      "issue": "flow layers need flowDevelopS"
     },
     {
-      "name": "transport outside the thermal view",
+      "name": "flow layers outside the thermal view",
       "cast": {
         "asset": "walking-commuter",
         "viewpoint": "elevation",
@@ -265,12 +267,12 @@
         "scale": 50,
         "clip": "walk-cycle",
         "fps": 15,
-        "transport": [
+        "flow": [
           "pathlines"
         ],
-        "transportAgeS": 3
+        "flowDevelopS": 3
       },
-      "issue": "exist for the thermal view only"
+      "issue": "flow layers exist for the thermal view only"
     },
     {
       "name": "no view direction",
@@ -348,7 +350,7 @@
                 "revision": "sha256:cdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcd"
               },
               "spanK": 25,
-              "transport": []
+              "flow": []
             }
           }
         }
@@ -419,8 +421,9 @@
                 }
               ],
               "spanK": null,
-              "transport": [
-                "parcels"
+              "flow": [
+                "streams",
+                "fog"
               ]
             }
           }
@@ -595,6 +598,20 @@
         "set": {
           "path": "provenance/view/style",
           "value": "sepia"
+        }
+      },
+      {
+        "name": "a layer of the retired transport overlay in the scenario",
+        "set": {
+          "path": "provenance/scenario/flow",
+          "value": ["parcels"]
+        }
+      },
+      {
+        "name": "the retired transport member in the scenario",
+        "set": {
+          "path": "provenance/scenario/transport",
+          "value": []
         }
       },
       {

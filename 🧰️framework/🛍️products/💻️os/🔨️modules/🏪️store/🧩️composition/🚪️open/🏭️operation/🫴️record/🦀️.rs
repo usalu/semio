@@ -37,7 +37,7 @@ fn invalid()->ValueError{ValueError::literal(ValueRefusalKind::InvariantViolated
 fn fixed(copy_bytes:usize)->RetirementDemand{RetirementDemand{copy_bytes,depth:1,..Default::default()}}
 fn progress(copy_bytes:usize)->RetainedCloneProgress{RetainedCloneProgress{copied_items:1,copied_bytes:copy_bytes,..Default::default()}}
 fn spent(work:u128)->u64{u64::try_from(work).unwrap_or(u64::MAX)}
-fn refused(failure:OriginalTurnFailure)->ValueError{let progress=failure.retained_progress();ValueError::literal(ValueRefusalKind::InvalidValue,"original member snapshot receiving turn refused").with_retained_progress(progress)}
+fn refused(failure:OriginalTurnFailure)->ValueError{eprintln!("[DEBUG] refused {failure:?}");let progress=failure.retained_progress();ValueError::literal(ValueRefusalKind::InvalidValue,"original member snapshot receiving turn refused").with_retained_progress(progress)}
 /// 🪙️ Runs one effect-shaped owner action in the turn's own effect and charges its performed work; `None` means the turn could not fund it.
 fn funded<T,E>(cx:&mut StepContext<'_>,grant:RetainedCloneGrant,run:impl FnOnce(&mut semio_framework_value::RetainedAllocationEffect<'_>)->semio_framework_value::RetainedWorkOutcome<T,E>)->Result<Option<Result<T,E>>,ValueError>{
  let Some((turn,performed))=cx.with_original_effect(grant,|_,effect|run(effect))? else{return Ok(None)};cx.consume_fuel(spent(performed.max(turn.work)));Ok(Some(turn.result))
@@ -48,20 +48,21 @@ fn closed(cx:&mut StepContext<'_>,grant:RetainedCloneGrant,run:impl FnOnce(&mut 
  match poll{semio_framework_value::RetainedWorkPoll::Pending{work}=>{cx.consume_fuel(spent(work.max(performed)));Ok(Default::default())},semio_framework_value::RetainedWorkPoll::Complete(turn)=>{cx.consume_fuel(spent(turn.work.max(performed)));turn.result.map(|step|step.progress()).map_err(semio_framework_value::OriginalRetirementFailure::into_value_error)}}
 }
 /// 🫴️ Runs one receiving step in a local scope; `None` means the turn could not fund it.
-fn received<T>(cx:&mut StepContext<'_>,run:impl FnOnce(&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>,RetainedCloneGrant,u64)->T)->Result<Option<T>,ValueError>{
+fn received<T>(cx:&mut StepContext<'_>,floor:semio_framework_value::RetirementDemand,run:impl FnOnce(&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>,RetainedCloneGrant,u64)->T)->Result<Option<T>,ValueError>{
  let mut scope=None;let mut stepped=None;
- if !cx.with_native_receiving_work(&mut scope,|control,grant,work|{stepped=Some(run(control,grant,work));Ok(())}).map_err(refused)?{return Ok(None)}
+ if !cx.with_native_receiving_work(&mut scope, floor, |control,grant,work|{stepped=Some(run(control,grant,work));Ok(())}).map_err(refused)?{return Ok(None)}
  let scope=scope.ok_or_else(invalid)?;
  if scope.source_refusal.is_some()||scope.call.is_err(){return Err(ValueError::literal(ValueRefusalKind::InvalidValue,"original member snapshot receiving scope refused").with_retained_progress(scope.retained_progress()))}
  stepped.map(Some).ok_or_else(invalid)
 }
 impl<S:NativeReceive<RecordValue>> OriginalRecordMemberSnapshotOpen<S>{
- /// 🧾️ The same caller debits this receipt even when the semantic decoder refuses its input.
+ /// 🧾️ The whole physical spend the Source booked during the turn, including the receiving scope's own control charge; the same caller debits it even when the semantic decoder refuses its input.
  pub fn last_receipt(&self)->RetainedCloneProgress{self.last}
- fn publish(&mut self,cx:&mut StepContext<'_>,result:Result<RetainedCloneProgress,ValueError>)->Result<MemberSnapshotOpenStep,OriginalTurnFailure>{
+ fn publish(&mut self,cx:&mut StepContext<'_>,start:RetainedCloneProgress,result:Result<RetainedCloneProgress,ValueError>)->Result<MemberSnapshotOpenStep,OriginalTurnFailure>{
   let mut p=match &result{Ok(p)=>*p,Err(error)=>error.retained_progress()};
-  let child=cx.receiving_child_progress();p.copied_items=p.copied_items.max(child.copied_items);p.copied_bytes=p.copied_bytes.max(child.copied_bytes);p.retained_capacity_bytes=p.retained_capacity_bytes.max(child.retained_capacity_bytes);p.released_bytes=p.released_bytes.max(child.released_bytes);self.last=p;
+  let child=cx.receiving_child_progress();p.copied_items=p.copied_items.max(child.copied_items);p.copied_bytes=p.copied_bytes.max(child.copied_bytes);p.retained_capacity_bytes=p.retained_capacity_bytes.max(child.retained_capacity_bytes);p.released_bytes=p.released_bytes.max(child.released_bytes);
   let receipt=if let Some(issued)=cx.receiving_issued_grant(){cx.consume_receiving_retained(issued,p)}else{cx.consume_retained(p)};cx.consume_fuel(p.copied_items.saturating_add(p.copied_bytes)as u64);
+  let now=cx.retained_progress();p=RetainedCloneProgress{copied_items:now.copied_items.saturating_sub(start.copied_items).max(p.copied_items),copied_bytes:now.copied_bytes.saturating_sub(start.copied_bytes).max(p.copied_bytes),retained_capacity_bytes:now.retained_capacity_bytes.saturating_sub(start.retained_capacity_bytes).max(p.retained_capacity_bytes),released_bytes:now.released_bytes.saturating_sub(start.released_bytes).max(p.released_bytes)};self.last=p;
   let receipt_refusal=receipt.err();
   if let Err(error)=result{self.diagnostic.get_or_insert(MemberOpenDiagnostic::Decode);let original=OriginalTurnFailure::from(error.with_retained_progress(p));return Err(OriginalTurnFailure{receipt_refusal,context_refusal:None,..original})}
   if let Some(error)=receipt_refusal{self.diagnostic.get_or_insert(MemberOpenDiagnostic::Capacity);let original=OriginalTurnFailure::from(invalid().with_retained_progress(p));return Err(OriginalTurnFailure{receipt_refusal:Some(error),context_refusal:None,..original})}
@@ -113,15 +114,17 @@ impl<S:NativeReceive<RecordValue>+BorrowedDslRecord+pack::snapshot::ArtifactDsl+
  }
 
  fn parse_step(&mut self,cx:&mut StepContext<'_>,child:RetainedCloneGrant)->Result<RetainedCloneProgress,ValueError>{
-  let source=self.request.as_ref().ok_or_else(invalid)?.original_snapshot_source(cx).map_err(semio_framework_os_store_member_open::member_admission_diagnostic)?;let parser=&mut self.parser;
-  let Some((stepped,performed))=cx.with_original_effect(child,|cx,effect|received(cx,|native,_,_|parser.as_mut().map(|parser|parser.step(&source,native,effect))))? else{return Ok(Default::default())};
+  let source=self.request.as_ref().ok_or_else(invalid)?.original_snapshot_source(cx).map_err(semio_framework_os_store_member_open::member_admission_diagnostic)?;let floor=self.parser.as_ref().ok_or_else(invalid)?.demands(&source)?;let parser=&mut self.parser;
+  let Some((stepped,performed))=cx.with_original_effect(child,|cx,effect|received(cx,floor,|native,offered,units|parser.as_mut().map(|parser|parser.advance(&source,native,&mut effect.nested(offered),units))))? else{return Ok(Default::default())};
   let Some(Some(turn))=stepped? else{return Ok(Default::default())};cx.consume_fuel(spent(performed.max(turn.work)));
   let p=turn.result.map_err(flat)?;if self.parser.as_ref().is_some_and(|p|p.is_ready()){self.phase=Phase::TakeRecord;}Ok(p)
  }
  fn receive_step(&mut self,cx:&mut StepContext<'_>,child:RetainedCloneGrant)->Result<RetainedCloneProgress,ValueError>{
   let receiver=self.receiving.as_mut().ok_or_else(invalid)?;
   let request=self.receive_request;
-  let Some(issued_turn)=received(cx,|native,offered,work|{
+  let (body,units)=request.map_or((child.maximum_copy_bytes,cx.fuel_remaining()),|(g,u)|(g.maximum_copy_bytes,u));
+  let floor=receiver.demands(body,units)?;
+  let Some(issued_turn)=received(cx,floor,|native,offered,work|{
    let available=child.restricted_by(offered);
    let (grant,units)=request.unwrap_or((available,work));
    if grant.restricted_by(available)!=grant||units>work
@@ -135,7 +138,7 @@ impl<S:NativeReceive<RecordValue>+BorrowedDslRecord+pack::snapshot::ArtifactDsl+
   })? else{return Ok(Default::default())};
   let Some((poll,issued))=issued_turn? else{return Ok(Default::default())};
   let turn=match poll{semio_framework_value::RetainedWorkPoll::Pending{work}=>{self.receive_request=Some(issued);cx.consume_fuel(spent(work));return Ok(Default::default())},semio_framework_value::RetainedWorkPoll::Complete(turn)=>turn};
-  let pending=receiver.advance_pending();
+  let pending=receiver.advance_pending();eprintln!("[DEBUG] recv turn work={} err={} pending={} progress={:?}",turn.work,turn.result.is_err(),pending,turn.result.as_ref().ok().map(|s|s.progress()));
   self.receive_request=pending.then_some(issued);
   cx.consume_fuel(spent(turn.work));let p=turn.result.map_err(flat)?.progress();
   if !pending&&receiver.output_ready(){self.phase=Phase::TakeSnapshot;}Ok(p)
@@ -212,18 +215,18 @@ impl<S:NativeReceive<RecordValue>+BorrowedDslRecord+pack::snapshot::ArtifactDsl+
   Ok(Self{projection:Default::default(),request:ManuallyDrop::new(Some(request)),parser:ManuallyDrop::new(None),record:ManuallyDrop::new(None),source:ManuallyDrop::new(None),admission:ManuallyDrop::new(None),receiving:ManuallyDrop::new(None),snapshot:ManuallyDrop::new(None),snapshot_close:None,record_close:None,phase:Phase::Frame,envelope_offset:0,payload_start:None,last:Default::default(),diagnostic:None,closing:false,terminal:false,turns:0,receive_request:None})
  }
  fn step(&mut self,cx:&mut StepContext<'_>,grant:RetainedCloneGrant)->Result<MemberSnapshotOpenStep,OriginalTurnFailure>{
-  self.last=Default::default();if self.closing||self.terminal{return Ok(MemberSnapshotOpenStep::Rejected(MemberOpenDiagnostic::Stale))}if let Some(d)=self.diagnostic{return Ok(MemberSnapshotOpenStep::Rejected(d))}
+  self.last=Default::default();let start=cx.retained_progress();if self.closing||self.terminal{return Ok(MemberSnapshotOpenStep::Rejected(MemberOpenDiagnostic::Stale))}if let Some(d)=self.diagnostic{return Ok(MemberSnapshotOpenStep::Rejected(d))}
   if let Err(d)=self.request.as_ref().expect("original open request").check_step_authority(cx){self.diagnostic=Some(d);return Ok(MemberSnapshotOpenStep::Rejected(d))}
   let mut g=grant.restricted_by(cx.retained_grant());
   if self.phase!=Phase::Receive{g.maximum_items=g.maximum_items.min(1);}
-  if cx.should_yield(){return self.publish(cx,Ok(Default::default()))}let result=self.advance_original(cx,g);self.publish(cx,result)
+  if cx.should_yield(){return self.publish(cx,start,Ok(Default::default()))}let result=self.advance_original(cx,g);self.publish(cx,start,result)
  }
  fn take_ready(&mut self,cx:&mut StepContext<'_>)->Result<Option<(S,MemberOpenRequest)>,OriginalTurnFailure>{
   if self.phase!=Phase::Ready||self.closing||self.terminal||self.diagnostic.is_some(){return Ok(None)}
   self.request.as_ref().ok_or_else(invalid)?.check_step_authority(cx).map_err(semio_framework_os_store_member_open::member_admission_diagnostic)?;
   if self.snapshot.is_none()||!self.parser.as_ref().is_some_and(|p|p.terminal_is_empty())||!self.receiving.as_ref().is_some_and(|r|r.terminal_is_empty())||self.record.is_some()||self.source.is_some()||self.admission.is_some()||!self.projection.terminal_is_empty(){return Err(invalid().into())}
   let d=fixed(2*(size_of::<Option<S>>()+size_of::<Option<MemberOpenRequest>>()+size_of::<Option<RetainedRecordReceiving>>()+size_of::<Option<NativeReceivingOriginal<RecordValue,S>>>())+size_of::<bool>());if cx.should_yield()||!retained_clone_grant_admits(cx.retained_grant(),d){return Ok(None)}
-  let p=progress(d.copy_bytes);self.publish(cx,Ok(p))?;let snapshot=self.snapshot.take().unwrap();let request=self.request.take().unwrap();self.parser.take();self.receiving.take();self.terminal=true;Ok(Some((snapshot,request)))
+  let p=progress(d.copy_bytes);let start=cx.retained_progress();self.publish(cx,start,Ok(p))?;let snapshot=self.snapshot.take().unwrap();let request=self.request.take().unwrap();self.parser.take();self.receiving.take();self.terminal=true;Ok(Some((snapshot,request)))
  }
 
 }

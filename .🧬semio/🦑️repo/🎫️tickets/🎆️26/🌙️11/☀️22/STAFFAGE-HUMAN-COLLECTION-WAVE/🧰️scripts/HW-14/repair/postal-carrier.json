@@ -1,0 +1,12 @@
+[
+{"op":"region-set","id":"satchel","set":{"areaM2":0.5216}},
+{"op":"set","path":["poses",{"id":"standing"},"thermal","regions","satchel","exposedFraction"],"value":0.5215},
+{"op":"set","path":["poses",{"id":"handing-over-letter"},"thermal","regions","satchel","exposedFraction"],"value":0.5215},
+{"op":"set","path":["poses",{"id":"reading-address"},"thermal","regions","satchel","exposedFraction"],"value":0.5215},
+{"op":"set","path":["poses",{"id":"contact-left"},"thermal","regions","satchel","exposedFraction"],"value":0.5215},
+{"op":"set","path":["poses",{"id":"loading-left"},"thermal","regions","satchel","exposedFraction"],"value":0.5215},
+{"op":"set","path":["poses",{"id":"passing-left"},"thermal","regions","satchel","exposedFraction"],"value":0.5215},
+{"op":"set","path":["poses",{"id":"contact-right"},"thermal","regions","satchel","exposedFraction"],"value":0.5215},
+{"op":"set","path":["poses",{"id":"loading-right"},"thermal","regions","satchel","exposedFraction"],"value":0.5215},
+{"op":"set","path":["poses",{"id":"passing-right"},"thermal","regions","satchel","exposedFraction"],"value":0.5215}
+]

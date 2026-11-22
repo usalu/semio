@@ -1,0 +1,231 @@
+{
+ "description": "Language-agnostic validation cases of the command offload action: the decoded command (argv, environment, declared outputs), what the worker offers (resolved tools by <tool>/<digest>, confinement, network) and the text key of the refusal, or null when the command is accepted. Any implementation of the worker validator must give the same verdicts.",
+ "cases": [
+  {
+   "name": "declared wasm-opt command",
+   "arguments": [
+    "@command:wasm-opt/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "@root/in/core.wasm",
+    "-Oz",
+    "-o",
+    "@root/out/core.wasm"
+   ],
+   "environment": {
+    "BINARYEN_CORES": "2"
+   },
+   "outputs": [
+    "out/core.wasm"
+   ],
+   "offered": [
+    "wasm-opt/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+   ],
+   "expect": null
+  },
+  {
+   "name": "tool not on the allow-list",
+   "arguments": [
+    "@command:curl/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "https://example.com"
+   ],
+   "environment": {},
+   "outputs": [
+    "out/x"
+   ],
+   "offered": [],
+   "expect": "refusal.tool"
+  },
+  {
+   "name": "resolved tool with another digest than the worker owns",
+   "arguments": [
+    "@command:wasm-opt/bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    "@root/in/core.wasm"
+   ],
+   "environment": {},
+   "outputs": [
+    "out/core.wasm"
+   ],
+   "offered": [
+    "wasm-opt/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+   ],
+   "expect": "refusal.digest"
+  },
+  {
+   "name": "shipped tool needs no row",
+   "arguments": [
+    "@command:build-script/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+   ],
+   "environment": {
+    "OUT_DIR": "@root/out",
+    "TARGET": "aarch64-apple-darwin"
+   },
+   "outputs": [
+    "out/x"
+   ],
+   "offered": [],
+   "expect": null
+  },
+  {
+   "name": "an absolute path argument",
+   "arguments": [
+    "@command:wasm-opt/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "/etc/passwd"
+   ],
+   "environment": {},
+   "outputs": [
+    "out/core.wasm"
+   ],
+   "offered": [
+    "wasm-opt/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+   ],
+   "expect": "refusal.argument"
+  },
+  {
+   "name": "a path that climbs out of the root",
+   "arguments": [
+    "@command:wasm-opt/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "@root/../x"
+   ],
+   "environment": {},
+   "outputs": [
+    "out/core.wasm"
+   ],
+   "offered": [
+    "wasm-opt/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+   ],
+   "expect": "refusal.argument"
+  },
+  {
+   "name": "a response file",
+   "arguments": [
+    "@command:wasm-opt/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "@args.txt"
+   ],
+   "environment": {},
+   "outputs": [
+    "out/core.wasm"
+   ],
+   "offered": [
+    "wasm-opt/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+   ],
+   "expect": "refusal.argument"
+  },
+  {
+   "name": "an output outside out/",
+   "arguments": [
+    "@command:wasm-opt/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+   ],
+   "environment": {},
+   "outputs": [
+    "in/core.wasm"
+   ],
+   "offered": [
+    "wasm-opt/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+   ],
+   "expect": "refusal.output"
+  },
+  {
+   "name": "no output at all",
+   "arguments": [
+    "@command:wasm-opt/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+   ],
+   "environment": {},
+   "outputs": [],
+   "offered": [
+    "wasm-opt/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+   ],
+   "expect": "refusal.output"
+  },
+  {
+   "name": "a loader variable",
+   "arguments": [
+    "@command:wasm-opt/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+   ],
+   "environment": {
+    "DYLD_INSERT_LIBRARIES": "x"
+   },
+   "outputs": [
+    "out/a"
+   ],
+   "offered": [
+    "wasm-opt/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+   ],
+   "expect": "refusal.environment"
+  },
+  {
+   "name": "a SEMIO variable",
+   "arguments": [
+    "@command:wasm-opt/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+   ],
+   "environment": {
+    "SEMIO_X": "1"
+   },
+   "outputs": [
+    "out/a"
+   ],
+   "offered": [
+    "wasm-opt/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+   ],
+   "expect": "refusal.environment"
+  },
+  {
+   "name": "another PATH",
+   "arguments": [
+    "@command:wasm-opt/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+   ],
+   "environment": {
+    "PATH": "/tmp"
+   },
+   "outputs": [
+    "out/a"
+   ],
+   "offered": [
+    "wasm-opt/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+   ],
+   "expect": "refusal.environment"
+  },
+  {
+   "name": "a plain program is no command",
+   "arguments": [
+    "/bin/sh",
+    "-c",
+    "id"
+   ],
+   "environment": {},
+   "outputs": [
+    "out/a"
+   ],
+   "offered": [],
+   "expect": "refusal.shape"
+  },
+  {
+   "name": "a worker without confinement",
+   "arguments": [
+    "@command:wasm-opt/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+   ],
+   "environment": {},
+   "outputs": [
+    "out/a"
+   ],
+   "offered": [
+    "wasm-opt/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+   ],
+   "confined": false,
+   "expect": "refusal.confinement"
+  },
+  {
+   "name": "a worker that allows network",
+   "arguments": [
+    "@command:wasm-opt/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+   ],
+   "environment": {},
+   "outputs": [
+    "out/a"
+   ],
+   "offered": [
+    "wasm-opt/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+   ],
+   "network": true,
+   "expect": "refusal.confinement"
+  }
+ ]
+}

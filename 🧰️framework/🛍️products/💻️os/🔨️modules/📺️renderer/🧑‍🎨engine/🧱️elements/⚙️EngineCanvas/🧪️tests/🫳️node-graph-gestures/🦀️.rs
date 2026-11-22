@@ -39,11 +39,11 @@ fn attach(surface_id: &str, bounds: Rect) -> UiComponentSceneNode {
 }
 
 /// 🩺️ The host's own classification of a surface point — the ONE the path discriminator reads.
-fn screen_hit(surface_id: &str, bounds: Rect, x: f32, y: f32) -> flow::dag::DagScreenHit {
+fn screen_hit(surface_id: &str, bounds: Rect, x: f32, y: f32) -> infinite_canvas::board::schema::dag_input::DagScreenHit {
     ENGINE_SURFACES.with(|cell| {
         let map = cell.borrow();
         let Some(NodeGraphEngine::Flow(host)) = map.get(surface_id).and_then(|entry| entry.node_graph.as_ref()) else { panic!("live flow host") };
-        host.dag.screen_hit((x - bounds.x) as f64, (y - bounds.y) as f64)
+        semio_os_infinite_board_dag_host::screen_hit(&host.dag.viewport, &host.dag.graph, &host.dag.minimap, (x - bounds.x) as f64, (y - bounds.y) as f64)
     })
 }
 
@@ -263,7 +263,7 @@ fn detaching_a_wired_input_from_its_port_publishes_disconnect() {
         ENGINE_SURFACES.with(|cell| {
             let map = cell.borrow();
             let Some(NodeGraphEngine::Flow(host)) = map.get(surface_id).and_then(|entry| entry.node_graph.as_ref()) else { panic!("live flow host for {label}") };
-            host.dag.host_snapshot.edges.iter().map(|edge| edge.id.clone()).collect::<Vec<_>>()
+            host.dag.graph.host_snapshot.edges.iter().map(|edge| edge.id.clone()).collect::<Vec<_>>()
         })
     };
     assert!(wired_ids("before").iter().any(|id| id == synapse), "{synapse} is wired before the cut");
@@ -287,7 +287,7 @@ fn a_minimap_press_publishes_the_camera_it_moved() {
         ENGINE_SURFACES.with(|cell| {
             let map = cell.borrow();
             let Some(NodeGraphEngine::Flow(host)) = map.get(surface_id).and_then(|entry| entry.node_graph.as_ref()) else { panic!("live flow host for {label}") };
-            [host.dag.host_snapshot.camera.x, host.dag.host_snapshot.camera.y]
+            [host.dag.graph.host_snapshot.camera.x, host.dag.graph.host_snapshot.camera.y]
         })
     };
     let mut point = None;
@@ -321,7 +321,7 @@ fn a_minimap_press_publishes_the_camera_it_moved() {
         viewport.args,
         Some(semio_framework::dsl_value!({
             "surfaceId": surface_id,
-            "viewport": { "x": after[0], "y": after[1], "zoom": ENGINE_SURFACES.with(|cell| { let map = cell.borrow(); let Some(NodeGraphEngine::Flow(host)) = map.get(surface_id).and_then(|entry| entry.node_graph.as_ref()) else { panic!("live flow host") }; host.dag.host_snapshot.camera.zoom }) },
+            "viewport": { "x": after[0], "y": after[1], "zoom": ENGINE_SURFACES.with(|cell| { let map = cell.borrow(); let Some(NodeGraphEngine::Flow(host)) = map.get(surface_id).and_then(|entry| entry.node_graph.as_ref()) else { panic!("live flow host") }; host.dag.graph.host_snapshot.camera.zoom }) },
         })),
         "the published viewport is exactly the camera the minimap committed"
     );

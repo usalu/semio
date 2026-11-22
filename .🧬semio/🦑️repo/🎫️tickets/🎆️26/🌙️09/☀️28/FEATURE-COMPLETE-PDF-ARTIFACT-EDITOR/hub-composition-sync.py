@@ -1,4 +1,4 @@
-"""🔁 Idempotently adds the seven PDF authoring actions to the hub composition JSON, mirroring `window_definition()`; rerun the descriptor generator to replace this hand sync."""
+"""🔁 Idempotently adds the eight PDF authoring actions to the hub composition JSON, mirroring `window_definition()`; rerun the descriptor generator to replace this hand sync."""
 import copy
 import json
 from pathlib import Path
@@ -13,6 +13,7 @@ page, x, y = number("page", "Page", "Seite", True), number("x", "X", "X", True),
 extra = lambda en, de: string("extra", en, de, 0)
 payload = lambda minimum: string("payload", "PDF Data", "PDF-Daten", minimum, minimum == 1)
 specs = [
+    ("set-entry", "Set Entry", "Eintrag setzen", [string("object", "Family (catalog, trailer, info, viewer)", "Familie (catalog, trailer, info, viewer)", 1, True), string("text", "Value (key=value to add)", "Wert (key=value zum Hinzufügen)", 0), string("extra", "Key", "Schlüssel", 0)]),
     ("create-annotation", "Create Annotation", "Anmerkung erstellen", [page, string("object", "Kind (note, highlight, underline, strikeOut, squiggly, ink, link)", "Art (note, highlight, underline, strikeOut, squiggly, ink, link)", 1, True), string("text", "Contents or link", "Inhalt oder Link", 0), extra("Quad points or ink strokes", "Quadpunkte oder Freihandstriche"), x, y, number("width", "Width", "Breite", False), number("height", "Height", "Höhe", False), number("red", "Red", "Rot", False), number("green", "Green", "Grün", False), number("blue", "Blue", "Blau", False)]),
     ("fill-form-field", "Fill Form Field", "Formularfeld ausfüllen", [string("object", "Field name", "Feldname", 1, True), string("text", "Value", "Wert", 0)]),
     ("replace-page", "Replace Page", "Seite ersetzen", [page, payload(0), extra("Source Page", "Quellseite"), number("width", "Width", "Breite", False), number("height", "Height", "Höhe", False)]),

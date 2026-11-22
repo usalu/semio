@@ -1,5 +1,5 @@
 /** 🧊️ The static pose of an asset as a GLB (binary glTF 2.0) holding every authored scale and mode: one glTF scene per scale and mode (`s50-body`, `s50-thermal`, `s50-structure`, `s100-body`, …) over one skeleton, each tessellated at the quality of its own scale and skinned to the rig, the pose baked into the node transforms, all seven views inside as `KHR_materials_variants` (the base materials carry the `light-solid` look a viewer shows without selecting a variant),
- * the feature edges as `lines` primitives under the line views and the glyphs of the analytic views as hidden-by-default solids of the structure and thermal scenes.
+ * the feature edges as `lines` primitives under the line views the glyphs of the structural views as hidden-by-default solids of the structure scenes and the developed air flow of the pose (stream tubes with arrow heads, vapour and fog puffs, see ../../🧊️volume/🌊️flow) as hidden-by-default solids of the thermal scenes, shown by the `thermal` variant.
  *
  * A GLB is one static pose: a clip is an FBX. Bytes are deterministic.
  *
@@ -16,7 +16,7 @@ import { resolvedOf, trianglesOf } from "../🗿️model/🟦️.ts";
 /** ⚙️ The options of one GLB: the pose and the {@link AssetModelOptions} that apply to a static pose (`scales` restricts the authored scales inside, default all of them). */
 export type GlbFileOptions = Omit<AssetModelOptions, "at" | "poses" | "clips"> & { readonly pose: Slug };
 
-/** 🔄️ A GLB with the number of triangles it holds (every triangle primitive of every scene, glyphs included; the seven variants share the geometry of their mode). */
+/** 🔄️ A GLB with the number of triangles it holds (every triangle primitive of every scene, glyphs and air flow included; the seven variants share the geometry of their mode). */
 export type GlbResult = { readonly bytes: Uint8Array; readonly triangles: number };
 
 /** 🚨️ The GLB of one pose of an asset and its triangle count. Throws {@link ModelRequestError} for an unknown pose, an unavailable scale or an asset without an authored scale; rejects with the signal's reason when cancelled. */

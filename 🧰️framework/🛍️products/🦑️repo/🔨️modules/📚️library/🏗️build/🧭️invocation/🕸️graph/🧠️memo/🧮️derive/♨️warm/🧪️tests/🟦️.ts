@@ -112,6 +112,6 @@ test("wiring: the memo asks the warm deriver before the derivation child and sta
  const ask=glue.indexOf("if(warm&&await warm.ask(file))"),child=glue.indexOf("await child({[GRAPH_MEMO_POLICY_V1.derive]:file})"),start=glue.indexOf("warm?.start(file)");
  expect(ask>0&&child>ask&&start>child).toBe(true);
  const main=readFileSync(join(import.meta.dir,"..","⌨️main","🟦️.ts"),"utf8");expect(main).toContain("if(!warmClosureStampsHoldV1(closure,stamps)||process.memoryUsage().rss>GRAPH_MEMO_POLICY_V1.warm.maximumResidentBytes)void server?.close();");
- expect(inputs).toContain("reuse.sourceFile(config, compilerHost.getSourceFile, host.readFile, JSON.stringify(options))");
+ expect(inputs).toContain("reuse.sourceFile(config, compilerHost.getSourceFile, host.readFile, reuse.shared ? JSON.stringify(options");
  expect(inputs).toContain("reuse: activeTypeScriptProgramReuseV1()");expect(inputs).toContain("...(oldProgram ? { oldProgram } : {})");expect(inputs).toContain("reuse?.keep(config, program);");
 });

@@ -1,5 +1,7 @@
 /** 📤️ Browser export actions: one shared evaluator feeds SVG, PDF (single page or all seven views), DXF, DWG, PNG sequence, MP4 and WebM; every action reports progress and honours cancellation.
  *
+ * Air flow. The request decides it (`flow`, `flowConditions`, `flowDetail`, `environment`), so a file shows what the screen shows: the flow is developed first (progress, cancellable), SVG and PDF draw it on paper (in a PDF of all views on the thermal page), DXF and DWG carry it as model-space geometry on the `FLOW-…` layers, and the frames of a PNG sequence, MP4 or WebM advance it with their times on one fixed canvas (the union of all frames about the world origin, so nothing jumps). A looping clip closes its loop; a pose with flow plays it for `durationS` (default {@link POSE_PLAY_S} s) on a standing figure.
+ *
  * Nothing is mislabelled: a format the runtime cannot produce returns `{ status: "unavailable", reason: { en, de } }`, and a video reports the codec and alpha behaviour the browser really chose.
  * Metadata embedded where the format allows: SVG `<metadata>`, PDF info dictionary, DXF `999` comments, PNG `tEXt`, ZIP comment and `metadata.json`.
  *
@@ -8,13 +10,13 @@
  * @see ../../../../🔨️modules/📤️export/🗜️zip/🟦️.ts — ZIP and PNG text chunks
  */
 import * as library from "@teaching/staffage";
-import { SVG_NAMESPACE, modelScene, withPngText, writeDxf, writePdf, writeSvg, writeZip } from "@teaching/staffage";
+import { SVG_NAMESPACE, developFlow, modelScene, shownFlow, transportOf, withPngText, writeDxf, writePdf, writeSvg, writeZip } from "@teaching/staffage";
 import type { ExportFormat as SchemaExportFormat } from "@teaching/staffage";
 import type { Asset, DrawingScene, EvaluationQuery, JobControl, ModelScene, Slug, Text, View } from "@teaching/staffage";
 import { VIEWPOINT_PHRASES } from "../🔭️viewpoints/🟦️.ts";
 import { ensureViewpoint } from "../🧮️pipeline/🦥️lazy/🟦️.ts";
-import { allViews, depictionOptions, evaluateState, queryAt, sceneOf, structureOf, thermalOf } from "../🧮️pipeline/🟦️.ts";
-import type { DepictionRequest } from "../🧮️pipeline/🟦️.ts";
+import { allViews, depictionOptions, evaluateState, frameOf, queryAt, sceneOf, sceneWithAir, structureOf, thermalOf } from "../🧮️pipeline/🟦️.ts";
+import type { DepictionRequest, SceneFrame } from "../🧮️pipeline/🟦️.ts";
 import { browserRasteriser, browserRecorder, canRasterise, recorderMimes } from "./🖼️raster/🟦️.ts";
 import type { Rasteriser, Recorder } from "./🖼️raster/🟦️.ts";
 
@@ -63,11 +65,14 @@ const MIME: Record<ExportFormat, string> = { svg: "image/svg+xml", pdf: "applica
 const MAX_SIDE_PX = 8192;
 const VIDEO_SIDE_PX = 1280;
 const DEFAULT_FPS = 30;
+
+/** ▶️ Seconds a pose plays its air flow as a frame sequence or video when the options name no duration. */
+export const POSE_PLAY_S = 6;
 const encoder = new TextEncoder();
 
 const NO_CANVAS: Text = { en: "This browser cannot draw SVG into a canvas, so frames cannot be rasterised.", de: "Dieser Browser kann SVG nicht in ein Canvas zeichnen, daher können keine Bilder gerastert werden." };
 const NO_RECORDER = (container: string): Text => ({ en: `This browser's MediaRecorder cannot produce ${container}, and no first-party encoder is bundled for it.`, de: `Der MediaRecorder dieses Browsers kann kein ${container} erzeugen, und es ist kein eigener Encoder dafür enthalten.` });
-const NO_CLIP: Text = { en: "Frame sequences and videos need a clip query, not a pose.", de: "Bildfolgen und Videos benötigen eine Clip-Abfrage, keine Pose." };
+const NO_CLIP: Text = { en: "Frame sequences and videos need a clip, or a pose whose air flow plays (thermal view with flow layers), not a still pose.", de: "Bildfolgen und Videos benötigen einen Clip oder eine Pose, deren Luftströmung abläuft (thermische Ansicht mit Strömungsebenen), keine stehende Pose." };
 const NO_DWG: Text = { en: "DWG export needs the DWG encoder, which is not available in this build.", de: "Der DWG-Export braucht den DWG-Encoder, der in diesem Build nicht verfügbar ist." };
 
 type DwgWriter = (scene: ModelScene) => Promise<Uint8Array>;
@@ -172,19 +177,48 @@ function check(control?: JobControl): void {
 
 const isAbort = (error: unknown): boolean => typeof error === "object" && error !== null && (error as { readonly name?: unknown }).name === "AbortError";
 
-function rasterSize(scene: DrawingScene, pixelsPerMm: number, maxSide: number): { widthPx: number; heightPx: number; svgScale: number } {
-  const fit = Math.min(1, maxSide / Math.max(scene.widthMm * pixelsPerMm, scene.heightMm * pixelsPerMm));
-  return { widthPx: Math.max(1, Math.round(scene.widthMm * pixelsPerMm * fit)), heightPx: Math.max(1, Math.round(scene.heightMm * pixelsPerMm * fit)), svgScale: fit };
+function rasterSize(frame: SceneFrame, pixelsPerMm: number, maxSide: number): { widthPx: number; heightPx: number; svgScale: number } {
+  const widthMm = frame.maxX - frame.minX;
+  const heightMm = frame.maxY - frame.minY;
+  const fit = Math.min(1, maxSide / Math.max(widthMm * pixelsPerMm, heightMm * pixelsPerMm));
+  return { widthPx: Math.max(1, Math.round(widthMm * pixelsPerMm * fit)), heightPx: Math.max(1, Math.round(heightMm * pixelsPerMm * fit)), svgScale: fit };
 }
 
-async function* renderFrames(asset: Asset, query: EvaluationQuery, options: ExportOptions, count: number, fps: number, size: { widthPx: number; heightPx: number }, rasterise: Rasteriser, control: JobControl | undefined, label: Text, flatten: boolean): AsyncGenerator<{ readonly index: number; readonly png: Uint8Array; readonly scene: DrawingScene }> {
+const ROOT_TAG = /<svg\b[^>]*>/u;
+
+/** 🪟️ The SVG of a scene on a fixed window about its world origin: the root takes the size and viewBox of `frame`, and `background` (when not `null`) is painted over the whole window first, so every frame of a sequence has the same canvas. */
+export function framedSvg(scene: DrawingScene, frame: SceneFrame, background: string | null): string {
+  const x = scene.metadata.origin.xMm + frame.minX;
+  const y = scene.metadata.origin.yMm + frame.minY;
+  const width = frame.maxX - frame.minX;
+  const height = frame.maxY - frame.minY;
+  const root = (ROOT_TAG.exec(writeSvg(scene))?.[0] ?? "<svg>").replace(/\s(?:width|height|viewBox)="[^"]*"/gu, "").replace(/>$/u, ` width="${width}mm" height="${height}mm" viewBox="${x} ${y} ${width} ${height}">`);
+  return writeSvg(scene).replace(ROOT_TAG, root + (background === null ? "" : `<rect x="${x}" y="${y}" width="${width}" height="${height}" fill="${background}"/>`));
+}
+
+const macrotask = (): Promise<void> => new Promise((resolve) => setTimeout(resolve, 0));
+
+/** 🎞️ The scenes of a frame schedule: a clip or transition is evaluated at every frame time (its flow advances with it), a pose keeps its figure and only its air moves on. Yields to the event loop between frames, so progress shows and a cancellation lands. */
+async function frameScenes(asset: Asset, query: EvaluationQuery, options: ExportOptions, count: number, fps: number, control: JobControl | undefined, label: Text): Promise<DrawingScene[]> {
+  const request = depictionOptions(options);
+  const pose = query.kind === "pose" ? query.pose : null;
+  const still = pose === null ? null : evaluateState(asset, { kind: "pose", pose }, request.representation);
+  const airy = (request.flow?.length ?? 0) > 0;
+  const scenes: DrawingScene[] = [];
   for (let n = 0; n < count; n++) {
     check(control);
-    const state = evaluateState(asset, queryAt(query, n / fps));
-    const scene = sceneOf(state, depictionOptions(options));
-    const svg = flatten && scene.background === null ? writeSvg({ ...scene, background: "#ffffff" }) : writeSvg(scene);
-    const png = await rasterise(svg, size.widthPx, size.heightPx, control?.signal);
+    scenes.push(still === null || pose === null ? sceneOf(evaluateState(asset, queryAt(query, n / fps), request.representation), request) : airy ? sceneWithAir(still, request, transportOf({ asset, query: { kind: "pose", pose, timeS: n / fps } }, request)) : sceneOf(still, request));
     control?.progress?.(n + 1, count, label);
+    await macrotask();
+  }
+  return scenes;
+}
+
+async function* renderFrames(scenes: readonly DrawingScene[], frame: SceneFrame, size: { widthPx: number; heightPx: number }, rasterise: Rasteriser, control: JobControl | undefined, label: Text, flatten: boolean): AsyncGenerator<{ readonly index: number; readonly png: Uint8Array; readonly scene: DrawingScene }> {
+  for (const [n, scene] of scenes.entries()) {
+    check(control);
+    const png = await rasterise(framedSvg(scene, frame, scene.background ?? (flatten ? "#ffffff" : null)), size.widthPx, size.heightPx, control?.signal);
+    control?.progress?.(n + 1, scenes.length, label);
     yield { index: n, png, scene };
   }
 }
@@ -205,6 +239,8 @@ export async function exportFigure(asset: Asset, query: EvaluationQuery, options
     await ensureViewpoint(options.viewpoint);
     const sheet = options.sheet ?? "single";
     const state = evaluateState(asset, query, depictionOptions(options).representation);
+    const airy = (depictionOptions(options).flow?.length ?? 0) > 0;
+    if (airy && query.kind !== "transition") await developFlow(state, depictionOptions(options), control ?? {});
 
     if (format === "svg") {
       const scene = sceneOf(state, depictionOptions(options));
@@ -222,7 +258,9 @@ export async function exportFigure(asset: Asset, query: EvaluationQuery, options
       const request = depictionOptions(options);
       const analysis = request.view === "thermal" ? { thermal: thermalOf(state, request.environment) } : request.view === "forces" || request.view === "moments" ? { structure: structureOf(state) } : undefined;
       const diagrams = request.view === "forces" || request.view === "moments" ? (["axial", "shear", "moment"] as const).filter((kind) => request.diagrams[kind]) : [];
-      const model = modelScene(state, { viewpoint: request.viewpoint, ...(analysis === undefined ? {} : { analysis }), diagrams });
+      const solved = airy ? transportOf(state, request).flow : null;
+      const field = solved === null ? null : shownFlow(state, solved);
+      const model = modelScene(state, { viewpoint: request.viewpoint, ...(analysis === undefined ? {} : { analysis }), diagrams, ...(field === null ? {} : { flow: { field, layers: request.flow!, denominator: request.scale.denominator, range: request.range, ...(request.flowDetail === undefined ? {} : { detail: request.flowDetail }) } }) });
       const scene = sceneOf(state, request);
       if (format === "dxf") {
         control?.progress?.(1, 1, label("DXF written", "DXF geschrieben"));
@@ -243,14 +281,16 @@ export async function exportFigure(asset: Asset, query: EvaluationQuery, options
 
     const rasterise = host?.rasterise ?? (canRasterise() ? browserRasteriser : null);
     if (rasterise === null) return { status: "unavailable", format, reason: NO_CANVAS };
-    const durationS = clipDuration(asset, query, options);
+    const durationS = clipDuration(asset, query, options) ?? (query.kind === "pose" && airy ? POSE_PLAY_S : null);
     if (query.kind === "pose" && durationS === null) return { status: "unavailable", format, reason: NO_CLIP };
     const fps = options.fps ?? DEFAULT_FPS;
     const count = Math.max(1, Math.round((durationS ?? 0) * fps));
-    const first = sceneOf(evaluateState(asset, queryAt(query, 0)), depictionOptions(options));
+    const scenes = await frameScenes(asset, query, options, count, fps, control, label("Evaluating frames", "Bilder werden ausgewertet"));
+    const first = scenes[0]!;
+    const window = frameOf(scenes);
     const video = format === "mp4" || format === "webm";
     const ppm = options.pixelsPerMm ?? 96 / 25.4 * 2;
-    const size = rasterSize(first, ppm, video ? VIDEO_SIDE_PX : MAX_SIDE_PX);
+    const size = rasterSize(window, ppm, video ? VIDEO_SIDE_PX : MAX_SIDE_PX);
     const even = video ? { widthPx: size.widthPx + (size.widthPx % 2), heightPx: size.heightPx + (size.heightPx % 2) } : size;
 
     if (format === "png-sequence") {
@@ -258,7 +298,7 @@ export async function exportFigure(asset: Asset, query: EvaluationQuery, options
       const entries: { name: string; bytes: Uint8Array }[] = [];
       const base = exportFilename(asset, query, options, format).replace(/\.zip$/u, "");
       const width = String(count).length;
-      for await (const frame of renderFrames(asset, query, options, count, fps, even, rasterise, control, label("Rendering frames", "Bilder werden gerendert"), false))
+      for await (const frame of renderFrames(scenes, window, even, rasterise, control, label("Rendering frames", "Bilder werden gerendert"), false))
         entries.push({ name: `${base}_${String(frame.index + 1).padStart(Math.max(width, 4), "0")}.png`, bytes: withPngText(frame.png, { ...text, Comment: JSON.stringify({ ...JSON.parse(text.Comment!), frame: frame.index + 1, fps, timeS: frame.index / fps }) }) });
       const info = { ...JSON.parse(text.Comment!), frames: count, fps, widthPx: even.widthPx, heightPx: even.heightPx, alpha: first.background === null };
       entries.push({ name: "metadata.json", bytes: encoder.encode(JSON.stringify(info, null, 2)) });
@@ -269,7 +309,7 @@ export async function exportFigure(asset: Asset, query: EvaluationQuery, options
     const mime = recorderMimes(format)[0] ?? `video/${format}`;
     if (record === null) return { status: "unavailable", format, reason: NO_RECORDER(format === "mp4" ? "MP4" : "WebM") };
     const rendered: Uint8Array[] = [];
-    for await (const frame of renderFrames(asset, query, options, count, fps, even, rasterise, control, label("Rendering frames", "Bilder werden gerendert"), true)) rendered.push(frame.png);
+    for await (const frame of renderFrames(scenes, window, even, rasterise, control, label("Rendering frames", "Bilder werden gerendert"), true)) rendered.push(frame.png);
     const frames = (async function* () {
       yield* rendered;
     })();

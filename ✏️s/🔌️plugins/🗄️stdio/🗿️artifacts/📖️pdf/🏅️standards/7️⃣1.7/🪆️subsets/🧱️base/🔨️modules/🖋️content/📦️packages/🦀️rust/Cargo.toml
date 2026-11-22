@@ -9,6 +9,33 @@ description = "Component crate of semio-s-artifact-stdio-pdf: mut-family"
 [package.metadata.semio]
 role = "library"
 
+[package.metadata.semio.carve]
+owned = [
+  "standards::v1_7::subsets::base::io::binary::mutations::append_page_content",
+  "standards::v1_7::subsets::base::io::binary::mutations::set_object_value",
+  "standards::v1_7::subsets::base::io::text::mutations::append_page_content",
+  "standards::v1_7::subsets::base::modules::content",
+  "standards::v1_7::subsets::base::modules::content::program",
+  "standards::v1_7::subsets::h::schema::mutations::embed_font_file",
+  "standards::v1_7::subsets::h::schema::mutations::insert_javascript_action",
+  "standards::v1_7::subsets::h::schema::mutations::insert_launch_action",
+  "standards::v1_7::subsets::h::schema::mutations::insert_signature_field",
+  "standards::v1_7::subsets::h::schema::mutations::remove_font_file",
+  "standards::v1_7::subsets::h::schema::mutations::remove_javascript_action",
+  "standards::v1_7::subsets::h::schema::mutations::remove_launch_action",
+  "standards::v1_7::subsets::h::schema::mutations::remove_signature_field",
+  "standards::v1_7::subsets::vt::schema::mutations::insert_media_annotation",
+  "standards::v1_7::subsets::vt::schema::mutations::remove_dpart_metadata",
+  "standards::v1_7::subsets::vt::schema::mutations::remove_dpart_root",
+  "standards::v1_7::subsets::vt::schema::mutations::remove_media_annotation",
+  "standards::v1_7::subsets::vt::schema::mutations::remove_output_intent",
+  "standards::v1_7::subsets::vt::schema::mutations::remove_trim_box",
+  "standards::v1_7::subsets::vt::schema::mutations::set_dpart_metadata",
+  "standards::v1_7::subsets::vt::schema::mutations::set_dpart_root",
+  "standards::v1_7::subsets::vt::schema::mutations::set_output_intent",
+  "standards::v1_7::subsets::vt::schema::mutations::set_trim_box",
+]
+
 [lints]
 workspace = true
 

@@ -18,7 +18,7 @@ pub mod hit;
 mod tree_metrics_and_window_measures;
 pub use tree_metrics_and_window_measures::{
     document_row_action_id, document_table, document_table_row, find_tree_item, host_content_height,
-    live_tree_item_height, live_tree_section_height, owning_tree_node, owning_tree_spec,
+    live_tree_item_band, live_tree_item_height, live_tree_section_height, owning_tree_node, owning_tree_spec,
     retained_section_title_height, retained_tree_height, retained_tree_row_metrics,
     table_actions_width_of, tree_window_measures, MountedLayoutFault, LAYOUT_ATLAS_PAGE_BYTES,
     LAYOUT_ATLAS_PAGE_CREDITS, LAYOUT_DEPTH_CREDITS, LAYOUT_GLYPH_CREDITS, LAYOUT_NODE_CREDITS,

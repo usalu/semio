@@ -1,9 +1,8 @@
 //! 📂 Uses the existing shell's bounded local picker for PNG authoring.
 
-use super::{check_image_placement, ImagePlacement, MAX_DATA_URL, MAX_FILE_BYTES, PNG_PREFIX, revision_bytes};
-use super::{PdfMutation, PdfSnapshot};
-use semio_plugin::{Emit, Fault};
-use semio_plugin::__value::{DslValue, ToValue};
+use super::{ImagePlacement, MAX_DATA_URL, PNG_PREFIX};
+use semio_plugin::Fault;
+use semio_plugin::__value::DslValue;
 
 pub const IMPORT: &str = "import-local-image";
 pub const INSERT: &str = "insert-image";
@@ -86,25 +85,6 @@ pub fn png_invocation(action: &str, args: Option<&DslValue>) -> Result<PngInvoca
     }
     let payload = format!("{PNG_PREFIX}{encoded}");
     Ok(PngInvocation::Import { target: PngTarget { page, operator, x, y, width, height }, revision, payload })
-}
-
-
-/// 📂 Opens the selected file under the exact committed target revision.
-pub fn picker(snapshot: &PdfSnapshot, operation: &semio_plugin::AppOperationContext, target: PngTarget, guard: &str) -> Result<Emit<PdfMutation>, Fault> {
-    if target.operator != INSERT_OPERATOR && guard.as_bytes() != &revision_bytes(operation)[..16] {
-        return Err(fault("Selected PDF image changed before the picker opened"));
-    }
-    check_image_placement(snapshot, target.placement())?;
-    let PngTarget { page, operator, x, y, width, height } = target;
-    let args = DslValue::object([
-        ("page".into(), page.to_value()), ("operator".into(), operator.to_value()),
-        ("revision".into(), String::from_utf8(revision_bytes(operation).to_vec()).expect("hexadecimal revision").to_value()), ("x".into(), x.to_value()), ("y".into(), y.to_value()),
-        ("width".into(), width.to_value()), ("height".into(), height.to_value()),
-    ]);
-    Ok(Emit::effect(semio_plugin::Effect::RequestFileOpen {
-        req: semio_plugin::RequestId(0x5044494d), accept: "image/png,.png".into(), read_as: Some("dataUrl".into()),
-        import_action: IMPORT.into(), multiple: false, args: Some(args), max_file_bytes: Some(MAX_FILE_BYTES),
-    }))
 }
 
 

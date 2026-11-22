@@ -1,0 +1,5671 @@
+{
+ "$schema": "../../../🧬️schema/🔣️.json#/$defs/AssetDocument",
+ "version": "semio.staffage/v2",
+ "asset": {
+  "id": "used-bedside-table",
+  "category": "furniture",
+  "title": {
+   "en": "Used Bedside Table",
+   "de": "Gebrauchter Nachttisch"
+  },
+  "summary": {
+   "en": "A 1970s teak-veneered chipboard bedside table, 0.35 x 0.43 x 0.55 m and 8.9 kg, with one drawer over an open shelf on four turned beech legs, sun-faded top with a cigarette burn, glass rings and a chipped corner; stored on a folded moving blanket, carried in one hand by the front edge of the top, back beside a bed with lamp and books, drawer pulled.",
+   "de": "Ein Nachttisch der 1970er-Jahre aus teakfurnierter Spanplatte, 0,35 x 0,43 x 0,55 m und 8.9 kg, mit einer Schublade über einem offenen Fach auf vier gedrechselten Buchenbeinen, sonnengebleichter Platte mit Zigarettenbrandstelle, Glasrändern und abgeplatzter Ecke; auf einer gefalteten Möbeldecke gelagert, mit einer Hand an der Vorderkante der Platte getragen, wieder neben einem Bett mit Lampe und Büchern, Schublade gezogen."
+  },
+  "tags": [
+   "used",
+   "household",
+   "second-hand",
+   "bedroom",
+   "bedside-table",
+   "furniture",
+   "teak",
+   "veneer",
+   "chipboard",
+   "beech",
+   "drawer",
+   "1970s",
+   "interior"
+  ],
+  "provenance": {
+   "author": "Semio staffage content (used household objects wave)",
+   "method": "handcrafted",
+   "created": "2026-11-22",
+   "references": [
+    {
+     "id": "iso-10456-2007",
+     "citation": "ISO 10456:2007 Building materials and products - Hygrothermal properties - Tabulated design values and procedures for determining declared and design thermal values (particleboard 600-700 kg/m3 about 0.13-0.14 W/mK and 1700 J/kgK, fibreboard, hardwood and softwood timber)."
+    },
+    {
+     "id": "en-312-2010",
+     "citation": "EN 312:2010 Particleboards - Specifications (type P2, boards for interior fitments including furniture in dry conditions: bending strength 11 N/mm2 and modulus of elasticity 1600 N/mm2 for 13-20 mm boards)."
+    },
+    {
+     "id": "en-622-2-2004",
+     "citation": "EN 622-2:2004 Fibreboards - Specifications - Part 2: Requirements for hardboards (HB, density at least 900 kg/m3, bending strength above 30 N/mm2 for boards up to 3.5 mm)."
+    },
+    {
+     "id": "en-338-2016",
+     "citation": "EN 338:2016 Structural timber - Strength classes (C24 softwood: 24 N/mm2 bending, 11 kN/mm2 modulus, 420 kg/m3 characteristic density; D35 hardwood: 35 N/mm2, 12 kN/mm2)."
+    },
+    {
+     "id": "wood-handbook-2021",
+     "citation": "Forest Products Laboratory (2021). Wood Handbook: Wood as an Engineering Material. General Technical Report FPL-GTR-282, USDA Forest Service (air-dry density and elastic modulus of European beech about 710 kg/m3 and 14 GPa, teak about 660 kg/m3, Scots pine about 520 kg/m3)."
+    },
+    {
+     "id": "en-16122-2012",
+     "citation": "EN 16122:2012 Domestic and non-domestic storage furniture - Test methods for the determination of strength, durability and stability (loads on tops and shelves, extension elements pulled out, stability with extension elements open)."
+    },
+    {
+     "id": "en-14749-2016",
+     "citation": "EN 14749:2016 Domestic and kitchen storage units and worktops - Safety requirements and test methods (stability of storage furniture with extension elements open and loaded)."
+    },
+    {
+     "id": "en-1991-1-1",
+     "citation": "EN 1991-1-1:2002 Eurocode 1: Actions on structures - Part 1-1: General actions - Densities, self-weight, imposed loads for buildings (self-weight as the product of volume and density)."
+    },
+    {
+     "id": "din-18011-2020",
+     "citation": "DIN 18011:2020-04 Stellflächen, Abstände und Bewegungsflächen im Wohnungsbau (placing areas of beds and bedside tables, 0.4-0.5 m wide and 0.35-0.4 m deep, beside the bed head)."
+    },
+    {
+     "id": "neufert-2019",
+     "citation": "Neufert, E., Kister, J. (2019). Bauentwurfslehre, 42nd ed., Springer Vieweg (bedroom furniture: bedside tables about 0.40-0.50 m wide, 0.35-0.40 m deep, top at mattress height 0.50-0.60 m)."
+    },
+    {
+     "id": "din-33402-2-2020",
+     "citation": "DIN 33402-2:2020-12 Ergonomie - Körpermaße des Menschen - Teil 2: Werte (grip axis height of the hanging arm of standing adults about 0.72-0.78 m, taken as 0.76 m for the carrying hand)."
+    },
+    {
+     "id": "incropera-2018",
+     "citation": "Incropera, F. P., DeWitt, D. P., Bergman, T. L., Lavine, A. S. (2018). Fundamentals of Heat and Mass Transfer, 8th ed., Wiley (total emissivity of lacquered wood 0.88-0.94 and of textiles 0.85-0.90; solar absorptance of dark and light wood surfaces)."
+    },
+    {
+     "id": "furniture-1970s-type",
+     "citation": "Type data of West German bedroom furniture programmes of 1970-1979 as mail-order and furniture-store catalogues offered them: bedside tables of teak- or walnut-veneered chipboard on four turned tapered legs, 40-48 cm wide, 30-38 cm deep, 50-58 cm high, one drawer over an open shelf, 7-11 kg; no single product, no brand."
+    },
+    {
+     "id": "moving-blanket-type",
+     "citation": "Type data of removal blankets (Möbeldecken, Umzugsdecken) as removal-equipment suppliers offer them: quilted needle felt of recycled cotton and polyester, 150 x 200 cm or 180 x 200 cm, 400-600 g/m2 (1.2-2.2 kg), about 3 mm thick per layer; no single product, no brand."
+    }
+   ],
+   "notes": {
+    "en": "West German bedside table of the 1970s type, emptied and cleaned at a flat clearance. Carcass of 16 mm teak-veneered chipboard P2 (sides 0.33 x 0.331 m, bottom and divider between them), 19 mm top flush with the sides and 20 mm proud at the front, 3 mm hardboard back, drawer bay 110 mm over an open shelf 189 mm clear; inset drawer with a 16 mm front, 10 mm pine sides and back and a 4 mm hardboard bottom on wooden runners, a turned teak knob; four turned beech legs 200 mm long, 22 mm at the foot and 35 mm under a 39 mm collar, on mounting plates. Traces of use: sun-faded top (lighter, lower solar absorptance) with the darker circle of a lamp base, a cigarette burn 28 x 9 mm near the front right, two glass rings, chipped veneer at the front-right corner, scuffed feet, a worn lower drawer edge; nothing that stops it working. Stored on a 150 x 200 cm moving blanket folded to 0.67 x 0.75 m (six layers, 18 mm), which stays behind when it is carried. Masses from the modelled 1:50 volumes x density: carcass 7.60 kg, drawer 1.30 kg, blanket 1.40 kg.",
+    "de": "Westdeutscher Nachttisch vom Typ der 1970er-Jahre, bei einer Haushaltsauflösung geleert und gereinigt. Korpus aus 16-mm-teakfurnierter Spanplatte P2 (Seiten 0,33 x 0,331 m, Boden und Zwischenboden dazwischen), 19-mm-Platte bündig mit den Seiten und vorn 20 mm überstehend, 3-mm-Hartfaserrückwand, Schubladenfach 110 mm über einem offenen Fach mit 189 mm lichter Höhe; eingelassene Schublade mit 16-mm-Front, 10-mm-Kiefernseiten und -rückwand und 4-mm-Hartfaserboden auf Holzlaufleisten, gedrechselter Teakknauf; vier gedrechselte Buchenbeine, 200 mm lang, 22 mm am Fuß und 35 mm unter einem 39-mm-Bund, auf Anschraubplatten. Gebrauchsspuren: sonnengebleichte Platte (heller, geringere Solarabsorption) mit dem dunkleren Kreis eines Lampenfußes, eine Zigarettenbrandstelle 28 x 9 mm vorn rechts, zwei Glasränder, abgeplatztes Furnier an der vorderen rechten Ecke, bestoßene Füße, eine abgegriffene untere Schubladenkante; nichts, was den Gebrauch hindert. Gelagert auf einer Möbeldecke 150 x 200 cm, auf 0,67 x 0,75 m gefaltet (sechs Lagen, 18 mm), die beim Tragen zurückbleibt. Massen aus den 1:50-Volumen x Dichte: Korpus 7.60 kg, Schublade 1.30 kg, Decke 1.40 kg."
+   }
+  },
+  "dimensions": {
+   "heightM": 0.568,
+   "widthM": 0.6666,
+   "depthM": 0.75,
+   "massKg": 10.30095
+  },
+  "materials": [
+   {
+    "id": "teak-veneer-chipboard",
+    "title": {
+     "en": "Teak-veneered chipboard P2, aged nitro lacquer",
+     "de": "Teakfurnierte Spanplatte P2, gealterter Nitrolack"
+    },
+    "emissivity": 0.9,
+    "solarAbsorptivity": 0.7,
+    "densityKgM3": 650,
+    "conductivityWmK": 0.13,
+    "specificHeatJKgK": 1700,
+    "elasticModulusPa": 1600000000.0,
+    "strengthPa": 11000000.0,
+    "source": "literature",
+    "reference": "en-312-2010"
+   },
+   {
+    "id": "teak-top-faded",
+    "title": {
+     "en": "Teak-veneered chipboard top, sun-bleached and worn",
+     "de": "Teakfurnierte Spanplattenplatte, sonnengebleicht und abgenutzt"
+    },
+    "emissivity": 0.88,
+    "solarAbsorptivity": 0.58,
+    "densityKgM3": 650,
+    "conductivityWmK": 0.13,
+    "specificHeatJKgK": 1700,
+    "elasticModulusPa": 1600000000.0,
+    "strengthPa": 11000000.0,
+    "source": "authored-estimate",
+    "reference": "incropera-2018"
+   },
+   {
+    "id": "beech-stained",
+    "title": {
+     "en": "Turned beech, stained teak colour and lacquered",
+     "de": "Gedrechselte Buche, teakfarben gebeizt und lackiert"
+    },
+    "emissivity": 0.9,
+    "solarAbsorptivity": 0.72,
+    "densityKgM3": 710,
+    "conductivityWmK": 0.16,
+    "specificHeatJKgK": 1600,
+    "elasticModulusPa": 14000000000.0,
+    "strengthPa": 35000000.0,
+    "source": "literature",
+    "reference": "wood-handbook-2021"
+   },
+   {
+    "id": "pine-drawer",
+    "title": {
+     "en": "Pine drawer boards, unfinished",
+     "de": "Kiefernholz der Schublade, unbehandelt"
+    },
+    "emissivity": 0.9,
+    "solarAbsorptivity": 0.45,
+    "densityKgM3": 520,
+    "conductivityWmK": 0.13,
+    "specificHeatJKgK": 1600,
+    "elasticModulusPa": 11000000000.0,
+    "strengthPa": 24000000.0,
+    "source": "literature",
+    "reference": "en-338-2016"
+   },
+   {
+    "id": "hardboard",
+    "title": {
+     "en": "Hardboard HB 3 mm, raw back",
+     "de": "Hartfaserplatte HB 3 mm, rohe Rückseite"
+    },
+    "emissivity": 0.92,
+    "solarAbsorptivity": 0.65,
+    "densityKgM3": 950,
+    "conductivityWmK": 0.18,
+    "specificHeatJKgK": 1700,
+    "elasticModulusPa": 4000000000.0,
+    "strengthPa": 30000000.0,
+    "source": "literature",
+    "reference": "en-622-2-2004"
+   },
+   {
+    "id": "teak-solid",
+    "title": {
+     "en": "Solid teak knob, oiled and handled",
+     "de": "Knauf aus massivem Teak, geölt und abgegriffen"
+    },
+    "emissivity": 0.9,
+    "solarAbsorptivity": 0.7,
+    "densityKgM3": 660,
+    "conductivityWmK": 0.17,
+    "specificHeatJKgK": 1600,
+    "elasticModulusPa": 10000000000.0,
+    "strengthPa": 70000000.0,
+    "source": "literature",
+    "reference": "wood-handbook-2021"
+   },
+   {
+    "id": "moving-blanket",
+    "title": {
+     "en": "Quilted cotton-polyester moving blanket, faded blue",
+     "de": "Gesteppte Möbeldecke aus Baumwolle und Polyester, verblasstes Blau"
+    },
+    "emissivity": 0.88,
+    "solarAbsorptivity": 0.75,
+    "densityKgM3": 156.1,
+    "conductivityWmK": 0.045,
+    "specificHeatJKgK": 1300,
+    "source": "authored-estimate",
+    "reference": "moving-blanket-type"
+   }
+  ],
+  "rig": {
+   "kind": "mechanical",
+   "root": "ground",
+   "bones": [
+    {
+     "id": "ground",
+     "parent": null,
+     "title": {
+      "en": "Depot floor reference",
+      "de": "Bodenbezug im Lager"
+     },
+     "x": 0,
+     "y": 0,
+     "angleDeg": 0,
+     "lengthM": 0,
+     "joint": {
+      "type": "fixed"
+     }
+    },
+    {
+     "id": "blanket",
+     "parent": "ground",
+     "title": {
+      "en": "Folded moving blanket (stays behind)",
+      "de": "Gefaltete Möbeldecke (bleibt zurück)"
+     },
+     "x": -0.3333,
+     "y": 0,
+     "angleDeg": 0,
+     "lengthM": 0.6666,
+     "joint": {
+      "type": "fixed"
+     },
+     "mass": {
+      "kg": 1.4,
+      "comX": 0.33442,
+      "comY": 0.009,
+      "distribution": "point",
+      "source": "authored-estimate",
+      "reference": "moving-blanket-type"
+     }
+    },
+    {
+     "id": "travel",
+     "parent": "ground",
+     "title": {
+      "en": "Carrying travel along the floor",
+      "de": "Tragweg über den Boden"
+     },
+     "x": 0,
+     "y": 0,
+     "angleDeg": 0,
+     "lengthM": 0,
+     "joint": {
+      "type": "prismatic",
+      "axisDeg": 0,
+      "minM": 0,
+      "maxM": 1.0
+     }
+    },
+    {
+     "id": "lift",
+     "parent": "travel",
+     "title": {
+      "en": "Lift of the carrying hand",
+      "de": "Hub der tragenden Hand"
+     },
+     "x": 0,
+     "y": 0,
+     "angleDeg": 0,
+     "lengthM": 0,
+     "joint": {
+      "type": "prismatic",
+      "axisDeg": 90,
+      "minM": -0.03,
+      "maxM": 0.3
+     }
+    },
+    {
+     "id": "carcass",
+     "parent": "lift",
+     "title": {
+      "en": "Carcass with top and legs (pivot at the rear top edge)",
+      "de": "Korpus mit Platte und Beinen (Drehpunkt an der hinteren Plattenkante)"
+     },
+     "x": -0.175,
+     "y": 0.5680000000000001,
+     "angleDeg": 0,
+     "lengthM": 0.35,
+     "joint": {
+      "type": "revolute",
+      "minDeg": -15,
+      "maxDeg": 30
+     },
+     "mass": {
+      "kg": 7.60347,
+      "comX": 0.15991,
+      "comY": -0.17461,
+      "distribution": "point",
+      "source": "authored-estimate",
+      "reference": "en-312-2010"
+     }
+    },
+    {
+     "id": "drawer",
+     "parent": "carcass",
+     "title": {
+      "en": "Drawer on wooden runners",
+      "de": "Schublade auf Holzlaufleisten"
+     },
+     "x": 0.015,
+     "y": -0.129,
+     "angleDeg": 0,
+     "lengthM": 0.315,
+     "joint": {
+      "type": "prismatic",
+      "axisDeg": 0,
+      "minM": 0,
+      "maxM": 0.26
+     },
+     "mass": {
+      "kg": 1.29749,
+      "comX": 0.18752,
+      "comY": 0.03655,
+      "distribution": "point",
+      "source": "authored-estimate",
+      "reference": "en-312-2010"
+     }
+    }
+   ]
+  },
+  "anchors": [
+   {
+    "id": "foot-rear-l",
+    "bone": "carcass",
+    "x": 0.04,
+    "y": -0.55,
+    "z": 0.175,
+    "kind": "contact",
+    "title": {
+     "en": "Rear left foot",
+     "de": "Hinterer linker Fuß"
+    },
+    "support": "contact",
+    "normalDeg": 90,
+    "footprintLengthM": 0.022,
+    "footprintWidthM": 0.022,
+    "frictionCoefficient": 0.4
+   },
+   {
+    "id": "foot-rear-r",
+    "bone": "carcass",
+    "x": 0.04,
+    "y": -0.55,
+    "z": -0.175,
+    "kind": "contact",
+    "title": {
+     "en": "Rear right foot",
+     "de": "Hinterer rechter Fuß"
+    },
+    "support": "contact",
+    "normalDeg": 90,
+    "footprintLengthM": 0.022,
+    "footprintWidthM": 0.022,
+    "frictionCoefficient": 0.4
+   },
+   {
+    "id": "foot-front-l",
+    "bone": "carcass",
+    "x": 0.29,
+    "y": -0.55,
+    "z": 0.175,
+    "kind": "contact",
+    "title": {
+     "en": "Front left foot",
+     "de": "Vorderer linker Fuß"
+    },
+    "support": "contact",
+    "normalDeg": 90,
+    "footprintLengthM": 0.022,
+    "footprintWidthM": 0.022,
+    "frictionCoefficient": 0.4
+   },
+   {
+    "id": "foot-front-r",
+    "bone": "carcass",
+    "x": 0.29,
+    "y": -0.55,
+    "z": -0.175,
+    "kind": "contact",
+    "title": {
+     "en": "Front right foot",
+     "de": "Vorderer rechter Fuß"
+    },
+    "support": "contact",
+    "normalDeg": 90,
+    "footprintLengthM": 0.022,
+    "footprintWidthM": 0.022,
+    "frictionCoefficient": 0.4
+   },
+   {
+    "id": "pad-rear-l",
+    "bone": "blanket",
+    "x": 0.1983,
+    "y": 0.0,
+    "z": 0.175,
+    "kind": "contact",
+    "title": {
+     "en": "Blanket under the rear left foot",
+     "de": "Decke unter dem hinteren linken Fuß"
+    },
+    "support": "contact",
+    "normalDeg": 90,
+    "footprintLengthM": 0.05,
+    "footprintWidthM": 0.05,
+    "frictionCoefficient": 0.6
+   },
+   {
+    "id": "pad-rear-r",
+    "bone": "blanket",
+    "x": 0.1983,
+    "y": 0.0,
+    "z": -0.175,
+    "kind": "contact",
+    "title": {
+     "en": "Blanket under the rear right foot",
+     "de": "Decke unter dem hinteren rechten Fuß"
+    },
+    "support": "contact",
+    "normalDeg": 90,
+    "footprintLengthM": 0.05,
+    "footprintWidthM": 0.05,
+    "frictionCoefficient": 0.6
+   },
+   {
+    "id": "pad-front-l",
+    "bone": "blanket",
+    "x": 0.4483,
+    "y": 0.0,
+    "z": 0.175,
+    "kind": "contact",
+    "title": {
+     "en": "Blanket under the front left foot",
+     "de": "Decke unter dem vorderen linken Fuß"
+    },
+    "support": "contact",
+    "normalDeg": 90,
+    "footprintLengthM": 0.05,
+    "footprintWidthM": 0.05,
+    "frictionCoefficient": 0.6
+   },
+   {
+    "id": "pad-front-r",
+    "bone": "blanket",
+    "x": 0.4483,
+    "y": 0.0,
+    "z": -0.175,
+    "kind": "contact",
+    "title": {
+     "en": "Blanket under the front right foot",
+     "de": "Decke unter dem vorderen rechten Fuß"
+    },
+    "support": "contact",
+    "normalDeg": 90,
+    "footprintLengthM": 0.05,
+    "footprintWidthM": 0.05,
+    "frictionCoefficient": 0.6
+   },
+   {
+    "id": "grip",
+    "bone": "carcass",
+    "x": 0.35,
+    "y": -0.0095,
+    "z": 0.0,
+    "kind": "support",
+    "title": {
+     "en": "Carrying hand at the front edge of the top",
+     "de": "Tragende Hand an der Vorderkante der Platte"
+    },
+    "support": "fixed"
+   },
+   {
+    "id": "lamp",
+    "bone": "carcass",
+    "x": 0.1,
+    "y": 0.0,
+    "z": 0.105,
+    "kind": "load",
+    "title": {
+     "en": "Bedside lamp on the top",
+     "de": "Nachttischlampe auf der Platte"
+    }
+   },
+   {
+    "id": "books",
+    "bone": "carcass",
+    "x": 0.215,
+    "y": 0.0,
+    "z": -0.09,
+    "kind": "load",
+    "title": {
+     "en": "Books on the top",
+     "de": "Bücher auf der Platte"
+    }
+   },
+   {
+    "id": "glass",
+    "bone": "carcass",
+    "x": 0.285,
+    "y": 0.0,
+    "z": 0.1,
+    "kind": "load",
+    "title": {
+     "en": "Glass of water",
+     "de": "Wasserglas"
+    }
+   },
+   {
+    "id": "drawer-contents",
+    "bone": "drawer",
+    "x": 0.15,
+    "y": 0.008,
+    "z": 0.0,
+    "kind": "load",
+    "title": {
+     "en": "Contents of the drawer",
+     "de": "Inhalt der Schublade"
+    }
+   },
+   {
+    "id": "knob-pull",
+    "bone": "drawer",
+    "x": 0.341,
+    "y": 0.055,
+    "z": 0.0,
+    "kind": "load",
+    "title": {
+     "en": "Hand pulling the knob",
+     "de": "Hand am Knauf"
+    }
+   }
+  ],
+  "representations": {
+   "50": {
+    "status": "authored",
+    "denominator": 50,
+    "validRange": {
+     "minDenominator": 20,
+     "maxDenominator": 75
+    },
+    "pens": {
+     "body": 0.5,
+     "detail": 0.25,
+     "texture": 0.13,
+     "glazing": null,
+     "ground": 0.7
+    },
+    "hatches": [
+     {
+      "id": "veneer",
+      "title": {
+       "en": "Teak veneer grain",
+       "de": "Teakfurnier-Maserung"
+      },
+      "pattern": "lines",
+      "angleDeg": 0,
+      "spacingMm": 0.7,
+      "penMm": 0.13
+     },
+     {
+      "id": "veneer-plan",
+      "title": {
+       "en": "Teak veneer grain across the top",
+       "de": "Teakfurnier-Maserung quer über die Platte"
+      },
+      "pattern": "lines",
+      "angleDeg": 90,
+      "spacingMm": 0.9,
+      "penMm": 0.13
+     },
+     {
+      "id": "grain-v",
+      "title": {
+       "en": "Beech grain along the legs",
+       "de": "Buchenmaserung längs der Beine"
+      },
+      "pattern": "lines",
+      "angleDeg": 90,
+      "spacingMm": 0.5,
+      "penMm": 0.13
+     },
+     {
+      "id": "felt",
+      "title": {
+       "en": "Needle felt of the moving blanket",
+       "de": "Nadelfilz der Möbeldecke"
+      },
+      "pattern": "dots",
+      "angleDeg": 45,
+      "spacingMm": 0.8,
+      "penMm": 0.13
+     }
+    ],
+    "geometry": {
+     "elevation": [
+      {
+       "id": "blanket",
+       "bone": "blanket",
+       "role": "body",
+       "z": 1,
+       "filled": true,
+       "tone": 0.45,
+       "kind": "poly",
+       "points": [
+        [
+         0.6666,
+         0.0
+        ],
+        [
+         0.6666,
+         0.018
+        ],
+        [
+         0.009,
+         0.018
+        ],
+        [
+         0.0045,
+         0.016794
+        ],
+        [
+         0.001206,
+         0.0135
+        ],
+        [
+         0.0,
+         0.009
+        ],
+        [
+         0.001206,
+         0.0045
+        ],
+        [
+         0.0045,
+         0.001206
+        ],
+        [
+         0.009,
+         0.0
+        ]
+       ],
+       "closed": true,
+       "region": "blanket",
+       "material": "moving-blanket",
+       "hatch": "felt"
+      },
+      {
+       "id": "blanket-layers",
+       "bone": "blanket",
+       "role": "texture",
+       "z": 1.5,
+       "filled": false,
+       "tone": 0.3,
+       "kind": "path",
+       "d": "M 0.03 0.006 L 0.6566 0.006 M 0.03 0.012 L 0.6566 0.012",
+       "region": "blanket"
+      },
+      {
+       "id": "drawer-box",
+       "bone": "drawer",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.78,
+       "kind": "rect",
+       "x": 0.0,
+       "y": 0.0,
+       "w": 0.299,
+       "h": 0.09,
+       "region": "drawer",
+       "material": "pine-drawer"
+      },
+      {
+       "id": "drawer-front",
+       "bone": "drawer",
+       "role": "body",
+       "z": 2.2,
+       "filled": true,
+       "tone": 0.66,
+       "kind": "rect",
+       "x": 0.299,
+       "y": 0.0015,
+       "w": 0.016,
+       "h": 0.107,
+       "region": "drawer",
+       "material": "teak-veneer-chipboard"
+      },
+      {
+       "id": "shelf-back",
+       "bone": "carcass",
+       "role": "body",
+       "z": 2.4,
+       "filled": true,
+       "tone": 0.3,
+       "kind": "rect",
+       "x": 0.0,
+       "y": -0.35,
+       "w": 0.003,
+       "h": 0.331,
+       "region": "back-panel",
+       "material": "hardboard"
+      },
+      {
+       "id": "leg-rear",
+       "bone": "carcass",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.55,
+       "kind": "poly",
+       "points": [
+        [
+         0.0505,
+         -0.55
+        ],
+        [
+         0.051,
+         -0.547
+        ],
+        [
+         0.0575,
+         -0.366
+        ],
+        [
+         0.0595,
+         -0.364
+        ],
+        [
+         0.0595,
+         -0.35
+        ],
+        [
+         0.0205,
+         -0.35
+        ],
+        [
+         0.0205,
+         -0.364
+        ],
+        [
+         0.0225,
+         -0.366
+        ],
+        [
+         0.029,
+         -0.547
+        ],
+        [
+         0.0295,
+         -0.55
+        ]
+       ],
+       "closed": true,
+       "region": "legs",
+       "material": "beech-stained",
+       "hatch": "grain-v"
+      },
+      {
+       "id": "leg-front",
+       "bone": "carcass",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.55,
+       "kind": "poly",
+       "points": [
+        [
+         0.3005,
+         -0.55
+        ],
+        [
+         0.301,
+         -0.547
+        ],
+        [
+         0.3075,
+         -0.366
+        ],
+        [
+         0.3095,
+         -0.364
+        ],
+        [
+         0.3095,
+         -0.35
+        ],
+        [
+         0.2705,
+         -0.35
+        ],
+        [
+         0.2705,
+         -0.364
+        ],
+        [
+         0.2725,
+         -0.366
+        ],
+        [
+         0.279,
+         -0.547
+        ],
+        [
+         0.2795,
+         -0.55
+        ]
+       ],
+       "closed": true,
+       "region": "legs",
+       "material": "beech-stained",
+       "hatch": "grain-v"
+      },
+      {
+       "id": "leg-collars",
+       "bone": "carcass",
+       "role": "detail",
+       "z": 3.5,
+       "filled": false,
+       "tone": 0.3,
+       "kind": "path",
+       "d": "M 0.0205 -0.364 L 0.0595 -0.364 M 0.2705 -0.364 L 0.3095 -0.364",
+       "region": "legs"
+      },
+      {
+       "id": "leg-scuffs",
+       "bone": "carcass",
+       "role": "texture",
+       "z": 3.6,
+       "filled": false,
+       "tone": 0.3,
+       "kind": "path",
+       "d": "M 0.031 -0.542 L 0.046 -0.536 M 0.281 -0.542 L 0.296 -0.536",
+       "region": "legs"
+      },
+      {
+       "id": "side",
+       "bone": "carcass",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.7,
+       "kind": "rect",
+       "x": 0.0,
+       "y": -0.35,
+       "w": 0.33,
+       "h": 0.331,
+       "region": "carcass",
+       "material": "teak-veneer-chipboard",
+       "hatch": "veneer"
+      },
+      {
+       "id": "carcass-front",
+       "bone": "carcass",
+       "role": "body",
+       "z": 4.2,
+       "filled": true,
+       "tone": 0.62,
+       "kind": "rect",
+       "x": 0.314,
+       "y": -0.35,
+       "w": 0.016,
+       "h": 0.331,
+       "region": "carcass",
+       "material": "teak-veneer-chipboard"
+      },
+      {
+       "id": "top",
+       "bone": "carcass",
+       "role": "body",
+       "z": 5,
+       "filled": true,
+       "tone": 0.84,
+       "kind": "rect",
+       "x": 0.0,
+       "y": -0.019,
+       "w": 0.35,
+       "h": 0.019,
+       "region": "top",
+       "material": "teak-top-faded"
+      },
+      {
+       "id": "top-front",
+       "bone": "carcass",
+       "role": "body",
+       "z": 5.2,
+       "filled": true,
+       "tone": 0.84,
+       "kind": "rect",
+       "x": 0.34,
+       "y": -0.019,
+       "w": 0.01,
+       "h": 0.019,
+       "region": "top",
+       "material": "teak-top-faded"
+      },
+      {
+       "id": "top-chip",
+       "bone": "carcass",
+       "role": "detail",
+       "z": 5.5,
+       "filled": false,
+       "tone": 0.25,
+       "kind": "poly",
+       "points": [
+        [
+         0.337,
+         0.0
+        ],
+        [
+         0.34,
+         -0.003
+        ],
+        [
+         0.35,
+         -0.003
+        ]
+       ],
+       "closed": false,
+       "region": "top"
+      },
+      {
+       "id": "knob",
+       "bone": "drawer",
+       "role": "body",
+       "z": 6,
+       "filled": true,
+       "tone": 0.5,
+       "kind": "poly",
+       "points": [
+        [
+         0.315,
+         0.062
+        ],
+        [
+         0.315,
+         0.062
+        ],
+        [
+         0.323,
+         0.062
+        ],
+        [
+         0.326,
+         0.067
+        ],
+        [
+         0.331,
+         0.069
+        ],
+        [
+         0.337,
+         0.068
+        ],
+        [
+         0.341,
+         0.063
+        ],
+        [
+         0.341,
+         0.047
+        ],
+        [
+         0.337,
+         0.042
+        ],
+        [
+         0.331,
+         0.041
+        ],
+        [
+         0.326,
+         0.043
+        ],
+        [
+         0.323,
+         0.048
+        ],
+        [
+         0.315,
+         0.048
+        ],
+        [
+         0.315,
+         0.048
+        ]
+       ],
+       "closed": true,
+       "region": "drawer",
+       "material": "teak-solid",
+       "penMm": 0.25
+      }
+     ],
+     "front": [
+      {
+       "id": "blanket",
+       "bone": "blanket",
+       "role": "body",
+       "z": 1,
+       "filled": true,
+       "tone": 0.45,
+       "kind": "rect",
+       "x": -0.375,
+       "y": 0.0,
+       "w": 0.75,
+       "h": 0.018,
+       "region": "blanket",
+       "material": "moving-blanket",
+       "hatch": "felt"
+      },
+      {
+       "id": "blanket-layers",
+       "bone": "blanket",
+       "role": "texture",
+       "z": 1.5,
+       "filled": false,
+       "tone": 0.3,
+       "kind": "path",
+       "d": "M -0.355 0.006 L 0.355 0.006 M -0.355 0.012 L 0.355 0.012",
+       "region": "blanket"
+      },
+      {
+       "id": "leg-front",
+       "bone": "carcass",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.55,
+       "kind": "path",
+       "d": "M -0.1645 0.018 L -0.164 0.021 L -0.1575 0.202 L -0.1555 0.204 L -0.1555 0.218 L -0.1945 0.218 L -0.1945 0.204 L -0.1925 0.202 L -0.186 0.021 L -0.1855 0.018 Z M 0.1855 0.018 L 0.186 0.021 L 0.1925 0.202 L 0.1945 0.204 L 0.1945 0.218 L 0.1555 0.218 L 0.1555 0.204 L 0.1575 0.202 L 0.164 0.021 L 0.1645 0.018 Z",
+       "region": "legs",
+       "material": "beech-stained",
+       "hatch": "grain-v"
+      },
+      {
+       "id": "leg-collars",
+       "bone": "carcass",
+       "role": "detail",
+       "z": 2.5,
+       "filled": false,
+       "tone": 0.3,
+       "kind": "path",
+       "d": "M -0.1945 0.204 L -0.1555 0.204 M 0.1555 0.204 L 0.1945 0.204",
+       "region": "legs"
+      },
+      {
+       "id": "shelf-back",
+       "bone": "carcass",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.3,
+       "kind": "rect",
+       "x": -0.199,
+       "y": 0.234,
+       "w": 0.398,
+       "h": 0.315,
+       "region": "back-panel",
+       "material": "hardboard"
+      },
+      {
+       "id": "carcass-front",
+       "bone": "carcass",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.62,
+       "kind": "path",
+       "d": "M -0.215 0.218 L -0.199 0.218 L -0.199 0.549 L -0.215 0.549 Z M 0.199 0.218 L 0.215 0.218 L 0.215 0.549 L 0.199 0.549 Z M -0.199 0.218 L 0.199 0.218 L 0.199 0.234 L -0.199 0.234 Z M -0.199 0.423 L 0.199 0.423 L 0.199 0.439 L -0.199 0.439 Z",
+       "region": "carcass",
+       "material": "teak-veneer-chipboard"
+      },
+      {
+       "id": "drawer-front",
+       "bone": "drawer",
+       "role": "body",
+       "z": 5,
+       "filled": true,
+       "tone": 0.66,
+       "kind": "rect",
+       "x": -0.1975,
+       "y": 0.4405,
+       "w": 0.395,
+       "h": 0.107,
+       "region": "drawer",
+       "material": "teak-veneer-chipboard",
+       "hatch": "veneer"
+      },
+      {
+       "id": "drawer-wear",
+       "bone": "drawer",
+       "role": "texture",
+       "z": 5.3,
+       "filled": false,
+       "tone": 0.3,
+       "kind": "path",
+       "d": "M -0.06 0.4445 L 0.07 0.4445",
+       "region": "drawer"
+      },
+      {
+       "id": "knob",
+       "bone": "drawer",
+       "role": "body",
+       "z": 6,
+       "filled": true,
+       "tone": 0.5,
+       "kind": "ellipse",
+       "cx": 0.0,
+       "cy": 0.494,
+       "rx": 0.014,
+       "ry": 0.014,
+       "region": "drawer",
+       "material": "teak-solid"
+      },
+      {
+       "id": "knob-centre",
+       "bone": "drawer",
+       "role": "texture",
+       "z": 6.5,
+       "filled": false,
+       "tone": 0.3,
+       "kind": "ellipse",
+       "cx": 0.0,
+       "cy": 0.494,
+       "rx": 0.006,
+       "ry": 0.006,
+       "region": "drawer"
+      },
+      {
+       "id": "top-front",
+       "bone": "carcass",
+       "role": "body",
+       "z": 7,
+       "filled": true,
+       "tone": 0.84,
+       "kind": "rect",
+       "x": -0.215,
+       "y": 0.549,
+       "w": 0.43,
+       "h": 0.019,
+       "region": "top",
+       "material": "teak-top-faded"
+      },
+      {
+       "id": "top-chip",
+       "bone": "carcass",
+       "role": "detail",
+       "z": 7.5,
+       "filled": false,
+       "tone": 0.25,
+       "kind": "poly",
+       "points": [
+        [
+         -0.215,
+         0.565
+        ],
+        [
+         -0.203,
+         0.565
+        ],
+        [
+         -0.2,
+         0.568
+        ]
+       ],
+       "closed": false,
+       "region": "top"
+      }
+     ],
+     "plan": [
+      {
+       "id": "blanket",
+       "bone": "blanket",
+       "role": "body",
+       "z": 1,
+       "filled": true,
+       "tone": 0.45,
+       "kind": "rect",
+       "x": -0.3333,
+       "y": -0.375,
+       "w": 0.6666,
+       "h": 0.75,
+       "region": "blanket",
+       "material": "moving-blanket",
+       "hatch": "felt"
+      },
+      {
+       "id": "blanket-quilting",
+       "bone": "blanket",
+       "role": "texture",
+       "z": 1.5,
+       "filled": false,
+       "tone": 0.3,
+       "kind": "path",
+       "d": "M -0.3133 -0.25 L 0.3133 -0.25 M -0.3133 -0.125 L 0.3133 -0.125 M -0.3133 0.0 L 0.3133 0.0 M -0.3133 0.125 L 0.3133 0.125 M -0.3133 0.25 L 0.3133 0.25",
+       "region": "blanket"
+      },
+      {
+       "id": "drawer-box",
+       "bone": "drawer",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.78,
+       "kind": "rect",
+       "x": -0.16,
+       "y": -0.1975,
+       "w": 0.299,
+       "h": 0.395,
+       "region": "drawer",
+       "material": "pine-drawer"
+      },
+      {
+       "id": "drawer-front",
+       "bone": "drawer",
+       "role": "body",
+       "z": 2.2,
+       "filled": true,
+       "tone": 0.66,
+       "kind": "rect",
+       "x": 0.139,
+       "y": -0.1975,
+       "w": 0.016,
+       "h": 0.395,
+       "region": "drawer",
+       "material": "teak-veneer-chipboard"
+      },
+      {
+       "id": "knob",
+       "bone": "drawer",
+       "role": "body",
+       "z": 2.4,
+       "filled": true,
+       "tone": 0.5,
+       "kind": "poly",
+       "points": [
+        [
+         0.155,
+         0.007
+        ],
+        [
+         0.155,
+         0.007
+        ],
+        [
+         0.163,
+         0.007
+        ],
+        [
+         0.166,
+         0.012
+        ],
+        [
+         0.171,
+         0.014
+        ],
+        [
+         0.177,
+         0.013
+        ],
+        [
+         0.181,
+         0.008
+        ],
+        [
+         0.181,
+         -0.008
+        ],
+        [
+         0.177,
+         -0.013
+        ],
+        [
+         0.171,
+         -0.014
+        ],
+        [
+         0.166,
+         -0.012
+        ],
+        [
+         0.163,
+         -0.007
+        ],
+        [
+         0.155,
+         -0.007
+        ],
+        [
+         0.155,
+         -0.007
+        ]
+       ],
+       "closed": true,
+       "region": "drawer",
+       "material": "teak-solid",
+       "penMm": 0.25
+      },
+      {
+       "id": "top",
+       "bone": "carcass",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.84,
+       "kind": "rect",
+       "x": -0.175,
+       "y": -0.215,
+       "w": 0.35,
+       "h": 0.43,
+       "region": "top",
+       "material": "teak-top-faded",
+       "hatch": "veneer-plan"
+      },
+      {
+       "id": "lamp-shadow",
+       "bone": "carcass",
+       "role": "texture",
+       "z": 4.4,
+       "filled": false,
+       "tone": 0.3,
+       "kind": "ellipse",
+       "cx": -0.075,
+       "cy": 0.105,
+       "rx": 0.07,
+       "ry": 0.07,
+       "region": "top"
+      },
+      {
+       "id": "glass-rings",
+       "bone": "carcass",
+       "role": "texture",
+       "z": 4.5,
+       "filled": false,
+       "tone": 0.3,
+       "kind": "path",
+       "d": "M 0.098 0.12 A 0.034 0.034 0 1 0 0.03 0.12 A 0.034 0.034 0 1 0 0.098 0.12 Z M 0.124 0.07 A 0.034 0.034 0 1 0 0.056 0.07 A 0.034 0.034 0 1 0 0.124 0.07 Z",
+       "region": "top"
+      },
+      {
+       "id": "burn",
+       "bone": "carcass",
+       "role": "detail",
+       "z": 4.6,
+       "filled": true,
+       "tone": 0.15,
+       "kind": "ellipse",
+       "cx": 0.095,
+       "cy": -0.13,
+       "rx": 0.014,
+       "ry": 0.0045,
+       "rotationDeg": 25,
+       "region": "top",
+       "material": "teak-top-faded"
+      },
+      {
+       "id": "burn-halo",
+       "bone": "carcass",
+       "role": "texture",
+       "z": 4.7,
+       "filled": false,
+       "tone": 0.3,
+       "kind": "ellipse",
+       "cx": 0.095,
+       "cy": -0.13,
+       "rx": 0.02,
+       "ry": 0.008,
+       "rotationDeg": 25,
+       "region": "top"
+      },
+      {
+       "id": "top-chip",
+       "bone": "carcass",
+       "role": "detail",
+       "z": 4.8,
+       "filled": false,
+       "tone": 0.25,
+       "kind": "poly",
+       "points": [
+        [
+         0.175,
+         -0.2
+        ],
+        [
+         0.172,
+         -0.203
+        ],
+        [
+         0.172,
+         -0.215
+        ]
+       ],
+       "closed": false,
+       "region": "top"
+      }
+     ]
+    },
+    "decisions": {
+     "silhouette": {
+      "en": "Table 7.0 x 11.4 mm on a 13.3 mm folded blanket with its whole construction: the 19 mm top with its 20 mm front overhang, the 16 mm side with its veneer, the inset drawer behind the side, the turned knob under the overhang and two tapered beech legs with their turned collars. Front view: the top edge, both side edges, bottom and divider edges, the drawer front with its 1.5 mm reveal, the knob and the open shelf with the hardboard back behind it. Plan: the sun-faded top with its grain, the knob just showing in front of it, the blanket with its quilting.",
+      "de": "Tisch 7,0 x 11,4 mm auf einer 13,3 mm breiten gefalteten Decke mit seiner ganzen Konstruktion: die 19-mm-Platte mit 20 mm Überstand vorn, die 16-mm-Seite mit Furnier, die eingelassene Schublade hinter der Seite, der gedrechselte Knauf unter dem Überstand und zwei konische Buchenbeine mit gedrechseltem Bund. Vorderansicht: Plattenkante, beide Seitenkanten, Boden- und Zwischenbodenkante, die Schubladenfront mit 1,5 mm Fuge, der Knauf und das offene Fach mit der Hartfaserrückwand dahinter. Grundriss: die sonnengebleichte Platte mit Maserung, der knapp davor sichtbare Knauf, die Decke mit ihrer Steppung."
+     },
+     "retained": {
+      "en": "The traces of use: the cigarette burn (28 x 9 mm) with its scorched halo, two glass rings, the darker unfaded circle where a lamp stood, the chipped veneer at the front-right corner, the scuffed feet and the worn lower edge of the drawer front.",
+      "de": "Die Gebrauchsspuren: die Zigarettenbrandstelle (28 x 9 mm) mit versengtem Hof, zwei Glasränder, der dunklere, nicht ausgebleichte Kreis, wo eine Lampe stand, das abgeplatzte Furnier an der vorderen rechten Ecke, die bestoßenen Füße und die abgegriffene Unterkante der Schubladenfront."
+     },
+     "merged": {
+      "en": "Left and right legs, sides and drawer sides coincide in the side view; rear and front legs coincide in the front view.",
+      "de": "Linke und rechte Beine, Seiten und Schubladenseiten fallen in der Seitenansicht zusammen; hintere und vordere Beine in der Vorderansicht."
+     },
+     "omitted": {
+      "en": "Leg mounting plates and hanger bolts, dowels, nails of the back panel, the drawer bottom grooves and the 6 mm round-over of the top edge (below 7.5 mm).",
+      "de": "Beinanschraubplatten und Stockschrauben, Dübel, Nägel der Rückwand, Nuten des Schubladenbodens und die 6-mm-Rundung der Plattenkante (unter 7,5 mm)."
+     },
+     "thinElements": {
+      "en": "The 3 mm hardboard back and the 4 mm drawer bottom keep their gauge as sheets; the blanket is 18 mm (0.36 mm).",
+      "de": "Die 3-mm-Hartfaserrückwand und der 4-mm-Schubladenboden behalten ihre Stärke als Platten; die Decke misst 18 mm (0,36 mm)."
+     },
+     "hatching": {
+      "en": "Veneer grain 0.7 mm on the side and the drawer front, 0.9 mm across the top, beech grain 0.5 mm on the legs, felt dots 0.8 mm on the blanket, all with the 0.13 mm pen.",
+      "de": "Furniermaserung 0,7 mm auf Seite und Schubladenfront, 0,9 mm quer über die Platte, Buchenmaserung 0,5 mm auf den Beinen, Filzpunkte 0,8 mm auf der Decke, alle mit dem 0,13-mm-Stift."
+     },
+     "styles": {
+      "en": "Faded top 0.84, side 0.7, drawer front 0.66, edges 0.62, legs 0.55, knob 0.5, blanket 0.45, shelf back 0.3 (in the shadow of the open shelf), burn 0.15; the knob is drawn with the 0.25 mm pen so that its 41 mm clearance under the overhang still prints at 1:75.",
+      "de": "Gebleichte Platte 0,84, Seite 0,7, Schubladenfront 0,66, Kanten 0,62, Beine 0,55, Knauf 0,5, Decke 0,45, Rückwand 0,3 (im Schatten des offenen Fachs), Brandstelle 0,15; der Knauf ist mit dem 0,25-mm-Stift gezeichnet, damit sein Abstand von 41 mm unter dem Überstand auch bei 1:75 druckt."
+     },
+     "overlays": {
+      "en": "One shape per region and part; the drawer box and the drawer front lie behind the side and under the top and show when the drawer is pulled out.",
+      "de": "Eine Form je Region und Teil; Schubladenkasten und Schubladenfront liegen hinter der Seite und unter der Platte und erscheinen, wenn die Schublade gezogen wird."
+     }
+    }
+   },
+   "100": {
+    "status": "authored",
+    "denominator": 100,
+    "validRange": {
+     "minDenominator": 75,
+     "maxDenominator": 150
+    },
+    "pens": {
+     "body": 0.35,
+     "detail": 0.18,
+     "texture": 0.13,
+     "glazing": null,
+     "ground": 0.5
+    },
+    "hatches": [],
+    "geometry": {
+     "elevation": [
+      {
+       "id": "blanket",
+       "bone": "blanket",
+       "role": "body",
+       "z": 1,
+       "filled": true,
+       "tone": 0.45,
+       "kind": "rect",
+       "x": 0.0,
+       "y": 0.0,
+       "w": 0.6666,
+       "h": 0.018,
+       "region": "blanket",
+       "material": "moving-blanket"
+      },
+      {
+       "id": "drawer-box",
+       "bone": "drawer",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.78,
+       "kind": "rect",
+       "x": 0.0,
+       "y": 0.0,
+       "w": 0.299,
+       "h": 0.09,
+       "region": "drawer",
+       "material": "pine-drawer"
+      },
+      {
+       "id": "drawer-front",
+       "bone": "drawer",
+       "role": "body",
+       "z": 2.2,
+       "filled": true,
+       "tone": 0.66,
+       "kind": "rect",
+       "x": 0.299,
+       "y": 0.0015,
+       "w": 0.016,
+       "h": 0.107,
+       "region": "drawer",
+       "material": "teak-veneer-chipboard"
+      },
+      {
+       "id": "shelf-back",
+       "bone": "carcass",
+       "role": "body",
+       "z": 2.4,
+       "filled": true,
+       "tone": 0.3,
+       "kind": "rect",
+       "x": 0.0,
+       "y": -0.35,
+       "w": 0.003,
+       "h": 0.331,
+       "region": "back-panel",
+       "material": "hardboard"
+      },
+      {
+       "id": "leg-rear",
+       "bone": "carcass",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.55,
+       "kind": "poly",
+       "points": [
+        [
+         0.051,
+         -0.55
+        ],
+        [
+         0.0585,
+         -0.35
+        ],
+        [
+         0.0215,
+         -0.35
+        ],
+        [
+         0.029,
+         -0.55
+        ]
+       ],
+       "closed": true,
+       "region": "legs",
+       "material": "beech-stained"
+      },
+      {
+       "id": "leg-front",
+       "bone": "carcass",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.55,
+       "kind": "poly",
+       "points": [
+        [
+         0.301,
+         -0.55
+        ],
+        [
+         0.3085,
+         -0.35
+        ],
+        [
+         0.2715,
+         -0.35
+        ],
+        [
+         0.279,
+         -0.55
+        ]
+       ],
+       "closed": true,
+       "region": "legs",
+       "material": "beech-stained"
+      },
+      {
+       "id": "side",
+       "bone": "carcass",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.72,
+       "kind": "poly",
+       "points": [
+        [
+         0.0,
+         -0.35
+        ],
+        [
+         0.33,
+         -0.35
+        ],
+        [
+         0.33,
+         -0.019
+        ],
+        [
+         0.35,
+         -0.019
+        ],
+        [
+         0.35,
+         0.0
+        ],
+        [
+         0.0,
+         0.0
+        ]
+       ],
+       "closed": true,
+       "regions": [
+        "carcass",
+        "top"
+       ],
+       "material": "teak-veneer-chipboard"
+      },
+      {
+       "id": "carcass-front",
+       "bone": "carcass",
+       "role": "body",
+       "z": 4.2,
+       "filled": true,
+       "tone": 0.62,
+       "kind": "rect",
+       "x": 0.314,
+       "y": -0.35,
+       "w": 0.016,
+       "h": 0.331,
+       "region": "carcass",
+       "material": "teak-veneer-chipboard"
+      },
+      {
+       "id": "top-front",
+       "bone": "carcass",
+       "role": "body",
+       "z": 4.4,
+       "filled": true,
+       "tone": 0.84,
+       "kind": "rect",
+       "x": 0.34,
+       "y": -0.019,
+       "w": 0.01,
+       "h": 0.019,
+       "region": "top",
+       "material": "teak-top-faded"
+      },
+      {
+       "id": "top-line",
+       "bone": "carcass",
+       "role": "detail",
+       "z": 4.6,
+       "filled": false,
+       "tone": 0.3,
+       "kind": "poly",
+       "points": [
+        [
+         0.0,
+         -0.019
+        ],
+        [
+         0.33,
+         -0.019
+        ]
+       ],
+       "closed": false,
+       "region": "top"
+      }
+     ],
+     "front": [
+      {
+       "id": "blanket",
+       "bone": "blanket",
+       "role": "body",
+       "z": 1,
+       "filled": true,
+       "tone": 0.45,
+       "kind": "rect",
+       "x": -0.375,
+       "y": 0.0,
+       "w": 0.75,
+       "h": 0.018,
+       "region": "blanket",
+       "material": "moving-blanket"
+      },
+      {
+       "id": "leg-front",
+       "bone": "carcass",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.55,
+       "kind": "path",
+       "d": "M -0.164 0.018 L -0.1565 0.218 L -0.1935 0.218 L -0.186 0.018 Z M 0.186 0.018 L 0.1935 0.218 L 0.1565 0.218 L 0.164 0.018 Z",
+       "region": "legs",
+       "material": "beech-stained"
+      },
+      {
+       "id": "shelf-back",
+       "bone": "carcass",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.3,
+       "kind": "rect",
+       "x": -0.199,
+       "y": 0.234,
+       "w": 0.398,
+       "h": 0.315,
+       "region": "back-panel",
+       "material": "hardboard"
+      },
+      {
+       "id": "carcass-front",
+       "bone": "carcass",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.62,
+       "kind": "path",
+       "d": "M -0.215 0.218 L -0.199 0.218 L -0.199 0.549 L -0.215 0.549 Z M 0.199 0.218 L 0.215 0.218 L 0.215 0.549 L 0.199 0.549 Z M -0.199 0.218 L 0.199 0.218 L 0.199 0.234 L -0.199 0.234 Z M -0.199 0.423 L 0.199 0.423 L 0.199 0.439 L -0.199 0.439 Z",
+       "region": "carcass",
+       "material": "teak-veneer-chipboard"
+      },
+      {
+       "id": "drawer-front",
+       "bone": "drawer",
+       "role": "body",
+       "z": 5,
+       "filled": true,
+       "tone": 0.66,
+       "kind": "rect",
+       "x": -0.1975,
+       "y": 0.4405,
+       "w": 0.395,
+       "h": 0.107,
+       "region": "drawer",
+       "material": "teak-veneer-chipboard"
+      },
+      {
+       "id": "knob",
+       "bone": "drawer",
+       "role": "detail",
+       "z": 6,
+       "filled": true,
+       "tone": 0.45,
+       "kind": "ellipse",
+       "cx": 0.0,
+       "cy": 0.494,
+       "rx": 0.014,
+       "ry": 0.014,
+       "region": "drawer",
+       "material": "teak-solid"
+      },
+      {
+       "id": "top-front",
+       "bone": "carcass",
+       "role": "body",
+       "z": 7,
+       "filled": true,
+       "tone": 0.84,
+       "kind": "rect",
+       "x": -0.215,
+       "y": 0.549,
+       "w": 0.43,
+       "h": 0.019,
+       "region": "top",
+       "material": "teak-top-faded"
+      }
+     ],
+     "plan": [
+      {
+       "id": "blanket",
+       "bone": "blanket",
+       "role": "body",
+       "z": 1,
+       "filled": true,
+       "tone": 0.45,
+       "kind": "rect",
+       "x": -0.3333,
+       "y": -0.375,
+       "w": 0.6666,
+       "h": 0.75,
+       "region": "blanket",
+       "material": "moving-blanket"
+      },
+      {
+       "id": "drawer-box",
+       "bone": "drawer",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.78,
+       "kind": "rect",
+       "x": -0.16,
+       "y": -0.1975,
+       "w": 0.299,
+       "h": 0.395,
+       "region": "drawer",
+       "material": "pine-drawer"
+      },
+      {
+       "id": "drawer-front",
+       "bone": "drawer",
+       "role": "body",
+       "z": 2.2,
+       "filled": true,
+       "tone": 0.66,
+       "kind": "rect",
+       "x": 0.139,
+       "y": -0.1975,
+       "w": 0.016,
+       "h": 0.395,
+       "region": "drawer",
+       "material": "teak-veneer-chipboard"
+      },
+      {
+       "id": "knob",
+       "bone": "drawer",
+       "role": "body",
+       "z": 2.4,
+       "filled": true,
+       "tone": 0.5,
+       "kind": "poly",
+       "points": [
+        [
+         0.155,
+         0.0075
+        ],
+        [
+         0.155,
+         0.0075
+        ],
+        [
+         0.165,
+         0.0075
+        ],
+        [
+         0.171,
+         0.014
+        ],
+        [
+         0.181,
+         0.0115
+        ],
+        [
+         0.181,
+         -0.0115
+        ],
+        [
+         0.171,
+         -0.014
+        ],
+        [
+         0.165,
+         -0.0075
+        ],
+        [
+         0.155,
+         -0.0075
+        ],
+        [
+         0.155,
+         -0.0075
+        ]
+       ],
+       "closed": true,
+       "region": "drawer",
+       "material": "teak-solid"
+      },
+      {
+       "id": "top",
+       "bone": "carcass",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.84,
+       "kind": "rect",
+       "x": -0.175,
+       "y": -0.215,
+       "w": 0.35,
+       "h": 0.43,
+       "region": "top",
+       "material": "teak-top-faded"
+      },
+      {
+       "id": "burn",
+       "bone": "carcass",
+       "role": "detail",
+       "z": 4.6,
+       "filled": true,
+       "tone": 0.15,
+       "kind": "ellipse",
+       "cx": 0.095,
+       "cy": -0.13,
+       "rx": 0.016,
+       "ry": 0.008,
+       "rotationDeg": 25,
+       "region": "top",
+       "material": "teak-top-faded"
+      }
+     ]
+    },
+    "decisions": {
+     "silhouette": {
+      "en": "Table 3.5 x 5.7 mm on a 6.7 mm blanket: top with its front overhang and side as one outline with the board line between them, two plain tapered legs, the drawer front and the open shelf in the front view, the top and the knob in plan.",
+      "de": "Tisch 3,5 x 5,7 mm auf einer 6,7 mm breiten Decke: Platte mit Überstand vorn und Seite als ein Umriss mit der Plattenfuge dazwischen, zwei glatte konische Beine, Schubladenfront und offenes Fach in der Vorderansicht, Platte und Knauf im Grundriss."
+     },
+     "retained": {
+      "en": "The open shelf with its dark back, the drawer reveal, the 20 mm front overhang and the cigarette burn as one dark dot on the top.",
+      "de": "Das offene Fach mit dunkler Rückwand, die Schubladenfuge, der Überstand von 20 mm vorn und die Zigarettenbrandstelle als ein dunkler Punkt auf der Platte."
+     },
+     "merged": {
+      "en": "Side and top in one side outline (regions carcass and top); sides, bottom and divider in one front profile.",
+      "de": "Seite und Platte in einem Seitenumriss (Regionen Korpus und Platte); Seiten, Boden und Zwischenboden in einem Frontprofil."
+     },
+     "omitted": {
+      "en": "Leg collars, scuffs, grain, glass rings, the lamp circle and the chip (all under 0.15 mm); the knob in the side view, whose 41 mm clearance under the overhang would print as a 0.03 to 0.3 mm white sliver between 1:75 and 1:150: the front view and the plan carry it.",
+      "de": "Beinbunde, Stoßspuren, Maserung, Glasränder, der Lampenkreis und die Abplatzung (alle unter 0,15 mm); der Knauf in der Seitenansicht, dessen 41-mm-Abstand unter dem Überstand zwischen 1:75 und 1:150 als weißer Spalt von 0,03 bis 0,3 mm drucken würde: Vorderansicht und Grundriss zeigen ihn."
+     },
+     "thinElements": {
+      "en": "Top 19 mm, sides 16 mm and drawer front 16 mm are inked by the 0.35 mm pen; the hardboard back keeps its 3 mm as a sheet.",
+      "de": "Platte 19 mm, Seiten 16 mm und Schubladenfront 16 mm trägt der 0,35-mm-Stift; die Hartfaserrückwand behält ihre 3 mm als Platte."
+     },
+     "hatching": {
+      "en": "None.",
+      "de": "Keine."
+     },
+     "styles": {
+      "en": "Top 0.84, side 0.72, drawer 0.66, edges 0.62, legs 0.55, blanket 0.45, knob 0.45, shelf back 0.3, burn 0.15.",
+      "de": "Platte 0,84, Seite 0,72, Schublade 0,66, Kanten 0,62, Beine 0,55, Decke 0,45, Knauf 0,45, Rückwand 0,3, Brandstelle 0,15."
+     },
+     "overlays": {
+      "en": "The side outline names carcass and top; drawer box and front lie hidden behind the side and show when the drawer is out.",
+      "de": "Der Seitenumriss nennt Korpus und Platte; Schubladenkasten und Front liegen verdeckt hinter der Seite und erscheinen bei gezogener Schublade."
+     }
+    }
+   },
+   "200": {
+    "status": "authored",
+    "denominator": 200,
+    "validRange": {
+     "minDenominator": 150,
+     "maxDenominator": 350
+    },
+    "pens": {
+     "body": 0.25,
+     "detail": 0.13,
+     "texture": null,
+     "glazing": null,
+     "ground": 0.35
+    },
+    "hatches": [],
+    "geometry": {
+     "elevation": [
+      {
+       "id": "blanket",
+       "bone": "blanket",
+       "role": "body",
+       "z": 1,
+       "filled": true,
+       "tone": 0.45,
+       "kind": "rect",
+       "x": 0.0,
+       "y": 0.0,
+       "w": 0.6666,
+       "h": 0.018,
+       "region": "blanket",
+       "material": "moving-blanket"
+      },
+      {
+       "id": "drawer-block",
+       "bone": "drawer",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.66,
+       "kind": "rect",
+       "x": 0.0,
+       "y": 0.0015,
+       "w": 0.315,
+       "h": 0.107,
+       "region": "drawer",
+       "material": "teak-veneer-chipboard"
+      },
+      {
+       "id": "leg-rear",
+       "bone": "carcass",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.55,
+       "kind": "poly",
+       "points": [
+        [
+         0.055,
+         -0.55
+        ],
+        [
+         0.058,
+         -0.35
+        ],
+        [
+         0.022,
+         -0.35
+        ],
+        [
+         0.025,
+         -0.55
+        ]
+       ],
+       "closed": true,
+       "region": "legs",
+       "material": "beech-stained"
+      },
+      {
+       "id": "leg-front",
+       "bone": "carcass",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.55,
+       "kind": "poly",
+       "points": [
+        [
+         0.305,
+         -0.55
+        ],
+        [
+         0.308,
+         -0.35
+        ],
+        [
+         0.272,
+         -0.35
+        ],
+        [
+         0.275,
+         -0.55
+        ]
+       ],
+       "closed": true,
+       "region": "legs",
+       "material": "beech-stained"
+      },
+      {
+       "id": "side",
+       "bone": "carcass",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.72,
+       "kind": "rect",
+       "x": 0.0,
+       "y": -0.35,
+       "w": 0.33,
+       "h": 0.331,
+       "regions": [
+        "carcass",
+        "back-panel"
+       ],
+       "material": "teak-veneer-chipboard"
+      },
+      {
+       "id": "top-band",
+       "bone": "carcass",
+       "role": "body",
+       "z": 4.5,
+       "filled": true,
+       "tone": 0.84,
+       "kind": "rect",
+       "x": 0.0,
+       "y": -0.019,
+       "w": 0.33,
+       "h": 0.019,
+       "region": "top",
+       "material": "teak-top-faded"
+      }
+     ],
+     "front": [
+      {
+       "id": "blanket",
+       "bone": "blanket",
+       "role": "body",
+       "z": 1,
+       "filled": true,
+       "tone": 0.45,
+       "kind": "rect",
+       "x": -0.375,
+       "y": 0.0,
+       "w": 0.75,
+       "h": 0.018,
+       "region": "blanket",
+       "material": "moving-blanket"
+      },
+      {
+       "id": "leg-front",
+       "bone": "carcass",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.55,
+       "kind": "path",
+       "d": "M -0.16 0.018 L -0.157 0.218 L -0.193 0.218 L -0.19 0.018 Z M 0.19 0.018 L 0.193 0.218 L 0.157 0.218 L 0.16 0.018 Z",
+       "region": "legs",
+       "material": "beech-stained"
+      },
+      {
+       "id": "carcass-front",
+       "bone": "carcass",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.62,
+       "kind": "rect",
+       "x": -0.215,
+       "y": 0.218,
+       "w": 0.43,
+       "h": 0.331,
+       "region": "carcass",
+       "material": "teak-veneer-chipboard"
+      },
+      {
+       "id": "shelf-back",
+       "bone": "carcass",
+       "role": "body",
+       "z": 3.5,
+       "filled": true,
+       "tone": 0.3,
+       "kind": "rect",
+       "x": -0.199,
+       "y": 0.234,
+       "w": 0.398,
+       "h": 0.189,
+       "region": "back-panel",
+       "material": "hardboard"
+      },
+      {
+       "id": "drawer-block",
+       "bone": "drawer",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.66,
+       "kind": "rect",
+       "x": -0.1975,
+       "y": 0.4405,
+       "w": 0.395,
+       "h": 0.107,
+       "region": "drawer",
+       "material": "teak-veneer-chipboard"
+      },
+      {
+       "id": "top-band",
+       "bone": "carcass",
+       "role": "body",
+       "z": 5,
+       "filled": true,
+       "tone": 0.84,
+       "kind": "rect",
+       "x": -0.215,
+       "y": 0.549,
+       "w": 0.43,
+       "h": 0.019,
+       "region": "top",
+       "material": "teak-top-faded"
+      }
+     ],
+     "plan": [
+      {
+       "id": "blanket",
+       "bone": "blanket",
+       "role": "body",
+       "z": 1,
+       "filled": true,
+       "tone": 0.45,
+       "kind": "rect",
+       "x": -0.3333,
+       "y": -0.375,
+       "w": 0.6666,
+       "h": 0.75,
+       "region": "blanket",
+       "material": "moving-blanket"
+      },
+      {
+       "id": "drawer-block",
+       "bone": "drawer",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.66,
+       "kind": "rect",
+       "x": -0.16,
+       "y": -0.1975,
+       "w": 0.315,
+       "h": 0.395,
+       "region": "drawer",
+       "material": "teak-veneer-chipboard"
+      },
+      {
+       "id": "top-band",
+       "bone": "carcass",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.84,
+       "kind": "rect",
+       "x": -0.175,
+       "y": -0.215,
+       "w": 0.33,
+       "h": 0.43,
+       "region": "top",
+       "material": "teak-top-faded"
+      }
+     ]
+    },
+    "decisions": {
+     "silhouette": {
+      "en": "Table 1.8 x 2.8 mm on a 3.3 mm blanket: carcass outline with the top as its band, two legs, the open shelf as a dark field under the drawer block.",
+      "de": "Tisch 1,8 x 2,8 mm auf einer 3,3 mm breiten Decke: Korpusumriss mit der Platte als Band, zwei Beine, das offene Fach als dunkles Feld unter dem Schubladenblock."
+     },
+     "retained": {
+      "en": "Top line at 0.57 m, the open shelf, the leg zone and the blanket under it.",
+      "de": "Plattenlinie bei 0,57 m, das offene Fach, die Beinzone und die Decke darunter."
+     },
+     "merged": {
+      "en": "Drawer front and box as one block; the top flush with the carcass front (its 20 mm overhang is under the 30 mm feature); the back panel drawn with the side.",
+      "de": "Schubladenfront und -kasten als ein Block; die Platte bündig mit der Korpusfront (ihr Überstand von 20 mm liegt unter dem Merkmal von 30 mm); die Rückwand mit der Seite gezeichnet."
+     },
+     "omitted": {
+      "en": "Knob, reveal, collars, grain and every trace of use (all under 0.15 mm at 1:200).",
+      "de": "Knauf, Fuge, Bunde, Maserung und alle Gebrauchsspuren (alle unter 0,15 mm bei 1:200)."
+     },
+     "thinElements": {
+      "en": "The 19 mm top band and the 18 mm blanket are carried by the 0.25 mm pen.",
+      "de": "Das 19-mm-Plattenband und die 18-mm-Decke trägt der 0,25-mm-Stift."
+     },
+     "hatching": {
+      "en": "None.",
+      "de": "Keine."
+     },
+     "styles": {
+      "en": "Top 0.84, side 0.72, drawer 0.66, carcass front 0.62, legs 0.55, blanket 0.45, shelf 0.3.",
+      "de": "Platte 0,84, Seite 0,72, Schublade 0,66, Korpusfront 0,62, Beine 0,55, Decke 0,45, Fach 0,3."
+     },
+     "overlays": {
+      "en": "The side names carcass and back panel; the drawer block is the drawer region.",
+      "de": "Die Seite nennt Korpus und Rückwand; der Schubladenblock ist die Region Schublade."
+     }
+    }
+   },
+   "500": {
+    "status": "unavailable",
+    "denominator": 500,
+    "cause": "below-printable-feature",
+    "reason": {
+     "en": "The bedside table is 0.35 x 0.43 x 0.57 m = 0.7 x 0.9 x 1.1 mm on paper at 1:500, under 3 mm: the drawer (0.11 m = 0.21 mm), the open shelf, the legs (22-39 mm = 0.04-0.08 mm) and the 18 mm blanket would merge into one anonymous speck.",
+     "de": "Der Nachttisch misst 0,35 x 0,43 x 0,57 m = 0,7 x 0,9 x 1,1 mm auf dem Papier bei 1:500, unter 3 mm: Schublade (0,11 m = 0,21 mm), offenes Fach, Beine (22-39 mm = 0,04-0,08 mm) und die 18-mm-Decke würden zu einem namenlosen Fleck verschmelzen."
+    },
+    "limitingFeature": {
+     "en": "Turned legs, 22-39 mm (0.04-0.08 mm on paper)",
+     "de": "Gedrechselte Beine, 22-39 mm (0,04-0,08 mm auf dem Papier)"
+    },
+    "limitingSizeM": 0.022,
+    "alternatives": [
+     {
+      "kind": "scale",
+      "denominator": 200
+     }
+    ]
+   }
+  },
+  "symbols": [
+   {
+    "id": "used-bedside-table-symbol",
+    "title": {
+     "en": "Bedside table on its blanket, true extent",
+     "de": "Nachttisch auf seiner Decke, wahre Ausdehnung"
+    },
+    "description": {
+     "en": "The stored bedside table in all three views: top 0.35 x 0.43 m at 0.57 m, carcass, open shelf, drawer, two legs of each pair, and the folded 0.67 x 0.75 m blanket under it.",
+     "de": "Der gelagerte Nachttisch in allen drei Ansichten: Platte 0,35 x 0,43 m auf 0,57 m, Korpus, offenes Fach, Schublade, je zwei Beine und die gefaltete Decke 0,67 x 0,75 m darunter."
+    },
+    "semantics": "true-extent",
+    "units": "model-m",
+    "denominators": [
+     200,
+     100,
+     50
+    ],
+    "pens": {
+     "body": 0.25,
+     "detail": 0.13,
+     "texture": null,
+     "glazing": null,
+     "ground": 0.35
+    },
+    "hatches": [],
+    "geometry": {
+     "elevation": [
+      {
+       "id": "blanket",
+       "bone": "ground",
+       "role": "body",
+       "z": 1,
+       "filled": true,
+       "tone": 0.45,
+       "kind": "rect",
+       "x": -0.3333,
+       "y": 0.0,
+       "w": 0.6666,
+       "h": 0.018
+      },
+      {
+       "id": "table",
+       "bone": "ground",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.8,
+       "kind": "poly",
+       "points": [
+        [
+         -0.175,
+         0.568
+        ],
+        [
+         0.175,
+         0.568
+        ],
+        [
+         0.175,
+         0.549
+        ],
+        [
+         0.155,
+         0.549
+        ],
+        [
+         0.155,
+         0.218
+        ],
+        [
+         0.1335,
+         0.218
+        ],
+        [
+         0.126,
+         0.018
+        ],
+        [
+         0.104,
+         0.018
+        ],
+        [
+         0.0965,
+         0.218
+        ],
+        [
+         -0.1165,
+         0.218
+        ],
+        [
+         -0.124,
+         0.018
+        ],
+        [
+         -0.146,
+         0.018
+        ],
+        [
+         -0.1535,
+         0.218
+        ],
+        [
+         -0.175,
+         0.218
+        ]
+       ],
+       "closed": true
+      },
+      {
+       "id": "drawer-line",
+       "bone": "ground",
+       "role": "detail",
+       "z": 3,
+       "filled": false,
+       "tone": 0.3,
+       "kind": "poly",
+       "points": [
+        [
+         0.155,
+         0.439
+        ],
+        [
+         0.17,
+         0.439
+        ]
+       ],
+       "closed": false
+      }
+     ],
+     "front": [
+      {
+       "id": "blanket",
+       "bone": "ground",
+       "role": "body",
+       "z": 1,
+       "filled": true,
+       "tone": 0.45,
+       "kind": "rect",
+       "x": -0.375,
+       "y": 0.0,
+       "w": 0.75,
+       "h": 0.018
+      },
+      {
+       "id": "table",
+       "bone": "ground",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.8,
+       "kind": "poly",
+       "points": [
+        [
+         -0.215,
+         0.568
+        ],
+        [
+         0.215,
+         0.568
+        ],
+        [
+         0.215,
+         0.218
+        ],
+        [
+         0.1935,
+         0.218
+        ],
+        [
+         0.186,
+         0.018
+        ],
+        [
+         0.164,
+         0.018
+        ],
+        [
+         0.1565,
+         0.218
+        ],
+        [
+         -0.1565,
+         0.218
+        ],
+        [
+         -0.164,
+         0.018
+        ],
+        [
+         -0.186,
+         0.018
+        ],
+        [
+         -0.1935,
+         0.218
+        ],
+        [
+         -0.215,
+         0.218
+        ]
+       ],
+       "closed": true
+      },
+      {
+       "id": "shelf",
+       "bone": "ground",
+       "role": "detail",
+       "z": 3,
+       "filled": true,
+       "tone": 0.3,
+       "kind": "rect",
+       "x": -0.199,
+       "y": 0.234,
+       "w": 0.398,
+       "h": 0.189
+      },
+      {
+       "id": "drawer",
+       "bone": "ground",
+       "role": "detail",
+       "z": 3.5,
+       "filled": false,
+       "tone": 0.3,
+       "kind": "rect",
+       "x": -0.1975,
+       "y": 0.4405,
+       "w": 0.395,
+       "h": 0.107
+      }
+     ],
+     "plan": [
+      {
+       "id": "blanket",
+       "bone": "ground",
+       "role": "body",
+       "z": 1,
+       "filled": true,
+       "tone": 0.45,
+       "kind": "rect",
+       "x": -0.3333,
+       "y": -0.375,
+       "w": 0.6666,
+       "h": 0.75
+      },
+      {
+       "id": "top",
+       "bone": "ground",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.8,
+       "kind": "rect",
+       "x": -0.175,
+       "y": -0.215,
+       "w": 0.35,
+       "h": 0.43
+      }
+     ]
+    },
+    "dimensionalNote": {
+     "en": "Model metres at real size in the frame of the asset (x ahead to the drawer front, lateral positive to the left, y up): the side view is seen from the right, the front view from ahead, the top view from above; all three show the stored pose on the blanket.",
+     "de": "Modellmeter in wahrer Größe im Koordinatensystem des Objekts (x nach vorn zur Schubladenfront, seitlich positiv nach links, y nach oben): die Seitenansicht blickt von rechts, die Vorderansicht von vorn, die Draufsicht von oben; alle drei zeigen die gelagerte Pose auf der Decke."
+    }
+   }
+  ],
+  "poses": [
+   {
+    "id": "stored",
+    "title": {
+     "en": "Stored on the blanket",
+     "de": "Auf der Decke gelagert"
+    },
+    "description": {
+     "en": "Emptied and cleaned, standing on a folded moving blanket in the reuse depot, drawer pushed shut.",
+     "de": "Geleert und gereinigt, auf einer gefalteten Möbeldecke im Wiederverwendungslager, Schublade zugeschoben."
+    },
+    "bones": {},
+    "ground": "authored",
+    "contacts": [
+     "pad-rear-l",
+     "pad-rear-r",
+     "pad-front-l",
+     "pad-front-r"
+    ],
+    "thermal": {
+     "regions": {
+      "top": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.0
+      },
+      "carcass": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0
+      },
+      "back-panel": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0
+      },
+      "drawer": {
+       "exposedFraction": 0.2,
+       "sunlitFraction": 0
+      },
+      "legs": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0
+      },
+      "blanket": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0,
+       "contact": {
+        "fraction": 0.45,
+        "tempC": 18
+       }
+      }
+     },
+     "emitters": {}
+    },
+    "loads": [
+     {
+      "id": "floor-under-blanket",
+      "kind": "imposed",
+      "title": {
+       "en": "Floor reaction under the blanket, which lies on its own",
+       "de": "Bodenreaktion unter der Decke, die für sich liegt"
+      },
+      "bone": "blanket",
+      "x": 0.33442,
+      "y": 0.009,
+      "fxN": 0,
+      "fyN": 13.729,
+      "source": "literature",
+      "reference": "en-1991-1-1"
+     }
+    ]
+   },
+   {
+    "id": "carried",
+    "title": {
+     "en": "Carried in one hand",
+     "de": "Mit einer Hand getragen"
+    },
+    "description": {
+     "en": "Held by the front edge of the top at 0.76 m hand height, tilted 12 degrees back so the drawer stays shut, lowest foot 0.17 m above the floor; the blanket stays behind.",
+     "de": "An der Vorderkante der Platte in 0.76 m Handhöhe gehalten, 12 Grad nach hinten geneigt, damit die Schublade zu bleibt, tiefster Fuß 0.17 m über dem Boden; die Decke bleibt zurück."
+    },
+    "bones": {
+     "travel": {
+      "dx": 0.3
+     },
+     "lift": {
+      "dy": 0.1285
+     },
+     "carcass": {
+      "angleDeg": 12
+     }
+    },
+    "ground": "authored",
+    "contacts": [
+     "grip"
+    ],
+    "thermal": {
+     "regions": {
+      "top": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.0
+      },
+      "carcass": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0
+      },
+      "back-panel": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0
+      },
+      "drawer": {
+       "exposedFraction": 0.2,
+       "sunlitFraction": 0
+      },
+      "legs": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0
+      },
+      "blanket": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0,
+       "contact": {
+        "fraction": 0.45,
+        "tempC": 18
+       }
+      }
+     },
+     "emitters": {}
+    },
+    "loads": [
+     {
+      "id": "floor-under-blanket",
+      "kind": "imposed",
+      "title": {
+       "en": "Floor reaction under the blanket, which lies on its own",
+       "de": "Bodenreaktion unter der Decke, die für sich liegt"
+      },
+      "bone": "blanket",
+      "x": 0.33442,
+      "y": 0.009,
+      "fxN": 0,
+      "fyN": 13.729,
+      "source": "literature",
+      "reference": "en-1991-1-1"
+     }
+    ]
+   },
+   {
+    "id": "in-use",
+    "title": {
+     "en": "Beside the bed again",
+     "de": "Wieder neben dem Bett"
+    },
+    "description": {
+     "en": "Set down on the bedroom floor beside a bed with a lamp, books and a glass on the top and a few things in the drawer; a window sun patch lies on the top.",
+     "de": "Auf den Schlafzimmerboden neben ein Bett gestellt, mit Lampe, Büchern und Glas auf der Platte und ein paar Dingen in der Schublade; ein Fensterlichtfleck liegt auf der Platte."
+    },
+    "bones": {
+     "travel": {
+      "dx": 0.8
+     },
+     "lift": {
+      "dy": -0.018
+     }
+    },
+    "ground": "authored",
+    "contacts": [
+     "foot-rear-l",
+     "foot-rear-r",
+     "foot-front-l",
+     "foot-front-r"
+    ],
+    "thermal": {
+     "regions": {
+      "top": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.3
+      },
+      "carcass": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0
+      },
+      "back-panel": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0
+      },
+      "drawer": {
+       "exposedFraction": 0.2,
+       "sunlitFraction": 0
+      },
+      "legs": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0
+      },
+      "blanket": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0,
+       "contact": {
+        "fraction": 0.45,
+        "tempC": 18
+       }
+      }
+     },
+     "emitters": {}
+    },
+    "loads": [
+     {
+      "id": "floor-under-blanket",
+      "kind": "imposed",
+      "title": {
+       "en": "Floor reaction under the blanket, which lies on its own",
+       "de": "Bodenreaktion unter der Decke, die für sich liegt"
+      },
+      "bone": "blanket",
+      "x": 0.33442,
+      "y": 0.009,
+      "fxN": 0,
+      "fyN": 13.729,
+      "source": "literature",
+      "reference": "en-1991-1-1"
+     },
+     {
+      "id": "lamp-load",
+      "kind": "equipment",
+      "title": {
+       "en": "Bedside lamp, 1.8 kg",
+       "de": "Nachttischlampe, 1,8 kg"
+      },
+      "anchor": "lamp",
+      "fxN": 0,
+      "fyN": -17.652,
+      "source": "authored-estimate",
+      "reference": "en-16122-2012"
+     },
+     {
+      "id": "books-load",
+      "kind": "equipment",
+      "title": {
+       "en": "Books, 1.5 kg",
+       "de": "Bücher, 1,5 kg"
+      },
+      "anchor": "books",
+      "fxN": 0,
+      "fyN": -14.71,
+      "source": "authored-estimate",
+      "reference": "en-16122-2012"
+     },
+     {
+      "id": "glass-load",
+      "kind": "equipment",
+      "title": {
+       "en": "Glass of water, 0.35 kg",
+       "de": "Wasserglas, 0,35 kg"
+      },
+      "anchor": "glass",
+      "fxN": 0,
+      "fyN": -3.432,
+      "source": "authored-estimate",
+      "reference": "en-16122-2012"
+     },
+     {
+      "id": "drawer-load",
+      "kind": "equipment",
+      "title": {
+       "en": "Drawer contents, 0.8 kg",
+       "de": "Schubladeninhalt, 0,8 kg"
+      },
+      "anchor": "drawer-contents",
+      "fxN": 0,
+      "fyN": -7.845,
+      "source": "authored-estimate",
+      "reference": "en-16122-2012"
+     }
+    ]
+   },
+   {
+    "id": "drawer-open",
+    "title": {
+     "en": "Drawer pulled out",
+     "de": "Schublade gezogen"
+    },
+    "description": {
+     "en": "In use with the drawer pulled 0.20 m out on its wooden runners by the knob.",
+     "de": "In Gebrauch, die Schublade am Knauf 0,20 m auf ihren Holzlaufleisten herausgezogen."
+    },
+    "bones": {
+     "travel": {
+      "dx": 0.8
+     },
+     "lift": {
+      "dy": -0.018
+     },
+     "drawer": {
+      "dx": 0.2
+     }
+    },
+    "ground": "authored",
+    "contacts": [
+     "foot-rear-l",
+     "foot-rear-r",
+     "foot-front-l",
+     "foot-front-r"
+    ],
+    "thermal": {
+     "regions": {
+      "top": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.3
+      },
+      "carcass": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0
+      },
+      "back-panel": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0
+      },
+      "drawer": {
+       "exposedFraction": 0.55,
+       "sunlitFraction": 0
+      },
+      "legs": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0
+      },
+      "blanket": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0,
+       "contact": {
+        "fraction": 0.45,
+        "tempC": 18
+       }
+      }
+     },
+     "emitters": {}
+    },
+    "loads": [
+     {
+      "id": "floor-under-blanket",
+      "kind": "imposed",
+      "title": {
+       "en": "Floor reaction under the blanket, which lies on its own",
+       "de": "Bodenreaktion unter der Decke, die für sich liegt"
+      },
+      "bone": "blanket",
+      "x": 0.33442,
+      "y": 0.009,
+      "fxN": 0,
+      "fyN": 13.729,
+      "source": "literature",
+      "reference": "en-1991-1-1"
+     },
+     {
+      "id": "lamp-load",
+      "kind": "equipment",
+      "title": {
+       "en": "Bedside lamp, 1.8 kg",
+       "de": "Nachttischlampe, 1,8 kg"
+      },
+      "anchor": "lamp",
+      "fxN": 0,
+      "fyN": -17.652,
+      "source": "authored-estimate",
+      "reference": "en-16122-2012"
+     },
+     {
+      "id": "books-load",
+      "kind": "equipment",
+      "title": {
+       "en": "Books, 1.5 kg",
+       "de": "Bücher, 1,5 kg"
+      },
+      "anchor": "books",
+      "fxN": 0,
+      "fyN": -14.71,
+      "source": "authored-estimate",
+      "reference": "en-16122-2012"
+     },
+     {
+      "id": "glass-load",
+      "kind": "equipment",
+      "title": {
+       "en": "Glass of water, 0.35 kg",
+       "de": "Wasserglas, 0,35 kg"
+      },
+      "anchor": "glass",
+      "fxN": 0,
+      "fyN": -3.432,
+      "source": "authored-estimate",
+      "reference": "en-16122-2012"
+     },
+     {
+      "id": "drawer-load",
+      "kind": "equipment",
+      "title": {
+       "en": "Drawer contents, 0.8 kg",
+       "de": "Schubladeninhalt, 0,8 kg"
+      },
+      "anchor": "drawer-contents",
+      "fxN": 0,
+      "fyN": -7.845,
+      "source": "authored-estimate",
+      "reference": "en-16122-2012"
+     },
+     {
+      "id": "pull",
+      "kind": "live",
+      "title": {
+       "en": "Pull at the knob, 12 N",
+       "de": "Zug am Knauf, 12 N"
+      },
+      "anchor": "knob-pull",
+      "fxN": 12,
+      "fyN": 0,
+      "source": "authored-estimate",
+      "reference": "en-16122-2012"
+     }
+    ]
+   },
+   {
+    "id": "lift-off-key",
+    "key": true,
+    "title": {
+     "en": "Lifting off the blanket",
+     "de": "Abheben von der Decke"
+    },
+    "description": {
+     "en": "The hand has taken the top and lifts the table clear of the blanket.",
+     "de": "Die Hand hat die Platte gefasst und hebt den Tisch von der Decke ab."
+    },
+    "bones": {
+     "lift": {
+      "dy": 0.03
+     },
+     "carcass": {
+      "angleDeg": 2
+     }
+    },
+    "ground": "authored",
+    "contacts": [
+     "grip"
+    ],
+    "thermal": {
+     "regions": {
+      "top": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.0
+      },
+      "carcass": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0
+      },
+      "back-panel": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0
+      },
+      "drawer": {
+       "exposedFraction": 0.2,
+       "sunlitFraction": 0
+      },
+      "legs": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0
+      },
+      "blanket": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0,
+       "contact": {
+        "fraction": 0.45,
+        "tempC": 18
+       }
+      }
+     },
+     "emitters": {}
+    },
+    "loads": [
+     {
+      "id": "floor-under-blanket",
+      "kind": "imposed",
+      "title": {
+       "en": "Floor reaction under the blanket, which lies on its own",
+       "de": "Bodenreaktion unter der Decke, die für sich liegt"
+      },
+      "bone": "blanket",
+      "x": 0.33442,
+      "y": 0.009,
+      "fxN": 0,
+      "fyN": 13.729,
+      "source": "literature",
+      "reference": "en-1991-1-1"
+     }
+    ]
+   },
+   {
+    "id": "set-down-key",
+    "key": true,
+    "title": {
+     "en": "Lowering at the bedside",
+     "de": "Absenken am Bett"
+    },
+    "description": {
+     "en": "Carried to the bedside, levelled and lowered to just above the floor.",
+     "de": "Ans Bett getragen, waagerecht gestellt und bis knapp über den Boden abgesenkt."
+    },
+    "bones": {
+     "travel": {
+      "dx": 0.8
+     },
+     "lift": {
+      "dy": -0.005
+     }
+    },
+    "ground": "authored",
+    "contacts": [
+     "grip"
+    ],
+    "thermal": {
+     "regions": {
+      "top": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.0
+      },
+      "carcass": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0
+      },
+      "back-panel": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0
+      },
+      "drawer": {
+       "exposedFraction": 0.2,
+       "sunlitFraction": 0
+      },
+      "legs": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0
+      },
+      "blanket": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0,
+       "contact": {
+        "fraction": 0.45,
+        "tempC": 18
+       }
+      }
+     },
+     "emitters": {}
+    },
+    "loads": [
+     {
+      "id": "floor-under-blanket",
+      "kind": "imposed",
+      "title": {
+       "en": "Floor reaction under the blanket, which lies on its own",
+       "de": "Bodenreaktion unter der Decke, die für sich liegt"
+      },
+      "bone": "blanket",
+      "x": 0.33442,
+      "y": 0.009,
+      "fxN": 0,
+      "fyN": 13.729,
+      "source": "literature",
+      "reference": "en-1991-1-1"
+     }
+    ]
+   }
+  ],
+  "clips": [
+   {
+    "id": "carry",
+    "title": {
+     "en": "Carry it off the blanket",
+     "de": "Von der Decke wegtragen"
+    },
+    "description": {
+     "en": "One hand takes the front edge of the top, lifts the table off the blanket, lets it tilt back and carries it away; the blanket stays on the depot floor.",
+     "de": "Eine Hand fasst die Vorderkante der Platte, hebt den Tisch von der Decke, lässt ihn nach hinten kippen und trägt ihn fort; die Decke bleibt auf dem Lagerboden."
+    },
+    "durationS": 2.4,
+    "fps": 30,
+    "loop": false,
+    "rootMotion": "none",
+    "keys": [
+     {
+      "t": 0,
+      "pose": "stored",
+      "ease": "smooth"
+     },
+     {
+      "t": 0.5,
+      "pose": "lift-off-key",
+      "ease": "smooth"
+     },
+     {
+      "t": 1.8,
+      "pose": "carried",
+      "ease": "smooth"
+     },
+     {
+      "t": 2.4,
+      "pose": "carried",
+      "ease": "smooth"
+     }
+    ],
+    "contacts": [
+     {
+      "anchor": "pad-rear-l",
+      "fromS": 0,
+      "toS": 0.2
+     },
+     {
+      "anchor": "pad-rear-r",
+      "fromS": 0,
+      "toS": 0.2
+     },
+     {
+      "anchor": "pad-front-l",
+      "fromS": 0,
+      "toS": 0.2
+     },
+     {
+      "anchor": "pad-front-r",
+      "fromS": 0,
+      "toS": 0.2
+     },
+     {
+      "anchor": "grip",
+      "fromS": 0,
+      "toS": 2.4
+     }
+    ],
+    "phases": [
+     {
+      "id": "grip",
+      "fromS": 0,
+      "toS": 0.5,
+      "title": {
+       "en": "Take hold and lift",
+       "de": "Fassen und anheben"
+      }
+     },
+     {
+      "id": "swing",
+      "fromS": 0.5,
+      "toS": 1.8,
+      "title": {
+       "en": "Tilt back and walk",
+       "de": "Zurückkippen und gehen"
+      }
+     },
+     {
+      "id": "carry",
+      "fromS": 1.8,
+      "toS": 2.4,
+      "title": {
+       "en": "Carry",
+       "de": "Tragen"
+      }
+     }
+    ],
+    "events": [
+     {
+      "t": 0.2,
+      "kind": "contact-off",
+      "title": {
+       "en": "Feet leave the blanket",
+       "de": "Füße verlassen die Decke"
+      }
+     },
+     {
+      "t": 1.8,
+      "kind": "motion",
+      "title": {
+       "en": "Hanging from the hand",
+       "de": "Hängt an der Hand"
+      }
+     }
+    ],
+    "tracks": []
+   },
+   {
+    "id": "drawer-pull",
+    "title": {
+     "en": "Pull the drawer and push it back",
+     "de": "Schublade ziehen und zurückschieben"
+    },
+    "description": {
+     "en": "In use: the drawer is pulled 0.20 m out by its knob, held and pushed back.",
+     "de": "In Gebrauch: die Schublade wird am Knauf 0,20 m herausgezogen, gehalten und zurückgeschoben."
+    },
+    "durationS": 3.0,
+    "fps": 30,
+    "loop": true,
+    "rootMotion": "none",
+    "keys": [
+     {
+      "t": 0,
+      "pose": "in-use",
+      "ease": "smooth"
+     },
+     {
+      "t": 1.0,
+      "pose": "drawer-open",
+      "ease": "smooth"
+     },
+     {
+      "t": 2.0,
+      "pose": "drawer-open",
+      "ease": "smooth"
+     },
+     {
+      "t": 3.0,
+      "pose": "in-use",
+      "ease": "smooth"
+     }
+    ],
+    "contacts": [
+     {
+      "anchor": "foot-rear-l",
+      "fromS": 0,
+      "toS": 3.0
+     },
+     {
+      "anchor": "foot-rear-r",
+      "fromS": 0,
+      "toS": 3.0
+     },
+     {
+      "anchor": "foot-front-l",
+      "fromS": 0,
+      "toS": 3.0
+     },
+     {
+      "anchor": "foot-front-r",
+      "fromS": 0,
+      "toS": 3.0
+     }
+    ],
+    "phases": [
+     {
+      "id": "pull",
+      "fromS": 0,
+      "toS": 1.0,
+      "title": {
+       "en": "Pull",
+       "de": "Ziehen"
+      }
+     },
+     {
+      "id": "hold",
+      "fromS": 1.0,
+      "toS": 2.0,
+      "title": {
+       "en": "Open",
+       "de": "Offen"
+      }
+     },
+     {
+      "id": "push",
+      "fromS": 2.0,
+      "toS": 3.0,
+      "title": {
+       "en": "Push back",
+       "de": "Zurückschieben"
+      }
+     }
+    ],
+    "events": [
+     {
+      "t": 1.0,
+      "kind": "motion",
+      "title": {
+       "en": "Drawer fully out",
+       "de": "Schublade ganz offen"
+      }
+     },
+     {
+      "t": 3.0,
+      "kind": "motion",
+      "title": {
+       "en": "Drawer shut",
+       "de": "Schublade zu"
+      }
+     }
+    ],
+    "tracks": [
+     {
+      "target": "region:drawer:exposedFraction",
+      "ease": "smooth",
+      "keys": [
+       {
+        "t": 0,
+        "v": 0.2
+       },
+       {
+        "t": 1.0,
+        "v": 0.55
+       },
+       {
+        "t": 2.0,
+        "v": 0.55
+       },
+       {
+        "t": 3.0,
+        "v": 0.2
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "set-down",
+    "title": {
+     "en": "Set it down beside the bed",
+     "de": "Neben dem Bett abstellen"
+    },
+    "description": {
+     "en": "Carried on to the bedside, levelled, lowered onto its feet and let go.",
+     "de": "Weiter ans Bett getragen, waagerecht gestellt, auf die Füße abgesenkt und losgelassen."
+    },
+    "durationS": 3.0,
+    "fps": 30,
+    "loop": false,
+    "rootMotion": "none",
+    "keys": [
+     {
+      "t": 0,
+      "pose": "carried",
+      "ease": "smooth"
+     },
+     {
+      "t": 2.2,
+      "pose": "set-down-key",
+      "ease": "smooth"
+     },
+     {
+      "t": 3.0,
+      "pose": "in-use",
+      "ease": "smooth"
+     }
+    ],
+    "contacts": [
+     {
+      "anchor": "grip",
+      "fromS": 0,
+      "toS": 2.9
+     },
+     {
+      "anchor": "foot-rear-l",
+      "fromS": 2.6,
+      "toS": 3.0
+     },
+     {
+      "anchor": "foot-rear-r",
+      "fromS": 2.6,
+      "toS": 3.0
+     },
+     {
+      "anchor": "foot-front-l",
+      "fromS": 2.6,
+      "toS": 3.0
+     },
+     {
+      "anchor": "foot-front-r",
+      "fromS": 2.6,
+      "toS": 3.0
+     }
+    ],
+    "phases": [
+     {
+      "id": "walk",
+      "fromS": 0,
+      "toS": 2.2,
+      "title": {
+       "en": "Walk and level",
+       "de": "Gehen und ausrichten"
+      }
+     },
+     {
+      "id": "lower",
+      "fromS": 2.2,
+      "toS": 3.0,
+      "title": {
+       "en": "Lower and let go",
+       "de": "Absenken und loslassen"
+      }
+     }
+    ],
+    "events": [
+     {
+      "t": 2.6,
+      "kind": "contact-on",
+      "title": {
+       "en": "Feet touch the floor",
+       "de": "Füße berühren den Boden"
+      }
+     },
+     {
+      "t": 2.9,
+      "kind": "contact-off",
+      "title": {
+       "en": "Hand lets go",
+       "de": "Hand lässt los"
+      }
+     }
+    ],
+    "tracks": []
+   }
+  ],
+  "thermal": {
+   "environment": {
+    "airTempC": 20,
+    "meanRadiantTempC": 20,
+    "relativeHumidity": 0.45,
+    "windMS": 0.1,
+    "windDirectionDeg": 0,
+    "solarWM2": 300,
+    "diffuseFraction": 0.2,
+    "pressurePa": 101325
+   },
+   "operating": [],
+   "regions": [
+    {
+     "id": "top",
+     "title": {
+      "en": "Sun-faded veneered top",
+      "de": "Sonnengebleichte furnierte Platte"
+     },
+     "kind": "surface",
+     "model": "passive",
+     "material": "teak-top-faded",
+     "areaM2": 0.234,
+     "characteristicLengthM": 0.35,
+     "geometry": "horizontal-plate-up",
+     "skyViewFactor": 0.8,
+     "layers": [
+      {
+       "id": "top-board",
+       "title": {
+        "en": "Chipboard 19 mm",
+        "de": "Spanplatte 19 mm"
+       },
+       "kind": "timber",
+       "material": "teak-top-faded",
+       "thicknessM": 0.019,
+       "resistanceM2KW": 0.146154,
+       "heatCapacityJM2K": 20995,
+       "source": "literature",
+       "reference": "iso-10456-2007"
+      }
+     ],
+     "heatCapacityJM2K": 20995,
+     "source": "authored-estimate",
+     "reference": "iso-10456-2007",
+     "ratedPowerW": 0,
+     "ratedPowerBasis": "passive"
+    },
+    {
+     "id": "carcass",
+     "title": {
+      "en": "Veneered carcass and open shelf",
+      "de": "Furnierter Korpus und offenes Fach"
+     },
+     "kind": "surface",
+     "model": "passive",
+     "material": "teak-veneer-chipboard",
+     "areaM2": 0.76,
+     "characteristicLengthM": 0.33,
+     "geometry": "vertical-plate",
+     "skyViewFactor": 0.4,
+     "layers": [
+      {
+       "id": "carcass-board",
+       "title": {
+        "en": "Chipboard 16 mm",
+        "de": "Spanplatte 16 mm"
+       },
+       "kind": "timber",
+       "material": "teak-veneer-chipboard",
+       "thicknessM": 0.016,
+       "resistanceM2KW": 0.123077,
+       "heatCapacityJM2K": 17680,
+       "source": "literature",
+       "reference": "iso-10456-2007"
+      }
+     ],
+     "heatCapacityJM2K": 17680,
+     "source": "authored-estimate",
+     "reference": "iso-10456-2007"
+    },
+    {
+     "id": "back-panel",
+     "title": {
+      "en": "Hardboard back",
+      "de": "Hartfaserrückwand"
+     },
+     "kind": "surface",
+     "model": "passive",
+     "material": "hardboard",
+     "areaM2": 0.24,
+     "characteristicLengthM": 0.33,
+     "geometry": "vertical-plate",
+     "skyViewFactor": 0.3,
+     "layers": [
+      {
+       "id": "back-sheet",
+       "title": {
+        "en": "Hardboard 3 mm",
+        "de": "Hartfaser 3 mm"
+       },
+       "kind": "timber",
+       "material": "hardboard",
+       "thicknessM": 0.003,
+       "resistanceM2KW": 0.016667,
+       "heatCapacityJM2K": 4845,
+       "source": "literature",
+       "reference": "iso-10456-2007"
+      }
+     ],
+     "heatCapacityJM2K": 4845,
+     "source": "authored-estimate",
+     "reference": "iso-10456-2007"
+    },
+    {
+     "id": "drawer",
+     "title": {
+      "en": "Drawer front, knob and box",
+      "de": "Schubladenfront, Knauf und Kasten"
+     },
+     "kind": "surface",
+     "model": "passive",
+     "material": "teak-veneer-chipboard",
+     "areaM2": 0.461,
+     "characteristicLengthM": 0.107,
+     "geometry": "vertical-plate",
+     "skyViewFactor": 0.4,
+     "layers": [
+      {
+       "id": "drawer-board",
+       "title": {
+        "en": "Chipboard 16 mm",
+        "de": "Spanplatte 16 mm"
+       },
+       "kind": "timber",
+       "material": "teak-veneer-chipboard",
+       "thicknessM": 0.016,
+       "resistanceM2KW": 0.123077,
+       "heatCapacityJM2K": 17680,
+       "source": "literature",
+       "reference": "iso-10456-2007"
+      }
+     ],
+     "heatCapacityJM2K": 17680,
+     "source": "authored-estimate",
+     "reference": "iso-10456-2007"
+    },
+    {
+     "id": "legs",
+     "title": {
+      "en": "Turned beech legs",
+      "de": "Gedrechselte Buchenbeine"
+     },
+     "kind": "surface",
+     "model": "passive",
+     "material": "beech-stained",
+     "areaM2": 0.08,
+     "characteristicLengthM": 0.03,
+     "geometry": "cylinder",
+     "skyViewFactor": 0.3,
+     "layers": [
+      {
+       "id": "leg-wood",
+       "title": {
+        "en": "Beech, half diameter 15 mm",
+        "de": "Buche, halber Durchmesser 15 mm"
+       },
+       "kind": "timber",
+       "material": "beech-stained",
+       "thicknessM": 0.015,
+       "resistanceM2KW": 0.09375,
+       "heatCapacityJM2K": 17040,
+       "source": "literature",
+       "reference": "iso-10456-2007"
+      }
+     ],
+     "heatCapacityJM2K": 17040,
+     "source": "authored-estimate",
+     "reference": "iso-10456-2007"
+    },
+    {
+     "id": "blanket",
+     "title": {
+      "en": "Folded moving blanket",
+      "de": "Gefaltete Möbeldecke"
+     },
+     "kind": "surface",
+     "model": "passive",
+     "material": "moving-blanket",
+     "areaM2": 1.05,
+     "characteristicLengthM": 0.667,
+     "geometry": "horizontal-plate-up",
+     "skyViewFactor": 0.6,
+     "layers": [
+      {
+       "id": "blanket-felt",
+       "title": {
+        "en": "Six felt layers 18 mm",
+        "de": "Sechs Filzlagen 18 mm"
+       },
+       "kind": "clothing",
+       "material": "moving-blanket",
+       "thicknessM": 0.018,
+       "resistanceM2KW": 0.4,
+       "heatCapacityJM2K": 3653,
+       "source": "literature",
+       "reference": "iso-10456-2007"
+      }
+     ],
+     "heatCapacityJM2K": 3653,
+     "source": "authored-estimate",
+     "reference": "iso-10456-2007"
+    }
+   ],
+   "emitters": [],
+   "passengers": [],
+   "assumptions": [
+    {
+     "en": "Veneered chipboard after ISO 10456 (650 kg/m3, 0.13 W/mK, 1700 J/kgK); areal heat capacity rho c min(t, sqrt(alpha 3600 s)): the 16 and 19 mm boards take part fully, the 39 mm legs to their half diameter.",
+     "de": "Furnierte Spanplatte nach ISO 10456 (650 kg/m3, 0,13 W/mK, 1700 J/kgK); flächenbezogene Wärmekapazität rho c min(t, sqrt(alpha 3600 s)): die 16- und 19-mm-Platten nehmen voll teil, die 39-mm-Beine bis zum halben Durchmesser."
+    },
+    {
+     "en": "Aged surfaces: the sun-bleached top absorbs less (0.58) than the darkened teak lacquer of the carcass (0.70), and its worn lacquer emits a little less (0.88 against 0.90); authored estimates from the range of lacquered wood in Incropera.",
+     "de": "Gealterte Oberflächen: die sonnengebleichte Platte absorbiert weniger (0,58) als der nachgedunkelte Teaklack des Korpus (0,70), und ihr abgenutzter Lack strahlt etwas weniger ab (0,88 statt 0,90); Schätzwerte aus dem Bereich lackierten Holzes nach Incropera."
+    },
+    {
+     "en": "The drawer region is the drawer front with its knob and the pine box behind it; the box sits in the drawer bay closed by 1.5 mm reveals, so only the front and knob are outer area (areaM2); pulled 0.20 m out, its sides add about 0.05 m2 of exchange that this passive model does not count.",
+     "de": "Die Region Schublade ist die Schubladenfront mit Knauf und dem Kiefernkasten dahinter; der Kasten sitzt im durch 1,5-mm-Fugen geschlossenen Schubladenfach, daher sind nur Front und Knauf Außenfläche (areaM2); 0,20 m herausgezogen kommen etwa 0,05 m2 Seitenfläche hinzu, die dieses passive Modell nicht zählt."
+    },
+    {
+     "en": "Reference case: a bedroom at 20 degC with still air and a 300 W/m2 window sun patch on the top in use; in the depot no sun; the blanket lies with 0.45 of its surface on an 18 degC floor.",
+     "de": "Referenzfall: ein Schlafzimmer bei 20 degC mit ruhender Luft und einem Fensterlichtfleck von 300 W/m2 auf der Platte in Gebrauch; im Lager keine Sonne; die Decke liegt mit 0,45 ihrer Oberfläche auf einem 18 degC warmen Boden."
+    },
+    {
+     "en": "No electrical element: the table is passive furniture, 0 W stated explicitly on the top region; the lamp on it is a load, not part of the asset.",
+     "de": "Kein elektrisches Element: der Tisch ist passives Möbel, 0 W ausdrücklich an der Region Platte angegeben; die Lampe darauf ist eine Last, nicht Teil des Assets."
+    }
+   ]
+  },
+  "structure": {
+   "gravityMS2": 9.80665,
+   "dynamics": "quasi-static",
+   "supports": [],
+   "assumptions": [
+    {
+     "en": "One rigid body on the contacts of each pose: stored, the four feet stand on the blanket and the blanket pads under them carry the table to the floor; carried, the hand at the front edge of the top is a fixed support (it clamps the 19 mm top between thumb and fingers and takes the tilting moment); in use, the four feet stand on the floor.",
+     "de": "Ein starrer Körper auf den Kontakten jeder Pose: gelagert stehen die vier Füße auf der Decke, und die Deckenpunkte darunter tragen den Tisch zum Boden; getragen ist die Hand an der Vorderkante der Platte ein festes Auflager (sie klemmt die 19-mm-Platte zwischen Daumen und Fingern und nimmt das Kippmoment auf); in Gebrauch stehen die vier Füße auf dem Boden."
+    },
+    {
+     "en": "The blanket (1.40 kg) belongs to the asset but lies on its own: its floor reaction is entered as an upward load at its centre in every pose, so the hand carries the table alone (8.90 kg = 87.3 N) and the blanket is never lifted with it.",
+     "de": "Die Decke (1.40 kg) gehört zum Asset, liegt aber für sich: ihre Bodenreaktion ist in jeder Pose als aufwärts gerichtete Last in ihrer Mitte angesetzt, so trägt die Hand nur den Tisch (8.90 kg = 87.3 N), und die Decke wird nie mit angehoben."
+    },
+    {
+     "en": "Members: 16 and 19 mm chipboard P2 (EN 312: 11 N/mm2, 1600 N/mm2), turned beech legs (D35 after EN 338) on screwed mounting plates, pine drawer boards (C24), hardboard back and drawer bottom (EN 622-2). Masses are section x density of the 1:50 solids.",
+     "de": "Stäbe: 16- und 19-mm-Spanplatte P2 (EN 312: 11 N/mm2, 1600 N/mm2), gedrechselte Buchenbeine (D35 nach EN 338) auf geschraubten Anschraubplatten, Kiefernholz der Schublade (C24), Hartfaserrückwand und -boden (EN 622-2). Massen sind Querschnitt x Dichte der 1:50-Körper."
+    },
+    {
+     "en": "In use: lamp 1.8 kg, books 1.5 kg, glass 0.35 kg and 0.8 kg in the drawer (authored estimates, far below the shelf and top test loads of EN 16122); with the drawer pulled 0.20 m and a 12 N pull at the knob the table stays standing (stability with extension elements open after EN 14749 and EN 16122).",
+     "de": "In Gebrauch: Lampe 1,8 kg, Bücher 1,5 kg, Glas 0,35 kg und 0,8 kg in der Schublade (Schätzwerte, weit unter den Prüflasten für Platten und Böden nach EN 16122); bei 0,20 m gezogener Schublade und 12 N Zug am Knauf bleibt der Tisch stehen (Standsicherheit mit geöffneten Auszügen nach EN 14749 und EN 16122)."
+    }
+   ],
+   "clinical": false
+  },
+  "volumes": {
+   "50": {
+    "status": "authored",
+    "denominator": 50,
+    "body": [
+     {
+      "id": "top",
+      "kind": "box",
+      "bone": "carcass",
+      "material": "teak-top-faded",
+      "role": "body",
+      "tone": 0.84,
+      "size": [
+       0.35,
+       0.019,
+       0.43
+      ],
+      "transform": {
+       "translation": [
+        0.175,
+        -0.0095,
+        0.0
+       ]
+      }
+     },
+     {
+      "id": "sides",
+      "kind": "box",
+      "bone": "carcass",
+      "material": "teak-veneer-chipboard",
+      "role": "body",
+      "tone": 0.7,
+      "size": [
+       0.33,
+       0.331,
+       0.016
+      ],
+      "transform": {
+       "translation": [
+        0.165,
+        -0.1845,
+        -0.207
+       ]
+      },
+      "repeat": {
+       "count": 2,
+       "translation": [
+        0,
+        0,
+        0.41400000000000003
+       ]
+      }
+     },
+     {
+      "id": "bottom",
+      "kind": "box",
+      "bone": "carcass",
+      "material": "teak-veneer-chipboard",
+      "role": "body",
+      "tone": 0.62,
+      "size": [
+       0.327,
+       0.016,
+       0.398
+      ],
+      "transform": {
+       "translation": [
+        0.1665,
+        -0.342,
+        0.0
+       ]
+      }
+     },
+     {
+      "id": "divider",
+      "kind": "box",
+      "bone": "carcass",
+      "material": "teak-veneer-chipboard",
+      "role": "body",
+      "tone": 0.62,
+      "size": [
+       0.327,
+       0.016,
+       0.398
+      ],
+      "transform": {
+       "translation": [
+        0.1665,
+        -0.137,
+        0.0
+       ]
+      }
+     },
+     {
+      "id": "back",
+      "kind": "box",
+      "bone": "carcass",
+      "material": "hardboard",
+      "role": "body",
+      "tone": 0.35,
+      "size": [
+       0.003,
+       0.331,
+       0.398
+      ],
+      "transform": {
+       "translation": [
+        0.0015,
+        -0.1845,
+        0.0
+       ]
+      },
+      "sheet": true
+     },
+     {
+      "id": "legs-rear",
+      "kind": "revolve",
+      "bone": "carcass",
+      "material": "beech-stained",
+      "role": "body",
+      "tone": 0.55,
+      "axis": [
+       0,
+       1,
+       0
+      ],
+      "origin": [
+       0.04,
+       -0.55,
+       0.175
+      ],
+      "profile": [
+       [
+        0.0,
+        0.0
+       ],
+       [
+        0.0,
+        0.0105
+       ],
+       [
+        0.003,
+        0.011
+       ],
+       [
+        0.184,
+        0.0175
+       ],
+       [
+        0.186,
+        0.0195
+       ],
+       [
+        0.2,
+        0.0195
+       ],
+       [
+        0.2,
+        0.0
+       ]
+      ],
+      "repeat": {
+       "count": 2,
+       "translation": [
+        0,
+        0,
+        -0.35
+       ]
+      }
+     },
+     {
+      "id": "legs-front",
+      "kind": "revolve",
+      "bone": "carcass",
+      "material": "beech-stained",
+      "role": "body",
+      "tone": 0.55,
+      "axis": [
+       0,
+       1,
+       0
+      ],
+      "origin": [
+       0.29,
+       -0.55,
+       0.175
+      ],
+      "profile": [
+       [
+        0.0,
+        0.0
+       ],
+       [
+        0.0,
+        0.0105
+       ],
+       [
+        0.003,
+        0.011
+       ],
+       [
+        0.184,
+        0.0175
+       ],
+       [
+        0.186,
+        0.0195
+       ],
+       [
+        0.2,
+        0.0195
+       ],
+       [
+        0.2,
+        0.0
+       ]
+      ],
+      "repeat": {
+       "count": 2,
+       "translation": [
+        0,
+        0,
+        -0.35
+       ]
+      }
+     },
+     {
+      "id": "burn",
+      "kind": "ellipsoid",
+      "bone": "carcass",
+      "material": "teak-top-faded",
+      "role": "detail",
+      "tone": 0.15,
+      "transform": {
+       "translation": [
+        0.27,
+        -0.0001,
+        -0.13
+       ],
+       "rotation": [
+        0.0,
+        0.21644,
+        0.0,
+        0.976296
+       ]
+      },
+      "texture": true,
+      "radii": [
+       0.014,
+       0.0005,
+       0.0045
+      ]
+     },
+     {
+      "id": "drawer-front",
+      "kind": "box",
+      "bone": "drawer",
+      "material": "teak-veneer-chipboard",
+      "role": "body",
+      "tone": 0.66,
+      "size": [
+       0.016,
+       0.107,
+       0.395
+      ],
+      "transform": {
+       "translation": [
+        0.307,
+        0.055,
+        0.0
+       ]
+      }
+     },
+     {
+      "id": "drawer-sides",
+      "kind": "box",
+      "bone": "drawer",
+      "material": "pine-drawer",
+      "role": "body",
+      "tone": 0.78,
+      "size": [
+       0.299,
+       0.09,
+       0.01
+      ],
+      "transform": {
+       "translation": [
+        0.1495,
+        0.045,
+        -0.1925
+       ]
+      },
+      "repeat": {
+       "count": 2,
+       "translation": [
+        0,
+        0,
+        0.385
+       ]
+      }
+     },
+     {
+      "id": "drawer-back",
+      "kind": "box",
+      "bone": "drawer",
+      "material": "pine-drawer",
+      "role": "body",
+      "tone": 0.78,
+      "size": [
+       0.01,
+       0.082,
+       0.375
+      ],
+      "transform": {
+       "translation": [
+        0.005,
+        0.049,
+        0.0
+       ]
+      }
+     },
+     {
+      "id": "drawer-bottom",
+      "kind": "box",
+      "bone": "drawer",
+      "material": "hardboard",
+      "role": "body",
+      "tone": 0.4,
+      "size": [
+       0.289,
+       0.004,
+       0.375
+      ],
+      "transform": {
+       "translation": [
+        0.1545,
+        0.006,
+        0.0
+       ]
+      },
+      "sheet": true
+     },
+     {
+      "id": "knob",
+      "kind": "revolve",
+      "bone": "drawer",
+      "material": "teak-solid",
+      "role": "body",
+      "tone": 0.5,
+      "axis": [
+       1,
+       0,
+       0
+      ],
+      "origin": [
+       0.315,
+       0.055,
+       0.0
+      ],
+      "profile": [
+       [
+        0.0,
+        0.0
+       ],
+       [
+        0.0,
+        0.007
+       ],
+       [
+        0.008,
+        0.007
+       ],
+       [
+        0.011,
+        0.012
+       ],
+       [
+        0.016,
+        0.014
+       ],
+       [
+        0.022,
+        0.013
+       ],
+       [
+        0.026,
+        0.008
+       ],
+       [
+        0.026,
+        0.0
+       ]
+      ]
+     },
+     {
+      "id": "blanket",
+      "kind": "extrude",
+      "bone": "blanket",
+      "material": "moving-blanket",
+      "role": "body",
+      "tone": 0.45,
+      "plane": "xy",
+      "profile": [
+       [
+        0.6666,
+        0.0
+       ],
+       [
+        0.6666,
+        0.018
+       ],
+       [
+        0.009,
+        0.018
+       ],
+       [
+        0.0045,
+        0.016794
+       ],
+       [
+        0.001206,
+        0.0135
+       ],
+       [
+        0.0,
+        0.009
+       ],
+       [
+        0.001206,
+        0.0045
+       ],
+       [
+        0.0045,
+        0.001206
+       ],
+       [
+        0.009,
+        0.0
+       ]
+      ],
+      "from": -0.375,
+      "to": 0.375,
+      "sheet": true
+     }
+    ],
+    "thermal": [
+     {
+      "id": "th-top",
+      "of": "top",
+      "region": "top"
+     },
+     {
+      "id": "th-sides",
+      "of": "sides",
+      "region": "carcass"
+     },
+     {
+      "id": "th-bottom",
+      "of": "bottom",
+      "region": "carcass"
+     },
+     {
+      "id": "th-divider",
+      "of": "divider",
+      "region": "carcass"
+     },
+     {
+      "id": "th-back",
+      "of": "back",
+      "region": "back-panel"
+     },
+     {
+      "id": "th-legs-rear",
+      "of": "legs-rear",
+      "region": "legs"
+     },
+     {
+      "id": "th-legs-front",
+      "of": "legs-front",
+      "region": "legs"
+     },
+     {
+      "id": "th-drawer-front",
+      "of": "drawer-front",
+      "region": "drawer"
+     },
+     {
+      "id": "th-knob",
+      "of": "knob",
+      "region": "drawer"
+     },
+     {
+      "id": "th-drawer-sides",
+      "of": "drawer-sides",
+      "region": "drawer"
+     },
+     {
+      "id": "th-drawer-back",
+      "of": "drawer-back",
+      "region": "drawer"
+     },
+     {
+      "id": "th-drawer-bottom",
+      "of": "drawer-bottom",
+      "region": "drawer"
+     },
+     {
+      "id": "th-blanket",
+      "of": "blanket",
+      "region": "blanket"
+     }
+    ],
+    "structure": [
+     {
+      "id": "m-top",
+      "of": "top",
+      "member": "carcass",
+      "part": "member"
+     },
+     {
+      "id": "m-sides",
+      "of": "sides",
+      "member": "carcass",
+      "part": "member"
+     },
+     {
+      "id": "m-bottom",
+      "of": "bottom",
+      "member": "carcass",
+      "part": "member"
+     },
+     {
+      "id": "m-divider",
+      "of": "divider",
+      "member": "carcass",
+      "part": "member"
+     },
+     {
+      "id": "m-back",
+      "of": "back",
+      "member": "carcass",
+      "part": "member"
+     },
+     {
+      "id": "m-legs-rear",
+      "of": "legs-rear",
+      "member": "carcass",
+      "part": "member"
+     },
+     {
+      "id": "m-legs-front",
+      "of": "legs-front",
+      "member": "carcass",
+      "part": "member"
+     },
+     {
+      "id": "j-leg-plates-rear",
+      "kind": "box",
+      "bone": "carcass",
+      "material": "teak-veneer-chipboard",
+      "role": "detail",
+      "tone": 0.3,
+      "size": [
+       0.05,
+       0.01,
+       0.05
+      ],
+      "transform": {
+       "translation": [
+        0.04,
+        -0.35,
+        0.175
+       ]
+      },
+      "repeat": {
+       "count": 2,
+       "translation": [
+        0,
+        0,
+        -0.35
+       ]
+      },
+      "member": "carcass",
+      "part": "joint"
+     },
+     {
+      "id": "j-leg-plates-front",
+      "kind": "box",
+      "bone": "carcass",
+      "material": "teak-veneer-chipboard",
+      "role": "detail",
+      "tone": 0.3,
+      "size": [
+       0.05,
+       0.01,
+       0.05
+      ],
+      "transform": {
+       "translation": [
+        0.29,
+        -0.35,
+        0.175
+       ]
+      },
+      "repeat": {
+       "count": 2,
+       "translation": [
+        0,
+        0,
+        -0.35
+       ]
+      },
+      "member": "carcass",
+      "part": "joint"
+     },
+     {
+      "id": "j-top-dowels-rear",
+      "kind": "box",
+      "bone": "carcass",
+      "material": "beech-stained",
+      "role": "detail",
+      "tone": 0.3,
+      "size": [
+       0.008,
+       0.032,
+       0.008
+      ],
+      "transform": {
+       "translation": [
+        0.04,
+        -0.019,
+        -0.207
+       ]
+      },
+      "repeat": {
+       "count": 2,
+       "translation": [
+        0,
+        0,
+        0.414
+       ]
+      },
+      "member": "carcass",
+      "part": "joint"
+     },
+     {
+      "id": "j-top-dowels-front",
+      "kind": "box",
+      "bone": "carcass",
+      "material": "beech-stained",
+      "role": "detail",
+      "tone": 0.3,
+      "size": [
+       0.008,
+       0.032,
+       0.008
+      ],
+      "transform": {
+       "translation": [
+        0.3,
+        -0.019,
+        -0.207
+       ]
+      },
+      "repeat": {
+       "count": 2,
+       "translation": [
+        0,
+        0,
+        0.414
+       ]
+      },
+      "member": "carcass",
+      "part": "joint"
+     },
+     {
+      "id": "m-drawer-front",
+      "of": "drawer-front",
+      "member": "drawer",
+      "part": "member"
+     },
+     {
+      "id": "m-drawer-sides",
+      "of": "drawer-sides",
+      "member": "drawer",
+      "part": "member"
+     },
+     {
+      "id": "m-drawer-back",
+      "of": "drawer-back",
+      "member": "drawer",
+      "part": "member"
+     },
+     {
+      "id": "m-drawer-bottom",
+      "of": "drawer-bottom",
+      "member": "drawer",
+      "part": "member"
+     },
+     {
+      "id": "j-runners",
+      "kind": "box",
+      "bone": "drawer",
+      "material": "pine-drawer",
+      "role": "detail",
+      "tone": 0.3,
+      "size": [
+       0.279,
+       0.008,
+       0.01
+      ],
+      "transform": {
+       "translation": [
+        0.1495,
+        0.004,
+        -0.1925
+       ]
+      },
+      "repeat": {
+       "count": 2,
+       "translation": [
+        0,
+        0,
+        0.385
+       ]
+      },
+      "member": "drawer",
+      "part": "joint"
+     },
+     {
+      "id": "m-blanket",
+      "of": "blanket",
+      "member": "blanket",
+      "part": "member"
+     },
+     {
+      "id": "mass-carcass",
+      "kind": "ellipsoid",
+      "bone": "carcass",
+      "material": "teak-veneer-chipboard",
+      "role": "detail",
+      "tone": 0.3,
+      "radii": [
+       0.012,
+       0.012,
+       0.012
+      ],
+      "transform": {
+       "translation": [
+        0.159905,
+        -0.174608,
+        0.0
+       ]
+      },
+      "member": "carcass",
+      "part": "mass"
+     },
+     {
+      "id": "mass-drawer",
+      "kind": "ellipsoid",
+      "bone": "drawer",
+      "material": "pine-drawer",
+      "role": "detail",
+      "tone": 0.3,
+      "radii": [
+       0.012,
+       0.012,
+       0.012
+      ],
+      "transform": {
+       "translation": [
+        0.187521,
+        0.036551,
+        0.0
+       ]
+      },
+      "member": "drawer",
+      "part": "mass"
+     },
+     {
+      "id": "mass-blanket",
+      "kind": "ellipsoid",
+      "bone": "blanket",
+      "material": "moving-blanket",
+      "role": "detail",
+      "tone": 0.3,
+      "radii": [
+       0.0085,
+       0.0085,
+       0.0085
+      ],
+      "transform": {
+       "translation": [
+        0.334421,
+        0.009,
+        0.0
+       ]
+      },
+      "member": "blanket",
+      "part": "mass"
+     }
+    ],
+    "decisions": [
+     {
+      "en": "Body for the 7.5 mm feature: the 19 mm faded top with its 20 mm front overhang, two 16 mm veneered chipboard sides, bottom and divider (16 mm), the 3 mm hardboard back (sheet), four turned beech legs (22 mm at the foot, 35 mm under the collar, 39 mm collar) as two repeated revolves, the inset drawer (16 mm front, 10 mm pine sides and back, 4 mm hardboard bottom as a sheet) with its turned teak knob, and the folded 150 x 200 cm moving blanket (six layers, 18 mm) with its round fold at the back.",
+      "de": "Körper für das 7,5-mm-Merkmal: die 19-mm-gebleichte Platte mit 20 mm Überstand vorn, zwei 16-mm-furnierte Spanplattenseiten, Boden und Zwischenboden (16 mm), die 3-mm-Hartfaserrückwand (Platte), vier gedrechselte Buchenbeine (22 mm am Fuß, 35 mm unter dem Bund, 39 mm Bund) als zwei wiederholte Drehkörper, die eingelassene Schublade (16-mm-Front, 10-mm-Kiefernseiten und -rückwand, 4-mm-Hartfaserboden als Platte) mit gedrechseltem Teakknauf und die gefaltete Möbeldecke 150 x 200 cm (sechs Lagen, 18 mm) mit runder Falte hinten."
+     },
+     {
+      "en": "Traces of use as geometry where they reach the feature and as texture where they do not: the cigarette burn is a 28 x 9 mm texture solid 0.6 mm into the top; rings, lamp circle, chip and scuffs are texture strokes of the drawing.",
+      "de": "Gebrauchsspuren als Geometrie, wo sie das Merkmal erreichen, und als Textur, wo nicht: die Zigarettenbrandstelle ist ein 28 x 9 mm großer Texturkörper 0,6 mm tief in der Platte; Glasränder, Lampenkreis, Abplatzung und Stoßspuren sind Texturstriche der Zeichnung."
+     },
+     {
+      "en": "Thermal: every body solid in its region; the drawer box belongs to the drawer region and lies in the closed drawer bay (the 1.5 mm reveals are below the quarter feature and close it), so only the front and knob count as its outer area. Structure: boards, legs, drawer parts and blanket as members along their bones, leg plates, top dowels and the drawer runners as joints, three mass markers; no permanent support: the pose contacts (blanket pads, feet, grip) carry it.",
+      "de": "Thermik: jeder Körper in seiner Region; der Schubladenkasten gehört zur Region Schublade und liegt im geschlossenen Schubladenfach (die 1,5-mm-Fugen liegen unter dem Viertelmerkmal und schließen es), daher zählen nur Front und Knauf als ihre Außenfläche. Tragwerk: Platten, Beine, Schubladenteile und Decke als Stäbe entlang ihrer Knochen, Beinplatten, Plattendübel und Schubladenlaufleisten als Gelenke, drei Massenmarken; kein dauerndes Auflager: die Kontakte der Posen (Deckenpunkte, Füße, Griff) tragen."
+     }
+    ]
+   },
+   "100": {
+    "status": "authored",
+    "denominator": 100,
+    "body": [
+     {
+      "id": "top-100",
+      "kind": "box",
+      "bone": "carcass",
+      "material": "teak-top-faded",
+      "role": "body",
+      "tone": 0.84,
+      "size": [
+       0.35,
+       0.019,
+       0.43
+      ],
+      "transform": {
+       "translation": [
+        0.175,
+        -0.0095,
+        0.0
+       ]
+      }
+     },
+     {
+      "id": "carcass-100",
+      "kind": "extrude",
+      "bone": "carcass",
+      "material": "teak-veneer-chipboard",
+      "role": "body",
+      "tone": 0.7,
+      "plane": "yz",
+      "profile": [
+       [
+        -0.35,
+        -0.215
+       ],
+       [
+        -0.35,
+        0.215
+       ],
+       [
+        -0.019,
+        0.215
+       ],
+       [
+        -0.019,
+        0.199
+       ],
+       [
+        -0.129,
+        0.199
+       ],
+       [
+        -0.129,
+        -0.199
+       ],
+       [
+        -0.019,
+        -0.199
+       ],
+       [
+        -0.019,
+        -0.215
+       ]
+      ],
+      "holes": [
+       [
+        [
+         -0.334,
+         -0.199
+        ],
+        [
+         -0.145,
+         -0.199
+        ],
+        [
+         -0.145,
+         0.199
+        ],
+        [
+         -0.334,
+         0.199
+        ]
+       ]
+      ],
+      "from": 0.003,
+      "to": 0.33
+     },
+     {
+      "id": "back-100",
+      "kind": "box",
+      "bone": "carcass",
+      "material": "hardboard",
+      "role": "body",
+      "tone": 0.35,
+      "size": [
+       0.003,
+       0.331,
+       0.43
+      ],
+      "transform": {
+       "translation": [
+        0.0015,
+        -0.1845,
+        0.0
+       ]
+      },
+      "sheet": true
+     },
+     {
+      "id": "legs-100-rear",
+      "kind": "revolve",
+      "bone": "carcass",
+      "material": "beech-stained",
+      "role": "body",
+      "tone": 0.55,
+      "axis": [
+       0,
+       1,
+       0
+      ],
+      "origin": [
+       0.04,
+       -0.55,
+       0.175
+      ],
+      "profile": [
+       [
+        0.0,
+        0.0
+       ],
+       [
+        0.0,
+        0.011
+       ],
+       [
+        0.2,
+        0.0185
+       ],
+       [
+        0.2,
+        0.0
+       ]
+      ],
+      "repeat": {
+       "count": 2,
+       "translation": [
+        0,
+        0,
+        -0.35
+       ]
+      }
+     },
+     {
+      "id": "legs-100-front",
+      "kind": "revolve",
+      "bone": "carcass",
+      "material": "beech-stained",
+      "role": "body",
+      "tone": 0.55,
+      "axis": [
+       0,
+       1,
+       0
+      ],
+      "origin": [
+       0.29,
+       -0.55,
+       0.175
+      ],
+      "profile": [
+       [
+        0.0,
+        0.0
+       ],
+       [
+        0.0,
+        0.011
+       ],
+       [
+        0.2,
+        0.0185
+       ],
+       [
+        0.2,
+        0.0
+       ]
+      ],
+      "repeat": {
+       "count": 2,
+       "translation": [
+        0,
+        0,
+        -0.35
+       ]
+      }
+     },
+     {
+      "id": "drawer-front-100",
+      "kind": "box",
+      "bone": "drawer",
+      "material": "teak-veneer-chipboard",
+      "role": "body",
+      "tone": 0.66,
+      "size": [
+       0.016,
+       0.107,
+       0.395
+      ],
+      "transform": {
+       "translation": [
+        0.307,
+        0.055,
+        0.0
+       ]
+      }
+     },
+     {
+      "id": "drawer-sides-100",
+      "kind": "box",
+      "bone": "drawer",
+      "material": "pine-drawer",
+      "role": "body",
+      "tone": 0.78,
+      "size": [
+       0.299,
+       0.09,
+       0.015
+      ],
+      "transform": {
+       "translation": [
+        0.1495,
+        0.045,
+        -0.19
+       ]
+      },
+      "repeat": {
+       "count": 2,
+       "translation": [
+        0,
+        0,
+        0.38
+       ]
+      }
+     },
+     {
+      "id": "drawer-back-100",
+      "kind": "box",
+      "bone": "drawer",
+      "material": "pine-drawer",
+      "role": "body",
+      "tone": 0.78,
+      "size": [
+       0.015,
+       0.082,
+       0.365
+      ],
+      "transform": {
+       "translation": [
+        0.0075,
+        0.049,
+        0.0
+       ]
+      }
+     },
+     {
+      "id": "drawer-bottom-100",
+      "kind": "box",
+      "bone": "drawer",
+      "material": "hardboard",
+      "role": "body",
+      "tone": 0.4,
+      "size": [
+       0.284,
+       0.004,
+       0.365
+      ],
+      "transform": {
+       "translation": [
+        0.157,
+        0.006,
+        0.0
+       ]
+      },
+      "sheet": true
+     },
+     {
+      "id": "knob-100",
+      "kind": "revolve",
+      "bone": "drawer",
+      "material": "teak-solid",
+      "role": "body",
+      "tone": 0.5,
+      "axis": [
+       1,
+       0,
+       0
+      ],
+      "origin": [
+       0.315,
+       0.055,
+       0.0
+      ],
+      "profile": [
+       [
+        0.0,
+        0.0
+       ],
+       [
+        0.0,
+        0.0075
+       ],
+       [
+        0.01,
+        0.0075
+       ],
+       [
+        0.016,
+        0.014
+       ],
+       [
+        0.026,
+        0.0115
+       ],
+       [
+        0.026,
+        0.0
+       ]
+      ]
+     },
+     {
+      "id": "blanket-100",
+      "kind": "box",
+      "bone": "blanket",
+      "material": "moving-blanket",
+      "role": "body",
+      "tone": 0.45,
+      "size": [
+       0.6666,
+       0.018,
+       0.75
+      ],
+      "transform": {
+       "translation": [
+        0.3333,
+        0.009,
+        0.0
+       ]
+      },
+      "sheet": true
+     }
+    ],
+    "thermal": [
+     {
+      "id": "th-top-100",
+      "of": "top-100",
+      "region": "top"
+     },
+     {
+      "id": "th-carcass-100",
+      "of": "carcass-100",
+      "region": "carcass"
+     },
+     {
+      "id": "th-back-100",
+      "of": "back-100",
+      "region": "back-panel"
+     },
+     {
+      "id": "th-legs-100-rear",
+      "of": "legs-100-rear",
+      "region": "legs"
+     },
+     {
+      "id": "th-legs-100-front",
+      "of": "legs-100-front",
+      "region": "legs"
+     },
+     {
+      "id": "th-drawer-front-100",
+      "of": "drawer-front-100",
+      "region": "drawer"
+     },
+     {
+      "id": "th-knob-100",
+      "of": "knob-100",
+      "region": "drawer"
+     },
+     {
+      "id": "th-drawer-sides-100",
+      "of": "drawer-sides-100",
+      "region": "drawer"
+     },
+     {
+      "id": "th-drawer-back-100",
+      "of": "drawer-back-100",
+      "region": "drawer"
+     },
+     {
+      "id": "th-drawer-bottom-100",
+      "of": "drawer-bottom-100",
+      "region": "drawer"
+     },
+     {
+      "id": "th-blanket-100",
+      "of": "blanket-100",
+      "region": "blanket"
+     }
+    ],
+    "structure": [
+     {
+      "id": "m-top-100",
+      "of": "top-100",
+      "member": "carcass",
+      "part": "member"
+     },
+     {
+      "id": "m-carcass-100",
+      "of": "carcass-100",
+      "member": "carcass",
+      "part": "member"
+     },
+     {
+      "id": "m-back-100",
+      "of": "back-100",
+      "member": "carcass",
+      "part": "member"
+     },
+     {
+      "id": "m-legs-100-rear",
+      "of": "legs-100-rear",
+      "member": "carcass",
+      "part": "member"
+     },
+     {
+      "id": "m-legs-100-front",
+      "of": "legs-100-front",
+      "member": "carcass",
+      "part": "member"
+     },
+     {
+      "id": "j-leg-plates-100-rear",
+      "kind": "box",
+      "bone": "carcass",
+      "material": "teak-veneer-chipboard",
+      "role": "detail",
+      "tone": 0.3,
+      "size": [
+       0.05,
+       0.016,
+       0.05
+      ],
+      "transform": {
+       "translation": [
+        0.04,
+        -0.35,
+        0.175
+       ]
+      },
+      "repeat": {
+       "count": 2,
+       "translation": [
+        0,
+        0,
+        -0.35
+       ]
+      },
+      "member": "carcass",
+      "part": "joint"
+     },
+     {
+      "id": "j-leg-plates-100-front",
+      "kind": "box",
+      "bone": "carcass",
+      "material": "teak-veneer-chipboard",
+      "role": "detail",
+      "tone": 0.3,
+      "size": [
+       0.05,
+       0.016,
+       0.05
+      ],
+      "transform": {
+       "translation": [
+        0.29,
+        -0.35,
+        0.175
+       ]
+      },
+      "repeat": {
+       "count": 2,
+       "translation": [
+        0,
+        0,
+        -0.35
+       ]
+      },
+      "member": "carcass",
+      "part": "joint"
+     },
+     {
+      "id": "m-drawer-front-100",
+      "of": "drawer-front-100",
+      "member": "drawer",
+      "part": "member"
+     },
+     {
+      "id": "m-drawer-sides-100",
+      "of": "drawer-sides-100",
+      "member": "drawer",
+      "part": "member"
+     },
+     {
+      "id": "m-drawer-back-100",
+      "of": "drawer-back-100",
+      "member": "drawer",
+      "part": "member"
+     },
+     {
+      "id": "m-drawer-bottom-100",
+      "of": "drawer-bottom-100",
+      "member": "drawer",
+      "part": "member"
+     },
+     {
+      "id": "j-runners-100",
+      "kind": "box",
+      "bone": "drawer",
+      "material": "pine-drawer",
+      "role": "detail",
+      "tone": 0.3,
+      "size": [
+       0.259,
+       0.016,
+       0.016
+      ],
+      "transform": {
+       "translation": [
+        0.1495,
+        0.008,
+        -0.1895
+       ]
+      },
+      "repeat": {
+       "count": 2,
+       "translation": [
+        0,
+        0,
+        0.379
+       ]
+      },
+      "member": "drawer",
+      "part": "joint"
+     },
+     {
+      "id": "m-blanket-100",
+      "of": "blanket-100",
+      "member": "blanket",
+      "part": "member"
+     },
+     {
+      "id": "mass-carcass-100",
+      "kind": "ellipsoid",
+      "bone": "carcass",
+      "material": "teak-veneer-chipboard",
+      "role": "detail",
+      "tone": 0.3,
+      "radii": [
+       0.009,
+       0.009,
+       0.009
+      ],
+      "transform": {
+       "translation": [
+        0.159905,
+        -0.174608,
+        0.0
+       ]
+      },
+      "member": "carcass",
+      "part": "mass"
+     },
+     {
+      "id": "mass-drawer-100",
+      "kind": "ellipsoid",
+      "bone": "drawer",
+      "material": "pine-drawer",
+      "role": "detail",
+      "tone": 0.3,
+      "radii": [
+       0.009,
+       0.009,
+       0.009
+      ],
+      "transform": {
+       "translation": [
+        0.187521,
+        0.036551,
+        0.0
+       ]
+      },
+      "member": "drawer",
+      "part": "mass"
+     },
+     {
+      "id": "mass-blanket-100",
+      "kind": "ellipsoid",
+      "bone": "blanket",
+      "material": "moving-blanket",
+      "role": "detail",
+      "tone": 0.3,
+      "radii": [
+       0.0085,
+       0.0085,
+       0.0085
+      ],
+      "transform": {
+       "translation": [
+        0.334421,
+        0.009,
+        0.0
+       ]
+      },
+      "member": "blanket",
+      "part": "mass"
+     }
+    ],
+    "decisions": [
+     {
+      "en": "Body for the 15 mm feature: the top with its overhang, sides, bottom and divider as one front profile swept to the front edge with the open shelf as a hole and the drawer bay open, the back sheet across the full width, plain tapered legs (22 to 37 mm), the drawer front, the knob, the drawer box of sides and back thickened from 10 to the 15 mm feature with its 4 mm bottom sheet, and the blanket as a plain 18 mm sheet.",
+      "de": "Körper für das 15-mm-Merkmal: die Platte mit Überstand, Seiten, Boden und Zwischenboden als ein bis zur Vorderkante gezogenes Frontprofil mit dem offenen Fach als Loch und offenem Schubladenfach, die Rückwand als Platte über die ganze Breite, glatte konische Beine (22 bis 37 mm), Schubladenfront, Knauf, der Schubladenkasten aus von 10 auf das Merkmal von 15 mm verdickten Seiten und Rückwand mit 4-mm-Bodenplatte und die Decke als glatte 18-mm-Platte."
+     },
+     {
+      "en": "Merged against 1:50: leg collars and the burn texture; the knob stays in 3D (26 x 28 mm) although the side view leaves it to the front view and plan (white-gap rule between 1:75 and 1:150).",
+      "de": "Gegenüber 1:50 zusammengefasst: Beinbunde und die Brandtextur; der Knauf bleibt im 3D (26 x 28 mm), obwohl die Seitenansicht ihn Vorderansicht und Grundriss überlässt (Weißspaltregel zwischen 1:75 und 1:150)."
+     },
+     {
+      "en": "Thermal and structure reference the body: carcass profile, top, back, legs, drawer front and knob, drawer box in the drawer region, blanket; leg plates and runners as 16 mm joints, masses 18 mm.",
+      "de": "Thermik und Tragwerk verweisen auf den Körper: Korpusprofil, Platte, Rückwand, Beine, Schubladenfront und Knauf, Schubladenkasten in der Region Schublade, Decke; Beinplatten und Laufleisten als 16-mm-Gelenke, Massen 18 mm."
+     }
+    ]
+   },
+   "200": {
+    "status": "authored",
+    "denominator": 200,
+    "body": [
+     {
+      "id": "top-200",
+      "kind": "box",
+      "bone": "carcass",
+      "material": "teak-top-faded",
+      "role": "body",
+      "tone": 0.84,
+      "size": [
+       0.33,
+       0.019,
+       0.43
+      ],
+      "transform": {
+       "translation": [
+        0.165,
+        -0.0095,
+        0.0
+       ]
+      }
+     },
+     {
+      "id": "carcass-200",
+      "kind": "extrude",
+      "bone": "carcass",
+      "material": "teak-veneer-chipboard",
+      "role": "body",
+      "tone": 0.7,
+      "plane": "yz",
+      "profile": [
+       [
+        -0.35,
+        -0.215
+       ],
+       [
+        -0.35,
+        0.215
+       ],
+       [
+        -0.019,
+        0.215
+       ],
+       [
+        -0.019,
+        0.199
+       ],
+       [
+        -0.129,
+        0.199
+       ],
+       [
+        -0.129,
+        -0.199
+       ],
+       [
+        -0.019,
+        -0.199
+       ],
+       [
+        -0.019,
+        -0.215
+       ]
+      ],
+      "holes": [
+       [
+        [
+         -0.334,
+         -0.199
+        ],
+        [
+         -0.145,
+         -0.199
+        ],
+        [
+         -0.145,
+         0.199
+        ],
+        [
+         -0.334,
+         0.199
+        ]
+       ]
+      ],
+      "from": 0.003,
+      "to": 0.33
+     },
+     {
+      "id": "back-200",
+      "kind": "box",
+      "bone": "carcass",
+      "material": "hardboard",
+      "role": "body",
+      "tone": 0.35,
+      "size": [
+       0.003,
+       0.331,
+       0.43
+      ],
+      "transform": {
+       "translation": [
+        0.0015,
+        -0.1845,
+        0.0
+       ]
+      },
+      "sheet": true
+     },
+     {
+      "id": "legs-200-rear",
+      "kind": "revolve",
+      "bone": "carcass",
+      "material": "beech-stained",
+      "role": "body",
+      "tone": 0.55,
+      "axis": [
+       0,
+       1,
+       0
+      ],
+      "origin": [
+       0.04,
+       -0.55,
+       0.175
+      ],
+      "profile": [
+       [
+        0.0,
+        0.0
+       ],
+       [
+        0.0,
+        0.015
+       ],
+       [
+        0.2,
+        0.018
+       ],
+       [
+        0.2,
+        0.0
+       ]
+      ],
+      "repeat": {
+       "count": 2,
+       "translation": [
+        0,
+        0,
+        -0.35
+       ]
+      }
+     },
+     {
+      "id": "legs-200-front",
+      "kind": "revolve",
+      "bone": "carcass",
+      "material": "beech-stained",
+      "role": "body",
+      "tone": 0.55,
+      "axis": [
+       0,
+       1,
+       0
+      ],
+      "origin": [
+       0.29,
+       -0.55,
+       0.175
+      ],
+      "profile": [
+       [
+        0.0,
+        0.0
+       ],
+       [
+        0.0,
+        0.015
+       ],
+       [
+        0.2,
+        0.018
+       ],
+       [
+        0.2,
+        0.0
+       ]
+      ],
+      "repeat": {
+       "count": 2,
+       "translation": [
+        0,
+        0,
+        -0.35
+       ]
+      }
+     },
+     {
+      "id": "drawer-200",
+      "kind": "box",
+      "bone": "drawer",
+      "material": "teak-veneer-chipboard",
+      "role": "body",
+      "tone": 0.66,
+      "size": [
+       0.315,
+       0.107,
+       0.395
+      ],
+      "transform": {
+       "translation": [
+        0.1575,
+        0.055,
+        0.0
+       ]
+      }
+     },
+     {
+      "id": "blanket-200",
+      "kind": "box",
+      "bone": "blanket",
+      "material": "moving-blanket",
+      "role": "body",
+      "tone": 0.45,
+      "size": [
+       0.6666,
+       0.018,
+       0.75
+      ],
+      "transform": {
+       "translation": [
+        0.3333,
+        0.009,
+        0.0
+       ]
+      },
+      "sheet": true
+     }
+    ],
+    "thermal": [
+     {
+      "id": "th-top-200",
+      "of": "top-200",
+      "region": "top"
+     },
+     {
+      "id": "th-carcass-200",
+      "of": "carcass-200",
+      "region": "carcass"
+     },
+     {
+      "id": "th-back-200",
+      "of": "back-200",
+      "region": "back-panel"
+     },
+     {
+      "id": "th-legs-200-rear",
+      "of": "legs-200-rear",
+      "region": "legs"
+     },
+     {
+      "id": "th-legs-200-front",
+      "of": "legs-200-front",
+      "region": "legs"
+     },
+     {
+      "id": "th-drawer-200",
+      "of": "drawer-200",
+      "region": "drawer"
+     },
+     {
+      "id": "th-blanket-200",
+      "of": "blanket-200",
+      "region": "blanket"
+     }
+    ],
+    "structure": [
+     {
+      "id": "m-top-200",
+      "of": "top-200",
+      "member": "carcass",
+      "part": "member"
+     },
+     {
+      "id": "m-carcass-200",
+      "of": "carcass-200",
+      "member": "carcass",
+      "part": "member"
+     },
+     {
+      "id": "m-back-200",
+      "of": "back-200",
+      "member": "carcass",
+      "part": "member"
+     },
+     {
+      "id": "m-legs-200-rear",
+      "of": "legs-200-rear",
+      "member": "carcass",
+      "part": "member"
+     },
+     {
+      "id": "m-legs-200-front",
+      "of": "legs-200-front",
+      "member": "carcass",
+      "part": "member"
+     },
+     {
+      "id": "j-leg-plates-200-rear",
+      "kind": "box",
+      "bone": "carcass",
+      "material": "teak-veneer-chipboard",
+      "role": "detail",
+      "tone": 0.3,
+      "size": [
+       0.05,
+       0.03,
+       0.05
+      ],
+      "transform": {
+       "translation": [
+        0.04,
+        -0.35,
+        0.175
+       ]
+      },
+      "repeat": {
+       "count": 2,
+       "translation": [
+        0,
+        0,
+        -0.35
+       ]
+      },
+      "member": "carcass",
+      "part": "joint"
+     },
+     {
+      "id": "j-leg-plates-200-front",
+      "kind": "box",
+      "bone": "carcass",
+      "material": "teak-veneer-chipboard",
+      "role": "detail",
+      "tone": 0.3,
+      "size": [
+       0.05,
+       0.03,
+       0.05
+      ],
+      "transform": {
+       "translation": [
+        0.29,
+        -0.35,
+        0.175
+       ]
+      },
+      "repeat": {
+       "count": 2,
+       "translation": [
+        0,
+        0,
+        -0.35
+       ]
+      },
+      "member": "carcass",
+      "part": "joint"
+     },
+     {
+      "id": "m-drawer-200",
+      "of": "drawer-200",
+      "member": "drawer",
+      "part": "member"
+     },
+     {
+      "id": "m-blanket-200",
+      "of": "blanket-200",
+      "member": "blanket",
+      "part": "member"
+     },
+     {
+      "id": "mass-carcass-200",
+      "kind": "ellipsoid",
+      "bone": "carcass",
+      "material": "teak-veneer-chipboard",
+      "role": "detail",
+      "tone": 0.3,
+      "radii": [
+       0.016,
+       0.016,
+       0.016
+      ],
+      "transform": {
+       "translation": [
+        0.159905,
+        -0.174608,
+        0.0
+       ]
+      },
+      "member": "carcass",
+      "part": "mass"
+     },
+     {
+      "id": "mass-drawer-200",
+      "kind": "ellipsoid",
+      "bone": "drawer",
+      "material": "pine-drawer",
+      "role": "detail",
+      "tone": 0.3,
+      "radii": [
+       0.016,
+       0.016,
+       0.016
+      ],
+      "transform": {
+       "translation": [
+        0.187521,
+        0.036551,
+        0.0
+       ]
+      },
+      "member": "drawer",
+      "part": "mass"
+     },
+     {
+      "id": "mass-blanket-200",
+      "kind": "ellipsoid",
+      "bone": "blanket",
+      "material": "moving-blanket",
+      "role": "detail",
+      "tone": 0.3,
+      "radii": [
+       0.03,
+       0.009,
+       0.03
+      ],
+      "transform": {
+       "translation": [
+        0.334421,
+        0.009,
+        0.0
+       ]
+      },
+      "member": "blanket",
+      "part": "mass"
+     }
+    ],
+    "decisions": [
+     {
+      "en": "Body for the 30 mm feature: top flush with the carcass front (the 20 mm overhang is under the feature), the carcass profile with the open shelf, the back sheet, legs from 30 to 36 mm, the drawer front and box as one block without the knob, and the blanket as an 18 mm sheet.",
+      "de": "Körper für das 30-mm-Merkmal: Platte bündig mit der Korpusfront (der Überstand von 20 mm liegt unter dem Merkmal), das Korpusprofil mit offenem Fach, die Rückwand als Platte, Beine von 30 bis 36 mm, Schubladenfront und -kasten als ein Block ohne Knauf und die Decke als 18-mm-Platte."
+     },
+     {
+      "en": "Thermal: the drawer block is the drawer region; structure: top, carcass, back, legs, drawer block and blanket as members, leg plates 30 mm, masses 32 mm.",
+      "de": "Thermik: der Schubladenblock ist die Region Schublade; Tragwerk: Platte, Korpus, Rückwand, Beine, Schubladenblock und Decke als Stäbe, Beinplatten 30 mm, Massen 32 mm."
+     }
+    ]
+   },
+   "500": {
+    "status": "unavailable",
+    "denominator": 500
+   }
+  },
+  "presentation": {
+   "defaultPose": "stored",
+   "defaultClip": "carry",
+   "defaultScale": 50
+  },
+  "exports": [
+   "svg",
+   "pdf",
+   "dxf",
+   "dwg",
+   "png-sequence",
+   "mp4",
+   "webm",
+   "component",
+   "glb",
+   "fbx",
+   "model",
+   "model-zip"
+  ],
+  "completion": "authored"
+ }
+}

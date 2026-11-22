@@ -1,0 +1,51 @@
+{
+  "id": "parent-with-child-on-shoulders",
+  "category": "humans",
+  "title": {
+    "en": "Parent with a Child on the Shoulders",
+    "de": "Elternteil mit Kind auf den Schultern"
+  },
+  "heightM": 2.137,
+  "widthM": 0.578,
+  "powerW": 221.6,
+  "poses": [
+    "shoulder-carry",
+    "child-waving",
+    "heel-strike-l"
+  ],
+  "clips": [
+    "walk-with-child-on-shoulders",
+    "wave-to-the-parade"
+  ],
+  "representations": {
+    "50": "authored",
+    "100": "authored",
+    "200": "authored",
+    "500": "authored"
+  },
+  "symbols": [],
+  "analytics": [
+    "thermal",
+    "transport",
+    "structural"
+  ],
+  "exports": [
+    "svg",
+    "pdf",
+    "dxf",
+    "dwg",
+    "png-sequence",
+    "mp4",
+    "webm",
+    "component",
+    "glb",
+    "fbx",
+    "model",
+    "model-zip"
+  ],
+  "distinction": {
+    "en": "A parent of 1.80 m in a wool coat, scarf, beanie, jeans, gloves and boots carrying a child of 30 months (0.92 m, 13.6 kg) in a padded overall astride the shoulders, 2.14 m to the child's pompom: standing, the child waving and a heel strike of the walk, with a slow walk and the child waving to a parade; the child is a second living body with its own heat and breath.",
+    "de": "Ein Elternteil von 1,80 m in Wollmantel, Schal, Mütze, Jeans, Handschuhen und Stiefeln, das ein Kind von 30 Monaten (0,92 m, 13,6 kg) im wattierten Overall rittlings auf den Schultern trägt, 2,14 m bis zum Bommel des Kindes: stehend, das Kind winkend und ein Fersenaufsatz des Gangs, mit einem langsamen Gang und dem Kind, das einem Umzug zuwinkt; das Kind ist ein zweiter lebender Körper mit eigener Wärme und eigenem Atem."
+  },
+  "completion": "authored"
+}

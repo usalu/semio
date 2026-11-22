@@ -1,0 +1,52 @@
+{
+  "id": "standing-violinist",
+  "category": "humans",
+  "title": {
+    "en": "Standing Violinist",
+    "de": "Stehende Geigerin"
+  },
+  "heightM": 1.716,
+  "widthM": 0.664,
+  "powerW": 243.5,
+  "poses": [
+    "playing",
+    "bow-at-frog",
+    "bow-at-tip",
+    "holding-between-phrases"
+  ],
+  "clips": [
+    "bowing",
+    "idle-breathing"
+  ],
+  "representations": {
+    "50": "authored",
+    "100": "authored",
+    "200": "authored",
+    "500": "authored"
+  },
+  "symbols": [],
+  "analytics": [
+    "thermal",
+    "transport",
+    "structural"
+  ],
+  "exports": [
+    "svg",
+    "pdf",
+    "dxf",
+    "dwg",
+    "png-sequence",
+    "mp4",
+    "webm",
+    "component",
+    "glb",
+    "fbx",
+    "model",
+    "model-zip"
+  ],
+  "distinction": {
+    "en": "A street violinist of 1.69 m in a hooded sweatshirt and jeans playing a full-size violin with a 750 mm bow at 2.5 met: mid-bow, frog on the E string, tip on the G string and holding between phrases, with a looping down-bow and up-bow and a breathing loop.",
+    "de": "Eine Straßengeigerin von 1,69 m in Kapuzensweatshirt und Jeans spielt bei 2,5 met eine ganze Geige mit 750 mm langem Bogen: Bogenmitte, Frosch auf der E-Saite, Spitze auf der G-Saite und Halten zwischen den Phrasen, mit einer Schleife aus Ab- und Aufstrich und einer Atemschleife."
+  },
+  "completion": "authored"
+}

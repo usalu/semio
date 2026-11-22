@@ -13,8 +13,8 @@
 import { Component, useEffect, useMemo, useRef, useState } from "react";
 import type { CSSProperties, KeyboardEvent, PointerEvent, ReactElement, ReactNode } from "react";
 import type { SceneFrame } from "../🧮️pipeline/🟦️.ts";
-import { axonometricCamera, project } from "@teaching/staffage";
-import type { Asset, DepictionOptions, DisplayRange, DrawingScale, DrawingScene, Environment, EvaluatedState, EvaluationQuery, FlowField, FlowLayer, ForceQuantity, ItemValue, Language, RepresentationSelector, StructuralResult, ThermalField, ThermalQuantity, View, Viewpoint } from "@teaching/staffage";
+import { axonometricCamera } from "@teaching/staffage";
+import type { Asset, DepictionOptions, DisplayRange, DrawingScale, DrawingScene, Environment, EvaluatedState, EvaluationQuery, FlowConditions, FlowField, FlowLayer, FlowMarkDetail, ForceQuantity, ItemValue, Language, RepresentationSelector, StructuralResult, ThermalField, ThermalQuantity, View, Viewpoint } from "@teaching/staffage";
 import type { StaffageClock } from "../⏱️clock/🧱️core/🟦️.ts";
 import { useHeldTime } from "../⏱️clock/🟦️.ts";
 import { useSvgMarkup } from "../🧮️pipeline/🧬️svg/🟦️.ts";
@@ -22,7 +22,7 @@ import { describeScene, valueText, valuedItems, word } from "../🗣️labels/�
 import { translator } from "../🌐️i18n/🟦️.ts";
 import { defaultQuery, figureFrame, inlineSvg, queryAt, sceneExtent } from "../🧮️pipeline/🟦️.ts";
 import { flowFrameOf, flowsIn, unionFrame } from "../🌊️flow/🟦️.ts";
-import { FlowStage, type FlowStageOptions } from "../🌊️flow/🖥️stage/🟦️.ts";
+import { FlowStage, paperProjection, type FlowStageOptions } from "../🌊️flow/🖥️stage/🟦️.ts";
 import { ViewpointGate } from "../🧮️pipeline/🦥️lazy/⚛️hook/🟦️.tsx";
 import { SpatialFigure } from "../🧊️spatial/🚪️gate/🟦️.tsx";
 import type { CameraPresetName } from "../🧊️spatial/🟦️.ts";
@@ -59,6 +59,10 @@ export type StaffageFigureProps = {
   environment?: Environment;
   /** 🌊️ The layers of the air flow drawn over the thermal view (none by default); the figure then takes the paper the flow needs around the asset. */
   flow?: readonly FlowLayer[];
+  /** 🌪️ The conditions of the air the flow is solved in besides the environment (turbulence, wind profile, parcel life, seed); changing them solves the flow again. */
+  flowConditions?: FlowConditions;
+  /** 🔎️ The generalisation and timing of the flow marks; changing it only redraws. */
+  flowDetail?: FlowMarkDetail;
   onFlow?: (flow: FlowField | null) => void;
   onEvaluated?: (frame: { state: EvaluatedState; thermal: ThermalField; structure: StructuralResult; scene: DrawingScene }) => void;
   onInspect?: (value: ItemValue | null, item: { bone?: string; region?: string } | null) => void;
@@ -180,6 +184,8 @@ function ModelFace(props: StaffageFigureProps): ReactElement {
         {...(props.range === undefined ? {} : { range: props.range })}
         {...(props.theme === undefined ? {} : { theme: props.theme })}
         {...(props.flow === undefined ? {} : { flow: props.flow })}
+        {...(props.flowConditions === undefined ? {} : { flowConditions: props.flowConditions })}
+        {...(props.flowDetail === undefined ? {} : { flowDetail: props.flowDetail })}
         {...(props.onFlow === undefined ? {} : { onFlow: props.onFlow })}
         {...(props.background === undefined ? {} : { background: props.background })}
         {...(props.toolbar === undefined ? {} : { toolbar: props.toolbar })}
@@ -231,32 +237,15 @@ function DrawnFigure(props: DrawnProps): ReactElement {
     asset,
     query: props.query ?? defaultQuery(asset, clock === undefined ? null : 0),
     environment: props.environment ?? asset.thermal.environment,
+    conditions: props.flowConditions ?? {},
+    detail: props.flowDetail ?? {},
     clock: clock ?? null,
     layers: flowLayers ?? [],
     theme: props.theme ?? "light",
     range: props.range ?? { mode: "shared" },
     scale: props.scale.denominator,
     language,
-    projection: () => {
-      const host = ref.current;
-      const { scene: drawn, paperWindow: box, viewpoint } = placing.current;
-      if (host === null || host.clientWidth === 0 || host.clientHeight === 0) return null;
-      const view = box === undefined ? { x: 0, y: 0, w: drawn.widthMm, h: drawn.heightMm } : { x: drawn.metadata.origin.xMm + box.minX, y: drawn.metadata.origin.yMm + box.minY, w: box.maxX - box.minX, h: box.maxY - box.minY };
-      const pxPerMm = Math.min(host.clientWidth / view.w, host.clientHeight / view.h);
-      const left = (host.clientWidth - view.w * pxPerMm) / 2;
-      const top = (host.clientHeight - view.h * pxPerMm) / 2;
-      const camera = viewpoint === "axonometric" ? axonometricCamera() : undefined;
-      const k = drawn.metadata.mmPerMetre;
-      return {
-        pxPerMm,
-        project: (at, out) => {
-          const q = project(viewpoint, at, camera);
-          out[0] = left + (drawn.metadata.origin.xMm + q.x * k - view.x) * pxPerMm;
-          out[1] = top + (drawn.metadata.origin.yMm - q.y * k - view.y) * pxPerMm;
-          return true;
-        },
-      };
-    },
+    projection: () => paperProjection(ref.current, placing.current.scene, placing.current.paperWindow, placing.current.viewpoint),
     ...(props.onFlow === undefined ? {} : { onFlow: props.onFlow }),
   });
   useEffect(() => {

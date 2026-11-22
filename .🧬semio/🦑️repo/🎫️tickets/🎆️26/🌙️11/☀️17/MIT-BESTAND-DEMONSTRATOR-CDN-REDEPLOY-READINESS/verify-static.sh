@@ -7,6 +7,9 @@ ROOT="$(cd "$T/../../../../../../.." && pwd)"; G="$T/🗑️generated"; mkdir -p
 SITE="$1"; PORT="${2:-8765}"
 [ -d "$SITE" ] || { echo "site folder missing: $SITE" >&2; exit 2; }
 [ -f "$SITE/index.html" ] || { echo "index.html missing in: $SITE" >&2; exit 2; }
+if python3 -c 'import socket, sys; s = socket.socket(); s.settimeout(1); sys.exit(0 if s.connect_ex(("127.0.0.1", int(sys.argv[1]))) == 0 else 1)' "$PORT"; then
+  echo "port $PORT is already served by another process; refusing to verify against a stale origin" >&2; exit 1
+fi
 python3 "$T/static-origin.py" "$SITE" "$PORT" > "$G/static-server.log" 2>&1 & SERVER=$!
 trap 'kill "$SERVER" 2>/dev/null || true' EXIT
 for _ in $(seq 1 60); do

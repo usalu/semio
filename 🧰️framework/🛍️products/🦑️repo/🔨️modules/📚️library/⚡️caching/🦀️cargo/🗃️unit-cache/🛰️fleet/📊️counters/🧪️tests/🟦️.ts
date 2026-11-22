@@ -3,7 +3,7 @@ import {mkdtempSync,rmSync} from "node:fs";
 import {tmpdir} from "node:os";
 import {join} from "node:path";
 import {spawnSync} from "node:child_process";
-import {countUnitV1,readBuildCountersV1,unitLedgerLinesV1,unitLedgerV1,type UnitCountKindV1} from "../🟦️.ts";
+import {countSkipV1,countUnitV1,readBuildCountersV1,unitLedgerLinesV1,unitLedgerV1,type UnitCountKindV1} from "../🟦️.ts";
 
 const python=`
 import json,sys
@@ -22,7 +22,7 @@ describe("🧮️ unit ledger of a run",()=>{
  test("the ledger is the growth of the real counter files of a workspace between two readings",()=>{
   const root=mkdtempSync(join(tmpdir(),"unit-ledger-"));
   try{
-   const grow=(kind:UnitCountKindV1,times:number)=>{for(let index=0;index<times;index++)countUnitV1(root,kind);};
+   const grow=(kind:UnitCountKindV1,times:number)=>{for(let index=0;index<times;index++)kind==="skipped"?countSkipV1(root,"read-only"):countUnitV1(root,kind);};
    grow("localHit",2);grow("miss",1);
    const before=readBuildCountersV1(root).unit;
    grow("localHit",3);grow("remoteHit",688);grow("miss",5);grow("stored",5);grow("skipped",2);

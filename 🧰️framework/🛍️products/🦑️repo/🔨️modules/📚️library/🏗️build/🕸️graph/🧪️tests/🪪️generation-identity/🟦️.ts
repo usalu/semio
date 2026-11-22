@@ -20,7 +20,8 @@ test("the independent Python derivation names the same identities",()=>{
  for(const name of Object.keys(registries))expect(graph.buildGraphGenerationIdentityV1(registries[name]!)).toBe(expected[name]!);
 });
 
-test("the head of a project record keeps the whole registry only for owner admission",()=>{
+test("the head of a project record keeps the catalog providers of the registry and never the whole registry",()=>{
  const text=readFileSync(fileURLToPath(new URL("../../📥️inference/📦️project-nodes/🟨️.mjs",import.meta.url)),"utf8");
- expect(text).toContain("options?.ownerAdmission?context.registry??null:context.registry?.catalogProviders?.map(");
+ expect(text).toContain("registryDigest=createHash(\"sha256\").update(JSON.stringify(context.registry?.catalogProviders?.map(");
+ expect(text).not.toContain("options?.ownerAdmission?context.registry??null");
 });

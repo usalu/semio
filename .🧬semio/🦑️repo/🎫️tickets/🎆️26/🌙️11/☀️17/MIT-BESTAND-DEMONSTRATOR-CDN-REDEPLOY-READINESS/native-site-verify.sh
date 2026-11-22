@@ -11,6 +11,9 @@ trap 'rmdir "$lock"' EXIT
 accepted="$generated/static-accepted.sha256"
 before="$generated/static-before.sha256"
 rm -f "$accepted"
+if [[ "${VERIFY_QUEUE_RECEIPTS:-0}" == 1 ]]; then
+  python3 "$T/release-receipts.py" status "$ROOT/.cache/b/p/m/browser/release/modules" "$generated/confirmed" >&2 || { echo "refusing to build and verify the site before every roster module is confirmed" >&2; exit 1; }
+fi
 capture=$(mktemp "$T/🗑️generated/native-site-verify.XXXXXX")
 NATIVE_SITE_RUN_LOG="$capture" MEM=4096 bash "$T/native-wasm.sh" site
 OUT="$(python3 "$T/captured-site.py" "$ROOT" "$capture")"

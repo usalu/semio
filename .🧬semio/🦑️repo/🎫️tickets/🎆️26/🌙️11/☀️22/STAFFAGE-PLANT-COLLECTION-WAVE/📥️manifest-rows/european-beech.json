@@ -1,0 +1,58 @@
+{
+ "id": "european-beech",
+ "category": "vegetation",
+ "title": {
+  "en": "European Beech",
+  "de": "Rotbuche"
+ },
+ "heightM": 29.6,
+ "widthM": 21.299,
+ "powerW": 0,
+ "poses": [
+  "summer-calm",
+  "summer-breeze",
+  "gale",
+  "wet-snow",
+  "autumn-copper",
+  "mast-year"
+ ],
+ "clips": [
+  "wind-sway",
+  "gust",
+  "diurnal-transpiration"
+ ],
+ "representations": {
+  "50": "authored",
+  "100": "authored",
+  "200": "authored",
+  "500": "authored"
+ },
+ "symbols": [
+  "european-beech-symbol",
+  "tree-sign"
+ ],
+ "analytics": [
+  "thermal",
+  "transport",
+  "structural"
+ ],
+ "exports": [
+  "svg",
+  "pdf",
+  "dxf",
+  "dwg",
+  "png-sequence",
+  "mp4",
+  "webm",
+  "component",
+  "glb",
+  "fbx",
+  "model",
+  "model-zip"
+ ],
+ "distinction": {
+  "en": "A 30 m open-grown European beech (Fagus sylvatica) with a smooth grey stem of 1.05 m on an elephant-foot flare, steep main limbs and a dense 20 m dome whose lowest sprays hang down to 2.2 m.",
+  "de": "Eine 30 m hohe, frei stehende Rotbuche (Fagus sylvatica) mit glattem grauem Stamm von 1,05 m auf elefantenfußartigem Anlauf, steilen Hauptästen und einer dichten Kuppel von 20 m, deren unterste Zweigfächer bis 2,2 m herabhängen."
+ },
+ "completion": "authored"
+}

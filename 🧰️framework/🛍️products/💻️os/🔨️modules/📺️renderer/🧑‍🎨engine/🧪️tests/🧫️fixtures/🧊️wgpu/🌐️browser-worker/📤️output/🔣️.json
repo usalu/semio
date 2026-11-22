@@ -59,6 +59,7 @@
     ],
     "cursor": "default",
     "fullscreen": null,
+    "unsaved": false,
     "requestFrame": true,
     "nextDeadlineDelayMs": 1.25,
     "continueFrame": true,

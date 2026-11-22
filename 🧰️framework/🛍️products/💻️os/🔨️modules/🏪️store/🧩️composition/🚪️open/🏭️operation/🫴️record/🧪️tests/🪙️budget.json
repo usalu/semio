@@ -1,0 +1,21 @@
+{
+  "batching": {
+    "titleBytes": 65536,
+    "titlePattern": "batched original drawing title ",
+    "fuel": 1099511627776,
+    "copyBytes": 1048576,
+    "scopeWorkCeiling": 1048576,
+    "actionsPerByteCeiling": 16,
+    "turnsPerShare": 8,
+    "maximumTurns": 1000000
+  },
+  "floor": {
+    "turnCopyOverReceiver": {
+      "numerator": 5,
+      "denominator": 2
+    },
+    "fuel": 1099511627776,
+    "stockCopyBytes": 268435456,
+    "maximumTurns": 1000000
+  }
+}

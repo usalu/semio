@@ -995,15 +995,15 @@
       "de": "{count} abgelöste Abhängigkeits-Generation(en) auf dem Datenträger"
     },
     "detail": {
-      "en": "About {estimatedBytes} bytes in generations that no pointer or binding uses. The collector removes them after their retention time; they fill the image until then.",
-      "de": "Etwa {estimatedBytes} Bytes in Generationen, die kein Zeiger und keine Bindung benutzt. Der Sammler entfernt sie nach ihrer Aufbewahrungszeit; bis dahin füllen sie das Image."
+      "en": "About {estimatedBytes} bytes in generations that no pointer or binding uses. `repo cache gc` (also run when the machine idles) retires them one hour after they were superseded, unless a live process still holds one; they fill the image until then.",
+      "de": "Etwa {estimatedBytes} Bytes in Generationen, die kein Zeiger und keine Bindung benutzt. `repo cache gc` (läuft auch im Leerlauf) entfernt sie eine Stunde nach der Ablösung, sofern kein laufender Prozess eine davon hält; bis dahin füllen sie das Image."
     },
     "fix": {
       "kind": "command",
-      "command": "repo dependencies ensure",
+      "command": "repo cache gc",
       "note": {
-        "en": "A publication collects the unreferenced generations that are past retention.",
-        "de": "Eine Veröffentlichung sammelt die unreferenzierten Generationen ein, deren Aufbewahrung abgelaufen ist."
+        "en": "The collection retires the unreferenced generations that no live process holds.",
+        "de": "Die Sammlung entfernt die unreferenzierten Generationen, die kein laufender Prozess hält."
       }
     }
   },
@@ -1027,10 +1027,10 @@
     },
     "fix": {
       "kind": "command",
-      "command": "repo dependencies ensure",
+      "command": "repo cache gc",
       "note": {
-        "en": "The next build discards unfinished generations before it installs.",
-        "de": "Der nächste Build verwirft unfertige Generationen, bevor er installiert."
+        "en": "`repo cache gc` (also run when the machine idles) retires unfinished generations of dead builds after six hours.",
+        "de": "`repo cache gc` (läuft auch im Leerlauf) entfernt unfertige Generationen toter Builds nach sechs Stunden."
       }
     }
   },
@@ -1137,8 +1137,8 @@
       "de": "Prozess {pid} hat seinen Elternprozess verloren und hält noch {holds} Ressource(n)"
     },
     "detail": {
-      "en": "{command} has run {ageSeconds} s without a parent, as after the killing of its wrapper. It keeps its leases and capacity grants until it ends.",
-      "de": "{command} läuft seit {ageSeconds} s ohne Elternprozess, wie nach dem Beenden seines Wrappers. Er behält seine Leases und Kapazitätszusagen, bis er endet."
+      "en": "{command} has run {ageSeconds} s without a parent and its process tree computes nothing, as after the killing of its wrapper (a detached run that still computes, such as one started with nohup, is not reported). It keeps its leases and capacity grants until it ends.",
+      "de": "{command} läuft seit {ageSeconds} s ohne Elternprozess und sein Prozessbaum rechnet nichts, wie nach dem Beenden seines Wrappers (ein abgekoppelter Lauf, der noch rechnet, etwa mit nohup gestartet, wird nicht gemeldet). Er behält seine Leases und Kapazitätszusagen, bis er endet."
     },
     "fix": {
       "kind": "ask",

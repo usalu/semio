@@ -14,7 +14,20 @@
         "waitCeilingEnvironment": "SEMIO_SCRIPT_WAIT_CEILING_MS",
         "waitEpisodeGapMilliseconds": 2000,
         "checkMilliseconds": 30000,
-        "terminationGraceMilliseconds": 10000
+        "terminationGraceMilliseconds": 10000,
+        "ownerEnvironment": "SEMIO_SCRIPT_PROCESS_OWNER",
+        "ownerCheckMilliseconds": 2000
+      }
+    },
+    "OwnerFacts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["owner", "ownerAlive", "initialParent", "currentParent"],
+      "properties": {
+        "owner": { "type": ["integer", "null"], "description": "The process that spawned this one and handed its pid over the invocation environment; null when none did." },
+        "ownerAlive": { "type": "boolean" },
+        "initialParent": { "type": "integer", "minimum": 0 },
+        "currentParent": { "type": "integer", "minimum": 0 }
       }
     },
     "Decision": { "enum": ["healthy", "stalled", "tree-stalled"] },
@@ -42,6 +55,10 @@
         "interrupted": {
       "en": "{signal} received: the running work is cancelled and its leases are released; this process exits after {seconds} s at the latest.",
       "de": "{signal} empfangen: die laufende Arbeit wird abgebrochen und ihre Leases werden freigegeben; dieser Prozess endet spätestens nach {seconds} s."
+    },
+    "ownerLost": {
+      "en": "The process that started this one ({owner}) is gone: the running work is cancelled and its leases are released so that nothing keeps running without an owner.",
+      "de": "Der Prozess, der diesen gestartet hat ({owner}), existiert nicht mehr: die laufende Arbeit wird abgebrochen und ihre Leases werden freigegeben, damit nichts ohne Besitzer weiterläuft."
     },
     "cancelled": {
       "en": "Cancelled ({signal}); leases released.",

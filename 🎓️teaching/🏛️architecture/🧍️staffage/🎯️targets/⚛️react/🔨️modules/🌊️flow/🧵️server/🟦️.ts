@@ -1,18 +1,22 @@
 /** 🧵️ The flow solver behind a message protocol: it keeps the assets and sessions a client opened, develops the transport of a session to the time a frame asks for in cooperative slices, reports progress, stops when cancelled and answers with the flow field. The same class runs in the flow worker and, where workers are missing, in the page.
  *
+ * A session is opened for an environment and the conditions of its air (`FlowConditions`: turbulence, wind profile, seed and the life of a parcel, which the client always states); and for whether the paths of the parcels are tracked (`pathlines`, the field's `paths`); they never change while it is open, a client that wants other air opens another session.
  * A session answers one frame at a time; a frame that arrives while another is solved replaces any frame still waiting, so the solver never works on a time the reader has already left. Going forward is incremental (the solver keeps its parcels); a time before the last one is solved afresh from one parcel life earlier.
  *
  * @see ../📡️session/🟦️.ts — the client
  * @see ../../../../../🔨️modules/💨️transport/🟦️.ts — `developTransport`
  */
 import { developTransport } from "@teaching/staffage";
-import type { Asset, Environment, EvaluationQuery, FlowField } from "@teaching/staffage";
+import type { Asset, Environment, EvaluationQuery, FlowConditions, FlowField } from "@teaching/staffage";
+
+/** 🌪️ The conditions of an open session: those of the library with the life of a parcel stated. */
+export type SessionConditions = FlowConditions & { readonly maxAgeS: number };
 
 /** 📬️ What a client sends. */
 export type FlowMessage =
   | { readonly kind: "asset"; readonly id: number; readonly asset: Asset }
   | { readonly kind: "release"; readonly id: number }
-  | { readonly kind: "open"; readonly session: number; readonly asset: number; readonly query: EvaluationQuery; readonly environment: Environment; readonly maxAgeS: number; readonly periodS: number }
+  | { readonly kind: "open"; readonly session: number; readonly asset: number; readonly query: EvaluationQuery; readonly environment: Environment; readonly conditions: SessionConditions; readonly periodS: number; readonly pathlines: boolean }
   | { readonly kind: "frame"; readonly session: number; readonly timeS: number }
   | { readonly kind: "cancel"; readonly session: number }
   | { readonly kind: "close"; readonly session: number };
@@ -24,7 +28,7 @@ export type FlowReply =
   | { readonly session: number; readonly kind: "cancelled" }
   | { readonly session: number; readonly kind: "error"; readonly message: string };
 
-type Session = { readonly asset: Asset; readonly query: EvaluationQuery; readonly environment: Environment; readonly maxAgeS: number; readonly periodS: number; lastS: number | null; wanted: number | null; busy: boolean; abort: AbortController; closed: boolean };
+type Session = { readonly asset: Asset; readonly query: EvaluationQuery; readonly environment: Environment; readonly conditions: SessionConditions; readonly pathlines: boolean; readonly periodS: number; lastS: number | null; wanted: number | null; busy: boolean; abort: AbortController; closed: boolean };
 
 const macrotask = (): Promise<void> => new Promise((resolve) => setTimeout(resolve, 0));
 
@@ -42,7 +46,7 @@ export class FlowServer {
     if (message.kind === "open") {
       const asset = this.#assets.get(message.asset);
       if (asset === undefined) return this.reply({ session: message.session, kind: "error", message: "The flow solver does not hold the requested asset" });
-      return void this.#sessions.set(message.session, { asset, query: message.query, environment: message.environment, maxAgeS: message.maxAgeS, periodS: message.periodS, lastS: null, wanted: null, busy: false, abort: new AbortController(), closed: false });
+      return void this.#sessions.set(message.session, { asset, query: message.query, environment: message.environment, conditions: message.conditions, pathlines: message.pathlines, periodS: message.periodS, lastS: null, wanted: null, busy: false, abort: new AbortController(), closed: false });
     }
     const session = this.#sessions.get(message.session);
     if (session === undefined) return;
@@ -66,9 +70,9 @@ export class FlowServer {
       const timeS = session.wanted;
       session.wanted = null;
       const signal = session.abort.signal;
-      const resume = session.lastS !== null && timeS >= session.lastS && timeS - session.lastS <= session.maxAgeS;
+      const resume = session.lastS !== null && timeS >= session.lastS && timeS - session.lastS <= session.conditions.maxAgeS;
       try {
-        const field = await developTransport(session.asset, { ...session.query, timeS } as EvaluationQuery, session.environment, { maxAgeS: session.maxAgeS, ...(session.periodS > 0 ? { periodS: session.periodS } : {}), ...(resume ? { fromS: session.lastS! } : {}), flow: true, pathlines: false, streamlines: false, signal, progress: (done, total) => total > 4 && this.reply({ session: id, kind: "progress", done, total }) });
+        const field = await developTransport(session.asset, { ...session.query, timeS } as EvaluationQuery, session.environment, { ...session.conditions, ...(session.periodS > 0 ? { periodS: session.periodS } : {}), ...(resume ? { fromS: session.lastS! } : {}), flow: true, pathlines: session.pathlines, signal, progress: (done, total) => total > 4 && this.reply({ session: id, kind: "progress", done, total }) });
         session.lastS = timeS;
         if (!session.closed && field.flow !== null) this.reply({ session: id, kind: "flow", timeS, flow: field.flow });
       } catch (error) {

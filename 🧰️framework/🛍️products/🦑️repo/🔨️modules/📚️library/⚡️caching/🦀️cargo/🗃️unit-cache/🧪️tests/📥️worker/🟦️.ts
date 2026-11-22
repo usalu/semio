@@ -14,4 +14,8 @@ if(mode==="claim"){
  const [root,count,hold]=rest,asked=Date.now(),claim=await acquireSlotV1(root!,Number(count));
  const acquired=Date.now();await sleepV1(Number(hold));claim.release();
  print({role:"slot",pid:process.pid,asked,acquired,released:Date.now()});
+}else if(mode==="slot-cpu"){
+ const [root,count,window]=rest,base=process.cpuUsage(),asked=Date.now();
+ const timer=setTimeout(()=>{const used=process.cpuUsage(base);print({role:"slot-cpu",pid:process.pid,cpuMicroseconds:used.user+used.system,windowMilliseconds:Date.now()-asked});},Number(window));
+ const claim=await acquireSlotV1(root!,Number(count));clearTimeout(timer);claim.release();
 }else throw Error("Unknown worker mode");

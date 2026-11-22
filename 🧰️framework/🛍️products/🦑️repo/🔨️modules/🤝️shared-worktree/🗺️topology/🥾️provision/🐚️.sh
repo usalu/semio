@@ -339,6 +339,11 @@ install_text() {
   fi
   rm -f "$tmp"
 }
+install_launch() {
+  local path=$1 content=$2
+  printf '%s\n' "$content" | run_as sh -c 'mkdir -p "$(dirname "$1")" && cat > "$1.new" && chmod 755 "$1.new" && mv "$1.new" "$1"' sh "$path"
+  say "wrote $path (owned by $WORKER_USER, changed later without privileges / gehört $WORKER_USER, später ohne Rechte änderbar)"
+}
 write_block() {
   local file=$1 content=$2 begin="# >>> semio fleet" end="# <<< semio fleet" tmp
   tmp=$(mktemp); [ -f "$file" ] || : > "$file"
@@ -924,6 +929,8 @@ if [ "$PLATFORM" = linux ]; then
   install_text "$SERVICE_TARGET" 644 "$(fleet worker-service --group "$GROUP_ID" --platform linux | fill)"
   install_text "$COMPACT_TARGET" 644 "$(fleet worker-service --group "$GROUP_ID" --platform linux --part compact-definition --role "$ROLE" | fill)"
   install_text "$(fleet worker-service --group "$GROUP_ID" --platform linux --part timer-target)" 644 "$(fleet worker-service --group "$GROUP_ID" --platform linux --part timer-definition)"
+  install_launch "$(fleet worker-service --group "$GROUP_ID" --platform linux --part launch-target | fill)" "$(fleet worker-service --group "$GROUP_ID" --platform linux --part launch-definition | fill)"
+  install_launch "$(fleet worker-service --group "$GROUP_ID" --platform linux --part compact-launch-target | fill)" "$(fleet worker-service --group "$GROUP_ID" --platform linux --part compact-launch-definition --role "$ROLE" | fill)"
   UNIT=$(basename "$SERVICE_TARGET")
   INSTANCE=${UNIT/@/@$WORKER_USER}
   TIMER=semio-fleet-compact@$WORKER_USER.timer
@@ -946,6 +953,8 @@ if [ "$SERVER" = 1 ]; then
     chown "root:$(id -gn "$WORKER_USER")" "$TOKENS"; chmod 640 "$TOKENS"
     install_text "$(server_part cache-target)" 644 "$(server_part cache-unit | fill)"
     install_text "$(server_part relay-target)" 644 "$(server_part relay-unit | fill)"
+    install_launch "$(server_part cache-launch-target | fill)" "$(server_part cache-launch | fill)"
+    install_launch "$(server_part relay-launch-target | fill)" "$(server_part relay-launch | fill)"
     CACHE_UNIT=$(basename "$(server_part cache-target)"); RELAY_UNIT=$(basename "$(server_part relay-target)")
     systemctl daemon-reload
     systemctl enable "$CACHE_UNIT" "$RELAY_UNIT"

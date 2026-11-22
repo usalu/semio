@@ -139,6 +139,7 @@
         let finish=host.find("self.original_emission.finish_host(").expect("original metadata and emission handoff");
         assert!(classify<admit&&admit<control&&control<produce&&produce<settle&&settle<finish);
         assert!(host.contains("&mut source.original_tool_dispatch"));
+        assert!(!host.contains("original_scrub_dispatch")&&!host.contains("source.original_tool_dispatch.is_none()"),"the host ingress re-enters prepare_original_tool_dispatch unconditionally, like its siblings");
         assert!(host.contains("&mut source.original_press_result"));
         assert!(host.contains("&meta.actor"));
         assert!(host.contains("self.original_emission.host_base.as_ref()"));

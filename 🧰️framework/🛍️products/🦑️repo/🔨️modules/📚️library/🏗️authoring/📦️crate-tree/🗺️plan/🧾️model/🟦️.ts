@@ -25,6 +25,7 @@ export type PlannedCrate = {
   readonly innerAttributes: readonly string[];
   readonly movedItemsText: string;
   readonly hoisted?: boolean;
+  readonly supersedes?: readonly string[];
   readonly lib: CrateMeasure | null;
   readonly test: CrateMeasure | null;
 };
@@ -56,6 +57,7 @@ export type ArtifactCratePlan = {
   readonly blockers: readonly PlanBlocker[];
   readonly packing: PackingStats;
   readonly carved: CarvedLayout | null;
+  readonly widen: ReadonlyMap<string, ReadonlySet<string>>;
 };
 
 /** ✏️ An edit of the artifact root; edits that replace a carved declaration remember it so the facade can weave children into the replacement. */
@@ -71,7 +73,7 @@ export type PlanBlocker = { readonly slices: number; readonly files: number; rea
 export type PackingStats = { pruned: number; measured: number; merged: number };
 
 /** 🧮️ Options of the planner. */
-export type PlanOptions = Readonly<{ target?: CrateBudget; hard?: CrateBudget; tests?: TestTransformOptions; mutationFamilies?: "off" | "on" | "auto"; inlineRootModules?: boolean; weave?: boolean; incrementalMeasure?: boolean; lift?: readonly string[]; carved?: CarvedLayout | null }>;
+export type PlanOptions = Readonly<{ target?: CrateBudget; hard?: CrateBudget; tests?: TestTransformOptions; mutationFamilies?: "off" | "on" | "auto"; inlineRootModules?: boolean; weave?: boolean; incrementalMeasure?: boolean; lift?: readonly string[]; carved?: CarvedLayout | null; tight?: readonly string[] }>;
 
 export type SliceInfo = {
   slice: CarveSlice;

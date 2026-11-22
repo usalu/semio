@@ -9,6 +9,9 @@ use ui_render::{DispatchEvent, ImeEvent, PointerInfo, TextEditTarget};
 #[path = "🖐️world-touch/🦀️.rs"]
 mod world_touch;
 
+#[path = "👆️text-touch/🦀️.rs"]
+mod text_touch;
+
 //#region 📮️RuntimeMailbox
 //#region 🎮️AppInteractionState
 const TEXT_STREAM_CAPACITY: usize = 64;
@@ -52,6 +55,7 @@ impl AppInteractionState {
 
     /// ⏱️ The frame's clock for the touch lane: a finger held still past the long-press deadline becomes its additive press and asks the plugin for its long press without waiting for the next contact event. The gestures are queued on the settle lane (the frame cannot await), which drains them on the same frame.
     pub fn poll_world_touch(&mut self) {
+        self.poll_text_touch();
         let mut gestures = Vec::new();
         for (host_id, steps) in world_touch::due(app_now_ms()) {
             let Some(state) = self.shell.surfaces.world3d_states.get_mut(&host_id) else { continue };
@@ -72,7 +76,8 @@ impl AppInteractionState {
 
     /// ⏰️ The wake-up deadline of the shell on the monotonic clock: `chrome` (the chrome and tutorial deadline) or the moment a held finger turns into a long press, whichever is earlier, so an idle app wakes exactly when the menu is due and never polls.
     pub fn wake_deadline(chrome: Option<f64>, monotonic_now_seconds: f64, wall_now_ms: f64) -> Option<f64> {
-        world_touch::merge_wake(chrome, monotonic_now_seconds, wall_now_ms, world_touch::next_deadline_ms())
+        let touch_ms = [world_touch::next_deadline_ms(), text_touch::next_deadline_ms()].into_iter().flatten().min_by(f64::total_cmp);
+        world_touch::merge_wake(chrome, monotonic_now_seconds, wall_now_ms, touch_ms)
     }
 
     pub fn start_text_operation(&mut self, stream: u64, declared_bytes: usize) -> Result<(), String> {
@@ -163,9 +168,9 @@ impl AppInteractionState {
         if !matches!(action, KeyAction::Escape | KeyAction::Tab) {
             return false;
         }
-        let surfaces: Vec<(String, String)> = self.shell.surfaces.board2d_states.keys().filter_map(|surface_id| self.shell.surfaces.board2d_states.get(surface_id).map(|surface| (surface_id.to_string(), surface.controller_id.clone()))).collect();
-        for (surface_id, controller_id) in surfaces {
-            match semio_renderer_wgpu_engine_board::board2d::board2d_key_into(&surface_id, &controller_id, action, modifiers, &mut self.input) {
+        let surfaces: Vec<(String, String, String)> = self.shell.surfaces.board2d_states.keys().filter_map(|surface_id| self.shell.surfaces.board2d_states.get(surface_id).map(|surface| (surface_id.to_string(), surface.controller_id.clone(), surface.window_id.clone()))).collect();
+        for (surface_id, controller_id, window_id) in surfaces {
+            match semio_renderer_wgpu_engine_board::board2d::board2d_key_into(&surface_id, &controller_id, &window_id, action, modifiers, &mut self.input) {
                 Ok(true) => return true,
                 Ok(false) => {}
                 Err(fault) => {
@@ -267,6 +272,9 @@ impl AppInteractionState {
                 }
             }
             if let Some(target) = semio_renderer_wgpu_ui_engine::retained_ui_engine::captured_scene_pointer(pointer.id) {
+                if target.kind == semio_ui_declaration::ui::SurfaceKind::TextEditor {
+                    self.text_touch(&target.window_id, &target.host_id, text_touch::Touch::Cancel);
+                }
                 let outcome = match target.kind {
                     semio_ui_declaration::ui::SurfaceKind::TiledMap => self
                         .shell
@@ -476,6 +484,12 @@ impl AppInteractionState {
                     semio_renderer_wgpu_scene_text_vfs::board2d_pointer_up_into(host_id, &surface.controller_id, surface.bounds, x, y, modifiers.shift, modifiers.ctrl_or_meta(), modifiers.alt, &mut self.input).map(|_| ())
                 }
             }),
+            SurfaceKind::TextEditor => {
+                if pointer.kind == ui_render::PointerKind::Touch {
+                    self.text_touch_at(&target, x, y, if down { |x, y| text_touch::Touch::Down { x, y } } else { |_, _| text_touch::Touch::Up });
+                }
+                None
+            }
             _ => None,
         };
         if let Some(Err(fault)) = outcome {
@@ -614,6 +628,12 @@ impl AppInteractionState {
                         semio_renderer_wgpu_scene_text_vfs::board2d_pointer_move_into(host_id, &surface.controller_id, surface.bounds, x, y, modifiers.shift, modifiers.ctrl_or_meta(), modifiers.alt, &mut self.input).map(|_| ())
                     }
                 }),
+            SurfaceKind::TextEditor => {
+                if pointer.kind == ui_render::PointerKind::Touch {
+                    self.text_touch_at(&target, x, y, |x, y| text_touch::Touch::Move { x, y });
+                }
+                None
+            }
             _ => None,
         };
         if let Some(Err(fault)) = outcome {

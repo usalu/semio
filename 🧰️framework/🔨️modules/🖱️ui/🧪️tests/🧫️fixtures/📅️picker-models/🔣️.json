@@ -1,0 +1,553 @@
+{
+  "provenance": {
+    "what": "Language-neutral vectors for the picker models: a surface-table row's context-menu trigger, the date picker (ISO values, en/de display, month grid, keys) and the colour picker (value normalisation, fields, swatch keys).",
+    "rule": "React renders native pickers (input type date and color) and TableHost's ContextMenuTriggerButton; the date and colour vectors are produced by the browser's own Intl and Date, the trigger vectors by contextMenuAnchorPointV1.",
+    "implementations": {
+      "rust": "🧰️framework/🔨️modules/🖱️ui/🧪️tests/📅️picker-models/🦀️.rs",
+      "typescript": "🧰️framework/🔨️modules/🖱️ui/🧪️tests/📅️picker-models/🟦️.ts"
+    }
+  },
+  "rowMenu": {
+    "trigger": [
+      {
+        "row": [
+          10,
+          40,
+          300,
+          24
+        ],
+        "spacingSingle": 3.2,
+        "rtl": false,
+        "expected": [
+          282.8,
+          40,
+          24,
+          24
+        ]
+      },
+      {
+        "row": [
+          0,
+          0,
+          200,
+          22.4
+        ],
+        "spacingSingle": 3.2,
+        "rtl": false,
+        "expected": [
+          172.8,
+          -0.8,
+          24,
+          24
+        ]
+      },
+      {
+        "row": [
+          0,
+          0,
+          200,
+          24
+        ],
+        "spacingSingle": 3.2,
+        "rtl": true,
+        "expected": [
+          3.2,
+          0,
+          24,
+          24
+        ]
+      }
+    ],
+    "anchor": [
+      {
+        "row": [
+          10,
+          40,
+          300,
+          24
+        ],
+        "expected": [
+          306,
+          64
+        ]
+      },
+      {
+        "row": [
+          0,
+          0,
+          200,
+          22.4
+        ],
+        "expected": [
+          196,
+          22.4
+        ]
+      },
+      {
+        "row": [
+          5,
+          5,
+          2,
+          30
+        ],
+        "expected": [
+          5,
+          29
+        ]
+      }
+    ],
+    "height": [
+      {
+        "sizeMedium": 22.4,
+        "expected": 24
+      },
+      {
+        "sizeMedium": 30,
+        "expected": 30
+      }
+    ]
+  },
+  "date": {
+    "iso": [
+      {
+        "text": "2026-09-17",
+        "epochDay": 20713,
+        "weekdayFromMonday": 3
+      },
+      {
+        "text": "2024-02-29",
+        "epochDay": 19782,
+        "weekdayFromMonday": 3
+      },
+      {
+        "text": "1970-01-01",
+        "epochDay": 0,
+        "weekdayFromMonday": 3
+      },
+      {
+        "text": "2026-12-31",
+        "epochDay": 20818,
+        "weekdayFromMonday": 3
+      },
+      {
+        "text": "2000-03-01",
+        "epochDay": 11017,
+        "weekdayFromMonday": 2
+      },
+      {
+        "text": "2026-02-29",
+        "valid": false
+      },
+      {
+        "text": "",
+        "valid": false
+      },
+      {
+        "text": "2026-9-17",
+        "valid": false
+      },
+      {
+        "text": "2026-13-01",
+        "valid": false
+      }
+    ],
+    "locales": [
+      {
+        "id": "en",
+        "intl": "en-US",
+        "weekStartsMonday": false,
+        "months": [
+          "January",
+          "February",
+          "March",
+          "April",
+          "May",
+          "June",
+          "July",
+          "August",
+          "September",
+          "October",
+          "November",
+          "December"
+        ],
+        "format": [
+          {
+            "iso": "2026-09-17",
+            "text": "09/17/2026"
+          },
+          {
+            "iso": "2024-02-29",
+            "text": "02/29/2024"
+          },
+          {
+            "iso": "1970-01-01",
+            "text": "01/01/1970"
+          },
+          {
+            "iso": "2026-12-31",
+            "text": "12/31/2026"
+          },
+          {
+            "iso": "2000-03-01",
+            "text": "03/01/2000"
+          }
+        ]
+      },
+      {
+        "id": "de",
+        "intl": "de-DE",
+        "weekStartsMonday": true,
+        "months": [
+          "Januar",
+          "Februar",
+          "März",
+          "April",
+          "Mai",
+          "Juni",
+          "Juli",
+          "August",
+          "September",
+          "Oktober",
+          "November",
+          "Dezember"
+        ],
+        "format": [
+          {
+            "iso": "2026-09-17",
+            "text": "17.09.2026"
+          },
+          {
+            "iso": "2024-02-29",
+            "text": "29.02.2024"
+          },
+          {
+            "iso": "1970-01-01",
+            "text": "01.01.1970"
+          },
+          {
+            "iso": "2026-12-31",
+            "text": "31.12.2026"
+          },
+          {
+            "iso": "2000-03-01",
+            "text": "01.03.2000"
+          }
+        ]
+      }
+    ],
+    "grids": [
+      {
+        "year": 2026,
+        "month": 9,
+        "weekStartsMonday": true,
+        "first": "2026-08-31",
+        "last": "2026-10-11"
+      },
+      {
+        "year": 2026,
+        "month": 9,
+        "weekStartsMonday": false,
+        "first": "2026-08-30",
+        "last": "2026-10-10"
+      },
+      {
+        "year": 2024,
+        "month": 2,
+        "weekStartsMonday": true,
+        "first": "2024-01-29",
+        "last": "2024-03-10"
+      },
+      {
+        "year": 2026,
+        "month": 3,
+        "weekStartsMonday": false,
+        "first": "2026-03-01",
+        "last": "2026-04-11"
+      }
+    ],
+    "keys": [
+      {
+        "key": "ArrowLeft",
+        "shift": false,
+        "focused": "2026-09-17",
+        "mondayFirst": true,
+        "expected": {
+          "focus": "2026-09-16"
+        }
+      },
+      {
+        "key": "ArrowRight",
+        "shift": false,
+        "focused": "2026-09-17",
+        "mondayFirst": true,
+        "expected": {
+          "focus": "2026-09-18"
+        }
+      },
+      {
+        "key": "ArrowUp",
+        "shift": false,
+        "focused": "2026-09-17",
+        "mondayFirst": true,
+        "expected": {
+          "focus": "2026-09-10"
+        }
+      },
+      {
+        "key": "ArrowDown",
+        "shift": false,
+        "focused": "2026-09-17",
+        "mondayFirst": true,
+        "expected": {
+          "focus": "2026-09-24"
+        }
+      },
+      {
+        "key": "PageDown",
+        "shift": false,
+        "focused": "2026-01-31",
+        "mondayFirst": true,
+        "expected": {
+          "focus": "2026-02-28"
+        }
+      },
+      {
+        "key": "PageUp",
+        "shift": false,
+        "focused": "2026-03-31",
+        "mondayFirst": true,
+        "expected": {
+          "focus": "2026-02-28"
+        }
+      },
+      {
+        "key": "PageDown",
+        "shift": true,
+        "focused": "2024-02-29",
+        "mondayFirst": true,
+        "expected": {
+          "focus": "2025-02-28"
+        }
+      },
+      {
+        "key": "Home",
+        "shift": false,
+        "focused": "2026-09-17",
+        "mondayFirst": true,
+        "expected": {
+          "focus": "2026-09-14"
+        }
+      },
+      {
+        "key": "End",
+        "shift": false,
+        "focused": "2026-09-17",
+        "mondayFirst": true,
+        "expected": {
+          "focus": "2026-09-20"
+        }
+      },
+      {
+        "key": "Home",
+        "shift": false,
+        "focused": "2026-09-17",
+        "mondayFirst": false,
+        "expected": {
+          "focus": "2026-09-13"
+        }
+      },
+      {
+        "key": "End",
+        "shift": false,
+        "focused": "2026-09-17",
+        "mondayFirst": false,
+        "expected": {
+          "focus": "2026-09-19"
+        }
+      },
+      {
+        "key": "Enter",
+        "shift": false,
+        "focused": "2026-09-17",
+        "mondayFirst": true,
+        "expected": {
+          "select": "2026-09-17"
+        }
+      },
+      {
+        "key": " ",
+        "shift": false,
+        "focused": "2026-09-17",
+        "mondayFirst": true,
+        "expected": {
+          "select": "2026-09-17"
+        }
+      },
+      {
+        "key": "Escape",
+        "shift": false,
+        "focused": "2026-09-17",
+        "mondayFirst": true,
+        "expected": "close"
+      },
+      {
+        "key": "a",
+        "shift": false,
+        "focused": "2026-09-17",
+        "mondayFirst": true,
+        "expected": null
+      }
+    ]
+  },
+  "colour": {
+    "values": [
+      {
+        "text": "#FF8000",
+        "expected": "#ff8000"
+      },
+      {
+        "text": "#f80",
+        "expected": "#ff8800"
+      },
+      {
+        "text": "ff8000",
+        "expected": "#ff8000"
+      },
+      {
+        "text": "#ff800080",
+        "expected": "#ff8000"
+      },
+      {
+        "text": " #00ff00 ",
+        "expected": "#00ff00"
+      },
+      {
+        "text": "red",
+        "expected": null
+      },
+      {
+        "text": "#12",
+        "expected": null
+      },
+      {
+        "text": "",
+        "expected": null
+      }
+    ],
+    "channels": [
+      {
+        "text": "#ff8000",
+        "expected": [
+          255,
+          128,
+          0
+        ]
+      },
+      {
+        "text": "#000000",
+        "expected": [
+          0,
+          0,
+          0
+        ]
+      }
+    ],
+    "fields": [
+      {
+        "current": "#ff8000",
+        "field": "red",
+        "draft": "0",
+        "expected": "#008000"
+      },
+      {
+        "current": "#ff8000",
+        "field": "green",
+        "draft": "255",
+        "expected": "#ffff00"
+      },
+      {
+        "current": "#ff8000",
+        "field": "blue",
+        "draft": "16",
+        "expected": "#ff8010"
+      },
+      {
+        "current": "#ff8000",
+        "field": "red",
+        "draft": "256",
+        "expected": null
+      },
+      {
+        "current": "#ff8000",
+        "field": "red",
+        "draft": "-1",
+        "expected": null
+      },
+      {
+        "current": "#ff8000",
+        "field": "blue",
+        "draft": "",
+        "expected": null
+      },
+      {
+        "current": "#ff8000",
+        "field": "hex",
+        "draft": "#0F0",
+        "expected": "#00ff00"
+      },
+      {
+        "current": "#ff8000",
+        "field": "hex",
+        "draft": "zzz",
+        "expected": null
+      }
+    ],
+    "swatchKeys": [
+      {
+        "key": "ArrowRight",
+        "focused": 0,
+        "expected": 1
+      },
+      {
+        "key": "ArrowLeft",
+        "focused": 0,
+        "expected": 0
+      },
+      {
+        "key": "ArrowDown",
+        "focused": 3,
+        "expected": 11
+      },
+      {
+        "key": "ArrowDown",
+        "focused": 12,
+        "expected": 15
+      },
+      {
+        "key": "ArrowUp",
+        "focused": 3,
+        "expected": 3
+      },
+      {
+        "key": "ArrowUp",
+        "focused": 11,
+        "expected": 3
+      },
+      {
+        "key": "Home",
+        "focused": 9,
+        "expected": 0
+      },
+      {
+        "key": "End",
+        "focused": 2,
+        "expected": 15
+      },
+      {
+        "key": "x",
+        "focused": 2,
+        "expected": null
+      }
+    ]
+  }
+}

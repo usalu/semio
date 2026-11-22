@@ -91,3 +91,12 @@ test("the compiler wrapper stand-in names the sealed copy, never the live toolin
   if(process.platform!=="win32"){const text=readFileSync(shim,"utf8");expect(text).toContain(script);expect(text).not.toContain(UNIT_CACHE_SCRIPT_V1);expect(shim.endsWith(sealed.digest)).toBe(true);}
  }finally{rmSync(root,{recursive:true,force:true});}
 },120000);
+
+test("the real compiler-wrapper closure seals well below the declared file limit and never reaches the build command line",()=>{
+ const root=scratch();
+ try{
+  const sealed=sealedUnitCacheV1(join(root,"u"));
+  expect(sealed.files).toBeGreaterThan(0);expect(sealed.files).toBeLessThanOrEqual(policy.maximumFiles/2);
+  expect(readdirSync(sealed.directory,{recursive:true}).map(String).filter(path=>path.replaceAll("\\","/").endsWith("📚️library/🏗️build/📜️script.ts"))).toEqual([]);
+ }finally{rmSync(root,{recursive:true,force:true});}
+},120000);

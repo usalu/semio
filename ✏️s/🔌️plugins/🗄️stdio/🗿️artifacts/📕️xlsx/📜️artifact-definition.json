@@ -255,7 +255,7 @@
   "conformance_suites": [
     {
       "id": "s.stdio.xlsx.conformance-suite.calamine-oracle",
-      "status": "unimplemented",
+      "status": "implemented",
       "fixtures": [
         "s.stdio.xlsx.fixture.native-document",
         "s.stdio.xlsx.fixture.canonical-xml-save",

@@ -6470,60 +6470,16 @@
           },
           {
             "id": "monitor-panel",
-            "kind": "extrude",
+            "kind": "box",
             "bone": "screen-tilt",
             "material": "equipment-housing",
             "role": "body",
             "tone": 0.18,
-            "plane": "xy",
-            "profile": [
-              [0.307, 0.176],
-              [0.3066955, 0.1775307],
-              [0.3058284, 0.1788284],
-              [0.3045307, 0.1796955],
-              [0.303, 0.18],
-              [-0.303, 0.18],
-              [-0.3045307, 0.1796955],
-              [-0.3058284, 0.1788284],
-              [-0.3066955, 0.1775307],
-              [-0.307, 0.176],
-              [-0.307, -0.184],
-              [-0.3066955, -0.1855307],
-              [-0.3058284, -0.1868284],
-              [-0.3045307, -0.1876955],
-              [-0.303, -0.188],
-              [0.303, -0.188],
-              [0.3045307, -0.1876955],
-              [0.3058284, -0.1868284],
-              [0.3066955, -0.1855307],
-              [0.307, -0.184]
-            ],
-            "holes": [
-              [
-                [0.299, -0.162],
-                [0.2988478, -0.1627654],
-                [0.2984142, -0.1634142],
-                [0.2977654, -0.1638478],
-                [0.297, -0.164],
-                [-0.297, -0.164],
-                [-0.2977654, -0.1638478],
-                [-0.2984142, -0.1634142],
-                [-0.2988478, -0.1627654],
-                [-0.299, -0.162],
-                [-0.299, 0.17],
-                [-0.2988478, 0.1707654],
-                [-0.2984142, 0.1714142],
-                [-0.2977654, 0.1718478],
-                [-0.297, 0.172],
-                [0.297, 0.172],
-                [0.2977654, 0.1718478],
-                [0.2984142, 0.1714142],
-                [0.2988478, 0.1707654],
-                [0.299, 0.17]
-              ]
-            ],
-            "from": -0.062,
-            "to": -0.047
+            "size": [0.614, 0.368, 0.0137],
+            "transform": {
+              "translation": [0, -0.004, -0.05385]
+            },
+            "cornerRadius": 0.004
           },
           {
             "id": "monitor-screen",
@@ -6535,30 +6491,6 @@
             "size": [0.598, 0.336, 0.002],
             "transform": {
               "translation": [0, 0.004, -0.0607]
-            }
-          },
-          {
-            "id": "monitor-backplane",
-            "kind": "box",
-            "bone": "screen-tilt",
-            "material": "equipment-housing",
-            "role": "body",
-            "tone": 0.23,
-            "size": [0.6, 0.338, 0.009],
-            "transform": {
-              "translation": [0, 0.004, -0.0552]
-            }
-          },
-          {
-            "id": "monitor-rear-panel",
-            "kind": "box",
-            "bone": "screen-tilt",
-            "material": "equipment-housing",
-            "role": "body",
-            "tone": 0.24,
-            "size": [0.607, 0.361, 0.003],
-            "transform": {
-              "translation": [0, -0.004, -0.0485]
             }
           },
           {
@@ -6578,21 +6510,15 @@
                 "exponent": 5
               },
               {
-                "at": [0, -0.015, -0.027],
-                "rx": 0.24,
-                "ry": 0.14,
+                "at": [0, -0.015, -0.03],
+                "rx": 0.245,
+                "ry": 0.142,
                 "exponent": 4
               },
               {
-                "at": [0, -0.015, -0.015],
+                "at": [0, -0.015, -0.016],
                 "rx": 0.212,
                 "ry": 0.12,
-                "exponent": 4
-              },
-              {
-                "at": [0, -0.015, -0.009],
-                "rx": 0.18,
-                "ry": 0.1,
                 "exponent": 4
               }
             ]
@@ -6604,81 +6530,10 @@
             "material": "steel-desk",
             "role": "body",
             "tone": 0.31,
-            "size": [0.116, 0.116, 0.0025],
+            "size": [0.116, 0.116, 0.016],
             "transform": {
-              "translation": [0, 0, -0.00775]
+              "translation": [0, 0, -0.01]
             }
-          },
-          {
-            "id": "monitor-hinge-ear",
-            "kind": "box",
-            "bone": "screen-tilt",
-            "material": "steel-desk",
-            "role": "body",
-            "tone": 0.31,
-            "size": [0.009, 0.033, 0.017],
-            "transform": {
-              "translation": [-0.042, 0, -0.001]
-            },
-            "repeat": {
-              "count": 2,
-              "translation": [0.084, 0, 0]
-            }
-          },
-          {
-            "id": "monitor-hinge",
-            "kind": "revolve",
-            "bone": "screen-tilt",
-            "material": "steel-desk",
-            "role": "body",
-            "tone": 0.32,
-            "profile": [[-0.05, 0.0045], [-0.047, 0.006], [0.047, 0.006], [0.05, 0.0045]],
-            "origin": [0, 0, 0],
-            "axis": [1, 0, 0]
-          },
-          {
-            "id": "vesa-screw-bl",
-            "kind": "revolve",
-            "bone": "screen-tilt",
-            "material": "steel-desk",
-            "role": "detail",
-            "tone": 0.27,
-            "profile": [[-0.009, 0.002], [0, 0.002], [0, 0.0038], [0.002, 0.0038]],
-            "origin": [-0.05, -0.05, -0.0065],
-            "axis": [0, 0, 1]
-          },
-          {
-            "id": "vesa-screw-br",
-            "kind": "revolve",
-            "bone": "screen-tilt",
-            "material": "steel-desk",
-            "role": "detail",
-            "tone": 0.27,
-            "profile": [[-0.009, 0.002], [0, 0.002], [0, 0.0038], [0.002, 0.0038]],
-            "origin": [0.05, -0.05, -0.0065],
-            "axis": [0, 0, 1]
-          },
-          {
-            "id": "vesa-screw-tl",
-            "kind": "revolve",
-            "bone": "screen-tilt",
-            "material": "steel-desk",
-            "role": "detail",
-            "tone": 0.27,
-            "profile": [[-0.009, 0.002], [0, 0.002], [0, 0.0038], [0.002, 0.0038]],
-            "origin": [-0.05, 0.05, -0.0065],
-            "axis": [0, 0, 1]
-          },
-          {
-            "id": "vesa-screw-tr",
-            "kind": "revolve",
-            "bone": "screen-tilt",
-            "material": "steel-desk",
-            "role": "detail",
-            "tone": 0.27,
-            "profile": [[-0.009, 0.002], [0, 0.002], [0, 0.0038], [0.002, 0.0038]],
-            "origin": [0.05, 0.05, -0.0065],
-            "axis": [0, 0, 1]
           }
         ],
         "thermal": [
@@ -6776,9 +6631,34 @@
           },
           {
             "id": "th-monitor-panel",
-            "of": "monitor-panel",
+            "kind": "extrude",
+            "bone": "screen-tilt",
+            "material": "equipment-housing",
+            "role": "body",
+            "tone": 0.18,
             "region": "monitor-housing",
-            "layer": "housing"
+            "layer": "housing",
+            "plane": "xy",
+            "profile": [[0.307, 0.18], [-0.307, 0.18], [-0.307, -0.188], [0.307, -0.188]],
+            "holes": [
+              [[0.299, -0.164], [-0.299, -0.164], [-0.299, 0.172], [0.299, 0.172]]
+            ],
+            "from": -0.0607,
+            "to": -0.047
+          },
+          {
+            "id": "th-monitor-rear-wall",
+            "kind": "box",
+            "bone": "screen-tilt",
+            "material": "equipment-housing",
+            "role": "body",
+            "tone": 0.18,
+            "region": "monitor-housing",
+            "layer": "housing",
+            "size": [0.614, 0.368, 0.003],
+            "transform": {
+              "translation": [0, -0.004, -0.0485]
+            }
           },
           {
             "id": "th-monitor-screen",
@@ -6786,12 +6666,6 @@
             "region": "display-front",
             "layer": "glass",
             "sectionFaces": ["+w"]
-          },
-          {
-            "id": "th-monitor-rear-panel",
-            "of": "monitor-rear-panel",
-            "region": "monitor-housing",
-            "layer": "housing"
           },
           {
             "id": "th-monitor-bulge",
@@ -6802,37 +6676,8 @@
           {
             "id": "th-monitor-vesa-plate",
             "of": "monitor-vesa-plate",
-            "region": "monitor-housing"
-          },
-          {
-            "id": "th-monitor-hinge-ear",
-            "of": "monitor-hinge-ear",
-            "region": "monitor-housing"
-          },
-          {
-            "id": "th-monitor-hinge",
-            "of": "monitor-hinge",
-            "region": "monitor-housing"
-          },
-          {
-            "id": "th-vesa-screw-bl",
-            "of": "vesa-screw-bl",
-            "region": "monitor-housing"
-          },
-          {
-            "id": "th-vesa-screw-br",
-            "of": "vesa-screw-br",
-            "region": "monitor-housing"
-          },
-          {
-            "id": "th-vesa-screw-tl",
-            "of": "vesa-screw-tl",
-            "region": "monitor-housing"
-          },
-          {
-            "id": "th-vesa-screw-tr",
-            "of": "vesa-screw-tr",
-            "region": "monitor-housing"
+            "region": "monitor-housing",
+            "layer": "housing"
           }
         ],
         "structure": [
@@ -7163,16 +7008,16 @@
         ],
         "decisions": [
           {
-            "en": "1:100 keeps every assembly at its true size but drops what lies under 15 mm: the glides (the foot stands on its pressed underside), the 15 mm slide bushings (merged into the tube ends), the handset, the tilt hinge, the rear bulge of the monitor (merged into a 60 mm panel block that reaches the stand), the crossbar flanges and the screen glazing detail; tubes, housings, rails, crossbar and laptop become plain blocks with the true sections, the tapered foot keeps its profile and the cable tray stays an open sheet U without its screw flanges.",
-            "de": "1:100 behält jede Baugruppe in wahrer Größe, lässt aber weg, was unter 15 mm liegt: die Gleiter (der Fuß steht auf seiner Unterseite), die 15-mm-Gleitbuchsen (in die Rohrenden verschmolzen), das Bedienteil, das Neigegelenk, die rückseitige Wölbung des Monitors (in einen 60-mm-Panelblock verschmolzen, der bis zum Ständer reicht), die Querträgerflansche und das Glasdetail des Schirms; Rohre, Gehäuse, Zargen, Querträger und Laptop werden einfache Blöcke mit wahren Querschnitten, der verjüngte Fuß behält sein Profil und die Kabelwanne bleibt ein offenes Blech-U ohne Schraubflansche."
+            "en": "1:100 keeps every assembly at its true size but drops what lies under 15 mm: the glides (the foot stands on its pressed underside), the 15 mm slide bushings (merged into the tube ends), the handset, the tilt hinge with its ears and the four VESA screws (merged into one 116 x 116 x 16 mm mount block between rear bulge and stand), the bezel step and the backplane of the monitor (merged into a 14 mm panel slab that carries the glass set 1 mm into its face), the crossbar flanges and the screen glazing detail; tubes, housings, rails, crossbar and laptop become plain blocks with the true sections, the tapered foot keeps its profile and the cable tray stays an open sheet U without its screw flanges.",
+            "de": "1:100 behält jede Baugruppe in wahrer Größe, lässt aber weg, was unter 15 mm liegt: die Gleiter (der Fuß steht auf seiner Unterseite), die 15-mm-Gleitbuchsen (in die Rohrenden verschmolzen), das Bedienteil, das Neigegelenk mit seinen Laschen und die vier VESA-Schrauben (in einen Halteblock 116 x 116 x 16 mm zwischen Rückwölbung und Ständer verschmolzen), die Rahmenstufe und die Rückwand des Monitors (in eine 14-mm-Panelscheibe verschmolzen, in deren Vorderseite das Glas 1 mm eingelassen ist), die Querträgerflansche und das Glasdetail des Schirms; Rohre, Gehäuse, Zargen, Querträger und Laptop werden einfache Blöcke mit wahren Querschnitten, der verjüngte Fuß behält sein Profil und die Kabelwanne bleibt ein offenes Blech-U ohne Schraubflansche."
           },
           {
             "en": "Thermal references the 1:100 bodies, the board as one shell (layers merged); structure as at 1:50 with 15 mm slide collars at the tube ends and 15 mm flange joints at the crossbar ends.",
             "de": "Die Thermik verweist auf die Körper von 1:100, die Platte als eine Schale (Schichten verschmolzen); Tragwerk wie bei 1:50 mit 15-mm-Gleitmanschetten an den Rohrenden und 15-mm-Flanschgelenken an den Querträgerenden."
           },
           {
-            "en": "The 15 mm bezel surrounds a 2 mm display glass. The contoured rear cover bears on a four-screw VESA plate. The hinge supports the display on the neck while its angle changes.",
-            "de": "Der 15 mm tiefe Rahmen fasst ein 2 mm starkes Deckglas. Das profilierte Rückgehäuse sitzt auf einer VESA-Platte mit vier Schrauben. Das Gelenk trägt das neigbare Display am Standfuß."
+            "en": "The monitor is modelled for the 15 mm feature: glass sheet, panel slab, rear bulge in three sections and the mount block; hinge pin, ears and screws exist at 1:50 only. In the thermal list the housing is the hollow shell it is (8 mm bezel ring and 3 mm rear wall around the display cavity), so the face behind the glass is no outer surface.",
+            "de": "Der Monitor ist für das 15-mm-Merkmal modelliert: Glasscheibe, Panelscheibe, Rückwölbung in drei Schnitten und Halteblock; Gelenkbolzen, Laschen und Schrauben gibt es nur bei 1:50. In der Thermik ist das Gehäuse die hohle Schale, die es ist (8-mm-Rahmenring und 3-mm-Rückwand um den Displayraum), sodass die Fläche hinter dem Glas keine Außenfläche ist."
           }
         ]
       },
@@ -7386,44 +7231,15 @@
           },
           {
             "id": "monitor-panel",
-            "kind": "extrude",
+            "kind": "box",
             "bone": "screen-tilt",
             "material": "equipment-housing",
             "role": "body",
             "tone": 0.18,
-            "plane": "xy",
-            "profile": [
-              [0.307, 0.176],
-              [0.3058284, 0.1788284],
-              [0.303, 0.18],
-              [-0.303, 0.18],
-              [-0.3058284, 0.1788284],
-              [-0.307, 0.176],
-              [-0.307, -0.184],
-              [-0.3058284, -0.1868284],
-              [-0.303, -0.188],
-              [0.303, -0.188],
-              [0.3058284, -0.1868284],
-              [0.307, -0.184]
-            ],
-            "holes": [
-              [
-                [0.299, -0.162],
-                [0.2984142, -0.1634142],
-                [0.297, -0.164],
-                [-0.297, -0.164],
-                [-0.2984142, -0.1634142],
-                [-0.299, -0.162],
-                [-0.299, 0.17],
-                [-0.2984142, 0.1714142],
-                [-0.297, 0.172],
-                [0.297, 0.172],
-                [0.2984142, 0.1714142],
-                [0.299, 0.17]
-              ]
-            ],
-            "from": -0.062,
-            "to": -0.047
+            "size": [0.614, 0.368, 0.029],
+            "transform": {
+              "translation": [0, -0.004, -0.0462]
+            }
           },
           {
             "id": "monitor-screen",
@@ -7438,30 +7254,6 @@
             }
           },
           {
-            "id": "monitor-backplane",
-            "kind": "box",
-            "bone": "screen-tilt",
-            "material": "equipment-housing",
-            "role": "body",
-            "tone": 0.23,
-            "size": [0.6, 0.338, 0.009],
-            "transform": {
-              "translation": [0, 0.004, -0.0552]
-            }
-          },
-          {
-            "id": "monitor-rear-panel",
-            "kind": "box",
-            "bone": "screen-tilt",
-            "material": "equipment-housing",
-            "role": "body",
-            "tone": 0.24,
-            "size": [0.607, 0.361, 0.003],
-            "transform": {
-              "translation": [0, -0.004, -0.0485]
-            }
-          },
-          {
             "id": "monitor-bulge",
             "kind": "loft",
             "bone": "screen-tilt",
@@ -7472,107 +7264,18 @@
             "capEnd": true,
             "sections": [
               {
-                "at": [0, -0.015, -0.047],
-                "rx": 0.26,
-                "ry": 0.15,
+                "at": [0, -0.015, -0.0317],
+                "rx": 0.25,
+                "ry": 0.145,
                 "exponent": 5
               },
               {
-                "at": [0, -0.015, -0.027],
-                "rx": 0.24,
-                "ry": 0.14,
-                "exponent": 4
-              },
-              {
-                "at": [0, -0.015, -0.009],
-                "rx": 0.18,
-                "ry": 0.1,
+                "at": [0, -0.015, -0.002],
+                "rx": 0.15,
+                "ry": 0.085,
                 "exponent": 4
               }
             ]
-          },
-          {
-            "id": "monitor-vesa-plate",
-            "kind": "box",
-            "bone": "screen-tilt",
-            "material": "steel-desk",
-            "role": "body",
-            "tone": 0.31,
-            "size": [0.116, 0.116, 0.0025],
-            "transform": {
-              "translation": [0, 0, -0.00775]
-            }
-          },
-          {
-            "id": "monitor-hinge-ear",
-            "kind": "box",
-            "bone": "screen-tilt",
-            "material": "steel-desk",
-            "role": "body",
-            "tone": 0.31,
-            "size": [0.009, 0.033, 0.017],
-            "transform": {
-              "translation": [-0.042, 0, -0.001]
-            },
-            "repeat": {
-              "count": 2,
-              "translation": [0.084, 0, 0]
-            }
-          },
-          {
-            "id": "monitor-hinge",
-            "kind": "revolve",
-            "bone": "screen-tilt",
-            "material": "steel-desk",
-            "role": "body",
-            "tone": 0.32,
-            "profile": [[-0.05, 0.0045], [-0.047, 0.006], [0.047, 0.006], [0.05, 0.0045]],
-            "origin": [0, 0, 0],
-            "axis": [1, 0, 0]
-          },
-          {
-            "id": "vesa-screw-bl",
-            "kind": "revolve",
-            "bone": "screen-tilt",
-            "material": "steel-desk",
-            "role": "detail",
-            "tone": 0.27,
-            "profile": [[-0.009, 0.002], [0, 0.002], [0, 0.0038], [0.002, 0.0038]],
-            "origin": [-0.05, -0.05, -0.0065],
-            "axis": [0, 0, 1]
-          },
-          {
-            "id": "vesa-screw-br",
-            "kind": "revolve",
-            "bone": "screen-tilt",
-            "material": "steel-desk",
-            "role": "detail",
-            "tone": 0.27,
-            "profile": [[-0.009, 0.002], [0, 0.002], [0, 0.0038], [0.002, 0.0038]],
-            "origin": [0.05, -0.05, -0.0065],
-            "axis": [0, 0, 1]
-          },
-          {
-            "id": "vesa-screw-tl",
-            "kind": "revolve",
-            "bone": "screen-tilt",
-            "material": "steel-desk",
-            "role": "detail",
-            "tone": 0.27,
-            "profile": [[-0.009, 0.002], [0, 0.002], [0, 0.0038], [0.002, 0.0038]],
-            "origin": [-0.05, 0.05, -0.0065],
-            "axis": [0, 0, 1]
-          },
-          {
-            "id": "vesa-screw-tr",
-            "kind": "revolve",
-            "bone": "screen-tilt",
-            "material": "steel-desk",
-            "role": "detail",
-            "tone": 0.27,
-            "profile": [[-0.009, 0.002], [0, 0.002], [0, 0.0038], [0.002, 0.0038]],
-            "origin": [0.05, 0.05, -0.0065],
-            "axis": [0, 0, 1]
           }
         ],
         "thermal": [
@@ -7677,51 +7380,10 @@
             "sectionFaces": ["+w"]
           },
           {
-            "id": "th-monitor-rear-panel",
-            "of": "monitor-rear-panel",
-            "region": "monitor-housing",
-            "layer": "housing"
-          },
-          {
             "id": "th-monitor-bulge",
             "of": "monitor-bulge",
             "region": "monitor-housing",
             "layer": "housing"
-          },
-          {
-            "id": "th-monitor-vesa-plate",
-            "of": "monitor-vesa-plate",
-            "region": "monitor-housing"
-          },
-          {
-            "id": "th-monitor-hinge-ear",
-            "of": "monitor-hinge-ear",
-            "region": "monitor-housing"
-          },
-          {
-            "id": "th-monitor-hinge",
-            "of": "monitor-hinge",
-            "region": "monitor-housing"
-          },
-          {
-            "id": "th-vesa-screw-bl",
-            "of": "vesa-screw-bl",
-            "region": "monitor-housing"
-          },
-          {
-            "id": "th-vesa-screw-br",
-            "of": "vesa-screw-br",
-            "region": "monitor-housing"
-          },
-          {
-            "id": "th-vesa-screw-tl",
-            "of": "vesa-screw-tl",
-            "region": "monitor-housing"
-          },
-          {
-            "id": "th-vesa-screw-tr",
-            "of": "vesa-screw-tr",
-            "region": "monitor-housing"
           }
         ],
         "structure": [
@@ -8046,16 +7708,16 @@
         ],
         "decisions": [
           {
-            "en": "1:200 merges further for the 30 mm feature: the feet are straight 45 mm bars, each motor housing grows up to the board and absorbs the 25 mm side rail, the monitor keeps base, stand and a 60 mm panel block, the tray is a closed block and the control box stays a block; the 25 mm board, the 20 mm laptop and the 48 to 64 mm tubes keep their true sizes because the drawing shows them so (C13).",
-            "de": "1:200 verschmilzt weiter für das 30-mm-Merkmal: die Füße sind gerade 45-mm-Balken, jedes Motorgehäuse reicht bis zur Platte und nimmt die 25-mm-Seitenzarge auf, der Monitor behält Fuß, Ständer und einen 60-mm-Panelblock, die Wanne ist ein geschlossener Block und der Steuerkasten bleibt ein Block; die 25-mm-Platte, der 20-mm-Laptop und die 48- bis 64-mm-Rohre behalten ihre wahre Größe, weil die Zeichnung sie so zeigt (C13)."
+            "en": "1:200 merges further for the 30 mm feature: the feet are straight 45 mm bars, each motor housing grows up to the board and absorbs the 25 mm side rail, the monitor keeps base, stand, a 29 mm panel slab with the glass set 1 mm into its face and a 30 mm rear housing that tapers to the stand, the tray is a closed block and the control box stays a block; the 25 mm board, the 20 mm laptop and the 48 to 64 mm tubes keep their true sizes because the drawing shows them so (C13).",
+            "de": "1:200 verschmilzt weiter für das 30-mm-Merkmal: die Füße sind gerade 45-mm-Balken, jedes Motorgehäuse reicht bis zur Platte und nimmt die 25-mm-Seitenzarge auf, der Monitor behält Fuß, Ständer, eine 29-mm-Panelscheibe mit dem 1 mm eingelassenen Glas auf der Vorderseite und ein 30 mm tiefes Rückgehäuse, das sich zum Ständer verjüngt, die Wanne ist ein geschlossener Block und der Steuerkasten bleibt ein Block; die 25-mm-Platte, der 20-mm-Laptop und die 48- bis 64-mm-Rohre behalten ihre wahre Größe, weil die Zeichnung sie so zeigt (C13)."
           },
           {
             "en": "Thermal references the 1:200 bodies; structure: feet, tubes, crossbar and board as members, 30 mm slide collars, crossbar flange joints, head plates, contact pads and masses.",
             "de": "Die Thermik verweist auf die Körper von 1:200; Tragwerk: Füße, Rohre, Querträger und Platte als Stäbe, 30-mm-Gleitmanschetten, Flanschgelenke des Querträgers, Kopfplatten, Kontaktflächen und Massen."
           },
           {
-            "en": "The 15 mm bezel surrounds a 2 mm display glass. The contoured rear cover bears on a four-screw VESA plate. The hinge supports the display on the neck while its angle changes. In the structure the head joint of each column reaches the underside of the board, as the motor housing does in the body.",
-            "de": "Der 15 mm tiefe Rahmen fasst ein 2 mm starkes Deckglas. Das profilierte Rückgehäuse sitzt auf einer VESA-Platte mit vier Schrauben. Das Gelenk trägt das neigbare Display am Standfuß. Im Tragwerk reicht das Kopfgelenk jeder Säule bis an die Unterseite der Platte, wie das Motorgehäuse im Körper."
+            "en": "The monitor is modelled for the 30 mm feature: glass sheet, panel slab and a rear housing in two sections that meets the stand; mount plate and hinge are inside that housing. In the structure the head joint of each column reaches the underside of the board, as the motor housing does in the body.",
+            "de": "Der Monitor ist für das 30-mm-Merkmal modelliert: Glasscheibe, Panelscheibe und ein Rückgehäuse in zwei Schnitten, das an den Ständer anschließt; Halteplatte und Gelenk liegen in diesem Gehäuse. Im Tragwerk reicht das Kopfgelenk jeder Säule bis an die Unterseite der Platte, wie das Motorgehäuse im Körper."
           }
         ]
       },
@@ -8257,18 +7919,15 @@
           },
           {
             "id": "monitor-panel",
-            "kind": "extrude",
+            "kind": "box",
             "bone": "screen-tilt",
             "material": "equipment-housing",
             "role": "body",
             "tone": 0.18,
-            "plane": "xy",
-            "profile": [[0.307, 0.176], [0.303, 0.18], [-0.303, 0.18], [-0.307, 0.176], [-0.307, -0.184], [-0.303, -0.188], [0.303, -0.188], [0.307, -0.184]],
-            "holes": [
-              [[0.299, -0.162], [0.297, -0.164], [-0.297, -0.164], [-0.299, -0.162], [-0.299, 0.17], [-0.297, 0.172], [0.297, 0.172], [0.299, 0.17]]
-            ],
-            "from": -0.062,
-            "to": -0.047
+            "size": [0.614, 0.368, 0.0587],
+            "transform": {
+              "translation": [0, -0.004, -0.03135]
+            }
           },
           {
             "id": "monitor-screen",
@@ -8281,137 +7940,6 @@
             "transform": {
               "translation": [0, 0.004, -0.0607]
             }
-          },
-          {
-            "id": "monitor-backplane",
-            "kind": "box",
-            "bone": "screen-tilt",
-            "material": "equipment-housing",
-            "role": "body",
-            "tone": 0.23,
-            "size": [0.6, 0.338, 0.009],
-            "transform": {
-              "translation": [0, 0.004, -0.0552]
-            }
-          },
-          {
-            "id": "monitor-rear-panel",
-            "kind": "box",
-            "bone": "screen-tilt",
-            "material": "equipment-housing",
-            "role": "body",
-            "tone": 0.24,
-            "size": [0.607, 0.361, 0.003],
-            "transform": {
-              "translation": [0, -0.004, -0.0485]
-            }
-          },
-          {
-            "id": "monitor-bulge",
-            "kind": "loft",
-            "bone": "screen-tilt",
-            "material": "equipment-housing",
-            "role": "body",
-            "tone": 0.24,
-            "capStart": true,
-            "capEnd": true,
-            "sections": [
-              {
-                "at": [0, -0.015, -0.047],
-                "rx": 0.26,
-                "ry": 0.15,
-                "exponent": 5
-              },
-              {
-                "at": [0, -0.015, -0.009],
-                "rx": 0.18,
-                "ry": 0.1,
-                "exponent": 4
-              }
-            ]
-          },
-          {
-            "id": "monitor-vesa-plate",
-            "kind": "box",
-            "bone": "screen-tilt",
-            "material": "steel-desk",
-            "role": "body",
-            "tone": 0.31,
-            "size": [0.116, 0.116, 0.0025],
-            "transform": {
-              "translation": [0, 0, -0.00775]
-            }
-          },
-          {
-            "id": "monitor-hinge-ear",
-            "kind": "box",
-            "bone": "screen-tilt",
-            "material": "steel-desk",
-            "role": "body",
-            "tone": 0.31,
-            "size": [0.009, 0.033, 0.017],
-            "transform": {
-              "translation": [-0.042, 0, -0.001]
-            },
-            "repeat": {
-              "count": 2,
-              "translation": [0.084, 0, 0]
-            }
-          },
-          {
-            "id": "monitor-hinge",
-            "kind": "revolve",
-            "bone": "screen-tilt",
-            "material": "steel-desk",
-            "role": "body",
-            "tone": 0.32,
-            "profile": [[-0.05, 0.0045], [-0.047, 0.006], [0.047, 0.006], [0.05, 0.0045]],
-            "origin": [0, 0, 0],
-            "axis": [1, 0, 0]
-          },
-          {
-            "id": "vesa-screw-bl",
-            "kind": "revolve",
-            "bone": "screen-tilt",
-            "material": "steel-desk",
-            "role": "detail",
-            "tone": 0.27,
-            "profile": [[-0.009, 0.002], [0, 0.002], [0, 0.0038], [0.002, 0.0038]],
-            "origin": [-0.05, -0.05, -0.0065],
-            "axis": [0, 0, 1]
-          },
-          {
-            "id": "vesa-screw-br",
-            "kind": "revolve",
-            "bone": "screen-tilt",
-            "material": "steel-desk",
-            "role": "detail",
-            "tone": 0.27,
-            "profile": [[-0.009, 0.002], [0, 0.002], [0, 0.0038], [0.002, 0.0038]],
-            "origin": [0.05, -0.05, -0.0065],
-            "axis": [0, 0, 1]
-          },
-          {
-            "id": "vesa-screw-tl",
-            "kind": "revolve",
-            "bone": "screen-tilt",
-            "material": "steel-desk",
-            "role": "detail",
-            "tone": 0.27,
-            "profile": [[-0.009, 0.002], [0, 0.002], [0, 0.0038], [0.002, 0.0038]],
-            "origin": [-0.05, 0.05, -0.0065],
-            "axis": [0, 0, 1]
-          },
-          {
-            "id": "vesa-screw-tr",
-            "kind": "revolve",
-            "bone": "screen-tilt",
-            "material": "steel-desk",
-            "role": "detail",
-            "tone": 0.27,
-            "profile": [[-0.009, 0.002], [0, 0.002], [0, 0.0038], [0.002, 0.0038]],
-            "origin": [0.05, 0.05, -0.0065],
-            "axis": [0, 0, 1]
           }
         ],
         "thermal": [
@@ -8509,53 +8037,6 @@
             "region": "display-front",
             "layer": "glass",
             "sectionFaces": ["+w"]
-          },
-          {
-            "id": "th-monitor-rear-panel",
-            "of": "monitor-rear-panel",
-            "region": "monitor-housing",
-            "layer": "housing"
-          },
-          {
-            "id": "th-monitor-bulge",
-            "of": "monitor-bulge",
-            "region": "monitor-housing",
-            "layer": "housing"
-          },
-          {
-            "id": "th-monitor-vesa-plate",
-            "of": "monitor-vesa-plate",
-            "region": "monitor-housing"
-          },
-          {
-            "id": "th-monitor-hinge-ear",
-            "of": "monitor-hinge-ear",
-            "region": "monitor-housing"
-          },
-          {
-            "id": "th-monitor-hinge",
-            "of": "monitor-hinge",
-            "region": "monitor-housing"
-          },
-          {
-            "id": "th-vesa-screw-bl",
-            "of": "vesa-screw-bl",
-            "region": "monitor-housing"
-          },
-          {
-            "id": "th-vesa-screw-br",
-            "of": "vesa-screw-br",
-            "region": "monitor-housing"
-          },
-          {
-            "id": "th-vesa-screw-tl",
-            "of": "vesa-screw-tl",
-            "region": "monitor-housing"
-          },
-          {
-            "id": "th-vesa-screw-tr",
-            "of": "vesa-screw-tr",
-            "region": "monitor-housing"
           }
         ],
         "structure": [
@@ -8806,16 +8287,16 @@
         ],
         "decisions": [
           {
-            "en": "1:500 is the desk sign: two T-feet, the three stacked tubes and the head housing per column, the board with its crossbar, the monitor as panel and stand and the laptop and control box as thin blocks; the tray, the monitor base and every rounding are omitted, the parts keep their true sizes as drawn (C13).",
-            "de": "1:500 ist das Tischzeichen: zwei T-Füße, die drei gestapelten Rohre und das Kopfgehäuse je Säule, die Platte mit ihrem Querträger, der Monitor als Panel und Ständer, Laptop und Steuerkasten als dünne Blöcke; Wanne, Monitorfuß und alle Rundungen entfallen, die Teile behalten ihre gezeichnete wahre Größe (C13)."
+            "en": "1:500 is the desk sign: two T-feet, the three stacked tubes and the head housing per column, the board with its crossbar, the monitor as one 59 mm panel block with its glass, base plate and stand, and the laptop and control box as thin blocks; the tray, the side rails and every rounding are omitted, the parts keep their true sizes as drawn (C13).",
+            "de": "1:500 ist das Tischzeichen: zwei T-Füße, die drei gestapelten Rohre und das Kopfgehäuse je Säule, die Platte mit ihrem Querträger, der Monitor als ein 59-mm-Panelblock mit Glas, Fußplatte und Ständer, Laptop und Steuerkasten als dünne Blöcke; Wanne, Seitenzargen und alle Rundungen entfallen, die Teile behalten ihre gezeichnete wahre Größe (C13)."
           },
           {
             "en": "Thermal references the 1:500 bodies; structure: the same members without slide and flange joints (below the 75 mm feature), head plates of the housing section, 30 mm contact pads standing 15 mm proud of the foot footprint and the masses.",
             "de": "Die Thermik verweist auf die Körper von 1:500; Tragwerk: dieselben Stäbe ohne Gleit- und Flanschgelenke (unter dem 75-mm-Merkmal), Kopfplatten im Gehäusequerschnitt, 30-mm-Kontaktflächen, die 15 mm über die Fußfläche vorstehen, und die Massen."
           },
           {
-            "en": "The 15 mm bezel surrounds a 2 mm display glass. The contoured rear cover bears on a four-screw VESA plate. The hinge supports the display on the neck while its angle changes.",
-            "de": "Der 15 mm tiefe Rahmen fasst ein 2 mm starkes Deckglas. Das profilierte Rückgehäuse sitzt auf einer VESA-Platte mit vier Schrauben. Das Gelenk trägt das neigbare Display am Standfuß."
+            "en": "The monitor is one block of its full 59 mm depth from the glass to the stand, with the glass as the sheet on its face that the display region needs.",
+            "de": "Der Monitor ist ein Block seiner vollen Tiefe von 59 mm vom Glas bis zum Ständer, mit dem Glas als Scheibe auf seiner Vorderseite, die die Displayregion braucht."
           }
         ]
       }

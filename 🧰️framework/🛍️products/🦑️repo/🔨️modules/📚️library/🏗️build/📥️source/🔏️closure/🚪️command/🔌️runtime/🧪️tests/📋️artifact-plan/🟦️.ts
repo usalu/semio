@@ -12,9 +12,11 @@ import {captureCompilerBuildSourceClosureV1} from "../../../../🏗️compiler/�
 import {buildSourceClosureTextV1,buildSourceClosureStreamLoaderV1} from "../../../../🟦️.ts";
 import fixture from "./🔣️.json";
 import schema from "../../../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/📋️plan/🧬️schema/🔣️.json";
+import {issueRepositoryScriptProvidersV1} from "../../../../../../../🏃️process/🔌️providers/🟦️.ts";
 import{existsSync as existsRootV1}from"node:fs";import{dirname as dirnameRootV1,join as joinRootV1}from"node:path";
 const repositoryRootV1=(()=>{let directory=import.meta.dir;while(!existsRootV1(joinRootV1(directory,"MODULE.bazel"))&&dirnameRootV1(directory)!==directory)directory=dirnameRootV1(directory);return directory;})();
 declareLibraryBuildTestEnvelopeV1({suite:"build-source-closure",maximumElapsedMilliseconds:300000,scratch:"checkout"});
+issueRepositoryScriptProvidersV1(process.env);
 async function workspace(area:string,name:string):Promise<string>{
  const root=join(area,name),features="cargo-features = "+JSON.stringify(fixture.cargoFeatures)+"\n\n";for(const crate of["subject","base"])await mkdir(join(root,crate,"src"),{recursive:true});
  await writeFile(join(root,"Cargo.toml"),features+"[workspace]\nmembers = [\"subject\", \"base\"]\nresolver = \"2\"\n\n[profile.prototype]\ninherits = \"dev\"\n");

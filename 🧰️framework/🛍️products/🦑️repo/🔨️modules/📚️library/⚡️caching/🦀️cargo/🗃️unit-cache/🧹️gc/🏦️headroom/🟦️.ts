@@ -5,6 +5,7 @@ import {UNIT_CACHE_POLICY_V1} from "../../🔏️key/🟦️.ts";
 import {processAliveV1,sleepV1} from "../../🔒️lock/🟦️.ts";
 import {collectGarbageSingleFlightV1,measureVolumeV1} from "../🟦️.ts";
 import {ensureBallastV1,releaseBallastV1,tryClaimWithBallastV1} from "../🛟️ballast/🟦️.ts";
+import {requestRustImageReclaimV1,type RustImageReclaimRequestV1} from "../♻️auto-reclaim/🟦️.ts";
 import {beginAdmissionWaitV1,enterScriptProcessWaitV1} from "../../../../../../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🐕️watchdog/🟦️.ts";
 import {nativeImageAvailabilityCorrectionMillisecondsV1,nativeImageContainerFreeBytesSyncV1,nativeImageEffectiveAvailableBytesV1} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🍎️image/⚖️availability/🟦️.ts";
 import {nativeFreeSpaceSyncV1,nativeImageBackingFilenameV1,nativeImageRootV1} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts";
@@ -144,10 +145,20 @@ export function createEffectiveMeasureV1(base:typeof measureVolumeV1=measureVolu
   return row.bytes===0?facts:Object.freeze({volumeBytes:facts.volumeBytes,freeBytes:Math.min(facts.volumeBytes,facts.freeBytes+row.bytes)});
  };
 }
-const effectiveMeasureV1=createEffectiveMeasureV1();
+
+/** 🧭️ Wraps a volume measurement so that it never promises more than the host can give: the free bytes of a mounted image are capped by the free bytes of the host volume that holds its backing file, because the sparse image cannot grow past them. This is the honest available space the reclaim thresholds and the admission decide on; an image that is not mounted is measured as it is. */
+export function createHonestMeasureV1(base:typeof measureVolumeV1=createEffectiveMeasureV1(),ports:Readonly<{host?:(directory:string)=>number|undefined}>={}):typeof measureVolumeV1{
+ const host=ports.host??((directory:string)=>nativeFreeSpaceSyncV1(directory)?.availableBytes);
+ return(root,capacityBytes)=>{
+  const facts=base(root,capacityBytes);if(facts.unmeasured)return facts;
+  const image=headroomImageMountV1(root),hostFree=image===undefined?undefined:host(image.directory);
+  return hostFree===undefined||hostFree>=facts.freeBytes?facts:Object.freeze({volumeBytes:facts.volumeBytes,freeBytes:hostFree});
+ };
+}
+const honestMeasureV1=createHonestMeasureV1();
 
 /** 🔌️ What admission touches, replaceable by tests. `reclaim` frees the bytes it is given on demand and answers whether a collection ran. */
-export type HeadroomPortsV1=Readonly<{now?:()=>number;sleep?:SleepV1;measure?:typeof measureVolumeV1;reclaim?:(demandBytes:number)=>Promise<boolean>;pid?:number;id?:string;claim?:typeof tryClaimWithBallastV1;writeRecord?:typeof writeAtomic}>;
+export type HeadroomPortsV1=Readonly<{now?:()=>number;sleep?:SleepV1;measure?:typeof measureVolumeV1;reclaim?:(demandBytes:number)=>Promise<boolean>;pid?:number;id?:string;claim?:typeof tryClaimWithBallastV1;writeRecord?:typeof writeAtomic;softPorts?:Pick<RustImageReclaimRequestV1,"collect"|"claim"|"sleep"|"now"|"lock"|"leases"|"live">}>;
 
 async function withClaim<T>(root:string,body:()=>T,options:Readonly<{sleep:SleepV1;attempts:number;signal?:AbortSignal;claim?:typeof tryClaimWithBallastV1;deferFull?:(error:unknown)=>void}>):Promise<T|undefined>{
  const directory=join(root,layout.locks),path=join(directory,policy.claim+".lock");
@@ -172,13 +183,18 @@ export function headroomPriorV1(classes:readonly string[],temperature:"warm"|"co
  return row?row[temperature]:rules.prior[temperature];
 }
 
-/** 🏦️ Admits one Cargo command to the compiler image. The command reserves what its classes (`classes` general to specific, `temperature` of the lane it runs in) wrote before; while the free space does not cover that on top of what the running commands are still expected to write and the floor, it waits in arrival order (the whole wait, claim polls and cleanups included, is a declared queue wait: the process watchdog never reaps a queued command and its deadline does not run while it waits), frees what it can on demand (idle lanes, incremental sessions and cold units, never anything a running command holds) and reports its wait; a cancellation withdraws it. Once admitted, the lease watches the image every `monitorMilliseconds` and frees on demand the moment the free space falls below the floor, and `release` ends the reservation and learns what the command wrote (under the temperature of the lane it actually ran in, when given). An image that cannot be measured admits at once (nothing to protect). */
-export async function admitImageHeadroomV1(options:Readonly<{root:string;capacityBytes:number;classes:readonly string[];temperature:"warm"|"cold";label:string;language:"en"|"de";report:(line:string)=>void;signal?:AbortSignal}&HeadroomPortsV1>):Promise<HeadroomLeaseV1>{
- const now=options.now??Date.now,sleep=options.sleep??sleepV1,measure=options.measure??effectiveMeasureV1,directory=join(options.root,layout.headroom),start=measure(options.root,options.capacityBytes);
+/** 🏦️ Admits one Cargo command to the compiler image. Given a `softReclaim` rule (the ledger's soft and target available bytes of the Rust image) it first reclaims, single-flight and lock-aware, whenever the honest available space is below the soft threshold, before and while it admits compile work, so a full image never fails a build with ENOSPC. The command reserves what its classes (`classes` general to specific, `temperature` of the lane it runs in) wrote before; while the free space does not cover that on top of what the running commands are still expected to write and the floor, it waits in arrival order (the whole wait, claim polls and cleanups included, is a declared queue wait: the process watchdog never reaps a queued command and its deadline does not run while it waits), frees what it can on demand (idle lanes, incremental sessions and cold units, never anything a running command holds) and reports its wait; a cancellation withdraws it. Once admitted, the lease watches the image every `monitorMilliseconds` and frees on demand the moment the free space falls below the floor, and `release` ends the reservation and learns what the command wrote (under the temperature of the lane it actually ran in, when given). An image that cannot be measured admits at once (nothing to protect). */
+export async function admitImageHeadroomV1(options:Readonly<{root:string;capacityBytes:number;classes:readonly string[];temperature:"warm"|"cold";label:string;language:"en"|"de";report:(line:string)=>void;signal?:AbortSignal;softReclaim?:RustImageReclaimRequestV1["rule"]}&HeadroomPortsV1>):Promise<HeadroomLeaseV1>{
+ const now=options.now??Date.now,sleep=options.sleep??sleepV1,measure=options.measure??honestMeasureV1,directory=join(options.root,layout.headroom),start=measure(options.root,options.capacityBytes);
  const unlimited:HeadroomLeaseV1=Object.freeze({id:"-",reservedBytes:0,waitedMs:0,imageWriteUncontended:()=>false,release:async()=>{}});
  if(start.unmeasured)return unlimited;
  const names=options.classes.map(name=>className(name,options.temperature)),estimate=headroomEstimateV1(readHeadroomHistoryV1(directory),names,headroomPriorV1(options.classes,options.temperature),start.volumeBytes);
  const reclaim=options.reclaim??(async(demandBytes:number)=>!(await collectGarbageSingleFlightV1(options.root,options.capacityBytes,{demandBytes,signal:options.signal,volume:measure})).running);
+ const soft=async():Promise<void>=>{
+  if(!options.softReclaim)return;
+  try{await requestRustImageReclaimV1({root:options.root,capacityBytes:options.capacityBytes,rule:options.softReclaim,language:options.language,report:options.report,signal:options.signal,measure,...options.softPorts});}
+  catch(error){if(options.signal?.aborted)throw error;}
+ };
  const id=options.id??randomBytes(8).toString("hex"),file=join(directory,id+".json"),arrivedMs=now(),pid=options.pid??process.pid;
  const admissionFile=join(directory,policy.latestAdmissionFile),admissionToken=randomBytes(12).toString("hex");let uncontendedAtAdmission=false;
  const imageWriteUncontended=():boolean=>{try{return uncontendedAtAdmission&&readRows(directory,Date.now()).every(row=>row.id===id)&&readFileSync(admissionFile,"utf8")===admissionToken;}catch{return false;}};
@@ -198,6 +214,7 @@ export async function admitImageHeadroomV1(options:Readonly<{root:string;capacit
      beat=setInterval(()=>{try{const date=new Date();utimesSync(file,date,date);}catch{}},policy.heartbeatMilliseconds);beat.unref?.();
     }catch(error){if((error as NodeJS.ErrnoException)?.code!=="ENOSPC")return unlimited;deferFull(error);}
    }
+   await soft();
    const decided=beat===undefined?undefined:await withClaim(options.root,()=>{
     const volume=measure(options.root,options.capacityBytes),at=now(),rows=readRows(directory,Date.now()),decision=decideHeadroomV1({freeBytes:volume.freeBytes,volumeBytes:volume.volumeBytes,nowMs:at,request:{id,reservedBytes:estimate.reservedBytes,arrivedMs},rows,reclaimed});
     if(decision.verdict==="admit"){admittedMs=at;write("running",at);roomy(options.root,()=>writeAtomic(admissionFile,admissionToken));uncontendedAtAdmission=rows.every(row=>row.id===id);}
@@ -229,6 +246,7 @@ export async function admitImageHeadroomV1(options:Readonly<{root:string;capacit
  }catch(error){clearInterval(beat);rmSync(file,{force:true});throw error;}finally{leaveWait();endAdmissionWait();}
  let inFlight=false;
  monitor=setInterval(()=>{
+  void soft().catch(()=>undefined);
   if(inFlight)return;
   try{
    const volume=measure(options.root,options.capacityBytes),floor=headroomFloorBytesV1(volume.volumeBytes);

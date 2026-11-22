@@ -58,7 +58,10 @@ use semio_plugin_window_config::WindowConfigOwner;
 use semio_plugin_window_config::WindowConfigReplaceMutation;
 use semio_plugin_window_kits::WindowKit;
 use semio_plugin_window_transient::window_transient::WindowTransientOwner;
-use semio_plugin_tests_05::plugin_runtime_plugin_builder_contract_support_1::{RENDER_CONTEXT_PROBE, TestApp, app_maintenance_turn, close_member_admission_app, close_member_admission_fixture, contract_app_raw, meta, test_child_dialect};
+use semio_plugin_tests_05::plugin_runtime_plugin_builder_contract_support_1::{RENDER_CONTEXT_PROBE, TestApp, app_maintenance_turn, close_member_admission_app, close_member_admission_fixture, contract_app_raw, meta, test_child_dialect, TestMembers};
+use semio_plugin_ownership::store_lifecycle::{ArtifactOwnedDisposer, bounded_document_store_disposer};
+use semio_os_kernel::{ColdMutation as _, ReferenceSpaceMember as _};
+use semio_framework_artifact_reference::io::text::artifact_reference::ArtifactReferenceText as _;
 use semio_ui_contract::*;
 use semio_framework::*;
 use semio_framework::kernel::*;
@@ -158,19 +161,28 @@ include!("../🔬️plugin-runtime-plugin-builder-contract-part-1-x/🦀️.rs")
         let mut app = VcsArtifactApp::<ComposedParentApp, TestMembers>::new(ComposedParentApp::default(), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()), mounted_policy, &mut identity).await.expect("the reference snapshot births");
         let dialect = test_child_dialect().await;
         let member = TestMembers::create("child-1", &dialect, &TestSnapshot::default().encode_pack(), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.unwrap();
+        let refused = app.register_child("slot", "child-1", dialect.clone(), member, &mut semio_plugin_testing_laws::artifact_app_laws::fixture_identity()).await.expect_err("a member without the exact parent owner is refused");
+        assert!(refused.fault.message.contains("exact admitted identity and ownership"));
+        assert_eq!(app.child_composition.test_child_admission_state(1).generation, 0);
+        let mut member = refused.member.expect("a refused registration returns its member");
+        let owner = store::OwnerRef { parent: ArtifactRef { artifact_id: app.stores.store.envelope().id.clone(), dialect: ComposedParentApp::<true>::DIALECT.into() }, slot: "slot".into(), child_id: "child-1".into() };
+        member.set_owner(Some(owner.clone())).await;
         app.register_child("slot", "child-1", dialect.clone(), member, &mut semio_plugin_testing_laws::artifact_app_laws::fixture_identity()).await.expect("pure fresh member is adopted");
         assert_eq!(app.child_composition.test_child_admission_state(1).generation, 1);
-        let owner = store::OwnerRef { parent: ArtifactRef { artifact_id: app.stores.store.envelope().id.clone(), dialect: ComposedParentApp::<true>::DIALECT.into() }, slot: "slot".into(), child_id: "child-1".into() };
         let member = app.child_store("slot", "child-1").await.unwrap();
         assert_eq!(member.owner_ref(), Some(owner.clone()));
-        let packed = member.envelope_pack_bytes().await.unwrap();
         let mut restored = VcsArtifactApp::<ComposedParentApp, TestMembers>::new(ComposedParentApp::default(), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()), mounted_policy, &mut identity).await.expect("the reference snapshot births");
+        let restored_owner = store::OwnerRef { parent: ArtifactRef { artifact_id: restored.stores.store.envelope().id.clone(), dialect: ComposedParentApp::<true>::DIALECT.into() }, slot: "slot".into(), child_id: "child-1".into() };
+        let mut persisted = TestMembers::create("child-1", &dialect, &TestSnapshot::default().encode_pack(), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.unwrap();
+        persisted.set_owner(Some(restored_owner.clone())).await;
+        let packed = persisted.envelope_pack_bytes().await.unwrap();
+        close_member_admission_fixture(&mut persisted);
         restored.open_child("slot", "child-1", dialect, &packed, &mut semio_plugin_testing_laws::artifact_app_laws::fixture_identity()).await.expect("fresh factory restores exact parent owner");
-        assert_eq!(restored.test_child_admission_state(1).generation, 1);
-        assert_eq!(restored.child_store("slot", "child-1").await.unwrap().owner_ref(), Some(owner.clone()));
-        assert_eq!(restored.composition.graph_mut().await.owner_of("child-1").await, Some(owner.parent.artifact_id.as_str()));
-        assert_eq!(restored.composition.graph_mut().await.slot_of("child-1").await, Some("slot"));
-        assert!(restored.child_content_root.typed_read::<TestSnapshot>("slot", "child-1").is_ok());
+        assert_eq!(restored.child_composition.test_child_admission_state(1).generation, 1);
+        assert_eq!(restored.child_store("slot", "child-1").await.unwrap().owner_ref(), Some(restored_owner.clone()));
+        assert_eq!(restored.child_composition.composition.graph_mut().await.owner_of("child-1").await, Some(restored_owner.parent.artifact_id.as_str()));
+        assert_eq!(restored.child_composition.composition.graph_mut().await.slot_of("child-1").await, Some("slot"));
+        assert!(restored.child_composition.child_content_root.typed_read::<TestSnapshot>("slot", "child-1").is_ok());
         close_member_admission_app(&mut restored,cx);
         close_member_admission_app(&mut app,cx);
 
@@ -179,6 +191,9 @@ include!("../🔬️plugin-runtime-plugin-builder-contract-part-1-x/🦀️.rs")
 
     #[semio_framework_async_macros::async_test]
     async fn reserved_section_surfaces_render_accessor_maps_instead_of_app_bodies() {
+        let mut caller = semio_plugin_testing_laws::OriginalFixtureCaller::admit().expect("original surface fixture caller admission");
+        let mut context = caller.context();
+        let cx = &mut context;
         let mounted_grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
         let mounted_policy = semio_plugin_mounted_owner::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
         let identity_started = std::time::Instant::now();
@@ -197,7 +212,20 @@ include!("../🔬️plugin-runtime-plugin-builder-contract-part-1-x/🦀️.rs")
         for section in UiRefreshSection::ALL {
             let surface = format!("7:{}", section.body_key());
             semio_plugin_runtime_ops::ops_surface_render::plugin_mount_surface(&runtime, 7, surface.clone(), section.body_key().into(), &semio_plugin_plugin_program::encode_wire_serialized(&host_view)).await.unwrap();
-            let (tree, presence) = semio_plugin_runtime_ops::ops_surface_render::plugin_render_surface(&runtime, 7, &surface).await.unwrap();
+            let mut tree = None;
+            let mut presence = None;
+            for _ in 0..semio_plugin_testing_laws::OriginalFixtureCaller::maximum_turns() {
+                cx.settle_receiving_scope().expect("previous render turn settles");
+                presence = semio_plugin_runtime_ops::ops_surface_render::plugin_render_surface(&runtime, 7, &surface, &mut |source, _| { tree = source.take(); Ok(tree.is_some()) }, cx).await.expect("reserved section surface renders");
+                if presence.is_some() || cx.should_yield() { break; }
+            }
+            let presence = presence.expect("the funded reserved section render reaches its ready turn");
+            let tree = tree.expect("the ready render turn hands over its component tree");
+            cx.settle_receiving_scope().expect("render turn settles");
+            let cell = runtime.instances.borrow().get(7).expect("live surface fixture").clone();
+            let mut instance = cell.host_instance().expect("render owner is available");
+            assert!((0..semio_plugin_testing_laws::OriginalFixtureCaller::maximum_turns()).any(|_| instance.app.close_render_work_request(cx).expect("bounded fixture render retirement") == Some(true)), "the fixture render work retires before the next surface");
+            drop(instance);
             assert!(presence.is_empty());
             assert!(RENDER_CONTEXT_PROBE.with(|probe| probe.take()).is_none(), "a reserved section body key must never reach ArtifactApp::render");
             let projected: Value = serde_json::from_str(&artifact_app_laws::project_and_retire_fixture_tree(tree).unwrap()).unwrap();
@@ -219,4 +247,7 @@ include!("../🔬️plugin-runtime-plugin-builder-contract-part-1-x/🦀️.rs")
         assert_eq!(payloads["measures"]["left"][0]["id"], "left-measure");
         assert_eq!(payloads["measures"]["right"][0]["id"], "right-measure");
         assert_eq!(payloads["tools"]["fill"][0]["id"], "fill-measure");
+        let fuel = cx.fuel_remaining();
+        drop(context);
+        caller.retire(fuel).expect("original surface fixture caller paid retirement");
     }

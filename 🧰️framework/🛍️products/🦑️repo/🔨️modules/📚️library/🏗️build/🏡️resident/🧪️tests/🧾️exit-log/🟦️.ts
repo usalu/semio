@@ -3,7 +3,23 @@ import {expect,test} from "bun:test";
 import {mkdtempSync,readFileSync,rmSync,statSync} from "node:fs";
 import {tmpdir} from "node:os";
 import {join} from "node:path";
-import {appendServiceExitRowV1,explainServiceLossV1,readServiceExitRowsV1} from "../../🧾️exit-log/🟨️.mjs";
+import {appendServiceExitRowV1,completeServiceStartRowV1,explainServiceLossV1,readServiceExitRowsV1} from "../../🧾️exit-log/🟨️.mjs";
+
+test("a launchd start is one row that is completed with the pid of its service, and a starting launchd job is not yet lost",()=>{
+ const root=directory(),dead=()=>false;
+ try{
+  appendServiceExitRowV1(root,{event:"start",at:Date.now(),via:"launchd",label:"semio.graph",placed:false});
+  expect(explainServiceLossV1(root,{alive:dead})).toBe("the service is still starting under launchd");
+  expect(explainServiceLossV1(root,{alive:dead,now:Date.now()+3600000})).toBe("the service was killed without an exit record (its cgroup is gone)");
+  expect(completeServiceStartRowV1(root,{pid:4300,tag:"t"})).toBe(true);
+  expect(readServiceExitRowsV1(root)).toHaveLength(1);
+  expect(readServiceExitRowsV1(root)[0]).toMatchObject({event:"start",pid:4300,via:"launchd",tag:"t"});
+  expect(completeServiceStartRowV1(root,{pid:4300})).toBe(false);
+  appendServiceExitRowV1(root,{event:"start",at:Date.now(),pid:4301,cgroup:"/cg",limitMegabytes:4096});
+  expect(completeServiceStartRowV1(root,{pid:4301})).toBe(false);
+  expect(readServiceExitRowsV1(root)).toHaveLength(2);
+ }finally{rmSync(root,{recursive:true,force:true});}
+});
 
 const directory=()=>mkdtempSync(join(tmpdir(),"exit-log-"));
 

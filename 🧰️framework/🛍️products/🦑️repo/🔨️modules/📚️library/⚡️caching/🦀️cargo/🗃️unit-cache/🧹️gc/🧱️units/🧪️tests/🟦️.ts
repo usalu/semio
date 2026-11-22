@@ -4,7 +4,7 @@ import {existsSync,mkdirSync,mkdtempSync,readdirSync,realpathSync,rmSync,utimesS
 import {tmpdir} from "node:os";
 import {join,relative,resolve,sep} from "node:path";
 import {acquireResourceLease} from "../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
-import {collectGarbageSingleFlightV1,reclaimUnitStorageV1} from "../../🟦️.ts";
+import {collectGarbageSingleFlightV1,reclaimUnitStorageV1,unitBudgetBytesV1} from "../../🟦️.ts";
 import fixture from "./🧫️fixtures/🔣️.json";
 import componentSchema from "../🧬️schema/🔣️.json";
 import {UNIT_POLICY_V1 as policy,collectUnitsV1,leaseDirectoryOfStoreV1,measureUnitsV1,planUnitsV1,profileLeasePortV1,profileLeaseResourceV1,unitProfilesV1,unitTextV1,type BuildUnitV1,type ProfileLeasePortV1} from "../🟦️.ts";
@@ -146,11 +146,11 @@ test("units of the native debug lane (u/l/d/b/debug/build/<crate>/<hash>) are re
 });
 
 test("the explicit reclaim retires lane units beyond the unit budget of the given capacity without any free-space need, and keeps them without a capacity",async()=>{
- const root=mkdtempSync(join(realpathSync(tmpdir()),"units-reclaim-")),store=join(root,"m");
+ const {root,store}=privateWorkspace("units-reclaim-");
  try{
   mkdirSync(join(store,"u"),{recursive:true});const lane="u/l/d/b/debug",old=[unit(store,lane,"x","h8",65536,8),unit(store,lane,"x","h7",65536,7)],young=[unit(store,lane,"x","h6",65536,6),unit(store,lane,"x","h5",65536,5)];
   await reclaimUnitStorageV1(store,0,{});for(const path of[...old,...young])expect(existsSync(path)).toBe(true);
-  await reclaimUnitStorageV1(store,0,{capacityBytes:1});for(const path of old)expect(existsSync(path)).toBe(false);for(const path of young)expect(existsSync(path)).toBe(true);
+  await reclaimUnitStorageV1(store,0,{capacityBytes:Math.ceil(2.5*65536*2**20/unitBudgetBytesV1(2**20))});for(const path of old)expect(existsSync(path)).toBe(false);for(const path of young)expect(existsSync(path)).toBe(true);
  }finally{rmSync(root,{recursive:true,force:true});}
 });
 

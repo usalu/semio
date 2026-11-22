@@ -1,7 +1,7 @@
 import {expect,test} from "bun:test";
 import {testPythonV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";
 import {join} from "node:path";
-import {classifySlotsV1,isSlotIdV1,requireSlotShapeV1,slotBudgetTierV1,slotIdV1,slotTextV1,type SlotRowV1} from "../🟦️.ts";
+import {classifySlotsV1,isSlotIdV1,requireSlotShapeV1,slotIdV1,slotTextV1,type SlotRowV1} from "../🟦️.ts";
 
 const python=testPythonV1(),oracle=join(import.meta.dir,"🐍️oracle","🐍️.py");
 const ask=(requests:unknown[])=>{const run=Bun.spawnSync([python!,"-I",oracle],{stdin:new TextEncoder().encode(JSON.stringify(requests)),stdout:"pipe",stderr:"pipe"});expect(run.exitCode,run.stderr.toString()).toBe(0);return JSON.parse(run.stdout.toString()) as unknown[];};
@@ -46,18 +46,23 @@ test("a revert makes the older key current again and the newer one superseded; r
  const young=classifySlotsV1([row("old",290),row("new",300)],{now:310,graceMilliseconds:100});expect(young.get("old")!.state,"stored within the grace is never reclaimed").toBe("retained");
 });
 
-test("budget tiers take retained before unslotted before current and never expired ones",()=>{
- expect(["current","unslotted","retained","expired"].map(state=>slotBudgetTierV1(state as never))).toEqual([2,1,0,-1]);
-});
-
 test("documents are checked against the schema and texts exist in both languages",()=>{
  const slot="b".repeat(64);
  requireSlotShapeV1("Meta",{version:1,slot,storedAt:1,refs:[slot]},"meta");
  requireSlotShapeV1("Claim",{entries:[{kind:"nx",key:"abc",slot}]},"claim");
  requireSlotShapeV1("Retention",{graceSeconds:600},"retention");
  requireSlotShapeV1("AuditReport",{version:1,cache:"x",current:0,grace:0,stray:[],unslotted:0},"audit");
+ const declaration={version:1,kind:"rust-unit",toolchain:slot,sources:[{path:"a/lib.rs",sha256:slot}],externs:[slot]};
+ requireSlotShapeV1("Declaration",declaration,"declaration");requireSlotShapeV1("Meta",{version:1,slot,storedAt:1,refs:[],declaration},"meta");
+ requireSlotShapeV1("Staleness",{mode:"dry-run",recheckSeconds:3,manifestNames:["unit.json"],generatedRoots:[".cache"],examples:8},"staleness");
+ requireSlotShapeV1("StalenessReport",{version:1,mode:"dry-run",sweptAt:1,entries:2,declared:1,live:1,grace:0,stale:{edited:1},unreached:0,retired:0,refused:{},examples:["edited k (a/lib.rs)"]},"report");
+ expect(()=>requireSlotShapeV1("Declaration",{...declaration,kind:"other"},"declaration")).toThrow();
+ expect(()=>requireSlotShapeV1("Declaration",{...declaration,sources:[{path:"a",sha256:"nope"}]},"declaration")).toThrow();
+ expect(()=>requireSlotShapeV1("Staleness",{mode:"sometimes",recheckSeconds:3,manifestNames:[],generatedRoots:[],examples:1},"staleness")).toThrow();
  expect(()=>requireSlotShapeV1("Meta",{version:1,slot:"nope",storedAt:1,refs:[]},"meta")).toThrow();
  expect(()=>requireSlotShapeV1("Claim",{entries:[{kind:"cas",key:"abc",slot}]},"claim")).toThrow();
  expect(slotTextV1("audit.title","en",{cache:"x",current:1,grace:2,stray:3,unslotted:4})).toContain("3 stray");
  expect(slotTextV1("audit.title","de",{cache:"x",current:1,grace:2,stray:3,unslotted:4})).toContain("3 verwaist");
+ expect(slotTextV1("staleness.title","en",{mode:"dry-run",declared:5,live:3,grace:1,stale:2,unreached:1,retired:0})).toContain("2 stale");
+ expect(slotTextV1("staleness.title","de",{mode:"dry-run",declared:5,live:3,grace:1,stale:2,unreached:1,retired:0})).toContain("2 veraltet");
 });

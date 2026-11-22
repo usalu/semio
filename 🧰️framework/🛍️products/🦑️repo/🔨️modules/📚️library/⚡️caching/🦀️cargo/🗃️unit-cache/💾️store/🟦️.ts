@@ -1,17 +1,21 @@
 import {createHash,randomBytes} from "node:crypto";
 import {appendFileSync,chmodSync,constants,copyFileSync,existsSync,lstatSync,mkdirSync,readFileSync,readdirSync,readlinkSync,renameSync,rmSync,statSync,utimesSync,writeFileSync} from "node:fs";
 import {basename,dirname,isAbsolute,join,relative,resolve,sep} from "node:path";
-import {differingComponentsV1,laneNeutralV1,laneRestoreV1,parseDepInfoV1,sha256V1,UNIT_CACHE_POLICY_V1} from "../🔏️key/🟦️.ts";
+import {differingComponentsV1,extraNeutralV1,extraRestoreV1,laneNeutralV1,laneRestoreV1,parseDepInfoV1,sha256V1,UNIT_CACHE_POLICY_V1} from "../🔏️key/🟦️.ts";
+import {compilerWrittenV1} from "../🔏️key/🔗️sources/🟦️.ts";
 import schema from "../🧬️schema/🔣️.json" with {type:"json"};
 import {casObjectPathV1,casRootV1} from "../../../../🏗️build/🗄️cas/🗃️store/🟦️.ts";
 import {hasCasObjectSyncV1,putCasObjectSyncV1,readCasObjectSyncV1,touchCasObjectSyncV1} from "../../../../🏗️build/🗄️cas/🗃️store/🔁️sync/🟦️.ts";
 import {claimUnitV1} from "../🧹️gc/🪢️supersession/🙋️claim/🟦️.ts";
 import {uncoveredOutputsV1} from "../✅️complete/🟦️.ts";
+import {declareV1,workspaceRowsV1} from "../../../../🏗️build/🌐️remote-cache/🏷️retention/🍂️staleness/🟦️.ts";
+import {type DeclarationV1} from "../../../../🏗️build/🪢️slots/🟦️.ts";
+import buildPolicy from "../../../../🏗️build/🔣️policy.json" with {type:"json"};
 
 const policy=UNIT_CACHE_POLICY_V1,layout=policy.layout;
 type Definitions=typeof schema.definitions;
 /** 📦️ One cached compilation: the files it read, the environment it observed, the files it wrote and the compiler's own messages. */
-export type UnitEntryV1={version:1;key:string;slot?:string;crate:string;dependencies:{path:string;sha256:string|null}[];environment:{name:string;value:string|null}[];outputs:{name:string;sha256:string;bytes:number;executable:boolean;template?:boolean}[];stderr:string|null;stdout:string|null;createdMs:number;provenance?:{peakRssBytes:number;userMs:number;sysMs:number;wallMs:number;rmetaOffsetMs:number|null}|null};
+export type UnitEntryV1={version:1;key:string;slot?:string;session?:true;retention?:DeclarationV1;crate:string;dependencies:{path:string;sha256:string|null}[];environment:{name:string;value:string|null}[];outputs:{name:string;sha256:string;bytes:number;executable:boolean;template?:boolean}[];stderr:string|null;stdout:string|null;createdMs:number;provenance?:{peakRssBytes:number;userMs:number;sysMs:number;wallMs:number;rmetaOffsetMs:number|null}|null};
 /** 🧾️ One measured cache decision (`Event` in the schema). */
 export type UnitEventV1={version:1;atMs:number;lane:string;pid:number;kind:Definitions["Event"]["properties"]["kind"]["enum"][number];crate:string;key:string|null;milliseconds:number;waitedMs:number;reason?:string};
 
@@ -63,8 +67,8 @@ function appendBounded(root:string,name:string,line:string):void{
  appendFileSync(file,line+"\n");
 }
 
-/** ♻️ What a collection or a forget removed, by kind (`Eviction` in the schema): lanes, lane incremental sets, incremental sessions, stale build units, entries superseded by a newer key of their slot, entries that lost an object, entries forgotten on request. */
-export type EvictionCountsV1=Partial<Record<"lanes"|"incremental"|"sessions"|"units"|"superseded"|"entries"|"forgotten",number>>;
+/** ♻️ What a collection or a forget removed, by kind (`Eviction` in the schema): lanes, lane incremental sets, incremental sessions, stale build units, entries retired because they are stale against the synchronized tree, entries that lost an object, entries forgotten on request. */
+export type EvictionCountsV1=Partial<Record<"lanes"|"incremental"|"sessions"|"units"|"retired"|"entries"|"forgotten",number>>;
 
 /** ♻️ Appends one eviction record to the bounded eviction log beside the lookup log; all-zero counts are not written. Best effort, never throws.
  * @see ../🧬️schema/🔣️.json */
@@ -166,13 +170,13 @@ function placeV1(destination:string,write:(temporary:string)=>void):void{
 }
 
 /** ♻️ Writes a cached compilation into `outDir` as the compiler would have: output files by reflink where the filesystem supports it (a copy elsewhere, never a shared inode) stamped with the restore time as a compile writes them (a reflink or Windows copy keeps the cache object's last-use time, which Cargo reads as an output older than a dependency's and re-runs the unit on every later build; see https://doc.rust-lang.org/nightly/nightly-rustc/cargo/core/compiler/fingerprint/index.html), the dependency file rewritten for this lane, and the compiler's messages returned for replay. */
-export function restoreUnitV1(root:string,entry:UnitEntryV1,context:Readonly<{outDir:string;laneRoot:string|undefined;stampDirectory:string|undefined}>):{stdout:string;stderr:string}{
- const render=(text:string)=>laneRestoreV1(text.split(policy.key.outputToken).join(context.outDir),context.laneRoot);
+export function restoreUnitV1(root:string,entry:UnitEntryV1,context:Readonly<{outDir:string;laneRoot:string|undefined;stampDirectory:string|undefined;extra?:string}>):{stdout:string;stderr:string}{
+ const extra=context.extra??"",render=(text:string)=>extraRestoreV1(laneRestoreV1(text.split(policy.key.outputToken).join(context.outDir),context.laneRoot),extra);
  ensure(context.outDir);
  const staged:Array<{row:UnitEntryV1["outputs"][number];destination:string;temporary:string}>=[];
  try{
   for(const row of entry.outputs){
-   const destination=join(context.outDir,row.name),temporary=destination+"."+randomBytes(4).toString("hex")+".tmp",source=objectPath(row.sha256);
+   const destination=join(context.outDir,extraRestoreV1(row.name,extra)),temporary=destination+"."+randomBytes(4).toString("hex")+".tmp",source=objectPath(row.sha256);
    staged.push({row,destination,temporary});
    if(row.template)writeFileSync(temporary,render(readFileSync(source,"utf8")));
    else{copyFileSync(source,temporary,constants.COPYFILE_FICLONE);chmodSync(temporary,row.executable?0o755:0o644);}
@@ -193,22 +197,23 @@ function stampFile(path:string,sha:string,stampDirectory:string):void{
 }
 
 /** 📥️ Publishes one successful compilation. Objects are content-addressed and the entry is renamed into place last, so a reader sees all of it or none of it. Returns the digests, `undefined` when the dependency file is missing, an `expected` output is absent (an entry that cannot serve its dependants is never stored) or the outputs exceed the bound. */
-export function publishUnitV1(root:string,input:Readonly<{key:string;crate:string;cwd:string;outDir:string;laneRoot:string|undefined;outputs:readonly string[];stdout:string;stderr:string;stampDirectory:string|undefined;provenance?:UnitEntryV1["provenance"];slot?:string;spill?:boolean;expected?:readonly string[]}>):UnitEntryV1|undefined{
+export function publishUnitV1(root:string,input:Readonly<{key:string;crate:string;cwd:string;outDir:string;laneRoot:string|undefined;outputs:readonly string[];stdout:string;stderr:string;stampDirectory:string|undefined;provenance?:UnitEntryV1["provenance"];slot?:string;retention?:Readonly<{workspace:string|undefined;externs:readonly string[];toolchain:string}>;spill?:boolean;session?:boolean;expected?:readonly string[];extra?:string}>):UnitEntryV1|undefined{
  const putObject=input.spill===true?putSpillObjectV1:putObjectCas;
  if(input.expected&&uncoveredOutputsV1(input.outputs.map(path=>basename(path)),input.expected).length>0)return undefined;
  const depInfoPath=input.outputs.find(path=>path.endsWith(".d"));if(!depInfoPath||!existsSync(depInfoPath))return undefined;
  const info=parseDepInfoV1(readFileSync(depInfoPath,"utf8"));
  if(info.dependencies.length>policy.key.maximumDependencyFiles)return undefined;
- const neutral=(text:string)=>laneNeutralV1(text.split(input.outDir).join(policy.key.outputToken),input.laneRoot);
+ const extra=input.extra??"",neutral=(text:string)=>extraNeutralV1(laneNeutralV1(text.split(input.outDir).join(policy.key.outputToken),input.laneRoot),extra);
  let total=0;const outputs:UnitEntryV1["outputs"]=[];
  for(const path of input.outputs){
   const stat=statSync(path);total+=stat.size;if(total>policy.key.maximumOutputBytes)return undefined;
   const template=path===depInfoPath,bytes=template?Buffer.from(neutral(readFileSync(path,"utf8"))):readFileSync(path),sha=putObject(root,bytes);
-  outputs.push({name:basename(path),sha256:sha,bytes:bytes.length,executable:(stat.mode&0o111)!==0&&!template,...(template?{template:true}:{})});
+  outputs.push({name:extraNeutralV1(basename(path),extra),sha256:sha,bytes:bytes.length,executable:(stat.mode&0o111)!==0&&!template,...(template?{template:true}:{})});
   if(!template&&input.stampDirectory&&input.spill!==true)stampFile(path,sha,input.stampDirectory);
  }
- const dependencies=info.dependencies.map(path=>({path:laneNeutralV1(path,input.laneRoot),sha256:digestFileV1(resolveStored(input.cwd,path),input.stampDirectory)}));
- const entry:UnitEntryV1={version:1,key:input.key,...(input.slot===undefined?{}:{slot:input.slot}),crate:input.crate,dependencies,environment:info.environment.map(row=>({name:row.name,value:row.value===null?null:laneNeutralV1(row.value,input.laneRoot)})),outputs,stderr:input.stderr?putObject(root,neutral(input.stderr)):null,stdout:input.stdout?putObject(root,neutral(input.stdout)):null,createdMs:Date.now(),provenance:input.provenance??null};
+ const dependencies=info.dependencies.filter(path=>!compilerWrittenV1(path)).map(path=>({path:laneNeutralV1(path,input.laneRoot),sha256:digestFileV1(resolveStored(input.cwd,path),input.stampDirectory)}));
+ const retention=input.retention===undefined?undefined:declareV1({kind:"rust-unit",toolchain:input.retention.toolchain,sources:workspaceRowsV1({dependencies,cwd:input.cwd,workspace:input.retention.workspace,generatedRoots:buildPolicy.remoteCache.server.staleness.generatedRoots}),externs:input.retention.externs});
+ const entry:UnitEntryV1={version:1,key:input.key,...(input.slot===undefined?{}:{slot:input.slot}),...(input.session===true?{session:true as const}:{}),...(retention===undefined?{}:{retention}),crate:input.crate,dependencies,environment:info.environment.map(row=>({name:row.name,value:row.value===null?null:laneNeutralV1(row.value,input.laneRoot)})),outputs,stderr:input.stderr?putObject(root,neutral(input.stderr)):null,stdout:input.stdout?putObject(root,neutral(input.stdout)):null,createdMs:Date.now(),provenance:input.provenance??null};
  writeEntryV1(root,entry);
  return entry;
 }
@@ -348,10 +353,23 @@ export function publishBuildRunV1(root:string,input:Readonly<{key:string;package
  const neutral=(text:string)=>buildRunNeutralV1(text,input.outDir,input.laneRoot);
  if(input.laneRoot&&[input.stdout,input.stderr].some(stream=>foreignLanePathV1(neutral(stream),input.laneRoot!)))return undefined;
  const entry:BuildEntryV1={version:1,key:input.key,package:input.package,facts:known.facts,environment:known.environment,outputs,stdout:input.stdout?putObject(root,neutral(input.stdout)):null,stderr:input.stderr?putObject(root,neutral(input.stderr)):null,createdMs:Date.now()};
- const directory=ensure(runDirectory(root,input.key)),temporary=join(ensure(join(root,layout.temporary)),randomBytes(8).toString("hex")),name=String(entry.createdMs).padStart(15,"0")+"-"+randomBytes(3).toString("hex")+".json";
+ writeBuildRunV1(root,entry);
+ return entry;
+}
+
+/** 📝️ Writes one build script run as the newest variant of its key (written aside and renamed into place, the oldest variants beyond the bound dropped); shared by a run that publishes and by a run installed from the fleet cache. */
+export function writeBuildRunV1(root:string,entry:BuildEntryV1):void{
+ const directory=ensure(runDirectory(root,entry.key)),temporary=join(ensure(join(root,layout.temporary)),randomBytes(8).toString("hex")),name=String(entry.createdMs).padStart(15,"0")+"-"+randomBytes(3).toString("hex")+".json";
  writeFileSync(temporary,JSON.stringify(entry));renameSync(temporary,join(directory,name));
  try{const names=readdirSync(directory).filter(file=>file.endsWith(".json")).sort();for(const old of names.slice(0,Math.max(0,names.length-policy.key.maximumVariants)))rmSync(join(directory,old),{force:true});}catch{}
- return entry;
+}
+
+/** 📖️ The newest recorded run of `key` as written, without checking anything; `undefined` when there is none. */
+export function newestBuildRunV1(root:string,key:string):BuildEntryV1|undefined{
+ const directory=runDirectory(root,key);let names:string[];
+ try{names=readdirSync(directory).filter(name=>name.endsWith(".json")).sort().reverse();}catch{return undefined;}
+ for(const name of names){try{const entry=JSON.parse(readFileSync(join(directory,name),"utf8")) as BuildEntryV1;if(entry.version===1&&entry.key===key)return entry;}catch{}}
+ return undefined;
 }
 
 /** 🧭️ The text of a build script run without the paths of the lane that ran it: the script's own OUT_DIR (which its `cargo:rustc-link-search` and generated sources name) becomes the output token, then the lane root becomes the lane token, so a replay in any lane names that lane's own OUT_DIR and never the directory of a lane that a collector may remove. Neutralizing the lane root alone is not enough: it is only the lane when the caller names the lane, and a build driver names its run directory. */

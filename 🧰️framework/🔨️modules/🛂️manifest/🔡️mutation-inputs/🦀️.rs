@@ -13,7 +13,7 @@ use std::error::Error;
 use std::fmt;
 use std::fmt::Display;
 use std::fmt::Formatter;
-use std::sync::OnceLock;
+use std::sync::{Mutex, OnceLock};
 use semio_framework_manifest_arg_schema::{ActionArgDef, ActionArgOption, ArgFormat, ArgPresentation, ArgSchema, NumberScale, OptionSource, ReferenceIdType, SnapSource};
 
 // #region 🛂️Manifest
@@ -129,17 +129,37 @@ pub fn mutation_input_audit(schema_json: &str, resolver: &dyn InputSchemaResolve
 /// (artifact facets and named scope exports) and every document a published mutation leaf references
 /// (`semio_framework_schema_registry::registered_referenced_schema_documents`), and the framework's own shared documents
 /// ([`FRAMEWORK_INPUT_SCHEMA_DOCUMENTS`], held without any registration): the document whose `$id` is `id`, or `None`
-/// when nobody published it.
+/// when nobody published it. Each registered text is parsed once into a process-wide index keyed by its own `$id`, so a lookup is a map read:
+/// the roster derives the inputs of every owner mutation through it, and a registry-wide scan and parse per `$ref` grew with mutations times documents.
 pub fn registered_input_schema_document(id: &str) -> Option<DslValue> {
+    #[derive(Default)]
+    struct Index {
+        parsed: std::collections::HashSet<(usize, usize)>,
+        documents: std::collections::HashMap<String, DslValue>,
+    }
+    static INDEX: OnceLock<Mutex<Index>> = OnceLock::new();
+    let mut index = INDEX.get_or_init(Default::default).lock().expect("input schema index lock");
+    if let Some(document) = index.documents.get(id) {
+        return Some(document.clone());
+    }
     let mut texts: Vec<&'static str> = semio_framework_schema_registry::with_schema_export_registry(|registry| {
         registry.entries().filter(|entry| entry.format == semio_framework_schema_registry::SchemaFormat::JsonSchema).filter_map(|entry| registry.resolve(entry.scope, entry.export, entry.format).ok()).filter(|text| text.contains(id)).collect()
     });
     texts.extend(semio_framework_schema_registry::registered_referenced_schema_documents().into_iter().filter(|text| text.contains(id)));
     texts.extend(FRAMEWORK_INPUT_SCHEMA_DOCUMENTS.into_iter().filter(|text| text.contains(id)));
-    texts.into_iter().find_map(|text| {
-        let document = semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::parse(text, semio_framework_pack_json::JsonMemberPolicy::Reject).ok()?);
-        (document.get("$id").and_then(DslValue::as_str) == Some(id)).then_some(document)
-    })
+    for text in texts {
+        if !index.parsed.insert((text.as_ptr() as usize, text.len())) {
+            continue;
+        }
+        let Some(document) = semio_framework_pack_json::parse(text, semio_framework_pack_json::JsonMemberPolicy::Reject).ok().map(|parsed| semio_framework_pack_json::to_dsl_value(&parsed)) else { continue };
+        let Some(own) = document.get("$id").and_then(DslValue::as_str).map(str::to_string) else { continue };
+        let found = own == id;
+        index.documents.entry(own).or_insert(document);
+        if found {
+            return index.documents.get(id).cloned();
+        }
+    }
+    None
 }
 
 /// 🧾️ The instance a leaf payload schema validates for a candidate `payload` (a `Mutation::payload_value`): the payload

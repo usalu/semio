@@ -11,3 +11,9 @@ pub mod flex;
 
 #[path = "../📊️table-model/🦀️.rs"]
 pub mod table;
+
+#[path = "../📅️date-picker-model/🦀️.rs"]
+pub mod date_picker;
+
+#[path = "../🎨️colour-picker-model/🦀️.rs"]
+pub mod colour_picker;

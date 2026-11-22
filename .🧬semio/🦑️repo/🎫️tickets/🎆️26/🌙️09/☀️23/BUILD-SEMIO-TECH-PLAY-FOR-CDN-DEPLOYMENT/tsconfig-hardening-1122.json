@@ -1,0 +1,2 @@
+{"compilerOptions":{"target":"ES2022","module":"ESNext","moduleResolution":"bundler","strict":true,"noEmit":true,"skipLibCheck":true,"allowImportingTsExtensions":true,"resolveJsonModule":true,"types":["bun","node"],"lib":["ES2024","DOM"],"typeRoots":["/Users/ueli/Documents/semio/node_modules/@types"]},
+"include":["/Users/ueli/Documents/semio/🏢️semio-tech/🎡️play/🧪️tests/🎭️acceptance/🟦️.ts","/Users/ueli/Documents/semio/🏢️semio-tech/🎡️play/🧪️tests/🎭️acceptance/🖼️visible-content/🟦️.ts","/Users/ueli/Documents/semio/🏢️semio-tech/🎡️play/🧪️tests/🧪️playvisiblecontent/🟦️.ts"]}

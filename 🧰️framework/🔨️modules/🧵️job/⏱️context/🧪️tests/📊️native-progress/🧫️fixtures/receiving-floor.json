@@ -1,0 +1,10 @@
+{
+  "turnCopyBytes": 65536,
+  "refusalTurns": 4,
+  "settlingTurns": 1,
+  "cases": [
+    {"id": "floor below the half share", "floorCopyBytes": 8192, "expect": "share"},
+    {"id": "floor between the half share and the whole turn", "floorCopyBytes": 49152, "expect": "floor"},
+    {"id": "floor above the whole turn", "floorCopyBytes": 65537, "expect": "refused"}
+  ]
+}

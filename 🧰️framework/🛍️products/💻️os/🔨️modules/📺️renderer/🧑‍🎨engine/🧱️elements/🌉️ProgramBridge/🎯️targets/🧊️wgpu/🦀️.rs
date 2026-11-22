@@ -42,6 +42,14 @@ use wasm_program_exchange_child::native_save;
 #[cfg(not(target_arch = "wasm32"))]
 pub use native_save::{NativeMediaDeclaration, NativeSaveOutcome};
 #[cfg(not(target_arch = "wasm32"))]
+use wasm_program_exchange_child::native_handle_doors;
+#[cfg(not(target_arch = "wasm32"))]
+pub use native_handle_doors::{
+    collect_media_export,
+    ProgramDocumentPack, ProgramMediaExportChunk, ProgramMediaExportStatus, ProgramMediaOut, ProgramMergeOutcome,
+    ProgramTransactionCommitted, ProgramTransactionPrepared, ProgramTransactionRequest,
+};
+#[cfg(not(target_arch = "wasm32"))]
 #[path = "🎞️original-media/🦀️.rs"]
 mod native_original_media;
 #[cfg(not(target_arch = "wasm32"))]
@@ -72,11 +80,27 @@ use js_calls_and_operation_publications::{
 pub use js_calls_and_operation_publications::OperationPublication;
 pub use js_calls_and_operation_publications::operation_publications_from_json;
 
+#[path = "🧩️extension-splice/🦀️.rs"]
+mod extension_splice;
+pub use extension_splice::{extension_hosts, register_extension_program, register_extension_program_extending, set_extension_program_enabled, shift_record_ids, splice_extension_documents, splice_extension_records, unregister_extension_program, EXTENSION_SPLICE_DEPTH};
+
+#[path = "🔀️extension-invoke/🦀️.rs"]
+mod extension_invoke;
+pub use extension_invoke::{extension_fault, route_extension_invoke, settle_extension_answer, ExtensionAnswer, ExtensionRoute, ExtensionTarget, EXTENSION_ANSWER_CEILING_BYTES, EXTENSION_REQUEST_CEILING_BYTES};
+
+#[cfg(not(target_arch = "wasm32"))]
+#[path = "🧰️native-extension-store/🦀️.rs"]
+mod native_extension_store;
+#[cfg(not(target_arch = "wasm32"))]
+pub use native_extension_store::{
+    install_native_extension, native_extension_install_package, native_extension_install_root, native_extension_records, native_extension_store_answer, retire_native_extension, NativeExtensionRecord,
+};
+
 #[path = "🧰️document-render-plugin-install-and-native-loading/🦀️.rs"]
 mod document_render_plugin_install_and_native_loading;
 #[cfg(target_arch="wasm32")]
 use document_render_plugin_install_and_native_loading::{
-    get_fn, invocation_pack_base64, render_with_document_js, view_state_pack_base64,
+    get_fn, invocation_pack_base64, render_browser_document, render_with_document_js, view_state_pack_base64,
 };
 pub use document_render_plugin_install_and_native_loading::{
     filter_plugins, resolve_artifact_kind_activation_owner, retained_publication_refusal,

@@ -117,10 +117,15 @@ impl<'ctx> SessionCtx<'ctx> {
                 let installing = self.plugins.plugin_install.as_ref().filter(|install| matches!(install.phase, semio_renderer_wgpu_shell_plugins::ShellPluginInstallPhase::Resolving | semio_renderer_wgpu_shell_plugins::ShellPluginInstallPhase::Loading)).map(|install| install.plugin_id.clone());
                 self.opening.sync_runtime_actors();
                 self.opening.sync_runtime_install_tasks(installing.as_deref(), chrome_now_ms() as u64);
+                self.opening.sync_runtime_export_tasks(self.prefs.locale_id == "de");
                 self.opening.build_task_manager_ui(&self.prefs)
             }
             semio_renderer_wgpu_shell_doc_open::ROUTE_NOT_FOUND_PANEL_ID => match self.opening.route_not_found.clone() {
                 Some(path) => self.opening.build_route_not_found_ui(&path, &self.prefs),
+                None => return Ok(None),
+            },
+            semio_renderer_wgpu_shell_doc_open::PLUGIN_RECOVERY_PANEL_ID => match self.opening.plugin_recovery.clone() {
+                Some((plugin_id, quarantined)) => self.opening.build_plugin_recovery_ui(&plugin_id, quarantined, &self.prefs),
                 None => return Ok(None),
             },
             FRAMEWORK_CHAT_PANEL_ID => self.directory.build_agent_chat_ui(&self.chrome, &self.prefs),

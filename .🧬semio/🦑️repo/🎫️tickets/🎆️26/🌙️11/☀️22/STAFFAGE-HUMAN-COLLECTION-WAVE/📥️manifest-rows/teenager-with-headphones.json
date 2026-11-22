@@ -1,0 +1,52 @@
+{
+  "id": "teenager-with-headphones",
+  "category": "humans",
+  "title": {
+    "en": "Teenager with Headphones",
+    "de": "Jugendliche Person mit Kopfhörern"
+  },
+  "heightM": 1.641,
+  "widthM": 0.505,
+  "powerW": 118.7,
+  "poses": [
+    "slouched-texting",
+    "glancing-up",
+    "listening-phone-down"
+  ],
+  "clips": [
+    "nod-to-the-beat",
+    "idle-scrolling",
+    "glance-up"
+  ],
+  "representations": {
+    "50": "authored",
+    "100": "authored",
+    "200": "authored",
+    "500": "authored"
+  },
+  "symbols": [],
+  "analytics": [
+    "thermal",
+    "transport",
+    "structural"
+  ],
+  "exports": [
+    "svg",
+    "pdf",
+    "dxf",
+    "dwg",
+    "png-sequence",
+    "mp4",
+    "webm",
+    "component",
+    "glb",
+    "fbx",
+    "model",
+    "model-zip"
+  ],
+  "distinction": {
+    "en": "A fifteen-year-old with the long limbs of the growth spurt, slouched with rounded shoulders over a phone, wearing wireless over-ear headphones on the head that move with every nod; the only figure listening to music, nodding to the beat, with the nameplates of phone and headphones in its total power.",
+    "de": "Eine fünfzehnjährige Person mit den langen Gliedern des Wachstumsschubs, mit runden Schultern über ein Telefon gebeugt, mit kabellosen Over-Ear-Kopfhörern auf dem Kopf, die jedes Nicken mitmachen; die einzige Figur, die Musik hört und im Takt nickt, mit den Nennleistungen von Telefon und Kopfhörern in ihrer Gesamtleistung."
+  },
+  "completion": "authored"
+}

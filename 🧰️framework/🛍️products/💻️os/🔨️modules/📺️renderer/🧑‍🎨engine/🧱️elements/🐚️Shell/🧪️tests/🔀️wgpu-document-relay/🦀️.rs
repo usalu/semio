@@ -154,7 +154,7 @@ fn a_remote_backbone_uri_names_host_space_and_document() {
 /// "action window instance framework.hub has no declared kind").
 #[test]
 fn the_hub_workspace_overlay_is_never_the_active_plugin_window() {
-    let shell = host_test_shell();
+    let mut shell = host_test_shell();
     assert!(SessionCtx::of(&mut shell).retained_surface_is_panel(semio_renderer_wgpu_hub_workspace::hub_connection::FRAMEWORK_HUB_PANEL_ID));
     let plugin_window = shell.docs.session.as_ref().expect("host test shell has a session").app.window_kinds.first().id.clone();
     assert!(!SessionCtx::of(&mut shell).retained_surface_is_panel(&plugin_window), "a plugin window stays a window");

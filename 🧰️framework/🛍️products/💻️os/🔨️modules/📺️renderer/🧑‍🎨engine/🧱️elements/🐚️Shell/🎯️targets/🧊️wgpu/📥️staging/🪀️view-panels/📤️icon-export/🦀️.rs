@@ -10,11 +10,15 @@ use semio_framework::kernel::IconRenderExportItem;
 
 impl<'ctx> PanelsViewCtx<'ctx> {
     pub fn render_icon_export_step(&mut self, cursor: &mut super::ShellChromeChildCursor, overlay: &mut semio_ui_draw_contract::DrawList, atlas: &mut semio_ui_text::FontAtlas, input: &mut semio_ui_wgpu_input::InputState<semio_ui_declaration::layout::ActionDescriptor>, theme: &semio_ui_theme::Theme, width: f32) -> bool {
-        let Some(batch) = self.opening.icon_export.as_ref() else { return true };
         let is_de = self.prefs.locale_id == "de";
-        let action_label = shell_chrome_string(if batch.running() { "icon.export.cancel" } else { "common.close" }, is_de);
-        let message = batch.message(is_de);
-        let severity = if batch.phase == Phase::Failed { semio_framework::Severity::Error } else { semio_framework::Severity::Info };
+        let (action_label, message, severity) = match self.opening.icon_export.as_ref() {
+            Some(batch) => (shell_chrome_string(if batch.running() { "icon.export.cancel" } else { "common.close" }, is_de).to_string(), batch.message(is_de), if batch.phase == Phase::Failed { semio_framework::Severity::Error } else { semio_framework::Severity::Info }),
+            None => match self.opening.video_render_message(is_de) {
+                Some(message) => (self.opening.video_render_cancel_label(is_de), message, semio_framework::Severity::Info),
+                None => return true,
+            },
+        };
+        let action_label = action_label.as_str();
         let (border, fill, text) = super::transient_notice_tone(severity, theme);
         let mut band = super::document_opening_rect(&message, action_label, width, theme);
         band.y += band.h + super::PLUGIN_INSTALL_TOP_GAP;
@@ -47,7 +51,7 @@ impl<'ctx> PanelsViewCtx<'ctx> {
                 input.register_hit(semio_ui_wgpu_input::HitTarget { rect: action, event: None, control_id: Some(CONTROL_ID.into()), kind: semio_ui_wgpu_input::HitKind::Button, drag_axis: None, drag_data: None });
             }
             8 => {
-                if self.chrome.chrome_build.clicked_this_frame && action.contains(input.pointer_x, input.pointer_y) { self.opening.cancel_icon_export(); }
+                if self.chrome.chrome_build.clicked_this_frame && action.contains(input.pointer_x, input.pointer_y) { self.opening.cancel_icon_export(); self.opening.cancel_video_render(); }
             }
             _ => return true,
         }

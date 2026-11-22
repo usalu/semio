@@ -20,7 +20,7 @@ test("a Windows worker is asked for its volume's free bytes, the nearest existin
 });
 
 test("slots follow the measured bytes, and an unknown volume is not a volume with no room",()=>{
- const disk={reserveGigabytes:4,perActionGigabytes:2};
+ const disk={reserveGigabytes:4,hostReserveGigabytes:0,perActionGigabytes:2};
  expect(remoteExecutionDiskSlotsV1({freeBytes:undefined,concurrency:4,disk}).freeBytes).toBeUndefined();
  expect(remoteExecutionDiskSlotsV1({freeBytes:20*GiB,concurrency:4,disk}).slots).toBeGreaterThan(0);
 });

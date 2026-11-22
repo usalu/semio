@@ -1,0 +1,39 @@
+{
+ "id": "flow-view",
+ "oracle": "hand-derived tracer schedules of two uniform streams and a hand-derived parcel path with its trail; d3-scale (square-root width scale, piecewise-linear position along a path, linear trail fade), d3-interpolate (neutral colour band), d3-quadtree (nearest-neighbour spacing of the generalised marks)",
+ "scene": { "scenario": "human", "pose": "rest", "timeS": 8, "environment": "calm-cold", "domain": {"min": {"x": -2, "y": 0, "z": -2}, "max": {"x": 3, "y": 4.5, "z": 2}} },
+ "scales": [50, 100, 200, 500],
+ "detail": { "spacingMmOnPaper": 2.2, "minStreakMmOnPaper": 0.9 },
+ "legends": [
+  { "quantity": "flow-excess-temperature", "unit": "K" },
+  { "quantity": "flow-speed", "unit": "m/s" },
+  { "quantity": "flow-vapour-excess", "unit": "g/kg" },
+  { "quantity": "flow-condensate", "unit": "g/kg" },
+  { "quantity": "flow-path-age", "unit": "s" }
+ ],
+ "streams": [
+  {
+   "id": "fast", "comment": "3 m straight up at 0.5 m/s: 6 s of travel, a tracer every 1.5 s, so 4 tracers 0.75 m apart; a streak covers 0.4 s, 0.2 m",
+   "lengthM": 3, "speedMS": 0.5, "points": 61, "denominator": 50,
+   "expected": { "travelS": 6, "releaseEveryS": 1.5, "tracers": 4, "headSpacingM": 0.75, "streakM": 0.2, "fadeInS": 0.6, "fadeOutS": 1.2 }
+  },
+  {
+   "id": "slow", "comment": "1 m at 0.02 m/s: 50 s of travel; at 1:50 the shortest streak is 0.045 m, tracers stay 4 streaks apart, so one every 50*4*0.045/1 = 9 s, 6 tracers (the sixth release falls beyond the end five sixths of the time), 0.18 m apart; a streak is the 0.045 m minimum, not 0.4 s * 0.02 m/s = 0.008 m",
+   "lengthM": 1, "speedMS": 0.02, "points": 51, "denominator": 50,
+   "expected": { "travelS": 50, "releaseEveryS": 9, "tracers": 6, "headSpacingM": 0.18, "streakM": 0.045, "fadeInS": 5, "fadeOutS": 10 }
+  }
+ ],
+ "tolerances": { "lengthM": 1e-09, "widthMm": 1e-12 },
+ "pathlines": {
+  "comment": "one parcel path at 20 Hz, x = 0.4 a, y = 1.5 + 0.2 a^2 (a: age in s), now 1.02 s old; trail 0.33 s: tail at age 0.69 s = 4/5 between the samples of 0.65 s and 0.70 s, fade = 1 - ago / 0.33, four opacity steps of 0.9 / 4 by the mean fade of a segment; trail 2 s is longer than the path, so the whole path stays and its first point has the fade 1 - 1.02 / 2",
+  "path": { "ageS": [0.0, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5, 0.55, 0.6, 0.65, 0.7, 0.75, 0.8, 0.85, 0.9, 0.95, 1.0, 1.02], "points": [[0.0, 1.5, 0.0], [0.02, 1.5005, 0.0], [0.04, 1.502, 0.0], [0.06, 1.5045, 0.0], [0.08, 1.508, 0.0], [0.1, 1.5125, 0.0], [0.12, 1.518, 0.0], [0.14, 1.5245, 0.0], [0.16, 1.532, 0.0], [0.18, 1.5405, 0.0], [0.2, 1.55, 0.0], [0.22, 1.5605, 0.0], [0.24, 1.572, 0.0], [0.26, 1.5845, 0.0], [0.28, 1.598, 0.0], [0.3, 1.6125, 0.0], [0.32, 1.628, 0.0], [0.34, 1.6445, 0.0], [0.36, 1.662, 0.0], [0.38, 1.6805, 0.0], [0.4, 1.7, 0.0], [0.408, 1.70808, 0.0]], "excessK": 3 },
+  "bands": 4,
+  "opacity": 0.9,
+  "trail": { "trailS": 0.33, "tailFraction": 0.8, "tail": [0.276, 1.5953, 0.0], "points": 9, "agoS": [0.33, 0.32, 0.27, 0.22, 0.17, 0.12, 0.07, 0.02, 0.0], "fade": [0.0, 0.030303030303, 0.181818181818, 0.333333333333, 0.484848484848, 0.636363636364, 0.787878787879, 0.939393939394, 1.0], "runs": [{"start": 0, "points": 3, "band": 0, "opacity": 0.225}, {"start": 2, "points": 3, "band": 1, "opacity": 0.45}, {"start": 4, "points": 3, "band": 2, "opacity": 0.675}, {"start": 6, "points": 3, "band": 3, "opacity": 0.9}] },
+  "long": { "trailS": 2.0, "points": 22, "firstFade": 0.49 },
+  "whole": { "points": 22, "agoS0": 1.02, "runs": [{"start": 0, "points": 22, "band": 3, "opacity": 0.9}] },
+  "occlusion": { "comment": "a solid ball of 5 cm radius 0.3 m towards the eye of the side elevation from the place the parcel had at the age 0.25 s, (0.1, 1.5125, 0): the samples of 0.20, 0.25 and 0.30 s lie within 2 cm of its axis and are hidden, those of 0, 0.05 and from 0.5 s on lie more than 8 cm beside it and are seen; from above the ball is beside the path", "centre": [0.1, 1.5125, 0], "towardEyeM": 0.3, "radiusM": 0.05, "behind": [4, 5, 6], "open": [0, 1, 10, 15, 21] },
+  "strokeMm": 0.6,
+  "widthMm": { "default": 0.12, "stroked": 0.24 }
+ }
+}

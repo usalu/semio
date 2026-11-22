@@ -1,6 +1,7 @@
 /** 🎭️ Cast exporter: renders the named, figure-only casts of a cast manifest into one folder per cast (`<out>/<cast-id>/🔣️.json` and `NNNN.svg`).
- * `repo tools exec bun -- 🟦️.ts --manifest file --ids a,b --out dir --lod full|preview|poster --output-fps 30 [--catalog dir]`. The level of detail (frames sampled at canonical times, shape roles, transport density; see 🧊️lod) is explicit and part of every index and provenance; the whole run sees one level. Casts are language-independent: they print no text, so no language is asked for or part of any cache key.
+ * `repo tools exec bun -- 🟦️.ts --manifest file --ids a,b --out dir --lod full|preview|poster --output-fps 30 [--catalog dir]`. The level of detail (frames sampled at canonical times, shape roles, the spacing of the flow marks; see 🧊️lod) is explicit and part of every index and provenance; the whole run sees one level. Casts are language-independent: they print no text, so no language is asked for or part of any cache key.
  *
+ * A thermal cast draws its air with the layers of the flow view (`flow`: streams, tracers, moisture, fog, pathlines; see `../../🎨️depiction/🌊️flow-view`): `flowDevelopS` seconds of history lie before every frame (developed once before the first frame in cooperative slices, so a cancellation is seen between them; the later frames continue the same solve), `flowTrailS`, `flowStrokeMm` and `flowSpacingMm` are the trail of the paths, the weight of the lines and the generalisation of the marks; the level of detail widens the spacing by its `flowSpacingFactor`.
  * A cast of the `axonometric` viewpoint draws the 3D volume through the default isometric camera. Each frame is `evaluate` → `depict` (every annotation, legend and title off, transparent paper) → `writeSvg`. All frames of a cast share one
  * viewBox and one world-origin alignment (the union of the frame extents, frames translated into it), so playing them back never jumps; `mirror`
  * flips the figure about the vertical axis of the world origin. Thermal clips and poses under an environment timeline solve through `solveThermalAt`,
@@ -21,10 +22,10 @@ import { sectionOf } from "../../🎨️depiction/✂️section/🟦️.ts";
 import { type Asset, type AuthoredRepresentation, type Environment, type EnvironmentPreset, SCALE_DENOMINATORS } from "../../../🧬️schema/🟦️.ts";
 import { DEFAULT_CATALOG_ROOT, type LoadedAsset, loadCatalogFromFiles, loadEnvironments } from "../../🗂️catalog/📥️files/🟦️.ts";
 import { evaluate, poseOf } from "../../🧮️evaluation/🟦️.ts";
-import { depict, dimensionExtent, figureOf, loadAxonometric, textlessDepictionOptions } from "../../🎨️depiction/🟦️.ts";
+import { depict, developFlow, dimensionExtent, figureOf, loadAxonometric, textlessDepictionOptions } from "../../🎨️depiction/🟦️.ts";
 import { prepare, sourceOf } from "../../🎨️depiction/🧩️shapes/🟦️.ts";
 import { solveThermalAt, thermalSession } from "../../🌡️thermal/🟦️.ts";
-import { solveTransport } from "../../💨️transport/🟦️.ts";
+import { FLOW_SPACING_MM } from "../../💨️transport/🟦️.ts";
 import { solveStructure } from "../../🏗️structure/🟦️.ts";
 import { type StructuralSummary, structureIndex, structuralSummary } from "../../🏗️structure/🧾️summary/🟦️.ts";
 import { type EnvironmentInput, isTimeline } from "../../🌡️thermal/🟦️.ts";
@@ -62,10 +63,7 @@ export function thinned(schedule: FrameSchedule): FrameSchedule {
 }
 
 function queriesOf(cast: Cast, asset: Asset, schedule: FrameSchedule): Frames["queries"] {
-  if (cast.clip !== undefined) {
-    const warm = cast.transportAgeS ?? 0;
-    return schedule.times.map((timeS) => ({ kind: "clip", clip: cast.clip!, timeS: warm + timeS }));
-  }
+  if (cast.clip !== undefined) return schedule.times.map((timeS) => ({ kind: "clip", clip: cast.clip!, timeS }));
   const pose = poseOf(asset, cast.pose!).id;
   return schedule.times.map((timeS) => ({ kind: "pose", pose, timeS }));
 }
@@ -190,8 +188,9 @@ async function render(id: string, cast: Cast, asset: Asset, revision: Revision, 
   const { canonical, schedule, queries } = framesOf(cast, asset, lod);
   const environment = environmentOf(cast, presets);
   const selector = { kind: "scale", scale: { denominator: cast.scale } } as const;
-  const base = { ...textlessDepictionOptions(cast.view, cast.scale, cast.viewpoint, cast.theme), patterns: lod.level.patterns, roles: lod.level.roles, transportDensity: lod.level.transportDensity, ...(cast.thermalSpanK === undefined ? {} : { range: { mode: "span", spanK: cast.thermalSpanK } as const }), transparent: true, marginMm: MARGIN_MM, annotations: { dimensions: false, scaleBar: false, legend: false, labels: false, ground: false } as const };
-  const options = { ...base, transport: cast.transport ?? [], ...(cast.transportStrokeMm === undefined ? {} : { transportStrokeMm: cast.transportStrokeMm }), ...(cast.transportTrailS === undefined ? {} : { transportTrailS: cast.transportTrailS }),...(environment === undefined ? {} : isTimeline(environment) ? { environmentTimeline: environment } : { environment }) };
+  const base = { ...textlessDepictionOptions(cast.view, cast.scale, cast.viewpoint, cast.theme), patterns: lod.level.patterns, roles: lod.level.roles, ...(cast.thermalSpanK === undefined ? {} : { range: { mode: "span", spanK: cast.thermalSpanK } as const }), transparent: true, marginMm: MARGIN_MM, annotations: { dimensions: false, scaleBar: false, legend: false, labels: false, ground: false } as const };
+  const air = cast.flow === undefined ? {} : { flow: cast.flow, flowDevelopS: cast.flowDevelopS!, flowDetail: { spacingMm: (cast.flowSpacingMm ?? FLOW_SPACING_MM) * lod.level.flowSpacingFactor, ...(cast.flowTrailS === undefined ? {} : { trailS: cast.flowTrailS }), ...(cast.flowStrokeMm === undefined ? {} : { strokeMm: cast.flowStrokeMm }) } };
+  const options = { ...base, ...air, ...(environment === undefined ? {} : isTimeline(environment) ? { environmentTimeline: environment } : { environment }) };
   const drawn: Drawn[] = [];
   const session = thermalSession();
   const summaries: StructuralSummary[] = [];
@@ -210,10 +209,10 @@ async function render(id: string, cast: Cast, asset: Asset, revision: Revision, 
     const state = evaluate(asset, query, selector);
     if (shared) logical.add(state);
     const thermal = cast.view === "thermal" ? solveThermalAt(asset, query, environment, { ...(control.signal ? { signal: control.signal } : {}), session }) : undefined;
-    const transport = options.transport.length > 0 && cast.transportAgeS !== undefined ? solveTransport(state.asset, state.query, options.environmentTimeline ?? options.environment!, { maxAgeS: cast.transportAgeS, ...(schedule.loop ? { periodS: schedule.durationS } : {}) }) : undefined;
+    if (cast.flow !== undefined && drawn.length === 0) await developFlow(state, options, control.signal ? { signal: control.signal } : {});
     const structure = cast.view === "forces" || cast.view === "moments" ? solveStructure(state) : undefined;
     if (structure) summaries.push(structuralSummary(structure, cast.mirror === true));
-    const scene = depict(state, options, { ...(thermal ? { thermal } : {}), ...(transport ? { transport } : {}), ...(structure ? { structure } : {}) }, control);
+    const scene = depict(state, options, { ...(thermal ? { thermal } : {}), ...(structure ? { structure } : {}) }, control);
     mmPerMetre ||= scene.metadata.mmPerMetre;
     drawn.push({ originX: scene.metadata.origin.xMm, originY: scene.metadata.origin.yMm, width: scene.widthMm, height: scene.heightMm, svg: Buffer.from(writeSvg(scene, { compact: true }), "utf8") });
     report();

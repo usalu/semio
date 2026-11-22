@@ -1,0 +1,4 @@
+const memo=JSON.parse(await Bun.file(process.argv[2]).text());const want=process.argv[3];
+const {statSync,readFileSync}=await import("node:fs");const {createHash}=await import("node:crypto");
+for(const row of memo.observations)if(row.path.endsWith(want)&&(row.kind==="file"||row.kind==="analysis")){let now:any;try{const s=statSync(row.path);now={size:s.size,mtimeMs:s.mtimeMs,ctimeMs:s.ctimeMs,ino:s.ino,sha256:createHash("sha256").update(readFileSync(row.path)).digest("hex")};}catch(e){now=String(e);}console.log(JSON.stringify({kind:row.kind,fact:row.kind==="file"?row.fact:row.fact.source,now}));}
+const users=memo.owners.filter((o:any)=>o.rows.some((at:number)=>memo.observations[at].path.endsWith(want))).map((o:any)=>o.suffix.split("\0")[0]);console.log(users.length,users.slice(0,50).join(" "));

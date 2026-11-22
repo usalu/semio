@@ -12,7 +12,7 @@ import { evaluateDrawing } from "../../../../🔨️modules/🧮️evaluation/�
 import { solveStructure } from "../../../../🔨️modules/🏗️structure/🟦️.ts";
 import { solveThermal } from "../../../../🔨️modules/🌡️thermal/🟦️.ts";
 import { writeSvg } from "../../../../🔨️modules/📤️export/🖼️svg/🟦️.ts";
-import type { Asset, DepictionOptions, DisplayRange, DrawingScene, DrawingScale, Environment, EvaluatedState, EvaluationQuery, ForceQuantity, Language, PrintProfile, RepresentationSelector, StructuralResult, ThermalField, ThermalQuantity, View, Viewpoint } from "@teaching/staffage";
+import type { Asset, DepictionOptions, DisplayRange, DrawingScene, DrawingScale, Environment, EvaluatedState, EvaluationQuery, FlowConditions, FlowLayer, FlowMarkDetail, ForceQuantity, Language, PrintProfile, RepresentationSelector, StructuralResult, ThermalField, ThermalQuantity, TransportField, View, Viewpoint } from "@teaching/staffage";
 
 /** 🖥️ The profile of an on-screen figure: the archive is read on a display, so pen and gap floors of a printer do not hide the drawing. A file exported from the site names this profile and does not claim a printer check. */
 const SCREEN_PROFILE: PrintProfile = {
@@ -45,7 +45,16 @@ export type DepictionRequest = {
   readonly patterns?: boolean;
   readonly diagrams?: Partial<DepictionOptions["diagrams"]>;
   readonly environment?: Environment;
+  /** 🌊️ The air flow layers a drawing of the thermal view carries (files and prints; the on-screen figure animates them in its own overlay instead). */
+  readonly flow?: readonly FlowLayer[];
+  /** 🌪️ The conditions of the air that flow is solved in (turbulence, wind profile, parcel life, seed), the same the screen solves with; the life of a parcel is also how long the drawn flow has developed. */
+  readonly flowConditions?: FlowConditions;
+  /** 🔎️ The generalisation and timing of the drawn flow marks, the same the screen draws with. */
+  readonly flowDetail?: FlowMarkDetail;
 };
+
+/** ⏳️ Seconds of history the air flow of a drawn file has: the same as the flow on screen. */
+export const DRAWN_FLOW_DEVELOP_S = 14;
 
 const CAPACITY = 512;
 const states = new WeakMap<Asset, Map<string, EvaluatedState>>();
@@ -124,6 +133,7 @@ export function depictionOptions(request: DepictionRequest): DepictionOptions {
     range: request.range ?? base.range,
     patterns: request.patterns ?? base.patterns,
     ...(request.environment === undefined ? {} : { environment: request.environment }),
+    ...(request.flow === undefined || request.flow.length === 0 || request.view !== "thermal" ? {} : { flow: request.flow, flowDevelopS: request.flowConditions?.maxAgeS ?? DRAWN_FLOW_DEVELOP_S, ...(request.flowConditions === undefined ? {} : { flowConditions: request.flowConditions }), ...(request.flowDetail === undefined ? {} : { flowDetail: request.flowDetail }) }),
   };
 }
 
@@ -137,6 +147,12 @@ export function sceneOf(state: EvaluatedState, options: DepictionOptions): Drawi
     const structure = options.view === "forces" || options.view === "moments" ? structureOf(drawn) : undefined;
     return depict(drawn, options, { ...(thermal === undefined ? {} : { thermal }), ...(structure === undefined ? {} : { structure }) });
   });
+}
+
+/** 🌬️ Depicts a state with the air of another instant: the figure and its thermal field stay those of `state`, the flow layers are drawn from `transport`. This is how a still pose plays its air flow frame by frame; nothing is memoised, every frame is drawn once. */
+export function sceneWithAir(state: EvaluatedState, options: DepictionOptions, transport: TransportField): DrawingScene {
+  const drawn = represented(state, options);
+  return depict(drawn, options, { ...(options.view === "thermal" ? { thermal: thermalOf(drawn, options.environment) } : {}), transport });
 }
 
 /** 🧾️ One instant as a frame: scene now, analyses on first read. */

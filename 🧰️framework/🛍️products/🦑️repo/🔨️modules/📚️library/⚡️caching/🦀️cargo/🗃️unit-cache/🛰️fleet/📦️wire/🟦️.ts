@@ -1,5 +1,6 @@
 import {createHash} from "node:crypto";
 import {FLEET_POLICY_V1,type PlatformV1} from "../🪪️identity/🟦️.ts";
+import {requireSlotShapeV1,type DeclarationV1} from "../../../../../🏗️build/🪢️slots/🟦️.ts";
 
 const fleet=FLEET_POLICY_V1,HEX=/^[a-f0-9]{64}$/u,EMPTY=createHash("sha256").digest("hex"),encoder=new TextEncoder(),decoder=new TextDecoder("utf-8",{fatal:true});
 
@@ -88,7 +89,7 @@ export function readUnitSlotV1(bytes:Uint8Array):string|undefined{
 }
 
 /** 📜️ One unit as it travels: the portable form of a local cache entry. */
-export type RemoteUnitV1={version:1;key:string;localKey:string;slot:string;crate:string;platform:PlatformV1;createdMs:number;costMs:number;dependencies:{path:string;sha256:string|null}[];environment:{name:string;value:string|null}[];outputs:{name:string;sha256:string;bytes:number;executable:boolean;template?:boolean}[];stdout:string|null;stderr:string|null};
+export type RemoteUnitV1={version:1;key:string;localKey:string;slot:string;crate:string;platform:PlatformV1;createdMs:number;costMs:number;dependencies:{path:string;sha256:string|null}[];environment:{name:string;value:string|null}[];outputs:{name:string;sha256:string;bytes:number;executable:boolean;template?:boolean}[];stdout:string|null;stderr:string|null;retention?:DeclarationV1};
 
 const isDigest=(value:unknown):value is string=>typeof value==="string"&&HEX.test(value);
 const isInteger=(value:unknown):value is number=>typeof value==="number"&&Number.isSafeInteger(value)&&value>=0;
@@ -108,6 +109,7 @@ export function parseRemoteUnitV1(bytes:Uint8Array,expected:Readonly<{key:string
   names.add(row.name);
  }
  if(!(value.stdout===null||isDigest(value.stdout))||!(value.stderr===null||isDigest(value.stderr)))throw Error("stream invalid");
+ if(value.retention!==undefined){try{requireSlotShapeV1("Declaration",value.retention,"retention");}catch{throw Error("retention invalid");}}
  return value as unknown as RemoteUnitV1;
 }
 

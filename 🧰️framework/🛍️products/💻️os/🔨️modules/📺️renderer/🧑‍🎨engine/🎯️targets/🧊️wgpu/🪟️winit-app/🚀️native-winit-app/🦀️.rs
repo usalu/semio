@@ -16,7 +16,6 @@ pub(super) mod native {
     use winit::event_loop::{ActiveEventLoop, EventLoopProxy};
     use winit::window::{Window, WindowAttributes, WindowId};
 
-    //#region 🚀️WinitApp
 
     /// 📨️ Same two-phase boot handshake `SemioApp`'s own `HostUserEvent` used — kept, not deleted, per
     /// this file's own module docstring on why `ui_host::NativeHost`'s single-phase construction cannot
@@ -109,7 +108,6 @@ pub(super) mod native {
         }
     }
 
-    //#region 🎛️WinitEventNormalization
 
     fn pointer_info_for_mouse(app: &mut WinitApp, device: winit::event::DeviceId) -> PointerInfo {
         #[cfg(not(target_arch = "wasm32"))]
@@ -237,7 +235,6 @@ pub(super) mod native {
     /// hands every pointer position in PHYSICAL pixels; the renderer hit-tests, lays out and paints
     /// in LOGICAL ones, so this is the native half of the ingress conversion the browser transport
     /// performs on its own side. Ticket 26/09/17/WGPU-RENDERER-REACT-PARITY packet W1g.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn pointer_scale_factor(app: &WinitApp) -> f32 {
         app.window.as_ref().map_or(1.0, |window| {
             let scale = window.scale_factor() as f32;
@@ -252,7 +249,6 @@ pub(super) mod native {
     /// 🔀️ Raw `winit::event::WindowEvent` → `ui_render::DispatchEvent`, ported from
     /// `ui_host::window::native::NativeHost::normalize` (private, see this file's own struct docstring).
     /// Pointer and touch positions arrive PHYSICAL and leave LOGICAL — see [`pointer_scale_factor`].
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn normalize(app: &mut WinitApp, event: &WindowEvent) -> Option<DispatchEvent> {
         use winit::event::{ElementState, TouchPhase};
         let scale = pointer_scale_factor(app);
@@ -301,21 +297,18 @@ pub(super) mod native {
         }
     }
 
-    //#endregion 🎛️WinitEventNormalization
 
     /// 🌓️ Publishes the OS light/dark preference winit reports into [`crate::set_host_appearance`],
     /// leaving that value's persisted-preference term untouched. `None` — a platform that reports no
     /// preference, and every wasm realm, where winit has no OS theme to read — changes NOTHING, so a
     /// value the page thread already forwarded survives window creation instead of being reset to
     /// light by it.
-    // 🚫️async: U1 — called from winit's own sync `ApplicationHandler` callbacks.
     fn publish_system_appearance(theme: Option<winit::window::Theme>) {
         let Some(theme) = theme else { return };
         semio_renderer_wgpu_host_base::set_host_appearance(semio_renderer_wgpu_host_base::HostAppearance { system_dark: matches!(theme, winit::window::Theme::Dark), ..semio_renderer_wgpu_host_base::host_appearance() });
     }
 
     /// 🎛️ Reads the accessibility preferences of the operating system (high contrast, more contrast, dark scheme, reduced motion) into [`semio_renderer_wgpu_host_base::publish_host_platform_prefs`]; `true` when one changed. The browser twin is the page thread forwarding its media queries, so a wasm realm reads nothing here.
-    // 🚫️async: U1 — called from winit's own sync `ApplicationHandler` callbacks.
     #[cfg(not(target_arch = "wasm32"))]
     fn publish_platform_prefs() -> bool {
         let read = semio_renderer_wgpu_native_platform::platform_prefs::detect();
@@ -473,8 +466,23 @@ pub(super) mod native {
                     if requested {
                         self.close_pending=true;
                         event_loop.set_control_flow(winit::event_loop::ControlFlow::wait_duration(std::time::Duration::from_millis(1)));
+                    } else if let Some(host) = self.host.as_mut() {
+                        let now = host.now_seconds();
+                        if invalidate_scheduler_redraw(&mut host.scheduler, &mut self.pending_reason, now, InvalidationReason::STRUCTURE).is_some() {
+                            window.request_redraw();
+                        }
                     }
                     return;
+                }
+                WindowEvent::DroppedFile(path) => {
+                    let _=self.frame_caller.observe_event();
+                    semio_renderer_wgpu_shell_window_actions::note_host_file_drop(path.clone());
+                    if let Some(host) = self.host.as_mut() {
+                        let now = host.now_seconds();
+                        if invalidate_scheduler_redraw(&mut host.scheduler, &mut self.pending_reason, now, InvalidationReason::STRUCTURE).is_some() {
+                            window.request_redraw();
+                        }
+                    }
                 }
                 WindowEvent::Resized(size) => {
                     let _=self.frame_caller.observe_event();
@@ -553,6 +561,7 @@ pub(super) mod native {
                 event_loop.set_control_flow(winit::event_loop::ControlFlow::wait_duration(std::time::Duration::from_millis(1)));
                 return;
             }
+            if semio_renderer_wgpu_shell_window_actions::take_host_close_approval(){self.close_pending=true;}
             if self.close_pending&&self.host.is_some(){
                 let returned=self.frame_caller.dispatch_cleanup_step(|cx|OsHost::try_into_retirement(&mut self.host,cx));
                 if let Ok(original)=returned{
@@ -622,5 +631,4 @@ pub(super) mod native {
         }
     }
 
-    //#endregion 🚀️WinitApp
 }

@@ -1,0 +1,21 @@
+const BUILD="/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build",root="/Users/ueli/Documents/semio";
+if(process.env.RESUME_PERF_EXIT_MS)setTimeout(()=>{console.log(JSON.stringify({exit:"[DEBUG] time cap"}));process.exit(0);},Number(process.env.RESUME_PERF_EXIT_MS)).unref?.();
+const observation=await import(BUILD+"/👁️observation/🟨️.mjs");
+const producer=await import(BUILD+"/🕸️graph/📥️inference/🟨️.mjs");
+const {readBuildOwnerRegistryV1}=await import(BUILD+"/🕸️graph/🚪️admission/🟦️.ts");
+const memo=JSON.parse(await Bun.file(process.argv[2]).text());
+const pick=process.argv.slice(3);
+await producer.libraryBootstrap;
+const registry=readBuildOwnerRegistryV1(JSON.parse(producer.readBuildOwnerRegistrySourceV1(root,"current")));
+const selection=memo.admission.selection;
+const nativeCache=new Map(),nativeClosures=new Map();
+const phases:Record<string,number>={};
+const run=async()=>{for(const entry of memo.owners.filter((o:any)=>pick.length===0||pick.includes(o.suffix.split("\0")[0])).slice(0,Number(process.env.RESUME_PERF_LIMIT??"1000"))){
+  const [name,rest]=entry.suffix.split("\0"),[targets,inputs]=JSON.parse(rest),owner=registry.owners.find((o:any)=>o.name===name);
+  let phase="start",at=performance.now();const s=performance.now();
+  const onOwnerDiscoveryPhase=(p:string)=>{const now=performance.now();phases[phase]=(phases[phase]??0)+now-at;phase=p;at=now;};
+  const captured=await observation.captureObservedSourceInputsV1(()=>producer.discoverBuildOwnerAdmissionFactsV1(owner,targets,registry,{workspaceRoot:root,selection,nativeCache,nativeClosures,onOwnerDiscoveryPhase},inputs),undefined,false);
+  onOwnerDiscoveryPhase("end");
+  process.stdout.write(JSON.stringify({owner:name,targets:targets.length,inputs:inputs.length,ms:Math.round(performance.now()-s),rows:captured.observations.length,memoRows:entry.rows.length})+"\n");
+}};
+const s=performance.now();await observation.captureObservedSourceInputsV1(()=>observation.settleObservedComputationV1(async()=>{await run();return 1;},{}),undefined,false);console.log(JSON.stringify({totalMs:Math.round(performance.now()-s),phases:Object.fromEntries(Object.entries(phases).map(([k,v])=>[k,Math.round(v)]))}));

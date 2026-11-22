@@ -234,6 +234,27 @@ async fn two_presses_are_two_transactions() {
     assert_eq!(exaggeration(&app), 4.0);
     close(&mut app);
 }
+
+/// ⚖️ LAW: time travel edits the press's committed value, never the slider: the absolute leaf superseded with another
+/// value replays deterministically — the later press, itself absolute, still wins at the head, and withdrawing nothing
+/// else the overwrite leaves exactly the head a fresh run of the edited presses reaches.
+#[semio_framework_async_macros::async_test]
+async fn a_committed_press_edited_in_history_replays_deterministically() {
+    let mut app = app().await;
+    release(&mut app, "terrain.exaggeration:5", 3.0).await;
+    let edited = edit_rows(&mut app).await.last().and_then(|row| row.mutations.first().map(|mutation| mutation.mutation_id.clone())).expect("the press's mutation");
+    assert_eq!(exaggeration(&app), 3.0, "the press committed before History opens");
+    app.renew_turn();
+    semio_plugin::app::history_edit_acceptance::assert_mounted_history_overwrite(
+        &mut *app.0, &edited, "/newExaggeration", number(2.0), app.1.cx(),
+    ).await;
+    assert_eq!(exaggeration(&app), 2.0, "the overwrite folds the edited value");
+    let mut fresh = crate::editor::gis3d::unit_tests::context::app().await;
+    release(&mut fresh, "terrain.exaggeration:6", 2.0).await;
+    assert_eq!(app.snapshot().expect("edited head"), fresh.snapshot().expect("fresh head"), "the edited log equals a fresh run of the edited press");
+    close(&mut app);
+    close(&mut fresh);
+}
 //#endregion 🎚️Scrub
 
 #[semio_framework_async_macros::async_test]

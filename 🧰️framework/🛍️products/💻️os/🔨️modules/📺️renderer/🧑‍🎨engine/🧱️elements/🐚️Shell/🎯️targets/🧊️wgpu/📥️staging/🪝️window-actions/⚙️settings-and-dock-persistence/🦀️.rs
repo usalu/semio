@@ -169,18 +169,18 @@ impl<'ctx> WindowActionsCtx<'ctx> {
                     self.open_service_port(&owner,&service_id,&action,payload);
                 }
                 semio_framework::kernel::Effect::InvokeExtension { req, extension_id, capability, request_json, .. } => {
-                    #[cfg(target_arch = "wasm32")]
                     self.plugins.pending_extension_invocations.push(PendingExtensionInvocation { req: req.0, extension_id, capability, request_json });
-                    #[cfg(not(target_arch = "wasm32"))]
-                    {
-                        let _ = (req, extension_id, capability, request_json);
-                    }
                 }
                 semio_framework::kernel::Effect::DownloadMediaExport { filename, mime_type, data, encoding } => {
                     download_media_export(&filename, &mime_type, &data, encoding.as_deref());
                 }
                 semio_framework::kernel::Effect::IconRenderExport { items } => {
                     self.opening.enqueue_icon_export(items);
+                }
+                semio_framework::kernel::Effect::VideoRenderExport { filename, program } => {
+                    let owner = self.docs.session.as_ref().map_or_else(|| controller_id.to_string(), |session| session.plugin_id.clone());
+                    let capabilities = semio_renderer_wgpu_host_base::plugin_catalog::plugin_catalog_v1().plugins.iter().find(|row| row.plugin_id == owner).map(|row| row.capabilities.clone()).unwrap_or_default();
+                    self.opening.enqueue_video_render(filename, &owner, &capabilities, program, &mut self.chrome, self.prefs.locale_id == "de");
                 }
                 semio_framework::kernel::Effect::RequestFileOpen { accept, read_as, import_action, args, multiple, max_file_bytes, .. } => {
                     #[cfg(target_arch = "wasm32")]

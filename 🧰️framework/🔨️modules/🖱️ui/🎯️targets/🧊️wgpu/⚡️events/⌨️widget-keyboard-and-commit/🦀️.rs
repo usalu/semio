@@ -84,7 +84,6 @@ impl EventRouter {
         self.focus.focused.is_some_and(|id| self.toggle_disclosure(tree, id))
     }
 
-    //#region 🔖️WidgetKeyboard
     /// 🔘️ Picks the segment of the segmented select `id` under pointer `x` — a click on the chosen segment changes nothing, as a radio cannot press off.
     pub(super) fn segmented_select_click(&mut self, tree: &mut UiTree, id: NodeId, x: f32, out: &mut Vec<UiCommand>) {
         let (Some(bounds), Some(UiNode::Select(select))) = (absolute_rect(tree, id), tree.node(id).map(|node| &node.spec.0)) else { return };
@@ -170,6 +169,113 @@ impl EventRouter {
         }
     }
 
+    /// 🗓️ The release of a press over a popup picker's own parts: a date or colour field toggles its popup (an opening date popup centres on the field's day), the previous and next buttons step the shown month without closing, a colour swatch commits its colour and closes. `false` for every other node, which the generic activation then handles.
+    pub(super) fn picker_release(&mut self, tree: &mut UiTree, id: NodeId, out: &mut Vec<UiCommand>) -> bool {
+        use semio_ui_wgpu_layout::date_picker::{is_picker_kind, CivilDate};
+        let Some(node) = tree.node(id) else { return false };
+        match &node.spec.0 {
+            UiNode::Input(input) if is_picker_kind(&input.input_kind) => {
+                if input.presence.state == UiState::Disabled {
+                    return true;
+                }
+                out.extend(self.toggle_select_popup(tree, id));
+                true
+            }
+            UiNode::Input(input) if input.input_kind == "colorSwatch" => {
+                let (change, parent) = (input.on_change.clone(), node.parent);
+                if let Some(fired) = fired_action(&change, Trigger::Change, DslValue::String(input.value.clone())) {
+                    self.push_app_command(tree, id, fired, out);
+                }
+                if let Some(parent) = parent {
+                    out.extend(self.close_overlay(tree, parent));
+                }
+                true
+            }
+            UiNode::Button(button) => {
+                let step = match button.id.as_deref() {
+                    Some("picker.1") => -1,
+                    Some("picker.2") => 1,
+                    _ => return false,
+                };
+                let Some(parent) = node.parent else { return false };
+                let Some(parent_node) = tree.node(parent) else { return false };
+                let UiNode::Input(input) = &parent_node.spec.0 else { return false };
+                if input.input_kind != "date" {
+                    return false;
+                }
+                let moved: Option<CivilDate> = semio_ui_wgpu_layout::date_picker::focus_date(&input.value, parent_node.state.picker_day).and_then(|shown| shown.plus_months(step));
+                if let (Some(moved), Some(parent_node)) = (moved, tree.node_mut(parent)) {
+                    parent_node.state.picker_day = Some(moved.epoch_day());
+                }
+                tree.mark_dirty(parent, NodeFlags::DIRTY_PAINT);
+                true
+            }
+            _ => false,
+        }
+    }
+
+    /// ⌨️ The keys of a focused `date` or `color` field, as the browser's own pickers answer them. Closed: Enter, Space and ArrowDown open the popup. A date popup: arrows one day or week, Page one month (Shift: one year), Home and End the week's ends move the focused day (the shown month follows), Enter and Space pick it and close. A colour popup: arrows walk the swatches, Home and End jump, Enter and Space pick the highlighted one. Escape stays with the generic overlay close; `Tab` closes and moves on.
+    pub(super) fn route_picker_key(&mut self, tree: &mut UiTree, key: &str, modifiers: EventModifiers, out: &mut Vec<UiCommand>) -> bool {
+        use semio_ui_wgpu_layout::colour_picker::{colour_value, swatch_key, COLOUR_SWATCHES};
+        use semio_ui_wgpu_layout::date_picker::{date_key, focus_date, is_picker_kind, DateKey};
+        let Some(id) = self.focus.focused else { return false };
+        let Some(node) = tree.node(id) else { return false };
+        let UiNode::Input(input) = &node.spec.0 else { return false };
+        if !is_picker_kind(&input.input_kind) || input.presence.state == UiState::Disabled || modifiers.ctrl || modifiers.meta {
+            return false;
+        }
+        let key = if key == "NumpadEnter" { "Enter" } else { key };
+        let (open, kind, change, value, day, monday, highlighted) = (node.state.open, input.input_kind.clone(), input.on_change.clone(), input.value.clone(), node.state.picker_day, node.state.picker_week_monday, node.state.highlighted);
+        if !open {
+            if matches!(key, "Enter" | " " | "ArrowDown") {
+                out.extend(self.toggle_select_popup(tree, id));
+                return true;
+            }
+            return false;
+        }
+        if key == "Tab" {
+            out.extend(self.close_overlay(tree, id));
+            return false;
+        }
+        let pick = |router: &mut Self, tree: &mut UiTree, picked: String, out: &mut Vec<UiCommand>| {
+            if let Some(fired) = fired_action(&change, Trigger::Change, DslValue::String(picked)) {
+                router.push_app_command(tree, id, fired, out);
+            }
+            out.extend(router.close_overlay(tree, id));
+        };
+        if kind == "date" {
+            match focus_date(&value, day).and_then(|focus| date_key(key, modifiers.shift, focus, monday)) {
+                Some(DateKey::Focus(moved)) => {
+                    if let Some(node) = tree.node_mut(id) {
+                        node.state.picker_day = Some(moved.epoch_day());
+                    }
+                    tree.mark_dirty(id, NodeFlags::DIRTY_PAINT);
+                    true
+                }
+                Some(DateKey::Select(picked)) => {
+                    pick(self, tree, picked.iso(), out);
+                    true
+                }
+                Some(DateKey::Close) | None => false,
+            }
+        } else {
+            let current = highlighted.or_else(|| colour_value(&value).and_then(|hex| COLOUR_SWATCHES.iter().position(|swatch| *swatch == hex))).unwrap_or(0);
+            if matches!(key, "Enter" | " ") {
+                if let Some(hex) = highlighted.and_then(|slot| COLOUR_SWATCHES.get(slot)) {
+                    pick(self, tree, (*hex).to_string(), out);
+                    return true;
+                }
+                return false;
+            }
+            let Some(next) = swatch_key(key, current) else { return false };
+            if let Some(node) = tree.node_mut(id) {
+                node.state.highlighted = Some(next);
+            }
+            tree.mark_dirty(id, NodeFlags::DIRTY_PAINT);
+            true
+        }
+    }
+
     /// 🔤️ Appends `char` to the live typeahead query, restarting it when the previous keystroke is
     /// older than `select::SELECT_TYPEAHEAD_RESET_SECONDS`.
     pub(super) fn extend_select_typeahead(&mut self, char: char) -> String {
@@ -241,7 +347,6 @@ impl EventRouter {
         let continuous = fired.trigger == Trigger::Change && (local_slider.is_some() || local_stepper.is_some());
         Some((id, if continuous { pressed(tree, &self.window_id, id, fired, true) } else { fired }))
     }
-    //#endregion 🔖️WidgetKeyboard
 
     /// 👆️ The `UiCommand::App` a press/drag at `(x, y)` over `id` commits, for the pointer-valued
     /// control kinds — see `pointer_commit_action`. The rect it measures the gesture against is the

@@ -24,8 +24,10 @@ test("a live read in the reading phase is exempt from the stall stop and bounded
  expect(readyReadingLiveV1({phase:"reading",record:undefined,alive})).toBe(false);
  expect(readyStalledV1(P.stallStopMilliseconds,P,true)).toBe(false);
  expect(readyStalledV1(P.stallStopMilliseconds,P,false)).toBe(true);
- expect(readyDeadlineV1({stage:"workspace",elapsedMs:3600000*7,softMs:3600000,sinceProgressMs:0,policy:P})).toBe("extended");
- expect(readyDeadlineV1({stage:"workspace",elapsedMs:3600000*9,softMs:3600000,sinceProgressMs:0,policy:P})).toBe("timeout");
+ expect(readyDeadlineV1({stage:"workspace",elapsedMs:3600000*9,softMs:3600000,sinceProgressMs:0,policy:P})).toBe("extended");
+ expect(readyDeadlineV1({stage:"workspace",elapsedMs:3600000*(P.progressCeilingMultiplier-1),softMs:3600000,sinceProgressMs:0,policy:P})).toBe("extended");
+ expect(readyDeadlineV1({stage:"workspace",elapsedMs:3600000*(P.progressCeilingMultiplier+1),softMs:3600000,sinceProgressMs:0,policy:P})).toBe("timeout");
+ expect(readyDeadlineV1({stage:"workspace",elapsedMs:3600000*9,softMs:3600000,sinceProgressMs:P.stallMilliseconds+1,policy:P})).toBe("timeout");
 });
 
 test("the restart budget counts only stalls without progress",()=>{

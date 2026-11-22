@@ -9,6 +9,9 @@ use semio_framework_value::{retained_clone::{RetainedCloneClose, RetainedCloneGr
 use semio_plugin::{ArtifactOutputChunks, MediaConstruction};
 use semio_plugin::__job::InteractiveJobCloseStep;
 
+/// 🔁️ Turn ceiling sized for a 9.44 MB stream written in 4 KiB paid pages.
+const TURN_LIMIT: usize = 1 << 22;
+
 const TURN: RetainedCloneGrant = RetainedCloneGrant {
     maximum_items: 64, maximum_copy_bytes: 32768, maximum_capacity_bytes: 1 << 20,
     maximum_release_bytes: 1 << 20, maximum_depth: 4096,
@@ -102,7 +105,7 @@ fn registered_segmented_save_writes_the_large_original_image_and_reopens_exactly
     assert!((0..64).any(|_| source.turn_with_decoder(TURN, &mut decoder, |cx|
         admit_retained_candidate(&snapshot, revision, &mut candidate, &mut birth, cx)).unwrap()));
     let mut program = ClassicPdfSaveProgram::new(candidate.unwrap(), ArtifactOutputChunks::MAXIMUM_TOTAL_BYTES);
-    let ready = (0..16384).find_map(|_| {
+    let ready = (0..TURN_LIMIT).find_map(|_| {
         match source.turn_with_decoder(TURN, &mut decoder, |cx| program.prepare_original(&snapshot, revision, cx)).unwrap() {
             PlanDecision::Pending => None,
             PlanDecision::Ready => Some(true),
@@ -115,7 +118,7 @@ fn registered_segmented_save_writes_the_large_original_image_and_reopens_exactly
     let mut construction = MediaConstruction::default();
     let mut page_ready = false;
     let mut done = false;
-    for _ in 0..16384 {
+    for _ in 0..TURN_LIMIT {
         if !page_ready {
             page_ready = source.turn_with_decoder(TURN, &mut decoder, |cx|
                 admit_pdf_save_page(&mut page, &mut construction, cx)).unwrap();
@@ -145,7 +148,7 @@ fn registered_segmented_save_writes_the_large_original_image_and_reopens_exactly
     assert!(done);
     let mut close = ProgramClose::new(program.retire());
     let mut last = None;
-    for _ in 0..16384 {
+    for _ in 0..TURN_LIMIT {
         last = Some(source.turn_with_decoder(TURN, &mut decoder, |cx|
             cx.with_original_retirement(|cx| close.close_step(cx))).unwrap());
         if matches!(last, Some(InteractiveJobCloseStep::Complete { .. })) && close.terminal_is_empty() { break; }

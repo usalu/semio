@@ -22,7 +22,7 @@ use semio_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
 use pack::snapshot::ArtifactPack;
 use semio_plugin_operation::original_catalog_constructor::{ArtifactStoreConstructorKind, ArtifactStoreConstructorPhase};
 use semio_plugin_decl_app::tool_contract::{ArtifactToolCompletionValue, ArtifactToolPublicContract, ToolOwnerWitness, TypedOperationResultLane};
-use semio_plugin_decl_views::{ArtifactView, ConfigView, InteractionView};
+use semio_plugin_decl_views::{ArtifactView, ConfigView, InteractionView, PresencePeersView};
 use std::collections::{BTreeMap, HashMap};
 use semio_plugin_decl_views::child_view::ChildContentView;
 use semio_ui_runtime::ComponentTree;

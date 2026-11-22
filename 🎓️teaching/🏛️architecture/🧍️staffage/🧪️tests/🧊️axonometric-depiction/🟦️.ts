@@ -204,7 +204,7 @@ describe("🧊️ pens, levels of detail and what is to scale", () => {
     expect(solidsAt(asset, 50, "structure").length).toBeGreaterThan(0);
     const thermal = new Set([...byId(axo("thermal", 50)).keys()].filter((id) => id.startsWith("shape:")).map((id) => id.slice(6).replace(/:band-\d+$/u, "")));
     const own = new Set(solidsAt(asset, 50, "thermal").map((s) => s.id));
-    expect([...thermal].filter((id) => !own.has(id) && !id.startsWith("emitter-"))).toEqual([]);
+    expect([...thermal].filter((id) => !own.has(id))).toEqual([]);
   });
 
   it("the tessellation follows the scale: the chord is 0.04 paper millimetres, so a smaller scale has coarser triangles", () => {

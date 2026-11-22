@@ -79,7 +79,7 @@ test.skipIf(diskFull)("signed end to end: an unsigned caller is refused, a unit 
  const requester=await machine("requester","g1-m11"),third=await machine("third","g1-m12");
  await eventuallyV1(async()=>{const signed=remoteCacheFetchV1({SEMIO_WORKSPACE_ROOT:requester.checkout.root},{root:requester.checkout.root,audience:"execution",roleOf:()=>"submit"});const api=`http://127.0.0.1:${ports[1]}/v1/fleet/load`;const table=await (await signed(api)).json() as {machines?:{origin:string;headroom?:boolean}[]};return["g1-m09","g1-m10"].every(origin=>table.machines?.some(row=>row.origin===origin&&row.headroom===true));},90000,"both agents report headroom");
  expect(requester.environment.SEMIO_REMOTE_CACHE_ENDPOINT,"the fleet environment names the signed cache").toBe(endpoint);
- const code=await run(requester,{...requester.environment,SEMIO_OFFLOAD:"always"},{admission:{probe:testHostProbeV1("critical-pressure-gigabyte-swap")}});
+ const code=await run(requester,{...requester.environment,SEMIO_OFFLOAD:"distribute"},{admission:{probe:testHostProbeV1("critical-pressure-gigabyte-swap")}});
  const trace=JSON.stringify(events(requester.cache))+(existsSync(join(requester.cache,"x","offload.progress"))?readFileSync(join(requester.cache,"x","offload.progress"),"utf8"):"");
  expect(code,trace).toBe(0);
  expect(callsOf(join(requester.cache,"rustc-calls.log")),"the requester compiled nothing itself: "+trace).toBe(0);

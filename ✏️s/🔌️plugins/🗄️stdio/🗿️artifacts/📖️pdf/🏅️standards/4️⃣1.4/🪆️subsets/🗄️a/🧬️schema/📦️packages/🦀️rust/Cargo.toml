@@ -9,6 +9,29 @@ description = "Component crate of semio-s-artifact-stdio-pdf: schema"
 [package.metadata.semio]
 role = "library"
 
+[package.metadata.semio.carve]
+owned = [
+  "editor::pdf14::page::tests",
+  "standards::v1_4::subsets::a::schema",
+  "standards::v1_4::subsets::base::io::binary",
+  "standards::v1_4::subsets::base::io::text",
+  "standards::v1_4::subsets::base::schema::mutations::tests",
+  "standards::v1_4::subsets::x::schema::mutations::tests",
+  "standards::v1_7::subsets::base::io::sqlite::snapshot::annotation",
+  "standards::v1_7::subsets::base::io::sqlite::snapshot::artifact_reference",
+  "standards::v1_7::subsets::base::io::sqlite::snapshot::color",
+  "standards::v1_7::subsets::base::io::sqlite::snapshot::content",
+  "standards::v1_7::subsets::base::io::sqlite::snapshot::cos",
+  "standards::v1_7::subsets::base::io::sqlite::snapshot::font",
+  "standards::v1_7::subsets::base::io::sqlite::snapshot::form",
+  "standards::v1_7::subsets::base::io::sqlite::snapshot::metadata",
+  "standards::v1_7::subsets::base::io::sqlite::snapshot::navigation",
+  "standards::v1_7::subsets::base::io::sqlite::snapshot::resource",
+  "standards::v1_7::subsets::base::io::sqlite::snapshot::stream_roles",
+  "viewer::pdf14x::modes",
+  "viewer::pdf14x::modes::view",
+]
+
 [lints]
 workspace = true
 

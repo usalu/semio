@@ -55,8 +55,6 @@ def decide(policy, i):
     if stale < 0 and i["repo"]:
         return act("idle", -1, None, policy["idlePollMilliseconds"]) if i["marker"] else act("mark", -1, None, 0)
     index = 0 if stale < 0 or not i["repo"] else stale
-    if i.get("restartPending"):
-        return act("wait", index, "sidecar-restarting", 1000)
     if i["human"]:
         return act("observe", index, "human-running", policy["observePollMilliseconds"])
     if i["lease"] == "other":

@@ -21,7 +21,8 @@ type Roots = (root: string, workspaceRoot: string, tests?: boolean, cache?: Map<
 function implementation(source: string): Roots {
   const syntax = ts.createSourceFile("plugin.mjs", source, ts.ScriptTarget.Latest, true), wanted = new Set(["nativeDependencyRoots", "nativeDependencies", "buildPath", "nxPath", "NATIVE_DIRECTORY_CLOSURES", "NATIVE_DIRECTORY_NAMES"]);
   const code = syntax.statements.filter((node) => ts.isFunctionDeclaration(node) ? wanted.has(node.name?.text ?? "") : ts.isVariableStatement(node) && node.declarationList.declarations.some((declaration) => declaration.initializer !== undefined && wanted.has(declaration.name.getText(syntax)))).map((node) => node.getText(syntax).replace(/^export /u, "")).join("\n");
-  return new Function("existsSync", "readToml", "join", "resolve", "dirname", "relative", "memoizedObservedComputationV1", `${code}\nreturn nativeDependencyRoots;`)(existsSync, (path: string) => toml.parse(readFileSync(path, "utf8")), join, resolve, dirname, relative, memoizedObservedComputationV1) as Roots;
+  const readTomlPort = (path: string) => toml.parse(readFileSync(path, "utf8"));
+  return new Function("existsSync", "readToml", "readCargoManifestRoleV1", "join", "resolve", "dirname", "relative", "memoizedObservedComputationV1", `${code}\nreturn nativeDependencyRoots;`)(existsSync, readTomlPort, (path: string) => readTomlPort(path), join, resolve, dirname, relative, memoizedObservedComputationV1) as Roots;
 }
 
 /** 🎯️ One answer: the closure, or the error message and code a root's traversal throws. */

@@ -45,3 +45,9 @@ Failures observed in sequence, each from another agent's in-flight edit and each
 4. Capacity starvation. The last run (`🗑️generated/g9/nb.1.log`) passed graph planning and admission but sat for over 30 minutes in the memory queue. A 4096 MB "setup" request was queued ahead of it, other agents held grants, and free memory stayed near the 2048 MB floor ("past the wait limit").
 
 No compiler task ran in this attempt, so there is no new first compiler error. The native-build run that did compile (1,239 units) lost its error text to truncation. The Stdio component, `modules`, smoke and Flow/Vitest steps were not started, because each needs the same memory grant. A background retry (`nb`) of the native-build is still running and will write `nb.status` when it ends.
+
+## Resumed sequence (after session restart)
+
+- The last full native-build log that reached compilation (`🗑️generated/g9/nb.7.log`, 06:57) failed with `E0425` in `semio-ui-theme` (`🖱️ui/🎨️styling/🎭️theme/🧩️component/🦀️.rs`). The 11 missing `chrome_metrics` constants (`TRANSITION_DURATION_MS`, `TRANSITION_EASING`, `DIALOG_ENTER_*`) are now present in `🔤️tokens/🦀️.rs`, so another agent's token change has landed since. Not re-verified by a build.
+- Reruns (`🗑️generated/g9/r2/nb2.*.log`) never reached the compiler. They waited in the host memory queue (load above 16, 1.7 to 3 GB spare against the 2048 MB floor) and then hit `Retired graph member changed` in the resident service's storage-headroom cleanup (`retireBuildGraphOptionalGroupsHeadroomV1`). That error is deterministic, so retrying does not help until the storage-enforcement owner fixes it. `📜️g9-retry.sh` is still retrying.
+- Not run: Stdio component, PDF component, `📜️native-wgpu-run.ts modules`, smoke, and the hub composition regeneration. The `hub-composition-sync.py` hand sync is therefore not yet compared against real descriptor output. The real emitter output must replace it once the PDF component builds.

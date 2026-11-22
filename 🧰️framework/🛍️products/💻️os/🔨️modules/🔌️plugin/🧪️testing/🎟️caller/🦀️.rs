@@ -6,7 +6,8 @@ use semio_framework_value::{RetainedCloneGrant,RetainedCloneProgress,ValueError}
 #[serde(rename_all="camelCase",deny_unknown_fields)]
 struct CallerPolicy{source_kind:String,operation:u64,generation:u64,fuel:u64,turn_fuel:u64,clock_us:u64,deadline_us:u64,maximum_turns:usize,maximum_close_turns:usize,maximum_idle_turns:usize,grant:RetainedCloneGrant,retirement_loan:RetainedCloneGrant}
 
-fn fixture_now_us()->Option<u64>{Some(1000)}
+thread_local!{static FIXTURE_DEADLINE_AFTER_READS:std::cell::Cell<Option<(u64,u64)>>=const{std::cell::Cell::new(None)};}
+fn fixture_now_us()->Option<u64>{FIXTURE_DEADLINE_AFTER_READS.with(|armed|match armed.get(){Some((0,deadline))=>Some(deadline),Some((reads,deadline))=>{armed.set(Some((reads-1,deadline)));Some(1000)},None=>Some(1000)})}
 
 /// 🪙️ One original ledger, cancellation root, cursor and cumulative recipient own the fixture's whole financed body; its roots are born and closed through the production effect-threaded admissions of the framework fixture caller. Its Source return table and publisher are born up front, as the production host births them before a turn that requested them: a lent long-lived context has no host to serve them between turns, so a body that needs them would otherwise wait on its own request forever.
 pub struct OriginalFixtureCaller{policy:CallerPolicy,caller:OriginalJobFixtureCaller,decoder:semio_framework_job::OriginalJobDecodeOwner,lent:bool}
@@ -73,6 +74,23 @@ impl OriginalFixtureScope{
  pub fn admit()->Self{let caller=Box::into_raw(Box::new(OriginalFixtureCaller::admit().expect("closed original fixture scope caller")));let context=unsafe{(*caller).context()};Self{context:Some(context),caller}}
  /// 🪢️ The one original context every call of the fixture's financed body shares; every call begins a new host turn, so the receiving scope the previous call left open is settled first.
  pub fn cx(&mut self)->&mut StepContext<'static>{let cx=self.context.as_mut().expect("original fixture scope context is lent until its retirement");cx.settle_receiving_scope().expect("the previous fixture call settles its original receiving scope");cx}
+ /// 🧯️ Pays the funded retirement of one refusal a fixture call returned, so asserting on a refusal never drops an unretired [`semio_framework_job::OriginalTurnFailure`]; each turn runs under the scope's one original context, bounded by [`OriginalFixtureCaller::maximum_close_turns`].
+ pub fn retire_failure(&mut self,failure:OriginalTurnFailure){
+  use semio_framework_value::{retained_clone::RetainedCloneClose,RetainedCloneStep,RetainedWorkOutcome,RetainedWorkPoll};
+  let mut state=(Some(failure),RetainedCloneClose::default());
+  let retired=within_close_turns(OriginalFixtureCaller::maximum_close_turns(),&mut state,|state:&(Option<OriginalTurnFailure>,RetainedCloneClose)|state.0.is_none()&&state.1.is_empty(),|state:&mut (Option<OriginalTurnFailure>,RetainedCloneClose)|{
+   let (failure,retirement)=state;let cx=self.cx();let body=cx.retained_grant().maximum_copy_bytes;
+   let demand=retirement.next_owner_demands::<OriginalTurnFailure>(failure.is_some(),&None,body).expect("original fixture failure retirement demand");
+   semio_framework_job::close_original_effect_step(cx,demand,|effect|{if !retirement.is_empty(){return retirement.step_granted(body,effect).map_err(semio_framework_job::OriginalTurnPrimary::from)}let turn=retirement.begin_granted(&mut *failure,effect);RetainedWorkPoll::Complete(RetainedWorkOutcome{result:turn.result.map_err(semio_framework_job::OriginalTurnPrimary::from).map(|step|step.unwrap_or(RetainedCloneStep::Progress(Default::default()))),work:turn.work})}).expect("paid original fixture failure retirement");
+  });
+  assert!(retired,"original fixture failure exceeds its supplied close turn bound")
+ }
+ /// ⏰️ Runs one fixture call whose turn deadline runs out after `reads` real clock reads, then restores the clock the context observed before the call, so only this call sees the deadline pass.
+ pub fn with_deadline_after_clock_reads<T>(&mut self,reads:u64,run:impl FnOnce(&mut StepContext<'static>)->T)->T{
+  let cx=self.cx();let parked=cx.park_state();FIXTURE_DEADLINE_AFTER_READS.with(|armed|armed.set(Some((reads,cx.deadline_us()))));
+  let result=run(cx);
+  FIXTURE_DEADLINE_AFTER_READS.with(|armed|armed.set(None));cx.park_restore(parked);result
+ }
  /// 🧹️ Returns the context, then pays the caller's terminal retirement from the fuel the body left.
  pub fn retire(&mut self)->RetainedCloneProgress{
   let context=self.context.take().expect("original fixture scope retires once");let fuel=context.fuel_remaining();drop(context);
@@ -80,11 +98,23 @@ impl OriginalFixtureScope{
   caller.retire(fuel).expect("paid original fixture scope retirement")
  }
 }
+/// 🔁️ Runs at most `turns` close steps over `state`, checking its terminal witness before the first step and after every step, so a close that finishes on its last allowed turn is terminal.
+fn within_close_turns<S>(turns:usize,state:&mut S,terminal:impl Fn(&S)->bool,mut step:impl FnMut(&mut S))->bool{
+ for _ in 0..turns{if terminal(state){return true}step(state)}
+ terminal(state)
+}
 impl Drop for OriginalFixtureScope{fn drop(&mut self){if self.caller.is_null(){return}if std::thread::panicking(){drop(self.context.take());drop(unsafe{Box::from_raw(self.caller)})}else{self.retire();}}}
 
 #[cfg(test)]
 mod original_physical_laws{
  use super::*;
+ #[test]
+ fn a_close_finishing_on_its_last_allowed_turn_is_terminal(){
+  let mut steps=0usize;assert!(within_close_turns(3,&mut steps,|steps|*steps==3,|steps|*steps+=1));assert_eq!(steps,3);
+  let mut steps=0usize;assert!(!within_close_turns(3,&mut steps,|steps|*steps==4,|steps|*steps+=1));assert_eq!(steps,3);
+  let mut steps=0usize;assert!(within_close_turns(3,&mut steps,|steps|*steps==0,|steps|*steps+=1));assert_eq!(steps,0);
+  let mut steps=0usize;assert!(!within_close_turns(0,&mut steps,|steps|*steps==1,|steps|*steps+=1));assert_eq!(steps,0);
+ }
  fn fixture_remaining(stock:RetainedCloneGrant,spent:RetainedCloneProgress)->RetainedCloneGrant{assert!(spent.fits(stock),"original fixture source admissions exceed its initiating stock");RetainedCloneGrant{maximum_items:stock.maximum_items-spent.copied_items,maximum_copy_bytes:stock.maximum_copy_bytes-spent.copied_bytes,maximum_capacity_bytes:stock.maximum_capacity_bytes-spent.retained_capacity_bytes,maximum_release_bytes:stock.maximum_release_bytes-spent.released_bytes,..stock}}
 
  /// 🪙️ The sole body context starts after its three original root admissions consumed CPU and stock.

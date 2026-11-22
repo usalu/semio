@@ -174,3 +174,32 @@ fn validates_explicit_aggregate_component_sources() {
         }
     }
 }
+
+#[test]
+fn aggregate_metadata_failure_names_the_path_component_and_error_kind() {
+    let (workspace, cwd, _, _) = materialize("direct-canonical");
+    let missing = workspace.join("domain").join("absent-component").join("🦀️.rs");
+    let missing_error = mutation_aggregate_source_authority(&missing, &cwd).unwrap_err();
+    assert!(missing_error.contains("absent-component"), "{missing_error}");
+    assert!(missing_error.contains("(NotFound)") && missing_error.contains("[NotFound]"), "{missing_error}");
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::PermissionsExt;
+        let locked = workspace.join("domain");
+        let mode = fs::metadata(&locked).unwrap().permissions().mode();
+        struct ModeRestore<'a>(&'a Path, u32);
+        impl Drop for ModeRestore<'_> {
+            fn drop(&mut self) {
+                use std::os::unix::fs::PermissionsExt;
+                let _ = fs::set_permissions(self.0, fs::Permissions::from_mode(self.1));
+            }
+        }
+        fs::set_permissions(&locked, fs::Permissions::from_mode(0o000)).unwrap();
+        let _restore = ModeRestore(&locked, mode);
+        let source = locked.join("🧬️mutations").join("🦀️.rs");
+        if let Err(denied) = mutation_aggregate_source_authority(&source, &cwd) {
+            assert!(denied.contains("🧬️mutations"), "{denied}");
+            assert!(denied.contains("(PermissionDenied)") && denied.contains("[PermissionDenied]"), "{denied}");
+        }
+    }
+}

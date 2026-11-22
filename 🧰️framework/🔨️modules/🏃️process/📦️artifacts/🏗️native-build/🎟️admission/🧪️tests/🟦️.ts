@@ -3,16 +3,16 @@ import { withBuildTestInvocationV1 } from "../../../../🧪️testing/📥️inv
 import { expect, test } from "bun:test";
 import Ajv from "ajv";
 import {parse as parseToml} from "smol-toml";
-import { quantile } from "d3-array";
+import { quantile, rollup } from "d3-array";
 import { Database } from "bun:sqlite";
 import ts from "typescript";
 import * as admission from "../🟦️.ts";
-import { appendFileSync, mkdtempSync, readFileSync } from "node:fs";
+import { appendFileSync, mkdtempSync, readFileSync, truncateSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import fixture from "./🧫️fixtures/🔣️.json" with { type: "json" };
 import schema from "../🧬️schema/🔣️.json" with { type: "json" };
 import { buildThroughBrokerV1, tinyCargoWorkspaceV1 } from "../../🧪️tests/🦀️cargo/🟦️.ts";
-import { admissionFrozenV1, admissionOrderV1, admitWaitersV1, expectedWallMsV1, externArtifactsV1, predictPeakBytesV1, quantileR7V1, readUnitHistoryV1, recordUnitHistoryV1, unitArtifactV1, unitKeyV1, unitOutputBytesV1, type UnitObservationV1, type UnitRecordV1 } from "../🟦️.ts";
+import { appendUnitHistoryV1, compactUnitHistoryV1, admissionFrozenV1, componentFinalPeaksV1, admissionOrderV1, admitWaitersV1, expectedWallMsV1, externArtifactsV1, predictPeakBytesV1, quantileR7V1, readUnitHistoryV1, recordUnitHistoryV1, unitArtifactV1, unitKeyV1, unitOutputBytesV1, type UnitObservationV1, type UnitRecordV1 } from "../🟦️.ts";
 
 const artifacts = resolve(process.env.SEMIO_TEST_ARTIFACT_DIR!);
 const ajv = new Ajv({ strict: true, allowUnionTypes: true }).addSchema(schema);
@@ -35,7 +35,9 @@ test("unit keys, artifact identities and extern edges follow the vectors", () =>
 
 test("p95 is R-7 and agrees with d3-array; predictions follow headroom, floor, window and the cold-start model", () => {
   for (const row of fixture.quantiles) { expect(quantileR7V1(row.values, row.q)).toBe(row.value); expect(quantileR7V1(row.values, row.q)).toBeCloseTo(quantile(row.values, row.q)!, 9); }
-  for (const row of fixture.predictions) expect(predictPeakBytesV1(row.peaks, { kloc: row.kloc, componentFinal: row.componentFinal })).toBe(row.bytes);
+  for (const row of fixture.predictions) expect(predictPeakBytesV1(row.peaks, { kloc: row.kloc, component: row.component })).toBe(row.bytes);
+  for (const row of fixture.predictions.filter((entry) => entry.component && entry.component.length >= 3 && !entry.peaks.length)) expect(predictPeakBytesV1([], { kloc: 0, component: row.component })).toBe(Math.max(Math.ceil(1.15 * quantile(row.component!, 0.5)!), 268435456));
+  for (const row of fixture.componentPools) expect(componentFinalPeaksV1(new Map(Object.entries(row.history).map(([key, peaks]) => [key, peaks.map((peakRssBytes, atMs) => ({ v: 1 as const, key, peakRssBytes, outputBytes: 1, wallMs: 1, cpuMs: 1, remainingMs: 0, atMs }))])), row.profile)).toEqual(row.peaks);
   for (const row of fixture.walls) expect(expectedWallMsV1(row.walls.map((wallMs, atMs) => ({ v: 1, key: "p@k|host|dev|lib", peakRssBytes: 1, outputBytes: 1, wallMs, cpuMs: 1, remainingMs: 0, atMs })))).toBe(row.expected);
 });
 
@@ -56,6 +58,42 @@ test("the store keeps the newest window per key, survives a torn trailing line a
   expect(Object.fromEntries([...history].map(([key, rows]) => [key, rows.map((row) => row.atMs)]))).toEqual(fixture.store.kept);
   await recordUnitHistoryV1(path, [], { leaseDirectory: artifacts, control: createIssuedResourceControlV1(original, "history:store", 10_000, AbortSignal.timeout(10_000)) });
   expect([...(await readUnitHistoryV1(path)).keys()].sort()).toEqual(Object.keys(fixture.store.kept).sort());
+}));
+
+const journalOptions = (original: Parameters<Parameters<typeof withBuildTestInvocationV1>[0]>[0]) => ({ leaseDirectory: artifacts, control: createIssuedResourceControlV1(original, "history:journal", 10_000, AbortSignal.timeout(10_000)) });
+const journalView = (history: Map<string, admission.UnitObservationV1[]>) => Object.fromEntries([...history].map(([key, rows]) => [key, rows.map((row) => ({ atMs: row.atMs, peakRssBytes: row.peakRssBytes, remainingMs: row.remainingMs }))]));
+
+test("a refined observation replaces the incrementally recorded one of the same key and time (vectors, cross-checked with d3-array)", () => {
+  const rows = fixture.journal.rows as UnitObservationV1[];
+  expect(journalView(compactUnitHistoryV1(rows))).toEqual(fixture.journal.refined);
+  const last = rollup(rows, (group) => group[group.length - 1]!.remainingMs, (row) => row.key, (row) => row.atMs);
+  for (const [key, observed] of compactUnitHistoryV1(rows)) for (const row of observed) expect(row.remainingMs).toBe(last.get(key)!.get(row.atMs)!);
+});
+
+test("appended rows are durable and concurrent writers never interleave", () => withBuildTestInvocationV1(async (original) => {
+  const path = join(mkdtempSync(join(artifacts, "j-")), "units.jsonl"), rows = fixture.journal.rows as UnitObservationV1[];
+  await Promise.all(rows.map((row) => appendUnitHistoryV1(path, [row], journalOptions(original))));
+  const text = readFileSync(path, "utf8");
+  expect(text.endsWith("\n")).toBe(true);
+  expect(text.split("\n").filter(Boolean).map((line) => JSON.parse(line).atMs).sort()).toEqual(rows.map((row) => row.atMs).sort());
+  expect(await readUnitHistoryV1(path)).toEqual(compactUnitHistoryV1(rows));
+}));
+
+test("a write killed at any byte of a record leaves every complete row readable and the next append repairs the tail", () => withBuildTestInvocationV1(async (original) => {
+  const path = join(mkdtempSync(join(artifacts, "k-")), "units.jsonl"), rows = fixture.journal.rows as UnitObservationV1[], complete = rows.slice(0, 2);
+  await appendUnitHistoryV1(path, complete, journalOptions(original));
+  const base = readFileSync(path, "utf8"), record = `${JSON.stringify(rows[3])}\n`;
+  for (let cut = 0; cut < record.length; cut++) {
+    writeFileSync(path, base + record.slice(0, cut));
+    expect(await readUnitHistoryV1(path), `cut ${cut}`).toEqual(compactUnitHistoryV1(complete));
+    await appendUnitHistoryV1(path, [rows[2]!], journalOptions(original));
+    expect(readFileSync(path, "utf8"), `cut ${cut}`).toBe(base + `${JSON.stringify(rows[2])}\n`);
+    truncateSync(path, base.length);
+  }
+  writeFileSync(path, base + record);
+  expect(await readUnitHistoryV1(path)).toEqual(compactUnitHistoryV1([...complete, rows[3]!]));
+  writeFileSync(path, `${fixture.journal.invalidTerminated}\n${base}`);
+  await expect(readUnitHistoryV1(path)).rejects.toThrow();
 }));
 
 test("real Cargo through the wrapper: a tight memory budget admits one unit at a time, a roomy one runs as many as the pool holds", async () => {

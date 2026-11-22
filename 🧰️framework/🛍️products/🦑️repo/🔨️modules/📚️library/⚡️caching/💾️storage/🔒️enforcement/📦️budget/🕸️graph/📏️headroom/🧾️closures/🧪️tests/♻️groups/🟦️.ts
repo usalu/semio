@@ -73,3 +73,16 @@ registerIsolatedBuildTestV1(fileURLToPath(import.meta.url),"graph optional group
   await fixture.withMaintenance(async(image,custody)=>{const free=await nativeImageFreshSpaceV1(image.root,image.filesystemBytes,custody.control.signal),result=await retireBuildGraphOptionalGroupsHeadroomV1(image,custody,{minimumAvailableBytes:free.bavail*free.bsize+1048576});expect(result.retiredFiles).toBeGreaterThan(0);expect(existsSync(join(fixture.root,"retired")) ? readdirSync(join(fixture.root,"retired")).filter(name=>name.endsWith(".json")).length : 0).toBe(0);});
  });
 }));
+
+/** 🧳️ The owner peaks spill of a graph writer travels with its group into the retirement catalog: the group still settles completely, the spill leaves with it, and a member forged beside it is still refused. */
+for(const scenario of ["settles","foreign-member"])registerIsolatedBuildTestV1(fileURLToPath(import.meta.url),"graph optional group retirement with travelled spill "+scenario,{bodyMilliseconds:120000,scope:{kind:"body"}},()=>withPrivateRepositoryBuildTestInvocationV1(async original=>{
+ const stop=new AbortController(),control=createIssuedResourceControlV1(original,"test:graph-group-spill",110000,stop.signal);
+ await withRepositoryBuildGraphPublicationFixtureV1(repository.root,original,control,async fixture=>{
+  const directory=join(fixture.root,"inference","np"),key=recordKey("group-spill"),graph={version:1,projects:{},dependencies:[],namedInputs:{},externalNodes:{}},spill=join(directory,"owner-peaks.json");let token="",lock="";
+  await fixture.withWriter(async()=>{token=(compactSourceInputs(["{workspaceRoot}/Cargo.toml"],fixture.sourceRoot).find((row:any)=>row?.env?.startsWith("SEMIO_SOURCE_CLOSURE_"))as{env:string}).env;lock=cargoLockInput("Cargo.toml",fixture.sourceRoot).env;mkdirSync(directory,{recursive:true});const records=openRecordStore(directory);records.put(key,Buffer.from(JSON.stringify({...graph,namedInputs:{source:[{env:token},{env:lock}]}})));records.flush();records.close();writeFileSync(spill,'{"language:cargo":[1,2,3]}');});
+  await fixture.withMaintenance(async(image,custody)=>{const proof=await captureBuildGraphClosureProofV1(image,custody);await invalidateBuildGraphOptionalGroupV1(image,custody,proof);expect(existsSync(directory)).toBe(false);});
+  const catalog=join(fixture.root,"retired");expect(readdirSync(catalog).filter(name=>name.endsWith(".d")).map(name=>existsSync(join(catalog,name,"owner-peaks.json")))).toEqual([true]);
+  if(scenario==="foreign-member")writeFileSync(join(catalog,readdirSync(catalog).find(name=>name.endsWith(".d"))!,"unknown"),"foreign");
+  await fixture.withMaintenance(async(image,custody)=>{const free=await nativeImageFreshSpaceV1(image.root,image.filesystemBytes,custody.control.signal),invoke=()=>retireBuildGraphOptionalGroupsHeadroomV1(image,custody,{minimumAvailableBytes:free.bavail*free.bsize+1048576});if(scenario==="foreign-member"){await expect(invoke()).rejects.toThrow(/^Retired graph member changed$/u);return;}const result=await invoke();expect(result.retiredFiles).toBeGreaterThan(0);expect(readdirSync(catalog)).toEqual([]);});
+ });
+}));

@@ -147,6 +147,35 @@ impl ShellInputState {
         semio_renderer_wgpu_ui_engine::scene_interaction::text_editor_claim_menu_action(&window_id, x - body.x, y - body.y, &action.action)
     }
 
+    /// 📖️ The non-empty selection of the text editor under a screen point — what a secondary press on selected text offers the text-selection menu for.
+    pub fn text_selection_at(&self, x: f32, y: f32) -> Option<String> {
+        let (window_id, body) = self.retained_context_menu_window(x, y)?;
+        semio_renderer_wgpu_ui_engine::scene_interaction::text_editor_selection_at(&window_id, x - body.x, y - body.y)
+    }
+
+    /// 📖️ Whether a secondary press at a screen point offers the text-selection menu, and whether a selection is there to cut or copy: a non-empty text-editor selection, or any retained text field (single or multiline), which offers Paste and Select all even while collapsed, as the browser's own input menu does.
+    pub fn text_selection_menu_at(&self, x: f32, y: f32) -> Option<bool> {
+        if self.text_selection_at(x, y).is_some() {
+            return Some(true);
+        }
+        let (window_id, body) = self.retained_context_menu_window(x, y)?;
+        semio_renderer_wgpu_ui_engine::scene_interaction::text_input_selection_at(&window_id, x - body.x, y - body.y).map(|selection| !selection.is_empty())
+    }
+
+    /// 🖱️ Answers an activated text-selection row on the text editor under the press point the row carries (Cut, Copy, Paste, Select all run on the surface, never reach the guest). `true` means the row was a text-selection row.
+    pub fn claim_text_selection_action(&self, action: &ActionDescriptor) -> bool {
+        let Some(verb) = text_selection_verb_of(action) else { return false };
+        let coordinate = |name: &str| action.args.as_ref().and_then(|args| args.get(name)).and_then(semio_framework_value::DslValue::as_f64).map(|value| value as f32);
+        let (Some(x), Some(y)) = (coordinate("x"), coordinate("y")) else { return true };
+        if let Some((window_id, body)) = self.retained_context_menu_window(x, y) {
+            let (local_x, local_y) = (x - body.x, y - body.y);
+            if !semio_renderer_wgpu_ui_engine::scene_interaction::queue_text_selection_verb_at(&window_id, local_x, local_y, verb) {
+                semio_renderer_wgpu_ui_engine::scene_interaction::queue_text_input_verb_at(&window_id, local_x, local_y, verb);
+            }
+        }
+        true
+    }
+
     /// 📋️ Alt + secondary press on a text editor opens its completions dropdown instead of a menu.
     pub fn claim_text_editor_alt_completions(&self, x: f32, y: f32) -> bool {
         let Some((window_id, body)) = self.retained_context_menu_window(x, y) else {
@@ -203,6 +232,7 @@ impl ShellInputState {
             semio_ui_wgpu_input::KeyAction::Escape => {
                 if menu.active.len() > 1 {
                     menu.active.pop();
+                    menu.submenu_collapsed_at = Some(menu.active.clone());
                     return ContextMenuKeyOutcome::Consumed;
                 }
                 self.context_menu = None;
@@ -256,7 +286,9 @@ impl ShellInputState {
                     return ContextMenuKeyOutcome::Consumed;
                 }
                 if let Some(action) = item.action.clone() {
-                    self.context_menu = None;
+                    if !self.suggestion_search.as_ref().is_some_and(|search| search.popup) {
+                        self.context_menu = None;
+                    }
                     return ContextMenuKeyOutcome::Activate(action);
                 }
                 return ContextMenuKeyOutcome::Ignored;
@@ -272,6 +304,7 @@ impl ShellInputState {
             semio_ui_wgpu_input::KeyAction::Char(ref key) if matches!(key.as_str(), "a" | "A") => {
                 if menu.active.len() > 1 {
                     menu.active.pop();
+                    menu.submenu_collapsed_at = Some(menu.active.clone());
                 }
                 return ContextMenuKeyOutcome::Consumed;
             }
@@ -325,7 +358,6 @@ impl ShellInputState {
         input.staged_hits().iter().rev().find(|hit| hit.control_id.as_deref() == Some(key)).map(|hit| hit.rect)
     }
 
-    //#region ⌨️ShellShortcutDispatch
     /// ⌨️ Writes the armed Keybindings row's override from one key event — the wgpu twin of React's
     /// `chordFromKeyboardEvent`: the fixed `ctrl, meta, alt, shift` modifier order then the key, with
     /// Escape cancelling the capture and a bare modifier press ignored. `true` when the event was
@@ -356,7 +388,6 @@ impl ShellInputState {
         debug_log(&format!("[TRACE] wgpu-shell keybinding override {control_id} -> {chord}"));
         true
     }
-    //#endregion ⌨️ShellShortcutDispatch
 }
 
 //#endregion ShellInput

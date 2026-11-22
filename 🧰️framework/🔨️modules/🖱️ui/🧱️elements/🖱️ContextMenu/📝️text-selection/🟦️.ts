@@ -1,6 +1,7 @@
 import { type UiLabel, uiDataLabel } from "../../🎗️UiLabel/🟦️.tsx";
 import { formatKeybindingShortcut } from "../../../🔨️modules/🔤️keybinding-text-interpretation/🟦️.ts";
 import type { ContextMenuItem } from "../🎨️item-render/🟦️.tsx";
+import textSelectionMenu from "../../../🧬️schema/📝️text-selection-menu/🔣️.json" with { type: "json" };
 
 /** 📖️ Non-collapsed DOM text selection string, or empty. */
 export function readDomTextSelection(): string {
@@ -52,19 +53,14 @@ export interface TextSelectionContextMenuActions {
   readonly selectAll: () => void;
 }
 
-/** 🔨️ Builds Cut/Copy/Paste/Select All rows for a DOM text selection. */
+/** 🔨️ Builds the shared schema's rows (`🧬️schema/📝️text-selection-menu`) for a DOM text selection. */
 export function buildTextSelectionContextMenuItems(input: { readonly editable: boolean; readonly hasSelection: boolean }, labels: TextSelectionContextMenuLabels, actions: TextSelectionContextMenuActions): ContextMenuItem[] {
-  const items: ContextMenuItem[] = [];
-  if (input.editable) {
-    items.push({ id: "text-cut", label: labels.cut, icon: "scissors", shortcut: formatKeybindingShortcut("mod+x"), disabled: !input.hasSelection, onSelect: () => actions.cut() });
-  }
-  items.push({ id: "text-copy", label: labels.copy, icon: "copy", shortcut: formatKeybindingShortcut("mod+c"), disabled: !input.hasSelection, onSelect: () => actions.copy() });
-  if (input.editable) {
-    items.push({ id: "text-paste", label: labels.paste, icon: "clipboard", shortcut: formatKeybindingShortcut("mod+v"), onSelect: () => actions.paste() });
-  }
-  items.push({ id: "text-sep", label: uiDataLabel(""), separator: true });
-  items.push({ id: "text-select-all", label: labels.selectAll, icon: "select-all", shortcut: formatKeybindingShortcut("mod+a"), onSelect: () => actions.selectAll() });
-  return items;
+  return textSelectionMenu.rows.flatMap((row): ContextMenuItem[] => {
+    if (!("verb" in row)) return [{ id: row.id, label: uiDataLabel(""), separator: true }];
+    if (row.editableOnly && !input.editable) return [];
+    const verb = row.verb as keyof TextSelectionContextMenuActions;
+    return [{ id: row.id, label: labels[verb], icon: row.icon as ContextMenuItem["icon"], shortcut: formatKeybindingShortcut(row.chord), ...(row.needsSelection ? { disabled: !input.hasSelection } : {}), onSelect: () => actions[verb]() }];
+  });
 }
 
 /**

@@ -1,0 +1,51 @@
+{
+  "id": "person-eating-standing",
+  "category": "humans",
+  "title": {
+    "en": "Person Eating Standing",
+    "de": "Stehend essende Person"
+  },
+  "heightM": 1.806,
+  "widthM": 0.519,
+  "powerW": 145.7,
+  "poses": [
+    "taking-a-bite",
+    "drinking-from-bottle",
+    "chewing"
+  ],
+  "clips": [
+    "bite-and-chew",
+    "idle-breathing"
+  ],
+  "representations": {
+    "50": "authored",
+    "100": "authored",
+    "200": "authored",
+    "500": "authored"
+  },
+  "symbols": [],
+  "analytics": [
+    "thermal",
+    "transport",
+    "structural"
+  ],
+  "exports": [
+    "svg",
+    "pdf",
+    "dxf",
+    "dwg",
+    "png-sequence",
+    "mp4",
+    "webm",
+    "component",
+    "glb",
+    "fbx",
+    "model",
+    "model-zip"
+  ],
+  "distinction": {
+    "en": "A man of 1.78 m on his lunch break eating a baguette sandwich standing, a bottle of water in the other hand, in a hooded sweatshirt, chinos and leather sneakers: taking a bite, chewing with the sandwich lowered and drinking from the bottle, with a bite-and-chew loop and idle breathing.",
+    "de": "Ein Mann von 1,78 m in der Mittagspause, der im Stehen ein Baguette-Sandwich isst, eine Wasserflasche in der anderen Hand, in Kapuzenpullover, Chino und Ledersneakern: beim Abbeißen, beim Kauen mit gesenktem Sandwich und beim Trinken aus der Flasche, mit einer Schleife aus Abbeißen und Kauen und ruhigem Atmen."
+  },
+  "completion": "authored"
+}

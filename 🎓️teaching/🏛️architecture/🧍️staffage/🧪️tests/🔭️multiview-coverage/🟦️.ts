@@ -278,11 +278,11 @@ describe("🔭️ reference cases", () => {
     const scrubbed = solveTransport(target, query(times[2]!), environment);
     expect(JSON.stringify(scrubbed)).toBe(JSON.stringify(fields[2]));
     const plain = draw(target, query(times[2]!), 100, "thermal", uncheckedProfile);
-    const withTransport = draw(target, query(times[2]!), 100, "thermal", { ...uncheckedProfile, transport: ["parcels", "streamlines"] });
+    const withTransport = draw(target, query(times[2]!), 100, "thermal", { ...uncheckedProfile, flow: ["streams", "moisture", "pathlines"] });
     expect(withTransport.analysis.transport).toBeDefined();
     const count = (scene: DrawingScene): number => scene.layers.reduce((n, layer) => n + layer.items.length, 0);
     for (const view of VIEWPOINT_LIST) {
-      expect(count(drawingOf(withTransport, view).scene), `${view} transport overlay`).toBeGreaterThan(count(drawingOf(plain, view).scene));
+      expect(count(drawingOf(withTransport, view).scene), `${view} flow view`).toBeGreaterThan(count(drawingOf(plain, view).scene));
       expect(drawingOf(withTransport, view).state).toBe(withTransport.state);
     }
     const a = drawingOf(draw(target, query(times[1]!), 100, "thermal", uncheckedProfile), "plan").scene;

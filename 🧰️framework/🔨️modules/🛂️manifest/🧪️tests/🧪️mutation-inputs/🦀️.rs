@@ -202,3 +202,14 @@ fn framework_input_documents_resolve_by_id_without_registration() {
     }
     assert!(registered_input_schema_document("https://json.schemas.assets.semio-tech.com/framework/schema/artifact-reference/link/schema.json").is_some());
 }
+
+/// 🗂️ The lookup parses each registered text once: a repeated lookup returns the same document, and an id nobody published stays unresolved after the index holds every framework document.
+#[test]
+fn registered_lookup_is_repeatable_and_indexed() {
+    for raw in FRAMEWORK_INPUT_SCHEMA_DOCUMENTS {
+        let document = semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::parse(raw, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("a framework document is JSON"));
+        let id = document.get("$id").and_then(DslValue::as_str).expect("a framework document has an $id");
+        assert_eq!(registered_input_schema_document(id), registered_input_schema_document(id), "{id}");
+    }
+    assert_eq!(registered_input_schema_document("https://json.schemas.assets.semio-tech.com/absent/schema.json"), None);
+}

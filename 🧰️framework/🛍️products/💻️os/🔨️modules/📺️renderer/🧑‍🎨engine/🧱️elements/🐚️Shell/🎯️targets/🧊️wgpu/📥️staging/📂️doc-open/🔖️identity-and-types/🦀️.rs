@@ -66,6 +66,10 @@ pub enum ShellDocumentOpenAnswer {
     Instantiated(u32),
     #[cfg(not(target_arch = "wasm32"))]
     NativeFile(Option<NativeOpenedFile>),
+    #[cfg(target_arch = "wasm32")]
+    BrowserRouting(BrowserOpenRouting),
+    #[cfg(target_arch = "wasm32")]
+    BrowserFile(Option<BrowserOpenedFile>),
     Seeded(Option<semio_os_kernel::os_directory::CanonicalCheckpointPairV1>),
 }
 
@@ -98,6 +102,8 @@ pub struct ShellDocumentOpening {
     pub label: String,
     pub phase: ShellDocumentOpenPhase,
     pub cancel_requested: bool,
+    /// 🗂️ A kept document's reopen: its band reads React's "Opening {name}…" instead of the step counter.
+    pub kept: bool,
     pub started_at_ms: f64,
     pub plugin_id: String,
     pub app_id: String,
@@ -115,7 +121,7 @@ pub struct ShellDocumentOpening {
 impl ShellDocumentOpening {
     /// 🚪️ An open whose first detached step is `pending`, in `phase`.
     pub fn new(label: String, phase: ShellDocumentOpenPhase, plugin_id: String, app_id: String, document: Option<ShellDocumentOpenTarget>, pending: Option<ShellDetached<Result<ShellDocumentOpenAnswer, semio_renderer_wgpu_program_bridge::ProgramFault>>>) -> Self {
-        Self { label, phase, cancel_requested: false, started_at_ms: chrome_now_ms(), plugin_id, app_id, document, pending, prepared: None, cancel: None, resolve_step: std::sync::Arc::default(),
+        Self { label, phase, cancel_requested: false, kept: false, started_at_ms: chrome_now_ms(), plugin_id, app_id, document, pending, prepared: None, cancel: None, resolve_step: std::sync::Arc::default(),
             native_transfer_progress: std::sync::Arc::default(), observed_native_transfer_progress: 0 }
     }
 

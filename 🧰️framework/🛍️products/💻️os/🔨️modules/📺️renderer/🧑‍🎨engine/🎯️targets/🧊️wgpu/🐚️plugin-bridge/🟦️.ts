@@ -1,6 +1,7 @@
 import { packValueFromBase64 } from "@semio-tech/framework-os";
 import type { InvocationResponse, PluginDispatchHintV1 } from "@semio-tech/framework";
 import type { WgpuEphemeralSnapshot, WgpuPluginHandle } from "./🧾️typed-operations-and-handle/🟦️.ts";
+import { naturalFileMediaInputV1 } from "../../../🧱️elements/🛠️ShellHelpers/🧾️transfer-checkin-tutorial/🟦️.ts";
 
 /** 🌉️ The raw string-in/string-out JS surface `🌉️ProgramBridge/🎯️targets/🧊️wgpu/🦀️.rs`'s `wasm32` branch reads
  * via `Reflect::get` — `manifest`/`createApp`/`render` are HARD requirements at
@@ -31,6 +32,10 @@ export interface WgpuJsBridge {
   readonly applyMutations: (instanceId: number, operations: Uint8Array) => Promise<void>;
   readonly loadAppDocumentArchive: (instanceId: number, archive: Uint8Array) => Promise<void>;
   readonly readAppDocumentArchive: (instanceId: number) => Promise<Uint8Array>;
+  /** 📂️ The largest natural file the format's import command admits, the bound the shell reads a picked file under. */
+  readonly naturalFileMaximumBytes: (formatKind: string) => number;
+  /** 📂️ Imports one picked natural file's bytes into a fresh instance through the typed media door, the same `MediaIn` React's Open file sends. */
+  readonly importNaturalFile: (instanceId: number, formatKind: string, bytes: Uint8Array) => Promise<void>;
   /** 🧾️ The history projection as JSON (`u64` carriers as numbers, `invocationResponseJson`'s rule). */
   readonly readHistory: (instanceId: number) => Promise<string>;
   /** 🧬️ `codec.pack-schema-hash(artifactKind)`: the kind's 32-byte structural fingerprint. */
@@ -98,6 +103,11 @@ export function pluginHandleForBridge(handle: WgpuPluginHandle): WgpuJsBridge {
     applyMutations: (instanceId, operations) => handle.applyMutations(instanceId, operations),
     loadAppDocumentArchive: (instanceId, archive) => handle.loadAppDocumentArchive(instanceId, archive),
     readAppDocumentArchive: (instanceId) => handle.readAppDocumentArchive(instanceId),
+    naturalFileMaximumBytes: (formatKind) => naturalFileMediaInputV1(formatKind).maximumBytes,
+    importNaturalFile: (instanceId, formatKind, bytes) => {
+      const input = naturalFileMediaInputV1(formatKind);
+      return handle.importAppMedia(instanceId, input.port, input.descriptor, bytes);
+    },
     readHistory: (instanceId) => handle.readHistory(instanceId).then((patch) => JSON.stringify(patch, (_key, value: unknown) => (typeof value === "bigint" ? Number(value) : value))),
     readAppDocumentIdentity: (instanceId) => handle.readAppDocumentIdentity(instanceId).then((identity) => JSON.stringify(identity)),
     codecPackSchemaHash: (artifactKind) => handle.codec({ operation: "pack-schema-hash", artifactKind }),

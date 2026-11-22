@@ -13,16 +13,25 @@ def box(kind, body):
 
 
 def main(path):
+    rows = [case(8), case(3)]
+    open(path, "w").write("\n".join(rows))
+    print(len(rows), "palette cases")
+
+
+def case(depth):
     width, height = 24, 16
     image = Image.new("L", (width, height))
-    image.putdata([(x * 3 + y) % 7 for y in range(height) for x in range(width)])
+    image.putdata([((x * 3 + y) % 7) + (0 if depth == 8 else 124) for y in range(height) for x in range(width)])
     buffer = io.BytesIO()
     image.save(buffer, "JPEG2000", irreversible=False, no_jp2=True)
-    codestream = buffer.getvalue()
+    codestream = bytearray(buffer.getvalue())
+    if depth != 8:
+        codestream[codestream.find(b"\xff\x51") + 40] = depth - 1
+    codestream = bytes(codestream)
     palette = [(255, 0, 0), (0, 255, 0), (0, 0, 255), (255, 255, 0), (0, 255, 255), (255, 0, 255), (10, 20, 30)]
     pclr = struct.pack(">HB", len(palette), 3) + bytes([7, 7, 7]) + b"".join(bytes(entry) for entry in palette)
     cmap = b"".join(struct.pack(">HBB", 0, 1, column) for column in range(3))
-    header = box(b"ihdr", struct.pack(">IIHBBBB", height, width, 1, 7, 7, 0, 0)) + box(b"colr", bytes([1, 0, 0]) + struct.pack(">I", 16)) + box(b"pclr", pclr) + box(b"cmap", cmap)
+    header = box(b"ihdr", struct.pack(">IIHBBBB", height, width, 1, depth - 1, 7, 0, 0)) + box(b"colr", bytes([1, 0, 0]) + struct.pack(">I", 16)) + box(b"pclr", pclr) + box(b"cmap", cmap)
     jp2 = box(b"jP  ", b"\r\n\x87\n") + box(b"ftyp", b"jp2 \0\0\0\0jp2 ") + box(b"jp2h", header) + box(b"jp2c", codestream)
     objects = [b"<< /Type /Catalog /Pages 2 0 R >>", b"<< /Type /Pages /Kids [3 0 R] /Count 1 >>",
                f"<< /Type /Page /Parent 2 0 R /MediaBox [0 0 {width} {height}] /Contents 4 0 R /Resources << /XObject << /Im1 5 0 R >> >> >>".encode(),
@@ -38,8 +47,7 @@ def main(path):
     with fitz.open(stream=bytes(pdf), filetype="pdf") as document:
         pixmap = document[0].get_pixmap(colorspace=fitz.csRGB)
         expected = bytes(c for y in range(height) for x in range(width) for c in pixmap.pixel(x, y))
-    open(path, "w").write("\t".join(["jpx-palette", str(width), str(height), "3", "0", jp2.hex(), expected.hex()]))
-    print("palette case")
+    return "\t".join(["jpx-palette" if depth == 8 else f"jpx-palette-{depth}bit", str(width), str(height), "3", "0", jp2.hex(), expected.hex()])
 
 
 main(sys.argv[1])

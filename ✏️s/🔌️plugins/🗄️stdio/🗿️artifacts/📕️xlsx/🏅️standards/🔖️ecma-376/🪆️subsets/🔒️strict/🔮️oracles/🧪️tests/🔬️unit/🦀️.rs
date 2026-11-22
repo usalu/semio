@@ -4,6 +4,10 @@ use super::*;
 /// 🧫️ The real committed package this subset's case runs on, read where the artifact keeps it.
 const FIXTURE: &[u8] = include_bytes!("../../../🧪️tests/🧫️fixtures/📕️reuse-marketplaces.xlsx");
 
+/// ⚓️ The openpyxl-written package and its lxml-rewritten relationship-base twin, replayed by `🔮️oracles/🔭️third-party-generators`.
+const BASE_PAIR_BEFORE: &[u8] = include_bytes!("../../../🧪️tests/🧫️fixtures/⚓️set-relationship-base-applied/⬅️before.xlsx");
+const BASE_PAIR_AFTER: &[u8] = include_bytes!("../../../🧪️tests/🧫️fixtures/⚓️set-relationship-base-applied/➡️after.xlsx");
+
 fn json_object(pairs: Vec<(&str, Json)>) -> Json {
     Json::Object(pairs.into_iter().map(|(key, value)| (key.to_string(), value)).collect())
 }
@@ -14,6 +18,7 @@ fn params_for(kind: &str) -> Json {
     match kind {
         "set-main-namespace" => json_object(vec![("namespace", Json::String("http://purl.oclc.org/ooxml/spreadsheetml/main".to_string()))]),
         "set-relationships-namespace" => json_object(vec![("namespace", Json::String("http://purl.oclc.org/ooxml/officeDocument/relationships".to_string()))]),
+        "set-relationship-base" => json_object(vec![("base", Json::String("http://purl.oclc.org/ooxml/officeDocument/relationships".to_string()))]),
         "set-conformance-attribute" => json_object(vec![("value", Json::String("strict".to_string()))]),
         "remove-conformance-attribute" => json_object(vec![]),
         "insert-vml-part" => json_object(vec![("path", Json::String("xl/drawings/vmlDrawing1.vml".to_string())), ("document", semio_s_plugin_stdio_document_test_oracle::ooxml::vml_document())]),
@@ -73,4 +78,16 @@ fn the_container_round_trip_is_projection_stable_and_not_a_byte_passthrough() {
     let rebuilt = oracle_round_trip(FIXTURE).unwrap();
     assert_ne!(rebuilt, FIXTURE.to_vec(), "the reference rebuilds the container; identical bytes would mean the input was smuggled");
     assert_eq!(project_package(&rebuilt).unwrap(), project_package(FIXTURE).unwrap());
+}
+
+/// 🔗️ `set-relationship-base` on the openpyxl-written package yields what lxml wrote as the Strict-base twin, and the inverse restores the original projection.
+#[test]
+fn set_relationship_base_reproduces_the_third_party_pair_and_its_inverse_restores_the_before() {
+    let forward = spec("set-relationship-base");
+    let before = project_package(BASE_PAIR_BEFORE).unwrap();
+    assert_ne!(before, project_package(BASE_PAIR_AFTER).unwrap(), "the pair must be observable in the conformance-class projection");
+    let produced = oracle_apply_mutation(BASE_PAIR_BEFORE, &forward).unwrap();
+    assert_eq!(project_package(&produced).unwrap(), project_package(BASE_PAIR_AFTER).unwrap(), "the oracle's result must read like the third-party after");
+    let undo = oracle_inverse_spec(BASE_PAIR_BEFORE, &forward).unwrap();
+    assert_eq!(project_package(&oracle_apply_mutation(&produced, &undo).unwrap()).unwrap(), before);
 }

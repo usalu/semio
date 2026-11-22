@@ -9,6 +9,38 @@ description = "Component crate of semio-s-artifact-stdio-pdf: mut-family"
 [package.metadata.semio]
 role = "library"
 
+[package.metadata.semio.carve]
+owned = [
+  "standards::v1_7::subsets::e::io",
+  "standards::v1_7::subsets::e::io::derived_analysis",
+  "standards::v1_7::subsets::e::io::derived_composition",
+  "standards::v1_7::subsets::e::io::derived_construction",
+  "standards::v1_7::subsets::e::io::mutation_bridge",
+  "standards::v1_7::subsets::e::schema::mutations::embed_font_file::tests",
+  "standards::v1_7::subsets::e::schema::mutations::insert_encryption_dictionary::tests",
+  "standards::v1_7::subsets::e::schema::mutations::insert_javascript_action::tests",
+  "standards::v1_7::subsets::e::schema::mutations::insert_launch_action::tests",
+  "standards::v1_7::subsets::e::schema::mutations::insert_media_annotation::tests",
+  "standards::v1_7::subsets::e::schema::mutations::remove_encryption_dictionary::tests",
+  "standards::v1_7::subsets::e::schema::mutations::remove_font_file::tests",
+  "standards::v1_7::subsets::e::schema::mutations::remove_javascript_action::tests",
+  "standards::v1_7::subsets::e::schema::mutations::remove_launch_action::tests",
+  "standards::v1_7::subsets::e::schema::mutations::remove_media_annotation::tests",
+  "standards::v1_7::subsets::x::schema::mutations::insert_encryption_dictionary::tests",
+  "standards::v1_7::subsets::x::schema::mutations::insert_javascript_action::tests",
+  "standards::v1_7::subsets::x::schema::mutations::insert_launch_action::tests",
+  "standards::v1_7::subsets::x::schema::mutations::insert_media_annotation::tests",
+  "standards::v1_7::subsets::x::schema::mutations::remove_encryption_dictionary::tests",
+  "standards::v1_7::subsets::x::schema::mutations::remove_font_file::tests",
+  "standards::v1_7::subsets::x::schema::mutations::remove_javascript_action::tests",
+  "standards::v1_7::subsets::x::schema::mutations::remove_launch_action::tests",
+  "standards::v1_7::subsets::x::schema::mutations::remove_media_annotation::tests",
+  "standards::v1_7::subsets::x::schema::mutations::remove_output_intent::tests",
+  "standards::v1_7::subsets::x::schema::mutations::remove_trim_box::tests",
+  "standards::v1_7::subsets::x::schema::mutations::set_output_intent::tests",
+  "standards::v1_7::subsets::x::schema::mutations::set_trim_box::tests",
+]
+
 [lints]
 workspace = true
 

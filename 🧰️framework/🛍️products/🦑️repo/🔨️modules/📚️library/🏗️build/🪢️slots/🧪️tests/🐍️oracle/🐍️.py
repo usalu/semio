@@ -28,35 +28,35 @@ def classify(rows, now, grace):
 
 
 def plan(rows, bounds, dangling, retention):
-    """Independent model of the collection plan: dangling, superseded beyond grace, age for unslotted, budget by value tier."""
+    """Independent model of the collection plan: dangling, stale or unreached beyond grace (verdicts given), age for entries that are not live, budget by value tier."""
     grace = retention["grace"]
     metas = retention["metas"]
+    verdicts = retention.get("verdicts") or {}
     claimed = set(retention["claimed"])
-    verdicts = classify(
-        [{"key": r["key"], "slot": (metas.get(r["key"]) or {}).get("slot"), "storedAt": (metas.get(r["key"]) or {}).get("storedAt", 0)} for r in rows],
-        bounds["now"], grace)
+    tiers = {"stale": 0, "unreached": 0, "undeclared": 1, "live": 2, "grace": 2}
     drops = []
     kept = []
     guarded = set()
     total = 0
     for r in rows:
         key = r["key"]
-        state = verdicts[key][0]
+        state = verdicts.get(key, "undeclared")
         stored = (metas.get(key) or {}).get("storedAt")
         is_claimed = key in claimed
+        young = stored is not None and bounds["now"] - stored < grace
         if key in dangling:
             drops.append({"key": key, "size": r["size"], "reason": "dangling"})
-        elif state == "expired" and not is_claimed:
-            d = {"key": key, "size": r["size"], "reason": "superseded"}
+        elif state in ("stale", "unreached") and not is_claimed and not young:
+            d = {"key": key, "size": r["size"], "reason": "stale"}
             if stored is not None:
                 d["storedAt"] = stored
             drops.append(d)
-        elif state == "unslotted" and not is_claimed and bounds["maximumAge"] > 0 and bounds["now"] - r["accessed"] > bounds["maximumAge"]:
+        elif tiers[state] < 2 and not is_claimed and bounds["maximumAge"] > 0 and bounds["now"] - r["accessed"] > bounds["maximumAge"]:
             drops.append({"key": key, "size": r["size"], "reason": "age"})
         else:
-            kept.append((r, {"expired": -1, "retained": 0, "unslotted": 1, "current": 2}[state]))
+            kept.append((r, tiers[state]))
             total += r["size"]
-            if is_claimed or (stored is not None and bounds["now"] - stored < grace):
+            if is_claimed or young:
                 guarded.add(key)
     need = bounds.get("need", 0)
     reserved = bounds.get("reserved", 0)

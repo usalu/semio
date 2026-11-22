@@ -74,7 +74,6 @@ enum MaintenanceTool {
     Worker(usize, u64),
     Awaiting,
     AwaitingPublication,
-    CloseEmissionConstruction,
     Idle,
 }
 
@@ -166,7 +165,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'sta
         }
         if stage==14{return self.drive_store_replacement_jobs(cx,grant,false)}
         if stage==23{return Ok(match semio_framework_job_worker::pump_worker_job_retirements(1,cx)?{semio_framework_job_worker_authority::WorkerJobCloseStep::Pending{progress}|semio_framework_job_worker_authority::WorkerJobCloseStep::Complete{progress}=>PluginLifecycleStep::Progress(progress),semio_framework_job_worker_authority::WorkerJobCloseStep::Blocked=>PluginLifecycleStep::Blocked{reason:"original worker retirement awaits custody"}})}
-if stage==0{return match self.shared().maintenance_tool_selection(){MaintenanceTool::AwaitingPublication=>Ok(PluginLifecycleStep::AwaitingInput{reason:"typed command awaits its original dispatch or publication turn"}),MaintenanceTool::Awaiting=>Ok(PluginLifecycleStep::AwaitingInput{reason:"every typed operation awaits its exact presented host result ACK"}),MaintenanceTool::Idle=>Ok(idle()),MaintenanceTool::CloseEmissionConstruction=>{let before=cx.retained_progress();if let Some(admission)=self.tools.original_emission_construction.as_mut(){admission.close_step(cx)?;}Ok(PluginLifecycleStep::Progress(semio_plugin_ownership::bounded_ownership::original_lifecycle_delta(before,cx.retained_progress())?))}MaintenanceTool::Worker(index,operation_id)=>{self.maintenance.maintenance_tool_cursor=(index+1)%ARTIFACT_LIVE_OUTPUT_SLOTS;let owner=self.tools.tool_operations.get_mut(operation_id).ok_or_else(||maintenance_fault("interactive-job.maintenance-tool-authority","typed operation authority changed during its original turn"))?;cx.with_retained_loan(grant,|same|owner.drive_worker_step(same)).map_err(Into::into)}}}
+if stage==0{return match self.shared().maintenance_tool_selection(){MaintenanceTool::AwaitingPublication=>Ok(PluginLifecycleStep::AwaitingInput{reason:"typed command awaits its original dispatch or publication turn"}),MaintenanceTool::Awaiting=>Ok(PluginLifecycleStep::AwaitingInput{reason:"every typed operation awaits its exact presented host result ACK"}),MaintenanceTool::Idle=>Ok(idle()),MaintenanceTool::Worker(index,operation_id)=>{self.maintenance.maintenance_tool_cursor=(index+1)%ARTIFACT_LIVE_OUTPUT_SLOTS;let owner=self.tools.tool_operations.get_mut(operation_id).ok_or_else(||maintenance_fault("interactive-job.maintenance-tool-authority","typed operation authority changed during its original turn"))?;cx.with_retained_loan(grant,|same|owner.drive_worker_step(same)).map_err(Into::into)}}}
         if stage==1{
             let Some((index,operation_id))=self.media.media_closures.next_id_from(self.maintenance.maintenance_media_cursor)else{return Ok(idle())};self.maintenance.maintenance_media_cursor=(index+1)%ARTIFACT_LIVE_OUTPUT_SLOTS;
             if self.media.media_closures.get(operation_id).is_some_and(|active|active.download_pending){return Ok(PluginLifecycleStep::AwaitingInput{reason:"terminal media source remains retained until its original output receiving"})}
@@ -651,6 +650,13 @@ if stage==0{return match self.shared().maintenance_tool_selection(){MaintenanceT
             }));
         }
         let step=self.ingest.advance_document_archive_load(&mut *self.stores, &mut *self.child_composition, &mut active, grant, cx);
+        let step=match step{
+            Err(failure) if active.terminal_target.is_none()&&failure.receipt_refusal.is_none()&&failure.context_refusal.is_none()&&failure.work_refusal.is_none() => match &failure.primary{
+                semio_plugin_ownership::bounded_ownership::PluginLifecyclePrimary::Fault(fault)=>{active.request_fault(fault);Ok(PluginLifecycleStep::Progress(failure.effects))}
+                _=>Err(failure),
+            },
+            step=>step,
+        };
         self.ingest.document_archive_loads.insert_admitted(operation, active);
         step
     }
@@ -668,8 +674,18 @@ impl<'v, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'stati
 
     /// 🪹️ Every live retirement frontier and its retained directory backing is empty.
     pub fn maintenance_ladder_terminal_is_empty(&self) -> bool {
+        self.maintenance_ladder_settled(false)
+    }
+
+    /// 🫧️ Quiescence of every maintenance frontier except a live transient press preview: a preview is a deliberate, committed-nowhere overlay that only its own release or cancel retires, so the tool-overlay unit that merely awaits the already-returned foreground source never blocks the settle of a tick.
+    pub fn maintenance_ladder_quiescent_under_live_preview(&self) -> bool {
+        self.maintenance_ladder_settled(true)
+    }
+
+    fn maintenance_ladder_settled(&self, live_preview_allowed: bool) -> bool {
+        let overlay = self.render_ref();
         self.stores.window_config_store.direct_ingress_quiescent()
-            && !self.render_ref().tool_overlay_retirement_pending()
+            && !(overlay.tool_overlay_retirement_pending() && !(live_preview_allowed && overlay.tool_overlay_waits_for_foreground()))
             && self.tool_run_ref().tool_run_retirement_demand(0).is_ok_and(|demand| demand == RetirementDemand::default())
             && self.time_travel_ref().time_travel_retirement_demands(0).is_ok_and(|demand| demand == RetirementDemand::default())
             && self.history.pending_command_prune.is_none()
@@ -679,6 +695,7 @@ impl<'v, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'stati
             && self.tools.tool_operations.is_empty()
             && self.tools.original_emission_admission.is_none()
             && self.tools.original_emission_receipt.is_none()
+            && self.tools.original_emission_result.is_none()
             && self.tools.original_emission_construction.as_ref().is_none_or(|admission| admission.terminal_is_empty())
             && self.tools.tool_cancellations.active_operation_count() == 0
             && self.tools.latest_wins_commands.is_empty()
@@ -773,6 +790,7 @@ impl<'v, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'stati
     fn maintenance_tool_selection(&self) -> MaintenanceTool {
         let mut awaits_publication = self.tools.original_emission_admission.is_some()
             || self.tools.original_emission_receipt.is_some()
+            || self.tools.original_emission_result.is_some()
             || self.tools.original_emission_construction.as_ref().is_some_and(|owner| !owner.terminal_is_empty());
         let mut awaits_ack = false;
         let mut retiring = false;
@@ -789,7 +807,6 @@ impl<'v, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'stati
             }
         }
         if retiring { return MaintenanceTool::Idle; }
-        if awaits_publication && self.tools.original_emission_admission.is_none() && self.tools.original_emission_receipt.is_none() && self.tools.tool_operations.is_empty() { return MaintenanceTool::CloseEmissionConstruction; }
         if awaits_publication { return MaintenanceTool::AwaitingPublication; }
         if awaits_ack { return MaintenanceTool::Awaiting; }
         MaintenanceTool::Idle
@@ -800,7 +817,6 @@ impl<'v, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'stati
             0 => match self.maintenance_tool_selection() {
                 MaintenanceTool::Worker(_, operation_id) => self.tools.tool_operations.get(operation_id).map(|operation| operation.worker_step_demands(body)).transpose()?,
                 MaintenanceTool::Awaiting | MaintenanceTool::AwaitingPublication => Some(RetirementDemand::default()),
-                MaintenanceTool::CloseEmissionConstruction => self.tools.original_emission_construction.as_ref().map(|admission| admission.close_demand()),
                 MaintenanceTool::Idle => None,
             },
             1 => {

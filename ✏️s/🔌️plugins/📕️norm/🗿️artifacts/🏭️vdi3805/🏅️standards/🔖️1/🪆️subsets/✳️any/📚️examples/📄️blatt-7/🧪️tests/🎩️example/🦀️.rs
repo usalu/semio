@@ -3,7 +3,7 @@ async fn primary_asset_decodes_and_complies() {
     use semio_s_artifact_norm_vdi3805_inferences::evaluate;
     use semio_s_artifact_norm_vdi3805_io::text::snapshot::decode_vdi3805_dsl;
     use semio_s_artifact_norm_vdi3805_model::conforming_blatt_dataset;
-    let text = semio_s_artifact_norm_vdi3805_examples::blatt_7::PRIMARY_TEXT;
+    let text = super::PRIMARY_TEXT;
     let decoded = decode_vdi3805_dsl(text).expect("blatt-7 dsl");
     assert_eq!(decoded.catalog.products[0].sheet.0, 7);
     let report = evaluate(&decoded);

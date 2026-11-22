@@ -111,7 +111,7 @@ fn the_open_band_names_every_resolution_step_in_both_tongues() {
 /// renderer I/O and worker-retirement slots). A bare `block_on` parked for ever inside a verb after a
 /// live law had opened a document: sampled on two-user gate run 17, the test thread sat in
 /// `block_on(handle_hub_workspace_action)` for 23 min, and eight earlier runs never exited.
-fn hub_verb(shell: &mut ShellState, verb: &str, args: &[(&str, &str)]) {
+fn hub_verb(mut shell: &mut ShellState, verb: &str, args: &[(&str, &str)]) {
     let args = (!args.is_empty()).then(|| DslValue::Object(args.iter().map(|(key, value)| ((*key).to_string(), DslValue::String((*value).to_string()))).collect()));
     #[cfg(not(target_arch = "wasm32"))]
     drive(ActionsCtx::of(&mut shell).handle_hub_workspace_action(verb, args));
@@ -122,7 +122,7 @@ fn hub_verb(shell: &mut ShellState, verb: &str, args: &[(&str, &str)]) {
 
 /// 🔐️ Pumps the directory lane until the hub workspace's spawned requests (sign-in, spaces) have answered — the
 /// verbs only arm them now, and a frame applies the answer.
-fn settle_hub_workspace(shell: &mut ShellState) {
+fn settle_hub_workspace(mut shell: &mut ShellState) {
     while !shell.directory.hub_workspace_settled() {
         #[cfg(not(target_arch = "wasm32"))]
         {

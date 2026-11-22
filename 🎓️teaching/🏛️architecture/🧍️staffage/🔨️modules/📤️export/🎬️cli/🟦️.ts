@@ -10,18 +10,22 @@
  * frame with `rsvg-convert` onto one fixed canvas (all frames aligned on the world origin, so nothing jumps), then pack a PNG ZIP or encode
  * with `ffmpeg`: MP4 is libx264 yuv420p (no alpha, opaque background), WebM is libvpx-vp9 yuva420p (alpha), both at the exact constant fps.
  * The thermal view solves under `--environment <preset>` if given, else the asset's `thermal.referenceEnvironment`, else its `thermal.environment`.
+ * Air flow. The thermal view shows the thermodynamic air flow by default everywhere in the product, so every thermal drawing carries its default layers (streams, tracers, moisture, fog; `--flow all` adds the parcel pathlines) unless `--flow none`; `--flow streams,tracers,moisture,fog,pathlines` picks layers. SVG, PDF and the raster formats draw it on paper (see `🎨️depiction/🌊️flow-view`), the sheets draw it in every cell from one developed field at one instant with the legends once, DXF and DWG carry it as model-space geometry in metres on the `FLOW-…` layers (see `🎨️depiction/🌊️flow-view/📐️model`; in a sheet `PLAN-FLOW-…`).
+ * The flow is developed for `--flow-develop <s>` (default 14) before the first frame and then advances with the frame times; a looping clip makes field and tracers periodic with its duration, so the loop closes. A pose written as png-sequence, mp4 or webm plays its flow for `--duration <s>` (default 6) at `--fps` (default 25): the figure stands still, the air moves. With an explicit `--duration` the other single-view formats write the same frames (one SVG, DXF or DWG per frame, one PDF page per frame); without it they write the one developed instant.
+ * Conditions (thermal view only, each refused by name elsewhere). The environment is `--environment <preset>`, else the asset's reference environment, else its own, and on top of it `--air-temp <°C>`, `--radiant-temp <°C>`, `--sky-temp <°C>`, `--ground-temp <°C>`, `--humidity <%>`, `--wind <m/s>`, `--wind-direction <°, 0 ahead, 90 to the asset's left>`, `--sun <W/m²>`, `--diffuse <0…1>`, `--pressure <Pa>`; they change the thermal solve and the flow alike. The air of the flow: `--turbulence <% of the wind speed>`, `--turbulence-floor <m/s>`, `--turbulence-time <s>`, `--wind-profile uniform|logarithmic` with `--roughness <m>` and `--reference-height <m>`, `--flow-life <s>` (the life of a parcel), `--flow-seed <n>`. The marks: `--flow-spacing <mm>`, `--flow-streak <mm>`, `--flow-period <s>`, `--flow-exposure <s>`, `--flow-trail <s>`, `--flow-stroke <mm>` (paper millimetres at the drawing scale).
  * External programs are reached only through {@link ToolPort}. Progress goes to stderr; SIGINT cancels and kills the running child.
  * <https://gitlab.gnome.org/GNOME/librsvg> · <https://ffmpeg.org/ffmpeg.html> */
 import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import { join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { VIEWS, type AxonometricSpec, type DepictionOptions, type DrawingScene, type EvaluationQuery, type JobControl, type View } from "../../🔗️contracts/🟦️.ts";
-import { LANGUAGES, PLANAR_VIEWPOINTS, VIEWPOINTS, type Asset, type Language, type Slug, type Text, type Viewpoint } from "../../../🧬️schema/🟦️.ts";
+import { DEFAULT_FLOW_LAYERS, FLOW_LAYERS, VIEWS, type AxonometricSpec, type DepictionOptions, type DrawingScene, type EvaluationQuery, type FlowConditions, type FlowLayer, type FlowMarkDetail, type JobControl, type View } from "../../🔗️contracts/🟦️.ts";
+import { LANGUAGES, PLANAR_VIEWPOINTS, VIEWPOINTS, type Asset, type Environment, type Language, type Slug, type Text, type Viewpoint } from "../../../🧬️schema/🟦️.ts";
 import { loadCatalogFromFiles, loadEnvironments, DEFAULT_CATALOG_ROOT } from "../../🗂️catalog/📥️files/🟦️.ts";
 import { resolveThermalEnvironment } from "../../🗂️catalog/🟦️.ts";
 import { evaluate } from "../../🧮️evaluation/🟦️.ts";
 import { axonometricCamera } from "../../🎨️depiction/🔭️views/🟦️.ts";
-import { defaultDepictionOptions, depict, loadAxonometric, modelScene, type Analysis } from "../../🎨️depiction/🟦️.ts";
+import { shownFlow, FLOW_DEVELOP_S, defaultDepictionOptions, depict, developFlow, loadAxonometric, modelScene, transportOf, type Analysis } from "../../🎨️depiction/🟦️.ts";
+import { DEFAULT_TURBULENCE } from "../../💨️transport/🟦️.ts";
 import { solveStructure } from "../../🏗️structure/🟦️.ts";
 import { solveThermalAt } from "../../🌡️thermal/🟦️.ts";
 import { writeSvg } from "../🖼️svg/🟦️.ts";
@@ -50,10 +54,10 @@ export const isModelFormat = (format: CliFormat): format is ModelFormat => (MODE
 /** 🗂️ One of {@link CLI_FORMATS}. */
 export type CliFormat = (typeof CLI_FORMATS)[number];
 
-/** ⚙️ The parsed command line. For the 3D model formats `scale` 0 means every authored scale (a GLB, a model JSON or a ZIP then holds all of them). */
-export type CliOptions = { readonly asset: string; readonly clip?: string; readonly pose?: string; readonly view: View; readonly viewpoint?: Viewpoint; readonly projection?: Projection; readonly axonometric?: AxonometricSpec; readonly sheetAxonometric?: boolean; readonly time?: number; readonly environment?: Slug; readonly scale: number; readonly fps?: number; readonly format: CliFormat; readonly out: string; readonly catalog: string; readonly language: Language; readonly pxPerMm: number; readonly background: string; readonly spanK?: number };
+/** ⚙️ The parsed command line. For the 3D model formats `scale` 0 means every authored scale (a GLB, a model JSON or a ZIP then holds all of them). `flow` is set for every thermal drawing (all layers unless `--flow` says otherwise, empty for `--flow none`) and absent for the other views; `environmentOverrides` are the single values laid over the resolved environment; `durationS` is set where a pose plays its flow as a frame sequence. */
+export type CliOptions = { readonly asset: string; readonly clip?: string; readonly pose?: string; readonly view: View; readonly viewpoint?: Viewpoint; readonly projection?: Projection; readonly axonometric?: AxonometricSpec; readonly sheetAxonometric?: boolean; readonly time?: number; readonly environment?: Slug; readonly scale: number; readonly fps?: number; readonly format: CliFormat; readonly out: string; readonly catalog: string; readonly language: Language; readonly pxPerMm: number; readonly background: string; readonly spanK?: number; readonly flow?: readonly FlowLayer[]; readonly environmentOverrides?: Partial<Environment>; readonly flowConditions?: FlowConditions; readonly flowDetail?: FlowMarkDetail; readonly flowDevelopS?: number; readonly durationS?: number };
 
-const SYNTAX = "--asset <slug> (--clip <slug> | --pose <slug>) --view <view> --scale <denominator> [--fps <n>] --format <svg|pdf|dxf|dwg|png-sequence|mp4|webm|sheet-svg|sheet-pdf|sheet-dxf|sheet-dwg|glb|fbx|model|model-zip> --out <dir> --lang <en|de> (--viewpoint elevation|front|plan|axonometric [--camera isometric|dimetric|<azimuth>,<elevation>] | --projection first|third [--views elevation,front,plan,axonometric]) [--time <s>] [--environment <preset>] [--catalog <dir>] [--px-per-mm <n>] [--background #rrggbb]";
+const SYNTAX = "--asset <slug> (--clip <slug> | --pose <slug>) --view <view> --scale <denominator> [--fps <n>] --format <svg|pdf|dxf|dwg|png-sequence|mp4|webm|sheet-svg|sheet-pdf|sheet-dxf|sheet-dwg|glb|fbx|model|model-zip> --out <dir> --lang <en|de> (--viewpoint elevation|front|plan|axonometric [--camera isometric|dimetric|<azimuth>,<elevation>] | --projection first|third [--views elevation,front,plan,axonometric]) [--time <s>] [--environment <preset>] [--air-temp <°C>] [--radiant-temp <°C>] [--sky-temp <°C>] [--ground-temp <°C>] [--humidity <%>] [--wind <m/s>] [--wind-direction <°>] [--sun <W/m²>] [--diffuse <0..1>] [--pressure <Pa>] [--flow all|none|streams,tracers,moisture,fog,pathlines] [--flow-develop <s>] [--duration <s>] [--turbulence <%>] [--turbulence-floor <m/s>] [--turbulence-time <s>] [--wind-profile uniform|logarithmic] [--roughness <m>] [--reference-height <m>] [--flow-life <s>] [--flow-seed <n>] [--flow-spacing <mm>] [--flow-streak <mm>] [--flow-period <s>] [--flow-exposure <s>] [--flow-trail <s>] [--flow-stroke <mm>] [--catalog <dir>] [--px-per-mm <n>] [--background #rrggbb]";
 const USAGE: Text = { en: `usage: ${SYNTAX}`, de: `Aufruf: ${SYNTAX}` };
 
 const SYNTAX_MODEL = "--asset <slug> --lang <en|de> --out <dir> --format glb --pose <slug> [--scale <denominator>] | --format fbx --clip <slug> --scale <denominator> [--view <view>] | --format model (--pose <slug> | --clip <slug>) [--scale <denominator>] | --format model-zip [--scale <denominator>], each with [--environment <preset>] [--span-k <kelvin>] [--catalog <dir>]; without --scale a GLB, a model and a ZIP hold every authored scale and mode, with --scale only that scale";
@@ -87,6 +91,8 @@ export function parseArguments(argv: readonly string[]): CliOptions {
   const asked = values.get("format");
   if (asked !== undefined && (MODEL_FORMATS as readonly string[]).includes(asked)) {
     const format = asked as ModelFormat;
+    const drawn = [...values.keys()].find((key) => DRAWING_FLAGS.has(key));
+    if (drawn !== undefined) throw refuse(`--${drawn} applies to the thermal view of the drawing formats (svg, pdf, dxf, dwg, png-sequence, mp4, webm and the sheets), not to ${format}`, `--${drawn} gilt für die thermische Ansicht der Zeichnungsformate (svg, pdf, dxf, dwg, png-sequence, mp4, webm und die Blätter), nicht für ${format}`, USAGE_MODEL);
     if (values.has("viewpoint") || values.has("projection")) throw new ModelRequestError("model-no-viewpoint");
     if (values.has("time") || values.has("fps")) throw new ModelRequestError("model-no-time");
     if (format === "glb" && (pose === undefined || clip !== undefined)) throw new ModelRequestError("glb-needs-pose");
@@ -103,6 +109,28 @@ export function parseArguments(argv: readonly string[]): CliOptions {
   if (values.has("environment") && values.get("view") !== "thermal") throw refuse("--environment applies to --view thermal only", "--environment gilt nur für --view thermal");
   const fps = values.get("fps");
   const format = oneOf("format", CLI_FORMATS);
+  const thermal = values.get("view") === "thermal";
+  if (values.has("flow") && !thermal) throw refuse("--flow draws the air flow of --view thermal only", "--flow zeichnet die Luftströmung nur für --view thermal");
+  const flow = thermal ? (values.has("flow") ? parseFlow(need("flow")) : DEFAULT_FLOW_LAYERS) : undefined;
+  const bounded = (spec: NumberFlag): number => { const value = Number(need(spec.flag)); if (!Number.isFinite(value) || value < spec.min || value > spec.max || (spec.whole === true && !Number.isInteger(value))) throw refuse(`--${spec.flag} must be a ${spec.whole === true ? "whole " : ""}number from ${spec.min} to ${spec.max} ${spec.unit}, got ${values.get(spec.flag)}`, `--${spec.flag} muss eine ${spec.whole === true ? "ganze " : ""}Zahl von ${spec.min} bis ${spec.max} ${spec.unit} sein, erhalten ${values.get(spec.flag)}`); return value * (spec.factor ?? 1); };
+  const given = <T extends NumberFlag>(specs: readonly T[]): readonly T[] => specs.filter((spec) => values.has(spec.flag));
+  const strayEnvironment = thermal ? undefined : ENVIRONMENT_FLAGS.find((spec) => values.has(spec.flag));
+  if (strayEnvironment !== undefined) throw refuse(`--${strayEnvironment.flag} sets the environment of --view thermal only`, `--${strayEnvironment.flag} setzt die Umgebung nur für --view thermal`);
+  const flowing = flow !== undefined && flow.length > 0;
+  const strayFlow = flowing ? undefined : [...FLOW_FLAGS].find((key) => values.has(key));
+  if (strayFlow !== undefined) throw thermal ? refuse(`--${strayFlow} shapes the air flow, which --flow none leaves out`, `--${strayFlow} formt die Luftströmung, die --flow none weglässt`) : refuse(`--${strayFlow} shapes the air flow, which only --view thermal draws`, `--${strayFlow} formt die Luftströmung, die nur --view thermal zeichnet`);
+  const environmentOverrides = Object.fromEntries(given(ENVIRONMENT_FLAGS).map((spec) => [spec.field, bounded(spec)])) as Partial<Environment>;
+  const profile = values.has("wind-profile") ? oneOf("wind-profile", WIND_PROFILES) : "uniform";
+  const strayProfile = profile === "logarithmic" ? undefined : BOUNDARY_FLAGS.find((spec) => values.has(spec.flag));
+  if (strayProfile !== undefined) throw refuse(`--${strayProfile.flag} describes the logarithmic wind profile: add --wind-profile logarithmic`, `--${strayProfile.flag} beschreibt das logarithmische Windprofil: --wind-profile logarithmic ergänzen`);
+  const turbulence = Object.fromEntries(given(TURBULENCE_FLAGS).map((spec) => [spec.field, bounded(spec)]));
+  const boundary = Object.fromEntries(given(BOUNDARY_FLAGS).map((spec) => [spec.field, bounded(spec)]));
+  const flowConditions: FlowConditions = { ...(Object.keys(turbulence).length === 0 ? {} : { turbulence: { ...DEFAULT_TURBULENCE, ...turbulence } }), ...(profile === "logarithmic" ? { boundaryLayer: { ...DEFAULT_BOUNDARY_LAYER, ...boundary } } : {}), ...Object.fromEntries(given(SOLVER_FLAGS).map((spec) => [spec.field, bounded(spec)])) };
+  const flowDetail = Object.fromEntries(given(MARK_FLAGS).map((spec) => [spec.field, bounded(spec)])) as FlowMarkDetail;
+  const sequence = format === "png-sequence" || format === "mp4" || format === "webm";
+  const playable = pose !== undefined && flowing && !format.startsWith("sheet-");
+  if (values.has("duration") && !playable) throw refuse("--duration is how long a pose plays its air flow, frame by frame (--pose, --view thermal, not --flow none, not a sheet); a clip has its own duration", "--duration ist die Dauer, die eine Pose ihre Luftströmung Bild für Bild abspielt (--pose, --view thermal, nicht --flow none, kein Blatt); ein Clip hat seine eigene Dauer");
+  const durationS = playable ? (values.has("duration") ? bounded(DURATION_FLAG) : sequence ? CLI_POSE_PLAY_S : undefined) : undefined;
   const sheet = format.startsWith("sheet-");
   if (sheet && values.has("viewpoint")) throw refuse(`--viewpoint does not apply to ${format}, a sheet draws all three views`, `--viewpoint gilt nicht für ${format}, ein Blatt zeigt alle drei Ansichten`);
   if (!sheet && values.has("projection")) throw refuse("--projection applies to the sheet formats only", "--projection gilt nur für die Blattformate");
@@ -112,7 +140,73 @@ export function parseArguments(argv: readonly string[]): CliOptions {
   if (values.has("camera") && !drawsAxonometric) throw refuse("--camera applies to the axonometric view only: --viewpoint axonometric, or a sheet with --views elevation,front,plan,axonometric", "--camera gilt nur für die axonometrische Ansicht: --viewpoint axonometric oder ein Blatt mit --views elevation,front,plan,axonometric");
   if (values.has("time") && clip === undefined) throw refuse("--time needs --clip", "--time braucht --clip");
   if (values.has("time") && (fps !== undefined || !["svg", "pdf", "dxf", "dwg", "sheet-svg", "sheet-pdf", "sheet-dxf", "sheet-dwg"].includes(format))) throw refuse("--time writes one instant as a still format and excludes --fps", "--time schreibt einen Zeitpunkt als Standbildformat und schliesst --fps aus");
-  return { asset: need("asset"), ...(clip === undefined ? {} : { clip }), ...(pose === undefined ? {} : { pose }), view: oneOf("view", VIEWS), ...(values.has("environment") ? { environment: values.get("environment")! as Slug } : {}), ...(sheet ? { projection: oneOf("projection", PROJECTIONS), ...(sheetAxonometric ? { sheetAxonometric: true } : {}) } : { viewpoint: oneOf("viewpoint", VIEWPOINTS) }), ...(values.has("camera") ? { axonometric: parseCamera(need("camera")) } : {}), ...(values.has("time") ? { time: nonNegative("time") } : {}), scale: positive("scale"), ...(fps === undefined ? {} : { fps: positive("fps") }), format, out: resolve(need("out")), catalog: resolve(values.get("catalog") ?? DEFAULT_CATALOG_ROOT), language: oneOf("lang", LANGUAGES), pxPerMm: positive("px-per-mm", 8), background: values.get("background") ?? "#ffffff" };
+  return { asset: need("asset"), ...(clip === undefined ? {} : { clip }), ...(pose === undefined ? {} : { pose }), view: oneOf("view", VIEWS), ...(values.has("environment") ? { environment: values.get("environment")! as Slug } : {}), ...(sheet ? { projection: oneOf("projection", PROJECTIONS), ...(sheetAxonometric ? { sheetAxonometric: true } : {}) } : { viewpoint: oneOf("viewpoint", VIEWPOINTS) }), ...(values.has("camera") ? { axonometric: parseCamera(need("camera")) } : {}), ...(values.has("time") ? { time: nonNegative("time") } : {}), scale: positive("scale"), ...(fps === undefined ? {} : { fps: positive("fps") }), format, out: resolve(need("out")), catalog: resolve(values.get("catalog") ?? DEFAULT_CATALOG_ROOT), language: oneOf("lang", LANGUAGES), pxPerMm: positive("px-per-mm", 8), background: values.get("background") ?? "#ffffff", ...(flow === undefined ? {} : { flow }), ...(Object.keys(environmentOverrides).length === 0 ? {} : { environmentOverrides }), ...(Object.keys(flowConditions).length === 0 ? {} : { flowConditions }), ...(Object.keys(flowDetail).length === 0 ? {} : { flowDetail }), ...(values.has("flow-develop") ? { flowDevelopS: bounded(DEVELOP_FLAG) } : {}), ...(durationS === undefined ? {} : { durationS }) };
+}
+
+/** ⏳️ Seconds of history the air flow of an exported drawing has before its first frame unless `--flow-develop` says otherwise. */
+export const CLI_FLOW_DEVELOP_S = FLOW_DEVELOP_S;
+
+/** ▶️ Seconds a pose plays its air flow as a frame sequence or video unless `--duration` says otherwise, and the frames per second of such a sequence without `--fps`. */
+export const CLI_POSE_PLAY_S = 6;
+export const CLI_POSE_PLAY_FPS = 25;
+
+/** 🌬️ The wind profiles of `--wind-profile` and the logarithmic boundary layer where `--roughness` and `--reference-height` are not given: open grass (roughness length 0.03 m) with the wind speed of the environment measured at 10 m. */
+export const WIND_PROFILES = ["uniform", "logarithmic"] as const;
+export const DEFAULT_BOUNDARY_LAYER = { z0M: 0.03, referenceHeightM: 10 } as const;
+
+type NumberFlag = { readonly flag: string; readonly field: string; readonly min: number; readonly max: number; readonly unit: string; readonly factor?: number; readonly whole?: boolean };
+
+/** 🌤️ The flags that set single values of the environment on top of the resolved one, with their admitted range in the unit of the flag (`factor` turns it into the unit of the field). */
+export const ENVIRONMENT_FLAGS = [
+  { flag: "air-temp", field: "airTempC", min: -90, max: 120, unit: "°C" },
+  { flag: "radiant-temp", field: "meanRadiantTempC", min: -90, max: 300, unit: "°C" },
+  { flag: "sky-temp", field: "skyTempC", min: -120, max: 60, unit: "°C" },
+  { flag: "ground-temp", field: "groundTempC", min: -90, max: 120, unit: "°C" },
+  { flag: "humidity", field: "relativeHumidity", min: 0, max: 100, unit: "%", factor: 0.01 },
+  { flag: "wind", field: "windMS", min: 0, max: 60, unit: "m/s" },
+  { flag: "wind-direction", field: "windDirectionDeg", min: -360, max: 360, unit: "°" },
+  { flag: "sun", field: "solarWM2", min: 0, max: 1400, unit: "W/m²" },
+  { flag: "diffuse", field: "diffuseFraction", min: 0, max: 1, unit: "" },
+  { flag: "pressure", field: "pressurePa", min: 30000, max: 110000, unit: "Pa" },
+] as const satisfies readonly (NumberFlag & { readonly field: keyof Environment })[];
+
+const TURBULENCE_FLAGS = [
+  { flag: "turbulence", field: "intensity", min: 0, max: 100, unit: "%", factor: 0.01 },
+  { flag: "turbulence-floor", field: "floorMS", min: 0, max: 1, unit: "m/s" },
+  { flag: "turbulence-time", field: "lagrangianTimeS", min: 0.1, max: 30, unit: "s" },
+] as const satisfies readonly NumberFlag[];
+const BOUNDARY_FLAGS = [
+  { flag: "roughness", field: "z0M", min: 0.001, max: 1, unit: "m" },
+  { flag: "reference-height", field: "referenceHeightM", min: 2, max: 100, unit: "m" },
+] as const satisfies readonly NumberFlag[];
+const SOLVER_FLAGS = [
+  { flag: "flow-life", field: "maxAgeS", min: 2, max: 60, unit: "s" },
+  { flag: "flow-seed", field: "seed", min: 1, max: 9999, unit: "", whole: true },
+] as const satisfies readonly NumberFlag[];
+const MARK_FLAGS = [
+  { flag: "flow-spacing", field: "spacingMm", min: 0.5, max: 20, unit: "mm" },
+  { flag: "flow-streak", field: "minStreakMm", min: 0, max: 10, unit: "mm" },
+  { flag: "flow-period", field: "periodS", min: 0.2, max: 10, unit: "s" },
+  { flag: "flow-exposure", field: "exposureS", min: 0.05, max: 5, unit: "s" },
+  { flag: "flow-trail", field: "trailS", min: 0.1, max: 60, unit: "s" },
+  { flag: "flow-stroke", field: "strokeMm", min: 0.05, max: 2, unit: "mm" },
+] as const satisfies readonly (NumberFlag & { readonly field: keyof FlowMarkDetail })[];
+const DEVELOP_FLAG = { flag: "flow-develop", field: "flowDevelopS", min: 0, max: 120, unit: "s" } as const satisfies NumberFlag;
+const DURATION_FLAG = { flag: "duration", field: "durationS", min: 0.1, max: 120, unit: "s" } as const satisfies NumberFlag;
+
+/** 🌊️ The flags that shape the air flow (conditions, marks, development): refused by name where no flow is drawn. */
+export const FLOW_FLAGS: ReadonlySet<string> = new Set<string>([...[...TURBULENCE_FLAGS, ...BOUNDARY_FLAGS, ...SOLVER_FLAGS, ...MARK_FLAGS, DEVELOP_FLAG].map((spec) => spec.flag), "wind-profile"]);
+
+/** 🖍️ Every flag that belongs to the thermal drawings alone: refused by name for the 3D model formats. */
+export const DRAWING_FLAGS: ReadonlySet<string> = new Set([...FLOW_FLAGS, "flow", "duration", ...ENVIRONMENT_FLAGS.map((spec) => spec.flag)]);
+
+function parseFlow(value: string): readonly FlowLayer[] {
+  if (value === "all") return FLOW_LAYERS;
+  if (value === "none") return [];
+  const layers = value.split(",");
+  const unknown = layers.find((layer) => !(FLOW_LAYERS as readonly string[]).includes(layer));
+  if (unknown !== undefined || layers.length === 0) throw refuse(`--flow is all, none or a comma list of ${FLOW_LAYERS.join(", ")}, got "${value}"`, `--flow ist all, none oder eine Kommaliste aus ${FLOW_LAYERS.join(", ")}, nicht "${value}"`);
+  return FLOW_LAYERS.filter((layer) => layers.includes(layer));
 }
 
 /** 🦄 The camera of `--camera`: `isometric`, `dimetric` or `<azimuth>,<elevation>` in degrees (azimuth −180…180 from ahead towards the asset's right, elevation 0…75). */
@@ -158,8 +252,12 @@ function catalogOf(root: string, signal: AbortSignal | undefined): ReturnType<ty
 const PROGRESS = { en: "Exporting", de: "Exportiere" } as const;
 const even = (value: number): number => Math.ceil(value / 2) * 2;
 
-/** 🗓️ The queries of the command: one per scheduled time (a pose is one frame at t = 0), with the schedule that times them. */
+/** 🗓️ The queries of the command: one per scheduled time (a pose is one frame at t = 0; a pose that plays its air flow, `durationS`, is its schedule of flow times on one standing figure), with the schedule that times them. */
 export function frameQueries(asset: Asset, options: CliOptions): { readonly schedule: FrameSchedule; readonly queries: readonly EvaluationQuery[] } {
+  if (options.pose !== undefined && options.durationS !== undefined) {
+    const schedule = frameSchedule({ durationS: options.durationS, loop: false }, options.fps ?? CLI_POSE_PLAY_FPS);
+    return { schedule, queries: schedule.times.map((timeS) => ({ kind: "pose", pose: options.pose!, timeS }) as const) };
+  }
   if (options.pose !== undefined) {
     const schedule: FrameSchedule = { fps: options.fps ?? 1, durationS: 0, loop: false, count: 1, times: [0] };
     return { schedule, queries: [{ kind: "pose", pose: options.pose }] };
@@ -228,31 +326,49 @@ export async function runModelExport(options: CliOptions, format: ModelFormat, a
   return [path];
 }
 
-/** 🚀️ Runs one export command; returns the files written. */
-export async function runExport(options: CliOptions, tools: ToolPort = repoToolPort, control: JobControl = {}): Promise<readonly string[]> {
-  const catalog = await catalogOf(options.catalog, control.signal);
+/** 🧍️ The figure of one query: its evaluated state and the analysis its view reads (thermal under the environment of the drawing, structure for forces and moments). A pose that plays its flow keeps this one figure for every frame. */
+function figureOf(asset: Asset, query: EvaluationQuery, selector: DepictionOptions["representation"], view: View, drawing: Pick<DepictionOptions, "environment" | "environmentTimeline">): { readonly state: ReturnType<typeof evaluate>; readonly analysis: Analysis } {
+  const state = evaluate(asset, query, selector);
+  return { state, analysis: view === "thermal" ? { thermal: solveThermalAt(state.asset, state.query, drawing.environmentTimeline ?? drawing.environment) } : view === "forces" || view === "moments" ? { structure: solveStructure(state) } : {} };
+}
+
+/** 🎛️ What a command solves and draws with: its asset and the depiction options every frame shares — the defaults of the view at the scale, the environment (`--environment`, else the asset's reference environment, else its own, with the single values of the environment flags laid over it) and, for a thermal drawing with flow layers, those layers with their development time, conditions and mark detail. */
+export async function drawingOf(options: CliOptions, signal?: AbortSignal) {
+  const catalog = await catalogOf(options.catalog, signal);
   const asset = catalog.assets.find((candidate) => candidate.id === options.asset);
   if (!asset) throw new Error(`asset ${options.asset} is not in the catalog ${options.catalog}`);
+  const presets = new Map(((options.view === "thermal" ? await loadEnvironments(options.catalog, signal) : null)?.presets ?? []).map((preset) => [preset.id, preset]));
+  const resolved = options.view === "thermal" ? resolveThermalEnvironment(asset, presets, options.environment) : undefined;
+  const environment = options.environmentOverrides === undefined ? resolved : { ...(resolved ?? asset.thermal.environment), ...options.environmentOverrides };
+  const { view: _view, viewpoint: _viewpoint, scale: _scale, representation: _representation, ...common } = defaultDepictionOptions(options.view, options.language, options.scale, "elevation");
+  const flowing = options.flow !== undefined && options.flow.length > 0;
+
+  const drawing = { ...common, ...(environment === undefined ? {} : { environment }), ...(flowing ? { flow: options.flow!, flowDevelopS: options.flowDevelopS ?? CLI_FLOW_DEVELOP_S, ...(options.flowConditions === undefined ? {} : { flowConditions: options.flowConditions }), ...(options.flowDetail === undefined ? {} : { flowDetail: options.flowDetail }) } : {}) };
+  return { asset, drawing };
+}
+
+/** 🚀️ Runs one export command; returns the files written. */
+export async function runExport(options: CliOptions, tools: ToolPort = repoToolPort, control: JobControl = {}): Promise<readonly string[]> {
+  const { asset, drawing } = await drawingOf(options, control.signal);
   if (isModelFormat(options.format)) return runModelExport(options, options.format, asset, control);
   const target = targetOf(options);
   if ((target.kind === "view" && target.viewpoint === "axonometric") || (target.kind === "sheet" && target.axonometric)) await loadAxonometric();
   const { schedule, queries } = frameQueries(asset, options);
-  const presets = new Map(((options.view === "thermal" ? await loadEnvironments(options.catalog, control.signal) : null)?.presets ?? []).map((preset) => [preset.id, preset]));
-  const environment = options.view === "thermal" ? resolveThermalEnvironment(asset, presets, options.environment) : undefined;
-  const { view: _view, viewpoint: _viewpoint, scale: _scale, representation: _representation, ...common } = defaultDepictionOptions(options.view, options.language, options.scale, "elevation");
-  const drawing = { ...common, ...(environment === undefined ? {} : { environment }) };
+  const flowing = (drawing.flow?.length ?? 0) > 0;
+  if (flowing && queries[0] !== undefined) await developFlow({ asset, query: queries[0] }, drawing, control);
   const source = { kind: "scale", denominator: options.scale } as const;
   const selector = { kind: "scale", scale: { denominator: options.scale } } as const;
   const transparentRaster = options.format === "png-sequence" || options.format === "webm";
+  const still = options.durationS === undefined || queries[0] === undefined ? undefined : figureOf(asset, { kind: "pose", pose: options.pose! }, selector, options.view, drawing);
   const frames = queries.map((query, index) => {
     control.signal?.throwIfAborted();
     control.progress?.(index + 1, queries.length, { en: "Evaluating frames", de: "Bilder werden ausgewertet" });
     if (target.kind === "sheet") {
-      const resolved = resolveSheet(asset, query, source, options.view, drawing, target.projection, options.language, target.axonometric ? (options.axonometric ?? { kind: "isometric" }) : false);
-      return { state: resolved.state, analysis: resolved.analysis, scene: resolved.sheet as DrawingScene };
+      const sheet = resolveSheet(asset, query, source, options.view, drawing, target.projection, options.language, target.axonometric ? (options.axonometric ?? { kind: "isometric" }) : false);
+      return { state: sheet.state, analysis: sheet.analysis, scene: sheet.sheet as DrawingScene };
     }
-    const state = evaluate(asset, query, selector);
-    const analysis: Analysis = options.view === "thermal" ? { thermal: solveThermalAt(state.asset, state.query, drawing.environmentTimeline ?? drawing.environment) } : options.view === "forces" || options.view === "moments" ? { structure: solveStructure(state) } : {};
+    const { state, analysis: solved } = still ?? figureOf(asset, query, selector, options.view, drawing);
+    const analysis: Analysis = flowing ? { ...solved, transport: transportOf({ asset, query }, drawing) } : solved;
     const depiction = { ...drawing, view: options.view, viewpoint: target.viewpoint, scale: { denominator: options.scale }, representation: selector, transparent: transparentRaster, ...(options.axonometric ? { axonometric: options.axonometric } : {}) } as DepictionOptions;
     return { state, analysis, scene: depict(state, depiction, analysis, control) };
   });
@@ -260,11 +376,15 @@ export async function runExport(options: CliOptions, tools: ToolPort = repoToolP
   await mkdir(options.out, { recursive: true });
   const where = target.kind === "sheet" ? `sheet-${target.projection}${target.axonometric ? `-axonometric${cameraTag(options.axonometric)}` : ""}` : `${target.viewpoint}${target.viewpoint === "axonometric" ? cameraTag(options.axonometric) : ""}`;
   const stem = `${options.asset}-${options.clip ?? options.pose}${options.time === undefined ? "" : `-t${options.time}`}-${options.view}-${where}-1to${options.scale}`;
-  const diagrams = options.view === "forces" || options.view === "moments" ? (["axial", "shear", "moment"] as const).filter((kind) => common.diagrams[kind]) : [];
-  const noteOf = (index: number): string => `staffage ${options.asset} ${options.clip ?? options.pose}${options.time === undefined ? "" : ` t=${options.time}`} ${options.view} ${where} 1:${options.scale} ${scenes[index]!.metadata.fidelity}`;
+  const air = flowing ? ` flow=${options.flow!.join("+")}` : "";
+  const diagrams = options.view === "forces" || options.view === "moments" ? (["axial", "shear", "moment"] as const).filter((kind) => drawing.diagrams[kind]) : [];
+  const noteOf = (index: number): string => `staffage ${options.asset} ${options.clip ?? options.pose}${options.time === undefined ? "" : ` t=${options.time}`} ${options.view} ${where} 1:${options.scale} ${scenes[index]!.metadata.fidelity}${air}`;
   const modelOf = (index: number) => {
     const { state, analysis } = frames[index]!;
-    const model = target.kind === "sheet" ? modelSheet(state, { projection: target.projection, denominator: options.scale, language: options.language, analysis, diagrams, axonometric: target.axonometric ? (options.axonometric ?? { kind: "isometric" }) : false }) : modelScene(state, { viewpoint: target.viewpoint, analysis, diagrams, ...(options.axonometric ? { axonometric: options.axonometric } : {}) });
+    const solved = flowing ? analysis.transport?.flow : undefined;
+    const field = solved === undefined || solved === null ? solved : shownFlow(state, solved);
+    const flow = field === undefined || field === null ? {} : { flow: { field, layers: options.flow!, denominator: options.scale, range: drawing.range, ...(options.flowDetail === undefined ? {} : { detail: options.flowDetail }) } };
+    const model = target.kind === "sheet" ? modelSheet(state, { projection: target.projection, denominator: options.scale, language: options.language, analysis, diagrams, axonometric: target.axonometric ? (options.axonometric ?? { kind: "isometric" }) : false, ...flow }) : modelScene(state, { viewpoint: target.viewpoint, analysis, diagrams, ...(options.axonometric ? { axonometric: options.axonometric } : {}), ...flow });
     return withNote(model, noteOf(index), options.scale);
   };
   const written: string[] = [];

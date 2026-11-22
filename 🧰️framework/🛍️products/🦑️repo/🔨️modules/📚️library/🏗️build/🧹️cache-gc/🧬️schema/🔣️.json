@@ -15,7 +15,8 @@
         "dedupeCountProgressStride": 512,
         "idleCompactionIntervalMilliseconds": 3600000,
         "idleCompactionMaximumMilliseconds": 600000,
-        "idleCompactionFirstDelayMilliseconds": 600000
+        "idleCompactionFirstDelayMilliseconds": 600000,
+        "strayScanMilliseconds": 300000
       }
     },
     "LimitsDescriptions": {

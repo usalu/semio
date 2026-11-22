@@ -389,6 +389,14 @@ impl RendererAssetDecodeSession {
         Self { session: None, source: Some(semio_plugin_ownership::reserved_job_session::RefusedWorkerSource::pending(job, (cx.operation(), cx.generation()))), boundary: None, surface_token, request_token, cancelled: AtomicBool::new(false), closing: false }
     }
     pub fn cancel(&self) { self.cancelled.store(true, Ordering::Release); }
+    /// 🧾️ Takes the sole physical receipt of a checked-out worker turn so the owner can resume; refused custody is a fault, a contended resume stays pending.
+    fn pump_and_take_receipt(session: &mut semio_framework_job_worker::MountedWorkerJobSession<RendererAssetDecodeJob>, cx: &mut semio_framework_job::StepContext<'_>) -> Result<(), semio_framework_job::OriginalTurnFailure> {
+        if session.pump_one_for_interactive_turn(cx)? == semio_framework_job_worker::WorkerJobPoll::Idle { return Ok(()); }
+        match session.take_checked_out_retained_step_receipt() {
+            Some((issued, progress)) if progress.fits(issued) => Ok(()),
+            _ => Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "decoder worker turn receipt is absent or exceeds its grant").into()),
+        }
+    }
     pub fn pump_one(&mut self, cx: &mut semio_framework_job::StepContext<'_>) -> Result<bool, semio_framework_job::OriginalTurnFailure> {
         use semio_framework_job::{InteractiveJob, JobOutcomeKind, close_original_retained_step, close_original_effect_step};
         use semio_framework_value::{RetirementDemand, RetainedCloneStep, ValueError, ValueRefusalKind};
@@ -408,7 +416,7 @@ impl RendererAssetDecodeSession {
         let Some(session) = self.session.as_mut() else { return Ok(false); };
         if self.closing {
             if self.boundary.is_none() {
-                if session.checked_out_job().is_none() { session.pump_one_for_interactive_turn(cx)?; }
+                if session.checked_out_job().is_none() { Self::pump_and_take_receipt(session, cx)?; }
                 self.boundary = session.checked_out_job().and_then(RendererAssetDecodeJob::take_probe).map(|probe| (probe, Some(RendererAssetDecodeResult::Cancelled)));
                 if self.boundary.is_none() { return Ok(false); }
             }
@@ -436,8 +444,8 @@ impl RendererAssetDecodeSession {
                 if session.checked_out_outcome_descriptor().is_none() { session.resume().map_err(|_| ValueError::literal(ValueRefusalKind::InvariantViolated, "decoder lost its original checked-out owner"))?; }
             }
         } else if session.checked_out_job().is_some() {
-            session.resume().map_err(|_| ValueError::literal(ValueRefusalKind::InvariantViolated, "decoder lost its original empty-outcome owner"))?;
-        } else { session.pump_one_for_interactive_turn(cx)?; }
+            if session.resume().is_err() { return Ok(false); }
+        } else { Self::pump_and_take_receipt(session, cx)?; }
         Ok(true)
     }
 

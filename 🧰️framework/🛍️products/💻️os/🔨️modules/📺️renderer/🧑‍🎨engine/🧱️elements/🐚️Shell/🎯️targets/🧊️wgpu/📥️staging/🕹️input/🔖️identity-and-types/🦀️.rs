@@ -58,6 +58,34 @@ impl ContextMenuItem {
     }
 }
 
+const TEXT_SELECTION_MENU_SCHEMA: &str = include_str!("../../../../../../../../../../../../🔨️modules/🖱️ui/🧬️schema/📝️text-selection-menu/🔣️.json");
+
+/// 📝️ The rows of the text-selection menu, read from the shared schema React's `buildTextSelectionContextMenuItems` reads too: Cut and Paste only for an editable target, Cut and Copy disabled without a selection, each row an action of the `framework` controller carrying the press point (`x`, `y`) whose verb the shell answers on the text surface under that point.
+pub fn text_selection_menu_items(origin: (f32, f32), editable: bool, has_selection: bool, is_de: bool, chord: impl Fn(&str) -> String) -> Vec<ContextMenuItem> {
+    let schema: Value = serde_json::from_str(TEXT_SELECTION_MENU_SCHEMA).expect("text-selection menu schema");
+    let prefix = schema["actionPrefix"].as_str().unwrap_or_default();
+    let controller = schema["actionController"].as_str().unwrap_or_default();
+    schema["rows"].as_array().into_iter().flatten().filter_map(|row| {
+        let id = row["id"].as_str()?.to_string();
+        let Some(verb) = row["verb"].as_str() else { return Some(ContextMenuItem { id, separator: true, ..Default::default() }) };
+        if row["editableOnly"].as_bool() == Some(true) && !editable { return None; }
+        let label = row["label"][if is_de { "de" } else { "en" }].as_str()?.to_string();
+        Some(ContextMenuItem {
+            id, label, icon: row["icon"].as_str().map(str::to_string), shortcut: row["chord"].as_str().map(&chord),
+            disabled: row["needsSelection"].as_bool() == Some(true) && !has_selection,
+            action: Some(ActionDescriptor { controller_id: controller.to_string(), action: format!("{prefix}{verb}"), args: Some(semio_framework_value::DslValue::from(serde_json::json!({ "x": origin.0, "y": origin.1 }))) }),
+            ..Default::default()
+        })
+    }).collect()
+}
+
+/// 🏷️ The text-selection verb an activated menu row names, `None` for every other action.
+pub fn text_selection_verb_of(action: &ActionDescriptor) -> Option<semio_renderer_wgpu_ui_engine::scene_interaction::TextSelectionVerb> {
+    let schema: Value = serde_json::from_str(TEXT_SELECTION_MENU_SCHEMA).ok()?;
+    let verb = action.action.strip_prefix(schema["actionPrefix"].as_str()?)?;
+    (action.controller_id == schema["actionController"].as_str()?).then(|| semio_renderer_wgpu_ui_engine::scene_interaction::TextSelectionVerb::parse(verb)).flatten()
+}
+
 #[derive(Clone, Debug, Default)]
 pub struct ContextMenuState {
     pub x: f32,
@@ -111,6 +139,14 @@ pub fn context_menu_item_at_path<'a>(root: &'a [ContextMenuItem], path: &[usize]
         }
     }
     item
+}
+
+/// ✅️ React's `findContextMenuCheckedPath`: the path to the first enabled `checked` row, which an opening menu seeds as its active row.
+pub fn context_menu_checked_path(root: &[ContextMenuItem], prefix: &[usize]) -> Option<Vec<usize>> {
+    root.iter().enumerate().filter(|(_, item)| !item.separator && !item.disabled).find_map(|(index, item)| {
+        let path: Vec<usize> = prefix.iter().copied().chain(std::iter::once(index)).collect();
+        if item.checked { Some(path) } else { context_menu_checked_path(&item.children, &path) }
+    })
 }
 
 pub fn context_menu_path_for_item_id(root: &[ContextMenuItem], item_id: &str, prefix: &mut Vec<usize>) -> Option<Vec<usize>> {

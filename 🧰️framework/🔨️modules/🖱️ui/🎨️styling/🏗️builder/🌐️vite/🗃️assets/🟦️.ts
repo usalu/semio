@@ -1,4 +1,4 @@
-import { resolve, join, dirname, basename } from "node:path";
+import { resolve, join, dirname, relative, sep } from "node:path";
 import { existsSync, statSync, lstatSync, mkdirSync, cpSync, readdirSync, readFileSync, copyFileSync } from "node:fs";
 import type { OwnedBuildPlugin } from "../../../../🎯️targets/⚛️react/📦️packages/🟦️typescript/🛠️build-tooling/🟦️.ts";
 import { SEMIO_ASSET_DIRECTORY, SEMIO_ASSET_ROUTE, assetPathFromRequest } from "../../../../../🖼️assets/📦️packages/🟦️typescript/🔍️resolver/🌐️delivery/🟦️.ts";
@@ -15,6 +15,14 @@ export function resolveSemioAssetRoot(repoRoot: string): string {
     throw new Error(`Missing Semio asset root at ${assetsRoot} (expected ${SEMIO_ASSET_ROOT} with 🔤️fonts)`);
   }
   return assetsRoot;
+}
+
+/** 🧹️ Whether one file of the asset root is a runtime asset: sources, tests, fixtures and agent docs stay in the repository and never reach a deployed site. */
+export function semioAssetShipsToBrowserV1(path: string): boolean {
+  const segments = path.split(/[\\/]/u).filter(Boolean);
+  const name = segments.at(-1) ?? "";
+  if (segments.some((segment) => segment === "node_modules" || segment === "🧪️tests" || segment === "🧫️fixtures")) return false;
+  return !/\.(?:ts|tsx|rs|toml|py)$/u.test(name) && name !== "AGENTS.md" && name !== "README.md";
 }
 
 function uiAssetsVitePluginsForRoot(assetsRoot: string): OwnedBuildPlugin[] {
@@ -47,7 +55,7 @@ function uiAssetsVitePluginsForRoot(assetsRoot: string): OwnedBuildPlugin[] {
         }
         const dest = resolve(outDir, SEMIO_ASSET_DIRECTORY);
         mkdirSync(outDir, { recursive: true });
-        cpSync(assetsRoot, dest, { recursive: true, filter: (source) => basename(source) !== "node_modules" && !lstatSync(source).isSymbolicLink() });
+        cpSync(assetsRoot, dest, { recursive: true, filter: (source) => source === assetsRoot || (semioAssetShipsToBrowserV1(relative(assetsRoot, source).split(sep).join("/")) && !lstatSync(source).isSymbolicLink()) });
       },
     },
   ];
@@ -78,13 +86,18 @@ export function semioReferencedAssetsVitePlugin(repoRoot: string): OwnedBuildPlu
   };
   return [
     {
-      name: "semio-referenced-assets",
+      name: "semio-referenced-assets-serve",
+      enforce: "pre",
       configureServer(server) {
         server.middlewares.use(serveAssets);
       },
       configurePreviewServer(server) {
         server.middlewares.use(serveAssets);
       },
+    },
+    {
+      name: "semio-referenced-assets-build",
+      apply: "build",
       configResolved(config) {
         outDir = resolve(config.root, config.build.outDir);
         writeOutput = config.build.write !== false;

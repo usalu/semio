@@ -15,32 +15,38 @@
         "sdk-fence": {
           "totalMilliseconds": 30000,
           "bodyMilliseconds": 25000,
-          "drainMilliseconds": 5000
+          "drainMilliseconds": 5000,
+          "scaling": "load"
         },
         "sdk-runtime": {
           "totalMilliseconds": 120000,
           "bodyMilliseconds": 110000,
-          "drainMilliseconds": 10000
+          "drainMilliseconds": 10000,
+          "scaling": "load"
         },
         "profile-oracle": {
           "totalMilliseconds": 120000,
           "bodyMilliseconds": 110000,
-          "drainMilliseconds": 10000
+          "drainMilliseconds": 10000,
+          "scaling": "load"
         },
         "receiver-proof": {
           "totalMilliseconds": 2000,
           "bodyMilliseconds": 1000,
-          "drainMilliseconds": 1000
+          "drainMilliseconds": 1000,
+          "scaling": "fixed"
         },
         "watch-lifecycle": {
           "totalMilliseconds": 15000,
           "bodyMilliseconds": 10000,
-          "drainMilliseconds": 5000
+          "drainMilliseconds": 5000,
+          "scaling": "load"
         },
         "caller-birth": {
           "totalMilliseconds": 15000,
           "bodyMilliseconds": 10000,
-          "drainMilliseconds": 5000
+          "drainMilliseconds": 5000,
+          "scaling": "load"
         }
       }
     }

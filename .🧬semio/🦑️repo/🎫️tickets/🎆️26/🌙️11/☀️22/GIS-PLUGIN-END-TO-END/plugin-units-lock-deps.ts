@@ -1,0 +1,3 @@
+import{readFileSync}from"node:fs";import{resolve}from"node:path";import{TOML}from"bun";
+const root=resolve(import.meta.dir,"../../../../../../..");const locks=JSON.parse(readFileSync(resolve(root,"🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/📦️units/📋️locks.json"),"utf8"));
+const names=process.argv.slice(2);for(const n of names){const m=new Map<string,string[]>();for(const p of locks){const l:any=TOML.parse(readFileSync(resolve(root,p),"utf8"));const e=l.package.filter((x:any)=>x.name===n);const k=JSON.stringify(e.map((x:any)=>x.dependencies));(m.get(k)??m.set(k,[]).get(k)!).push(p)}console.log(n,[...m].map(([k,v])=>[v.length,v[0],k.slice(0,900)]))}

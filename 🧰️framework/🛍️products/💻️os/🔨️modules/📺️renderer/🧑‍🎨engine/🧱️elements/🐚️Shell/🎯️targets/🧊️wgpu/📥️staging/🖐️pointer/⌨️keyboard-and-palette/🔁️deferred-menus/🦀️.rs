@@ -69,10 +69,11 @@ impl<'ctx> PointerCtx<'ctx> {
     /// `settle_boot`, where a propagated error aborted the whole boot
     /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
     pub async fn drain_deferred_actions(&mut self) -> Result<usize, String> {
+        self.sync_suggestion_submenu().await;
         self.as_window_actions().arm_window_activation_note();
         self.windows.arm_window_blur_host_event(&mut self.settle, &self.plugins, &self.docs);
         self.as_window_actions().arm_host_window_blur();
-        let mut worked = self.step_import_transfers().await;
+        let mut worked = self.drain_host_window_lifecycle().saturating_add(self.step_import_transfers().await);
         for (gesture, x, y) in std::mem::take(&mut self.settle.touch_gestures) {
             worked = worked.saturating_add(1);
             if let Err(error) = self.handle_touch_gesture(gesture, x, y).await {
@@ -87,10 +88,7 @@ impl<'ctx> PointerCtx<'ctx> {
         }
         for _ in 0..SHELL_DEFERRED_CHAIN_ROUNDS {
             let actions = std::mem::take(&mut self.settle.deferred_actions);
-            #[cfg(target_arch = "wasm32")]
             let invocations = std::mem::take(&mut self.plugins.pending_extension_invocations);
-            #[cfg(not(target_arch = "wasm32"))]
-            let invocations: Vec<()> = Vec::new();
             #[cfg(target_arch = "wasm32")]
             let file_opens = std::mem::take(&mut self.opening.pending_file_opens);
             #[cfg(not(target_arch = "wasm32"))]
@@ -109,7 +107,6 @@ impl<'ctx> PointerCtx<'ctx> {
                     debug_log(&format!("[TRACE] wgpu-shell deferred action {id} failed: {error}"));
                 }
             }
-            #[cfg(target_arch = "wasm32")]
             for invocation in invocations {
                 self.run_extension_invocation(invocation).await;
             }
@@ -129,6 +126,87 @@ impl<'ctx> PointerCtx<'ctx> {
         Ok(worked)
     }
 
+    /// 🚪️ Answers the host window's lifecycle notes. It publishes React's unload predicate to the host, holds a requested close the way React's `requestCloseDocument` does (wait up to ten seconds for the store to acknowledge, then ask before discarding, Cancel keeps the document), and turns every OS file dropped onto the window into the Open File action Open File's own picker would have answered.
+    pub fn drain_host_window_lifecycle(&mut self) -> usize {
+        use semio_renderer_wgpu_shell_window_actions as host;
+        let schema = self.docs.session.as_ref().is_some_and(|session| !session.app.io.artifact_schema.is_empty());
+        host::publish_host_unsaved(schema && (self.sync.sync_channel.is_none() || self.sync.saved_state() != ShellSavedState::Saved));
+        let mut worked = 0;
+        let now = semio_renderer_wgpu_shell_async::chrome_now_ms();
+        if host::take_host_close_request() {
+            worked += 1;
+            if self.sync.close_guard.is_none() {
+                let saving = self.sync.sync_channel.is_some();
+                self.sync.close_guard = Some(if saving { ShellCloseGuard::Saving { since_ms: now } } else { ShellCloseGuard::Confirm });
+                self.open_close_dialog(saving);
+            }
+        }
+        if let Some(guard) = self.sync.close_guard {
+            worked += 1;
+            if !self.chrome.chrome_build.dialog_stack.iter().any(|dialog| dialog.id == host::CLOSE_GUARD_DIALOG_ID) {
+                self.sync.close_guard = None;
+            } else if !schema || (self.sync.sync_channel.is_some() && self.sync.saved_state() == ShellSavedState::Saved) {
+                self.chrome.chrome_build.dialog_stack.retain(|dialog| dialog.id != host::CLOSE_GUARD_DIALOG_ID);
+                self.sync.close_guard = None;
+                host::approve_host_close();
+            } else if matches!(guard, ShellCloseGuard::Saving { since_ms } if now - since_ms >= SHELL_CLOSE_FLUSH_TIMEOUT_MS) {
+                self.chrome.chrome_build.dialog_stack.retain(|dialog| dialog.id != host::CLOSE_GUARD_DIALOG_ID);
+                self.sync.close_guard = Some(ShellCloseGuard::Confirm);
+                self.open_close_dialog(false);
+            }
+        }
+        #[cfg(not(target_arch = "wasm32"))]
+        for path in host::take_host_file_drops() {
+            worked += 1;
+            self.opening.dropped_sources.push_back(path);
+            if let Some(controller_id) = self.docs.session.as_ref().map(|session| session.app.controller_id.clone()) {
+                self.settle.deferred_actions.push(ActionDescriptor { controller_id, action: semio_framework::OPEN_ARTIFACT_FILE_ACTION_ID.into(), args: None });
+            } else {
+                self.opening.dropped_sources.pop_back();
+            }
+        }
+        if let Some(json) = host::take_host_local_catalog() {
+            worked += 1;
+            self.history.set_local_files_from_json(&json);
+        }
+        #[cfg(target_arch = "wasm32")]
+        {
+            for (token, name, size, mime) in host::take_host_picked_files() {
+                worked += 1;
+                self.opening.dropped_files.push_back(semio_renderer_wgpu_shell_doc_open::BrowserPickedFile { token, name, size, mime });
+            }
+            let armed = self.settle.deferred_actions.iter().any(|action| action.action == semio_framework::OPEN_ARTIFACT_FILE_ACTION_ID);
+            let running = self.opening.document_opening.as_ref().is_some_and(semio_renderer_wgpu_shell_doc_open::ShellDocumentOpening::running);
+            if !self.opening.dropped_files.is_empty() && !armed && !running {
+                worked += 1;
+                match self.docs.session.as_ref().map(|session| session.app.controller_id.clone()) {
+                    Some(controller_id) => self.settle.deferred_actions.push(ActionDescriptor { controller_id, action: semio_framework::OPEN_ARTIFACT_FILE_ACTION_ID.into(), args: None }),
+                    None => self.opening.dropped_files.clear(),
+                }
+            }
+        }
+        worked
+    }
+
+    /// 🚪️ React's `DocumentCloseDialog`: while it waits only Cancel is offered; once it asks, "Keep editing" (focused, Escape, veil click) and "Close and discard", with the typed save failure after the question.
+    fn open_close_dialog(&mut self, saving: bool) {
+        use semio_renderer_wgpu_shell_window_actions as host;
+        let is_de = self.prefs.locale_id == "de";
+        let text = |key: &'static str| semio_renderer_wgpu_shell_vocab::shell_chrome_string(key, is_de).to_string();
+        let name = self.sync.active_sync_owner().map(|owner| owner.document_id).or_else(|| self.docs.session.as_ref().map(|session| session.app.id.clone())).unwrap_or_default();
+        let body = if saving {
+            semio_renderer_wgpu_shell_vocab::shell_chrome_format("closeGuard.saving", is_de, &[("name", &name)])
+        } else {
+            let question = semio_renderer_wgpu_shell_vocab::shell_chrome_format("closeGuard.body", is_de, &[("name", &name)]);
+            match self.sync.saved_state() {
+                ShellSavedState::Unsaved { failure: Some((code, message)), .. } => format!("{question} {}", semio_renderer_wgpu_shell_vocab::shell_save_failure_text(&code, message.as_deref(), is_de)),
+                _ => question,
+            }
+        };
+        let (cancel, confirm, action) = if saving { (text("closeGuard.cancel"), String::new(), "") } else { (text("closeGuard.keep"), text("closeGuard.discard"), host::CLOSE_DISCARD_ACTION_ID) };
+        self.chrome.chrome_build.open_dialog(semio_renderer_wgpu_shell_chrome_state::ChromeDialogRequest::confirmation(host::CLOSE_GUARD_DIALOG_ID, "framework", text("closeGuard.title"), body, cancel, confirm, action, self.prefs.active_terminology(), self.prefs.active_locale()));
+    }
+
     /// 🫀️ Whether the frame loop owes this shell a settle step. Derived, never a latch alone: armed
     /// work, an owed refresh scope and a producer that reports `computing` each keep the pump running
     /// on their own, so a step that forgot to re-arm cannot silently park a live chain.
@@ -144,13 +222,13 @@ impl<'ctx> PointerCtx<'ctx> {
     /// which nothing evaluated at all (`📓️wgpu-progress-visibility-2026-09-14.md` §3.1).
     pub fn settle_pump_pending(&self) -> bool {
         #[cfg(target_arch = "wasm32")]
-        let parked = !self.plugins.pending_extension_invocations.is_empty() || !self.opening.pending_file_opens.is_empty();
+        let parked = !self.plugins.pending_extension_invocations.is_empty() || !self.opening.pending_file_opens.is_empty() || !self.opening.dropped_files.is_empty();
         #[cfg(not(target_arch = "wasm32"))]
-        let parked = false;
-        let armed_work = !self.settle.deferred_actions.is_empty() || !self.settle.touch_gestures.is_empty() || !self.settle.suggestion_holds.is_empty() || self.opening.pending_shell_uri_apply || parked || host_window_blur_pending() || !self.opening.import_transfers.is_empty()
-            || self.settle.deferred_document_load.is_some() || !self.settle.held_host_effects.is_empty();
+        let parked = !self.plugins.pending_extension_invocations.is_empty();
+        let armed_work = !self.settle.deferred_actions.is_empty() || !self.settle.touch_gestures.is_empty() || !self.settle.suggestion_holds.is_empty() || self.opening.pending_shell_uri_apply || parked || host_window_blur_pending() || semio_renderer_wgpu_shell_window_actions::host_window_lifecycle_pending() || self.sync.close_guard.is_some() || !self.opening.import_transfers.is_empty()
+            || self.input.suggestion_search.is_some() || self.settle.deferred_document_load.is_some() || !self.settle.held_host_effects.is_empty();
         let computing = self.surfaces.live_compute_surfaces().any(|(surface_id, _)| !self.settle.settle_pump.watches.get(&surface_id).is_some_and(|watch| watch.standing));
-        self.opening.icon_export.as_ref().is_some_and(IconExportBatch::running) || semio_renderer_wgpu_ui_engine::retained_ui_engine::ui_document_close_pending() || settle_pump_owes(self.settle.settling, self.docs.session.is_some(), armed_work, &self.settle.owed_refresh_scope, self.settle.settle_pump.owed, computing)
+        self.opening.icon_export.as_ref().is_some_and(IconExportBatch::running) || self.opening.video_render_running() || semio_renderer_wgpu_ui_engine::retained_ui_engine::ui_document_close_pending() || settle_pump_owes(self.settle.settling, self.docs.session.is_some(), armed_work, &self.settle.owed_refresh_scope, self.settle.settle_pump.owed, computing)
     }
 
     /// 🫀️ ONE settle step, and the whole of what the frame loop asks of this shell per frame.
@@ -269,6 +347,13 @@ impl<'ctx> PointerCtx<'ctx> {
     }
 
     pub async fn open_context_menu(&mut self, x: f32, y: f32, hit: Option<HitTarget<ActionDescriptor>>) {
+        if let Some(has_selection) = self.input.text_selection_menu_at(x, y) {
+            let items = text_selection_menu_items((x, y), true, has_selection, self.prefs.locale_id == "de", |keys| format_keybinding_shortcut(keys));
+            self.release_suggestion_search().await;
+            self.input.context_menu = Some(ContextMenuState { x, y, items, active: Vec::new(), submenu_collapsed_at: None, scroll_offset: 0.0 });
+            self.input.overlay_state = OverlayState::None;
+            return;
+        }
         let node_id = hit.as_ref().and_then(|hit| hit.control_id.as_deref().and_then(|id| id.rsplit_once(".node.").map(|(_, node_id)| node_id.to_string())));
         let edge_id = hit.as_ref().and_then(|hit| hit.control_id.as_deref().and_then(|id| id.rsplit_once(".edge.").map(|(_, edge_id)| edge_id.to_string())));
         let tree_item_id = hit.as_ref().and_then(|hit| hit.control_id.as_deref().and_then(tree_hit_item_id).map(str::to_string));
@@ -356,12 +441,129 @@ impl<'ctx> PointerCtx<'ctx> {
                 ..Default::default()
             });
         }
-        self.input.context_menu = Some(ContextMenuState { x, y, items, active: Vec::new(), submenu_collapsed_at: None, scroll_offset: 0.0 });
+        self.release_suggestion_search().await;
+        let mut search_open = None;
+        if let Some(window_id) = window_instance_id.as_deref() {
+            if let (Some((target, controller_id)), Some(source)) = (suggestion_submenu_target(&items), self.input.suggestion_source(&self.surfaces, window_id)) {
+                let rows = suggestion_rows(source.menu.as_ref(), window_id, &source, is_de);
+                let mut children: Vec<ContextMenuItem> = rows.iter().map(|row| row.item.clone()).collect();
+                scope_context_menu_items(&mut children, window_id);
+                if let Some(row_id) = with_suggestion_submenu(&mut items, &children) {
+                    let args = semio_framework::DslValue::from(serde_json::json!({ "fullId": target, "x": x, "y": y, "windowId": window_id, "submenu": true }));
+                    search_open = Some(ActionDescriptor { controller_id: controller_id.clone(), action: SUGGESTION_SUBMENU_OPEN_ACTION.into(), args: Some(args) });
+                    let hovers = rows.into_iter().filter_map(|row| row.hover).collect();
+                    self.input.suggestion_search = Some(SuggestionSearch { target, controller_id, window_id: window_id.to_owned(), row_id, kind: source.kind, popup: false, hovers, hovered: None });
+                }
+            }
+        }
+        let active = semio_renderer_wgpu_shell_input::context_menu_checked_path(&items, &[]).unwrap_or_default();
+        self.input.context_menu = Some(ContextMenuState { x, y, items, active, submenu_collapsed_at: None, scroll_offset: 0.0 });
         self.input.overlay_state = OverlayState::None;
+        if let Some(open) = search_open {
+            if let Err(error) = self.as_actions().dispatch_action(open).await {
+                debug_log(&format!("[TRACE] wgpu-shell suggestion search failed: {error}"));
+            }
+        }
     }
 
+    /// 🎣️ Releases the search or popup the closed (or retargeted) context menu stood for — React's `useSuggestionSubmenuSearch` cleanup and the popup's `onOpenChange(false)`: the hover focus is dropped and the close verb dispatched.
+    pub async fn release_suggestion_search(&mut self) {
+        let Some(search) = self.input.suggestion_search.take() else { return };
+        self.focus_suggestion_trace(&search, None);
+        let (action, args) = match (search.popup, search.kind) {
+            (false, _) => (SUGGESTION_SUBMENU_CLOSE_ACTION, serde_json::json!({ "fullId": search.target })),
+            (true, SuggestionKind::World) => (SUGGESTION_SUBMENU_CLOSE_ACTION, serde_json::json!({ "windowId": search.window_id })),
+            (true, SuggestionKind::Board) => ("closeHandleSuggestions", serde_json::json!({ "windowId": search.window_id })),
+        };
+        if search.popup {
+            self.input.suggestion_popup_suppressed = true;
+        }
+        if let Err(error) = self.as_actions().dispatch_action(ActionDescriptor { controller_id: search.controller_id, action: action.into(), args: Some(semio_framework::DslValue::from(args)) }).await {
+            debug_log(&format!("[TRACE] wgpu-shell suggestion release failed: {error}"));
+        }
+        self.settle.owe_settle();
+    }
+
+    /// 🔦️ Points the viewport's trace at the ONE candidate a hovered row stands for, or back at the whole search with `None` — React's `suggestionFocus`.
+    fn focus_suggestion_trace(&mut self, search: &SuggestionSearch, key: Option<u64>) {
+        match search.kind {
+            SuggestionKind::World => {
+                if let Some(state) = self.surfaces.world3d_state_for_window_mut(&search.window_id) {
+                    state.trace.tool_run_trace.focus = key;
+                }
+            }
+            SuggestionKind::Board => {
+                if let Some(host_key) = self.surfaces.board2d_states.iter().find(|(_, board)| board.window_id == search.window_id).map(|(host_key, _)| host_key.clone()) {
+                    semio_renderer_wgpu_engine_board::board2d::board2d_set_suggestion_focus(&host_key, key);
+                }
+            }
+        }
+    }
+
+    /// 🎣️ One frame of the suggestion menus: opens the floating popup an owned non-submenu record asks for, releases a search or popup once its menu is gone, lists the candidates the guest has published since, and answers the hovered row with its preview.
+    pub async fn sync_suggestion_submenu(&mut self) {
+        if self.input.suggestion_search.is_none() {
+            let request = self.input.suggestion_popup_request(&self.surfaces);
+            if request.is_none() {
+                self.input.suggestion_popup_suppressed = false;
+            }
+            let (Some((window_id, source, x, y)), false) = (request, self.input.suggestion_popup_suppressed) else { return };
+            if self.input.context_menu.is_some() {
+                return;
+            }
+            let rows = suggestion_rows(source.menu.as_ref(), &window_id, &source, self.prefs.locale_id == "de");
+            let mut items: Vec<ContextMenuItem> = rows.iter().map(|row| row.item.clone()).collect();
+            scope_context_menu_items(&mut items, &window_id);
+            items.insert(0, suggestion_popup_title(self.prefs.locale_id == "de"));
+            let hovers = rows.into_iter().filter_map(|row| row.hover).collect();
+            self.input.suggestion_search = Some(SuggestionSearch { target: String::new(), controller_id: source.controller_id.clone(), window_id, row_id: String::new(), kind: source.kind, popup: true, hovers, hovered: None });
+            self.input.context_menu = Some(ContextMenuState { x, y, items, active: Vec::new(), submenu_collapsed_at: None, scroll_offset: 0.0 });
+            self.input.overlay_state = OverlayState::None;
+            return;
+        }
+        let Some(search) = self.input.suggestion_search.clone() else { return };
+        if self.input.context_menu.is_none() {
+            return self.release_suggestion_search().await;
+        }
+        let Some(source) = self.input.suggestion_source(&self.surfaces, &search.window_id) else { return };
+        let rows = suggestion_rows(source.menu.as_ref(), &search.window_id, &source, self.prefs.locale_id == "de");
+        let mut children: Vec<ContextMenuItem> = rows.iter().map(|row| row.item.clone()).collect();
+        scope_context_menu_items(&mut children, &search.window_id);
+        let hovers: Vec<SuggestionHover> = rows.into_iter().filter_map(|row| row.hover).collect();
+        if search.popup {
+            if !source.menu.as_ref().is_some_and(|menu| suggestion_popup_owns_window(menu, &search.window_id)) {
+                self.input.context_menu = None;
+                return self.release_suggestion_search().await;
+            }
+            children.insert(0, suggestion_popup_title(self.prefs.locale_id == "de"));
+        }
+        let Some(open) = self.input.context_menu.as_mut() else { return };
+        if search.popup {
+            if open.items.len() != children.len() || open.items.iter().zip(&children).any(|(a, b)| (&a.id, &a.label, a.checked, a.disabled) != (&b.id, &b.label, b.checked, b.disabled)) {
+                open.items = children;
+            }
+        } else {
+            set_submenu_children(&mut open.items, &search.row_id, &children);
+        }
+        let hovered = semio_renderer_wgpu_shell_input::context_menu_item_at_path(&open.items, &open.active).map(|item| item.id.clone()).filter(|id| hovers.iter().any(|hover| hover.row_id == *id));
+        if hovered == search.hovered {
+            if let Some(live) = self.input.suggestion_search.as_mut() {
+                live.hovers = hovers;
+            }
+            return;
+        }
+        let hover = hovered.as_ref().and_then(|id| hovers.iter().find(|hover| hover.row_id == *id)).cloned();
+        if let Some(live) = self.input.suggestion_search.as_mut() {
+            live.hovers = hovers;
+            live.hovered = hovered;
+        }
+        self.focus_suggestion_trace(&search, hover.as_ref().and_then(|hover| hover.focus));
+        if let Some(hover) = hover {
+            if let Err(error) = self.as_actions().dispatch_action(hover.action).await {
+                debug_log(&format!("[TRACE] wgpu-shell suggestion hover failed: {error}"));
+            }
+        }
+        self.settle.owe_settle();
+    }
 }
 //#endregion ShellInput
-
-/// 🌳️ The `ContextMenuHit` domain of a row of a tree (outliner, checks list, any panel tree): its id is the tree item id, so an app answers a secondary click or the context-menu key on a row with the menu of that row.
-pub const CONTEXT_MENU_TREE_HIT_DOMAIN: &str = "tree";

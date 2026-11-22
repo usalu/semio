@@ -1,4 +1,4 @@
-/** 🌤️ The reference environment of an asset: schema twin and validator, the precedence `--environment` over `thermal.referenceEnvironment` over `thermal.environment`, and the export CLI reading it.
+/** 🌤️ The reference environment of an asset: schema twin and validator, the precedence `--environment` over `thermal.referenceEnvironment` over `thermal.environment`, and the export CLI reading it (a thermal export carries the air flow by default, so the reference drawing has the default flow layers, developed as the CLI develops them).
  *
  * THE REFERENCE is the library path itself (`solveThermalAt` with an explicit environment and `depict`): the CLI output must equal it byte for byte, and the physics must make the sunlit absorber warmer than under the asset's own sunless environment.
  *
@@ -11,7 +11,8 @@ import { beforeAll, describe, expect, it } from "vitest";
 import type { Asset, Environment, EnvironmentPreset } from "../../🧬️schema/🟦️.ts";
 import { DEFAULT_CATALOG_ROOT, loadCatalogFromFiles, loadEnvironments } from "../../🔨️modules/🗂️catalog/📥️files/🟦️.ts";
 import { resolveThermalEnvironment, validateAsset } from "../../🔨️modules/🗂️catalog/🟦️.ts";
-import { defaultDepictionOptions, depict } from "../../🔨️modules/🎨️depiction/🟦️.ts";
+import { FLOW_DEVELOP_S, defaultDepictionOptions, depict } from "../../🔨️modules/🎨️depiction/🟦️.ts";
+import { DEFAULT_FLOW_LAYERS } from "../../🔨️modules/🔗️contracts/🟦️.ts";
 import { evaluate } from "../../🔨️modules/🧮️evaluation/🟦️.ts";
 import { solveThermalAt } from "../../🔨️modules/🌡️thermal/🟦️.ts";
 import { parseArguments, runExport } from "../../🔨️modules/📤️export/🎬️cli/🟦️.ts";
@@ -45,7 +46,7 @@ async function exported(extra: readonly string[], asset = "solar-thermal-collect
 function oracle(asset: Asset, environment: Environment | undefined, pose = "operating"): string {
   const selector = { kind: "scale", scale: { denominator: SCALE } } as const;
   const state = evaluate(asset, { kind: "pose", pose }, selector);
-  return writeSvg(depict(state, { ...defaultDepictionOptions("thermal", "en", SCALE, "elevation"), transparent: false, ...(environment === undefined ? {} : { environment }) }));
+  return writeSvg(depict(state, { ...defaultDepictionOptions("thermal", "en", SCALE, "elevation"), transparent: false, flow: DEFAULT_FLOW_LAYERS, flowDevelopS: FLOW_DEVELOP_S, ...(environment === undefined ? {} : { environment }) }));
 }
 
 describe("🧬️ the declaration", () => {

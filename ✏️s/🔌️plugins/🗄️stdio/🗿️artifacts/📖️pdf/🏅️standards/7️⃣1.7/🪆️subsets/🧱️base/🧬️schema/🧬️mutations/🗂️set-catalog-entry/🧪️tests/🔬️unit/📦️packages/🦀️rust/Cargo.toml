@@ -9,6 +9,38 @@ description = "Component crate of semio-s-artifact-stdio-pdf: mut-family"
 [package.metadata.semio]
 role = "library"
 
+[package.metadata.semio.carve]
+owned = [
+  "standards::v1_7::subsets::a::io",
+  "standards::v1_7::subsets::a::io::derived_analysis",
+  "standards::v1_7::subsets::a::io::derived_composition",
+  "standards::v1_7::subsets::a::io::derived_construction",
+  "standards::v1_7::subsets::a::io::mutation_bridge",
+  "standards::v1_7::subsets::a::schema::mutations::embed_font_file::tests",
+  "standards::v1_7::subsets::a::schema::mutations::insert_embedded_file::tests",
+  "standards::v1_7::subsets::a::schema::mutations::insert_encryption_dictionary::tests",
+  "standards::v1_7::subsets::a::schema::mutations::insert_javascript_action::tests",
+  "standards::v1_7::subsets::a::schema::mutations::insert_launch_action::tests",
+  "standards::v1_7::subsets::a::schema::mutations::remove_af_relationship::tests",
+  "standards::v1_7::subsets::a::schema::mutations::remove_embedded_file::tests",
+  "standards::v1_7::subsets::a::schema::mutations::remove_encryption_dictionary::tests",
+  "standards::v1_7::subsets::a::schema::mutations::remove_font_file::tests",
+  "standards::v1_7::subsets::a::schema::mutations::remove_javascript_action::tests",
+  "standards::v1_7::subsets::a::schema::mutations::remove_launch_action::tests",
+  "standards::v1_7::subsets::a::schema::mutations::remove_output_intent::tests",
+  "standards::v1_7::subsets::a::schema::mutations::set_af_relationship::tests",
+  "standards::v1_7::subsets::a::schema::mutations::set_output_intent::tests",
+  "standards::v1_7::subsets::base::schema::mutations::remove_catalog_entry::tests",
+  "standards::v1_7::subsets::base::schema::mutations::set_catalog_entry::tests",
+  "standards::v1_7::subsets::base::schema::mutations::tests_lopdf_vectors",
+  "standards::v1_7::subsets::x::io",
+  "standards::v1_7::subsets::x::io::derived_analysis",
+  "standards::v1_7::subsets::x::io::derived_composition",
+  "standards::v1_7::subsets::x::io::derived_construction",
+  "standards::v1_7::subsets::x::io::mutation_bridge",
+  "standards::v1_7::subsets::x::schema::mutations::embed_font_file::tests",
+]
+
 [lints]
 workspace = true
 

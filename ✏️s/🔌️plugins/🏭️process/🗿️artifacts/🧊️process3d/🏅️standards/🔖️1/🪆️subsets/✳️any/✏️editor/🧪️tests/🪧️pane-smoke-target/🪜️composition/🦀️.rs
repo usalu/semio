@@ -289,6 +289,23 @@ fn picked_step_with_two_solids_requires_one_workpiece() {
     assert!(matches!(import_process3d_model("assembly.step", &url), Err(Process3dImportError::MultipleSolids)));
 }
 
+/// 🩻️ A STEP whose edges name a curve the reader cannot translate reports that cause, never a missing solid.
+#[test]
+fn malformed_step_reports_the_reader_cause_instead_of_a_missing_solid() {
+    use semio_s_artifact_process_process3d_inferences::ProcessKernelReplay;
+    use semio_s_artifact_process_process3d_io::{import_process3d_model, Process3dImportError};
+
+    let mut replay = ProcessKernelReplay::new();
+    let cube = replay.kernel_mut().box_prim_sync(1.0, 1.0, 1.0).unwrap();
+    let source = semio_s_artifact_stdio_step::geometry::export_step(replay.kernel(), &[cube]).unwrap();
+    assert!(source.contains("= LINE("));
+    let malformed = source.replace("= LINE(", "= OFFSET_CURVE_3D(");
+    let url = format!("data:application/octet-stream;base64,{}", base64_codec::base64_standard_encode(malformed.into_bytes()));
+    let error = import_process3d_model("cube.step", &url).expect_err("an untranslatable edge curve is refused");
+    assert!(matches!(&error, Process3dImportError::InvalidData(cause) if cause.contains("OFFSET_CURVE_3D")), "{error:?}");
+    assert!(error.to_string().contains("OFFSET_CURVE_3D"));
+}
+
 #[test]
 fn open_glb_remains_displayable_after_reopen_without_admitting_solid_operations() {
     use semio_framework::mesh_io::{GlbExporter, GlbImporter, MeshExporter, MeshImporter};

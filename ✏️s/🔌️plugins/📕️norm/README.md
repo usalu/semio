@@ -24,8 +24,8 @@ The Eurocode part of the norm plugins checks a design against the Eurocodes (EN 
 
 ### Read this first: what is verified
 
-- The visual editors and the clause libraries are written, but the audits of the ticket `NORM-COMPLETE-VISUAL-EUROCODE-PLUGINS` (state 2026-11-02) record that they were not yet compiled or run as a whole. Features described here are the designed and implemented behaviour; where an audit lists a feature as missing or deferred, the page says so.
-- No normative value is verified against the printed standard yet. The NDP registry holds 520 entries, 0 verified. Results that rest on such a value are marked as unverified (see "Unverified basis"). Treat every result as a design aid that needs checking by a qualified engineer.
+- All 15 Standards apps (DIN 4108, DIN EN 16798, ISO 16757, VDI 3805, DIN V 18599 and EN 1990 to EN 1999) build as five signed browser components (`norm`, `norm-energy`, `norm-eurocode`, `norm-eurocode-structural`, `norm-eurocode-materials`). As of 2026-11-22 each app passes the Play workflow: boot, loading its curated example archive, drawing the model, switching to an alternate example and back, without faults. Features described here are the designed and implemented behaviour; where an audit lists a feature as missing or deferred, the page says so.
+- No normative value is verified against the printed standard yet. The NDP registry holds 4005 entries: 247 are marked verified, only against third-party library tables (mostly EN 338:2016 timber strength classes), and 3758 are unverified. Results that rest on an unverified value are marked as unverified (see "Unverified basis"). Treat every result as a design aid that needs checking by a qualified engineer.
 
 ### The windows
 
@@ -166,8 +166,8 @@ Der Eurocode-Teil der Norm-Plugins prüft einen Entwurf nach den Eurocodes (EN 1
 
 ### Zuerst lesen: Was ist geprüft
 
-- Die visuellen Editoren und die Normbibliotheken sind geschrieben. Die Prüfberichte des Tickets `NORM-COMPLETE-VISUAL-EUROCODE-PLUGINS` (Stand 02.11.2026) halten fest, dass sie als Ganzes noch nicht kompiliert und ausgeführt wurden. Die hier beschriebenen Funktionen sind das entworfene und implementierte Verhalten; was ein Bericht als fehlend oder zurückgestellt führt, benennt die jeweilige Seite.
-- Kein normativer Wert ist bisher gegen die gedruckte Norm geprüft. Das NDP-Register enthält 520 Einträge, davon 0 geprüft. Ergebnisse, die auf einem solchen Wert beruhen, sind als ungeprüft gekennzeichnet (siehe "Ungeprüfte Grundlage"). Jedes Ergebnis ist eine Entwurfshilfe und muss von einer qualifizierten Person kontrolliert werden.
+- Alle 15 Standards-Apps (DIN 4108, DIN EN 16798, ISO 16757, VDI 3805, DIN V 18599 und EN 1990 bis EN 1999) werden als fünf signierte Browser-Komponenten (`norm`, `norm-energy`, `norm-eurocode`, `norm-eurocode-structural`, `norm-eurocode-materials`) gebaut. Stand 22.11.2026 besteht jede App den Play-Ablauf: Start, Laden ihres kuratierten Beispielarchivs, Zeichnen des Modells, Wechsel zu einem anderen Beispiel und zurück, ohne Fehler. Die hier beschriebenen Funktionen sind das entworfene und implementierte Verhalten; was ein Bericht als fehlend oder zurückgestellt führt, benennt die jeweilige Seite.
+- Kein normativer Wert ist bisher gegen die gedruckte Norm geprüft. Das NDP-Register enthält 4005 Einträge: 247 sind als geprüft markiert, nur gegen Tabellen von Drittbibliotheken (überwiegend die Festigkeitsklassen für Holz nach EN 338:2016), 3758 sind ungeprüft. Ergebnisse, die auf einem ungeprüften Wert beruhen, sind als ungeprüft gekennzeichnet (siehe "Ungeprüfte Grundlage"). Jedes Ergebnis ist eine Entwurfshilfe und muss von einer qualifizierten Person kontrolliert werden.
 
 ### Die Fenster
 

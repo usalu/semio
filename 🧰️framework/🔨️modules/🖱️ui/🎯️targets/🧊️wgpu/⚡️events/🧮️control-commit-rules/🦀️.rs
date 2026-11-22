@@ -58,6 +58,7 @@ pub fn descriptor_action_id(action: &ActionDescriptor) -> Option<ui_contract::Ac
 /// its own `Input` cell (`UiNode::IconSelect` synthesizes it), so the selector itself edits nothing.
 pub fn editable_value(node: &UiNode) -> Option<String> {
     match node {
+        UiNode::Input(input) if matches!(input.input_kind.as_str(), "file" | "color" | "colorSwatch") => None,
         UiNode::Input(input) if input.input_kind == "text" && input.commit.as_deref() == Some(UI_DECIMAL_QUAD_COMMIT) =>
             decimal_quad_text(&input.value),
         UiNode::Input(input) => Some(match input.display_factor.filter(|_| input.input_kind == "number").zip(input.value.trim().parse::<f64>().ok()) {
@@ -87,6 +88,8 @@ pub fn edit_commit_action(node: &Node, text: &str) -> Option<FiredAction> {
         UiNode::Input(input) => {
             let value = if input.input_kind == "number" { DslValue::float(constrain_number_field(typed_number(text, input.display_factor, input.precision, current_stored(input), input.min, input.max, input.limits.as_ref()).ok()?, input)) } else if input.input_kind == "text" && input.commit.as_deref() == Some(UI_DECIMAL_QUAD_COMMIT) {
                 DslValue::String(decimal_quad_text(text)?)
+            } else if let Some(typed) = native_value_text(&input.input_kind, input.commit.as_deref(), text) {
+                DslValue::String(typed?)
             } else if let Some(mode) = input.icon_mode() { DslValue::String(semio_ui_declaration::ui::UiIconSelectNode::encode_for_mode(mode, text)) } else { DslValue::String(text.to_string()) };
             let trigger = if commits_on_blur(&node.spec.0) { Trigger::Commit } else { Trigger::Change };
             fired_action(&input.on_change, trigger, value)
@@ -112,6 +115,24 @@ pub fn search_line_action(node: &Node, trigger: Trigger, text: &str) -> Option<F
         Trigger::Submit => fired_action(input.on_submit.as_ref()?, Trigger::Submit, DslValue::String(text.trim().to_string())),
         Trigger::Abort => bare_action(input.on_abort.as_ref()?, Trigger::Abort),
         Trigger::RepeatLast => bare_action(input.on_repeat_last.as_ref()?, Trigger::RepeatLast),
+        _ => None,
+    }
+}
+
+/// 📅️🎨️ What a `date` or `color` field commits for the text typed into it — the values the DOM `<input type="date">` (`YYYY-MM-DD` or the empty text of a cleared field) and `<input type="color">` (`#rrggbb`, lower case, never empty) can hold. The outer `None` is a kind with no such rule; the inner `None` is text the DOM input would refuse, which commits nothing and keeps the draft.
+pub fn native_value_text(input_kind: &str, commit: Option<&str>, text: &str) -> Option<Option<String>> {
+    use semio_ui_wgpu_layout::colour_picker::{colour_apply_field, colour_value, ColourField};
+    match input_kind {
+        "date" => Some(if text.is_empty() { Some(String::new()) } else { semio_ui_wgpu_layout::date_picker::parse_typed(text).map(|date| date.iso()) }),
+        "color" | "colourHex" => Some(colour_value(text)),
+        "colourChannel" => Some(commit.and_then(|commit| commit.strip_prefix("colour:")).and_then(|rest| rest.split_once(':')).and_then(|(channel, current)| {
+            let field = match channel {
+                "r" => ColourField::Red,
+                "g" => ColourField::Green,
+                _ => ColourField::Blue,
+            };
+            colour_apply_field(current, field, text)
+        })),
         _ => None,
     }
 }
@@ -191,6 +212,7 @@ pub fn edit_refusal(node: &Node) -> Option<String> {
         UiNode::Input(input) if input.input_kind == "text" && input.commit.as_deref() == Some(UI_DECIMAL_QUAD_COMMIT) =>
             decimal_quad_text(text).is_none().then(String::new),
         UiNode::Input(input) if input.input_kind == "number" => typed_number(text, input.display_factor, input.precision, current_stored(input), input.min, input.max, input.limits.as_ref()).err(),
+        UiNode::Input(input) => native_value_text(&input.input_kind, input.commit.as_deref(), text).filter(Option::is_none).map(|_| String::new()),
         UiNode::NumberStepper(stepper) => typed_number(text, stepper.display_factor, stepper.precision, std::iter::once(stepper.value).chain(stepper.snaps.iter().copied()), stepper.min, stepper.max, stepper.limits.as_ref()).err(),
         UiNode::Slider(slider) => typed_number(text, slider.display_factor, slider.precision, std::iter::once(slider_live_value(node, slider)).chain(slider.snaps.iter().copied()), Some(slider.min), Some(slider.max), slider.limits.as_ref()).err(),
         _ => None,

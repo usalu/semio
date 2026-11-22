@@ -1028,8 +1028,8 @@
   {
    "class": "protocol-changed",
    "detail": "semio.dependency-generation-walk/0",
-   "en": "The dependency generation protocol changed: the receipt was sealed with semio.dependency-generation-walk/0, this tool declares semio.dependency-generation-walk/3.",
-   "de": "Das Protokoll der Abhängigkeitsgeneration hat sich geändert: Die Quittung wurde mit semio.dependency-generation-walk/0 versiegelt, dieses Werkzeug deklariert semio.dependency-generation-walk/3."
+   "en": "The dependency generation protocol changed: the receipt was sealed with semio.dependency-generation-walk/0, this tool declares semio.dependency-generation-walk/4.",
+   "de": "Das Protokoll der Abhängigkeitsgeneration hat sich geändert: Die Quittung wurde mit semio.dependency-generation-walk/0 versiegelt, dieses Werkzeug deklariert semio.dependency-generation-walk/4."
   },
   {
    "class": "configuration-changed",

@@ -53,7 +53,7 @@ export function adoptInferenceAuthorityV1(rows:readonly {readonly kind:string;re
 /** 🧊️ Registers a block a farm worker validated and the caller verified by its hash. */
 export function adoptVerifiedBlockV1(path:string,text:string):void;
 /** 📦️ Admits one physical project's awaited JSON computation and complete observations. */
-export function observeProjectInferenceV1<T>(options:Readonly<{cachePath:string;key:unknown;owner:string;reusable?:(value:unknown)=>boolean|PromiseLike<boolean>;stamps?:readonly string[];prepare?:()=>boolean|PromiseLike<boolean>;fleet?:string;verdict?:(asked:{readonly headerDigest:string})=>PromiseLike<{readonly verdict?:string;readonly headerDigest?:string}|undefined>;verdictFinal?:boolean;prepareAttempts?:number}>,compute:()=>T|PromiseLike<T>):Promise<Awaited<T>>;
+export function observeProjectInferenceV1<T>(options:Readonly<{cachePath:string;key:unknown;owner:string;reusable?:(value:unknown)=>boolean|PromiseLike<boolean>;stamps?:readonly string[];prepare?:()=>boolean|PromiseLike<boolean>;fleet?:string;verdict?:(asked:{readonly headerDigest:string})=>PromiseLike<{readonly verdict?:string;readonly headerDigest?:string}|undefined>;verdictFinal?:boolean;prepareAttempts?:number;stale?:(row:Readonly<{kind:string;path:string;fact:string;recorded?:string;current?:string;why?:string}>)=>void}>,compute:()=>T|PromiseLike<T>):Promise<Awaited<T>>;
 /** 🤝️ The verdict of one process on one stored project record: `holds`, `stale`, `other` (a record of another key) or `missing`, with the digest of the header line it judged. */
 export function verifyStoredProjectRecordV1(options:Readonly<{cachePath:string;key:unknown}>):Promise<{readonly verdict:"holds"|"stale"|"other"|"missing";readonly headerDigest?:string;readonly rows?:number;readonly staleRow?:Readonly<{kind:string;path:string;fact:string;why?:string}>;readonly verifier:number}>;
 /** 🔖️ Registers the declared stamps of the inference protocol as `[path, stamp]` pairs and the path fragments they cover, which the module-load authority names by stamp instead of by bytes. */
@@ -159,6 +159,8 @@ export function sourceObservationStatsV1():Readonly<{loadObservations:number;pro
 
 export function requireCurrentObservationV1():void;
 export function registerLoadedImplementationRowsV1(rows:readonly {kind:string;path:string;fact:{sha256:string;ignore?:unknown}}[]):void;
+export function finishOnLoadedImplementationV1():void;
+export function loadedImplementationRecordedFactV1(kind:string,path:string,fact:unknown):unknown;
 export function requirePinnedImplementationFactsV1(observations:readonly SourceObservationV1[],signal?:AbortSignal):void;
 export function staleSourceFactsErrorV1(rows:readonly {kind:string;path:string}[]):Error;
 

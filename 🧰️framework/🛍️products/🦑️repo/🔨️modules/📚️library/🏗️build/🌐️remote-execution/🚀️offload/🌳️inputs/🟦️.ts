@@ -26,7 +26,7 @@ export function walkFilesV1(root:string,ignored:readonly string[],maximumFiles:n
 }
 
 const ARTIFACT=/^lib(.+)-([0-9a-f]{16})\.(rlib|rmeta|so|dylib|dll)$/u;
-/** 🔗️ Follows Cargo metadata suffixes across the original dependency search directories, keeping every selected artifact in its own root. */
+/** 🔗️ Follows Cargo metadata suffixes across the original dependency search directories, keeping every selected artifact in its own root: every file of a selected artifact (its rmeta, its rlib, its library) names the dependencies it was built against, and the union of those names is followed, so no dependency that any of them loads is left behind. */
 export function dependencyClosureV1(directories:readonly string[],direct:readonly string[],read:(path:string)=>Buffer=path=>readFileSync(path)):ReadonlyMap<string,readonly string[]>|undefined{
  const bySuffix=new Map<string,Map<string,string[]>>();
  for(const directory of directories){
@@ -47,9 +47,10 @@ export function dependencyClosureV1(directories:readonly string[],direct:readonl
   for(const [directory,files] of bySuffix.get(suffix)!){
    const current=selected.get(directory)??[];
    current.push(...files);selected.set(directory,current);
-   const source=files.find(file=>file.endsWith(".rmeta"))??files.find(file=>file.endsWith(".so")||file.endsWith(".dylib")||file.endsWith(".dll"))??files[0]!;
-   let text:string;try{text=read(join(directory,source)).toString("latin1");}catch{return undefined;}
-   for(const token of text.matchAll(/[0-9a-f]{16}/gu))take(token[0]);
+   for(const file of files){
+    let text:string;try{text=read(join(directory,file)).toString("latin1");}catch{return undefined;}
+    for(const token of text.matchAll(/[0-9a-f]{16}/gu))take(token[0]);
+   }
   }
  }
  return new Map([...selected].map(([directory,files])=>[directory,files.sort()]));

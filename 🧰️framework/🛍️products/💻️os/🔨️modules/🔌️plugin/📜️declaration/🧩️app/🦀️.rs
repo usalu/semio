@@ -122,6 +122,7 @@ use semio_plugin_decl_views::ConfigView;
 use semio_plugin_decl_views::DraftView;
 use semio_plugin_decl_views::InteractionView;
 use semio_plugin_decl_views::PresenceView;
+use semio_plugin_decl_views::PresencePeersView;
 use semio_plugin_window_transient::window_transient::TransientView;
 use semio_plugin_ownership::bounded_ownership::PluginLifecycleStep;
 use crate::media_contract::ArtifactMediaExportJobRequest;

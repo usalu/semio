@@ -290,6 +290,21 @@ pub trait ArtifactViewer: Default + Send + 'static {
     /// 🕹️ `interaction` reads the framework-owned interaction mechanism (hover + selection) so a
     /// window can paint its own hovered/selected state instead of ever storing it again itself —
     /// see `26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM`.
+    /// 👥️ [`Self::render_with_request_context`] plus every other collaborator's typed presence, as last broadcast. Renders that draw collaborators override this; the default ignores the peers, so existing renders are unchanged.
+    fn render_with_peers(
+        owner: &ArtifactInstanceOperationOwnerHandle,
+        body_key: &str,
+        doc: &ArtifactView<'_, Self::Snapshot>,
+        cfg: &ConfigView<'_, Self::Config>,
+        view_state: &ViewModel,
+        transient: &TransientView<'_, Self::Transient>,
+        interaction: &InteractionView<'_>,
+        peers: &PresencePeersView<'_, Self::Presence>,
+        cx:&mut semio_framework_job::StepContext<'_>,
+    ) -> semio_plugin_ownership::sdk_fault::OriginalRenderResult<ComponentTree> {
+        let _ = peers;
+        Self::render_with_request_context(owner, body_key, doc, cfg, view_state, transient, interaction, cx)
+    }
     fn render_with_request_context(
         _owner: &ArtifactInstanceOperationOwnerHandle,
         body_key: &str,

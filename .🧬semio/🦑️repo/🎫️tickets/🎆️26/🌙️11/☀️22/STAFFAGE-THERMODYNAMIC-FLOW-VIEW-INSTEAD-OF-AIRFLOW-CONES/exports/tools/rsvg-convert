@@ -1,0 +1,5 @@
+#!/bin/sh
+# Stand-in for rsvg-convert on a host without librsvg: the MuPDF rasteriser of the staffage oracle set, which takes the same arguments (the double the export tests use).
+ROOT="$(cd "$(dirname "$0")/../../../../../../../../.." && pwd)"
+ORACLES="$ROOT/🎓️teaching/🏛️architecture/🧍️staffage/🧪️tests/🧰️support/🐍️oracles"
+UV_PYTHON_DOWNLOADS=never UV_PROJECT_ENVIRONMENT="$HOME/Library/Caches/semio/staffage-oracles/documents" exec uv run --quiet --project "$ORACLES" --locked --only-group documents python -I "$ORACLES/🖼️raster.py" rsvg "$@"

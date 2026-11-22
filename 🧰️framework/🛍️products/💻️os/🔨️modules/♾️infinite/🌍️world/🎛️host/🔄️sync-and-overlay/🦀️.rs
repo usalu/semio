@@ -284,6 +284,18 @@ pub fn step_world3d_scene_bridge(state: &mut World3dState, context: &mut semio_f
     }
 }
 
+/// 🎣️ Reads the guest's `interaction.suggestionMenu` and `brushCandidateIndex` once per change of the interaction record, so the shell's "suggest" submenu lists the live candidates.
+fn sync_world3d_suggestion_menu(session: &mut WorldSessionState, interaction_json: Option<&str>) {
+    let source = world3d_scene_digest(&[interaction_json.unwrap_or("")]);
+    if session.suggestion_source == source {
+        return;
+    }
+    session.suggestion_source = source;
+    let interaction: Option<serde_json::Value> = interaction_json.and_then(|json| serde_json::from_str(json).ok());
+    session.suggestion_menu_json = interaction.as_ref().and_then(|record| record.get("suggestionMenu")).filter(|menu| !menu.is_null()).map(ToString::to_string);
+    session.brush_candidate_index = interaction.as_ref().and_then(|record| record.get("brushCandidateIndex")).and_then(serde_json::Value::as_i64).unwrap_or(0);
+}
+
 pub fn sync_world3d_state(state: &mut World3dState, scene: &UiComponentSceneNode, bounds: Rect) {
     state.session.bounds = bounds;
     state.terrain.set_terrain_json(scene.world_3d.as_ref().and_then(|world| world.terrain_json.as_deref()));
@@ -292,6 +304,7 @@ pub fn sync_world3d_state(state: &mut World3dState, scene: &UiComponentSceneNode
         state.session.snapshot_fault = Some(World3dSnapshotFault::Unavailable);
         return;
     };
+    sync_world3d_suggestion_menu(&mut state.session, world.interaction_json.as_deref());
     state.terrain.sync_terrain_camera_frame(&world.camera_json);
     state.session.bound_domain_id = world.domain_id.clone();
     state.session.bound_domain_granularity_id = world.domain_granularity_id.clone();

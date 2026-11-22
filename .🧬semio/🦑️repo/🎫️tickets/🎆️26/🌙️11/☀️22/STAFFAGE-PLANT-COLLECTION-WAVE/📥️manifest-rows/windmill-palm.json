@@ -1,0 +1,55 @@
+{
+  "id": "windmill-palm",
+  "category": "vegetation",
+  "title": {
+    "en": "Windmill Palm",
+    "de": "Chinesische Hanfpalme"
+  },
+  "heightM": 7.807,
+  "widthM": 2.916,
+  "powerW": 0,
+  "poses": [
+    "calm",
+    "windy",
+    "storm",
+    "snow"
+  ],
+  "clips": [
+    "wind-sway",
+    "gust",
+    "diurnal-transpiration"
+  ],
+  "representations": {
+    "50": "authored",
+    "100": "authored",
+    "200": "authored",
+    "500": "authored"
+  },
+  "symbols": [
+    "windmill-palm-symbol"
+  ],
+  "analytics": [
+    "thermal",
+    "transport",
+    "structural"
+  ],
+  "exports": [
+    "svg",
+    "pdf",
+    "dxf",
+    "dwg",
+    "png-sequence",
+    "mp4",
+    "webm",
+    "component",
+    "glb",
+    "fbx",
+    "model",
+    "model-zip"
+  ],
+  "distinction": {
+    "en": "The hardy fan palm of temperate gardens: an 8 m stem wrapped in brown leaf-sheath fibre under a round crown of stiff palmate leaves with split, drooping segments, plus a skirt of dead leaves; fans fold and roll edge-on in wind and bend under snow.",
+    "de": "Die winterharte Fächerpalme gemäßigter Gärten: ein 8 m hoher, in braune Blattscheidenfasern gehüllter Stamm unter einer runden Krone steifer handförmiger Blätter mit geteilten, überhängenden Segmenten, dazu ein Rock toter Blätter; die Fächer falten und drehen sich im Wind hochkant und biegen sich unter Schnee."
+  },
+  "completion": "authored"
+}

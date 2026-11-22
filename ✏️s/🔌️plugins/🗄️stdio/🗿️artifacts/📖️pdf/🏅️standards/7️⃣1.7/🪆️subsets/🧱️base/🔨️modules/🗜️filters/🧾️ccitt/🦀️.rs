@@ -200,6 +200,11 @@ fn paint(changes: &[u32], columns: u32, black_is_1: bool, out: &mut Vec<u8>) {
 
 /// 🧾️ Decodes a CCITT stream into packed 1-bit rows (`BlackIs1` decides the bit sense).
 pub fn decode(data: &[u8], parameters: &CcittParameters, control: Control<'_>) -> Result<Vec<u8>, RasterError> {
+    decode_consumed(data, parameters, control).map(|(rows, _)| rows)
+}
+
+/// 🧾️ Like [`decode`], also returning how many input bytes the coded rows and an optional end-of-block marker used.
+pub fn decode_consumed(data: &[u8], parameters: &CcittParameters, control: Control<'_>) -> Result<(Vec<u8>, usize), RasterError> {
     let columns = parameters.columns.max(1);
     let limit = if parameters.rows > 0 { parameters.rows as usize } else { MAX_ROWS };
     let mut bits = Bits { data, position: 0 };
@@ -233,5 +238,8 @@ pub fn decode(data: &[u8], parameters: &CcittParameters, control: Control<'_>) -
         let stride = columns.div_ceil(8) as usize;
         out.resize(parameters.rows as usize * stride, if parameters.black_is_1 { 0 } else { 0xFF });
     }
-    Ok(out)
+    if parameters.k < 0 {
+        for _ in 0..2 { if bits.peek(12) == 1 { bits.position += 12; } }
+    }
+    Ok((out, bits.position.div_ceil(8).min(data.len())))
 }

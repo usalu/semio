@@ -7593,6 +7593,7 @@ dependencies = [
  "semio-framework-value-native-owned",
  "semio-framework-value-persistent",
  "semio-framework-value-testing-allocator",
+ "semio-framework-value-testing-effect-bank",
  "serde_json",
 ]
 
@@ -10126,6 +10127,7 @@ version = "0.1.0"
 dependencies = [
  "semio-framework-artifact-reference",
  "semio-framework-async",
+ "semio-framework-deflate",
  "semio-framework-diagnostic",
  "semio-framework-io-control",
  "semio-framework-io-schema",
@@ -12102,6 +12104,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "semio-ui-contract-laws"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-test-fixtures",
+ "semio-framework-value",
+ "semio-ui-contract",
+ "semio-ui-contract-values",
+ "serde_json",
+]
+
+[[package]]
 name = "semio-ui-contract-operations"
 version = "0.1.0"
 dependencies = [
@@ -13119,6 +13132,7 @@ dependencies = [
 name = "semio-ui-wgpu-events"
 version = "0.1.0"
 dependencies = [
+ "semio-framework-pack-json",
  "semio-framework-value",
  "semio-ui-action",
  "semio-ui-arena",
@@ -13336,6 +13350,7 @@ name = "semio-ui-wgpu-layout-laws"
 version = "0.1.0"
 dependencies = [
  "semio-framework-job",
+ "semio-framework-value",
  "semio-ui-arena",
  "semio-ui-contract",
  "semio-ui-contract-values",
@@ -13455,6 +13470,7 @@ dependencies = [
  "semio-ui-wgpu-layout",
  "semio-ui-wgpu-light",
  "semio-ui-wgpu-mounted-layout",
+ "semio-ui-wgpu-paint-overlay",
  "semio-ui-wgpu-paint-sync",
  "semio-ui-wgpu-paint-widgets",
  "semio-ui-wgpu-widget-kit",
@@ -13485,6 +13501,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "semio-ui-wgpu-paint-overlay"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-pixels",
+ "semio-ui-declaration",
+ "semio-ui-draw-contract",
+ "semio-ui-text",
+ "semio-ui-theme",
+ "semio-ui-wgpu-layout",
+ "semio-ui-wgpu-widget-kit",
+]
+
+[[package]]
 name = "semio-ui-wgpu-paint-reference"
 version = "0.1.0"
 dependencies = [
@@ -13509,6 +13538,7 @@ name = "semio-ui-wgpu-paint-sync"
 version = "0.1.0"
 dependencies = [
  "semio-framework-pixels",
+ "semio-framework-value",
  "semio-ui-arena",
  "semio-ui-contract",
  "semio-ui-declaration",

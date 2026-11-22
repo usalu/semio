@@ -1,0 +1,34 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Readiness stage claim",
+  "definitions": {
+    "Policy": {
+      "const": {
+        "fileName": "ready-stage-claim.json",
+        "shareBasisPoints": 3000,
+        "maximumShareBasisPoints": 5000,
+        "minimumMegabytes": 1024,
+        "percentile": 90,
+        "marginPercent": 25,
+        "samples": 16,
+        "freshMilliseconds": 120000,
+        "writeMilliseconds": 5000,
+        "changeMegabytes": 64
+      }
+    },
+    "Claim": {
+      "description": "What the readiness stage of this machine is entitled to hold and holds now: the one fact the owner puller and the remote-execution agent need to keep the sum of their admissions inside the machine while the stage grows.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "stage", "pid", "entitlementMegabytes", "observedMegabytes", "atMs"],
+      "properties": {
+        "version": { "const": 1 },
+        "stage": { "type": "string", "minLength": 1 },
+        "pid": { "type": "integer", "minimum": 1 },
+        "entitlementMegabytes": { "type": "integer", "minimum": 0 },
+        "observedMegabytes": { "type": "integer", "minimum": 0 },
+        "atMs": { "type": "integer", "minimum": 0 }
+      }
+    }
+  }
+}

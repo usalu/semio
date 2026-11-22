@@ -111,10 +111,10 @@ test("followup files: a failed write is removed through the descriptor and the s
  const root=scratch();
  try{
   const name=generationSha256V1("retry")+".frontier.ndjson";let calls=0;
-  await expect(glue.writeJavascriptDependencyGenerationFilesV1(root,[{name,bytes:pattern(300000)}],()=>{},async()=>{if(++calls===3)throw Error("cancelled mid write");})).rejects.toThrow("cancelled mid write");
+  await expect(glue.writeJavascriptDependencyGenerationFilesV1(root,[{name,bytes:pattern(16777217)}],()=>{},async()=>{if(++calls===3)throw Error("cancelled mid write");})).rejects.toThrow("cancelled mid write");
   expect(readdirSync(join(root,protocol.directory))).not.toContain(name);
-  await glue.writeJavascriptDependencyGenerationFilesV1(root,[{name,bytes:pattern(300000)}],()=>{},async()=>{});
-  expect(statSync(join(root,protocol.directory,name)).size).toBe(300000);
+  await glue.writeJavascriptDependencyGenerationFilesV1(root,[{name,bytes:pattern(16777217)}],()=>{},async()=>{});
+  expect(statSync(join(root,protocol.directory,name)).size).toBe(16777217);
   const digest=spawnSync("shasum",["-a","256",join(root,protocol.directory,name)],{encoding:"utf8"}).stdout.split(" ")[0];
   expect(generationSha256V1(readFileSync(join(root,protocol.directory,name)))).toBe(digest);
  }finally{rmSync(root,{recursive:true,force:true});}

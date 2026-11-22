@@ -8,6 +8,9 @@
  * - Mixing conserves `h` and `w_t` per kg dry air: `d(h, w_t)/dt = (ṁ_d/m_d)(ambient − parcel)`; temperature, vapour and condensate come from saturation adjustment. Buoyancy `g' = g((ρ_a V − m)/m)` uses the true densities including vapour deficit and liquid loading.
  * - Position (three-dimensional: ahead x, up y, left z): `dx/dt = u_wind(y) + u` (RK4), plus a random-walk increment `σ_u √(2 T_L h)·ξ` per axis and step with `ξ` hashed from (seed, parcel, axis, step index). The wind is horizontal, the jet momentum decays isotropically and buoyancy acts along y, so every view projects the same parcels.
  * - Ground: `y ≥ 0` (the parcel slides along it with `u_y ≥ 0`).
+ * - Body: only for an asset with an authored volume (see ../🌊️flow/🪨️obstacles). The obstacles of a grid step are interpolated between the asset evaluated at the multiples of {@link WALL_STRIDE_STEPS} steps before and after it. A parcel is born at a nozzle on or inside the fitted body, so it is free until it has once been outside every wall;
+ *   from then on, after every grid step (and after the last partial step), a parcel that a step carried into a wall is put back on its surface along the normal (at most {@link WALL_PUSH_MS} fast) and loses the part of its relative velocity that points into the wall, so it slides along the body as it slides along the ground.
+ *   Inside a porous obstacle (foliage, a lattice of limbs) the wind that carries the parcel is slowed to the share `Π(1 − φ)` the obstacle lets through. Without obstacles nothing of this runs and the arithmetic is the one above, bit for bit.
  * Culling: age above `maxAgeS`, or temperature excess < 0.05 K and vapour excess < 0.05 g/kg and no condensate (indistinguishable from ambient).
  * Pure function of absolute time: the parcels of time `t` are those born on the emission grid within `maxAgeS`; each is integrated from its birth with the same arithmetic whatever the cache holds.
  *
@@ -21,6 +24,7 @@ import { type Ambient, type BoundaryLayer, type Turbulence, ambientAt } from "..
 import { GRAVITY_MS2, moistFrom, specificHumidity, volumePerDryKg } from "../🌫️air/🟦️.ts";
 import { gaussianPair } from "../🎲️noise/🟦️.ts";
 import { type Emission, type World, STEPS_PER_S, emissionSteps, emissionsAt } from "../🔥️sources/🟦️.ts";
+import { type Walls, blendObstacles, bodyClusters, insideWall, obstaclesOf, packWalls, porousShare, pushOut } from "../🌊️flow/🪨️obstacles/🟦️.ts";
 import * as portable from "../../../../../../🧰️framework/🔨️modules/🧊️3d/🗿️model/🧮️math/🎯️portable/🟦️.ts";
 
 /** 🧮️ Top-hat entrainment coefficient of a jet. */
@@ -37,8 +41,13 @@ export const BREATH_SPREAD_RAD = portable.atan(2 * ALPHA_JET);
 export const CULL_EXCESS_K = 0.05;
 export const CULL_VAPOUR_KGKG = 5e-5;
 
-/** 🎛️ Resolved solver settings. */
-export type Resolved = { readonly maxAgeS: number; readonly seed: number; readonly layer: BoundaryLayer | null; readonly turbulence: Turbulence; readonly periodSteps: number };
+/** 🧱️ Grid steps between two evaluations of the body that the parcels slide along (1/15 s); between them the obstacles are interpolated. */
+export const WALL_STRIDE_STEPS = 8;
+/** 🧱️ The fastest a wall puts a parcel it holds back on its surface (m/s): a body that moved over a parcel (a stride, the wrap of a looping clip) pushes it out over several steps, not at once. */
+export const WALL_PUSH_MS = 1.2;
+
+/** 🎛️ Resolved solver settings; `bodyScale` names the authored volume the obstacles are derived from (absent: the finest authored one). */
+export type Resolved = { readonly maxAgeS: number; readonly seed: number; readonly layer: BoundaryLayer | null; readonly turbulence: Turbulence; readonly periodSteps: number; readonly bodyScale?: number };
 
 type Rec = {
   readonly emission: Emission;
@@ -48,6 +57,7 @@ type Rec = {
   readonly s: Float64Array;
   step: number;
   dead: number;
+  free: boolean;
   path: number[];
 };
 
@@ -130,6 +140,8 @@ export type Track = {
   readonly ambientHalf: Map<number, Ambient>;
   readonly emissions: Map<string, readonly Emission[]>;
   readonly recs: Map<string, Rec>;
+  readonly walls: Map<number, Walls | null>;
+  readonly walled: boolean;
 };
 
 /** 🧮️ Creates a track around the evaluation and thermal functions. */
@@ -161,7 +173,7 @@ export function createTrack(asset: Asset, query: EvaluationQuery, environment: E
       return field;
     },
   };
-  return { world, settings, environment, ambientHalf: new Map(), emissions: new Map(), recs: new Map() };
+  return { world, settings, environment, ambientHalf: new Map(), emissions: new Map(), recs: new Map(), walls: new Map(), walled: bodyClusters(asset, settings.bodyScale).length > 0 };
 }
 
 function halfAmbient(track: Track, index: number): Ambient {
@@ -183,6 +195,37 @@ function born(track: Track, emitterIndex: number, k: number): readonly Emission[
     track.emissions.set(id, list);
   }
   return list;
+}
+
+/** 🧱️ The walls a parcel meets during grid step `step`: the obstacles of the asset evaluated at the multiples of {@link WALL_STRIDE_STEPS} before and after it, interpolated ({@link blendObstacles}), so a moving body pushes the air smoothly; `null` for an asset without obstacles. */
+function wallsAt(track: Track, step: number): Walls | null {
+  if (!track.walled) return null;
+  let walls = track.walls.get(step);
+  if (walls === undefined) {
+    if (track.walls.size > 8192) track.walls.clear();
+    const key = Math.floor(step / WALL_STRIDE_STEPS) * WALL_STRIDE_STEPS;
+    const at = (k: number): ReturnType<typeof obstaclesOf> => obstaclesOf(track.world.stateAt(k / STEPS_PER_S), track.settings.bodyScale);
+    const obstacles = step === key ? at(key) : blendObstacles(at(key), at(key + WALL_STRIDE_STEPS), (step - key) / WALL_STRIDE_STEPS);
+    walls = obstacles.length === 0 ? null : packWalls(obstacles);
+    track.walls.set(step, walls);
+  }
+  return walls;
+}
+
+/** 🧱️ Keeps a parcel state out of the walls after a step of `dt` seconds (see the module text) and returns whether the parcel is free of the body it was born in. */
+function confine(s: Float64Array, walls: Walls, free: boolean, a: Ambient, dt: number): boolean {
+  let out = free;
+  if (walls.solid) {
+    if (!insideWall(walls, s[X]!, s[Y]!, s[Z]!)) out = true;
+    else if (free) pushOut(walls, s, s, UX, WALL_PUSH_MS * dt);
+  }
+  const share = porousShare(walls, s[X]!, s[Y]!, s[Z]!);
+  if (share < 1) {
+    const wind = a.windAt(Math.max(0, s[Y]!));
+    s[X] = s[X]! - (1 - share) * wind.x * dt;
+    s[Z] = s[Z]! - (1 - share) * wind.z * dt;
+  }
+  return out;
 }
 
 const periodic = (track: Track, step: number): number => (track.settings.periodSteps > 0 ? step % track.settings.periodSteps : step);
@@ -214,7 +257,7 @@ function spawn(track: Track, emission: Emission, k: number, steps: number): Rec 
   const clip = (g: number): number => BREATH_SPREAD_RAD * Math.max(-2, Math.min(2, g));
   const [ux, uy, uz] = breath ? fanned(emission, clip(ga), clip(gb)) : [emission.ux, emission.uy, emission.uz];
   const s = new Float64Array([emission.at.x, emission.at.y, emission.at.z, ux, uy, uz, emission.md, emission.h, emission.wt]);
-  return { emission, key: emission.emitterIndex * 64 + emission.anchorIndex, birthStep, tauS: steps / STEPS_PER_S, s, step: birthStep, dead: -1, path: [emission.at.x, emission.at.y, emission.at.z] };
+  return { emission, key: emission.emitterIndex * 64 + emission.anchorIndex, birthStep, tauS: steps / STEPS_PER_S, s, step: birthStep, dead: -1, free: false, path: [emission.at.x, emission.at.y, emission.at.z] };
 }
 
 function advance(track: Track, rec: Rec): void {
@@ -228,6 +271,8 @@ function advance(track: Track, rec: Rec): void {
   rec.s[X] = rec.s[X]! + sigma * gx;
   rec.s[Y] = Math.max(0, rec.s[Y]! + sigma * gy);
   rec.s[Z] = rec.s[Z]! + sigma * gz;
+  const walls = wallsAt(track, n);
+  if (walls !== null) rec.free = confine(rec.s, walls, rec.free, a0, STEP_S);
   rec.step = n + 1;
   if ((rec.step - rec.birthStep) % PATH_STRIDE === 0) rec.path.push(rec.s[X]!, rec.s[Y]!, rec.s[Z]!);
   const a = halfAmbient(track, 2 * rec.step);
@@ -269,7 +314,11 @@ export function parcelsAt(track: Track, timeS: number, wantPaths: boolean, signa
       scratch.set(rec.s);
       const t0 = n / STEPS_PER_S;
       const a0 = track.world.ambientAt(t0);
-      if (frac > 0) rk4(scratch, frac, a0, track.world.ambientAt(t0 + frac / 2), track.world.ambientAt(t0 + frac), rec.tauS);
+      if (frac > 0) {
+        rk4(scratch, frac, a0, track.world.ambientAt(t0 + frac / 2), track.world.ambientAt(t0 + frac), rec.tauS);
+        const walls = wallsAt(track, n);
+        if (walls !== null) confine(scratch, walls, rec.free, a0, frac);
+      }
       const a = track.world.ambientAt(timeS);
       const state = derive(scratch, a, rec.tauS, new Float64Array(SIZE));
       const wind = a.windAt(Math.max(0, scratch[Y]!));

@@ -1,0 +1,525 @@
+{
+ "runs": {
+  "none": [],
+  "one-ok": [
+   {
+    "stage": "workspace",
+    "outcome": "ok",
+    "peakMegabytes": 4514
+   }
+  ],
+  "failed-only": [
+   {
+    "stage": "workspace",
+    "outcome": "stage-failed",
+    "peakMegabytes": 9000
+   },
+   {
+    "stage": "workspace",
+    "outcome": "stalled",
+    "peakMegabytes": 7000
+   }
+  ],
+  "other-stage": [
+   {
+    "stage": "tools",
+    "outcome": "ok",
+    "peakMegabytes": 5000
+   }
+  ],
+  "tiny": [
+   {
+    "stage": "workspace",
+    "outcome": "ok",
+    "peakMegabytes": 300
+   }
+  ],
+  "huge": [
+   {
+    "stage": "workspace",
+    "outcome": "ok",
+    "peakMegabytes": 40000
+   }
+  ],
+  "twenty": [
+   {
+    "stage": "workspace",
+    "outcome": "ok",
+    "peakMegabytes": 1000
+   },
+   {
+    "stage": "workspace",
+    "outcome": "ok",
+    "peakMegabytes": 1100
+   },
+   {
+    "stage": "workspace",
+    "outcome": "ok",
+    "peakMegabytes": 1200
+   },
+   {
+    "stage": "workspace",
+    "outcome": "ok",
+    "peakMegabytes": 1300
+   },
+   {
+    "stage": "workspace",
+    "outcome": "ok",
+    "peakMegabytes": 1400
+   },
+   {
+    "stage": "workspace",
+    "outcome": "ok",
+    "peakMegabytes": 1500
+   },
+   {
+    "stage": "workspace",
+    "outcome": "ok",
+    "peakMegabytes": 1600
+   },
+   {
+    "stage": "workspace",
+    "outcome": "ok",
+    "peakMegabytes": 1700
+   },
+   {
+    "stage": "workspace",
+    "outcome": "ok",
+    "peakMegabytes": 1800
+   },
+   {
+    "stage": "workspace",
+    "outcome": "ok",
+    "peakMegabytes": 1900
+   },
+   {
+    "stage": "workspace",
+    "outcome": "ok",
+    "peakMegabytes": 2000
+   },
+   {
+    "stage": "workspace",
+    "outcome": "ok",
+    "peakMegabytes": 2100
+   },
+   {
+    "stage": "workspace",
+    "outcome": "ok",
+    "peakMegabytes": 2200
+   },
+   {
+    "stage": "workspace",
+    "outcome": "ok",
+    "peakMegabytes": 2300
+   },
+   {
+    "stage": "workspace",
+    "outcome": "ok",
+    "peakMegabytes": 2400
+   },
+   {
+    "stage": "workspace",
+    "outcome": "ok",
+    "peakMegabytes": 2500
+   },
+   {
+    "stage": "workspace",
+    "outcome": "ok",
+    "peakMegabytes": 2600
+   },
+   {
+    "stage": "workspace",
+    "outcome": "ok",
+    "peakMegabytes": 2700
+   },
+   {
+    "stage": "workspace",
+    "outcome": "ok",
+    "peakMegabytes": 2800
+   },
+   {
+    "stage": "workspace",
+    "outcome": "ok",
+    "peakMegabytes": 2900
+   }
+  ]
+ },
+ "entitlements": [
+  {
+   "totalMegabytes": 8192,
+   "case": "none",
+   "entitlementMegabytes": 2457
+  },
+  {
+   "totalMegabytes": 8192,
+   "case": "one-ok",
+   "entitlementMegabytes": 4096
+  },
+  {
+   "totalMegabytes": 8192,
+   "case": "failed-only",
+   "entitlementMegabytes": 2457
+  },
+  {
+   "totalMegabytes": 8192,
+   "case": "other-stage",
+   "entitlementMegabytes": 2457
+  },
+  {
+   "totalMegabytes": 8192,
+   "case": "tiny",
+   "entitlementMegabytes": 1024
+  },
+  {
+   "totalMegabytes": 8192,
+   "case": "huge",
+   "entitlementMegabytes": 4096
+  },
+  {
+   "totalMegabytes": 8192,
+   "case": "twenty",
+   "entitlementMegabytes": 3500
+  },
+  {
+   "totalMegabytes": 16384,
+   "case": "none",
+   "entitlementMegabytes": 4915
+  },
+  {
+   "totalMegabytes": 16384,
+   "case": "one-ok",
+   "entitlementMegabytes": 5643
+  },
+  {
+   "totalMegabytes": 16384,
+   "case": "failed-only",
+   "entitlementMegabytes": 4915
+  },
+  {
+   "totalMegabytes": 16384,
+   "case": "other-stage",
+   "entitlementMegabytes": 4915
+  },
+  {
+   "totalMegabytes": 16384,
+   "case": "tiny",
+   "entitlementMegabytes": 1024
+  },
+  {
+   "totalMegabytes": 16384,
+   "case": "huge",
+   "entitlementMegabytes": 8192
+  },
+  {
+   "totalMegabytes": 16384,
+   "case": "twenty",
+   "entitlementMegabytes": 3500
+  },
+  {
+   "totalMegabytes": 32768,
+   "case": "none",
+   "entitlementMegabytes": 9830
+  },
+  {
+   "totalMegabytes": 32768,
+   "case": "one-ok",
+   "entitlementMegabytes": 5643
+  },
+  {
+   "totalMegabytes": 32768,
+   "case": "failed-only",
+   "entitlementMegabytes": 9830
+  },
+  {
+   "totalMegabytes": 32768,
+   "case": "other-stage",
+   "entitlementMegabytes": 9830
+  },
+  {
+   "totalMegabytes": 32768,
+   "case": "tiny",
+   "entitlementMegabytes": 1024
+  },
+  {
+   "totalMegabytes": 32768,
+   "case": "huge",
+   "entitlementMegabytes": 16384
+  },
+  {
+   "totalMegabytes": 32768,
+   "case": "twenty",
+   "entitlementMegabytes": 3500
+  },
+  {
+   "totalMegabytes": 65536,
+   "case": "none",
+   "entitlementMegabytes": 19660
+  },
+  {
+   "totalMegabytes": 65536,
+   "case": "one-ok",
+   "entitlementMegabytes": 5643
+  },
+  {
+   "totalMegabytes": 65536,
+   "case": "failed-only",
+   "entitlementMegabytes": 19660
+  },
+  {
+   "totalMegabytes": 65536,
+   "case": "other-stage",
+   "entitlementMegabytes": 19660
+  },
+  {
+   "totalMegabytes": 65536,
+   "case": "tiny",
+   "entitlementMegabytes": 1024
+  },
+  {
+   "totalMegabytes": 65536,
+   "case": "huge",
+   "entitlementMegabytes": 32768
+  },
+  {
+   "totalMegabytes": 65536,
+   "case": "twenty",
+   "entitlementMegabytes": 3500
+  }
+ ],
+ "holds": [
+  {
+   "entitlementMegabytes": 4915,
+   "observedMegabytes": 0,
+   "ageMilliseconds": 0,
+   "holdMegabytes": 4915
+  },
+  {
+   "entitlementMegabytes": 4915,
+   "observedMegabytes": 0,
+   "ageMilliseconds": 119999,
+   "holdMegabytes": 4915
+  },
+  {
+   "entitlementMegabytes": 4915,
+   "observedMegabytes": 0,
+   "ageMilliseconds": 120001,
+   "holdMegabytes": 0
+  },
+  {
+   "entitlementMegabytes": 4915,
+   "observedMegabytes": 1200,
+   "ageMilliseconds": 0,
+   "holdMegabytes": 3715
+  },
+  {
+   "entitlementMegabytes": 4915,
+   "observedMegabytes": 1200,
+   "ageMilliseconds": 119999,
+   "holdMegabytes": 3715
+  },
+  {
+   "entitlementMegabytes": 4915,
+   "observedMegabytes": 1200,
+   "ageMilliseconds": 120001,
+   "holdMegabytes": 0
+  },
+  {
+   "entitlementMegabytes": 4915,
+   "observedMegabytes": 4915,
+   "ageMilliseconds": 0,
+   "holdMegabytes": 0
+  },
+  {
+   "entitlementMegabytes": 4915,
+   "observedMegabytes": 4915,
+   "ageMilliseconds": 119999,
+   "holdMegabytes": 0
+  },
+  {
+   "entitlementMegabytes": 4915,
+   "observedMegabytes": 4915,
+   "ageMilliseconds": 120001,
+   "holdMegabytes": 0
+  },
+  {
+   "entitlementMegabytes": 4915,
+   "observedMegabytes": 9000,
+   "ageMilliseconds": 0,
+   "holdMegabytes": 0
+  },
+  {
+   "entitlementMegabytes": 4915,
+   "observedMegabytes": 9000,
+   "ageMilliseconds": 119999,
+   "holdMegabytes": 0
+  },
+  {
+   "entitlementMegabytes": 4915,
+   "observedMegabytes": 9000,
+   "ageMilliseconds": 120001,
+   "holdMegabytes": 0
+  }
+ ],
+ "pools": [
+  {
+   "totalMegabytes": 16384,
+   "availableMegabytes": 6000,
+   "observedMegabytes": 1200,
+   "entitlementMegabytes": 4915,
+   "childMegabytes": 800,
+   "leftMegabytes": 2285,
+   "children": 0,
+   "childrenGrown": 4
+  },
+  {
+   "totalMegabytes": 16384,
+   "availableMegabytes": 6000,
+   "observedMegabytes": 1200,
+   "entitlementMegabytes": 4915,
+   "childMegabytes": 1393,
+   "leftMegabytes": 2285,
+   "children": 0,
+   "childrenGrown": 2
+  },
+  {
+   "totalMegabytes": 16384,
+   "availableMegabytes": 6000,
+   "observedMegabytes": 4915,
+   "entitlementMegabytes": 4915,
+   "childMegabytes": 800,
+   "leftMegabytes": 6000,
+   "children": 4,
+   "childrenGrown": 4
+  },
+  {
+   "totalMegabytes": 16384,
+   "availableMegabytes": 6000,
+   "observedMegabytes": 4915,
+   "entitlementMegabytes": 4915,
+   "childMegabytes": 1393,
+   "leftMegabytes": 6000,
+   "children": 2,
+   "childrenGrown": 2
+  },
+  {
+   "totalMegabytes": 16384,
+   "availableMegabytes": 8000,
+   "observedMegabytes": 1200,
+   "entitlementMegabytes": 4915,
+   "childMegabytes": 800,
+   "leftMegabytes": 4285,
+   "children": 2,
+   "childrenGrown": 7
+  },
+  {
+   "totalMegabytes": 16384,
+   "availableMegabytes": 8000,
+   "observedMegabytes": 1200,
+   "entitlementMegabytes": 4915,
+   "childMegabytes": 1393,
+   "leftMegabytes": 4285,
+   "children": 1,
+   "childrenGrown": 4
+  },
+  {
+   "totalMegabytes": 16384,
+   "availableMegabytes": 8000,
+   "observedMegabytes": 4915,
+   "entitlementMegabytes": 4915,
+   "childMegabytes": 800,
+   "leftMegabytes": 8000,
+   "children": 7,
+   "childrenGrown": 7
+  },
+  {
+   "totalMegabytes": 16384,
+   "availableMegabytes": 8000,
+   "observedMegabytes": 4915,
+   "entitlementMegabytes": 4915,
+   "childMegabytes": 1393,
+   "leftMegabytes": 8000,
+   "children": 4,
+   "childrenGrown": 4
+  },
+  {
+   "totalMegabytes": 16384,
+   "availableMegabytes": 10000,
+   "observedMegabytes": 1200,
+   "entitlementMegabytes": 4915,
+   "childMegabytes": 800,
+   "leftMegabytes": 6285,
+   "children": 5,
+   "childrenGrown": 9
+  },
+  {
+   "totalMegabytes": 16384,
+   "availableMegabytes": 10000,
+   "observedMegabytes": 1200,
+   "entitlementMegabytes": 4915,
+   "childMegabytes": 1393,
+   "leftMegabytes": 6285,
+   "children": 3,
+   "childrenGrown": 5
+  },
+  {
+   "totalMegabytes": 16384,
+   "availableMegabytes": 10000,
+   "observedMegabytes": 4915,
+   "entitlementMegabytes": 4915,
+   "childMegabytes": 800,
+   "leftMegabytes": 10000,
+   "children": 9,
+   "childrenGrown": 9
+  },
+  {
+   "totalMegabytes": 16384,
+   "availableMegabytes": 10000,
+   "observedMegabytes": 4915,
+   "entitlementMegabytes": 4915,
+   "childMegabytes": 1393,
+   "leftMegabytes": 10000,
+   "children": 5,
+   "childrenGrown": 5
+  },
+  {
+   "totalMegabytes": 16384,
+   "availableMegabytes": 12000,
+   "observedMegabytes": 1200,
+   "entitlementMegabytes": 4915,
+   "childMegabytes": 800,
+   "leftMegabytes": 8285,
+   "children": 7,
+   "childrenGrown": 9
+  },
+  {
+   "totalMegabytes": 16384,
+   "availableMegabytes": 12000,
+   "observedMegabytes": 1200,
+   "entitlementMegabytes": 4915,
+   "childMegabytes": 1393,
+   "leftMegabytes": 8285,
+   "children": 4,
+   "childrenGrown": 7
+  },
+  {
+   "totalMegabytes": 16384,
+   "availableMegabytes": 12000,
+   "observedMegabytes": 4915,
+   "entitlementMegabytes": 4915,
+   "childMegabytes": 800,
+   "leftMegabytes": 12000,
+   "children": 9,
+   "childrenGrown": 9
+  },
+  {
+   "totalMegabytes": 16384,
+   "availableMegabytes": 12000,
+   "observedMegabytes": 4915,
+   "entitlementMegabytes": 4915,
+   "childMegabytes": 1393,
+   "leftMegabytes": 12000,
+   "children": 7,
+   "childrenGrown": 7
+  }
+ ]
+}

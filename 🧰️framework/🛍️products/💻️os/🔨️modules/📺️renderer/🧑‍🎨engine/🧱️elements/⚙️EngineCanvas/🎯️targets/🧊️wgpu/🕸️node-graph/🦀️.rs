@@ -30,7 +30,7 @@ pub use scene_camera_and_drag_drop::{
     catalogue_ghost_descriptor_json, component_scene_apply_note_edit_key,
     component_scene_has_editable_caret, component_scene_set_caret_visible, flow_widget_drop_args,
     node_graph_catalogue_drop_action, node_graph_clear_all_ghost_widgets,
-    node_graph_clear_wheel_zoom_active, node_graph_drag_ghost_descriptor, node_graph_fit_camera,
+    node_graph_clear_wheel_zoom_active, node_graph_drag_ghost_descriptor, node_graph_current_camera, node_graph_fit_camera,
     node_graph_flow_widget_drop_action, node_graph_set_catalogue_json,
     node_graph_sync_flow_widget_ghost, puzzle3d_catalogue_drag_payload,
     puzzle3d_catalogue_drag_payload_json, CATALOGUE_DRAG_MIME, FLOW_WIDGET_DRAG_MIME,

@@ -9,6 +9,37 @@ description = "Component crate of semio-s-artifact-stdio-pdf: mut-base"
 [package.metadata.semio]
 role = "library"
 
+[package.metadata.semio.carve]
+owned = [
+  "standards::v1_7::subsets::base::schema::mutations::insert_annotation",
+  "standards::v1_7::subsets::base::schema::mutations::insert_content",
+  "standards::v1_7::subsets::base::schema::mutations::move_page",
+  "standards::v1_7::subsets::base::schema::mutations::remove_annotation",
+  "standards::v1_7::subsets::base::schema::mutations::remove_content",
+  "standards::v1_7::subsets::base::schema::mutations::remove_dict_entry",
+  "standards::v1_7::subsets::base::schema::mutations::remove_ext_g_state",
+  "standards::v1_7::subsets::base::schema::mutations::remove_font",
+  "standards::v1_7::subsets::base::schema::mutations::remove_form",
+  "standards::v1_7::subsets::base::schema::mutations::remove_image",
+  "standards::v1_7::subsets::base::schema::mutations::remove_pattern",
+  "standards::v1_7::subsets::base::schema::mutations::remove_shading",
+  "standards::v1_7::subsets::base::schema::mutations::remove_trailer_entry",
+  "standards::v1_7::subsets::base::schema::mutations::replace_content",
+  "standards::v1_7::subsets::base::schema::mutations::set_annotation",
+  "standards::v1_7::subsets::base::schema::mutations::set_dict_entry",
+  "standards::v1_7::subsets::base::schema::mutations::set_ext_g_state",
+  "standards::v1_7::subsets::base::schema::mutations::set_font",
+  "standards::v1_7::subsets::base::schema::mutations::set_form",
+  "standards::v1_7::subsets::base::schema::mutations::set_image",
+  "standards::v1_7::subsets::base::schema::mutations::set_page_box",
+  "standards::v1_7::subsets::base::schema::mutations::set_page_content",
+  "standards::v1_7::subsets::base::schema::mutations::set_page_rotation",
+  "standards::v1_7::subsets::base::schema::mutations::set_page_user_unit",
+  "standards::v1_7::subsets::base::schema::mutations::set_pattern",
+  "standards::v1_7::subsets::base::schema::mutations::set_shading",
+  "standards::v1_7::subsets::base::schema::mutations::set_trailer_entry",
+]
+
 [lints]
 workspace = true
 

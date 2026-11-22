@@ -210,7 +210,7 @@ describe("📐️ a thin sheet is judged by its two large extents", () => {
   });
 
   it.each(vectors.sheets.declarations.cases)("a thin sheet passes only when declared: $name", ({ scale, solid, bound, thin, hint, declaration, both, ratio }) => {
-    const first = (sample.volumes![`${scale}`] as { body: { bone: string; material: string }[] }).body[0]!;
+    const first = (sample.volumes![`${scale}`] as unknown as { body: { bone: string; material: string }[] }).body[0]!;
     const sheet = { id: "sheet-test", bone: first.bone, material: first.material, role: "body", tone: 0.5, ...solid };
     const asset = patch(sample, [{ op: "add", path: `/volumes/${scale}/body/-`, value: sheet }, ...(bound === undefined ? [] : [{ op: "add" as const, path: `/volumes/${scale}/thermal/-`, value: { id: "sheet-test-surface", of: sheet.id, ...bound } }])]);
     const measured = featureRule(asset, [scale]);
@@ -233,7 +233,7 @@ describe("📐️ a thin sheet is judged by its two large extents", () => {
 
 describe("🔬️ every scale is judged for its own smallest feature", () => {
   it("passes a 20 mm cube at 1:50 and reports the identical cube at 1:500", () => {
-    const first = (sample.volumes!["50"] as { body: { bone: string; material: string }[] }).body[0]!;
+    const first = (sample.volumes!["50"] as unknown as { body: { bone: string; material: string }[] }).body[0]!;
     const cube = { id: "carried-test", kind: "box", bone: first.bone, material: first.material, role: "body", tone: 0.5, size: [0.02, 0.02, 0.02] };
     const asset = patch(sample, [{ op: "add", path: "/volumes/50/body/-", value: cube }, { op: "add", path: "/volumes/500/body/-", value: cube }]);
     expect(checkVolumes(asset, { scale: 50, rules: ["volumes-feature"] }).filter((f) => f.message.en.includes('"carried-test"'))).toEqual([]);
@@ -295,7 +295,7 @@ describe("👤️ volumes-connected on the sample figure", () => {
 describe("🫙️ a hollow vessel is judged by its overall extents, a lump by its own", () => {
   const vessels = fixture<{ vessels: { cases: { name: string; solid: Record<string, unknown>; finding: boolean }[] } }>("🧊️volumes-connected").vessels;
   it.each(vessels.cases)("$name: finding $finding", ({ solid, finding }) => {
-    const first = (sample.volumes!["50"] as { body: { bone: string; material: string }[] }).body[0]!;
+    const first = (sample.volumes!["50"] as unknown as { body: { bone: string; material: string }[] }).body[0]!;
     const found = checkVolumes(patch(sample, [{ op: "add", path: "/volumes/50/body/-", value: { id: "vessel-test", bone: first.bone, material: first.material, role: "body", tone: 0.5, ...solid } }]), { scale: 50, rules: ["volumes-feature"] });
     expect(found.some((f) => f.message.en.includes('"vessel-test"'))).toBe(finding);
   });
@@ -335,7 +335,7 @@ describe("🦴️ a long member keeps its true section at every scale when it is
   type Long = { scale: ScaleDenominator; femur: Record<string, unknown>; radius: Record<string, unknown>; finger: Record<string, unknown>; hoopWide: Record<string, unknown>; hoopNarrow: Record<string, unknown>; cases: { name: string; list: "body" | "structure"; solid: "femur" | "radius" | "finger" | "hoopWide" | "hoopNarrow"; slender: boolean; feature: boolean; slenderFinding: boolean }[] };
   const long = fixture<{ longMembers: Long }>("🧊️volumes-connected").longMembers;
   it.each(long.cases)("$name: feature finding $feature, slender finding $slenderFinding", ({ list, solid, slender, feature, slenderFinding }) => {
-    const member = (sample.volumes![`${long.scale}`] as { structure: { bone: string; material: string; member: string }[] }).structure[0]!;
+    const member = (sample.volumes![`${long.scale}`] as unknown as { structure: { bone: string; material: string; member: string }[] }).structure[0]!;
     const value = { id: "long-test", bone: member.bone, material: member.material, role: "body", tone: 0.5, ...long[solid], ...(slender ? { slender: true } : {}), ...(list === "structure" ? { member: member.member, part: "member" } : {}) };
     const found = checkVolumes(patch(sample, [{ op: "add", path: `/volumes/${long.scale}/${list}/-`, value }]), { scale: long.scale, rules: ["volumes-feature", "volumes-slender"] }).filter((f) => f.message.en.includes('"long-test"'));
     expect(found.some((f) => f.rule === "volumes-feature"), found.map((f) => f.message.en).join("\n")).toBe(feature);

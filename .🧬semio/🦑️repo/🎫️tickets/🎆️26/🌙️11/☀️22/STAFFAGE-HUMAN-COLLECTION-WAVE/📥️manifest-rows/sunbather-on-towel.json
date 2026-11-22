@@ -1,0 +1,51 @@
+{
+  "id": "sunbather-on-towel",
+  "category": "humans",
+  "title": {
+    "en": "Sunbather on Towel",
+    "de": "Sonnenbadende Person auf Strandtuch"
+  },
+  "heightM": 0.245,
+  "widthM": 1.833,
+  "powerW": 95.7,
+  "poses": [
+    "supine",
+    "prone",
+    "propped-on-elbows"
+  ],
+  "clips": [
+    "idle-breathing",
+    "fanning-face"
+  ],
+  "representations": {
+    "50": "authored",
+    "100": "authored",
+    "200": "authored",
+    "500": "authored"
+  },
+  "symbols": [],
+  "analytics": [
+    "thermal",
+    "transport",
+    "structural"
+  ],
+  "exports": [
+    "svg",
+    "pdf",
+    "dxf",
+    "dwg",
+    "png-sequence",
+    "mp4",
+    "webm",
+    "component",
+    "glb",
+    "fbx",
+    "model",
+    "model-zip"
+  ],
+  "distinction": {
+    "en": "A woman of 1.69 m in a navy one-piece swimsuit lying on a striped 1.80 by 0.90 m beach towel in the midday sun: on her back, on her front with the head turned to the side and propped on the elbows, with a dozing breathing loop and a loop of fanning the face; a lying figure 0.25 m high and 1.83 m long, with bare skin in strong sun.",
+    "de": "Eine Frau von 1,69 m in dunkelblauem Badeanzug, die in der Mittagssonne auf einem gestreiften Strandtuch von 1,80 mal 0,90 m liegt: auf dem Rücken, auf dem Bauch mit zur Seite gedrehtem Kopf und auf die Ellbogen gestützt, mit einer Atemschleife im Dösen und einer Schleife, in der sie sich Luft zufächelt; eine liegende Figur, 0,25 m hoch und 1,83 m lang, mit bloßer Haut in starker Sonne."
+  },
+  "completion": "authored"
+}

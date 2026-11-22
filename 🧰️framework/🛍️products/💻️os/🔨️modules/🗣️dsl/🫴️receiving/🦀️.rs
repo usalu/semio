@@ -164,7 +164,6 @@ impl<M:DslOwnedReceivingVariants+BorrowedDslVariants+OpBinaryReceiving<DomainFai
    Err(error)=>return RetainedWorkOutcome{result:Err(error.into()),work:0},
   };
   let work=match selection{
-   // The typed native child issues and settles its own Work action on this control.
    Some(OwnedAdvanceSelection::Nested)=>{
     let begun=(||{
      let demand=self.demands_inner(source,body)?;
@@ -254,6 +253,7 @@ fn debit(left:&mut RetainedCloneGrant,progress:RetainedCloneProgress){left.maxim
 fn quantum_of(stock:&ReceivingStock)->RetainedCloneGrant{let (s,q)=(stock.stock,stock.quantum);RetainedCloneGrant{maximum_items:if stock.fuel==0{0}else{s.maximum_items.min(q.maximum_items)},maximum_copy_bytes:s.maximum_copy_bytes.min(q.maximum_copy_bytes),maximum_capacity_bytes:s.maximum_capacity_bytes.min(q.maximum_capacity_bytes),maximum_release_bytes:s.maximum_release_bytes.min(q.maximum_release_bytes),maximum_depth:s.maximum_depth.min(q.maximum_depth)}}
 fn spend(stock:&mut ReceivingStock,progress:RetainedCloneProgress,work:u128){debit(&mut stock.stock,progress);stock.fuel=stock.fuel.saturating_sub(u64::try_from(work).unwrap_or(u64::MAX))}
 fn stalled(text:&'static str)->OriginalReceivingPrimary{ValueError::literal(ValueRefusalKind::WorkLimit,text).into()}
+fn stalled_at(text:&str,quote:Result<RetirementDemand,ValueError>,grant:RetainedCloneGrant)->OriginalReceivingPrimary{ValueError::new(ValueRefusalKind::WorkLimit,format!("{text}: quote {quote:?} against grant {grant:?}")).into()}
 /// 🧪️ Drives one stored operation through its own original receiving cursor, paying every turn and the paid close from the explicit stock. A close that the stock cannot pay refuses with `WorkLimit` and abandons the unpaid cursor without running its terminal-empty drop assertions.
 pub fn receive_to_completion<M:OpBinaryReceiving>(source:&[u8],range:(usize,usize),mut stock:ReceivingStock)->Result<M,OriginalReceivingPrimary>{
  let body=stock.quantum.maximum_copy_bytes;
@@ -276,7 +276,7 @@ pub fn receive_to_completion<M:OpBinaryReceiving>(source:&[u8],range:(usize,usiz
   }))).and_then(|turn|turn);
   let turn=match turn{Ok(turn)=>turn,Err(error)=>{failure=Some(error.into());break}};
   let actual_work=native.actual_work().saturating_sub(prior_work);
-  match turn.result{Ok(progress)=>{let idle=turn.work==0&&progress==RetainedCloneProgress::default()&&prior_transitions==NativeDecodeControl::transitions();spend(&mut stock,progress,actual_work);if idle{failure=Some(stalled("original receiving made no progress"))}},Err(error)=>{spend(&mut stock,error.retained_progress(),actual_work);failure=Some(error)}}
+  match turn.result{Ok(progress)=>{let idle=turn.work==0&&progress==RetainedCloneProgress::default()&&prior_transitions==NativeDecodeControl::transitions();spend(&mut stock,progress,actual_work);if idle{failure=Some(stalled_at("original receiving made no progress",cursor.demands(source,body),grant))}},Err(error)=>{spend(&mut stock,error.retained_progress(),actual_work);failure=Some(error)}}
  }
  let mut output=None;
  if failure.is_none(){let turn=cursor.take_into(&mut output,quantum_of(&stock));match turn.result{Ok(progress)=>spend(&mut stock,progress,turn.work),Err(error)=>failure=Some(error.into())}}

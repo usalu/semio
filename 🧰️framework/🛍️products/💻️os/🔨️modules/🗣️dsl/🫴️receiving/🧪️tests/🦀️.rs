@@ -1,8 +1,8 @@
 //! 🧫️ Actual generic operation cursors move original typed fields through one-item native loans.
 use super::*;
-use semio_framework_replication as protocol;
 use protocol::{OpBinary,OpBinaryReceiving,OpBinaryReceivingCursor};
-use semio_framework_value::{AuthoringWallet, OriginalRetirementPoll, RetainedAllocationEffect, ORIGINAL_INVOCATION_WORK, retirement::controlled::ControlledRetirement};
+use semio_framework_dsl_record::receiving::owned::OwnedAdvanceSelection;
+use semio_framework_value::{AuthoringWallet, RetainedAllocationEffect, RetainedWorkPoll, ORIGINAL_INVOCATION_WORK, retirement::controlled::ControlledRetirement};
 use semio_framework_value_native_owned::OriginalSourceTurnIssuer;
 #[path="🧰️bank.rs"]
 mod bank;
@@ -34,42 +34,73 @@ impl OpBinary for CloseWorkMutation {
 }
 semio_os_kernel::original_ordinal_operation_receiving!(CloseWorkMutation);
 
-struct CloseWorkBinding { open: bool, work: u64 }
+struct CloseWorkBinding { open: std::sync::Arc<std::sync::atomic::AtomicBool>, work: u64 }
+
+static CLOSE_BINDING_OPEN: std::sync::OnceLock<std::sync::Arc<std::sync::atomic::AtomicBool>> = std::sync::OnceLock::new();
+static CLOSE_BINDING_WORK: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
 
 impl DslOwnedReceivingVariants for CloseWorkMutation {
  type Cursor = CloseWorkBinding;
- fn receiving_cursor(_: &str) -> Result<Self::Cursor, ValueError> { Err(invalid("test binding must be seeded after receiving")) }
+ fn receiving_cursor(keyword: &str) -> Result<Self::Cursor, ValueError> {
+  assert_eq!(keyword, "clear");
+  let open = CLOSE_BINDING_OPEN.get_or_init(|| std::sync::Arc::new(std::sync::atomic::AtomicBool::new(true))).clone();
+  open.store(true, std::sync::atomic::Ordering::SeqCst);
+  Ok(CloseWorkBinding { open, work: CLOSE_BINDING_WORK.load(std::sync::atomic::Ordering::SeqCst) })
+ }
 }
 
 impl OwnedFieldReceiving<CloseWorkMutation> for CloseWorkBinding {
- fn demands(&self, _: &Option<FieldValue>, _: usize) -> Result<RetirementDemand, ValueError> { unreachable!() }
- fn select_advance(&self, _: &Option<FieldValue>, _: usize, _: u64) -> Result<OwnedAdvanceSelection, ValueError> { unreachable!() }
+ fn demands(&self, _: &Option<FieldValue>, _: usize) -> Result<RetirementDemand, ValueError> { Ok(RetirementDemand { depth: 1, ..Default::default() }) }
+ fn select_advance(&self, _: &Option<FieldValue>, _: usize, _: u64) -> Result<OwnedAdvanceSelection, ValueError> { Ok(OwnedAdvanceSelection::Local { work: 1 }) }
  fn advance_local(&mut self, _: &mut Option<FieldValue>, _: usize, _: &mut RetainedAllocationEffect<'_>) -> semio_framework_dsl_record::receiving::owned::OwnedPoll { unreachable!() }
- fn is_ready(&self) -> bool { false }
- fn take_into(&mut self, _: &mut Option<CloseWorkMutation>, _: &mut RetainedAllocationEffect<'_>) -> semio_framework_dsl_record::receiving::owned::OwnedTake { unreachable!() }
- fn close_demands(&self, _: usize) -> Result<RetirementDemand, ValueError> { Ok(metadata::<()>()) }
- fn close_work_demand(&self, _: usize) -> Result<u64, ValueError> { Ok(self.work) }
- fn close_step(&mut self, effect: &mut RetainedAllocationEffect<'_>) -> semio_framework_dsl_record::receiving::owned::OwnedClose {
-  let result = perform(effect, u128::from(self.work)).map(|()| {
-   self.open = false;
-   receipt(metadata::<()>())
+ fn is_ready(&self) -> bool { true }
+ fn take_into(&mut self, out: &mut Option<CloseWorkMutation>, effect: &mut RetainedAllocationEffect<'_>) -> semio_framework_dsl_record::receiving::owned::OwnedTake {
+  let result = effect.performed(1).and_then(|ok| if ok {
+   *out = Some(CloseWorkMutation::Clear {});
+   Ok(RetainedCloneProgress { copied_items: 1, ..Default::default() })
+  } else {
+   Err(ValueError::literal(ValueRefusalKind::WorkLimit, "unfunded"))
   }).map_err(Into::into);
   RetainedWorkPoll::Complete(RetainedWorkOutcome { result, work: effect.performed_work() })
  }
- fn terminal_is_empty(&self) -> bool { !self.open }
+ fn close_demands(&self, _: usize) -> Result<RetirementDemand, ValueError> { Ok(RetirementDemand { depth: 1, ..Default::default() }) }
+ fn close_work_demand(&self, _: usize) -> Result<u64, ValueError> { Ok(self.work) }
+ fn close_step(&mut self, effect: &mut RetainedAllocationEffect<'_>) -> semio_framework_dsl_record::receiving::owned::OwnedClose {
+  let result = effect.performed(self.work).and_then(|ok| if ok {
+   self.open.store(false, std::sync::atomic::Ordering::SeqCst);
+   Ok(RetainedCloneProgress { copied_items: 1, ..Default::default() })
+  } else {
+   Err(ValueError::literal(ValueRefusalKind::WorkLimit, "unfunded"))
+  }).map_err(Into::into);
+  RetainedWorkPoll::Complete(RetainedWorkOutcome { result, work: effect.performed_work() })
+ }
+ fn terminal_is_empty(&self) -> bool { !self.open.load(std::sync::atomic::Ordering::SeqCst) }
 }
 
 #[test]
 fn original_operation_close_quotes_and_funds_the_selected_binding_after_take() {
  let fixture: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
  let child_work = fixture["closeBindingWork"].as_u64().unwrap();
- let grant = RetainedCloneGrant { maximum_items: 1, maximum_depth: 2, ..Default::default() };
+ CLOSE_BINDING_WORK.store(child_work, std::sync::atomic::Ordering::SeqCst);
+ let open = CLOSE_BINDING_OPEN.get_or_init(|| std::sync::Arc::new(std::sync::atomic::AtomicBool::new(true))).clone();
+ let step_grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 4096, maximum_capacity_bytes: 4096, maximum_release_bytes: 4096, maximum_depth: 16 };
  let expected = CloseWorkMutation::Clear {};
  let source = expected.encode_op().unwrap();
- let (mut cursor, _) = CloseWorkMutation::admit_receiving(&source, (0, source.len()), grant).result.unwrap().unwrap();
- cursor.phase = 6;
- *cursor.output.value = Some(expected.clone());
- cursor.binding = Some(CloseWorkBinding { open: true, work: child_work });
+ let dispatch = OriginalSourceTurnIssuer::new().issue().unwrap();
+ let mut bank = OperationBank::fixture(step_grant, dispatch.identity());
+ let mut callback = |_| true;
+ let mut native = NativeDecodeControl::new(bank.left.maximum_capacity_bytes, &mut callback);
+ let mut cursor = native.with_source_witness(Some(dispatch.witness()), |native| {
+  let turn = CloseWorkMutation::admit_receiving(&source, (0, source.len()), bank.grant());
+  let (mut cursor, admitted) = turn.result.unwrap().unwrap();
+  bank.debit(admitted, turn.work);
+  while !cursor.is_ready() {
+   let demand = cursor.step_work_demand(&source, step_grant.maximum_copy_bytes).unwrap();
+   bank.normal(native, demand, |native, g| cursor.step(&source, native, step_grant.maximum_copy_bytes, g)).result.unwrap();
+  }
+  cursor
+ });
+ let grant = RetainedCloneGrant { maximum_items: 1, maximum_depth: 2, ..Default::default() };
  let mut output = None;
  cursor.take_into(&mut output, grant).result.unwrap();
  assert_eq!(output, Some(CloseWorkMutation::decode_op(&source).unwrap()));
@@ -85,11 +116,13 @@ fn original_operation_close_quotes_and_funds_the_selected_binding_after_take() {
  let denied = run(&mut cursor, quoted - 1);
  assert_eq!(denied.work, 0);
  assert_eq!(denied.result.unwrap().progress(), RetainedCloneProgress::default());
- assert!(cursor.binding.as_ref().unwrap().open);
+ assert!(open.load(std::sync::atomic::Ordering::SeqCst));
  let paid = run(&mut cursor, quoted);
  assert_eq!(paid.work, u128::from(quoted));
  paid.result.unwrap();
- for _ in 0..2 {
+ assert!(!open.load(std::sync::atomic::Ordering::SeqCst));
+ for _ in 0..3 {
+  if cursor.terminal_is_empty() { break; }
   let work = cursor.close_work_demand(0).unwrap();
   assert_eq!(work, 1);
   run(&mut cursor, work).result.unwrap();
@@ -188,4 +221,13 @@ fn original_pack_value_receiving_decodes_the_same_value_as_the_pack_rt_oracle(){
   let mut output=ControlledRetirement::new(output.take().unwrap()).ok().unwrap();while !output.terminal_is_empty(){bank.close(|effect|output.step(effect.grant().maximum_copy_bytes,effect)).result.unwrap();}
  });
  }
+}
+
+#[test]
+fn receive_to_completion_names_the_unpayable_quote_and_the_quantum_when_no_turn_progresses(){
+ let bytes=PackValueMutation::Clear.encode_op().unwrap();
+ let stock=RetainedCloneGrant{maximum_items:1<<10,maximum_copy_bytes:1<<16,maximum_capacity_bytes:1<<16,maximum_release_bytes:1<<16,maximum_depth:64};
+ let quantum=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:0,..stock};
+ let message=receive_to_completion::<PackValueMutation>(&bytes,(0,bytes.len()),ReceivingStock{stock,quantum,fuel:1<<10}).unwrap_err().message().to_string();
+ assert!(message.contains("made no progress")&&message.contains("quote Ok(RetirementDemand")&&message.contains("maximum_copy_bytes: 0"),"{message}");
 }

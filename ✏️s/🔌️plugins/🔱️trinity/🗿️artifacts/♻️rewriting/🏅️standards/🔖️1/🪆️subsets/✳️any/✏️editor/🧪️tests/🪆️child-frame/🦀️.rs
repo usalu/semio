@@ -68,7 +68,7 @@ async fn sqlite_snapshot_rewriting_full_child_existing_registry_lifetime(){
  assert!(matches!(PluginApp::close_step(&mut app.0, app.1.cx(), semio_framework_value::retained_clone::RetainedCloneGrant{maximum_items:0,..policy.close}).expect("zero close grant"),PluginLifecycleStep::Progress(progress) if progress==Default::default()));
  assert_eq!(encode_semio_graph_snapshot_json(&old).expect("zero grant retains child"),expected);
  let mut blocked=false;
- for _ in 0..65536{let demand=PluginApp::close_retirement_demands(&app.0,policy.close.maximum_copy_bytes).expect("close quote");if matches!(PluginApp::close_step(&mut app.0, app.1.cx(), semio_s_artifact_trinity_jack::standards::v1::subsets::any::schema::content::jack_self_funded_grant(demand)).expect("bounded close"),PluginLifecycleStep::Blocked{..}){blocked=true;break}}
+ for _ in 0..65536{let demand=PluginApp::close_retirement_demands(&app.0,policy.close.maximum_copy_bytes).expect("close quote");if matches!(PluginApp::close_step(&mut app.0, app.1.cx(), semio_plugin::plugin_self_funded_grant(demand, semio_plugin::PLUGIN_SELF_FUNDED_BODY_BYTES)).expect("bounded close"),PluginLifecycleStep::Blocked{..}){blocked=true;break}}
  assert!(blocked,"captured full existing registry owner blocks actual close");
  drop(old);drop(view);artifact_app_laws::close_registered_fixture_app(&mut app.0, semio_s_artifact_trinity_jack::standards::v1::subsets::any::schema::content::trinity_mounted_owner_policy(), app.1.cx()).expect("original caller paid app close");
  assert!(PluginApp::close_terminal_is_empty(&app.0));

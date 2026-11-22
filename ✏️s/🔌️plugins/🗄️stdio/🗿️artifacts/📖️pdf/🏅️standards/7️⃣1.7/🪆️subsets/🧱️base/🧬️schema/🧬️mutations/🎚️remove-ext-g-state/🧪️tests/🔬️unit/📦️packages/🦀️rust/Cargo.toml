@@ -9,6 +9,37 @@ description = "Component crate of semio-s-artifact-stdio-pdf: mut-base"
 [package.metadata.semio]
 role = "library"
 
+[package.metadata.semio.carve]
+owned = [
+  "standards::v1_7::subsets::base::schema::mutations::remove_color_space::tests",
+  "standards::v1_7::subsets::base::schema::mutations::remove_embedded_file::tests",
+  "standards::v1_7::subsets::base::schema::mutations::remove_ext_g_state::tests",
+  "standards::v1_7::subsets::base::schema::mutations::remove_named_destination::tests",
+  "standards::v1_7::subsets::base::schema::mutations::remove_pattern::tests",
+  "standards::v1_7::subsets::base::schema::mutations::remove_properties::tests",
+  "standards::v1_7::subsets::base::schema::mutations::remove_shading::tests",
+  "standards::v1_7::subsets::base::schema::mutations::set_acro_form::tests",
+  "standards::v1_7::subsets::base::schema::mutations::set_color_space::tests",
+  "standards::v1_7::subsets::base::schema::mutations::set_document_id::tests",
+  "standards::v1_7::subsets::base::schema::mutations::set_embedded_file::tests",
+  "standards::v1_7::subsets::base::schema::mutations::set_encryption::tests",
+  "standards::v1_7::subsets::base::schema::mutations::set_language::tests",
+  "standards::v1_7::subsets::base::schema::mutations::set_mark_info::tests",
+  "standards::v1_7::subsets::base::schema::mutations::set_metadata::tests",
+  "standards::v1_7::subsets::base::schema::mutations::set_named_destination::tests",
+  "standards::v1_7::subsets::base::schema::mutations::set_open_action::tests",
+  "standards::v1_7::subsets::base::schema::mutations::set_optional_content::tests",
+  "standards::v1_7::subsets::base::schema::mutations::set_outlines::tests",
+  "standards::v1_7::subsets::base::schema::mutations::set_output_intents::tests",
+  "standards::v1_7::subsets::base::schema::mutations::set_page_labels::tests",
+  "standards::v1_7::subsets::base::schema::mutations::set_page_layout::tests",
+  "standards::v1_7::subsets::base::schema::mutations::set_page_mode::tests",
+  "standards::v1_7::subsets::base::schema::mutations::set_pattern::tests",
+  "standards::v1_7::subsets::base::schema::mutations::set_properties::tests",
+  "standards::v1_7::subsets::base::schema::mutations::set_shading::tests",
+  "standards::v1_7::subsets::base::schema::mutations::set_viewer_preferences::tests",
+]
+
 [lints]
 workspace = true
 

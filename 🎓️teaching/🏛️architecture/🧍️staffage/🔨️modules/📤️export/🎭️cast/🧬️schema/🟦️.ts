@@ -2,7 +2,7 @@
  * @see ./🔣️.schema.json — the normative schema `semio.staffage.cast/v1`
  * @see ../🟦️.ts — the exporter */
 import { VIEWPOINTS, SCALE_DENOMINATORS, type ScaleDenominator, type ViewSection, type Slug, type Viewpoint } from "../../../../🧬️schema/🟦️.ts";
-import { TRANSPORT_LAYERS, VIEWS, type TransportLayer, type View } from "../../../🔗️contracts/🟦️.ts";
+import { FLOW_LAYERS, VIEWS, type FlowLayer, type View } from "../../../🔗️contracts/🟦️.ts";
 import type { StructureIndex } from "../../../🏗️structure/🧾️summary/🟦️.ts";
 import type { LodId } from "../🧊️lod/🟦️.ts";
 
@@ -18,17 +18,18 @@ export const CAST_SCHEMA_ID = "semio.staffage.cast/v1";
 /** 🌤️ One key of a transient environment: a preset slug from time `t` seconds on. */
 export type CastTimelineKey = { readonly t: number; readonly environment: Slug; readonly ease: "step" | "linear" };
 
-/** 🎭️ One cast entry: exactly one of `pose` and `clip`. */
+/** 🎭️ One cast entry: exactly one of `pose` and `clip`. `flow` names the layers of the flow view drawn over a thermal cast and needs `flowDevelopS`, the seconds the air has developed before every frame; `flowTrailS` (pathlines), `flowStrokeMm` and `flowSpacingMm` are the trail, weight and generalisation of its marks. */
 export type Cast = {
   readonly asset: Slug;
   readonly pose?: Slug;
   readonly clip?: Slug;
   readonly view: View;
   readonly theme: CastTheme;
-  readonly transport?: readonly TransportLayer[];
-  readonly transportAgeS?: number;
-  readonly transportStrokeMm?: number;
-  readonly transportTrailS?: number;
+  readonly flow?: readonly FlowLayer[];
+  readonly flowDevelopS?: number;
+  readonly flowTrailS?: number;
+  readonly flowStrokeMm?: number;
+  readonly flowSpacingMm?: number;
   readonly viewpoint: Viewpoint;
   readonly scale: ScaleDenominator;
   readonly fps?: number;
@@ -77,8 +78,8 @@ export type Revision = `sha256:${string}`;
 export type CastScenario =
   | { readonly kind: "geometry" }
   | { readonly kind: "structural"; readonly dynamics: "quasi-static" | "inertial"; readonly gravityMS2: number }
-  | { readonly kind: "thermal"; readonly environment: { readonly id: Slug; readonly revision: Revision }; readonly spanK: number | null; readonly transport: readonly TransportLayer[] }
-  | { readonly kind: "thermal"; readonly timeline: readonly { readonly t: number; readonly id: Slug; readonly ease: "step" | "linear"; readonly revision: Revision }[]; readonly spanK: number | null; readonly transport: readonly TransportLayer[] };
+  | { readonly kind: "thermal"; readonly environment: { readonly id: Slug; readonly revision: Revision }; readonly spanK: number | null; readonly flow: readonly FlowLayer[] }
+  | { readonly kind: "thermal"; readonly timeline: readonly { readonly t: number; readonly id: Slug; readonly ease: "step" | "linear"; readonly revision: Revision }[]; readonly spanK: number | null; readonly flow: readonly FlowLayer[] };
 
 /** 📏️ Where one rendered cast came from: asset id and revision, view, authored scale, pose or clip, clock and scenario. `clock.rate` is added by a scene; the exporter does not know it.
  * @see ../../../../../../../.🧬semio — ticket r3-contract.md */
@@ -94,7 +95,7 @@ export type CastProvenance = {
 };
 
 const SLUG = /^[a-z0-9]+(?:-[a-z0-9]+)*$/u;
-const KEYS = ["asset", "pose", "clip", "view", "viewpoint", "scale", "fps", "environment", "timeline", "thermalSpanK", "mirror", "theme", "transport", "transportAgeS", "transportStrokeMm", "transportTrailS"];
+const KEYS = ["asset", "pose", "clip", "view", "viewpoint", "scale", "fps", "environment", "timeline", "thermalSpanK", "mirror", "theme", "flow", "flowDevelopS", "flowTrailS", "flowStrokeMm", "flowSpacingMm"];
 const isSlug = (value: unknown): boolean => typeof value === "string" && value.length <= 64 && SLUG.test(value);
 const isObject = (value: unknown): value is Record<string, unknown> => typeof value === "object" && value !== null && !Array.isArray(value);
 
@@ -106,14 +107,15 @@ function castIssues(path: string, cast: unknown): string[] {
   if (!("asset" in cast)) issues.push(`${path}: asset is required`);
   if (!("theme" in cast)) issues.push(`${path}: theme is required`);
   else if (!(CAST_THEMES as readonly unknown[]).includes(cast.theme)) issues.push(`${path}/theme: must be one of ${CAST_THEMES.join(", ")}`);
-  if ("transport" in cast && !(Array.isArray(cast.transport) && cast.transport.every((layer: unknown) => (TRANSPORT_LAYERS as readonly unknown[]).includes(layer)) && new Set(cast.transport).size === cast.transport.length)) issues.push(`${path}/transport: must be unique layers of ${TRANSPORT_LAYERS.join(", ")}`);
-  for (const key of ["transportAgeS", "transportStrokeMm", "transportTrailS"]) {
+  const layers = Array.isArray(cast.flow) ? (cast.flow as readonly unknown[]) : [];
+  if ("flow" in cast && !(Array.isArray(cast.flow) && layers.length > 0 && layers.every((layer) => (FLOW_LAYERS as readonly unknown[]).includes(layer)) && new Set(layers).size === layers.length)) issues.push(`${path}/flow: must be one or more unique layers of ${FLOW_LAYERS.join(", ")}`);
+  for (const key of ["flowDevelopS", "flowTrailS", "flowStrokeMm", "flowSpacingMm"]) {
     if (key in cast && !(typeof cast[key] === "number" && Number.isFinite(cast[key]) && (cast[key] as number) > 0)) issues.push(`${path}/${key}: must be a positive number`);
-    if (key in cast && !("transport" in cast)) issues.push(`${path}: ${key} needs transport layers`);
+    if (key in cast && !("flow" in cast)) issues.push(`${path}: ${key} needs flow layers`);
   }
-  if ("transportAgeS" in cast && !("clip" in cast)) issues.push(`${path}: transportAgeS needs a clip`);
-  if ("transport" in cast && !("transportAgeS" in cast)) issues.push(`${path}: transport layers need transportAgeS, the explicit start of the field`);
-  if ("transport" in cast && cast.view !== "thermal") issues.push(`${path}: transport layers exist for the thermal view only`);
+  if ("flowTrailS" in cast && "flow" in cast && !layers.includes("pathlines")) issues.push(`${path}: flowTrailS needs the flow layer pathlines, the only layer with a trail`);
+  if ("flow" in cast && !("flowDevelopS" in cast)) issues.push(`${path}: flow layers need flowDevelopS, the seconds the air has developed before every frame`);
+  if ("flow" in cast && cast.view !== "thermal") issues.push(`${path}: flow layers exist for the thermal view only`);
   if (!(VIEWS as readonly unknown[]).includes(cast.view)) issues.push(`${path}/view: must be one of ${VIEWS.join(", ")}`);
   if (!(VIEWPOINTS as readonly unknown[]).includes(cast.viewpoint)) issues.push(`${path}/viewpoint: is required and must be one of ${VIEWPOINTS.join(", ")}`);
   if (cast.mirror === true && cast.viewpoint !== "elevation") issues.push(`${path}: mirror needs viewpoint elevation, a mirrored front or plan would fake a view`);

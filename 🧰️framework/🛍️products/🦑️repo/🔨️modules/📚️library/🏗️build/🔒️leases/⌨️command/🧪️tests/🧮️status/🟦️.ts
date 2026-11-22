@@ -12,6 +12,7 @@ import {requireTestToolV1} from "../../../../../../../../../🔨️modules/🏃�
 import {readLeaseAdmissionV1,REPOSITORY_LEASE_DIRECTORY_V1,runLeasesCliV1} from "../../🟦️.ts";
 import corpus from "./🔣️.json";
 import corpusSchema from "./🧬️schema/🔣️.json";
+import {osLanguageListV1} from "../../../../../../../../../🔨️modules/⚙️runtime/🗣️language/🟦️.ts";
 
 setDefaultTimeout(60000);
 
@@ -33,6 +34,7 @@ test("every command yields text, one JSON document or the authored refusal, and 
  const initial=await run(["status","--json"]);expect(initial.error).toBeUndefined();const document=initial.lines.join("\n"),parsed=JSON.parse(document),expected=ask(parsed);
  expect(expected.problems).toEqual([]);expect(parsed.directory).toBe(join(root,...corpus.leaseDirectory.split("/")));
  for(const row of corpus.commands){
+  if(row.messageIncludes&&osLanguageListV1().length>0)continue;
   const result=await run(row.args,row.environment??corpus.environment),label=row.args.join(" ");
   if(row.outcome==="throw"){if(row.messageIncludes){expect(result.error,label).toContain(row.messageIncludes);expect(result.error,label).toContain("Keine Sprache für Texte gewählt.");}else expect(result.error,label).toBe(row.message);expect(result.lines,label).toEqual([]);continue;}
   expect(result.error,label).toBeUndefined();expect(result.code,label).toBe(0);

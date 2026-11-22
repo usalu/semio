@@ -10,6 +10,7 @@ export type WgpuBrowserHostOptions = {
     readonly locale: "en" | "de";
     readonly mountId: string;
     readonly pageBindings?: boolean;
+    readonly formatCatalog?: PickedFileFormatCatalogPortV1;
     readonly rendererModuleUrl?: string;
     readonly rendererWasmUrl?: string;
     readonly frameWorkerUrl?: string;
@@ -26,6 +27,10 @@ import { BrowserFrameTransport } from "../🚚️browser-frame-transport/🟦️
 import { browserFrameEventFromDom, browserFrameEventIsReplaceable, browserFramePointerDomEvent, browserFrameWheelDomEvent, type BrowserFrameDomEvent } from "../🚚️browser-frame-transport/🖱️dom-events/🟦️.ts";
 import { type BrowserFrameFallbackState, type BrowserFrameIntrospectionProbe, type BrowserFrameWorkerFaultCode, type BrowserFrameWorkerStepReport, type BrowserHubDocumentRemote } from "../🚚️browser-frame-transport/📋️contract/🟦️.ts";
 import { createWgpuPageHostIo } from "../🚪️host-io/🟦️.ts";
+import type { PickedFileFormatCatalogPortV1 } from "../../../🧱️elements/🏛️ShellHost/📂️picked-file-opening/🟦️.ts";
+import { createWgpuLocalCatalog } from "../🗂️local-catalog/🟦️.ts";
+import { createWgpuPickedFiles } from "../🛬️picked-files/🟦️.ts";
+import { installNaturalFileDropV1 } from "../../../🧱️elements/🏛️ShellHost/🛬️natural-file-drop/🟦️.ts";
 import { setInteractiveJobPort } from "@semio-tech/ui/elements/Ports/interactive-jobs";
 import { TURN_DIAGNOSTICS_KEY, setTurnDiagnostics, turnDiagnosticsEnabled } from "../⏱️turn-budget/🟦️.ts";
 import { resolveRuntimeDiagnosticsPreference, stampShardWorkerDiagnostics } from "@semio-tech/framework-actor/diagnostics";
@@ -314,6 +319,25 @@ async function createWgpuBrowserHost(root: HTMLElement, options: WgpuBrowserHost
     let bootComplete = false;
     let cleanupInput = () => { };
     const fullscreenOwner = wireBrowserFullscreen(root, canvas);
+    const hostWindow = root.ownerDocument.defaultView;
+    let unsavedGuard = false;
+    const askBeforeUnload = (event: BeforeUnloadEvent): void => {
+        if (!unsavedGuard)
+            return;
+        event.preventDefault();
+        event.returnValue = "";
+    };
+    const pickedFiles = createWgpuPickedFiles();
+    let noteLocalCatalog = (_catalogJson: string): void => { };
+    const localCatalog = createWgpuLocalCatalog({ dataDir: options.descriptor.hub?.dataDir || undefined, actor: `os-shell-wgpu:${options.mountId}`, onChange: (catalog) => noteLocalCatalog(JSON.stringify(catalog)) });
+    let noteFileDrop = (_file: ReturnType<typeof pickedFiles.hold>): void => { };
+    const uninstallFileDrop = hostWindow ? installNaturalFileDropV1(hostWindow, async (file) => noteFileDrop(pickedFiles.hold(file))) : () => { };
+    hostWindow?.addEventListener("beforeunload", askBeforeUnload);
+    const releaseHostWindowGuards = (): void => {
+        hostWindow?.removeEventListener("beforeunload", askBeforeUnload);
+        uninstallFileDrop();
+        localCatalog.dispose();
+    };
     let detachIntrospection = () => { };
     let accessibility: {
         readonly refresh: () => void;
@@ -327,7 +351,7 @@ async function createWgpuBrowserHost(root: HTMLElement, options: WgpuBrowserHost
         boot: { catalog: options.catalog, nativeCatalog: options.nativeCatalog ?? emptyNativeCatalogV1(), bindingsModuleUrl: options.rendererModuleUrl ?? RENDERER_MODULE_URL, bindingsWasmUrl: options.rendererWasmUrl ?? RENDERER_WASM_URL, canvas: offscreen, width, height, dpr, plugins, pluginRegistrySelection: options.pluginRegistrySelection, locale: options.locale, introductionSuppressed: introductionSuppressed(options.suppressAutoIntroduction === true), descriptor, appearance: hostAppearance(), platformPrefs: hostPlatformPrefs(), platform: hostPlatform(), storage: hostStorage() },
         requestAnimationFrame: (callback) => window.requestAnimationFrame(callback),
         cancelAnimationFrame: (handle) => window.cancelAnimationFrame(handle),
-        hostIo: createWgpuPageHostIo(),
+        hostIo: createWgpuPageHostIo(pickedFiles, options.formatCatalog, localCatalog),
         onProgress: (stage, progress, worker) => {
             const contract = bootLifecycleSchema.properties;
             if (disposed || bootComplete || options.signal?.aborted || typeof stage !== "string" || stage.length === 0 || stage.length > contract.stage.maxLength * 2 || [...stage].length > contract.stage.maxLength || !Number.isFinite(progress) || progress < contract.progress.minimum || progress > contract.progress.maximum) return;
@@ -359,7 +383,8 @@ async function createWgpuBrowserHost(root: HTMLElement, options: WgpuBrowserHost
                 canvas.focus({ preventScroll: true });
             resolveReady();
         },
-        onDirectives: ({ cursor, fullscreen, mediaSlots, tutorialVideo }) => {
+        onDirectives: ({ cursor, fullscreen, unsaved, mediaSlots, tutorialVideo }) => {
+            unsavedGuard = unsaved;
             mediaOverlay?.accept(mediaSlots);
             tutorialVideoOverlay?.accept(tutorialVideo);
             canvas.style.cursor = cursor;
@@ -372,6 +397,7 @@ async function createWgpuBrowserHost(root: HTMLElement, options: WgpuBrowserHost
             beacon.error();
             cleanupInput();
             fullscreenOwner.dispose();
+            releaseHostWindowGuards();
             detachIntrospection();
             mediaOverlay?.dispose();
             tutorialVideoOverlay?.dispose();
@@ -380,6 +406,8 @@ async function createWgpuBrowserHost(root: HTMLElement, options: WgpuBrowserHost
             rejectReady(new Error(code + ": " + detail));
         },
     });
+    noteFileDrop = (file) => transport.noteHostFileDrop([file]);
+    noteLocalCatalog = (catalogJson) => transport.noteHostLocalCatalog(catalogJson);
     const previousInteractiveJobPort = options.pageBindings ? setInteractiveJobPort(transport.interactiveJobs) : undefined;
     const publishMetrics = (site: string) => {
         const startedAt = performance.now();
@@ -430,6 +458,7 @@ async function createWgpuBrowserHost(root: HTMLElement, options: WgpuBrowserHost
         resolutionQuery?.removeEventListener("change", onResolutionChange);
         cleanupInput();
         fullscreenOwner.dispose();
+        releaseHostWindowGuards();
         detachIntrospection();
         mediaOverlay?.dispose();
         tutorialVideoOverlay?.dispose();

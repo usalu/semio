@@ -60,6 +60,8 @@ pub struct BoardSyncCache {
     pub area_brush_size: Option<String>,
     pub size_key: Option<String>,
     pub tool_run_trace_window_id: Option<String>,
+    /// 💡️ The open handle-suggestions menu as the scene published it, `None` while it is closed: its window gates the pane's Tab chord (React's `board2dSuggestionMenuOwnsWindow`) and the shell's "suggest" submenu lists its candidates.
+    pub suggestion_menu_json: Option<String>,
 }
 
 /** 🖌️ The last `Paint2dScene` fields pushed into this surface's [`RasterHost`] — the wgpu twin of
@@ -163,6 +165,7 @@ pub(super) fn board_sync_terminal(cache: &BoardSyncCache) -> bool {
         && cache.lod_mode.is_none()
         && cache.transform_flags.is_none()
         && cache.area_brush_size.is_none()
+        && cache.suggestion_menu_json.is_none()
         && cache.size_key.is_none()
         && cache.tool_run_trace_window_id.is_none()
 }

@@ -147,7 +147,7 @@ impl GpuContext {
                 let mut encoder = self.roots.device.create_command_encoder(&gpu_device::CommandEncoderDescriptor { label: Some("prepared_composite_packet") });
                 self.pipelines.blit_prepared_scene(&self.roots.device, &mut encoder, composite.view(), scene);
                 self.roots.queue.submit(encoder.finish()).expect("same-session recorded command");
-                self.group_open = None;
+                self.group_open.clear();
                 cursor.phase = PreparedGpuPresentPhase::Commands;
             }
             PreparedGpuPresentPhase::Commands => {
@@ -229,10 +229,7 @@ impl GpuContext {
                 let Some(scene) = self.scene_color.as_ref() else { return Err("prepared scene target was missing".to_string()) };
                 let Some(composite) = self.composite_color.as_ref() else { return Err("prepared composite target was missing".to_string()) };
                 let mut encoder = self.roots.device.create_command_encoder(&gpu_device::CommandEncoderDescriptor { label: Some("prepared_glass_scalar") });
-                let target = match (self.group_open.is_some(), self.group_target.as_ref()) {
-                    (true, Some(group)) => &group.view,
-                    _ => composite.view(),
-                };
+                let target = GpuContext::open_group_target(&self.group_targets, self.group_open.len()).map_or_else(|| composite.view(), |group| &group.view);
                 self.pipelines.encode_prepared_glass_scalar(&self.roots.device, &self.roots.queue, &mut encoder, target, scene, &mut self.frame_buffers, glass, scissor, self.logical_width, self.logical_height).map_err(str::to_owned)?;
                 self.roots.queue.submit(encoder.finish()).expect("same-session recorded command");
                 cursor.clip_piece = cursor.clip_piece.checked_add(1).ok_or_else(|| "prepared glass clip-piece cursor exhausted".to_string())?;

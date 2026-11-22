@@ -1,0 +1,55 @@
+{
+ "id": "shrub-rose",
+ "category": "vegetation",
+ "title": {
+  "en": "Shrub Rose",
+  "de": "Strauchrose"
+ },
+ "heightM": 1.5,
+ "widthM": 1.6585,
+ "powerW": 0,
+ "poses": [
+  "flowering",
+  "windy",
+  "storm",
+  "rain-laden"
+ ],
+ "clips": [
+  "wind-sway",
+  "gust",
+  "diurnal-transpiration"
+ ],
+ "representations": {
+  "50": "authored",
+  "100": "authored",
+  "200": "authored",
+  "500": "authored"
+ },
+ "symbols": [
+  "shrub-rose-symbol"
+ ],
+ "analytics": [
+  "thermal",
+  "transport",
+  "structural"
+ ],
+ "exports": [
+  "svg",
+  "pdf",
+  "dxf",
+  "dwg",
+  "png-sequence",
+  "mp4",
+  "webm",
+  "component",
+  "glb",
+  "fbx",
+  "model",
+  "model-zip"
+ ],
+ "distinction": {
+  "en": "A deciduous flowering shrub of eleven arching three-part canes with bloom clusters on the nodding tips, whose rain-laden pose sinks the arches under held water.",
+  "de": "Sommergrüner Blütenstrauch aus elf bogigen dreiteiligen Ruten mit Blütenbüscheln an den nickenden Spitzen, dessen regenschwere Pose die Bögen unter gehaltenem Wasser sinken lässt."
+ },
+ "completion": "authored"
+}

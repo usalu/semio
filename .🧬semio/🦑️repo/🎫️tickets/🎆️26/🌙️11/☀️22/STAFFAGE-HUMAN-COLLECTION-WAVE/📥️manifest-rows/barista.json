@@ -1,0 +1,52 @@
+{
+  "id": "barista",
+  "category": "humans",
+  "title": {
+    "en": "Barista",
+    "de": "Barista"
+  },
+  "heightM": 1.726,
+  "widthM": 0.551,
+  "powerW": 178.7,
+  "poses": [
+    "pouring-latte-art",
+    "steaming-milk",
+    "serving-cup"
+  ],
+  "clips": [
+    "latte-art-pour",
+    "idle-breathing",
+    "serve-to-guest"
+  ],
+  "representations": {
+    "50": "authored",
+    "100": "authored",
+    "200": "authored",
+    "500": "authored"
+  },
+  "symbols": [],
+  "analytics": [
+    "thermal",
+    "transport",
+    "structural"
+  ],
+  "exports": [
+    "svg",
+    "pdf",
+    "dxf",
+    "dwg",
+    "png-sequence",
+    "mp4",
+    "webm",
+    "component",
+    "glb",
+    "fbx",
+    "model",
+    "model-zip"
+  ],
+  "distinction": {
+    "en": "A barista in a dark long-sleeve top and a waxed-canvas bib apron, her hair in a bun, bowed over a cappuccino cup tilted in the left hand and pouring steamed milk from a stainless jug in the right; the only figure whose hands hold two hot vessels (heated regions without a power rating), with a pouring loop that rocks the jug.",
+    "de": "Eine Barista in dunklem Langarmshirt und Latzschürze aus gewachstem Canvas, das Haar zum Knoten gebunden, über eine in der linken Hand schräg gehaltene Cappuccinotasse gebeugt, in die sie aus einem Edelstahlkännchen in der rechten Hand aufgeschäumte Milch gießt; die einzige Figur, deren Hände zwei heiße Gefäße halten (beheizte Regionen ohne Leistungsangabe), mit einer Gießschleife, die das Kännchen schwenkt."
+  },
+  "completion": "authored"
+}

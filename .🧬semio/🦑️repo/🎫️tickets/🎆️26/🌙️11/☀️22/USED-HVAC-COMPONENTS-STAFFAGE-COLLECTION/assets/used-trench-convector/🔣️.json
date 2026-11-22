@@ -1,0 +1,7498 @@
+{
+ "$schema": "../../../🧬️schema/🔣️.json#/$defs/AssetDocument",
+ "version": "semio.staffage/v2",
+ "asset": {
+  "id": "used-trench-convector",
+  "category": "components",
+  "title": {
+   "en": "Used Trench Convector",
+   "de": "Gebrauchter Unterflurkonvektor"
+  },
+  "summary": {
+   "en": "A dismantled floor trench convector for natural convection as an HVAC reuse dealer offers it: a 2.0 m long folded steel trough of 260 x 110 mm (1.25 mm galvanised sheet, black powder-coated inside) with its natural-anodised aluminium edge frame, a copper-aluminium heat exchanger of 1.80 m (two 15 mm copper tubes through aluminium fins at 8 mm pitch, dusty, two fins dented) on three brackets on the window side, the flow and return tails cut from their hoses and capped with brass caps, a bleed valve, four levelling brackets and grey screed remnants on the outer wall; drained, 14.7 kg. The roll-up aluminium grille of 2000 x 250 mm is removed and lies strapped as a 236 mm coil on one of the two 80 x 80 mm softwood bearers beside it; 23.8 kg in all. Poses: stored on the bearers, carried by two people with bearers and grille left behind, and reinstalled on a slab heating at 75/65 degC with warm air rising over the fins.",
+   "de": "Ein ausgebauter Unterflurkonvektor für freie Konvektion, wie ihn ein Händler für gebrauchte Haustechnik anbietet: eine 2,0 m lange abgekantete Stahlwanne von 260 x 110 mm (verzinktes Blech 1,25 mm, innen schwarz pulverbeschichtet) mit ihrem natur eloxierten Aluminium-Randrahmen, ein Kupfer-Aluminium-Wärmetauscher von 1,80 m (zwei Kupferrohre 15 mm durch Aluminiumlamellen im Abstand von 8 mm, verstaubt, zwei Lamellen verbogen) auf drei Haltern an der Fensterseite, Vor- und Rücklaufanschluss von ihren Schläuchen getrennt und mit Messingkappen verschlossen, ein Entlüftungsventil, vier Nivellierwinkel und graue Estrichreste an der Außenwand; entleert 14.7 kg. Der Rollrost aus Aluminium von 2000 x 250 mm ist ausgebaut und liegt umreift als Rolle von 236 mm auf einem der zwei Nadelholz-Kanthölzer 80 x 80 mm daneben; zusammen 23.8 kg. Posen: auf den Kanthölzern gelagert, von zwei Personen getragen, wobei Kanthölzer und Rost liegen bleiben, und wieder eingebaut auf einer Rohdecke im Heizbetrieb 75/65 °C mit warmer Luft über den Lamellen."
+  },
+  "tags": [
+   "component",
+   "reclaimed",
+   "used",
+   "hvac",
+   "heating",
+   "convector",
+   "trench-convector",
+   "floor-heater",
+   "galvanised-steel",
+   "copper",
+   "aluminium",
+   "grille",
+   "timber",
+   "operating",
+   "thermal"
+  ],
+  "provenance": {
+   "author": "Semio staffage component authors (used HVAC wave, author 12)",
+   "method": "handcrafted",
+   "created": "2026-11-22",
+   "references": [
+    {
+     "id": "trench-convector-catalogues",
+     "citation": "Catalogue and installation data of natural-convection floor trench convectors of the 1990s to 2010s (Kampmann Katherm NK, Jaga Mini Canal, Möhlenhoff Wärmetechnik, Emco): troughs 180 to 420 mm wide and 90 to 200 mm deep in lengths of 0.8 to 5 m, galvanised sheet 1.0 to 1.5 mm with black inner coating, aluminium edge frames, copper-aluminium heat exchangers on the window side with 15 mm copper tubes and aluminium fins, height-adjustable levelling brackets, roll-up linear grilles of anodised aluminium; heat output of a 260 x 110 mm trough of 2 m about 400 to 550 W at 75/65/20 degC, about 1.5 kg of aluminium grille per metre of 250 mm width; the convector of this asset is a typical member of the family, not one model (authored-estimate)."
+    },
+    {
+     "id": "din-en-16430",
+     "citation": "DIN EN 16430-1/-2:2015 Fan assisted radiators, convectors and trench convectors: technical specifications and requirements, test method and rating for thermal output (rated output at 75/65/20 degC, characteristic equation with exponent n of about 1.4 for natural-convection trench heaters)."
+    },
+    {
+     "id": "din-en-442",
+     "citation": "DIN EN 442-2:2015 Radiators and convectors: test methods and rating (standard conditions 75/65/20 degC, conversion of output to other temperature differences)."
+    },
+    {
+     "id": "din-en-1057",
+     "citation": "DIN EN 1057:2010 Copper and copper alloys, seamless round copper tubes for water and gas: 15 x 1.0 mm, 0.391 kg/m, 0.133 l/m."
+    },
+    {
+     "id": "din-en-10346",
+     "citation": "DIN EN 10346:2015 Continuously hot-dip coated steel flat products (DX51D+Z275 sheet 1.25 mm, density 7850 kg/m3)."
+    },
+    {
+     "id": "recknagel-2019",
+     "citation": "Recknagel, Sprenger, Albers: Taschenbuch für Heizung und Klimatechnik, 79th ed., ITM 2019 (convectors and trench heaters in front of glazed facades: cold-air drop at the window, warm air rising through the grille, low water content and fast response)."
+    },
+    {
+     "id": "en-338",
+     "citation": "EN 338:2016 Structural timber, strength classes: C24 softwood, mean density 420 kg/m3 (450 kg/m3 used for the weathered, air-dry bearers), E0,mean 11 GPa, fm,k 24 MPa."
+    },
+    {
+     "id": "en-iso-10456",
+     "citation": "EN ISO 10456:2007 Building materials and products, hygrothermal properties (softwood 0.13 W/mK, steel 50 W/mK, aluminium 160 W/mK, copper 380 W/mK, cement screed 1.4 W/mK)."
+    },
+    {
+     "id": "incropera-2018",
+     "citation": "Bergman, Lavine, Incropera, DeWitt: Fundamentals of Heat and Mass Transfer, 8th ed., Wiley 2018 (emissivities: black paint 0.9, anodised aluminium 0.8, dusty aluminium fins 0.3, oxidised copper 0.6, tarnished brass 0.3, weathered galvanised steel 0.28)."
+    },
+    {
+     "id": "din-iso-128-50",
+     "citation": "DIN ISO 128-50:2002 Technical drawings, basic conventions for representing areas on cuts and sections (hatching)."
+    },
+    {
+     "id": "din-1356-1",
+     "citation": "DIN 1356-1:1995 Building drawings, types of drawings and basic principles of presentation."
+    }
+   ],
+   "notes": {
+    "en": "Dimensions, output, water content and masses are typical values of the natural-convection trench convector family (authored estimates from the cited catalogues, nothing is measured); the copper tubes follow DIN EN 1057, the sheet DIN EN 10346 and the bearers EN 338. The grille is part of the asset but stays rolled up in every pose: the reinstalled poses show the commissioning state before the screed is laid, when the trough is open for bleeding and inspection.",
+    "de": "Maße, Leistung, Wasserinhalt und Massen sind typische Werte der Unterflurkonvektoren für freie Konvektion (Schätzwerte nach den zitierten Katalogen, nichts ist gemessen); die Kupferrohre folgen DIN EN 1057, das Blech DIN EN 10346 und die Kanthölzer EN 338. Der Rost gehört zum Asset, bleibt aber in jeder Pose aufgerollt: die Einbauposen zeigen den Zustand der Inbetriebnahme vor dem Estrich, wenn die Wanne zum Entlüften und Prüfen offen ist."
+   }
+  },
+  "dimensions": {
+   "heightM": 0.316,
+   "widthM": 2.0,
+   "depthM": 0.62,
+   "massKg": 23.823394
+  },
+  "materials": [
+   {
+    "id": "coated-steel",
+    "title": {
+     "en": "Galvanised sheet steel 1.25 mm, black powder-coated inside, scuffed",
+     "de": "Verzinktes Stahlblech 1,25 mm, innen schwarz pulverbeschichtet, verschrammt"
+    },
+    "emissivity": 0.9,
+    "solarAbsorptivity": 0.9,
+    "densityKgM3": 7850,
+    "conductivityWmK": 50,
+    "specificHeatJKgK": 460,
+    "elasticModulusPa": 210000000000,
+    "strengthPa": 140000000,
+    "source": "literature",
+    "reference": "din-en-10346"
+   },
+   {
+    "id": "galvanised-steel",
+    "title": {
+     "en": "Weathered galvanised steel of brackets",
+     "de": "Verwitterter verzinkter Stahl der Halter"
+    },
+    "emissivity": 0.28,
+    "solarAbsorptivity": 0.65,
+    "densityKgM3": 7850,
+    "conductivityWmK": 50,
+    "specificHeatJKgK": 460,
+    "elasticModulusPa": 210000000000,
+    "strengthPa": 140000000,
+    "source": "literature",
+    "reference": "incropera-2018"
+   },
+   {
+    "id": "anodised-aluminium",
+    "title": {
+     "en": "Natural anodised aluminium of the frame and the grille bars, scratched",
+     "de": "Natur eloxiertes Aluminium von Rahmen und Roststäben, zerkratzt"
+    },
+    "emissivity": 0.8,
+    "solarAbsorptivity": 0.35,
+    "densityKgM3": 2700,
+    "conductivityWmK": 160,
+    "specificHeatJKgK": 900,
+    "elasticModulusPa": 70000000000,
+    "strengthPa": 160000000,
+    "source": "literature",
+    "reference": "incropera-2018"
+   },
+   {
+    "id": "aluminium-fins",
+    "title": {
+     "en": "Dusty aluminium fins 0.25 mm of the heat exchanger",
+     "de": "Verstaubte Aluminiumlamellen 0,25 mm des Wärmetauschers"
+    },
+    "emissivity": 0.3,
+    "solarAbsorptivity": 0.4,
+    "densityKgM3": 2700,
+    "conductivityWmK": 200,
+    "specificHeatJKgK": 900,
+    "source": "literature",
+    "reference": "incropera-2018"
+   },
+   {
+    "id": "copper",
+    "title": {
+     "en": "Oxidised copper tube 15 x 1 mm",
+     "de": "Oxidiertes Kupferrohr 15 x 1 mm"
+    },
+    "emissivity": 0.6,
+    "solarAbsorptivity": 0.65,
+    "densityKgM3": 8930,
+    "conductivityWmK": 380,
+    "specificHeatJKgK": 385,
+    "source": "literature",
+    "reference": "din-en-1057"
+   },
+   {
+    "id": "brass",
+    "title": {
+     "en": "Tarnished brass caps and bleed valve",
+     "de": "Angelaufene Messingkappen und Entlüftungsventil"
+    },
+    "emissivity": 0.3,
+    "solarAbsorptivity": 0.6,
+    "densityKgM3": 8500,
+    "conductivityWmK": 110,
+    "specificHeatJKgK": 380,
+    "source": "literature",
+    "reference": "incropera-2018"
+   },
+   {
+    "id": "polypropylene",
+    "title": {
+     "en": "Polypropylene strapping band around the grille coil",
+     "de": "Umreifungsband aus Polypropylen um die Rostrolle"
+    },
+    "emissivity": 0.9,
+    "solarAbsorptivity": 0.5,
+    "densityKgM3": 910,
+    "conductivityWmK": 0.22,
+    "specificHeatJKgK": 1900,
+    "source": "literature",
+    "reference": "en-iso-10456"
+   },
+   {
+    "id": "cement-screed",
+    "title": {
+     "en": "Cement screed remnants on the outer trough wall",
+     "de": "Zementestrichreste an der Wannenaußenwand"
+    },
+    "emissivity": 0.93,
+    "solarAbsorptivity": 0.65,
+    "densityKgM3": 2000,
+    "conductivityWmK": 1.4,
+    "specificHeatJKgK": 1000,
+    "source": "literature",
+    "reference": "en-iso-10456"
+   },
+   {
+    "id": "label-film",
+    "title": {
+     "en": "Faded polyester type label",
+     "de": "Verblichenes Typenetikett aus Polyester"
+    },
+    "emissivity": 0.9,
+    "solarAbsorptivity": 0.3,
+    "densityKgM3": 1400,
+    "conductivityWmK": 0.2,
+    "specificHeatJKgK": 1200,
+    "source": "literature",
+    "reference": "incropera-2018"
+   },
+   {
+    "id": "softwood",
+    "title": {
+     "en": "Weathered softwood bearers C24",
+     "de": "Verwitterte Nadelholz-Kanthölzer C24"
+    },
+    "emissivity": 0.9,
+    "solarAbsorptivity": 0.6,
+    "densityKgM3": 450,
+    "conductivityWmK": 0.13,
+    "specificHeatJKgK": 1600,
+    "elasticModulusPa": 11000000000,
+    "strengthPa": 24000000,
+    "source": "literature",
+    "reference": "en-338"
+   }
+  ],
+  "rig": {
+   "kind": "mechanical",
+   "root": "floor",
+   "bones": [
+    {
+     "id": "floor",
+     "parent": null,
+     "title": {
+      "en": "Yard floor frame (massless, fixed root)",
+      "de": "Hallenboden-Bezug (masselos, feste Wurzel)"
+     },
+     "x": 0,
+     "y": 0,
+     "angleDeg": 0,
+     "lengthM": 0.01,
+     "joint": {
+      "type": "fixed"
+     }
+    },
+    {
+     "id": "bearers",
+     "parent": "floor",
+     "title": {
+      "en": "Two squared softwood bearers 80 x 80 x 620 mm across the trough (stay on the floor when the trough is lifted)",
+      "de": "Zwei Nadelholz-Kanthölzer 80 x 80 x 620 mm quer unter der Wanne (bleiben beim Anheben am Boden liegen)"
+     },
+     "x": 0,
+     "y": 0,
+     "angleDeg": 0,
+     "lengthM": 1.89,
+     "joint": {
+      "type": "prismatic",
+      "axisDeg": 0,
+      "minM": 0,
+      "maxM": 2.5
+     },
+     "mass": {
+      "kg": 3.5712,
+      "comX": 1.0,
+      "comY": 0.04,
+      "distribution": "uniform",
+      "source": "literature",
+      "reference": "en-338"
+     },
+     "section": {
+      "areaM2": 0.0064,
+      "secondMomentM4": 3e-06,
+      "extremeFibreM": 0.04,
+      "material": "softwood",
+      "title": {
+       "en": "Squared timber 80 x 80 mm",
+       "de": "Kantholz 80 x 80 mm"
+      }
+     }
+    },
+    {
+     "id": "grille",
+     "parent": "bearers",
+     "title": {
+      "en": "Roll-up aluminium grille 2000 x 250 mm, rolled to a coil of 236 mm and strapped (stays with the bearers)",
+      "de": "Rollrost aus Aluminium 2000 x 250 mm, zu einer Rolle von 236 mm gewickelt und umreift (bleibt bei den Kanthölzern)"
+     },
+     "x": 0,
+     "y": 0,
+     "angleDeg": 0,
+     "lengthM": 0.25,
+     "joint": {
+      "type": "fixed"
+     },
+     "mass": {
+      "kg": 5.5125,
+      "comX": 1.85,
+      "comY": 0.198,
+      "distribution": "point",
+      "source": "authored-estimate",
+      "reference": "trench-convector-catalogues"
+     }
+    },
+    {
+     "id": "convector",
+     "parent": "floor",
+     "title": {
+      "en": "Trench convector: steel trough with frame, copper-aluminium element, capped tails (carried by two people at its ends)",
+      "de": "Unterflurkonvektor: Stahlwanne mit Rahmen, Kupfer-Aluminium-Wärmetauscher, verschlossene Anschlüsse (von zwei Personen an den Enden getragen)"
+     },
+     "x": 0,
+     "y": 0.08,
+     "angleDeg": 0,
+     "lengthM": 2.0,
+     "joint": {
+      "type": "prismatic",
+      "axisDeg": 90,
+      "minM": -0.08,
+      "maxM": 0.5
+     },
+     "mass": {
+      "kg": 14.739694,
+      "comX": 1.012348,
+      "comY": 0.036665,
+      "distribution": "uniform",
+      "source": "authored-estimate",
+      "reference": "trench-convector-catalogues"
+     },
+     "section": {
+      "areaM2": 0.000567,
+      "secondMomentM4": 1e-06,
+      "extremeFibreM": 0.082283,
+      "material": "coated-steel",
+      "title": {
+       "en": "Folded steel trough 240 x 108 mm, 1.25 mm sheet",
+       "de": "Abgekantete Stahlwanne 240 x 108 mm, Blech 1,25 mm"
+      }
+     }
+    }
+   ]
+  },
+  "volumes": {
+   "50": {
+    "status": "authored",
+    "denominator": 50,
+    "body": [
+     {
+      "id": "bearer-0",
+      "bone": "bearers",
+      "material": "softwood",
+      "role": "body",
+      "tone": 0.62,
+      "kind": "box",
+      "size": [
+       0.08,
+       0.08,
+       0.62
+      ],
+      "transform": {
+       "translation": [
+        0.15,
+        0.04,
+        0.14
+       ]
+      },
+      "cornerRadius": 0.004
+     },
+     {
+      "id": "bearer-1",
+      "bone": "bearers",
+      "material": "softwood",
+      "role": "body",
+      "tone": 0.62,
+      "kind": "box",
+      "size": [
+       0.08,
+       0.08,
+       0.62
+      ],
+      "transform": {
+       "translation": [
+        1.85,
+        0.04,
+        0.14
+       ]
+      },
+      "cornerRadius": 0.004
+     },
+     {
+      "id": "grille-roll",
+      "bone": "grille",
+      "material": "anodised-aluminium",
+      "role": "body",
+      "tone": 0.55,
+      "kind": "revolve",
+      "profile": [
+       [
+        0,
+        0.05
+       ],
+       [
+        0,
+        0.118
+       ],
+       [
+        0.25,
+        0.118
+       ],
+       [
+        0.25,
+        0.05
+       ],
+       [
+        0,
+        0.05
+       ]
+      ],
+      "axis": [
+       0,
+       0,
+       1
+      ],
+      "origin": [
+       1.85,
+       0.198,
+       0.16
+      ]
+     },
+     {
+      "id": "trough-bottom",
+      "bone": "convector",
+      "material": "coated-steel",
+      "role": "body",
+      "tone": 0.2,
+      "kind": "box",
+      "size": [
+       1.98,
+       0.00125,
+       0.24
+      ],
+      "transform": {
+       "translation": [
+        1.0,
+        0.000625,
+        0.0
+       ]
+      },
+      "sheet": true
+     },
+     {
+      "id": "trough-side-window",
+      "bone": "convector",
+      "material": "coated-steel",
+      "role": "body",
+      "tone": 0.2,
+      "kind": "box",
+      "size": [
+       1.98,
+       0.10675,
+       0.00125
+      ],
+      "transform": {
+       "translation": [
+        1.0,
+        0.054625,
+        -0.119375
+       ]
+      },
+      "sheet": true
+     },
+     {
+      "id": "trough-side-room",
+      "bone": "convector",
+      "material": "coated-steel",
+      "role": "body",
+      "tone": 0.2,
+      "kind": "box",
+      "size": [
+       1.98,
+       0.10675,
+       0.00125
+      ],
+      "transform": {
+       "translation": [
+        1.0,
+        0.054625,
+        0.119375
+       ]
+      },
+      "sheet": true
+     },
+     {
+      "id": "trough-end-blind",
+      "bone": "convector",
+      "material": "coated-steel",
+      "role": "body",
+      "tone": 0.2,
+      "kind": "box",
+      "size": [
+       0.00125,
+       0.10675,
+       0.2375
+      ],
+      "transform": {
+       "translation": [
+        0.010625,
+        0.054625,
+        0.0
+       ]
+      },
+      "sheet": true
+     },
+     {
+      "id": "trough-end-connection",
+      "bone": "convector",
+      "material": "coated-steel",
+      "role": "body",
+      "tone": 0.2,
+      "kind": "box",
+      "size": [
+       0.00125,
+       0.10675,
+       0.2375
+      ],
+      "transform": {
+       "translation": [
+        1.989375,
+        0.054625,
+        0.0
+       ]
+      },
+      "sheet": true
+     },
+     {
+      "id": "frame",
+      "bone": "convector",
+      "material": "anodised-aluminium",
+      "role": "body",
+      "tone": 0.5,
+      "kind": "extrude",
+      "plane": "zx",
+      "profile": [
+       [
+        -0.13,
+        0.0
+       ],
+       [
+        0.13,
+        0.0
+       ],
+       [
+        0.13,
+        2.0
+       ],
+       [
+        -0.13,
+        2.0
+       ]
+      ],
+      "holes": [
+       [
+        [
+         -0.105,
+         0.025
+        ],
+        [
+         -0.105,
+         1.975
+        ],
+        [
+         0.105,
+         1.975
+        ],
+        [
+         0.105,
+         0.025
+        ]
+       ]
+      ],
+      "from": 0.108,
+      "to": 0.11,
+      "sheet": true
+     },
+     {
+      "id": "fins-blind",
+      "bone": "convector",
+      "material": "aluminium-fins",
+      "role": "body",
+      "tone": 0.42,
+      "kind": "box",
+      "size": [
+       0.00025,
+       0.06,
+       0.14
+      ],
+      "transform": {
+       "translation": [
+        0.103,
+        0.05,
+        -0.04
+       ]
+      },
+      "sheet": true,
+      "repeat": {
+       "count": 150,
+       "translation": [
+        0.006,
+        0,
+        0
+       ]
+      }
+     },
+     {
+      "id": "fins-connection",
+      "bone": "convector",
+      "material": "aluminium-fins",
+      "role": "body",
+      "tone": 0.42,
+      "kind": "box",
+      "size": [
+       0.00025,
+       0.06,
+       0.14
+      ],
+      "transform": {
+       "translation": [
+        1.003,
+        0.05,
+        -0.04
+       ]
+      },
+      "sheet": true,
+      "repeat": {
+       "count": 150,
+       "translation": [
+        0.006,
+        0,
+        0
+       ]
+      }
+     },
+     {
+      "id": "tube-0",
+      "bone": "convector",
+      "material": "copper",
+      "role": "body",
+      "tone": 0.38,
+      "kind": "revolve",
+      "profile": [
+       [
+        0,
+        0
+       ],
+       [
+        0,
+        0.0075
+       ],
+       [
+        1.85,
+        0.0075
+       ],
+       [
+        1.85,
+        0
+       ]
+      ],
+      "axis": [
+       1,
+       0,
+       0
+      ],
+      "origin": [
+       0.085,
+       0.05,
+       -0.075
+      ]
+     },
+     {
+      "id": "tube-1",
+      "bone": "convector",
+      "material": "copper",
+      "role": "body",
+      "tone": 0.38,
+      "kind": "revolve",
+      "profile": [
+       [
+        0,
+        0
+       ],
+       [
+        0,
+        0.0075
+       ],
+       [
+        1.85,
+        0.0075
+       ],
+       [
+        1.85,
+        0
+       ]
+      ],
+      "axis": [
+       1,
+       0,
+       0
+      ],
+      "origin": [
+       0.085,
+       0.05,
+       -0.005
+      ]
+     },
+     {
+      "id": "return-bend",
+      "bone": "convector",
+      "material": "copper",
+      "role": "body",
+      "tone": 0.38,
+      "kind": "box",
+      "size": [
+       0.012,
+       0.015,
+       0.085
+      ],
+      "transform": {
+       "translation": [
+        0.079,
+        0.05,
+        -0.04
+       ]
+      }
+     },
+     {
+      "id": "tail-cap-0",
+      "bone": "convector",
+      "material": "brass",
+      "role": "body",
+      "tone": 0.3,
+      "kind": "revolve",
+      "profile": [
+       [
+        0,
+        0
+       ],
+       [
+        0,
+        0.011
+       ],
+       [
+        0.023,
+        0.011
+       ],
+       [
+        0.023,
+        0
+       ]
+      ],
+      "axis": [
+       1,
+       0,
+       0
+      ],
+      "origin": [
+       1.935,
+       0.05,
+       -0.075
+      ]
+     },
+     {
+      "id": "tail-cap-1",
+      "bone": "convector",
+      "material": "brass",
+      "role": "body",
+      "tone": 0.3,
+      "kind": "revolve",
+      "profile": [
+       [
+        0,
+        0
+       ],
+       [
+        0,
+        0.011
+       ],
+       [
+        0.023,
+        0.011
+       ],
+       [
+        0.023,
+        0
+       ]
+      ],
+      "axis": [
+       1,
+       0,
+       0
+      ],
+      "origin": [
+       1.935,
+       0.05,
+       -0.005
+      ]
+     },
+     {
+      "id": "bleed-valve",
+      "bone": "convector",
+      "material": "brass",
+      "role": "body",
+      "tone": 0.3,
+      "kind": "revolve",
+      "profile": [
+       [
+        0,
+        0
+       ],
+       [
+        0,
+        0.005
+       ],
+       [
+        0.0145,
+        0.005
+       ],
+       [
+        0.0145,
+        0
+       ]
+      ],
+      "axis": [
+       0,
+       1,
+       0
+      ],
+      "origin": [
+       1.915,
+       0.0575,
+       -0.075
+      ]
+     },
+     {
+      "id": "element-bracket-0",
+      "bone": "convector",
+      "material": "galvanised-steel",
+      "role": "body",
+      "tone": 0.3,
+      "kind": "box",
+      "size": [
+       0.03,
+       0.01875,
+       0.14
+      ],
+      "transform": {
+       "translation": [
+        0.3,
+        0.010625,
+        -0.04
+       ]
+      }
+     },
+     {
+      "id": "element-bracket-1",
+      "bone": "convector",
+      "material": "galvanised-steel",
+      "role": "body",
+      "tone": 0.3,
+      "kind": "box",
+      "size": [
+       0.03,
+       0.01875,
+       0.14
+      ],
+      "transform": {
+       "translation": [
+        1.0,
+        0.010625,
+        -0.04
+       ]
+      }
+     },
+     {
+      "id": "element-bracket-2",
+      "bone": "convector",
+      "material": "galvanised-steel",
+      "role": "body",
+      "tone": 0.3,
+      "kind": "box",
+      "size": [
+       0.03,
+       0.01875,
+       0.14
+      ],
+      "transform": {
+       "translation": [
+        1.7,
+        0.010625,
+        -0.04
+       ]
+      }
+     },
+     {
+      "id": "levelling-bracket-0",
+      "bone": "convector",
+      "material": "galvanised-steel",
+      "role": "body",
+      "tone": 0.32,
+      "kind": "box",
+      "size": [
+       0.04,
+       0.05,
+       0.025
+      ],
+      "transform": {
+       "translation": [
+        0.15,
+        0.025,
+        -0.1325
+       ]
+      }
+     },
+     {
+      "id": "levelling-bracket-1",
+      "bone": "convector",
+      "material": "galvanised-steel",
+      "role": "body",
+      "tone": 0.32,
+      "kind": "box",
+      "size": [
+       0.04,
+       0.05,
+       0.025
+      ],
+      "transform": {
+       "translation": [
+        0.15,
+        0.025,
+        0.1325
+       ]
+      }
+     },
+     {
+      "id": "levelling-bracket-2",
+      "bone": "convector",
+      "material": "galvanised-steel",
+      "role": "body",
+      "tone": 0.32,
+      "kind": "box",
+      "size": [
+       0.04,
+       0.05,
+       0.025
+      ],
+      "transform": {
+       "translation": [
+        1.85,
+        0.025,
+        -0.1325
+       ]
+      }
+     },
+     {
+      "id": "levelling-bracket-3",
+      "bone": "convector",
+      "material": "galvanised-steel",
+      "role": "body",
+      "tone": 0.32,
+      "kind": "box",
+      "size": [
+       0.04,
+       0.05,
+       0.025
+      ],
+      "transform": {
+       "translation": [
+        1.85,
+        0.025,
+        0.1325
+       ]
+      }
+     },
+     {
+      "id": "type-label",
+      "kind": "box",
+      "bone": "convector",
+      "material": "label-film",
+      "role": "detail",
+      "tone": 0.8,
+      "size": [
+       0.12,
+       0.03,
+       0.0005
+      ],
+      "transform": {
+       "translation": [
+        1.68,
+        0.07,
+        -0.12025
+       ]
+      },
+      "texture": true,
+      "sheet": true
+     },
+     {
+      "id": "screed-remnant-0",
+      "kind": "box",
+      "bone": "convector",
+      "material": "cement-screed",
+      "role": "detail",
+      "tone": 0.55,
+      "size": [
+       0.39,
+       0.028,
+       0.001
+      ],
+      "transform": {
+       "translation": [
+        0.515,
+        0.014,
+        -0.1205
+       ]
+      },
+      "texture": true,
+      "sheet": true
+     },
+     {
+      "id": "screed-remnant-1",
+      "kind": "box",
+      "bone": "convector",
+      "material": "cement-screed",
+      "role": "detail",
+      "tone": 0.55,
+      "size": [
+       0.24,
+       0.024,
+       0.001
+      ],
+      "transform": {
+       "translation": [
+        1.1,
+        0.012,
+        -0.1205
+       ]
+      },
+      "texture": true,
+      "sheet": true
+     },
+     {
+      "id": "screed-remnant-2",
+      "kind": "box",
+      "bone": "convector",
+      "material": "cement-screed",
+      "role": "detail",
+      "tone": 0.55,
+      "size": [
+       0.17,
+       0.0256,
+       0.001
+      ],
+      "transform": {
+       "translation": [
+        1.545,
+        0.0128,
+        -0.1205
+       ]
+      },
+      "texture": true,
+      "sheet": true
+     }
+    ],
+    "thermal": [
+     {
+      "id": "th-bearer-0",
+      "of": "bearer-0",
+      "region": "bearers"
+     },
+     {
+      "id": "th-bearer-1",
+      "of": "bearer-1",
+      "region": "bearers"
+     },
+     {
+      "id": "th-grille-roll",
+      "of": "grille-roll",
+      "region": "grille"
+     },
+     {
+      "id": "th-trough-bottom",
+      "of": "trough-bottom",
+      "region": "trough"
+     },
+     {
+      "id": "th-trough-side-window",
+      "of": "trough-side-window",
+      "region": "trough"
+     },
+     {
+      "id": "th-trough-side-room",
+      "of": "trough-side-room",
+      "region": "trough"
+     },
+     {
+      "id": "th-trough-end-blind",
+      "of": "trough-end-blind",
+      "region": "trough"
+     },
+     {
+      "id": "th-trough-end-connection",
+      "of": "trough-end-connection",
+      "region": "trough"
+     },
+     {
+      "id": "th-frame",
+      "of": "frame",
+      "region": "frame"
+     },
+     {
+      "id": "th-fins-blind",
+      "of": "fins-blind",
+      "region": "heat-exchanger"
+     },
+     {
+      "id": "th-fins-connection",
+      "of": "fins-connection",
+      "region": "heat-exchanger"
+     },
+     {
+      "id": "th-tube-0",
+      "of": "tube-0",
+      "region": "heat-exchanger"
+     },
+     {
+      "id": "th-tube-1",
+      "of": "tube-1",
+      "region": "heat-exchanger"
+     },
+     {
+      "id": "th-return-bend",
+      "of": "return-bend",
+      "region": "heat-exchanger"
+     },
+     {
+      "id": "th-tail-cap-0",
+      "of": "tail-cap-0",
+      "region": "tails"
+     },
+     {
+      "id": "th-tail-cap-1",
+      "of": "tail-cap-1",
+      "region": "tails"
+     },
+     {
+      "id": "th-bleed-valve",
+      "of": "bleed-valve",
+      "region": "tails"
+     },
+     {
+      "id": "th-element-bracket-0",
+      "of": "element-bracket-0",
+      "region": "trough"
+     },
+     {
+      "id": "th-element-bracket-1",
+      "of": "element-bracket-1",
+      "region": "trough"
+     },
+     {
+      "id": "th-element-bracket-2",
+      "of": "element-bracket-2",
+      "region": "trough"
+     },
+     {
+      "id": "th-levelling-bracket-0",
+      "of": "levelling-bracket-0",
+      "region": "trough"
+     },
+     {
+      "id": "th-levelling-bracket-1",
+      "of": "levelling-bracket-1",
+      "region": "trough"
+     },
+     {
+      "id": "th-levelling-bracket-2",
+      "of": "levelling-bracket-2",
+      "region": "trough"
+     },
+     {
+      "id": "th-levelling-bracket-3",
+      "of": "levelling-bracket-3",
+      "region": "trough"
+     },
+     {
+      "id": "th-warm-air-outlet",
+      "kind": "box",
+      "bone": "convector",
+      "material": "aluminium-fins",
+      "role": "detail",
+      "tone": 0.42,
+      "size": [
+       1.8,
+       0.002,
+       0.14
+      ],
+      "transform": {
+       "translation": [
+        1.0,
+        0.081,
+        -0.04
+       ]
+      },
+      "region": "heat-exchanger",
+      "sheet": true,
+      "tags": [
+       "warm-air",
+       "trough-plume"
+      ]
+     }
+    ],
+    "structure": [
+     {
+      "id": "member-bearer-0",
+      "of": "bearer-0",
+      "member": "bearers",
+      "part": "member"
+     },
+     {
+      "id": "member-bearer-1",
+      "of": "bearer-1",
+      "member": "bearers",
+      "part": "member"
+     },
+     {
+      "id": "member-grille-roll",
+      "of": "grille-roll",
+      "member": "grille",
+      "part": "member"
+     },
+     {
+      "id": "member-trough-bottom",
+      "of": "trough-bottom",
+      "member": "convector",
+      "part": "member"
+     },
+     {
+      "id": "member-trough-side-window",
+      "of": "trough-side-window",
+      "member": "convector",
+      "part": "member"
+     },
+     {
+      "id": "member-trough-side-room",
+      "of": "trough-side-room",
+      "member": "convector",
+      "part": "member"
+     },
+     {
+      "id": "joint-bearing-0",
+      "kind": "box",
+      "bone": "convector",
+      "material": "galvanised-steel",
+      "role": "detail",
+      "tone": 0.5,
+      "size": [
+       0.04,
+       0.008,
+       0.04
+      ],
+      "transform": {
+       "translation": [
+        0.15,
+        0.004,
+        -0.1
+       ]
+      },
+      "member": "convector",
+      "part": "joint"
+     },
+     {
+      "id": "joint-bearing-1",
+      "kind": "box",
+      "bone": "convector",
+      "material": "galvanised-steel",
+      "role": "detail",
+      "tone": 0.5,
+      "size": [
+       0.04,
+       0.008,
+       0.04
+      ],
+      "transform": {
+       "translation": [
+        0.15,
+        0.004,
+        0.1
+       ]
+      },
+      "member": "convector",
+      "part": "joint"
+     },
+     {
+      "id": "joint-bearing-2",
+      "kind": "box",
+      "bone": "convector",
+      "material": "galvanised-steel",
+      "role": "detail",
+      "tone": 0.5,
+      "size": [
+       0.04,
+       0.008,
+       0.04
+      ],
+      "transform": {
+       "translation": [
+        1.85,
+        0.004,
+        -0.1
+       ]
+      },
+      "member": "convector",
+      "part": "joint"
+     },
+     {
+      "id": "joint-bearing-3",
+      "kind": "box",
+      "bone": "convector",
+      "material": "galvanised-steel",
+      "role": "detail",
+      "tone": 0.5,
+      "size": [
+       0.04,
+       0.008,
+       0.04
+      ],
+      "transform": {
+       "translation": [
+        1.85,
+        0.004,
+        0.1
+       ]
+      },
+      "member": "convector",
+      "part": "joint"
+     },
+     {
+      "id": "mass-convector",
+      "kind": "ellipsoid",
+      "bone": "convector",
+      "material": "coated-steel",
+      "role": "detail",
+      "tone": 0.5,
+      "radii": [
+       0.025,
+       0.025,
+       0.025
+      ],
+      "transform": {
+       "translation": [
+        1.012348,
+        0.036665,
+        0
+       ]
+      },
+      "member": "convector",
+      "part": "mass"
+     },
+     {
+      "id": "mass-bearer-0",
+      "kind": "ellipsoid",
+      "bone": "bearers",
+      "material": "softwood",
+      "role": "detail",
+      "tone": 0.5,
+      "radii": [
+       0.025,
+       0.025,
+       0.025
+      ],
+      "transform": {
+       "translation": [
+        0.15,
+        0.04,
+        0.14
+       ]
+      },
+      "member": "bearers",
+      "part": "mass"
+     },
+     {
+      "id": "mass-bearer-1",
+      "kind": "ellipsoid",
+      "bone": "bearers",
+      "material": "softwood",
+      "role": "detail",
+      "tone": 0.5,
+      "radii": [
+       0.025,
+       0.025,
+       0.025
+      ],
+      "transform": {
+       "translation": [
+        1.85,
+        0.04,
+        0.14
+       ]
+      },
+      "member": "bearers",
+      "part": "mass"
+     },
+     {
+      "id": "mass-grille",
+      "kind": "ellipsoid",
+      "bone": "grille",
+      "material": "anodised-aluminium",
+      "role": "detail",
+      "tone": 0.5,
+      "radii": [
+       0.025,
+       0.025,
+       0.025
+      ],
+      "transform": {
+       "translation": [
+        1.85,
+        0.114,
+        0.285
+       ]
+      },
+      "member": "grille",
+      "part": "mass"
+     }
+    ],
+    "decisions": [
+     {
+      "en": "Body: the trough as five declared 1.25 mm sheets (bottom, two walls, two ends) under four 2 mm frame flanges, the fin pack as the envelope prism of its 225 fins on three brackets, the two copper tubes with their return bend, the brass caps and the bleed valve as revolves, four levelling brackets, the grille coil as a revolve with its bore and the strap as a declared sheet band, the bearers with 4 mm arrises, and the label and three screed remnants as declared texture sheets.",
+      "de": "Körper: die Wanne als fünf deklarierte Bleche 1,25 mm (Boden, zwei Wände, zwei Stirnen) unter vier Rahmenflanschen 2 mm, das Lamellenpaket als Hüllprisma seiner 225 Lamellen auf drei Haltern, die zwei Kupferrohre mit Umlenkbogen, die Messingkappen und das Entlüftungsventil als Drehkörper, vier Nivellierwinkel, die Rostrolle als Drehkörper mit Öffnung und die Umreifung als deklariertes Blechband, die Kanthölzer mit 4 mm Fasen sowie Etikett und drei Estrichreste als deklarierte Texturbleche."
+     },
+     {
+      "en": "Thermal: every region by reference to its body solids and the warm-air outlet as a thin patch on top of the fin pack. Structure: bearers, trough bottom and walls and the grille coil as members, four bearing pads over the levelling brackets as joints, three mass markers.",
+      "de": "Wärme: jede Region als Verweis auf ihre Körper und der Warmluftauslass als dünnes Feld auf dem Lamellenpaket. Tragwerk: Kanthölzer, Wannenboden und -wände und die Rostrolle als Stäbe, vier Auflagerpolster über den Nivellierwinkeln als Gelenke, drei Massenmarken."
+     }
+    ]
+   },
+   "100": {
+    "status": "authored",
+    "denominator": 100,
+    "body": [
+     {
+      "id": "bearer-0",
+      "bone": "bearers",
+      "material": "softwood",
+      "role": "body",
+      "tone": 0.62,
+      "kind": "box",
+      "size": [
+       0.08,
+       0.08,
+       0.62
+      ],
+      "transform": {
+       "translation": [
+        0.15,
+        0.04,
+        0.14
+       ]
+      }
+     },
+     {
+      "id": "bearer-1",
+      "bone": "bearers",
+      "material": "softwood",
+      "role": "body",
+      "tone": 0.62,
+      "kind": "box",
+      "size": [
+       0.08,
+       0.08,
+       0.62
+      ],
+      "transform": {
+       "translation": [
+        1.85,
+        0.04,
+        0.14
+       ]
+      }
+     },
+     {
+      "id": "grille-roll",
+      "bone": "grille",
+      "material": "anodised-aluminium",
+      "role": "body",
+      "tone": 0.55,
+      "kind": "revolve",
+      "profile": [
+       [
+        0,
+        0.05
+       ],
+       [
+        0,
+        0.118
+       ],
+       [
+        0.25,
+        0.118
+       ],
+       [
+        0.25,
+        0.05
+       ],
+       [
+        0,
+        0.05
+       ]
+      ],
+      "axis": [
+       0,
+       0,
+       1
+      ],
+      "origin": [
+       1.85,
+       0.198,
+       0.16
+      ]
+     },
+     {
+      "id": "trough-bottom",
+      "bone": "convector",
+      "material": "coated-steel",
+      "role": "body",
+      "tone": 0.2,
+      "kind": "box",
+      "size": [
+       1.98,
+       0.00125,
+       0.24
+      ],
+      "transform": {
+       "translation": [
+        1.0,
+        0.000625,
+        0.0
+       ]
+      },
+      "sheet": true
+     },
+     {
+      "id": "trough-side-window",
+      "bone": "convector",
+      "material": "coated-steel",
+      "role": "body",
+      "tone": 0.2,
+      "kind": "box",
+      "size": [
+       1.98,
+       0.10675,
+       0.00125
+      ],
+      "transform": {
+       "translation": [
+        1.0,
+        0.054625,
+        -0.119375
+       ]
+      },
+      "sheet": true
+     },
+     {
+      "id": "trough-side-room",
+      "bone": "convector",
+      "material": "coated-steel",
+      "role": "body",
+      "tone": 0.2,
+      "kind": "box",
+      "size": [
+       1.98,
+       0.10675,
+       0.00125
+      ],
+      "transform": {
+       "translation": [
+        1.0,
+        0.054625,
+        0.119375
+       ]
+      },
+      "sheet": true
+     },
+     {
+      "id": "trough-end-blind",
+      "bone": "convector",
+      "material": "coated-steel",
+      "role": "body",
+      "tone": 0.2,
+      "kind": "box",
+      "size": [
+       0.00125,
+       0.10675,
+       0.2375
+      ],
+      "transform": {
+       "translation": [
+        0.010625,
+        0.054625,
+        0.0
+       ]
+      },
+      "sheet": true
+     },
+     {
+      "id": "trough-end-connection",
+      "bone": "convector",
+      "material": "coated-steel",
+      "role": "body",
+      "tone": 0.2,
+      "kind": "box",
+      "size": [
+       0.00125,
+       0.10675,
+       0.2375
+      ],
+      "transform": {
+       "translation": [
+        1.989375,
+        0.054625,
+        0.0
+       ]
+      },
+      "sheet": true
+     },
+     {
+      "id": "frame",
+      "bone": "convector",
+      "material": "anodised-aluminium",
+      "role": "body",
+      "tone": 0.5,
+      "kind": "extrude",
+      "plane": "zx",
+      "profile": [
+       [
+        -0.13,
+        0.0
+       ],
+       [
+        0.13,
+        0.0
+       ],
+       [
+        0.13,
+        2.0
+       ],
+       [
+        -0.13,
+        2.0
+       ]
+      ],
+      "holes": [
+       [
+        [
+         -0.105,
+         0.025
+        ],
+        [
+         -0.105,
+         1.975
+        ],
+        [
+         0.105,
+         1.975
+        ],
+        [
+         0.105,
+         0.025
+        ]
+       ]
+      ],
+      "from": 0.108,
+      "to": 0.11,
+      "sheet": true
+     },
+     {
+      "id": "fin-pack",
+      "bone": "convector",
+      "material": "aluminium-fins",
+      "role": "body",
+      "tone": 0.42,
+      "kind": "box",
+      "size": [
+       1.8,
+       0.06,
+       0.14
+      ],
+      "transform": {
+       "translation": [
+        1.0,
+        0.05,
+        -0.04
+       ]
+      },
+      "envelope": true
+     },
+     {
+      "id": "return-bend",
+      "bone": "convector",
+      "material": "copper",
+      "role": "body",
+      "tone": 0.38,
+      "kind": "box",
+      "size": [
+       0.027,
+       0.015,
+       0.085
+      ],
+      "transform": {
+       "translation": [
+        0.0865,
+        0.05,
+        -0.04
+       ]
+      }
+     },
+     {
+      "id": "tube-ends",
+      "bone": "convector",
+      "material": "copper",
+      "role": "body",
+      "tone": 0.38,
+      "kind": "box",
+      "size": [
+       0.035,
+       0.015,
+       0.085
+      ],
+      "transform": {
+       "translation": [
+        1.9175,
+        0.05,
+        -0.04
+       ]
+      }
+     },
+     {
+      "id": "tail-cap-0",
+      "bone": "convector",
+      "material": "brass",
+      "role": "body",
+      "tone": 0.3,
+      "kind": "box",
+      "size": [
+       0.023,
+       0.022,
+       0.022
+      ],
+      "transform": {
+       "translation": [
+        1.9465,
+        0.05,
+        -0.075
+       ]
+      }
+     },
+     {
+      "id": "tail-cap-1",
+      "bone": "convector",
+      "material": "brass",
+      "role": "body",
+      "tone": 0.3,
+      "kind": "box",
+      "size": [
+       0.023,
+       0.022,
+       0.022
+      ],
+      "transform": {
+       "translation": [
+        1.9465,
+        0.05,
+        -0.005
+       ]
+      }
+     },
+     {
+      "id": "element-bracket-0",
+      "bone": "convector",
+      "material": "galvanised-steel",
+      "role": "body",
+      "tone": 0.3,
+      "kind": "box",
+      "size": [
+       0.03,
+       0.01875,
+       0.14
+      ],
+      "transform": {
+       "translation": [
+        0.3,
+        0.010625,
+        -0.04
+       ]
+      }
+     },
+     {
+      "id": "element-bracket-1",
+      "bone": "convector",
+      "material": "galvanised-steel",
+      "role": "body",
+      "tone": 0.3,
+      "kind": "box",
+      "size": [
+       0.03,
+       0.01875,
+       0.14
+      ],
+      "transform": {
+       "translation": [
+        1.0,
+        0.010625,
+        -0.04
+       ]
+      }
+     },
+     {
+      "id": "element-bracket-2",
+      "bone": "convector",
+      "material": "galvanised-steel",
+      "role": "body",
+      "tone": 0.3,
+      "kind": "box",
+      "size": [
+       0.03,
+       0.01875,
+       0.14
+      ],
+      "transform": {
+       "translation": [
+        1.7,
+        0.010625,
+        -0.04
+       ]
+      }
+     },
+     {
+      "id": "levelling-bracket-0",
+      "bone": "convector",
+      "material": "galvanised-steel",
+      "role": "body",
+      "tone": 0.32,
+      "kind": "box",
+      "size": [
+       0.04,
+       0.05,
+       0.025
+      ],
+      "transform": {
+       "translation": [
+        0.15,
+        0.025,
+        -0.1325
+       ]
+      }
+     },
+     {
+      "id": "levelling-bracket-1",
+      "bone": "convector",
+      "material": "galvanised-steel",
+      "role": "body",
+      "tone": 0.32,
+      "kind": "box",
+      "size": [
+       0.04,
+       0.05,
+       0.025
+      ],
+      "transform": {
+       "translation": [
+        0.15,
+        0.025,
+        0.1325
+       ]
+      }
+     },
+     {
+      "id": "levelling-bracket-2",
+      "bone": "convector",
+      "material": "galvanised-steel",
+      "role": "body",
+      "tone": 0.32,
+      "kind": "box",
+      "size": [
+       0.04,
+       0.05,
+       0.025
+      ],
+      "transform": {
+       "translation": [
+        1.85,
+        0.025,
+        -0.1325
+       ]
+      }
+     },
+     {
+      "id": "levelling-bracket-3",
+      "bone": "convector",
+      "material": "galvanised-steel",
+      "role": "body",
+      "tone": 0.32,
+      "kind": "box",
+      "size": [
+       0.04,
+       0.05,
+       0.025
+      ],
+      "transform": {
+       "translation": [
+        1.85,
+        0.025,
+        0.1325
+       ]
+      }
+     }
+    ],
+    "thermal": [
+     {
+      "id": "th-bearer-0",
+      "of": "bearer-0",
+      "region": "bearers"
+     },
+     {
+      "id": "th-bearer-1",
+      "of": "bearer-1",
+      "region": "bearers"
+     },
+     {
+      "id": "th-grille-roll",
+      "of": "grille-roll",
+      "region": "grille"
+     },
+     {
+      "id": "th-trough-bottom",
+      "of": "trough-bottom",
+      "region": "trough"
+     },
+     {
+      "id": "th-trough-side-window",
+      "of": "trough-side-window",
+      "region": "trough"
+     },
+     {
+      "id": "th-trough-side-room",
+      "of": "trough-side-room",
+      "region": "trough"
+     },
+     {
+      "id": "th-trough-end-blind",
+      "of": "trough-end-blind",
+      "region": "trough"
+     },
+     {
+      "id": "th-trough-end-connection",
+      "of": "trough-end-connection",
+      "region": "trough"
+     },
+     {
+      "id": "th-frame",
+      "of": "frame",
+      "region": "frame"
+     },
+     {
+      "id": "th-fin-pack",
+      "of": "fin-pack",
+      "region": "heat-exchanger"
+     },
+     {
+      "id": "th-return-bend",
+      "of": "return-bend",
+      "region": "heat-exchanger"
+     },
+     {
+      "id": "th-tube-ends",
+      "of": "tube-ends",
+      "region": "heat-exchanger"
+     },
+     {
+      "id": "th-tail-cap-0",
+      "of": "tail-cap-0",
+      "region": "tails"
+     },
+     {
+      "id": "th-tail-cap-1",
+      "of": "tail-cap-1",
+      "region": "tails"
+     },
+     {
+      "id": "th-element-bracket-0",
+      "of": "element-bracket-0",
+      "region": "trough"
+     },
+     {
+      "id": "th-element-bracket-1",
+      "of": "element-bracket-1",
+      "region": "trough"
+     },
+     {
+      "id": "th-element-bracket-2",
+      "of": "element-bracket-2",
+      "region": "trough"
+     },
+     {
+      "id": "th-levelling-bracket-0",
+      "of": "levelling-bracket-0",
+      "region": "trough"
+     },
+     {
+      "id": "th-levelling-bracket-1",
+      "of": "levelling-bracket-1",
+      "region": "trough"
+     },
+     {
+      "id": "th-levelling-bracket-2",
+      "of": "levelling-bracket-2",
+      "region": "trough"
+     },
+     {
+      "id": "th-levelling-bracket-3",
+      "of": "levelling-bracket-3",
+      "region": "trough"
+     },
+     {
+      "id": "th-warm-air-outlet",
+      "kind": "box",
+      "bone": "convector",
+      "material": "aluminium-fins",
+      "role": "detail",
+      "tone": 0.42,
+      "size": [
+       1.8,
+       0.004,
+       0.14
+      ],
+      "transform": {
+       "translation": [
+        1.0,
+        0.082,
+        -0.04
+       ]
+      },
+      "region": "heat-exchanger",
+      "sheet": true,
+      "tags": [
+       "warm-air",
+       "trough-plume"
+      ]
+     }
+    ],
+    "structure": [
+     {
+      "id": "member-bearer-0",
+      "of": "bearer-0",
+      "member": "bearers",
+      "part": "member"
+     },
+     {
+      "id": "member-bearer-1",
+      "of": "bearer-1",
+      "member": "bearers",
+      "part": "member"
+     },
+     {
+      "id": "member-grille-roll",
+      "of": "grille-roll",
+      "member": "grille",
+      "part": "member"
+     },
+     {
+      "id": "member-trough-bottom",
+      "of": "trough-bottom",
+      "member": "convector",
+      "part": "member"
+     },
+     {
+      "id": "member-trough-side-window",
+      "of": "trough-side-window",
+      "member": "convector",
+      "part": "member"
+     },
+     {
+      "id": "member-trough-side-room",
+      "of": "trough-side-room",
+      "member": "convector",
+      "part": "member"
+     },
+     {
+      "id": "joint-bearing-0",
+      "kind": "box",
+      "bone": "convector",
+      "material": "galvanised-steel",
+      "role": "detail",
+      "tone": 0.5,
+      "size": [
+       0.04,
+       0.015,
+       0.04
+      ],
+      "transform": {
+       "translation": [
+        0.15,
+        0.0075,
+        -0.1
+       ]
+      },
+      "member": "convector",
+      "part": "joint"
+     },
+     {
+      "id": "joint-bearing-1",
+      "kind": "box",
+      "bone": "convector",
+      "material": "galvanised-steel",
+      "role": "detail",
+      "tone": 0.5,
+      "size": [
+       0.04,
+       0.015,
+       0.04
+      ],
+      "transform": {
+       "translation": [
+        0.15,
+        0.0075,
+        0.1
+       ]
+      },
+      "member": "convector",
+      "part": "joint"
+     },
+     {
+      "id": "joint-bearing-2",
+      "kind": "box",
+      "bone": "convector",
+      "material": "galvanised-steel",
+      "role": "detail",
+      "tone": 0.5,
+      "size": [
+       0.04,
+       0.015,
+       0.04
+      ],
+      "transform": {
+       "translation": [
+        1.85,
+        0.0075,
+        -0.1
+       ]
+      },
+      "member": "convector",
+      "part": "joint"
+     },
+     {
+      "id": "joint-bearing-3",
+      "kind": "box",
+      "bone": "convector",
+      "material": "galvanised-steel",
+      "role": "detail",
+      "tone": 0.5,
+      "size": [
+       0.04,
+       0.015,
+       0.04
+      ],
+      "transform": {
+       "translation": [
+        1.85,
+        0.0075,
+        0.1
+       ]
+      },
+      "member": "convector",
+      "part": "joint"
+     },
+     {
+      "id": "mass-convector",
+      "kind": "ellipsoid",
+      "bone": "convector",
+      "material": "coated-steel",
+      "role": "detail",
+      "tone": 0.5,
+      "radii": [
+       0.025,
+       0.025,
+       0.025
+      ],
+      "transform": {
+       "translation": [
+        1.012348,
+        0.036665,
+        0
+       ]
+      },
+      "member": "convector",
+      "part": "mass"
+     },
+     {
+      "id": "mass-bearer-0",
+      "kind": "ellipsoid",
+      "bone": "bearers",
+      "material": "softwood",
+      "role": "detail",
+      "tone": 0.5,
+      "radii": [
+       0.025,
+       0.025,
+       0.025
+      ],
+      "transform": {
+       "translation": [
+        0.15,
+        0.04,
+        0.14
+       ]
+      },
+      "member": "bearers",
+      "part": "mass"
+     },
+     {
+      "id": "mass-bearer-1",
+      "kind": "ellipsoid",
+      "bone": "bearers",
+      "material": "softwood",
+      "role": "detail",
+      "tone": 0.5,
+      "radii": [
+       0.025,
+       0.025,
+       0.025
+      ],
+      "transform": {
+       "translation": [
+        1.85,
+        0.04,
+        0.14
+       ]
+      },
+      "member": "bearers",
+      "part": "mass"
+     },
+     {
+      "id": "mass-grille",
+      "kind": "ellipsoid",
+      "bone": "grille",
+      "material": "anodised-aluminium",
+      "role": "detail",
+      "tone": 0.5,
+      "radii": [
+       0.025,
+       0.025,
+       0.025
+      ],
+      "transform": {
+       "translation": [
+        1.85,
+        0.114,
+        0.285
+       ]
+      },
+      "member": "grille",
+      "part": "mass"
+     }
+    ],
+    "decisions": [
+     {
+      "en": "Body for the 15 mm feature: sheets and frame stay declared sheets, the fin pack on its three brackets, tubes, return bend, caps and the levelling brackets keep their sizes; bleed valve, strap, label and screed remnants are left out.",
+      "de": "Körper für das Merkmal von 15 mm: Bleche und Rahmen bleiben deklarierte Bleche, das Lamellenpaket auf seinen drei Haltern, Rohre, Umlenkbogen, Kappen und Nivellierwinkel behalten ihre Größen; Entlüftungsventil, Umreifung, Etikett und Estrichreste entfallen."
+     },
+     {
+      "en": "Thermal: the regions by reference, the tubes with the tails region, the outlet patch of 7.5 mm; structure: bearers, trough and coil as members, bearing pads of 15 mm and mass markers.",
+      "de": "Wärme: die Regionen als Verweise, die Rohre mit der Anschlussregion, das Auslassfeld von 7,5 mm; Tragwerk: Kanthölzer, Wanne und Rolle als Stäbe, Auflagerpolster von 15 mm und Massenmarken."
+     }
+    ]
+   },
+   "200": {
+    "status": "authored",
+    "denominator": 200,
+    "body": [
+     {
+      "id": "bearer-0",
+      "bone": "bearers",
+      "material": "softwood",
+      "role": "body",
+      "tone": 0.62,
+      "kind": "box",
+      "size": [
+       0.08,
+       0.08,
+       0.62
+      ],
+      "transform": {
+       "translation": [
+        0.15,
+        0.04,
+        0.14
+       ]
+      }
+     },
+     {
+      "id": "bearer-1",
+      "bone": "bearers",
+      "material": "softwood",
+      "role": "body",
+      "tone": 0.62,
+      "kind": "box",
+      "size": [
+       0.08,
+       0.08,
+       0.62
+      ],
+      "transform": {
+       "translation": [
+        1.85,
+        0.04,
+        0.14
+       ]
+      }
+     },
+     {
+      "id": "grille-roll",
+      "bone": "grille",
+      "material": "anodised-aluminium",
+      "role": "body",
+      "tone": 0.55,
+      "kind": "revolve",
+      "profile": [
+       [
+        0,
+        0.05
+       ],
+       [
+        0,
+        0.118
+       ],
+       [
+        0.25,
+        0.118
+       ],
+       [
+        0.25,
+        0.05
+       ],
+       [
+        0,
+        0.05
+       ]
+      ],
+      "axis": [
+       0,
+       0,
+       1
+      ],
+      "origin": [
+       1.85,
+       0.198,
+       0.16
+      ]
+     },
+     {
+      "id": "trough-bottom",
+      "bone": "convector",
+      "material": "coated-steel",
+      "role": "body",
+      "tone": 0.2,
+      "kind": "box",
+      "size": [
+       1.98,
+       0.00125,
+       0.24
+      ],
+      "transform": {
+       "translation": [
+        1.0,
+        0.000625,
+        0.0
+       ]
+      },
+      "sheet": true
+     },
+     {
+      "id": "trough-side-window",
+      "bone": "convector",
+      "material": "coated-steel",
+      "role": "body",
+      "tone": 0.2,
+      "kind": "box",
+      "size": [
+       1.98,
+       0.10675,
+       0.00125
+      ],
+      "transform": {
+       "translation": [
+        1.0,
+        0.054625,
+        -0.119375
+       ]
+      },
+      "sheet": true
+     },
+     {
+      "id": "trough-side-room",
+      "bone": "convector",
+      "material": "coated-steel",
+      "role": "body",
+      "tone": 0.2,
+      "kind": "box",
+      "size": [
+       1.98,
+       0.10675,
+       0.00125
+      ],
+      "transform": {
+       "translation": [
+        1.0,
+        0.054625,
+        0.119375
+       ]
+      },
+      "sheet": true
+     },
+     {
+      "id": "trough-end-blind",
+      "bone": "convector",
+      "material": "coated-steel",
+      "role": "body",
+      "tone": 0.2,
+      "kind": "box",
+      "size": [
+       0.00125,
+       0.10675,
+       0.2375
+      ],
+      "transform": {
+       "translation": [
+        0.010625,
+        0.054625,
+        0.0
+       ]
+      },
+      "sheet": true
+     },
+     {
+      "id": "trough-end-connection",
+      "bone": "convector",
+      "material": "coated-steel",
+      "role": "body",
+      "tone": 0.2,
+      "kind": "box",
+      "size": [
+       0.00125,
+       0.10675,
+       0.2375
+      ],
+      "transform": {
+       "translation": [
+        1.989375,
+        0.054625,
+        0.0
+       ]
+      },
+      "sheet": true
+     },
+     {
+      "id": "frame",
+      "bone": "convector",
+      "material": "anodised-aluminium",
+      "role": "body",
+      "tone": 0.5,
+      "kind": "extrude",
+      "plane": "zx",
+      "profile": [
+       [
+        -0.13,
+        0.0
+       ],
+       [
+        0.13,
+        0.0
+       ],
+       [
+        0.13,
+        2.0
+       ],
+       [
+        -0.13,
+        2.0
+       ]
+      ],
+      "holes": [
+       [
+        [
+         -0.105,
+         0.025
+        ],
+        [
+         -0.105,
+         1.975
+        ],
+        [
+         0.105,
+         1.975
+        ],
+        [
+         0.105,
+         0.025
+        ]
+       ]
+      ],
+      "from": 0.108,
+      "to": 0.11,
+      "sheet": true
+     },
+     {
+      "id": "fin-pack",
+      "bone": "convector",
+      "material": "aluminium-fins",
+      "role": "body",
+      "tone": 0.42,
+      "kind": "box",
+      "size": [
+       1.8,
+       0.07875,
+       0.14
+      ],
+      "transform": {
+       "translation": [
+        1.0,
+        0.040625,
+        -0.04
+       ]
+      },
+      "envelope": true
+     },
+     {
+      "id": "tails",
+      "bone": "convector",
+      "material": "copper",
+      "role": "body",
+      "tone": 0.36,
+      "kind": "box",
+      "size": [
+       0.058,
+       0.03,
+       0.1
+      ],
+      "transform": {
+       "translation": [
+        1.929,
+        0.05,
+        -0.04
+       ]
+      }
+     }
+    ],
+    "thermal": [
+     {
+      "id": "th-bearer-0",
+      "of": "bearer-0",
+      "region": "bearers"
+     },
+     {
+      "id": "th-bearer-1",
+      "of": "bearer-1",
+      "region": "bearers"
+     },
+     {
+      "id": "th-grille-roll",
+      "of": "grille-roll",
+      "region": "grille"
+     },
+     {
+      "id": "th-trough-bottom",
+      "of": "trough-bottom",
+      "region": "trough"
+     },
+     {
+      "id": "th-trough-side-window",
+      "of": "trough-side-window",
+      "region": "trough"
+     },
+     {
+      "id": "th-trough-side-room",
+      "of": "trough-side-room",
+      "region": "trough"
+     },
+     {
+      "id": "th-trough-end-blind",
+      "of": "trough-end-blind",
+      "region": "trough"
+     },
+     {
+      "id": "th-trough-end-connection",
+      "of": "trough-end-connection",
+      "region": "trough"
+     },
+     {
+      "id": "th-frame",
+      "of": "frame",
+      "region": "frame"
+     },
+     {
+      "id": "th-fin-pack",
+      "of": "fin-pack",
+      "region": "heat-exchanger"
+     },
+     {
+      "id": "th-tails",
+      "of": "tails",
+      "region": "tails"
+     },
+     {
+      "id": "th-warm-air-outlet",
+      "kind": "box",
+      "bone": "convector",
+      "material": "aluminium-fins",
+      "role": "detail",
+      "tone": 0.42,
+      "size": [
+       1.8,
+       0.006,
+       0.14
+      ],
+      "transform": {
+       "translation": [
+        1.0,
+        0.083,
+        -0.04
+       ]
+      },
+      "region": "heat-exchanger",
+      "sheet": true,
+      "tags": [
+       "warm-air",
+       "trough-plume"
+      ]
+     }
+    ],
+    "structure": [
+     {
+      "id": "member-bearer-0",
+      "of": "bearer-0",
+      "member": "bearers",
+      "part": "member"
+     },
+     {
+      "id": "member-bearer-1",
+      "of": "bearer-1",
+      "member": "bearers",
+      "part": "member"
+     },
+     {
+      "id": "member-grille-roll",
+      "of": "grille-roll",
+      "member": "grille",
+      "part": "member"
+     },
+     {
+      "id": "member-trough-bottom",
+      "of": "trough-bottom",
+      "member": "convector",
+      "part": "member"
+     },
+     {
+      "id": "member-trough-side-window",
+      "of": "trough-side-window",
+      "member": "convector",
+      "part": "member"
+     },
+     {
+      "id": "member-trough-side-room",
+      "of": "trough-side-room",
+      "member": "convector",
+      "part": "member"
+     },
+     {
+      "id": "joint-bearing-line-0",
+      "kind": "box",
+      "bone": "convector",
+      "material": "galvanised-steel",
+      "role": "detail",
+      "tone": 0.5,
+      "size": [
+       0.06,
+       0.03,
+       0.24
+      ],
+      "transform": {
+       "translation": [
+        0.15,
+        0.015,
+        0
+       ]
+      },
+      "member": "convector",
+      "part": "joint"
+     },
+     {
+      "id": "joint-bearing-line-1",
+      "kind": "box",
+      "bone": "convector",
+      "material": "galvanised-steel",
+      "role": "detail",
+      "tone": 0.5,
+      "size": [
+       0.06,
+       0.03,
+       0.24
+      ],
+      "transform": {
+       "translation": [
+        1.85,
+        0.015,
+        0
+       ]
+      },
+      "member": "convector",
+      "part": "joint"
+     },
+     {
+      "id": "mass-convector",
+      "kind": "ellipsoid",
+      "bone": "convector",
+      "material": "coated-steel",
+      "role": "detail",
+      "tone": 0.5,
+      "radii": [
+       0.025,
+       0.025,
+       0.025
+      ],
+      "transform": {
+       "translation": [
+        1.012348,
+        0.036665,
+        0
+       ]
+      },
+      "member": "convector",
+      "part": "mass"
+     },
+     {
+      "id": "mass-bearer-0",
+      "kind": "ellipsoid",
+      "bone": "bearers",
+      "material": "softwood",
+      "role": "detail",
+      "tone": 0.5,
+      "radii": [
+       0.025,
+       0.025,
+       0.025
+      ],
+      "transform": {
+       "translation": [
+        0.15,
+        0.04,
+        0.14
+       ]
+      },
+      "member": "bearers",
+      "part": "mass"
+     },
+     {
+      "id": "mass-bearer-1",
+      "kind": "ellipsoid",
+      "bone": "bearers",
+      "material": "softwood",
+      "role": "detail",
+      "tone": 0.5,
+      "radii": [
+       0.025,
+       0.025,
+       0.025
+      ],
+      "transform": {
+       "translation": [
+        1.85,
+        0.04,
+        0.14
+       ]
+      },
+      "member": "bearers",
+      "part": "mass"
+     },
+     {
+      "id": "mass-grille",
+      "kind": "ellipsoid",
+      "bone": "grille",
+      "material": "anodised-aluminium",
+      "role": "detail",
+      "tone": 0.5,
+      "radii": [
+       0.025,
+       0.025,
+       0.025
+      ],
+      "transform": {
+       "translation": [
+        1.85,
+        0.114,
+        0.285
+       ]
+      },
+      "member": "grille",
+      "part": "mass"
+     }
+    ],
+    "decisions": [
+     {
+      "en": "Body for the 30 mm feature: the fin pack reaches down to the trough bottom, tubes, caps and bleed valve are one 30 mm connection block, brackets and strap are left out; trough sheets, frame and the coil with its bore remain.",
+      "de": "Körper für das Merkmal von 30 mm: das Lamellenpaket reicht bis zum Wannenboden, Rohre, Kappen und Entlüftungsventil sind ein Anschlussblock von 30 mm, Halter und Umreifung entfallen; Wannenbleche, Rahmen und die Rolle mit Öffnung bleiben."
+     },
+     {
+      "en": "Thermal: the regions by reference and an outlet patch of 15 mm; structure: bearers, trough and coil as members, bearing pads of 30 mm, mass markers.",
+      "de": "Wärme: die Regionen als Verweise und ein Auslassfeld von 15 mm; Tragwerk: Kanthölzer, Wanne und Rolle als Stäbe, Auflagerpolster von 30 mm, Massenmarken."
+     }
+    ]
+   },
+   "500": {
+    "status": "authored",
+    "denominator": 500,
+    "body": [
+     {
+      "id": "bearer-0",
+      "bone": "bearers",
+      "material": "softwood",
+      "role": "body",
+      "tone": 0.62,
+      "kind": "box",
+      "size": [
+       0.08,
+       0.08,
+       0.62
+      ],
+      "transform": {
+       "translation": [
+        0.15,
+        0.04,
+        0.14
+       ]
+      }
+     },
+     {
+      "id": "bearer-1",
+      "bone": "bearers",
+      "material": "softwood",
+      "role": "body",
+      "tone": 0.62,
+      "kind": "box",
+      "size": [
+       0.08,
+       0.08,
+       0.62
+      ],
+      "transform": {
+       "translation": [
+        1.85,
+        0.04,
+        0.14
+       ]
+      }
+     },
+     {
+      "id": "grille-roll",
+      "bone": "grille",
+      "material": "anodised-aluminium",
+      "role": "body",
+      "tone": 0.55,
+      "kind": "revolve",
+      "profile": [
+       [
+        0,
+        0
+       ],
+       [
+        0,
+        0.118
+       ],
+       [
+        0.25,
+        0.118
+       ],
+       [
+        0.25,
+        0
+       ]
+      ],
+      "axis": [
+       0,
+       0,
+       1
+      ],
+      "origin": [
+       1.85,
+       0.198,
+       0.16
+      ]
+     },
+     {
+      "id": "trough",
+      "bone": "convector",
+      "material": "coated-steel",
+      "role": "body",
+      "tone": 0.2,
+      "kind": "box",
+      "size": [
+       2.0,
+       0.11,
+       0.26
+      ],
+      "transform": {
+       "translation": [
+        1.0,
+        0.055,
+        0.0
+       ]
+      }
+     }
+    ],
+    "thermal": [
+     {
+      "id": "th-bearer-0",
+      "of": "bearer-0",
+      "region": "bearers"
+     },
+     {
+      "id": "th-bearer-1",
+      "of": "bearer-1",
+      "region": "bearers"
+     },
+     {
+      "id": "th-grille-roll",
+      "of": "grille-roll",
+      "region": "grille"
+     },
+     {
+      "id": "th-trough",
+      "of": "trough",
+      "region": "trough"
+     },
+     {
+      "id": "th-frame",
+      "kind": "box",
+      "bone": "convector",
+      "material": "anodised-aluminium",
+      "role": "body",
+      "tone": 0.5,
+      "size": [
+       2.0,
+       0.002,
+       0.26
+      ],
+      "transform": {
+       "translation": [
+        1.0,
+        0.109,
+        0
+       ]
+      },
+      "region": "frame",
+      "sheet": true
+     },
+     {
+      "id": "th-tails",
+      "kind": "box",
+      "bone": "convector",
+      "material": "copper",
+      "role": "body",
+      "tone": 0.36,
+      "size": [
+       0.078,
+       0.075,
+       0.1
+      ],
+      "transform": {
+       "translation": [
+        1.919,
+        0.055,
+        -0.04
+       ]
+      },
+      "region": "tails"
+     },
+     {
+      "id": "th-element",
+      "kind": "box",
+      "bone": "convector",
+      "material": "aluminium-fins",
+      "role": "body",
+      "tone": 0.42,
+      "size": [
+       1.8,
+       0.08,
+       0.14
+      ],
+      "transform": {
+       "translation": [
+        1.0,
+        0.04,
+        -0.04
+       ]
+      },
+      "region": "heat-exchanger"
+     },
+     {
+      "id": "th-warm-air-outlet",
+      "kind": "box",
+      "bone": "convector",
+      "material": "aluminium-fins",
+      "role": "detail",
+      "tone": 0.42,
+      "size": [
+       1.8,
+       0.007,
+       0.14
+      ],
+      "transform": {
+       "translation": [
+        1.0,
+        0.1135,
+        -0.04
+       ]
+      },
+      "region": "heat-exchanger",
+      "sheet": true,
+      "tags": [
+       "warm-air",
+       "trough-plume"
+      ]
+     }
+    ],
+    "structure": [
+     {
+      "id": "member-bearer-0",
+      "of": "bearer-0",
+      "member": "bearers",
+      "part": "member"
+     },
+     {
+      "id": "member-bearer-1",
+      "of": "bearer-1",
+      "member": "bearers",
+      "part": "member"
+     },
+     {
+      "id": "member-grille-roll",
+      "of": "grille-roll",
+      "member": "grille",
+      "part": "member"
+     },
+     {
+      "id": "member-trough",
+      "of": "trough",
+      "member": "convector",
+      "part": "member"
+     },
+     {
+      "id": "joint-bearing-line-0",
+      "kind": "box",
+      "bone": "convector",
+      "material": "galvanised-steel",
+      "role": "detail",
+      "tone": 0.5,
+      "size": [
+       0.15,
+       0.075,
+       0.24
+      ],
+      "transform": {
+       "translation": [
+        0.15,
+        0.0375,
+        0
+       ]
+      },
+      "member": "convector",
+      "part": "joint"
+     },
+     {
+      "id": "joint-bearing-line-1",
+      "kind": "box",
+      "bone": "convector",
+      "material": "galvanised-steel",
+      "role": "detail",
+      "tone": 0.5,
+      "size": [
+       0.15,
+       0.075,
+       0.24
+      ],
+      "transform": {
+       "translation": [
+        1.85,
+        0.0375,
+        0
+       ]
+      },
+      "member": "convector",
+      "part": "joint"
+     },
+     {
+      "id": "mass-convector",
+      "kind": "ellipsoid",
+      "bone": "convector",
+      "material": "coated-steel",
+      "role": "detail",
+      "tone": 0.5,
+      "radii": [
+       0.0375,
+       0.0375,
+       0.0375
+      ],
+      "transform": {
+       "translation": [
+        1.012348,
+        0.0375,
+        0
+       ]
+      },
+      "member": "convector",
+      "part": "mass"
+     },
+     {
+      "id": "mass-bearer-0",
+      "kind": "ellipsoid",
+      "bone": "bearers",
+      "material": "softwood",
+      "role": "detail",
+      "tone": 0.5,
+      "radii": [
+       0.0375,
+       0.0375,
+       0.0375
+      ],
+      "transform": {
+       "translation": [
+        0.15,
+        0.04,
+        0.14
+       ]
+      },
+      "member": "bearers",
+      "part": "mass"
+     },
+     {
+      "id": "mass-bearer-1",
+      "kind": "ellipsoid",
+      "bone": "bearers",
+      "material": "softwood",
+      "role": "detail",
+      "tone": 0.5,
+      "radii": [
+       0.0375,
+       0.0375,
+       0.0375
+      ],
+      "transform": {
+       "translation": [
+        1.85,
+        0.04,
+        0.14
+       ]
+      },
+      "member": "bearers",
+      "part": "mass"
+     },
+     {
+      "id": "mass-grille",
+      "kind": "ellipsoid",
+      "bone": "grille",
+      "material": "anodised-aluminium",
+      "role": "detail",
+      "tone": 0.5,
+      "radii": [
+       0.0375,
+       0.0375,
+       0.0375
+      ],
+      "transform": {
+       "translation": [
+        1.85,
+        0.198,
+        0.285
+       ]
+      },
+      "member": "grille",
+      "part": "mass"
+     }
+    ],
+    "decisions": [
+     {
+      "en": "Body for the 75 mm feature: the trough with frame is one closed box of 2.0 x 0.11 x 0.26 m, the coil a solid cylinder of 236 mm, the bearers 80 mm squares.",
+      "de": "Körper für das Merkmal von 75 mm: die Wanne mit Rahmen ist ein geschlossener Quader von 2,0 x 0,11 x 0,26 m, die Rolle ein voller Zylinder von 236 mm, die Kanthölzer Quadrate von 80 mm."
+     },
+     {
+      "en": "Thermal: the trough box by reference and the element as a box inside it; structure: bearers, trough box and coil as members, bearing pads of 75 mm, mass markers.",
+      "de": "Wärme: der Wannenquader als Verweis und der Wärmetauscher als Quader darin; Tragwerk: Kanthölzer, Wannenquader und Rolle als Stäbe, Auflagerpolster von 75 mm, Massenmarken."
+     }
+    ]
+   }
+  },
+  "anchors": [
+   {
+    "id": "bearer-ground-0",
+    "bone": "bearers",
+    "x": 0.15,
+    "y": 0,
+    "z": -0.13,
+    "kind": "contact",
+    "support": "contact",
+    "footprintLengthM": 0.08,
+    "footprintWidthM": 0.08,
+    "frictionCoefficient": 0.5,
+    "title": {
+     "en": "Blind-end bearer, window end on the yard floor",
+     "de": "Kantholz am Blindende, fensterseitiges Ende auf dem Hallenboden"
+    }
+   },
+   {
+    "id": "bearer-ground-1",
+    "bone": "bearers",
+    "x": 0.15,
+    "y": 0,
+    "z": 0.41000000000000003,
+    "kind": "contact",
+    "support": "contact",
+    "footprintLengthM": 0.08,
+    "footprintWidthM": 0.08,
+    "frictionCoefficient": 0.5,
+    "title": {
+     "en": "Blind-end bearer, room end on the yard floor",
+     "de": "Kantholz am Blindende, raumseitiges Ende auf dem Hallenboden"
+    }
+   },
+   {
+    "id": "bearer-ground-2",
+    "bone": "bearers",
+    "x": 1.85,
+    "y": 0,
+    "z": -0.13,
+    "kind": "contact",
+    "support": "contact",
+    "footprintLengthM": 0.08,
+    "footprintWidthM": 0.08,
+    "frictionCoefficient": 0.5,
+    "title": {
+     "en": "Connection-end bearer, window end on the yard floor",
+     "de": "Kantholz am Anschlussende, fensterseitiges Ende auf dem Hallenboden"
+    }
+   },
+   {
+    "id": "bearer-ground-3",
+    "bone": "bearers",
+    "x": 1.85,
+    "y": 0,
+    "z": 0.41000000000000003,
+    "kind": "contact",
+    "support": "contact",
+    "footprintLengthM": 0.08,
+    "footprintWidthM": 0.08,
+    "frictionCoefficient": 0.5,
+    "title": {
+     "en": "Connection-end bearer, room end on the yard floor",
+     "de": "Kantholz am Anschlussende, raumseitiges Ende auf dem Hallenboden"
+    }
+   },
+   {
+    "id": "trough-foot-0",
+    "bone": "convector",
+    "x": 0.15,
+    "y": 0,
+    "z": -0.1,
+    "kind": "contact",
+    "support": "contact",
+    "footprintLengthM": 0.08,
+    "footprintWidthM": 0.04,
+    "frictionCoefficient": 0.4,
+    "title": {
+     "en": "Trough bottom over the blind-end levelling bracket, window side",
+     "de": "Wannenboden über dem Nivellierwinkel am Blindende, Fensterseite"
+    }
+   },
+   {
+    "id": "trough-foot-1",
+    "bone": "convector",
+    "x": 0.15,
+    "y": 0,
+    "z": 0.1,
+    "kind": "contact",
+    "support": "contact",
+    "footprintLengthM": 0.08,
+    "footprintWidthM": 0.04,
+    "frictionCoefficient": 0.4,
+    "title": {
+     "en": "Trough bottom over the blind-end levelling bracket, room side",
+     "de": "Wannenboden über dem Nivellierwinkel am Blindende, Raumseite"
+    }
+   },
+   {
+    "id": "trough-foot-2",
+    "bone": "convector",
+    "x": 1.85,
+    "y": 0,
+    "z": -0.1,
+    "kind": "contact",
+    "support": "contact",
+    "footprintLengthM": 0.08,
+    "footprintWidthM": 0.04,
+    "frictionCoefficient": 0.4,
+    "title": {
+     "en": "Trough bottom over the connection-end levelling bracket, window side",
+     "de": "Wannenboden über dem Nivellierwinkel am Anschlussende, Fensterseite"
+    }
+   },
+   {
+    "id": "trough-foot-3",
+    "bone": "convector",
+    "x": 1.85,
+    "y": 0,
+    "z": 0.1,
+    "kind": "contact",
+    "support": "contact",
+    "footprintLengthM": 0.08,
+    "footprintWidthM": 0.04,
+    "frictionCoefficient": 0.4,
+    "title": {
+     "en": "Trough bottom over the connection-end levelling bracket, room side",
+     "de": "Wannenboden über dem Nivellierwinkel am Anschlussende, Raumseite"
+    }
+   },
+   {
+    "id": "grip-0",
+    "bone": "convector",
+    "x": 0.0,
+    "y": 0.11,
+    "z": 0,
+    "kind": "support",
+    "support": "pin",
+    "title": {
+     "en": "Blind end of the frame where one carrier holds the trough",
+     "de": "Blindende des Rahmens, an dem ein Träger die Wanne hält"
+    }
+   },
+   {
+    "id": "grip-1",
+    "bone": "convector",
+    "x": 2.0,
+    "y": 0.11,
+    "z": 0,
+    "kind": "support",
+    "support": "pin",
+    "title": {
+     "en": "Connection end of the frame where one carrier holds the trough",
+     "de": "Anschlussende des Rahmens, an dem ein Träger die Wanne hält"
+    }
+   },
+   {
+    "id": "warm-air-outlet",
+    "bone": "convector",
+    "x": 1.0,
+    "y": 0.08,
+    "z": -0.04,
+    "kind": "emitter",
+    "title": {
+     "en": "Top of the fin pack where the warm air rises out of the trough",
+     "de": "Oberseite des Lamellenpakets, wo die warme Luft aus der Wanne steigt"
+    }
+   },
+   {
+    "id": "tail-0",
+    "bone": "convector",
+    "x": 1.935,
+    "y": 0.05,
+    "z": -0.075,
+    "kind": "load",
+    "title": {
+     "en": "Flow tail where the connection hose is screwed on",
+     "de": "Vorlaufanschluss, an dem der Anschlussschlauch angeschraubt wird"
+    }
+   },
+   {
+    "id": "tail-1",
+    "bone": "convector",
+    "x": 1.935,
+    "y": 0.05,
+    "z": -0.005,
+    "kind": "load",
+    "title": {
+     "en": "Return tail where the connection hose is screwed on",
+     "de": "Rücklaufanschluss, an dem der Anschlussschlauch angeschraubt wird"
+    }
+   }
+  ],
+  "representations": {
+   "50": {
+    "status": "authored",
+    "denominator": 50,
+    "validRange": {
+     "minDenominator": 20,
+     "maxDenominator": 75
+    },
+    "pens": {
+     "body": 0.35,
+     "detail": 0.18,
+     "texture": 0.1,
+     "glazing": null,
+     "ground": 0.5
+    },
+    "hatches": [
+     {
+      "id": "end-grain",
+      "title": {
+       "en": "Sawn end grain of the softwood bearers",
+       "de": "Gesägtes Hirnholz der Nadelholz-Kanthölzer"
+      },
+      "pattern": "lines",
+      "angleDeg": 45,
+      "spacingMm": 0.5,
+      "penMm": 0.1
+     },
+     {
+      "id": "fin-pack",
+      "title": {
+       "en": "Aluminium fins of the heat exchanger, seen from above",
+       "de": "Aluminiumlamellen des Wärmetauschers, von oben gesehen"
+      },
+      "pattern": "lines",
+      "angleDeg": 90,
+      "spacingMm": 0.4,
+      "penMm": 0.1
+     }
+    ],
+    "geometry": {
+     "elevation": [
+      {
+       "id": "bearer-0",
+       "bone": "bearers",
+       "role": "body",
+       "z": 5.17,
+       "filled": true,
+       "tone": 0.62,
+       "material": "softwood",
+       "region": "bearers",
+       "kind": "rect",
+       "x": 0.11,
+       "y": 0.0,
+       "w": 0.08,
+       "h": 0.08,
+       "hatch": "end-grain"
+      },
+      {
+       "id": "bearer-1",
+       "bone": "bearers",
+       "role": "body",
+       "z": 5.17,
+       "filled": true,
+       "tone": 0.62,
+       "material": "softwood",
+       "region": "bearers",
+       "kind": "rect",
+       "x": 1.81,
+       "y": 0.0,
+       "w": 0.08,
+       "h": 0.08,
+       "hatch": "end-grain"
+      },
+      {
+       "id": "grille-roll",
+       "bone": "grille",
+       "role": "body",
+       "z": 4.84,
+       "filled": true,
+       "tone": 0.55,
+       "material": "anodised-aluminium",
+       "region": "grille",
+       "kind": "path",
+       "d": "M 1.732 0.198 A 0.118 0.118 0 1 0 1.968 0.198 A 0.118 0.118 0 1 0 1.732 0.198 Z M 1.8 0.198 A 0.05 0.05 0 1 1 1.9 0.198 A 0.05 0.05 0 1 1 1.8 0.198 Z"
+      },
+      {
+       "id": "trough-side-window",
+       "bone": "convector",
+       "role": "body",
+       "z": 5.12,
+       "filled": true,
+       "tone": 0.2,
+       "material": "coated-steel",
+       "region": "trough",
+       "kind": "rect",
+       "x": 0.01,
+       "y": 0.00125,
+       "w": 1.98,
+       "h": 0.10675
+      },
+      {
+       "id": "trough-end-blind",
+       "bone": "convector",
+       "role": "body",
+       "z": 5.1188,
+       "filled": true,
+       "tone": 0.2,
+       "material": "coated-steel",
+       "region": "trough",
+       "kind": "rect",
+       "x": 0.01,
+       "y": 0.00125,
+       "w": 0.00125,
+       "h": 0.10675
+      },
+      {
+       "id": "trough-end-connection",
+       "bone": "convector",
+       "role": "body",
+       "z": 5.1188,
+       "filled": true,
+       "tone": 0.2,
+       "material": "coated-steel",
+       "region": "trough",
+       "kind": "rect",
+       "x": 1.98875,
+       "y": 0.00125,
+       "w": 0.00125,
+       "h": 0.10675
+      },
+      {
+       "id": "frame",
+       "bone": "convector",
+       "role": "body",
+       "z": 5.13,
+       "filled": true,
+       "tone": 0.5,
+       "material": "anodised-aluminium",
+       "region": "frame",
+       "kind": "rect",
+       "x": 0.0,
+       "y": 0.108,
+       "w": 2.0,
+       "h": 0.002
+      },
+      {
+       "id": "fins-blind",
+       "bone": "convector",
+       "role": "body",
+       "z": 5.11,
+       "filled": true,
+       "tone": 0.42,
+       "material": "aluminium-fins",
+       "region": "heat-exchanger",
+       "kind": "rect",
+       "x": 0.1,
+       "y": 0.02,
+       "w": 0.9,
+       "h": 0.06
+      },
+      {
+       "id": "fins-connection",
+       "bone": "convector",
+       "role": "body",
+       "z": 5.11,
+       "filled": true,
+       "tone": 0.42,
+       "material": "aluminium-fins",
+       "region": "heat-exchanger",
+       "kind": "rect",
+       "x": 1.0,
+       "y": 0.02,
+       "w": 0.9,
+       "h": 0.06
+      },
+      {
+       "id": "tail-cap-0",
+       "bone": "convector",
+       "role": "body",
+       "z": 5.086,
+       "filled": true,
+       "tone": 0.3,
+       "material": "brass",
+       "region": "tails",
+       "kind": "rect",
+       "x": 1.935,
+       "y": 0.039,
+       "w": 0.023,
+       "h": 0.022
+      },
+      {
+       "id": "levelling-bracket-0",
+       "bone": "convector",
+       "role": "body",
+       "z": 5.145,
+       "filled": true,
+       "tone": 0.32,
+       "material": "galvanised-steel",
+       "region": "trough",
+       "kind": "rect",
+       "x": 0.13,
+       "y": 0.0,
+       "w": 0.04,
+       "h": 0.05
+      },
+      {
+       "id": "levelling-bracket-2",
+       "bone": "convector",
+       "role": "body",
+       "z": 5.145,
+       "filled": true,
+       "tone": 0.32,
+       "material": "galvanised-steel",
+       "region": "trough",
+       "kind": "rect",
+       "x": 1.83,
+       "y": 0.0,
+       "w": 0.04,
+       "h": 0.05
+      },
+      {
+       "id": "rim-edge",
+       "bone": "convector",
+       "role": "detail",
+       "z": 8.5,
+       "filled": false,
+       "tone": 0.25,
+       "kind": "poly",
+       "closed": false,
+       "points": [
+        [
+         0.0,
+         0.108
+        ],
+        [
+         2.0,
+         0.108
+        ]
+       ],
+       "region": "frame"
+      },
+      {
+       "id": "screed-remnant-0",
+       "bone": "convector",
+       "role": "texture",
+       "z": 8.2,
+       "filled": true,
+       "tone": 0.55,
+       "kind": "poly",
+       "closed": true,
+       "points": [
+        [
+         0.32,
+         0.0
+        ],
+        [
+         0.71,
+         0.0
+        ],
+        [
+         0.68,
+         0.021
+        ],
+        [
+         0.515,
+         0.035
+        ],
+        [
+         0.34,
+         0.0245
+        ]
+       ],
+       "region": "trough"
+      },
+      {
+       "id": "screed-remnant-1",
+       "bone": "convector",
+       "role": "texture",
+       "z": 8.2,
+       "filled": true,
+       "tone": 0.55,
+       "kind": "poly",
+       "closed": true,
+       "points": [
+        [
+         0.98,
+         0.0
+        ],
+        [
+         1.22,
+         0.0
+        ],
+        [
+         1.19,
+         0.018
+        ],
+        [
+         1.1,
+         0.03
+        ],
+        [
+         1.0,
+         0.021
+        ]
+       ],
+       "region": "trough"
+      },
+      {
+       "id": "screed-remnant-2",
+       "bone": "convector",
+       "role": "texture",
+       "z": 8.2,
+       "filled": true,
+       "tone": 0.55,
+       "kind": "poly",
+       "closed": true,
+       "points": [
+        [
+         1.46,
+         0.0
+        ],
+        [
+         1.63,
+         0.0
+        ],
+        [
+         1.6,
+         0.0192
+        ],
+        [
+         1.545,
+         0.032
+        ],
+        [
+         1.48,
+         0.0224
+        ]
+       ],
+       "region": "trough"
+      },
+      {
+       "id": "label",
+       "bone": "convector",
+       "role": "texture",
+       "z": 8.3,
+       "filled": true,
+       "tone": 0.8,
+       "kind": "poly",
+       "closed": true,
+       "points": [
+        [
+         1.62,
+         0.055
+        ],
+        [
+         1.74,
+         0.055
+        ],
+        [
+         1.74,
+         0.085
+        ],
+        [
+         1.62,
+         0.085
+        ]
+       ],
+       "region": "trough"
+      },
+      {
+       "id": "label-text",
+       "bone": "convector",
+       "role": "texture",
+       "z": 8.4,
+       "filled": false,
+       "tone": 0.25,
+       "kind": "poly",
+       "closed": false,
+       "points": [
+        [
+         1.635,
+         0.07
+        ],
+        [
+         1.725,
+         0.07
+        ]
+       ],
+       "region": "trough"
+      },
+      {
+       "id": "roll-winding-0",
+       "bone": "grille",
+       "role": "texture",
+       "z": 7.0,
+       "filled": false,
+       "tone": 0.25,
+       "kind": "poly",
+       "closed": false,
+       "points": [
+        [
+         1.918,
+         0.198
+        ],
+        [
+         1.915683,
+         0.2156
+        ],
+        [
+         1.90889,
+         0.232
+        ],
+        [
+         1.898083,
+         0.246083
+        ],
+        [
+         1.884,
+         0.25689
+        ],
+        [
+         1.8676,
+         0.263683
+        ],
+        [
+         1.85,
+         0.266
+        ],
+        [
+         1.8324,
+         0.263683
+        ],
+        [
+         1.816,
+         0.25689
+        ],
+        [
+         1.801917,
+         0.246083
+        ],
+        [
+         1.79111,
+         0.232
+        ],
+        [
+         1.784317,
+         0.2156
+        ],
+        [
+         1.782,
+         0.198
+        ],
+        [
+         1.784317,
+         0.1804
+        ],
+        [
+         1.79111,
+         0.164
+        ],
+        [
+         1.801917,
+         0.149917
+        ],
+        [
+         1.816,
+         0.13911
+        ],
+        [
+         1.8324,
+         0.132317
+        ],
+        [
+         1.85,
+         0.13
+        ],
+        [
+         1.8676,
+         0.132317
+        ],
+        [
+         1.884,
+         0.13911
+        ],
+        [
+         1.898083,
+         0.149917
+        ],
+        [
+         1.90889,
+         0.164
+        ],
+        [
+         1.915683,
+         0.1804
+        ],
+        [
+         1.918,
+         0.198
+        ]
+       ],
+       "region": "grille"
+      },
+      {
+       "id": "roll-winding-1",
+       "bone": "grille",
+       "role": "texture",
+       "z": 7.0,
+       "filled": false,
+       "tone": 0.25,
+       "kind": "poly",
+       "closed": false,
+       "points": [
+        [
+         1.936,
+         0.198
+        ],
+        [
+         1.93307,
+         0.220258
+        ],
+        [
+         1.924478,
+         0.241
+        ],
+        [
+         1.910811,
+         0.258811
+        ],
+        [
+         1.893,
+         0.272478
+        ],
+        [
+         1.872258,
+         0.28107
+        ],
+        [
+         1.85,
+         0.284
+        ],
+        [
+         1.827742,
+         0.28107
+        ],
+        [
+         1.807,
+         0.272478
+        ],
+        [
+         1.789189,
+         0.258811
+        ],
+        [
+         1.775522,
+         0.241
+        ],
+        [
+         1.76693,
+         0.220258
+        ],
+        [
+         1.764,
+         0.198
+        ],
+        [
+         1.76693,
+         0.175742
+        ],
+        [
+         1.775522,
+         0.155
+        ],
+        [
+         1.789189,
+         0.137189
+        ],
+        [
+         1.807,
+         0.123522
+        ],
+        [
+         1.827742,
+         0.11493
+        ],
+        [
+         1.85,
+         0.112
+        ],
+        [
+         1.872258,
+         0.11493
+        ],
+        [
+         1.893,
+         0.123522
+        ],
+        [
+         1.910811,
+         0.137189
+        ],
+        [
+         1.924478,
+         0.155
+        ],
+        [
+         1.93307,
+         0.175742
+        ],
+        [
+         1.936,
+         0.198
+        ]
+       ],
+       "region": "grille"
+      },
+      {
+       "id": "roll-winding-2",
+       "bone": "grille",
+       "role": "texture",
+       "z": 7.0,
+       "filled": false,
+       "tone": 0.25,
+       "kind": "poly",
+       "closed": false,
+       "points": [
+        [
+         1.954,
+         0.198
+        ],
+        [
+         1.950456,
+         0.224917
+        ],
+        [
+         1.940067,
+         0.25
+        ],
+        [
+         1.923539,
+         0.271539
+        ],
+        [
+         1.902,
+         0.288067
+        ],
+        [
+         1.876917,
+         0.298456
+        ],
+        [
+         1.85,
+         0.302
+        ],
+        [
+         1.823083,
+         0.298456
+        ],
+        [
+         1.798,
+         0.288067
+        ],
+        [
+         1.776461,
+         0.271539
+        ],
+        [
+         1.759933,
+         0.25
+        ],
+        [
+         1.749544,
+         0.224917
+        ],
+        [
+         1.746,
+         0.198
+        ],
+        [
+         1.749544,
+         0.171083
+        ],
+        [
+         1.759933,
+         0.146
+        ],
+        [
+         1.776461,
+         0.124461
+        ],
+        [
+         1.798,
+         0.107933
+        ],
+        [
+         1.823083,
+         0.097544
+        ],
+        [
+         1.85,
+         0.094
+        ],
+        [
+         1.876917,
+         0.097544
+        ],
+        [
+         1.902,
+         0.107933
+        ],
+        [
+         1.923539,
+         0.124461
+        ],
+        [
+         1.940067,
+         0.146
+        ],
+        [
+         1.950456,
+         0.171083
+        ],
+        [
+         1.954,
+         0.198
+        ]
+       ],
+       "region": "grille"
+      }
+     ],
+     "front": [
+      {
+       "id": "bearer-0",
+       "bone": "bearers",
+       "role": "body",
+       "z": 5.19,
+       "filled": true,
+       "tone": 0.62,
+       "material": "softwood",
+       "region": "bearers",
+       "kind": "rect",
+       "x": -0.17,
+       "y": 0.0,
+       "w": 0.62,
+       "h": 0.08
+      },
+      {
+       "id": "bearer-1",
+       "bone": "bearers",
+       "role": "body",
+       "z": 6.89,
+       "filled": true,
+       "tone": 0.62,
+       "material": "softwood",
+       "region": "bearers",
+       "kind": "rect",
+       "x": -0.17,
+       "y": 0.0,
+       "w": 0.62,
+       "h": 0.08
+      },
+      {
+       "id": "grille-roll",
+       "bone": "grille",
+       "role": "body",
+       "z": 6.968,
+       "filled": true,
+       "tone": 0.55,
+       "material": "anodised-aluminium",
+       "region": "grille",
+       "kind": "rect",
+       "x": 0.16,
+       "y": 0.08,
+       "w": 0.25,
+       "h": 0.236
+      },
+      {
+       "id": "trough-bottom",
+       "bone": "convector",
+       "role": "body",
+       "z": 6.99,
+       "filled": true,
+       "tone": 0.2,
+       "material": "coated-steel",
+       "region": "trough",
+       "kind": "rect",
+       "x": -0.12,
+       "y": 0.08,
+       "w": 0.24,
+       "h": 0.00125
+      },
+      {
+       "id": "trough-end-connection",
+       "bone": "convector",
+       "role": "body",
+       "z": 6.99,
+       "filled": true,
+       "tone": 0.2,
+       "material": "coated-steel",
+       "region": "trough",
+       "kind": "rect",
+       "x": -0.11875,
+       "y": 0.08125,
+       "w": 0.2375,
+       "h": 0.10675
+      },
+      {
+       "id": "frame",
+       "bone": "convector",
+       "role": "body",
+       "z": 7.0,
+       "filled": true,
+       "tone": 0.5,
+       "material": "anodised-aluminium",
+       "region": "frame",
+       "kind": "rect",
+       "x": -0.13,
+       "y": 0.188,
+       "w": 0.26,
+       "h": 0.002
+      },
+      {
+       "id": "rim-edge-front",
+       "bone": "convector",
+       "role": "detail",
+       "z": 6.0,
+       "filled": false,
+       "tone": 0.25,
+       "kind": "poly",
+       "closed": false,
+       "points": [
+        [
+         -0.13,
+         0.188
+        ],
+        [
+         0.13,
+         0.188
+        ]
+       ],
+       "region": "frame"
+      },
+      {
+       "id": "bearer-grain-0",
+       "bone": "bearers",
+       "role": "texture",
+       "z": 5.5,
+       "filled": false,
+       "tone": 0.25,
+       "kind": "poly",
+       "closed": false,
+       "points": [
+        [
+         -0.17,
+         0.03
+        ],
+        [
+         0.15,
+         0.032
+        ],
+        [
+         0.45,
+         0.029
+        ]
+       ],
+       "region": "bearers"
+      },
+      {
+       "id": "bearer-grain-1",
+       "bone": "bearers",
+       "role": "texture",
+       "z": 5.5,
+       "filled": false,
+       "tone": 0.25,
+       "kind": "poly",
+       "closed": false,
+       "points": [
+        [
+         -0.17,
+         0.05
+        ],
+        [
+         0.15,
+         0.052
+        ],
+        [
+         0.45,
+         0.049
+        ]
+       ],
+       "region": "bearers"
+      },
+      {
+       "id": "strap-1",
+       "bone": "grille",
+       "role": "texture",
+       "z": 9.5,
+       "filled": false,
+       "tone": 0.35,
+       "kind": "poly",
+       "closed": true,
+       "points": [
+        [
+         0.275,
+         0.08
+        ],
+        [
+         0.295,
+         0.08
+        ],
+        [
+         0.295,
+         0.316
+        ],
+        [
+         0.275,
+         0.316
+        ]
+       ],
+       "region": "grille"
+      }
+     ],
+     "plan": [
+      {
+       "id": "bearer-0",
+       "bone": "bearers",
+       "role": "body",
+       "z": 5.08,
+       "filled": true,
+       "tone": 0.62,
+       "material": "softwood",
+       "region": "bearers",
+       "kind": "rect",
+       "x": 0.11,
+       "y": -0.17,
+       "w": 0.08,
+       "h": 0.62
+      },
+      {
+       "id": "bearer-1",
+       "bone": "bearers",
+       "role": "body",
+       "z": 5.08,
+       "filled": true,
+       "tone": 0.62,
+       "material": "softwood",
+       "region": "bearers",
+       "kind": "rect",
+       "x": 1.81,
+       "y": -0.17,
+       "w": 0.08,
+       "h": 0.62
+      },
+      {
+       "id": "grille-roll",
+       "bone": "grille",
+       "role": "body",
+       "z": 5.316,
+       "filled": true,
+       "tone": 0.55,
+       "material": "anodised-aluminium",
+       "region": "grille",
+       "kind": "rect",
+       "x": 1.732,
+       "y": 0.16,
+       "w": 0.236,
+       "h": 0.25
+      },
+      {
+       "id": "trough-bottom",
+       "bone": "convector",
+       "role": "body",
+       "z": 5.0812,
+       "filled": true,
+       "tone": 0.2,
+       "material": "coated-steel",
+       "region": "trough",
+       "kind": "rect",
+       "x": 0.01,
+       "y": -0.12,
+       "w": 1.98,
+       "h": 0.24
+      },
+      {
+       "id": "trough-side-window",
+       "bone": "convector",
+       "role": "body",
+       "z": 5.188,
+       "filled": true,
+       "tone": 0.2,
+       "material": "coated-steel",
+       "region": "trough",
+       "kind": "rect",
+       "x": 0.01,
+       "y": -0.12,
+       "w": 1.98,
+       "h": 0.00125
+      },
+      {
+       "id": "trough-side-room",
+       "bone": "convector",
+       "role": "body",
+       "z": 5.188,
+       "filled": true,
+       "tone": 0.2,
+       "material": "coated-steel",
+       "region": "trough",
+       "kind": "rect",
+       "x": 0.01,
+       "y": 0.11875,
+       "w": 1.98,
+       "h": 0.00125
+      },
+      {
+       "id": "trough-end-blind",
+       "bone": "convector",
+       "role": "body",
+       "z": 5.188,
+       "filled": true,
+       "tone": 0.2,
+       "material": "coated-steel",
+       "region": "trough",
+       "kind": "rect",
+       "x": 0.01,
+       "y": -0.11875,
+       "w": 0.00125,
+       "h": 0.2375
+      },
+      {
+       "id": "trough-end-connection",
+       "bone": "convector",
+       "role": "body",
+       "z": 5.188,
+       "filled": true,
+       "tone": 0.2,
+       "material": "coated-steel",
+       "region": "trough",
+       "kind": "rect",
+       "x": 1.98875,
+       "y": -0.11875,
+       "w": 0.00125,
+       "h": 0.2375
+      },
+      {
+       "id": "frame",
+       "bone": "convector",
+       "role": "body",
+       "z": 5.19,
+       "filled": true,
+       "tone": 0.5,
+       "material": "anodised-aluminium",
+       "region": "frame",
+       "kind": "path",
+       "d": "M 0.0 -0.13 L 2.0 -0.13 L 2.0 0.13 L 0.0 0.13 Z M 0.025 -0.105 L 0.025 0.105 L 1.975 0.105 L 1.975 -0.105 Z"
+      },
+      {
+       "id": "fins-blind",
+       "bone": "convector",
+       "role": "body",
+       "z": 5.16,
+       "filled": true,
+       "tone": 0.42,
+       "material": "aluminium-fins",
+       "region": "heat-exchanger",
+       "kind": "rect",
+       "x": 0.1,
+       "y": -0.11,
+       "w": 0.9,
+       "h": 0.14,
+       "hatch": "fin-pack"
+      },
+      {
+       "id": "fins-connection",
+       "bone": "convector",
+       "role": "body",
+       "z": 5.16,
+       "filled": true,
+       "tone": 0.42,
+       "material": "aluminium-fins",
+       "region": "heat-exchanger",
+       "kind": "rect",
+       "x": 1.0,
+       "y": -0.11,
+       "w": 0.9,
+       "h": 0.14,
+       "hatch": "fin-pack"
+      },
+      {
+       "id": "tube-0",
+       "bone": "convector",
+       "role": "body",
+       "z": 5.1375,
+       "filled": true,
+       "tone": 0.38,
+       "material": "copper",
+       "region": "heat-exchanger",
+       "kind": "rect",
+       "x": 0.085,
+       "y": -0.0825,
+       "w": 1.85,
+       "h": 0.015
+      },
+      {
+       "id": "tube-1",
+       "bone": "convector",
+       "role": "body",
+       "z": 5.1375,
+       "filled": true,
+       "tone": 0.38,
+       "material": "copper",
+       "region": "heat-exchanger",
+       "kind": "rect",
+       "x": 0.085,
+       "y": -0.0125,
+       "w": 1.85,
+       "h": 0.015
+      },
+      {
+       "id": "return-bend",
+       "bone": "convector",
+       "role": "body",
+       "z": 5.1375,
+       "filled": true,
+       "tone": 0.38,
+       "material": "copper",
+       "region": "heat-exchanger",
+       "kind": "rect",
+       "x": 0.073,
+       "y": -0.0825,
+       "w": 0.012,
+       "h": 0.085
+      },
+      {
+       "id": "tail-cap-0",
+       "bone": "convector",
+       "role": "body",
+       "z": 5.141,
+       "filled": true,
+       "tone": 0.3,
+       "material": "brass",
+       "region": "tails",
+       "kind": "rect",
+       "x": 1.935,
+       "y": -0.086,
+       "w": 0.023,
+       "h": 0.022
+      },
+      {
+       "id": "tail-cap-1",
+       "bone": "convector",
+       "role": "body",
+       "z": 5.141,
+       "filled": true,
+       "tone": 0.3,
+       "material": "brass",
+       "region": "tails",
+       "kind": "rect",
+       "x": 1.935,
+       "y": -0.016,
+       "w": 0.023,
+       "h": 0.022
+      },
+      {
+       "id": "bleed-valve",
+       "bone": "convector",
+       "role": "body",
+       "z": 5.152,
+       "filled": true,
+       "tone": 0.3,
+       "material": "brass",
+       "region": "tails",
+       "kind": "ellipse",
+       "cx": 1.915,
+       "cy": -0.075,
+       "rx": 0.005,
+       "ry": 0.005
+      },
+      {
+       "id": "element-bracket-0",
+       "bone": "convector",
+       "role": "body",
+       "z": 5.1,
+       "filled": true,
+       "tone": 0.3,
+       "material": "galvanised-steel",
+       "region": "trough",
+       "kind": "rect",
+       "x": 0.285,
+       "y": -0.11,
+       "w": 0.03,
+       "h": 0.14
+      },
+      {
+       "id": "element-bracket-1",
+       "bone": "convector",
+       "role": "body",
+       "z": 5.1,
+       "filled": true,
+       "tone": 0.3,
+       "material": "galvanised-steel",
+       "region": "trough",
+       "kind": "rect",
+       "x": 0.985,
+       "y": -0.11,
+       "w": 0.03,
+       "h": 0.14
+      },
+      {
+       "id": "element-bracket-2",
+       "bone": "convector",
+       "role": "body",
+       "z": 5.1,
+       "filled": true,
+       "tone": 0.3,
+       "material": "galvanised-steel",
+       "region": "trough",
+       "kind": "rect",
+       "x": 1.685,
+       "y": -0.11,
+       "w": 0.03,
+       "h": 0.14
+      },
+      {
+       "id": "levelling-bracket-0",
+       "bone": "convector",
+       "role": "body",
+       "z": 5.13,
+       "filled": true,
+       "tone": 0.32,
+       "material": "galvanised-steel",
+       "region": "trough",
+       "kind": "rect",
+       "x": 0.13,
+       "y": -0.145,
+       "w": 0.04,
+       "h": 0.025
+      },
+      {
+       "id": "levelling-bracket-1",
+       "bone": "convector",
+       "role": "body",
+       "z": 5.13,
+       "filled": true,
+       "tone": 0.32,
+       "material": "galvanised-steel",
+       "region": "trough",
+       "kind": "rect",
+       "x": 0.13,
+       "y": 0.12,
+       "w": 0.04,
+       "h": 0.025
+      },
+      {
+       "id": "levelling-bracket-2",
+       "bone": "convector",
+       "role": "body",
+       "z": 5.13,
+       "filled": true,
+       "tone": 0.32,
+       "material": "galvanised-steel",
+       "region": "trough",
+       "kind": "rect",
+       "x": 1.83,
+       "y": -0.145,
+       "w": 0.04,
+       "h": 0.025
+      },
+      {
+       "id": "levelling-bracket-3",
+       "bone": "convector",
+       "role": "body",
+       "z": 5.13,
+       "filled": true,
+       "tone": 0.32,
+       "material": "galvanised-steel",
+       "region": "trough",
+       "kind": "rect",
+       "x": 1.83,
+       "y": 0.12,
+       "w": 0.04,
+       "h": 0.025
+      },
+      {
+       "id": "rim-inner-window",
+       "bone": "convector",
+       "role": "detail",
+       "z": 7.0,
+       "filled": false,
+       "tone": 0.25,
+       "kind": "poly",
+       "closed": false,
+       "points": [
+        [
+         0.025,
+         -0.105
+        ],
+        [
+         1.975,
+         -0.105
+        ]
+       ],
+       "region": "frame"
+      },
+      {
+       "id": "rim-inner-room",
+       "bone": "convector",
+       "role": "detail",
+       "z": 7.0,
+       "filled": false,
+       "tone": 0.25,
+       "kind": "poly",
+       "closed": false,
+       "points": [
+        [
+         0.025,
+         0.105
+        ],
+        [
+         1.975,
+         0.105
+        ]
+       ],
+       "region": "frame"
+      },
+      {
+       "id": "fin-pitch-0",
+       "bone": "convector",
+       "role": "texture",
+       "z": 6.2,
+       "filled": false,
+       "tone": 0.3,
+       "kind": "poly",
+       "closed": false,
+       "points": [
+        [
+         0.2,
+         -0.11
+        ],
+        [
+         0.2,
+         0.03
+        ]
+       ],
+       "region": "heat-exchanger"
+      },
+      {
+       "id": "fin-pitch-1",
+       "bone": "convector",
+       "role": "texture",
+       "z": 6.2,
+       "filled": false,
+       "tone": 0.3,
+       "kind": "poly",
+       "closed": false,
+       "points": [
+        [
+         0.4,
+         -0.11
+        ],
+        [
+         0.4,
+         0.03
+        ]
+       ],
+       "region": "heat-exchanger"
+      },
+      {
+       "id": "fin-pitch-2",
+       "bone": "convector",
+       "role": "texture",
+       "z": 6.2,
+       "filled": false,
+       "tone": 0.3,
+       "kind": "poly",
+       "closed": false,
+       "points": [
+        [
+         0.6,
+         -0.11
+        ],
+        [
+         0.6,
+         0.03
+        ]
+       ],
+       "region": "heat-exchanger"
+      },
+      {
+       "id": "fin-pitch-3",
+       "bone": "convector",
+       "role": "texture",
+       "z": 6.2,
+       "filled": false,
+       "tone": 0.3,
+       "kind": "poly",
+       "closed": false,
+       "points": [
+        [
+         0.8,
+         -0.11
+        ],
+        [
+         0.8,
+         0.03
+        ]
+       ],
+       "region": "heat-exchanger"
+      },
+      {
+       "id": "fin-pitch-4",
+       "bone": "convector",
+       "role": "texture",
+       "z": 6.2,
+       "filled": false,
+       "tone": 0.3,
+       "kind": "poly",
+       "closed": false,
+       "points": [
+        [
+         1.0,
+         -0.11
+        ],
+        [
+         1.0,
+         0.03
+        ]
+       ],
+       "region": "heat-exchanger"
+      },
+      {
+       "id": "fin-pitch-5",
+       "bone": "convector",
+       "role": "texture",
+       "z": 6.2,
+       "filled": false,
+       "tone": 0.3,
+       "kind": "poly",
+       "closed": false,
+       "points": [
+        [
+         1.2,
+         -0.11
+        ],
+        [
+         1.2,
+         0.03
+        ]
+       ],
+       "region": "heat-exchanger"
+      },
+      {
+       "id": "fin-pitch-6",
+       "bone": "convector",
+       "role": "texture",
+       "z": 6.2,
+       "filled": false,
+       "tone": 0.3,
+       "kind": "poly",
+       "closed": false,
+       "points": [
+        [
+         1.4,
+         -0.11
+        ],
+        [
+         1.4,
+         0.03
+        ]
+       ],
+       "region": "heat-exchanger"
+      },
+      {
+       "id": "fin-pitch-7",
+       "bone": "convector",
+       "role": "texture",
+       "z": 6.2,
+       "filled": false,
+       "tone": 0.3,
+       "kind": "poly",
+       "closed": false,
+       "points": [
+        [
+         1.6,
+         -0.11
+        ],
+        [
+         1.6,
+         0.03
+        ]
+       ],
+       "region": "heat-exchanger"
+      },
+      {
+       "id": "fin-pitch-8",
+       "bone": "convector",
+       "role": "texture",
+       "z": 6.2,
+       "filled": false,
+       "tone": 0.3,
+       "kind": "poly",
+       "closed": false,
+       "points": [
+        [
+         1.8,
+         -0.11
+        ],
+        [
+         1.8,
+         0.03
+        ]
+       ],
+       "region": "heat-exchanger"
+      },
+      {
+       "id": "dented-fins-0",
+       "bone": "convector",
+       "role": "detail",
+       "z": 6.3,
+       "filled": false,
+       "tone": 0.2,
+       "kind": "poly",
+       "closed": false,
+       "points": [
+        [
+         0.55,
+         0.03
+        ],
+        [
+         0.57,
+         0.005
+        ],
+        [
+         0.6,
+         0.03
+        ]
+       ],
+       "region": "heat-exchanger"
+      },
+      {
+       "id": "dented-fins-1",
+       "bone": "convector",
+       "role": "detail",
+       "z": 6.3,
+       "filled": false,
+       "tone": 0.2,
+       "kind": "poly",
+       "closed": false,
+       "points": [
+        [
+         1.31,
+         0.03
+        ],
+        [
+         1.33,
+         0.005
+        ],
+        [
+         1.36,
+         0.03
+        ]
+       ],
+       "region": "heat-exchanger"
+      },
+      {
+       "id": "grille-bar-0",
+       "bone": "grille",
+       "role": "texture",
+       "z": 6.5,
+       "filled": false,
+       "tone": 0.25,
+       "kind": "poly",
+       "closed": false,
+       "points": [
+        [
+         1.732,
+         0.18
+        ],
+        [
+         1.968,
+         0.18
+        ]
+       ],
+       "region": "grille"
+      },
+      {
+       "id": "grille-bar-1",
+       "bone": "grille",
+       "role": "texture",
+       "z": 6.5,
+       "filled": false,
+       "tone": 0.25,
+       "kind": "poly",
+       "closed": false,
+       "points": [
+        [
+         1.732,
+         0.2
+        ],
+        [
+         1.968,
+         0.2
+        ]
+       ],
+       "region": "grille"
+      },
+      {
+       "id": "grille-bar-2",
+       "bone": "grille",
+       "role": "texture",
+       "z": 6.5,
+       "filled": false,
+       "tone": 0.25,
+       "kind": "poly",
+       "closed": false,
+       "points": [
+        [
+         1.732,
+         0.22
+        ],
+        [
+         1.968,
+         0.22
+        ]
+       ],
+       "region": "grille"
+      },
+      {
+       "id": "grille-bar-3",
+       "bone": "grille",
+       "role": "texture",
+       "z": 6.5,
+       "filled": false,
+       "tone": 0.25,
+       "kind": "poly",
+       "closed": false,
+       "points": [
+        [
+         1.732,
+         0.24
+        ],
+        [
+         1.968,
+         0.24
+        ]
+       ],
+       "region": "grille"
+      },
+      {
+       "id": "grille-bar-4",
+       "bone": "grille",
+       "role": "texture",
+       "z": 6.5,
+       "filled": false,
+       "tone": 0.25,
+       "kind": "poly",
+       "closed": false,
+       "points": [
+        [
+         1.732,
+         0.26
+        ],
+        [
+         1.968,
+         0.26
+        ]
+       ],
+       "region": "grille"
+      },
+      {
+       "id": "grille-bar-5",
+       "bone": "grille",
+       "role": "texture",
+       "z": 6.5,
+       "filled": false,
+       "tone": 0.25,
+       "kind": "poly",
+       "closed": false,
+       "points": [
+        [
+         1.732,
+         0.28
+        ],
+        [
+         1.968,
+         0.28
+        ]
+       ],
+       "region": "grille"
+      },
+      {
+       "id": "grille-bar-6",
+       "bone": "grille",
+       "role": "texture",
+       "z": 6.5,
+       "filled": false,
+       "tone": 0.25,
+       "kind": "poly",
+       "closed": false,
+       "points": [
+        [
+         1.732,
+         0.3
+        ],
+        [
+         1.968,
+         0.3
+        ]
+       ],
+       "region": "grille"
+      },
+      {
+       "id": "grille-bar-7",
+       "bone": "grille",
+       "role": "texture",
+       "z": 6.5,
+       "filled": false,
+       "tone": 0.25,
+       "kind": "poly",
+       "closed": false,
+       "points": [
+        [
+         1.732,
+         0.32
+        ],
+        [
+         1.968,
+         0.32
+        ]
+       ],
+       "region": "grille"
+      },
+      {
+       "id": "grille-bar-8",
+       "bone": "grille",
+       "role": "texture",
+       "z": 6.5,
+       "filled": false,
+       "tone": 0.25,
+       "kind": "poly",
+       "closed": false,
+       "points": [
+        [
+         1.732,
+         0.34
+        ],
+        [
+         1.968,
+         0.34
+        ]
+       ],
+       "region": "grille"
+      },
+      {
+       "id": "grille-bar-9",
+       "bone": "grille",
+       "role": "texture",
+       "z": 6.5,
+       "filled": false,
+       "tone": 0.25,
+       "kind": "poly",
+       "closed": false,
+       "points": [
+        [
+         1.732,
+         0.36
+        ],
+        [
+         1.968,
+         0.36
+        ]
+       ],
+       "region": "grille"
+      },
+      {
+       "id": "grille-bar-10",
+       "bone": "grille",
+       "role": "texture",
+       "z": 6.5,
+       "filled": false,
+       "tone": 0.25,
+       "kind": "poly",
+       "closed": false,
+       "points": [
+        [
+         1.732,
+         0.38
+        ],
+        [
+         1.968,
+         0.38
+        ]
+       ],
+       "region": "grille"
+      },
+      {
+       "id": "grille-bar-11",
+       "bone": "grille",
+       "role": "texture",
+       "z": 6.5,
+       "filled": false,
+       "tone": 0.25,
+       "kind": "poly",
+       "closed": false,
+       "points": [
+        [
+         1.732,
+         0.4
+        ],
+        [
+         1.968,
+         0.4
+        ]
+       ],
+       "region": "grille"
+      },
+      {
+       "id": "strap-0",
+       "bone": "grille",
+       "role": "texture",
+       "z": 9.5,
+       "filled": false,
+       "tone": 0.35,
+       "kind": "poly",
+       "closed": true,
+       "points": [
+        [
+         1.732,
+         0.275
+        ],
+        [
+         1.968,
+         0.275
+        ],
+        [
+         1.968,
+         0.295
+        ],
+        [
+         1.732,
+         0.295
+        ]
+       ],
+       "region": "grille"
+      },
+      {
+       "id": "dust-cold-channel",
+       "bone": "convector",
+       "role": "texture",
+       "z": 5.4,
+       "filled": false,
+       "tone": 0.5,
+       "kind": "poly",
+       "closed": false,
+       "points": [
+        [
+         0.2,
+         0.06
+        ],
+        [
+         0.7,
+         0.075
+        ],
+        [
+         1.3,
+         0.058
+        ],
+        [
+         1.8,
+         0.07
+        ]
+       ],
+       "region": "trough"
+      }
+     ]
+    },
+    "decisions": {
+     "silhouette": {
+      "en": "Side elevation from the window side, 40 mm long and 6.3 mm high on paper: the 2.0 m trough wall with its frame edge on the two bearer ends, two levelling brackets, screed remnants and the label, and the grille coil with its bore and windings rising behind the connection end. Front from the connection end, 12.4 x 6.3 mm: the end wall and both frame flanges over the long side of the near bearer and the coil. Plan, 40 x 12.4 mm: the open trough with the fin pack, three brackets, the two copper tubes with their return bend, the capped tails and the bleed valve, the frame, the four levelling brackets, the coil with its strap and both bearers.",
+      "de": "Seitenansicht von der Fensterseite, auf Papier 40 mm lang und 6,3 mm hoch: die 2,0 m lange Wannenwand mit Rahmenkante auf den zwei Kantholzenden, zwei Nivellierwinkel, Estrichreste und Etikett, dahinter die Rostrolle mit Öffnung und Windungen am Anschlussende. Vorderansicht vom Anschlussende, 12,4 x 6,3 mm: Stirnwand und beide Rahmenflansche über der Längsseite des vorderen Kantholzes und der Rolle. Grundriss, 40 x 12,4 mm: die offene Wanne mit Lamellenpaket, drei Haltern, den zwei Kupferrohren mit Umlenkbogen, den verschlossenen Anschlüssen und dem Entlüftungsventil, der Rahmen, die vier Nivellierwinkel, die Rolle mit Umreifung und beide Kanthölzer."
+     },
+     "retained": {
+      "en": "Every part at its true size: the 15 mm tubes and 22 mm caps, the 30 mm element brackets, the 40 mm levelling brackets, the 25 mm frame flanges, the coil of 236 mm with its 100 mm bore, the fin pitch as texture strokes and two dented fins.",
+      "de": "Jedes Teil in wahrer Größe: die 15 mm Rohre und 22 mm Kappen, die 30 mm Tauscherhalter, die 40 mm Nivellierwinkel, die 25 mm Rahmenflansche, die Rolle von 236 mm mit ihrer Öffnung von 100 mm, der Lamellenabstand als Texturstriche und zwei verbogene Lamellen."
+     },
+     "merged": {
+      "en": "The far trough wall and the element are hidden behind the near wall in the side elevation and behind the end wall in the front view; the plan shows them.",
+      "de": "Die hintere Wannenwand und der Wärmetauscher liegen in der Seitenansicht hinter der vorderen Wand und in der Vorderansicht hinter der Stirnwand; der Grundriss zeigt sie."
+     },
+     "omitted": {
+      "en": "The 225 single fins are one fin pack with a fin hatch; the spring spacers between the grille bars are not drawn.",
+      "de": "Die 225 einzelnen Lamellen sind ein Lamellenpaket mit Lamellenschraffur; die Federabstandshalter zwischen den Roststäben sind nicht gezeichnet."
+     },
+     "thinElements": {
+      "en": "The 1.25 mm sheet walls, the 2 mm frame and the strap are declared thin sheets of 0.025 to 0.04 mm on paper and drawn as body lines.",
+      "de": "Die Blechwände von 1,25 mm, der 2 mm Rahmen und die Umreifung sind deklarierte dünne Bleche von 0,025 bis 0,04 mm auf Papier und als Körperlinien gezeichnet."
+     },
+     "hatching": {
+      "en": "The bearer ends carry a 45 degree end-grain hatch in the side elevation; the fin pack a fin hatch at 0.4 mm in plan.",
+      "de": "Die Kantholzenden tragen in der Seitenansicht eine Hirnholzschraffur unter 45 Grad; das Lamellenpaket im Grundriss eine Lamellenschraffur von 0,4 mm."
+     },
+     "styles": {
+      "en": "Body pen 0.35 mm, detail 0.18 mm, texture 0.1 mm; tones: trough 0.2, frame 0.5, coil 0.55, bearers 0.62, fins 0.42, copper 0.38, screed 0.55, label 0.8.",
+      "de": "Körperstift 0,35 mm, Details 0,18 mm, Textur 0,1 mm; Töne: Wanne 0,2, Rahmen 0,5, Rolle 0,55, Kanthölzer 0,62, Lamellen 0,42, Kupfer 0,38, Estrich 0,55, Etikett 0,8."
+     },
+     "overlays": {
+      "en": "Every shape names its thermal region.",
+      "de": "Jede Form nennt ihre Wärmeregion."
+     }
+    }
+   },
+   "100": {
+    "status": "authored",
+    "denominator": 100,
+    "validRange": {
+     "minDenominator": 75,
+     "maxDenominator": 150
+    },
+    "pens": {
+     "body": 0.25,
+     "detail": 0.13,
+     "texture": null,
+     "glazing": null,
+     "ground": 0.35
+    },
+    "hatches": [
+     {
+      "id": "fin-pack",
+      "title": {
+       "en": "Aluminium fins of the heat exchanger, seen from above",
+       "de": "Aluminiumlamellen des Wärmetauschers, von oben gesehen"
+      },
+      "pattern": "lines",
+      "angleDeg": 90,
+      "spacingMm": 0.5,
+      "penMm": 0.1
+     }
+    ],
+    "geometry": {
+     "elevation": [
+      {
+       "id": "bearer-0",
+       "bone": "bearers",
+       "role": "body",
+       "z": 5.17,
+       "filled": true,
+       "tone": 0.62,
+       "material": "softwood",
+       "region": "bearers",
+       "kind": "rect",
+       "x": 0.11,
+       "y": 0.0,
+       "w": 0.08,
+       "h": 0.08
+      },
+      {
+       "id": "bearer-1",
+       "bone": "bearers",
+       "role": "body",
+       "z": 5.17,
+       "filled": true,
+       "tone": 0.62,
+       "material": "softwood",
+       "region": "bearers",
+       "kind": "rect",
+       "x": 1.81,
+       "y": 0.0,
+       "w": 0.08,
+       "h": 0.08
+      },
+      {
+       "id": "grille-roll",
+       "bone": "grille",
+       "role": "body",
+       "z": 4.84,
+       "filled": true,
+       "tone": 0.55,
+       "material": "anodised-aluminium",
+       "region": "grille",
+       "kind": "path",
+       "d": "M 1.732 0.198 A 0.118 0.118 0 1 0 1.968 0.198 A 0.118 0.118 0 1 0 1.732 0.198 Z M 1.8 0.198 A 0.05 0.05 0 1 1 1.9 0.198 A 0.05 0.05 0 1 1 1.8 0.198 Z"
+      },
+      {
+       "id": "fin-pack",
+       "bone": "convector",
+       "role": "body",
+       "z": 5.11,
+       "filled": true,
+       "tone": 0.42,
+       "material": "aluminium-fins",
+       "region": "heat-exchanger",
+       "kind": "rect",
+       "x": 0.1,
+       "y": 0.02,
+       "w": 1.8,
+       "h": 0.06
+      },
+      {
+       "id": "tail-cap-0",
+       "bone": "convector",
+       "role": "body",
+       "z": 5.086,
+       "filled": true,
+       "tone": 0.3,
+       "material": "brass",
+       "region": "tails",
+       "kind": "rect",
+       "x": 1.935,
+       "y": 0.039,
+       "w": 0.023,
+       "h": 0.022
+      },
+      {
+       "id": "levelling-bracket-0",
+       "bone": "convector",
+       "role": "body",
+       "z": 5.145,
+       "filled": true,
+       "tone": 0.32,
+       "material": "galvanised-steel",
+       "region": "trough",
+       "kind": "rect",
+       "x": 0.13,
+       "y": 0.0,
+       "w": 0.04,
+       "h": 0.05
+      },
+      {
+       "id": "levelling-bracket-2",
+       "bone": "convector",
+       "role": "body",
+       "z": 5.145,
+       "filled": true,
+       "tone": 0.32,
+       "material": "galvanised-steel",
+       "region": "trough",
+       "kind": "rect",
+       "x": 1.83,
+       "y": 0.0,
+       "w": 0.04,
+       "h": 0.05
+      },
+      {
+       "bone": "convector",
+       "role": "body",
+       "filled": true,
+       "tone": 0.2,
+       "material": "coated-steel",
+       "regions": [
+        "trough",
+        "frame"
+       ],
+       "id": "trough-body",
+       "z": 5.13,
+       "kind": "rect",
+       "x": 0.0,
+       "y": 0.0,
+       "w": 2.0,
+       "h": 0.11
+      },
+      {
+       "id": "rim-edge",
+       "bone": "convector",
+       "role": "detail",
+       "z": 8.5,
+       "filled": false,
+       "tone": 0.25,
+       "kind": "poly",
+       "closed": false,
+       "points": [
+        [
+         0.0,
+         0.108
+        ],
+        [
+         2.0,
+         0.108
+        ]
+       ],
+       "region": "frame"
+      }
+     ],
+     "front": [
+      {
+       "id": "bearer-0",
+       "bone": "bearers",
+       "role": "body",
+       "z": 5.19,
+       "filled": true,
+       "tone": 0.62,
+       "material": "softwood",
+       "region": "bearers",
+       "kind": "rect",
+       "x": -0.17,
+       "y": 0.0,
+       "w": 0.62,
+       "h": 0.08
+      },
+      {
+       "id": "bearer-1",
+       "bone": "bearers",
+       "role": "body",
+       "z": 6.89,
+       "filled": true,
+       "tone": 0.62,
+       "material": "softwood",
+       "region": "bearers",
+       "kind": "rect",
+       "x": -0.17,
+       "y": 0.0,
+       "w": 0.62,
+       "h": 0.08
+      },
+      {
+       "id": "grille-roll",
+       "bone": "grille",
+       "role": "body",
+       "z": 6.968,
+       "filled": true,
+       "tone": 0.55,
+       "material": "anodised-aluminium",
+       "region": "grille",
+       "kind": "rect",
+       "x": 0.16,
+       "y": 0.08,
+       "w": 0.25,
+       "h": 0.236
+      },
+      {
+       "bone": "convector",
+       "role": "body",
+       "filled": true,
+       "tone": 0.2,
+       "material": "coated-steel",
+       "regions": [
+        "trough",
+        "frame"
+       ],
+       "id": "trough-body",
+       "z": 7.0,
+       "kind": "rect",
+       "x": -0.13,
+       "y": 0.08,
+       "w": 0.26,
+       "h": 0.11
+      },
+      {
+       "id": "rim-edge-front",
+       "bone": "convector",
+       "role": "detail",
+       "z": 6.0,
+       "filled": false,
+       "tone": 0.25,
+       "kind": "poly",
+       "closed": false,
+       "points": [
+        [
+         -0.13,
+         0.188
+        ],
+        [
+         0.13,
+         0.188
+        ]
+       ],
+       "region": "frame"
+      }
+     ],
+     "plan": [
+      {
+       "id": "bearer-0",
+       "bone": "bearers",
+       "role": "body",
+       "z": 5.08,
+       "filled": true,
+       "tone": 0.62,
+       "material": "softwood",
+       "region": "bearers",
+       "kind": "rect",
+       "x": 0.11,
+       "y": -0.17,
+       "w": 0.08,
+       "h": 0.62
+      },
+      {
+       "id": "bearer-1",
+       "bone": "bearers",
+       "role": "body",
+       "z": 5.08,
+       "filled": true,
+       "tone": 0.62,
+       "material": "softwood",
+       "region": "bearers",
+       "kind": "rect",
+       "x": 1.81,
+       "y": -0.17,
+       "w": 0.08,
+       "h": 0.62
+      },
+      {
+       "id": "grille-roll",
+       "bone": "grille",
+       "role": "body",
+       "z": 5.316,
+       "filled": true,
+       "tone": 0.55,
+       "material": "anodised-aluminium",
+       "region": "grille",
+       "kind": "rect",
+       "x": 1.732,
+       "y": 0.16,
+       "w": 0.236,
+       "h": 0.25
+      },
+      {
+       "id": "trough-bottom",
+       "bone": "convector",
+       "role": "body",
+       "z": 5.0812,
+       "filled": true,
+       "tone": 0.2,
+       "material": "coated-steel",
+       "region": "trough",
+       "kind": "rect",
+       "x": 0.01,
+       "y": -0.12,
+       "w": 1.98,
+       "h": 0.24
+      },
+      {
+       "id": "frame",
+       "bone": "convector",
+       "role": "body",
+       "z": 5.19,
+       "filled": true,
+       "tone": 0.5,
+       "material": "anodised-aluminium",
+       "kind": "path",
+       "d": "M 0.0 -0.13 L 2.0 -0.13 L 2.0 0.13 L 0.0 0.13 Z M 0.025 -0.105 L 0.025 0.105 L 1.975 0.105 L 1.975 -0.105 Z",
+       "regions": [
+        "frame",
+        "trough"
+       ]
+      },
+      {
+       "id": "fin-pack",
+       "bone": "convector",
+       "role": "body",
+       "z": 5.16,
+       "filled": true,
+       "tone": 0.42,
+       "material": "aluminium-fins",
+       "region": "heat-exchanger",
+       "kind": "rect",
+       "x": 0.1,
+       "y": -0.11,
+       "w": 1.8,
+       "h": 0.14,
+       "hatch": "fin-pack"
+      },
+      {
+       "id": "return-bend",
+       "bone": "convector",
+       "role": "body",
+       "z": 5.1375,
+       "filled": true,
+       "tone": 0.38,
+       "material": "copper",
+       "region": "heat-exchanger",
+       "kind": "rect",
+       "x": 0.073,
+       "y": -0.0825,
+       "w": 0.027,
+       "h": 0.085
+      },
+      {
+       "id": "tube-ends",
+       "bone": "convector",
+       "role": "body",
+       "z": 5.1375,
+       "filled": true,
+       "tone": 0.38,
+       "material": "copper",
+       "region": "heat-exchanger",
+       "kind": "rect",
+       "x": 1.9,
+       "y": -0.0825,
+       "w": 0.035,
+       "h": 0.085
+      },
+      {
+       "id": "tail-cap-0",
+       "bone": "convector",
+       "role": "body",
+       "z": 5.141,
+       "filled": true,
+       "tone": 0.3,
+       "material": "brass",
+       "region": "tails",
+       "kind": "rect",
+       "x": 1.935,
+       "y": -0.086,
+       "w": 0.023,
+       "h": 0.022
+      },
+      {
+       "id": "tail-cap-1",
+       "bone": "convector",
+       "role": "body",
+       "z": 5.141,
+       "filled": true,
+       "tone": 0.3,
+       "material": "brass",
+       "region": "tails",
+       "kind": "rect",
+       "x": 1.935,
+       "y": -0.016,
+       "w": 0.023,
+       "h": 0.022
+      },
+      {
+       "id": "element-bracket-0",
+       "bone": "convector",
+       "role": "body",
+       "z": 5.1,
+       "filled": true,
+       "tone": 0.3,
+       "material": "galvanised-steel",
+       "region": "trough",
+       "kind": "rect",
+       "x": 0.285,
+       "y": -0.11,
+       "w": 0.03,
+       "h": 0.14
+      },
+      {
+       "id": "element-bracket-1",
+       "bone": "convector",
+       "role": "body",
+       "z": 5.1,
+       "filled": true,
+       "tone": 0.3,
+       "material": "galvanised-steel",
+       "region": "trough",
+       "kind": "rect",
+       "x": 0.985,
+       "y": -0.11,
+       "w": 0.03,
+       "h": 0.14
+      },
+      {
+       "id": "element-bracket-2",
+       "bone": "convector",
+       "role": "body",
+       "z": 5.1,
+       "filled": true,
+       "tone": 0.3,
+       "material": "galvanised-steel",
+       "region": "trough",
+       "kind": "rect",
+       "x": 1.685,
+       "y": -0.11,
+       "w": 0.03,
+       "h": 0.14
+      },
+      {
+       "id": "levelling-bracket-0",
+       "bone": "convector",
+       "role": "body",
+       "z": 5.13,
+       "filled": true,
+       "tone": 0.32,
+       "material": "galvanised-steel",
+       "region": "trough",
+       "kind": "rect",
+       "x": 0.13,
+       "y": -0.145,
+       "w": 0.04,
+       "h": 0.025
+      },
+      {
+       "id": "levelling-bracket-1",
+       "bone": "convector",
+       "role": "body",
+       "z": 5.13,
+       "filled": true,
+       "tone": 0.32,
+       "material": "galvanised-steel",
+       "region": "trough",
+       "kind": "rect",
+       "x": 0.13,
+       "y": 0.12,
+       "w": 0.04,
+       "h": 0.025
+      },
+      {
+       "id": "levelling-bracket-2",
+       "bone": "convector",
+       "role": "body",
+       "z": 5.13,
+       "filled": true,
+       "tone": 0.32,
+       "material": "galvanised-steel",
+       "region": "trough",
+       "kind": "rect",
+       "x": 1.83,
+       "y": -0.145,
+       "w": 0.04,
+       "h": 0.025
+      },
+      {
+       "id": "levelling-bracket-3",
+       "bone": "convector",
+       "role": "body",
+       "z": 5.13,
+       "filled": true,
+       "tone": 0.32,
+       "material": "galvanised-steel",
+       "region": "trough",
+       "kind": "rect",
+       "x": 1.83,
+       "y": 0.12,
+       "w": 0.04,
+       "h": 0.025
+      },
+      {
+       "id": "rim-inner-window",
+       "bone": "convector",
+       "role": "detail",
+       "z": 7.0,
+       "filled": false,
+       "tone": 0.25,
+       "kind": "poly",
+       "closed": false,
+       "points": [
+        [
+         0.025,
+         -0.105
+        ],
+        [
+         1.975,
+         -0.105
+        ]
+       ],
+       "region": "frame"
+      },
+      {
+       "id": "rim-inner-room",
+       "bone": "convector",
+       "role": "detail",
+       "z": 7.0,
+       "filled": false,
+       "tone": 0.25,
+       "kind": "poly",
+       "closed": false,
+       "points": [
+        [
+         0.025,
+         0.105
+        ],
+        [
+         1.975,
+         0.105
+        ]
+       ],
+       "region": "frame"
+      }
+     ]
+    },
+    "decisions": {
+     "silhouette": {
+      "en": "Side elevation 20 x 3.2 mm, front 6.2 x 3.2 mm, plan 20 x 6.2 mm: trough wall with frame, levelling brackets and the coil with its bore; in plan the fin pack, brackets, tubes, caps, frame and bearers.",
+      "de": "Seitenansicht 20 x 3,2 mm, Vorderansicht 6,2 x 3,2 mm, Grundriss 20 x 6,2 mm: Wannenwand mit Rahmen, Nivellierwinkel und die Rolle mit Öffnung; im Grundriss Lamellenpaket, Halter, Rohre, Kappen, Rahmen und Kanthölzer."
+     },
+     "retained": {
+      "en": "The 15 mm tubes, the 22 mm caps, the 30 mm brackets, the 40 mm levelling brackets and the coil bore.",
+      "de": "Die 15 mm Rohre, die 22 mm Kappen, die 30 mm Halter, die 40 mm Nivellierwinkel und die Öffnung der Rolle."
+     },
+     "merged": {
+      "en": "The tubes count to the tails region as the visible copper of the circuit.",
+      "de": "Die Rohre zählen zur Anschlussregion als sichtbares Kupfer des Kreises."
+     },
+     "omitted": {
+      "en": "Bleed valve, strap, label, screed remnants, windings, dents and grain.",
+      "de": "Entlüftungsventil, Umreifung, Etikett, Estrichreste, Windungen, Dellen und Maserung."
+     },
+     "thinElements": {
+      "en": "Sheet walls and frame are declared sheets of 0.0125 to 0.02 mm on paper.",
+      "de": "Blechwände und Rahmen sind deklarierte Bleche von 0,0125 bis 0,02 mm auf Papier."
+     },
+     "hatching": {
+      "en": "The fin hatch at 0.5 mm in plan.",
+      "de": "Die Lamellenschraffur mit 0,5 mm im Grundriss."
+     },
+     "styles": {
+      "en": "Body pen 0.25 mm, detail 0.13 mm; the tones of 1:50.",
+      "de": "Körperstift 0,25 mm, Details 0,13 mm; die Töne von 1:50."
+     },
+     "overlays": {
+      "en": "Every shape names its thermal region.",
+      "de": "Jede Form nennt ihre Wärmeregion."
+     }
+    }
+   },
+   "200": {
+    "status": "authored",
+    "denominator": 200,
+    "validRange": {
+     "minDenominator": 150,
+     "maxDenominator": 350
+    },
+    "pens": {
+     "body": 0.18,
+     "detail": null,
+     "texture": null,
+     "glazing": null,
+     "ground": 0.25
+    },
+    "hatches": [],
+    "geometry": {
+     "elevation": [
+      {
+       "id": "bearer-0",
+       "bone": "bearers",
+       "role": "body",
+       "z": 5.17,
+       "filled": true,
+       "tone": 0.62,
+       "material": "softwood",
+       "region": "bearers",
+       "kind": "rect",
+       "x": 0.11,
+       "y": 0.0,
+       "w": 0.08,
+       "h": 0.08
+      },
+      {
+       "id": "bearer-1",
+       "bone": "bearers",
+       "role": "body",
+       "z": 5.17,
+       "filled": true,
+       "tone": 0.62,
+       "material": "softwood",
+       "region": "bearers",
+       "kind": "rect",
+       "x": 1.81,
+       "y": 0.0,
+       "w": 0.08,
+       "h": 0.08
+      },
+      {
+       "id": "grille-roll",
+       "bone": "grille",
+       "role": "body",
+       "z": 4.84,
+       "filled": true,
+       "tone": 0.55,
+       "material": "anodised-aluminium",
+       "region": "grille",
+       "kind": "path",
+       "d": "M 1.732 0.198 A 0.118 0.118 0 1 0 1.968 0.198 A 0.118 0.118 0 1 0 1.732 0.198 Z M 1.8 0.198 A 0.05 0.05 0 1 1 1.9 0.198 A 0.05 0.05 0 1 1 1.8 0.198 Z"
+      },
+      {
+       "id": "fin-pack",
+       "bone": "convector",
+       "role": "body",
+       "z": 5.11,
+       "filled": true,
+       "tone": 0.42,
+       "material": "aluminium-fins",
+       "region": "heat-exchanger",
+       "kind": "rect",
+       "x": 0.1,
+       "y": 0.00125,
+       "w": 1.8,
+       "h": 0.07875
+      },
+      {
+       "id": "tails",
+       "bone": "convector",
+       "role": "body",
+       "z": 5.09,
+       "filled": true,
+       "tone": 0.36,
+       "material": "copper",
+       "region": "tails",
+       "kind": "rect",
+       "x": 1.9,
+       "y": 0.035,
+       "w": 0.058,
+       "h": 0.03
+      },
+      {
+       "bone": "convector",
+       "role": "body",
+       "filled": true,
+       "tone": 0.2,
+       "material": "coated-steel",
+       "regions": [
+        "trough",
+        "frame"
+       ],
+       "id": "trough-body",
+       "z": 5.13,
+       "kind": "rect",
+       "x": 0.0,
+       "y": 0.0,
+       "w": 2.0,
+       "h": 0.11
+      }
+     ],
+     "front": [
+      {
+       "id": "bearer-0",
+       "bone": "bearers",
+       "role": "body",
+       "z": 5.19,
+       "filled": true,
+       "tone": 0.62,
+       "material": "softwood",
+       "region": "bearers",
+       "kind": "rect",
+       "x": -0.17,
+       "y": 0.0,
+       "w": 0.62,
+       "h": 0.08
+      },
+      {
+       "id": "bearer-1",
+       "bone": "bearers",
+       "role": "body",
+       "z": 6.89,
+       "filled": true,
+       "tone": 0.62,
+       "material": "softwood",
+       "region": "bearers",
+       "kind": "rect",
+       "x": -0.17,
+       "y": 0.0,
+       "w": 0.62,
+       "h": 0.08
+      },
+      {
+       "id": "grille-roll",
+       "bone": "grille",
+       "role": "body",
+       "z": 6.968,
+       "filled": true,
+       "tone": 0.55,
+       "material": "anodised-aluminium",
+       "region": "grille",
+       "kind": "rect",
+       "x": 0.16,
+       "y": 0.08,
+       "w": 0.25,
+       "h": 0.236
+      },
+      {
+       "bone": "convector",
+       "role": "body",
+       "filled": true,
+       "tone": 0.2,
+       "material": "coated-steel",
+       "regions": [
+        "trough",
+        "frame"
+       ],
+       "id": "trough-body",
+       "z": 7.0,
+       "kind": "rect",
+       "x": -0.13,
+       "y": 0.08,
+       "w": 0.26,
+       "h": 0.11
+      }
+     ],
+     "plan": [
+      {
+       "id": "bearer-0",
+       "bone": "bearers",
+       "role": "body",
+       "z": 5.08,
+       "filled": true,
+       "tone": 0.62,
+       "material": "softwood",
+       "region": "bearers",
+       "kind": "rect",
+       "x": 0.11,
+       "y": -0.17,
+       "w": 0.08,
+       "h": 0.62
+      },
+      {
+       "id": "bearer-1",
+       "bone": "bearers",
+       "role": "body",
+       "z": 5.08,
+       "filled": true,
+       "tone": 0.62,
+       "material": "softwood",
+       "region": "bearers",
+       "kind": "rect",
+       "x": 1.81,
+       "y": -0.17,
+       "w": 0.08,
+       "h": 0.62
+      },
+      {
+       "id": "grille-roll",
+       "bone": "grille",
+       "role": "body",
+       "z": 5.316,
+       "filled": true,
+       "tone": 0.55,
+       "material": "anodised-aluminium",
+       "region": "grille",
+       "kind": "rect",
+       "x": 1.732,
+       "y": 0.16,
+       "w": 0.236,
+       "h": 0.25
+      },
+      {
+       "id": "trough-bottom",
+       "bone": "convector",
+       "role": "body",
+       "z": 5.0812,
+       "filled": true,
+       "tone": 0.2,
+       "material": "coated-steel",
+       "region": "trough",
+       "kind": "rect",
+       "x": 0.01,
+       "y": -0.12,
+       "w": 1.98,
+       "h": 0.24
+      },
+      {
+       "id": "frame",
+       "bone": "convector",
+       "role": "body",
+       "z": 5.19,
+       "filled": true,
+       "tone": 0.5,
+       "material": "anodised-aluminium",
+       "kind": "path",
+       "d": "M 0.0 -0.13 L 2.0 -0.13 L 2.0 0.13 L 0.0 0.13 Z M 0.025 -0.105 L 0.025 0.105 L 1.975 0.105 L 1.975 -0.105 Z",
+       "regions": [
+        "frame",
+        "trough"
+       ]
+      },
+      {
+       "id": "fin-pack",
+       "bone": "convector",
+       "role": "body",
+       "z": 5.16,
+       "filled": true,
+       "tone": 0.42,
+       "material": "aluminium-fins",
+       "region": "heat-exchanger",
+       "kind": "rect",
+       "x": 0.1,
+       "y": -0.11,
+       "w": 1.8,
+       "h": 0.14
+      },
+      {
+       "id": "tails",
+       "bone": "convector",
+       "role": "body",
+       "z": 5.145,
+       "filled": true,
+       "tone": 0.36,
+       "material": "copper",
+       "region": "tails",
+       "kind": "rect",
+       "x": 1.9,
+       "y": -0.09,
+       "w": 0.058,
+       "h": 0.1
+      }
+     ]
+    },
+    "decisions": {
+     "silhouette": {
+      "en": "Side elevation 10 x 1.6 mm, front 3.1 x 1.6 mm, plan 10 x 3.1 mm: the trough wall with its frame on the bearers and the coil; in plan the open trough with the fin pack and one connection block.",
+      "de": "Seitenansicht 10 x 1,6 mm, Vorderansicht 3,1 x 1,6 mm, Grundriss 10 x 3,1 mm: die Wannenwand mit Rahmen auf den Kanthölzern und die Rolle; im Grundriss die offene Wanne mit Lamellenpaket und einem Anschlussblock."
+     },
+     "retained": {
+      "en": "Trough, frame, fin pack, the coil with its 100 mm bore, the bearers, and the two tails with their caps as one 30 mm block.",
+      "de": "Wanne, Rahmen, Lamellenpaket, die Rolle mit ihrer Öffnung von 100 mm, die Kanthölzer und die zwei Anschlüsse mit Kappen als ein Block von 30 mm."
+     },
+     "merged": {
+      "en": "The fin pack reaches down to the trough bottom over its brackets; tubes, caps and bleed valve are one connection block; the frame shapes also carry the trough region.",
+      "de": "Das Lamellenpaket reicht über seine Halter bis zum Wannenboden; Rohre, Kappen und Entlüftungsventil sind ein Anschlussblock; die Rahmenformen tragen auch die Wannenregion."
+     },
+     "omitted": {
+      "en": "Levelling brackets, element brackets, strap, hatches and every texture.",
+      "de": "Nivellierwinkel, Tauscherhalter, Umreifung, Schraffuren und alle Texturen."
+     },
+     "thinElements": {
+      "en": "Sheet walls and frame remain declared sheets; no other part below 30 mm (0.15 mm on paper).",
+      "de": "Blechwände und Rahmen bleiben deklarierte Bleche; kein anderes Teil unter 30 mm (0,15 mm auf Papier)."
+     },
+     "hatching": {
+      "en": "None.",
+      "de": "Keine."
+     },
+     "styles": {
+      "en": "One body pen of 0.18 mm; the tones of 1:50.",
+      "de": "Ein Körperstift von 0,18 mm; die Töne von 1:50."
+     },
+     "overlays": {
+      "en": "The frame shapes list frame and trough as merged regions.",
+      "de": "Die Rahmenformen führen Rahmen und Wanne als zusammengeführte Regionen."
+     }
+    }
+   },
+   "500": {
+    "status": "authored",
+    "denominator": 500,
+    "validRange": {
+     "minDenominator": 350,
+     "maxDenominator": 1000
+    },
+    "pens": {
+     "body": 0.13,
+     "detail": null,
+     "texture": null,
+     "glazing": null,
+     "ground": 0.18
+    },
+    "hatches": [],
+    "geometry": {
+     "elevation": [
+      {
+       "id": "bearer-0",
+       "bone": "bearers",
+       "role": "body",
+       "z": 5.17,
+       "filled": true,
+       "tone": 0.62,
+       "material": "softwood",
+       "region": "bearers",
+       "kind": "rect",
+       "x": 0.11,
+       "y": 0.0,
+       "w": 0.08,
+       "h": 0.08
+      },
+      {
+       "id": "bearer-1",
+       "bone": "bearers",
+       "role": "body",
+       "z": 5.17,
+       "filled": true,
+       "tone": 0.62,
+       "material": "softwood",
+       "region": "bearers",
+       "kind": "rect",
+       "x": 1.81,
+       "y": 0.0,
+       "w": 0.08,
+       "h": 0.08
+      },
+      {
+       "id": "grille-roll",
+       "bone": "grille",
+       "role": "body",
+       "z": 4.84,
+       "filled": true,
+       "tone": 0.55,
+       "material": "anodised-aluminium",
+       "region": "grille",
+       "kind": "ellipse",
+       "cx": 1.85,
+       "cy": 0.198,
+       "rx": 0.118,
+       "ry": 0.118
+      },
+      {
+       "id": "trough",
+       "bone": "convector",
+       "role": "body",
+       "z": 5.13,
+       "filled": true,
+       "tone": 0.2,
+       "material": "coated-steel",
+       "regions": [
+        "trough",
+        "frame",
+        "heat-exchanger",
+        "tails"
+       ],
+       "kind": "rect",
+       "x": 0.0,
+       "y": 0.0,
+       "w": 2.0,
+       "h": 0.11
+      }
+     ],
+     "front": [
+      {
+       "id": "bearer-0",
+       "bone": "bearers",
+       "role": "body",
+       "z": 5.19,
+       "filled": true,
+       "tone": 0.62,
+       "material": "softwood",
+       "region": "bearers",
+       "kind": "rect",
+       "x": -0.17,
+       "y": 0.0,
+       "w": 0.62,
+       "h": 0.08
+      },
+      {
+       "id": "bearer-1",
+       "bone": "bearers",
+       "role": "body",
+       "z": 6.89,
+       "filled": true,
+       "tone": 0.62,
+       "material": "softwood",
+       "region": "bearers",
+       "kind": "rect",
+       "x": -0.17,
+       "y": 0.0,
+       "w": 0.62,
+       "h": 0.08
+      },
+      {
+       "id": "grille-roll",
+       "bone": "grille",
+       "role": "body",
+       "z": 6.968,
+       "filled": true,
+       "tone": 0.55,
+       "material": "anodised-aluminium",
+       "region": "grille",
+       "kind": "rect",
+       "x": 0.16,
+       "y": 0.08,
+       "w": 0.25,
+       "h": 0.236
+      },
+      {
+       "id": "trough",
+       "bone": "convector",
+       "role": "body",
+       "z": 7.0,
+       "filled": true,
+       "tone": 0.2,
+       "material": "coated-steel",
+       "regions": [
+        "trough",
+        "frame",
+        "heat-exchanger",
+        "tails"
+       ],
+       "kind": "rect",
+       "x": -0.13,
+       "y": 0.08,
+       "w": 0.26,
+       "h": 0.11
+      }
+     ],
+     "plan": [
+      {
+       "id": "bearer-0",
+       "bone": "bearers",
+       "role": "body",
+       "z": 5.08,
+       "filled": true,
+       "tone": 0.62,
+       "material": "softwood",
+       "region": "bearers",
+       "kind": "rect",
+       "x": 0.11,
+       "y": -0.17,
+       "w": 0.08,
+       "h": 0.62
+      },
+      {
+       "id": "bearer-1",
+       "bone": "bearers",
+       "role": "body",
+       "z": 5.08,
+       "filled": true,
+       "tone": 0.62,
+       "material": "softwood",
+       "region": "bearers",
+       "kind": "rect",
+       "x": 1.81,
+       "y": -0.17,
+       "w": 0.08,
+       "h": 0.62
+      },
+      {
+       "id": "grille-roll",
+       "bone": "grille",
+       "role": "body",
+       "z": 5.316,
+       "filled": true,
+       "tone": 0.55,
+       "material": "anodised-aluminium",
+       "region": "grille",
+       "kind": "rect",
+       "x": 1.732,
+       "y": 0.16,
+       "w": 0.236,
+       "h": 0.25
+      },
+      {
+       "id": "trough",
+       "bone": "convector",
+       "role": "body",
+       "z": 5.19,
+       "filled": true,
+       "tone": 0.2,
+       "material": "coated-steel",
+       "regions": [
+        "trough",
+        "frame",
+        "heat-exchanger",
+        "tails"
+       ],
+       "kind": "rect",
+       "x": 0.0,
+       "y": -0.13,
+       "w": 2.0,
+       "h": 0.26
+      }
+     ]
+    },
+    "decisions": {
+     "silhouette": {
+      "en": "Side elevation 4 x 0.6 mm, front 1.2 x 0.6 mm, plan 4 x 1.2 mm: one closed trough bar on two bearers and the grille coil as a disc behind it.",
+      "de": "Seitenansicht 4 x 0,6 mm, Vorderansicht 1,2 x 0,6 mm, Grundriss 4 x 1,2 mm: ein geschlossener Wannenbalken auf zwei Kanthölzern und die Rostrolle als Scheibe dahinter."
+     },
+     "retained": {
+      "en": "The 2.0 x 0.26 x 0.11 m trough, the 80 mm bearers and the 236 mm coil.",
+      "de": "Die Wanne 2,0 x 0,26 x 0,11 m, die 80 mm Kanthölzer und die Rolle von 236 mm."
+     },
+     "merged": {
+      "en": "Trough, frame, element and tails are one closed box that lists their four regions; the coil is a solid disc without its bore.",
+      "de": "Wanne, Rahmen, Wärmetauscher und Anschlüsse sind ein geschlossener Quader, der ihre vier Regionen führt; die Rolle ist eine volle Scheibe ohne Öffnung."
+     },
+     "omitted": {
+      "en": "Every interior part, the brackets, the strap and every texture.",
+      "de": "Alle Innenteile, die Halter, die Umreifung und alle Texturen."
+     },
+     "thinElements": {
+      "en": "No part below 75 mm (0.15 mm on paper) remains.",
+      "de": "Kein Teil unter 75 mm (0,15 mm auf Papier) bleibt."
+     },
+     "hatching": {
+      "en": "None.",
+      "de": "Keine."
+     },
+     "styles": {
+      "en": "One body pen of 0.13 mm; the tones of 1:50.",
+      "de": "Ein Körperstift von 0,13 mm; die Töne von 1:50."
+     },
+     "overlays": {
+      "en": "The trough shape lists trough, frame, heat exchanger and tails as merged regions.",
+      "de": "Die Wannenform führt Wanne, Rahmen, Wärmetauscher und Anschlüsse als zusammengeführte Regionen."
+     }
+    }
+   }
+  },
+  "symbols": [],
+  "poses": [
+   {
+    "id": "stored",
+    "title": {
+     "en": "Stored on bearers, grille rolled up beside",
+     "de": "Auf Kanthölzern gelagert, Rollrost daneben"
+    },
+    "description": {
+     "en": "Drained, with both tails capped, the trough lies on two squared timbers across it in the hall of the component exchange; the roll-up grille, taken out of the frame, lies strapped as a coil on the connection-end bearer beside the trough.",
+     "de": "Entleert und mit beiden verschlossenen Anschlüssen liegt die Wanne auf zwei quer darunter liegenden Kanthölzern in der Halle der Bauteilbörse; der aus dem Rahmen genommene Rollrost liegt umreift als Rolle auf dem Kantholz am Anschlussende neben der Wanne."
+    },
+    "bones": {},
+    "ground": "authored",
+    "contacts": [
+     "bearer-ground-0",
+     "bearer-ground-1",
+     "bearer-ground-2",
+     "bearer-ground-3"
+    ],
+    "thermal": {
+     "operating": {
+      "heating": 0
+     },
+     "regions": {
+      "trough": {
+       "exposedFraction": 0.9,
+       "sunlitFraction": 0,
+       "contact": {
+        "fraction": 0.1,
+        "tempC": 20
+       }
+      },
+      "frame": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0
+      },
+      "heat-exchanger": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0
+      },
+      "tails": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0
+      },
+      "grille": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0
+      },
+      "bearers": {
+       "exposedFraction": 0.85,
+       "sunlitFraction": 0,
+       "contact": {
+        "fraction": 0.15,
+        "tempC": 20
+       }
+      }
+     },
+     "emitters": {
+      "warm-air": 0,
+      "trough-plume": 0
+     }
+    },
+    "loads": []
+   },
+   {
+    "id": "lifted",
+    "title": {
+     "en": "Carried by two people",
+     "de": "Von zwei Personen getragen"
+    },
+    "description": {
+     "en": "Two workers hold the 15 kg trough at the two ends of its frame and carry it 0.30 m above the bearers; the bearers and the grille coil stay on the floor.",
+     "de": "Zwei Arbeiter halten die 15 kg schwere Wanne an den beiden Rahmenenden und tragen sie 0,30 m über den Kanthölzern; Kanthölzer und Rostrolle bleiben am Boden."
+    },
+    "bones": {
+     "convector": {
+      "dy": 0.3
+     }
+    },
+    "ground": "authored",
+    "contacts": [
+     "grip-0",
+     "grip-1"
+    ],
+    "thermal": {
+     "operating": {
+      "heating": 0
+     },
+     "regions": {
+      "trough": {
+       "exposedFraction": 0.9,
+       "sunlitFraction": 0,
+       "contact": {
+        "fraction": 0.1,
+        "tempC": 20
+       }
+      },
+      "frame": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0
+      },
+      "heat-exchanger": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0
+      },
+      "tails": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0
+      },
+      "grille": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0
+      },
+      "bearers": {
+       "exposedFraction": 0.85,
+       "sunlitFraction": 0,
+       "contact": {
+        "fraction": 0.15,
+        "tempC": 20
+       }
+      }
+     },
+     "emitters": {
+      "warm-air": 0,
+      "trough-plume": 0
+     }
+    },
+    "loads": []
+   },
+   {
+    "id": "reinstalled",
+    "title": {
+     "en": "Reinstalled, heating at 75/65 degC",
+     "de": "Wieder eingebaut, Heizbetrieb 75/65 °C"
+    },
+    "description": {
+     "en": "Set on its levelling brackets on the raw slab in front of a glazed facade, connected and filled, the element runs at 75 degC flow and 65 degC return; warm air rises out of the open trough over the fins. The grille coil and the bearers lie beside it until the screed is laid and the grille is rolled into the frame.",
+     "de": "Auf seinen Nivellierwinkeln auf der Rohdecke vor einer verglasten Fassade aufgestellt, angeschlossen und befüllt, läuft der Wärmetauscher mit 75 °C Vorlauf und 65 °C Rücklauf; warme Luft steigt über den Lamellen aus der offenen Wanne. Rostrolle und Kanthölzer liegen daneben, bis der Estrich eingebracht und der Rost in den Rahmen eingerollt ist."
+    },
+    "bones": {
+     "convector": {
+      "dy": -0.08
+     },
+     "bearers": {
+      "dx": 2.3
+     }
+    },
+    "ground": "authored",
+    "contacts": [
+     "trough-foot-0",
+     "trough-foot-1",
+     "trough-foot-2",
+     "trough-foot-3"
+    ],
+    "thermal": {
+     "operating": {
+      "heating": 1
+     },
+     "regions": {
+      "trough": {
+       "exposedFraction": 0.75,
+       "sunlitFraction": 0,
+       "contact": {
+        "fraction": 0.25,
+        "tempC": 20
+       }
+      },
+      "frame": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0
+      },
+      "heat-exchanger": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0
+      },
+      "tails": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0
+      },
+      "grille": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0
+      },
+      "bearers": {
+       "exposedFraction": 0.85,
+       "sunlitFraction": 0,
+       "contact": {
+        "fraction": 0.15,
+        "tempC": 20
+       }
+      }
+     },
+     "emitters": {
+      "warm-air": 1,
+      "trough-plume": 1
+     }
+    },
+    "loads": [
+     {
+      "id": "element-water",
+      "kind": "carried",
+      "title": {
+       "en": "Heating water 0.55 l in the two copper tubes",
+       "de": "Heizwasser 0,55 l in den zwei Kupferrohren"
+      },
+      "bone": "convector",
+      "x": 1.0,
+      "y": 0.05,
+      "z": -0.04,
+      "fxN": 0,
+      "fyN": -5.3955,
+      "source": "authored-estimate",
+      "reference": "trench-convector-catalogues"
+     },
+     {
+      "id": "flow-hose",
+      "kind": "imposed",
+      "title": {
+       "en": "Flexible flow connection hose on the flow tail, 25 N",
+       "de": "Flexibler Vorlauf-Anschlussschlauch am Vorlaufanschluss, 25 N"
+      },
+      "anchor": "tail-0",
+      "fxN": 0,
+      "fyN": -25,
+      "source": "authored-estimate"
+     },
+     {
+      "id": "return-hose",
+      "kind": "imposed",
+      "title": {
+       "en": "Flexible return connection hose on the return tail, 25 N",
+       "de": "Flexibler Rücklauf-Anschlussschlauch am Rücklaufanschluss, 25 N"
+      },
+      "anchor": "tail-1",
+      "fxN": 0,
+      "fyN": -25,
+      "source": "authored-estimate"
+     }
+    ]
+   },
+   {
+    "id": "reinstalled-off",
+    "title": {
+     "en": "Reinstalled, filled and cold",
+     "de": "Wieder eingebaut, befüllt und kalt"
+    },
+    "description": {
+     "en": "The same installed state with the valve closed: the element is filled and at room temperature, no air moves.",
+     "de": "Derselbe Einbauzustand bei geschlossenem Ventil: der Wärmetauscher ist befüllt und raumwarm, keine Luft bewegt sich."
+    },
+    "bones": {
+     "convector": {
+      "dy": -0.08
+     },
+     "bearers": {
+      "dx": 2.3
+     }
+    },
+    "ground": "authored",
+    "contacts": [
+     "trough-foot-0",
+     "trough-foot-1",
+     "trough-foot-2",
+     "trough-foot-3"
+    ],
+    "thermal": {
+     "operating": {
+      "heating": 0
+     },
+     "regions": {
+      "trough": {
+       "exposedFraction": 0.75,
+       "sunlitFraction": 0,
+       "contact": {
+        "fraction": 0.25,
+        "tempC": 20
+       }
+      },
+      "frame": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0
+      },
+      "heat-exchanger": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0
+      },
+      "tails": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0
+      },
+      "grille": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0
+      },
+      "bearers": {
+       "exposedFraction": 0.85,
+       "sunlitFraction": 0,
+       "contact": {
+        "fraction": 0.15,
+        "tempC": 20
+       }
+      }
+     },
+     "emitters": {
+      "warm-air": 0,
+      "trough-plume": 0
+     }
+    },
+    "loads": [
+     {
+      "id": "element-water",
+      "kind": "carried",
+      "title": {
+       "en": "Heating water 0.55 l in the two copper tubes",
+       "de": "Heizwasser 0,55 l in den zwei Kupferrohren"
+      },
+      "bone": "convector",
+      "x": 1.0,
+      "y": 0.05,
+      "z": -0.04,
+      "fxN": 0,
+      "fyN": -5.3955,
+      "source": "authored-estimate",
+      "reference": "trench-convector-catalogues"
+     },
+     {
+      "id": "flow-hose",
+      "kind": "imposed",
+      "title": {
+       "en": "Flexible flow connection hose on the flow tail, 25 N",
+       "de": "Flexibler Vorlauf-Anschlussschlauch am Vorlaufanschluss, 25 N"
+      },
+      "anchor": "tail-0",
+      "fxN": 0,
+      "fyN": -25,
+      "source": "authored-estimate"
+     },
+     {
+      "id": "return-hose",
+      "kind": "imposed",
+      "title": {
+       "en": "Flexible return connection hose on the return tail, 25 N",
+       "de": "Flexibler Rücklauf-Anschlussschlauch am Rücklaufanschluss, 25 N"
+      },
+      "anchor": "tail-1",
+      "fxN": 0,
+      "fyN": -25,
+      "source": "authored-estimate"
+     }
+    ]
+   }
+  ],
+  "clips": [
+   {
+    "id": "lift",
+    "title": {
+     "en": "Lift off the bearers",
+     "de": "Von den Kanthölzern abheben"
+    },
+    "description": {
+     "en": "The two carriers take hold of the frame ends for two seconds and lift the trough 0.30 m clear of its bearers in four seconds.",
+     "de": "Die zwei Träger fassen zwei Sekunden lang die Rahmenenden und heben die Wanne in vier Sekunden 0,30 m über ihre Kanthölzer."
+    },
+    "durationS": 8,
+    "fps": 25,
+    "loop": false,
+    "rootMotion": "none",
+    "keys": [
+     {
+      "t": 0,
+      "pose": "stored",
+      "ease": "smooth"
+     },
+     {
+      "t": 2,
+      "pose": "stored",
+      "ease": "smooth"
+     },
+     {
+      "t": 6,
+      "pose": "lifted",
+      "ease": "smooth"
+     },
+     {
+      "t": 8,
+      "pose": "lifted",
+      "ease": "smooth"
+     }
+    ],
+    "contacts": [
+     {
+      "anchor": "bearer-ground-0",
+      "fromS": 0,
+      "toS": 2.2
+     },
+     {
+      "anchor": "bearer-ground-1",
+      "fromS": 0,
+      "toS": 2.2
+     },
+     {
+      "anchor": "bearer-ground-2",
+      "fromS": 0,
+      "toS": 2.2
+     },
+     {
+      "anchor": "bearer-ground-3",
+      "fromS": 0,
+      "toS": 2.2
+     },
+     {
+      "anchor": "grip-0",
+      "fromS": 2,
+      "toS": 8
+     },
+     {
+      "anchor": "grip-1",
+      "fromS": 2,
+      "toS": 8
+     }
+    ],
+    "phases": [
+     {
+      "id": "grip",
+      "fromS": 0,
+      "toS": 2,
+      "title": {
+       "en": "Taking hold",
+       "de": "Anfassen"
+      }
+     },
+     {
+      "id": "lift",
+      "fromS": 2,
+      "toS": 6,
+      "title": {
+       "en": "Lifting",
+       "de": "Anheben"
+      }
+     },
+     {
+      "id": "hold",
+      "fromS": 6,
+      "toS": 8,
+      "title": {
+       "en": "Holding",
+       "de": "Halten"
+      }
+     }
+    ],
+    "events": [
+     {
+      "t": 2.2,
+      "kind": "contact-off",
+      "title": {
+       "en": "Trough leaves the bearers",
+       "de": "Wanne verlässt die Kanthölzer"
+      },
+      "target": "convector"
+     }
+    ],
+    "tracks": []
+   },
+   {
+    "id": "heat-up",
+    "title": {
+     "en": "Valve opens after reinstallation",
+     "de": "Ventil öffnet nach dem Wiedereinbau"
+    },
+    "description": {
+     "en": "The filled element starts at room temperature; the valve opens after half a minute and the light copper-aluminium element reaches 75/65 degC within five minutes while the warm-air flow over the fins builds up.",
+     "de": "Der befüllte Wärmetauscher startet raumwarm; das Ventil öffnet nach einer halben Minute, und der leichte Kupfer-Aluminium-Wärmetauscher erreicht innerhalb von fünf Minuten 75/65 °C, während sich die Warmluftströmung über den Lamellen aufbaut."
+    },
+    "durationS": 600,
+    "fps": 1,
+    "loop": false,
+    "rootMotion": "none",
+    "keys": [
+     {
+      "t": 0,
+      "pose": "reinstalled-off",
+      "ease": "step"
+     },
+     {
+      "t": 30,
+      "pose": "reinstalled",
+      "ease": "step"
+     },
+     {
+      "t": 600,
+      "pose": "reinstalled",
+      "ease": "step"
+     }
+    ],
+    "contacts": [
+     {
+      "anchor": "trough-foot-0",
+      "fromS": 0,
+      "toS": 600
+     },
+     {
+      "anchor": "trough-foot-1",
+      "fromS": 0,
+      "toS": 600
+     },
+     {
+      "anchor": "trough-foot-2",
+      "fromS": 0,
+      "toS": 600
+     },
+     {
+      "anchor": "trough-foot-3",
+      "fromS": 0,
+      "toS": 600
+     }
+    ],
+    "phases": [
+     {
+      "id": "cold",
+      "fromS": 0,
+      "toS": 30,
+      "title": {
+       "en": "Valve closed",
+       "de": "Ventil geschlossen"
+      }
+     },
+     {
+      "id": "warm-up",
+      "fromS": 30,
+      "toS": 330,
+      "title": {
+       "en": "Warming up",
+       "de": "Aufheizen"
+      }
+     },
+     {
+      "id": "design",
+      "fromS": 330,
+      "toS": 600,
+      "title": {
+       "en": "Design temperatures",
+       "de": "Auslegungstemperaturen"
+      }
+     }
+    ],
+    "events": [
+     {
+      "t": 30,
+      "kind": "operating",
+      "title": {
+       "en": "Valve opens",
+       "de": "Ventil öffnet"
+      },
+      "target": "heating"
+     },
+     {
+      "t": 330,
+      "kind": "operating",
+      "title": {
+       "en": "Element at 75/65 degC",
+       "de": "Wärmetauscher bei 75/65 °C"
+      },
+      "target": "heating"
+     }
+    ],
+    "tracks": [
+     {
+      "target": "operating:heating",
+      "ease": "smooth",
+      "keys": [
+       {
+        "t": 0,
+        "v": 0
+       },
+       {
+        "t": 30,
+        "v": 0
+       },
+       {
+        "t": 330,
+        "v": 1
+       },
+       {
+        "t": 600,
+        "v": 1
+       }
+      ]
+     },
+     {
+      "target": "emitter:warm-air",
+      "ease": "smooth",
+      "keys": [
+       {
+        "t": 0,
+        "v": 0
+       },
+       {
+        "t": 30,
+        "v": 0
+       },
+       {
+        "t": 330,
+        "v": 1
+       },
+       {
+        "t": 600,
+        "v": 1
+       }
+      ]
+     },
+     {
+      "target": "emitter:trough-plume",
+      "ease": "smooth",
+      "keys": [
+       {
+        "t": 0,
+        "v": 0
+       },
+       {
+        "t": 60,
+        "v": 0
+       },
+       {
+        "t": 400,
+        "v": 1
+       },
+       {
+        "t": 600,
+        "v": 1
+       }
+      ]
+     }
+    ]
+   }
+  ],
+  "thermal": {
+   "environment": {
+    "airTempC": 20,
+    "meanRadiantTempC": 19,
+    "relativeHumidity": 0.45,
+    "windMS": 0.1,
+    "windDirectionDeg": 0,
+    "solarWM2": 0,
+    "diffuseFraction": 1,
+    "pressurePa": 101325
+   },
+   "passengers": [],
+   "operating": [
+    {
+     "id": "heating",
+     "title": {
+      "en": "Heating water through the element",
+      "de": "Heizwasser durch den Wärmetauscher"
+     },
+     "levels": [
+      {
+       "v": 0,
+       "title": {
+        "en": "Drained, or valve closed",
+        "de": "Entleert oder Ventil geschlossen"
+       }
+      },
+      {
+       "v": 0.5,
+       "title": {
+        "en": "Reduced, 55/45 degC",
+        "de": "Abgesenkt, 55/45 °C"
+       }
+      },
+      {
+       "v": 1,
+       "title": {
+        "en": "Rated, 75/65 degC (about 470 W)",
+        "de": "Nennbetrieb, 75/65 °C (etwa 470 W)"
+       }
+      }
+     ]
+    }
+   ],
+   "regions": [
+    {
+     "id": "trough",
+     "title": {
+      "en": "Folded steel trough, levelling and element brackets",
+      "de": "Abgekantete Stahlwanne, Nivellier- und Tauscherhalter"
+     },
+     "kind": "surface",
+     "model": "passive",
+     "material": "coated-steel",
+     "areaM2": 2.05,
+     "characteristicLengthM": 0.24,
+     "geometry": "horizontal-plate-up",
+     "skyViewFactor": 0.2,
+     "layers": [
+      {
+       "id": "sheet",
+       "title": {
+        "en": "Galvanised sheet 1.25 mm, powder-coated",
+        "de": "Verzinktes Blech 1,25 mm, pulverbeschichtet"
+       },
+       "kind": "metal",
+       "material": "coated-steel",
+       "thicknessM": 0.00125,
+       "resistanceM2KW": 2.5e-05,
+       "heatCapacityJM2K": 4513.8,
+       "source": "literature",
+       "reference": "din-en-10346"
+      }
+     ],
+     "heatCapacityJM2K": 4513.8,
+     "source": "authored-estimate",
+     "reference": "trench-convector-catalogues"
+    },
+    {
+     "id": "frame",
+     "title": {
+      "en": "Anodised aluminium edge frame",
+      "de": "Eloxierter Aluminium-Randrahmen"
+     },
+     "kind": "surface",
+     "model": "passive",
+     "material": "anodised-aluminium",
+     "areaM2": 0.24,
+     "characteristicLengthM": 0.025,
+     "geometry": "horizontal-plate-up",
+     "skyViewFactor": 0.2,
+     "layers": [
+      {
+       "id": "profile",
+       "title": {
+        "en": "Aluminium angle 2 mm",
+        "de": "Aluminiumwinkel 2 mm"
+       },
+       "kind": "metal",
+       "material": "anodised-aluminium",
+       "thicknessM": 0.002,
+       "resistanceM2KW": 1.3e-05,
+       "heatCapacityJM2K": 4860.0,
+       "source": "literature",
+       "reference": "en-iso-10456"
+      }
+     ],
+     "heatCapacityJM2K": 4860.0,
+     "source": "authored-estimate",
+     "reference": "trench-convector-catalogues"
+    },
+    {
+     "id": "heat-exchanger",
+     "title": {
+      "en": "Copper-aluminium fin element",
+      "de": "Kupfer-Aluminium-Lamellenwärmetauscher"
+     },
+     "kind": "heater",
+     "model": "hydronic",
+     "material": "aluminium-fins",
+     "areaM2": 3.9,
+     "characteristicLengthM": 0.06,
+     "geometry": "horizontal-plate-up",
+     "skyViewFactor": 0.2,
+     "layers": [
+      {
+       "id": "fin",
+       "title": {
+        "en": "Aluminium fin 0.25 mm on copper tube",
+        "de": "Aluminiumlamelle 0,25 mm auf Kupferrohr"
+       },
+       "kind": "metal",
+       "material": "aluminium-fins",
+       "thicknessM": 0.00025,
+       "resistanceM2KW": 1e-06,
+       "heatCapacityJM2K": 607.5,
+       "source": "literature",
+       "reference": "incropera-2018"
+      }
+     ],
+     "heatCapacityJM2K": 607.5,
+     "source": "authored-estimate",
+     "reference": "trench-convector-catalogues",
+     "areaBasis": "exchange",
+     "hydronic": {
+      "key": "heating",
+      "rows": [
+       {
+        "v": 0.5,
+        "supplyTempC": 55,
+        "returnTempC": 45
+       },
+       {
+        "v": 1,
+        "supplyTempC": 75,
+        "returnTempC": 65
+       }
+      ],
+      "flowPosition": 0.5,
+      "filmM2KW": 0.02
+     },
+     "ratedPowerW": 0,
+     "ratedPowerBasis": "passive"
+    },
+    {
+     "id": "tails",
+     "title": {
+      "en": "Cut and capped flow and return tails with bleed valve",
+      "de": "Abgetrennte und verschlossene Vor- und Rücklaufanschlüsse mit Entlüftungsventil"
+     },
+     "kind": "surface",
+     "model": "hydronic",
+     "material": "copper",
+     "areaM2": 0.0055,
+     "characteristicLengthM": 0.015,
+     "geometry": "cylinder",
+     "skyViewFactor": 0.2,
+     "layers": [
+      {
+       "id": "tube",
+       "title": {
+        "en": "Copper tube 1 mm",
+        "de": "Kupferrohr 1 mm"
+       },
+       "kind": "metal",
+       "material": "copper",
+       "thicknessM": 0.001,
+       "resistanceM2KW": 3e-06,
+       "heatCapacityJM2K": 3438.0,
+       "source": "literature",
+       "reference": "din-en-1057"
+      }
+     ],
+     "heatCapacityJM2K": 3438.0,
+     "source": "authored-estimate",
+     "reference": "trench-convector-catalogues",
+     "hydronic": {
+      "key": "heating",
+      "rows": [
+       {
+        "v": 0.5,
+        "supplyTempC": 55,
+        "returnTempC": 45
+       },
+       {
+        "v": 1,
+        "supplyTempC": 75,
+        "returnTempC": 65
+       }
+      ],
+      "flowPosition": 0.0,
+      "filmM2KW": 0.002
+     }
+    },
+    {
+     "id": "grille",
+     "title": {
+      "en": "Roll-up aluminium grille, rolled and strapped",
+      "de": "Rollrost aus Aluminium, aufgerollt und umreift"
+     },
+     "kind": "surface",
+     "model": "passive",
+     "material": "anodised-aluminium",
+     "areaM2": 0.336,
+     "characteristicLengthM": 0.236,
+     "geometry": "cylinder",
+     "skyViewFactor": 0.2,
+     "layers": [
+      {
+       "id": "bars",
+       "title": {
+        "en": "Aluminium bars, effective 3 mm",
+        "de": "Aluminiumstäbe, wirksam 3 mm"
+       },
+       "kind": "metal",
+       "material": "anodised-aluminium",
+       "thicknessM": 0.003,
+       "resistanceM2KW": 1.9e-05,
+       "heatCapacityJM2K": 7290.0,
+       "source": "literature",
+       "reference": "en-iso-10456"
+      }
+     ],
+     "heatCapacityJM2K": 7290.0,
+     "source": "authored-estimate",
+     "reference": "trench-convector-catalogues"
+    },
+    {
+     "id": "bearers",
+     "title": {
+      "en": "Two squared softwood bearers",
+      "de": "Zwei Nadelholz-Kanthölzer"
+     },
+     "kind": "surface",
+     "model": "passive",
+     "material": "softwood",
+     "areaM2": 0.42,
+     "characteristicLengthM": 0.08,
+     "geometry": "horizontal-plate-up",
+     "skyViewFactor": 0.2,
+     "layers": [
+      {
+       "id": "timber",
+       "title": {
+        "en": "Softwood, thermally active 20 mm",
+        "de": "Nadelholz, thermisch wirksam 20 mm"
+       },
+       "kind": "timber",
+       "material": "softwood",
+       "thicknessM": 0.02,
+       "resistanceM2KW": 0.153846,
+       "heatCapacityJM2K": 14400.0,
+       "source": "literature",
+       "reference": "en-338"
+      }
+     ],
+     "heatCapacityJM2K": 14400.0,
+     "source": "literature",
+     "reference": "en-338"
+    }
+   ],
+   "emitters": [
+    {
+     "id": "warm-air",
+     "kind": "vent",
+     "title": {
+      "en": "Warm air rising out of the trough over the fins",
+      "de": "Warme Luft, die über den Lamellen aus der Wanne steigt"
+     },
+     "anchor": "warm-air-outlet",
+     "directionDeg": 90,
+     "diameterM": 0.14,
+     "operatingKey": "heating",
+     "volumeFlowM3S": 0.0195,
+     "temperatureRiseK": 20,
+     "source": "authored-estimate",
+     "reference": "din-en-16430"
+    },
+    {
+     "id": "trough-plume",
+     "kind": "plume",
+     "title": {
+      "en": "Free-convection plume over the warm fin pack",
+      "de": "Freie Konvektionsfahne über dem warmen Lamellenpaket"
+     },
+     "anchor": "warm-air-outlet",
+     "directionDeg": 90,
+     "diameterM": 0.3,
+     "region": "heat-exchanger",
+     "source": "authored-estimate",
+     "reference": "recknagel-2019"
+    }
+   ],
+   "assumptions": [
+    {
+     "en": "Stored and carried, the convector is drained and at the 20 degC of the heated hall; reinstalled, the element is filled with 0.55 l and follows the heating circuit (75/65 degC rated, 55/45 degC reduced); the fin pack and the tails take that water through their films, the trough, the frame and the grille stay passive.",
+     "de": "Gelagert und getragen ist der Konvektor entleert und hat die 20 °C der beheizten Halle; eingebaut ist der Wärmetauscher mit 0,55 l befüllt und folgt dem Heizkreis (75/65 °C Nenn, 55/45 °C abgesenkt); Lamellenpaket und Anschlüsse übernehmen dieses Wasser durch ihre Filme, Wanne, Rahmen und Rost bleiben passiv."
+    },
+    {
+     "en": "A fed convector has no nameplate power of its own (ratedPowerW 0, passive): its rated output of about 470 W at 75/65/20 degC (DIN EN 16430, authored estimate for a 2 m trough of 260 x 110 mm) is carried by the warm air of about 0.020 m3/s rising 20 K warmer out of the trough.",
+     "de": "Ein gespeister Konvektor hat keine eigene Nennleistung (ratedPowerW 0, passiv): seine Normleistung von etwa 470 W bei 75/65/20 °C (DIN EN 16430, Schätzwert für eine 2 m lange Wanne 260 x 110 mm) trägt die warme Luft von etwa 0,020 m3/s, die 20 K wärmer aus der Wanne steigt."
+    },
+    {
+     "en": "The area of the heat exchanger is its exchange area (225 fins of 140 x 60 mm on both faces and the tubes, 3.9 m2), not the envelope of the fin pack; black coating, anodised and dusty surfaces carry the emissivities of aged surfaces (Incropera): the dusty fins 0.3 instead of 0.1 when new.",
+     "de": "Die Fläche des Wärmetauschers ist seine Austauschfläche (225 Lamellen 140 x 60 mm beidseitig und die Rohre, 3,9 m2), nicht die Hülle des Lamellenpakets; schwarze Beschichtung, eloxierte und verstaubte Oberflächen haben die Emissionsgrade gealterter Oberflächen (Incropera): die verstaubten Lamellen 0,3 statt 0,1 im Neuzustand."
+    }
+   ]
+  },
+  "structure": {
+   "gravityMS2": 9.81,
+   "dynamics": "quasi-static",
+   "supports": [],
+   "assumptions": [
+    {
+     "en": "No support is permanent: each pose names its contacts. Stored, the 14.7 kg trough lies with its bottom over the four levelling brackets on two 80 x 80 mm softwood bearers that rest with their four ends on the floor (contacts, friction 0.5); carried, two people hold the two frame ends (pins); reinstalled, the four levelling brackets stand on the slab (contacts).",
+     "de": "Kein Auflager ist dauerhaft: jede Pose nennt ihre Kontakte. Gelagert liegt die 14.7 kg schwere Wanne mit ihrem Boden über den vier Nivellierwinkeln auf zwei Nadelholz-Kanthölzern 80 x 80 mm, die mit ihren vier Enden auf dem Boden liegen (Kontakte, Reibung 0,5); getragen halten zwei Personen die beiden Rahmenenden (Gelenke); eingebaut stehen die vier Nivellierwinkel auf der Rohdecke (Kontakte)."
+    },
+    {
+     "en": "The solver treats the whole asset as one rigid body: carried, the 3.6 kg of bearers and the 5.5 kg grille coil left on the floor are counted in the reactions of the carriers, reinstalled they are carried by the trough feet (38 % of the asset weight).",
+     "de": "Der Löser behandelt das ganze Asset als einen starren Körper: getragen gehen die 3.6 kg der Kanthölzer und die 5.5 kg der Rostrolle, die am Boden liegen, in die Reaktionen der Träger ein, eingebaut tragen die Wannenfüße sie (38 % des Assetgewichts)."
+    },
+    {
+     "en": "The trough is a folded open channel of 1.25 mm sheet (A 5.67 cm2, I 67.5 cm4) spanning 1.70 m between the bearers; reinstalled it carries the 0.55 l of water (5.4 N) and the two connection hoses (25 N each); the element, frame and brackets are rigid with it.",
+     "de": "Die Wanne ist ein abgekanteter offener Kanal aus Blech 1,25 mm (A 5.67 cm2, I 67.5 cm4), der 1,70 m zwischen den Kanthölzern spannt; eingebaut trägt sie die 0,55 l Wasser (5,4 N) und die zwei Anschlussschläuche (je 25 N); Wärmetauscher, Rahmen und Halter sind starr mit ihr verbunden."
+    }
+   ],
+   "clinical": false
+  },
+  "presentation": {
+   "defaultPose": "stored",
+   "defaultClip": "lift",
+   "defaultScale": 50
+  },
+  "exports": [
+   "svg",
+   "pdf",
+   "dxf",
+   "dwg",
+   "png-sequence",
+   "mp4",
+   "webm",
+   "component",
+   "glb",
+   "fbx",
+   "model",
+   "model-zip"
+  ],
+  "completion": "authored"
+ }
+}

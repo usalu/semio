@@ -55,6 +55,31 @@ test("a namespace native image left reserved by an aborted birth is protected fr
  });
 },{maximumElapsedMilliseconds:170000}),180000);
 
+/** 🧟️ Proves a reservation whose reserver died before any physical effect (no namespace receipt, no directory) is retired by an appended journal event when the same namespace is born again, never by editing the journal. */
+test("a funded namespace birth retires the orphan reservation of a dead reserver through journal events",()=>repository.invoke(async original=>{
+ const root=repository.root,control=createIssuedResourceControlV1(original,"nx:funded-orphan-namespace",0),value={version:1 as const,toolingIdentity:"1".repeat(64),workspaceRoot:root,graphIdentity:null,implementationIdentity:"2".repeat(64)},nx=repositoryCacheBudgetV1(root).partitions.nx,orphan="0123456789abcdef0123456789abcdef";
+ await owner.prepareNxGraphCacheStorageV1(root,original,control,0);
+ const shard=(root:string)=>owner.nxGraphNativeImageDirectoryV1(root,value),children=async(store:owner.NxGraphCacheStoreV1)=>(await observeNativeStorageStateV1({policy:{version:1 as const,root:store.root,leaseDirectory:join(root,".cache/b/l/m/data"),capacityBytes:nx.capacityBytes,maximumWorkspaceBytes:nx.filesystemBytes,maximumArtifactBytes:nx.maximumArtifactBytes},control,port:store.image.port})).allocations.filter(row=>row.child?.directory===shard(store.root));
+ let journal="",row:Awaited<ReturnType<typeof children>>[number]|undefined;
+ await owner.withNxGraphCacheStoreV1(root,original,control,async store=>{
+  const lease=await owner.acquireNxGraphNamespaceV1(store,value);
+  try{await lease.recheck();row=(await children(store))[0];journal=join(store.root,"storage-events.jsonl");}finally{await lease.release();}
+  let retired=false;for(let attempt=0;attempt<40&&!retired;attempt++){retired=await owner.retireNxGraphNamespaceV1(store,value);if(!retired)await new Promise(done=>setTimeout(done,500));}expect(retired).toBe(true);
+  expect(await children(store)).toHaveLength(0);expect(existsSync(dirname(shard(store.root)))).toBe(false);
+ });
+ const reserved={type:"reserved",allocation:{id:orphan,owner:row!.owner,kind:row!.kind,bytes:row!.bytes,phase:"reserved",child:{...row!.child!,allocation:orphan}}},before=readFileSync(journal,"utf8");
+ writeFileSync(journal,before+JSON.stringify(reserved)+"\n");
+ await owner.withNxGraphCacheStoreV1(root,original,control,async store=>{
+  expect((await children(store)).map(item=>item.id)).toEqual([orphan]);
+  const lease=await owner.acquireNxGraphNamespaceV1(store,value);
+  try{await lease.recheck();const rows=await children(store);expect(rows).toHaveLength(1);expect(rows[0]!.id).not.toBe(orphan);expect(rows[0]!.phase).toBe("committed");}finally{await lease.release();}
+ });
+ const after=readFileSync(journal,"utf8"),events=after.split("\n").filter(Boolean).map(line=>JSON.parse(line)as{type:string;id?:string});expect(after.startsWith(before)).toBe(true);expect(events.filter(event=>event.id===orphan).map(event=>event.type)).toEqual(["retiring","retired"]);
+ await owner.withNxGraphCacheStoreV1(root,original,control,async store=>{
+  let retired=false;for(let attempt=0;attempt<40&&!retired;attempt++){retired=await owner.retireNxGraphNamespaceV1(store,value);if(!retired)await new Promise(done=>setTimeout(done,500));}expect(retired).toBe(true);expect(await children(store)).toHaveLength(0);
+ });
+},{maximumElapsedMilliseconds:170000}),180000);
+
 /** 🕳️ Proves a funded namespace whose physical child an interrupted retirement already removed, whole or down to its creator sidecar, settles its remaining charge instead of failing on the missing directory. */
 for(const[title,letter,removal,retiring]of[["with its namespace","c",(shard:string)=>dirname(shard),false],["leaving only its creator sidecar","e",(shard:string)=>shard,false],["after its retirement began (protected, not retired)","f",(shard:string)=>dirname(shard),true]]as const)test("a funded namespace removed by an interrupted retirement settles its remaining charge, "+title,()=>repository.invoke(async original=>{
  const root=repository.root,control=createIssuedResourceControlV1(original,"nx:funded-removed-namespace",0),value={version:1 as const,toolingIdentity:letter.repeat(64),workspaceRoot:root,graphIdentity:null,implementationIdentity:"d".repeat(64)},nx=repositoryCacheBudgetV1(root).partitions.nx;

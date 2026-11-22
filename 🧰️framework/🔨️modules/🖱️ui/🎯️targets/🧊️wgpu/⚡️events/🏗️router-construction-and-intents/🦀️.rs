@@ -267,7 +267,7 @@ impl EventRouter {
         if item.presence.state == UiState::Disabled || tree_drag_role(item).is_none() {
             return false;
         }
-        if self.tree_drag_driver == UiDriverDrag::Surface {
+        if self.tree_drag_driver == UiDriverDrag::Surface || tree_palette_payload(item.drag_data.as_ref().and_then(|data| data.get(TREE_CATALOGUE_DRAG_MIME)).map(String::as_str)) {
             return true;
         }
         let Some(row_rect) = node_abs_rect(tree, row) else { return false };
@@ -276,7 +276,6 @@ impl EventRouter {
         Rect::new(row_rect.x + relative.x, row_rect.y + relative.y, relative.w, relative.h).contains(x, y)
     }
 
-    //#region 🎬️IntentApi
     /// 🔨️ Turns one fired gesture into an addressed [`UiIntentCommand`] — the wgpu twin of React's
     /// `dispatchTrigger` → `emitIntent` → `UiDocumentStore::buildIntent` chain.
     ///
@@ -345,7 +344,6 @@ impl EventRouter {
         let trailing = if self.tree_drag_driver == UiDriverDrag::Handle && tree_drag_role(item).is_some() { tree_drag_handle_reservation(&metrics) } else { 0.0 };
         semio_ui_wgpu_layout::layout::tree_row_action_at(item, band.w, band.h, trailing, &metrics, x - band.x, y - band.y)
     }
-    //#endregion 🎬️IntentApi
 
     pub(super) fn resolve_target(&self, tree: &UiTree, root: NodeId, x: f32, y: f32) -> Option<NodeId> {
         match self.capture.target {

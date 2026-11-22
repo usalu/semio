@@ -35,5 +35,6 @@ semio-ui-wgpu-layout = { path = "../../../🧱️layout-stack/📦️packages/�
 semio-ui-wgpu-light = { path = "../../../🪶️light/📦️packages/🦀️rust" }
 semio-ui-wgpu-mounted-layout = { path = "../../../📌️mounted_layout/📦️packages/🦀️rust" }
 semio-ui-wgpu-widget-kit = { path = "../../../🪀️widgets/🧰️kit/📦️packages/🦀️rust" }
+semio-framework-pack-json = { path = "../../../../../../🎒️pack/🔤️json/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../../🌱️value/📦️packages/🦀️rust" }
 ui_contract = { path = "../../../../../🧬️contract/📦️packages/🦀️rust", package = "semio-ui-contract" }

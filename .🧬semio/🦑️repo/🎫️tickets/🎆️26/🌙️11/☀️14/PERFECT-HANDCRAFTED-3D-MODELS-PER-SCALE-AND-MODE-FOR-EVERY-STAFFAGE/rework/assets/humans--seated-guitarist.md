@@ -58,3 +58,42 @@ Subject: man, about 1.76 m barefoot (1.78 m in boots), 74 kg, flannel shirt over
 ### Validation and what was looked at
 
 See the next section (appended after the runs).
+
+The runs of the first session were not written down; the state it left was published (source and catalog identical at 13:56) and `--catalog-only` was `VALID`.
+
+## Pass 1 (second round), continued by a second session, 2026-11-22
+
+Script: `T/rework-seated-guitarist-2-forms.py` (idempotent, states every changed solid whole). `T/rig-lateral-rest.md` existed at the start and at the end; the girdles of the first session follow it (clavicles and hip bones on lateral rest placement, limbs re-parented with `rig-rest.ts --solve` frames, right side mirrored by negated `z`, `abductionDeg`, `twistDeg`). Checked in the rig: both sides alike, upper arm 0.327, forearm 0.257, palm 0.105, thigh 0.430, shank 0.435, shoulder centres 0.356 m apart, hip centres 0.18 m apart.
+
+### Looked at (every sheet read at full size)
+
+1:50 body, thermal, structure with rig; 1:50 body front, left and a three-quarter close-up; 1:100, 1:200, 1:500 body and structure; 1:200 and 1:500 thermal; poses `fretting-high`, `resting`, `tuning`; clips `strum-loop` 0.125 s, `chord-change` 1.4 s, `tune-up` 0.5 s; product 2D at 1:50 and 1:100.
+
+### Defects found and rebuilt
+
+| Scale, list | Defect | Now |
+|---|---|---|
+| 1:500 structure | humerus, forearm, femur and tibia thickened to 75 mm rods (validator rule 2 forbids it); femur and tibia lofts twisted into a bow tie because the bent path had no section rotation | humerus 25/22/23 mm, radius 16/15/22 mm, ulna 22/21/15 mm, femur 34/29/40 mm, tibia 38/25/34 mm as `slender` members, sections with `rotation` along the bone; the merged forearm rod is gone |
+| 1:200 structure | forearm one 30 mm rod, humerus 30 mm, femur and tibia 32 mm at the narrowest | the same true shafts as above, `slender` |
+| 1:100 structure | radius and ulna 15.4 mm, fibula 15.4 mm (true 15 and 12 mm) | true shafts, `slender` |
+| 1:100 body | sound box through eight stations: an angular polygon in front and back view | fifteen stations of the dreadnought outline (lower bout 397, waist 273, upper bout 292 mm), top plate the same |
+| 1:100, 1:200 body | sleeves, forearms, thighs and shanks cut off flat at elbow and knee (a disc showed at the bent right knee and at both elbows) | closed with a dome of three sections |
+| all scales, body | shirt shoulder fell away inside the acromion, the sleeve head stood above it as a knob | yoke carried out: half breadth 190 mm at 0.456 m and 140 mm at 0.472 m above L5/S1 at 1:50, one matching station at the coarser scales |
+| 1:200, 1:500 decisions | two sentences claimed finger pads and occipital condyles that these scales do not have | removed; one sentence per scale on this pass added (en, de) |
+
+### Validation
+
+`r3-validate.ts humans/seated-guitarist --volumes`: `VALID humans/seated-guitarist (catalog asset + volumes source): schema 0, validateAsset 0, checkVolumes 0`. Published with `volumes-insert.py`; `--catalog-only --no-print`: `VALID`.
+
+### What remains imperfect
+
+- Not read after the last change: pose `strum-up`, clip instants `strum-loop` 0.375 s, `chord-change` 3.4 s, `tune-up` 2.9 s (rendered, not read); 1:100 thermal; product 2D at 1:200 and 1:500.
+- 2D, front elevation, 1:50 and 1:100: the head has no hair and no beard shape (only a dark rim), the face reads as a mask; the side elevation has both.
+- 1:50 body: hair is one smooth cap with a straight cut at the nape (no hairline, no parting); the right sleeve head still reads as a ball in the three-quarter view; a seam ring shows at the left knee; the trunk is one rigid bone from L5/S1 to C7 (no thoracic or lumbar segment in the rig), so `tuning` leans from the hip only.
+- 1:500 body: stool legs and rung at 76 mm are much heavier than the 30 mm turned legs; they are not declared `slender`.
+- Thermal sheets at 1:200 and 1:500: shirt, sleeves, jeans and boots are drawn grey by `r3-sheet.ts` (regions without a layer have no legend colour); the data validates.
+
+### Fundamental issues
+
+- `S/🔨️modules/🎨️depiction/🌊️flow-view/📐️model/🟦️.ts` (written 14:32 by another session) imported `🧰️framework/…/🎯️portable/🟦️.ts` with six `../` where seven are needed; `r3-2d.ts` failed with `Cannot find module` for some minutes and worked again later. Not touched here.
+- `r3-sheet.ts --list thermal` has no legend colour for a region whose solids carry no layer at the coarse scales (grey solids).

@@ -12,6 +12,10 @@ const DOCUMENT_LOAD_CANCELLED: &str = "document.load-cancelled: the load was can
 pub(super) mod native_save;
 
 #[cfg(not(target_arch = "wasm32"))]
+#[path = "🎛️handle-doors/🦀️.rs"]
+pub(super) mod native_handle_doors;
+
+#[cfg(not(target_arch = "wasm32"))]
 pub(super) mod wasm_program_exchange {
     use super::*;
     use semio_framework_value::DslValue;
@@ -27,11 +31,11 @@ use semio_framework_value::ToValue;
         SEQ.fetch_add(1, Ordering::Relaxed)
     }
 
-    fn encode_wire<T: ToValue>(value: &T) -> Vec<u8> {
+    pub(super) fn encode_wire<T: ToValue>(value: &T) -> Vec<u8> {
         pack_rt::encode_wire_value(&semio_framework_value::ToValue::to_value(value))
     }
 
-    fn decode_wire<T: FromValue>(bytes: &[u8]) -> Result<T, String> {
+    pub(super) fn decode_wire<T: FromValue>(bytes: &[u8]) -> Result<T, String> {
         let value = pack_rt::decode_wire_value(bytes).map_err(|error| error.to_string())?;
         semio_framework_value::FromValue::from_value(value).map_err(|error| error.to_string())
     }
@@ -120,7 +124,7 @@ use semio_framework_value::ToValue;
         ephemeral_snapshots().lock().unwrap_or_else(std::sync::PoisonError::into_inner).remove(&instance_id);
     }
 
-    fn expect_done(frames: &[AppFrame], seq: u64) -> Result<(), ProgramFault> {
+    pub(super) fn expect_done(frames: &[AppFrame], seq: u64) -> Result<(), ProgramFault> {
         if let Some(AppFrame::Error { fault, report, .. }) = frames.iter().find(|frame| matches!(frame, AppFrame::Error { in_reply_to: Some(reply), .. } if *reply == seq)) {
             return Err((app_frame_error_message(fault, report)).into());
         }
@@ -367,11 +371,19 @@ use semio_framework_value::ToValue;
         drive_app_document_archive(client, instance_id, protocol::DocumentArchiveLoadHost::new(archive.clone())).await
     }
 
-    pub(crate) async fn drive_app_document_archive(client: &KernelClient, instance_id: u32, mut host: protocol::DocumentArchiveLoadHost) -> Result<(), ProgramFault> {
+    pub(crate) async fn drive_app_document_archive(client: &KernelClient, instance_id: u32, host: protocol::DocumentArchiveLoadHost) -> Result<(), ProgramFault> {
+        drive_observed_archive(client, instance_id, host, &|| false, &mut |_: &protocol::DocumentArchiveLoadStatus| {}).await.map(|_| ())
+    }
+
+    /// 🔭️ The same admit, poll, cancel and acknowledge drive with the caller's cancellation read before every step and every polled status handed to `progress`; answers the events the program holds that the archive lacks (`0` for a load).
+    pub(crate) async fn drive_observed_archive(client: &KernelClient, instance_id: u32, mut host: protocol::DocumentArchiveLoadHost, cancelled: &impl Fn() -> bool, progress: &mut impl FnMut(&protocol::DocumentArchiveLoadStatus)) -> Result<u64, ProgramFault> {
         loop {
+            if cancelled() {
+                host.request_cancel();
+            }
             let (seq, command) = match host.step(next_seq) {
                 protocol::DocumentArchiveLoadStep::Send { seq, command } => (seq, command),
-                protocol::DocumentArchiveLoadStep::Finished(protocol::DocumentArchiveLoadOutcome::Ready) => return Ok(()),
+                protocol::DocumentArchiveLoadStep::Finished(protocol::DocumentArchiveLoadOutcome::Ready) => return Ok(host.ahead()),
                 protocol::DocumentArchiveLoadStep::Finished(protocol::DocumentArchiveLoadOutcome::Cancelled) => return Err((DOCUMENT_LOAD_CANCELLED.to_string()).into()),
                 protocol::DocumentArchiveLoadStep::Finished(protocol::DocumentArchiveLoadOutcome::Fault(fault)) => return Err((app_frame_error_message(&fault, &[])).into()),
             };
@@ -382,7 +394,11 @@ use semio_framework_value::ToValue;
                 _ => false,
             });
             match answer.map(|frame| host.answer(seq, frame)) {
-                Some(Ok(_)) => {}
+                Some(Ok(status)) => {
+                    if let Some(status) = status {
+                        progress(&status);
+                    }
+                }
                 Some(Err(protocol::DocumentArchiveLoadRefusal::Refused(fault))) => return Err((app_frame_error_message(&fault, &[])).into()),
                 Some(Err(protocol::DocumentArchiveLoadRefusal::Unanswered)) | None => return Err((format!("document archive load: the plugin sent no answer for seq {seq}")).into()),
             }
@@ -517,6 +533,56 @@ use semio_framework_value::ToValue;
     /// native block2d: every `SurfaceVisible` answered no patch, ticket 26/09/23 slice WG8).
     fn kernel_surface_id(instance_id: u32, surface_id: &str) -> String {
         format!("{instance_id}:{surface_id}")
+    }
+
+    /// 🧯️ A fault as the pack bytes a request completion carries.
+    pub fn fault_to_pack(fault: &semio_framework::Fault) -> Vec<u8> {
+        encode_wire(fault)
+    }
+
+    /// 🧯️ The fault a pack of fault bytes decodes to; `None` for anything else.
+    pub fn fault_from_pack(bytes: &[u8]) -> Option<semio_framework::Fault> {
+        decode_wire::<semio_framework::Fault>(bytes).ok()
+    }
+
+    /// 🔁️ A capability's JSON answer as the pack the requester's actor decodes (the browser's `encodePackValue(JSON.parse(..))`).
+    pub fn json_to_pack(json: &str) -> Result<Vec<u8>, String> {
+        let value = semio_framework_pack_json::from_json_str::<DslValue>(json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())?;
+        Ok(encode_wire(&value))
+    }
+
+    /// 📨️ One inbound `Event::Request` to the extension actor `instance` and the `Effect::Respond` the same exchange raised for it.
+    pub async fn answer_extension_request(client: &KernelClient, instance: u32, origin: u32, req: semio_framework::kernel::RequestId, capability: &str, payload: Vec<u8>) -> ExtensionAnswer {
+        let event = Event::Request { req, from: MessageEndpoint::Shell { instance: PluginInstanceId(origin.to_string()) }, capability: capability.to_string(), payload };
+        match client.exchange_events(instance, vec![event]).await {
+            Ok(outcome) => outcome
+                .effects
+                .into_iter()
+                .find_map(|effect| match effect {
+                    Effect::Respond { req: answered, result } if answered == req => Some(match result {
+                        semio_framework::kernel::RequestOutcome::Ok(bytes) => ExtensionAnswer::Ok(bytes),
+                        semio_framework::kernel::RequestOutcome::Err(bytes) => ExtensionAnswer::Fault(bytes),
+                    }),
+                    _ => None,
+                })
+                .unwrap_or(ExtensionAnswer::Unanswered),
+            Err(error) => ExtensionAnswer::Failed(error.to_string()),
+        }
+    }
+
+    /// ✅️ Delivers the one `Event::Completed` of `req` to the requesting `instance`; the answer is an empty invocation carrying the effects that turn raised (the browser's `emptyInvocation(carried)`).
+    pub async fn deliver_extension_completion(client: &KernelClient, instance: u32, req: u64, result: semio_framework::kernel::RequestOutcome) -> Result<InvocationResult, ProgramFault> {
+        let outcome = client.exchange_events(instance, vec![Event::Completed { req: semio_framework::kernel::RequestId(req), result }]).await?;
+        Ok(InvocationResult {
+            output: DslValue::Null,
+            mutations: Vec::new(),
+            inverse_group: UndoGroup { invocation_id: InvocationId(String::new()), mutations: Vec::new(), inverse_mutations: Vec::new(), member_edits: Vec::new() },
+            diagnostics: Vec::new(),
+            requested_effects: outcome.effects,
+            events: Vec::new(),
+            ui_scope: semio_framework::kernel::UiDirtyScope::default(),
+            history_patch: None,
+        })
     }
 
     #[cfg(test)]

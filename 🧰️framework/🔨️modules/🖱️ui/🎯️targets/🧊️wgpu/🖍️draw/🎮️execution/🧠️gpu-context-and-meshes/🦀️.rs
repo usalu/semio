@@ -18,9 +18,9 @@ pub struct GpuContext {
     pub(super) raster_store: RasterTextureTable,
     pub(super) scene_color: Option<SceneColorTarget>,
     pub(super) composite_color: Option<PreparedCompositeTarget>,
-    /// 🫥️ The pooled offscreen target of the open group-alpha group (created at its first group) and that group while its layers are being encoded.
-    pub(super) group_target: Option<PreparedGroupTarget>,
-    pub(super) group_open: Option<semio_ui_draw_contract::GroupAlpha>,
+    /// 🫥️ The pooled offscreen targets of the group-alpha groups, one per nesting level (created at the first group of that level), and the groups open while their layers are being encoded, outermost first.
+    pub(super) group_targets: Vec<Option<PreparedGroupTarget>>,
+    pub(super) group_open: Vec<semio_ui_draw_contract::GroupAlpha>,
     pub(super) accepted_offscreen: Option<(u64, u64)>,
     pub(super) atlas_upload: Option<PreparedAtlasUploadCursor>,
     /// 🧷️ The last prepared world draw whose mesh was not resident at submit, kept for ONE readable
@@ -65,8 +65,8 @@ impl GpuContext {
             raster_store,
             scene_color: None,
             composite_color: None,
-            group_target: None,
-            group_open: None,
+            group_targets: Vec::new(),
+            group_open: Vec::new(),
             accepted_offscreen: None,
             atlas_upload: None,
             missing_world_mesh: None,
@@ -154,8 +154,8 @@ impl GpuContext {
         }
         self.scene_color = None;
         self.composite_color = None;
-        self.group_target = None;
-        self.group_open = None;
+        self.group_targets.clear();
+        self.group_open.clear();
         self.accepted_offscreen = None;
         self.ensure_depth();
     }

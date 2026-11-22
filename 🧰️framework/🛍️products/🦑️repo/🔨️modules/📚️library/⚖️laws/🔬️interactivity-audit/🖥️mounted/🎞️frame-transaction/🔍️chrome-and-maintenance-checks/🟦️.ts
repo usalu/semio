@@ -34,7 +34,7 @@ export function checkTransactionAndMaintenanceOwners({ requireAll, transaction, 
   ], "P5a exact seven-stage mounted transaction is incomplete");
   requireAll(glue, [
     "struct FrameActionOwners",
-    "slots: [Option<ActionDescriptor>; WORLD3D_DEADLINE_CAPACITY]",
+    "slots: [Option<FrameActionEnvelope>; WORLD3D_DEADLINE_CAPACITY]",
     "fn try_push(&mut self, action: ActionDescriptor) -> Result<(), ActionDescriptor>",
     "fn pop_front(&mut self) -> Option<ActionDescriptor>",
     "EFFECT_STORM_BUDGET: u32 = 64",
@@ -145,16 +145,19 @@ export function checkTransactionAndMaintenanceOwners({ requireAll, transaction, 
     "renderer_worker_pool().try_submit(semio_framework_async::Lane::Io, job)",
     "error.into_job()",
     "FrameMaintenanceRefusal { owner: reclaimed, reservation_live: true }",
-    "cursor.cancel.is_cancelled_now()",
+    "cursor.cancel.as_ref().is_none_or(|cancel| cancel.is_cancelled_now())",
     "presentation_authority.witness_for(generation).is_none()",
-    "worker_pool.now_ms() > deadline",
-    "frame_maintenance_terminal_fault(cancelled, stale, deadline_exceeded)",
+    "deadline_ms.is_some_and(|deadline| worker_pool.now_ms() > deadline)",
+    "frame_maintenance_terminal_fault(cancelled, stale)",
+    "else if deadline_passed",
     "cursor.begin_close()",
     "frame_maintenance.release(generation)",
     "execution.finish()",
   ], "P5a maintenance submission does not preserve exact owners across refusal/cancel/stale/deadline/close");
-  requireAll(maintenanceTerminalBoundary, ["if cancelled", "else if stale", "else if deadline_exceeded", "frame maintenance cancelled", "frame maintenance generation became stale", "frame maintenance deadline expired"], "P5a maintenance terminal classifier is incomplete for cancel/stale/deadline");
-  requireAll(maintenanceWorkerTerminalBoundary, ["frame_maintenance_terminal_fault(cancelled, stale, deadline_exceeded)", "cursor.begin_close()", "interaction.frame_fault = Some(fault.to_string())"], "P5a maintenance terminal outcome does not enter retained close before handback");
+  requireAll(maintenanceTerminalBoundary, ["if cancelled", "else if stale", "frame maintenance cancelled", "frame maintenance generation became stale"], "P5a maintenance terminal classifier is incomplete for cancel/stale");
+  if (maintenanceTerminalBoundary.includes("deadline_exceeded") || maintenanceTerminalBoundary.includes("frame maintenance deadline expired") || maintenanceSpawnBoundary.includes("frame maintenance deadline expired")) failures.push("P5a maintenance deadline is still a terminal surface fault");
+  requireAll(maintenanceSpawnBoundary, ["else if deadline_passed", "cursor.shell_maintenance = false"], "P5a a passed maintenance deadline does not defer while its owner is live");
+  requireAll(maintenanceWorkerTerminalBoundary, ["frame_maintenance_terminal_fault(cancelled, stale)", "cursor.begin_close()", "interaction.frame_fault = Some(fault.to_string())"], "P5a maintenance terminal outcome does not enter retained close before handback");
   for (const forbidden of ["KernelPoolFuture::spawn", "let _ = renderer_worker_pool().try_submit", "renderer_worker_pool().submit(", "Lane::Interactive", ".lock()", "loop {", "while "])
     if (maintenanceSpawnBoundary.includes(forbidden)) failures.push(`P5a maintenance submission retains discarded, blocking, interactive-lane, or whole-work ${forbidden}`);
   if (maintenanceOwnerBoundary.includes("self.actions = FrameActionOwners::default()")) failures.push("P5a deferred close bulk-drops the populated action owner");
@@ -272,7 +275,7 @@ export function checkPreferencesAndChromeSteps({ requireAll, prefsBoundary, fixe
     "fn render_tutorial_bar_step",
     "fn render_footer_step",
     "fn render_overlay_step",
-    "fn render_context_menu_step",
+    "fn render_context_menu_levels_step",
     "fn render_chrome_tooltip_step",
     "fn render_chrome_dialog_step",
     "fn render_chrome_tour_step",
@@ -323,11 +326,11 @@ export function checkChromeTextAndEngineFrame({ requireAll, shellSource, shell, 
   readonly interactiveSyncBoundary: string | undefined;
 }) {
   requireAll(shellSource, [
-    "#[cfg(test)]\nfn measure_chrome_group_item",
-    "#[cfg(test)]\nfn render_chrome_group",
+    "pub fn measure_chrome_group_item",
+    "pub fn render_chrome_group",
   ], "P5a legacy whole-string chrome-group oracles are not explicitly test-only");
   for (const forbidden of ["fn measure_chrome_group_item", "fn render_chrome_group"])
-    if (shell.includes(forbidden)) failures.push(`P5a production Shell retains legacy whole-string chrome-group reachability ${forbidden}`);
+    if (new RegExp(`^[\\t ]*${forbidden}\\b`, "mu").test(shell)) failures.push(`P5a production Shell retains legacy whole-string chrome-group reachability ${forbidden}`);
   for (const forbidden of ["draw_text(", "chrome_text(", "measure_text(", "for ch in", "for item in", "loop {", "while "])
     if (chromeGroupStepBoundary?.includes(forbidden)) failures.push(`P5a retained Shell chrome group reaches whole work ${forbidden}`);
   requireAll(chromeDialogBoundary, ["chrome_text_complete_step", "&mut cursor.glyph", "Ok(false) => return false", "cursor.scalar += 1"], "P5a live dialog does not park on the retained glyph cursor");
@@ -335,7 +338,7 @@ export function checkChromeTextAndEngineFrame({ requireAll, shellSource, shell, 
   requireAll(chromeTutorialBoundary, ["fn render_tutorial_bar_step", "chrome_text_complete_step", "&mut cursor.glyph", "Ok(false) => return false"], "P5a mounted tutorial bar does not park dynamic text on the retained glyph cursor");
   requireAll(chromeTutorialBoundary, ["render_retained_chrome_group_item_step", "retained_chrome_group_item_width", "RetainedChromeGroupStep::Pending => return false"], "P5a mounted tutorial groups do not park each output and glyph opportunity");
   requireAll(chromeFooterBoundary, ["render_retained_panel_chrome_item_step", "render_footer_status_step", "Ok(false) => return false"], "P5a mounted footer does not park on retained dynamic utility and sync labels");
-  requireAll(chromeOverlayBoundary, ["fn render_overlay_step", "fn render_context_menu_step", "fn render_chrome_tooltip_step", "fn render_chrome_dialog_step", "fn render_chrome_tour_step", "chrome_text_complete_step", "&mut cursor.glyph", "Ok(false) => return false"], "P5a mounted overlay children do not park dynamic text on the retained glyph cursor");
+  requireAll(chromeOverlayBoundary, ["fn render_overlay_step", "fn render_context_menu_levels_step", "fn render_chrome_tooltip_step", "fn render_chrome_dialog_step", "fn render_chrome_tour_step", "chrome_text_complete_step", "&mut cursor.glyph", "Ok(false) => return false"], "P5a mounted overlay children do not park dynamic text on the retained glyph cursor");
   requireAll(chromeBoundary, ["ShellChromeFramePhase::Error", "chrome_text_complete_step(draw, atlas, error", "&mut cursor.child.glyph", "Ok(false) => return false"], "P5a mounted Shell error path does not park on the retained glyph cursor");
   for (const [boundary, label] of [[chromeTextBoundary, "text callee"], [chromeDialogBoundary, "dialog"], [chromeTourBoundary, "tour"]] as const)
     for (const forbidden of ["draw_text(", "chrome_text(", "for ch in", "for character in", ".chars().for_each", ".chars().count()", "loop {", "while "])

@@ -18,6 +18,9 @@
 // #endregion 🧲️Header
 
 import { readSelectedFilesBoundedV1, requestFileSelectionV1 } from "../../../🧱️elements/🛠️ShellHelpers/🔩️plumbing/📥️downloads-and-file-requests/🟦️.ts";
+import type { WgpuLocalCatalog } from "../🗂️local-catalog/🟦️.ts";
+import { createWgpuPickedFiles, wgpuFormatClaimsJson, type WgpuPickedFiles } from "../🛬️picked-files/🟦️.ts";
+import type { PickedFileFormatCatalogPortV1 } from "../../../🧱️elements/🏛️ShellHost/📂️picked-file-opening/🟦️.ts";
 import { WGPU_HOST_STORAGE_VALUE_MAX_BYTES, wgpuHostStorageCarriesKey, type WgpuHostStorageScope } from "../🧭️boot-descriptor/🟦️.ts";
 import moduleRoutes from "@semio-tech/plugin-registry/deployment/routes.json" with { type: "json" };
 import { formatHostTemporalValuesV1, type HostTemporalFormatPageStateV1, type HostTemporalFormatRequestV1 } from "@semio-tech/ui-contract/presentation/host-temporal-format";
@@ -30,6 +33,13 @@ export type WgpuHostIoRequest =
   | { readonly op: "download-media-export"; readonly filename: string; readonly mimeType: string }
   | { readonly op: "write-clipboard"; readonly text: string }
   | { readonly op: "request-file-open"; readonly accept: string; readonly readAs?: string; readonly multiple?: boolean; readonly maxFileBytes?: number }
+  | { readonly op: "format-claims" }
+  | { readonly op: "local-catalog-admit"; readonly document: import("@semio-tech/framework/config/mutations").LocalDocument }
+  | { readonly op: "local-catalog-retire"; readonly documentId: string }
+  | { readonly op: "sha256-hex"; readonly text: string }
+  | { readonly op: "request-picked-file"; readonly accept: string }
+  | { readonly op: "read-picked-file"; readonly token: number; readonly start: number; readonly end: number }
+  | { readonly op: "release-picked-file"; readonly token: number }
   | { readonly op: "request-native-file-path"; readonly accept?: string }
   | { readonly op: "request-native-folder-path" }
   | { readonly op: "extension-store-list" }
@@ -533,7 +543,7 @@ function createSocketDoor(): (request: Extract<WgpuHostIoRequest, { op: "socket"
 }
 
 /** 🚪️ The page-owned implementation of {@link WgpuHostIo}. */
-export function createWgpuPageHostIo(): WgpuHostIo {
+export function createWgpuPageHostIo(pickedFiles: WgpuPickedFiles = createWgpuPickedFiles(), formatCatalog?: PickedFileFormatCatalogPortV1, localCatalog?: WgpuLocalCatalog): WgpuHostIo {
   const socketDoor = createSocketDoor();
   const temporalProfile: HostTemporalFormatPageStateV1 = { profileRevision: 0, profileSignature: "" };
   return async (requestJson, bytes) => {
@@ -562,6 +572,18 @@ export function createWgpuPageHostIo(): WgpuHostIo {
           progress: () => {},
         });
       return JSON.stringify(opened);
+    }
+    if (request.op === "local-catalog-admit" || request.op === "local-catalog-retire") {
+      if (localCatalog === undefined) throw new Error("wgpu-host-io.local-catalog: no catalog facet");
+      return JSON.stringify(await (request.op === "local-catalog-admit" ? localCatalog.admit(request.document) : localCatalog.retire(request.documentId)));
+    }
+    if (request.op === "format-claims") return wgpuFormatClaimsJson(formatCatalog);
+    if (request.op === "sha256-hex") return Array.from(new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(request.text))), (byte) => byte.toString(16).padStart(2, "0")).join("");
+    if (request.op === "request-picked-file") return JSON.stringify(await pickedFiles.pick(request.accept));
+    if (request.op === "read-picked-file") return socketBytesToBase64((await pickedFiles.read(request.token, request.start, request.end)).slice().buffer);
+    if (request.op === "release-picked-file") {
+      pickedFiles.release(request.token);
+      return "";
     }
     if (request.op === "request-native-file-path") {
       return JSON.stringify(await pickNativeFilePath(request.accept));

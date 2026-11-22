@@ -42,6 +42,11 @@ NOTE = {
     "de": " Überarbeitung vom 22.11.2026: Knochen für Lenden-, Brust- und Halswirbelsäule, Schlüsselbein- und Hüftbeinknochen in seitlicher Ruhelage, Schultergelenke 30 mm tiefer, fünfzehn Fingerknochen je Hand, eine Wirbelsäule aus einzelnen Wirbeln und ein zusammenhängendes Skelett in jedem Maßstab.",
 }
 
+STRUCTURE["50"]["en"] = STRUCTURE["50"]["en"].replace("Braincase, facial bones, mandible, zygomatic arches and orbits", "Braincase, maxilla with the nasal opening, nasal bones, brow ridges, cheekbones, zygomatic arches, orbits and mandible; a coracoid process on each scapula and iliac blades of eight sections from the posterior to the anterior superior spine")
+STRUCTURE["50"]["de"] = STRUCTURE["50"]["de"].replace("Hirnschädel, Gesichtsknochen, Unterkiefer, Jochbögen und Augenhöhlen", "Hirnschädel, Oberkiefer mit Nasenöffnung, Nasenbeine, Brauenwülste, Jochbeine, Jochbögen, Augenhöhlen und Unterkiefer; ein Rabenschnabelfortsatz an jedem Schulterblatt und Darmbeinschaufeln aus acht Schnitten vom hinteren zum vorderen oberen Darmbeinstachel")
+STRUCTURE["100"]["en"] = STRUCTURE["100"]["en"].replace("braincase, facial block and mandible", "braincase, maxilla with cheekbones and mandible")
+STRUCTURE["100"]["de"] = STRUCTURE["100"]["de"].replace("Hirnschädel, Gesichtsblock und Unterkiefer", "Hirnschädel, Oberkiefer mit Jochbeinen und Unterkiefer")
+assert "maxilla" in STRUCTURE["50"]["en"] and "Oberkiefer" in STRUCTURE["50"]["de"] and "maxilla" in STRUCTURE["100"]["en"] and "Oberkiefer" in STRUCTURE["100"]["de"]
 doc = json.load(open(PATH, encoding="utf8"))
 asset = doc["asset"]
 for scale, text in STRUCTURE.items():

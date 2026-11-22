@@ -12,6 +12,16 @@ pub(crate) struct HuffTable {
     max_len: u8,
 }
 
+pub(crate) trait HuffLookup {
+    fn max_len(&self) -> u8;
+    fn symbol(&self, length: u8, code: u16) -> Option<u8>;
+}
+
+impl HuffLookup for HuffTable {
+    fn max_len(&self) -> u8 { self.max_len }
+    fn symbol(&self, length: u8, code: u16) -> Option<u8> { self.decode.get(&(length, code)).copied() }
+}
+
 /// 🏗️ Builds canonical codes per Annex C.2: codes are assigned in symbol
 /// order, incrementing within a length and left-shifting on length change —
 /// same "canonical" spirit as deflate's Huffman but JPEG's table layout
@@ -144,12 +154,12 @@ impl<'a> BitReader<'a> {
         }
         Ok(v)
     }
-    pub(crate) fn decode_symbol(&mut self, table: &HuffTable) -> Result<u8, JpgError> {
+    pub(crate) fn decode_symbol(&mut self, table: &impl HuffLookup) -> Result<u8, JpgError> {
         let mut code: u16 = 0;
-        for len in 1..=table.max_len {
+        for len in 1..=table.max_len() {
             code = (code << 1) | self.read_bit()? as u16;
-            if let Some(v) = table.decode.get(&(len, code)) {
-                return Ok(*v);
+            if let Some(value) = table.symbol(len, code) {
+                return Ok(value);
             }
         }
         Err(JpgError::Malformed("huffman decode: no matching code".into()))
@@ -260,11 +270,12 @@ pub(crate) fn encode_block(bw: &mut BitWriter, coeffs: &[i32; 64], dc_pred: &mut
 
 /// 🧱 Decodes one 8x8 block into zigzag-order quantized coefficients.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn decode_block(br: &mut BitReader<'_>, dc_pred: &mut i32, dc_table: &HuffTable, ac_table: &HuffTable) -> Result<[i32; 64], JpgError> {
+pub(crate) fn decode_block(br: &mut BitReader<'_>, dc_pred: &mut i32, dc_table: &impl HuffLookup, ac_table: &impl HuffLookup) -> Result<[i32; 64], JpgError> {
     let mut out = [0i32; 64];
     let sz = br.decode_symbol(dc_table)?;
     let bits = if sz > 0 { br.read_bits(sz)? } else { 0 };
-    *dc_pred += extend_sign(bits, sz);
+    *dc_pred = dc_pred.checked_add(extend_sign(bits, sz))
+        .ok_or_else(|| JpgError::Malformed("JPEG DC predictor overflow".into()))?;
     out[0] = *dc_pred;
     let mut z = 1usize;
     while z < 64 {
@@ -274,6 +285,7 @@ pub(crate) fn decode_block(br: &mut BitReader<'_>, dc_pred: &mut i32, dc_table: 
         if sz == 0 {
             if run == 15 {
                 z += 16;
+                if z > 64 { return Err(JpgError::Malformed("JPEG zero run overruns the block".into())); }
                 continue;
             }
             break;

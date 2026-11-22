@@ -2,11 +2,12 @@ import {test} from "bun:test";
 import {toolsProgressPaths} from "../../../🟦️.ts";
 import {join} from "node:path";
 import {writeFileSync} from "node:fs";
-import {declareBuildTestEnvelopeV1,withBuildTestInvocationV1} from "../../../../../../../../../../../../🔨️modules/🏃️process/🧪️testing/📥️invocation/🟦️.ts";
+import {withBuildTestInvocationV1} from "../../../../../../../../../../../../🔨️modules/🏃️process/🧪️testing/📥️invocation/🟦️.ts";
+import {declareLibraryBuildTestEnvelopeV1} from "../../../../../../../../🧪️testing/🪪️native-birth/🟦️.ts";
 import {createIssuedResourceControlV1} from "../../../../../../../../../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
 import {acquireResourceLease} from "../../../../../../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
 
-declareBuildTestEnvelopeV1({owner:"test:ready-tools-standing-child",maximumElapsedMilliseconds:60000,capabilities:{artifacts:true}});
+declareLibraryBuildTestEnvelopeV1({suite:"build-remote-execution",maximumElapsedMilliseconds:60000});
 test.skipIf(!process.env.SEMIO_READY_TEST_PRODUCER)("private tools producer",()=>withBuildTestInvocationV1(async original=>{
  const root=process.env.SEMIO_TEST_ARTIFACT_DIR!, registry=process.env.SEMIO_LEASE_REGISTRY_DIRECTORY!;
  const paths=toolsProgressPaths(root,registry)!;

@@ -9,6 +9,37 @@ description = "Component crate of semio-s-artifact-stdio-pdf: mut-base"
 [package.metadata.semio]
 role = "library"
 
+[package.metadata.semio.carve]
+owned = [
+  "standards::v1_7::subsets::base::schema::mutations::append_page_content::tests",
+  "standards::v1_7::subsets::base::schema::mutations::insert_annotation::tests",
+  "standards::v1_7::subsets::base::schema::mutations::insert_content::tests",
+  "standards::v1_7::subsets::base::schema::mutations::insert_object::tests",
+  "standards::v1_7::subsets::base::schema::mutations::move_page::tests",
+  "standards::v1_7::subsets::base::schema::mutations::remove_annotation::tests",
+  "standards::v1_7::subsets::base::schema::mutations::remove_content::tests",
+  "standards::v1_7::subsets::base::schema::mutations::remove_dict_entry::tests",
+  "standards::v1_7::subsets::base::schema::mutations::remove_font::tests",
+  "standards::v1_7::subsets::base::schema::mutations::remove_form::tests",
+  "standards::v1_7::subsets::base::schema::mutations::remove_image::tests",
+  "standards::v1_7::subsets::base::schema::mutations::remove_object::tests",
+  "standards::v1_7::subsets::base::schema::mutations::remove_trailer_entry::tests",
+  "standards::v1_7::subsets::base::schema::mutations::replace_content::tests",
+  "standards::v1_7::subsets::base::schema::mutations::set_annotation::tests",
+  "standards::v1_7::subsets::base::schema::mutations::set_dict_entry::tests",
+  "standards::v1_7::subsets::base::schema::mutations::set_ext_g_state::tests",
+  "standards::v1_7::subsets::base::schema::mutations::set_font::tests",
+  "standards::v1_7::subsets::base::schema::mutations::set_form::tests",
+  "standards::v1_7::subsets::base::schema::mutations::set_image::tests",
+  "standards::v1_7::subsets::base::schema::mutations::set_info::tests",
+  "standards::v1_7::subsets::base::schema::mutations::set_object_value::tests",
+  "standards::v1_7::subsets::base::schema::mutations::set_page_box::tests",
+  "standards::v1_7::subsets::base::schema::mutations::set_page_content::tests",
+  "standards::v1_7::subsets::base::schema::mutations::set_page_rotation::tests",
+  "standards::v1_7::subsets::base::schema::mutations::set_page_user_unit::tests",
+  "standards::v1_7::subsets::base::schema::mutations::set_trailer_entry::tests",
+]
+
 [lints]
 workspace = true
 

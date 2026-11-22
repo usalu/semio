@@ -11,6 +11,12 @@ Feature: Shareable addresses
     When its parameters are written and read again
     Then every setting, including the environment overrides, is equal
 
+  Scenario: The air survives a round trip
+    Given a viewer with a reference environment preset, every environment value set by hand, a logarithmic wind profile, turbulence, parcel life, seed and the detail of the flow marks
+    When its parameters are written and read again
+    Then every setting is equal and the parameters stand in one stable order
+    And a value equal to its default is dropped, a bearing is folded into 0 to 360 degrees and every value is held in its range
+
   Scenario: Defaults write nothing
     Given the default viewer
     Then its address query is empty

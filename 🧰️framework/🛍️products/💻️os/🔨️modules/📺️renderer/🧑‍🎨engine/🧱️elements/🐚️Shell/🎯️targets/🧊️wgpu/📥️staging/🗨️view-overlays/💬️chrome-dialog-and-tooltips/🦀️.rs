@@ -17,6 +17,98 @@ thread_local! {
     static CHROME_DIALOG_GHOST: std::cell::RefCell<Option<DialogGhost>> = const { std::cell::RefCell::new(None) };
 }
 
+/// 🧾️ One paint opportunity of the open context menu, in paint order; every level of the open path is its own glass region.
+pub enum ContextMenuPaintOp {
+    Glass(Rect),
+    Scroll(Rect),
+    Scissor(Rect),
+    Solid(Rect, Rgba),
+    Rounded(Rect, Rgba),
+    Icon { id: String, x: f32, y: f32, size: f32, color: Rgba },
+    Text { value: String, x: f32, y: f32, color: Rgba },
+    Hit { row: Rect, path: Vec<usize> },
+    EndLevel,
+}
+
+fn context_menu_level_ops(ops: &mut Vec<ContextMenuPaintOp>, theme: &Theme, menu: &ContextMenuState, items: &[ContextMenuItem], path_prefix: &[usize], origin: (f32, f32), viewport: (f32, f32)) {
+    let (viewport_w, viewport_h) = viewport;
+    let row_h = theme.control_height;
+    let w = context_menu_level_width(items, theme);
+    let content_h = items.len() as f32 * row_h + 8.0;
+    let h = content_h.min((viewport_h - 8.0).max(row_h + 8.0));
+    let scrollable = content_h > h + 0.5;
+    let scroll = if scrollable { menu.scroll_offset.clamp(0.0, content_h - h) } else { 0.0 };
+    let (x, y) = if path_prefix.is_empty() { (origin.0.clamp(0.0, (viewport_w - w).max(0.0)), origin.1.clamp(0.0, (viewport_h - h).max(0.0))) } else { origin };
+    let rect = Rect::new(x, y, w, h);
+    ops.push(ContextMenuPaintOp::Glass(rect));
+    if scrollable {
+        ops.push(ContextMenuPaintOp::Scroll(rect));
+    }
+    ops.push(ContextMenuPaintOp::Scissor(rect));
+    let (icon_size, ordinal_gap, small) = (theme.font_size_body, theme.font_size_small * 0.85, theme.font_size_small);
+    let mut children = Vec::new();
+    let (mut visual_row, mut ordinal) = (0usize, 0usize);
+    for (index, item) in items.iter().enumerate() {
+        let row_top = rect.y + 4.0 + visual_row as f32 * row_h - scroll;
+        let visible = row_top + row_h > rect.y && row_top < rect.y + rect.h;
+        visual_row += 1;
+        if item.separator {
+            if visible {
+                if item.label.is_empty() {
+                    ops.push(ContextMenuPaintOp::Solid(Rect::new(rect.x + 8.0, row_top + row_h * 0.5, w - 16.0, 1.0), theme.text_muted));
+                } else {
+                    ops.push(ContextMenuPaintOp::Text { value: item.label.clone(), x: rect.x + 8.0, y: row_top + (row_h + small) * 0.5 - 1.0, color: theme.text_muted });
+                }
+            }
+            continue;
+        }
+        ordinal += 1;
+        let row_path: Vec<usize> = path_prefix.iter().copied().chain(std::iter::once(index)).collect();
+        let is_active = context_menu_paths_equal(&menu.active, &row_path);
+        let has_children = !item.children.is_empty();
+        let collapsed = menu.submenu_collapsed_at.as_deref().is_some_and(|at| context_menu_paths_equal(at, &row_path));
+        let submenu_open = (context_menu_submenu_open(&menu.active, &row_path, is_active, has_children) || (is_active && has_children)) && !collapsed;
+        let row = Rect::new(rect.x + 4.0, row_top, w - 8.0, row_h);
+        if visible {
+            let (bg, fg) = if is_active { (theme.accent, theme.active_foreground) } else { (theme.button, theme.text) };
+            let ink = if item.disabled { theme.text_muted } else { fg };
+            let baseline = row.y + (row.h + small) * 0.5 - 1.0;
+            ops.push(ContextMenuPaintOp::Rounded(row, bg));
+            let mut text_x = row.x + 8.0;
+            if ordinal <= 9 {
+                ops.push(ContextMenuPaintOp::Text { value: ordinal.to_string(), x: text_x, y: baseline, color: theme.text_muted });
+                text_x += ordinal_gap;
+            }
+            ops.push(ContextMenuPaintOp::Icon { id: item.icon.clone().unwrap_or_else(|| "circle-dot".into()), x: text_x, y: row.y + (row.h - icon_size) * 0.5, size: icon_size, color: ink });
+            text_x += icon_size + theme.gap_standard;
+            ops.push(ContextMenuPaintOp::Text { value: item.painted_label(), x: text_x, y: baseline, color: ink });
+            if let Some(shortcut) = item.shortcut.as_deref() {
+                let shortcut_w = shortcut.chars().count() as f32 * small * 0.55;
+                ops.push(ContextMenuPaintOp::Text { value: shortcut.to_string(), x: row.x + row.w - 8.0 - shortcut_w, y: baseline, color: theme.text_muted });
+            }
+            ops.push(ContextMenuPaintOp::Hit { row, path: row_path.clone() });
+        }
+        if submenu_open {
+            let child_w = context_menu_level_width(&item.children, theme);
+            let child_x = if row.x + row.w + 4.0 + child_w > viewport_w { (row.x - child_w - 4.0).max(0.0) } else { row.x + row.w + 4.0 };
+            children.push((row_path, (child_x, row.y)));
+        }
+    }
+    ops.push(ContextMenuPaintOp::EndLevel);
+    for (path, origin) in children {
+        if let Some(item) = context_menu_item_at_path(&menu.items, &path) {
+            context_menu_level_ops(ops, theme, menu, &item.children, &path, origin, viewport);
+        }
+    }
+}
+
+/// 🧾️ Every level of the open context menu as paint opportunities: the top level clamped on screen, each open submenu fused beside its parent row (flipping left past the right edge) — React's `ContextMenuController` fusion panels.
+pub fn context_menu_paint_ops(theme: &Theme, menu: &ContextMenuState, viewport: (f32, f32)) -> Vec<ContextMenuPaintOp> {
+    let mut ops = Vec::new();
+    context_menu_level_ops(&mut ops, theme, menu, &menu.items, &[], (menu.x, menu.y), viewport);
+    ops
+}
+
 //#region ShellChrome
 impl<'ctx> OverlaysViewCtx<'ctx> {
     /// 🔐️ Paints the `/hub` workspace as the centered overlay React mounts outside `defaultDock`.
@@ -34,20 +126,27 @@ impl<'ctx> OverlaysViewCtx<'ctx> {
         world_resources: &mut infinite_world::world::World3dBuildContext,
         cx:&mut semio_framework_job::StepContext<'_>,
     ) -> bool {
-        let route_page = !self.directory.hub_workspace_open && self.opening.route_not_found.is_some();
+        let recovery_page = !self.directory.hub_workspace_open && self.opening.plugin_recovery.is_some();
+        let route_page = !self.directory.hub_workspace_open && (recovery_page || self.opening.route_not_found.is_some());
         if !self.directory.hub_workspace_open && !route_page {
             close_chrome_overlay_glass_content(cursor, overlay);
             return true;
         }
-        let surface = if route_page { semio_renderer_wgpu_shell_doc_open::ROUTE_NOT_FOUND_PANEL_ID } else { semio_renderer_wgpu_hub_workspace::hub_connection::FRAMEWORK_HUB_PANEL_ID };
+        let surface = if recovery_page { semio_renderer_wgpu_shell_doc_open::PLUGIN_RECOVERY_PANEL_ID } else if route_page { semio_renderer_wgpu_shell_doc_open::ROUTE_NOT_FOUND_PANEL_ID } else { semio_renderer_wgpu_hub_workspace::hub_connection::FRAMEWORK_HUB_PANEL_ID };
         match cursor.phase {
             0 => {
-                overlay.push_glass([0.0, 0.0, width, height], 0.0, theme.veil_glass(Level::Dialog));
-                input.register_hit(HitTarget { rect: Rect::new(0.0, 0.0, width, height), event: None, control_id: Some(if route_page { "os.route-not-found.scrim" } else { "framework.hub.scrim" }.into()), kind: HitKind::Button, drag_axis: None, drag_data: None });
+                let canvas = Rect::new(0.0, theme.navbar_height, width, (height - theme.navbar_height - theme.footer_height).max(1.0));
+                let scrim = if recovery_page { canvas } else { Rect::new(0.0, 0.0, width, height) };
+                if recovery_page {
+                    overlay.push_rounded([canvas.x, canvas.y, canvas.w, canvas.h], theme.background, 0.0);
+                } else {
+                    overlay.push_glass([0.0, 0.0, width, height], 0.0, theme.veil_glass(Level::Dialog));
+                }
+                input.register_hit(HitTarget { rect: scrim, event: None, control_id: Some(if recovery_page { "os.plugin-recovery.scrim" } else if route_page { "os.route-not-found.scrim" } else { "framework.hub.scrim" }.into()), kind: HitKind::Button, drag_axis: None, drag_data: None });
                 let card_w = (width - theme.padding_standard * 4.0).clamp(320.0, 960.0);
                 let card_h = (height - theme.navbar_height - theme.footer_height - theme.padding_standard * 4.0).clamp(240.0, 760.0);
-                let rect = Rect::new((width - card_w) * 0.5, (height - card_h) * 0.5, card_w, card_h);
-                open_chrome_overlay_glass_content(cursor, overlay, rect, theme.border_radius, theme.glass(Level::Dialog));
+                let rect = if recovery_page { canvas } else { Rect::new((width - card_w) * 0.5, (height - card_h) * 0.5, card_w, card_h) };
+                open_chrome_overlay_glass_content(cursor, overlay, rect, if recovery_page { 0.0 } else { theme.border_radius }, theme.glass(Level::Dialog));
                 cursor.rect = Some(rect);
                 cursor.phase = 1;
             }
@@ -252,6 +351,47 @@ impl<'ctx> OverlaysViewCtx<'ctx> {
         }
         ops.push(AgentApprovalPaintOp::Clicks);
         ops
+    }
+
+    /// 🖱️ Paints the open context menu level by level, one op per grant; a hit registers after its row paints.
+    pub fn render_context_menu_levels_step(&mut self, cursor: &mut ShellChromeChildCursor, overlay: &mut DrawList, atlas: &mut FontAtlas, icons: &IconAtlas, input: &mut InputState<ActionDescriptor>, theme: &Theme, width: f32, height: f32) -> bool {
+        let Some(menu) = self.input.context_menu.as_ref() else {
+            close_chrome_overlay_glass_content(cursor, overlay);
+            return true;
+        };
+        let ops = context_menu_paint_ops(theme, menu, (width, height));
+        let Some(op) = ops.get(cursor.scalar) else {
+            close_chrome_overlay_glass_content(cursor, overlay);
+            return true;
+        };
+        let small = theme.font_size_small;
+        match op {
+            ContextMenuPaintOp::Glass(rect) => open_chrome_overlay_glass_content(cursor, overlay, *rect, theme.border_radius, theme.glass(Level::Menu)),
+            ContextMenuPaintOp::Scroll(rect) => input.register_hit(HitTarget { rect: *rect, event: None, control_id: Some("shell.context.menu.scroll".into()), kind: HitKind::ScrollRegion, drag_axis: None, drag_data: None }),
+            ContextMenuPaintOp::Scissor(rect) => overlay.push_scissor(*rect),
+            ContextMenuPaintOp::Solid(rect, color) => overlay.push_solid([rect.x, rect.y, rect.w, rect.h], *color),
+            ContextMenuPaintOp::Rounded(rect, color) => overlay.push_rounded([rect.x, rect.y, rect.w, rect.h], *color, theme.border_radius),
+            ContextMenuPaintOp::Icon { id, x, y, size, color } => chrome_icon(overlay, icons, id, *x, *y, *size, *color),
+            ContextMenuPaintOp::Text { value, x, y, color } => match chrome_text_complete_step(overlay, atlas, value, *x, *y, (width - *x).max(1.0), small, *color, &mut cursor.glyph) {
+                Ok(false) => return false,
+                Ok(true) => {}
+                Err(()) => {
+                    self.chrome.error = Some("Shell context-menu text exceeded the retained glyph boundary".to_string());
+                    cursor.glyph.reset();
+                }
+            },
+            ContextMenuPaintOp::Hit { row, path } => {
+                if let Some(item) = context_menu_item_at_path(&menu.items, path) {
+                    item.register_hit(*row, input);
+                }
+            }
+            ContextMenuPaintOp::EndLevel => {
+                overlay.pop_scissor();
+                close_chrome_overlay_glass_content(cursor, overlay);
+            }
+        }
+        cursor.scalar += 1;
+        false
     }
 
     pub fn render_chrome_dialog_step(&mut self, cursor: &mut ShellChromeChildCursor, overlay: &mut DrawList, atlas: &mut FontAtlas, input: &mut InputState<ActionDescriptor>, theme: &Theme, width: f32, height: f32) -> bool {
@@ -611,9 +751,7 @@ impl<'ctx> OverlaysViewCtx<'ctx> {
         false
     }
 
-    //#region SilhouetteContent
 
-    //#endregion SilhouetteContent
     /// 💬️ Paints the armed tooltip (item 1) — `AtPointer` placement/dismissal policy sourced from
     /// `ui_wgpu::wgpu::OverlayKind::Tooltip` via a scratch `UiTree` (empty; `Point` anchors never touch it).
     #[cfg(any(test, feature = "testkit"))]
@@ -677,7 +815,7 @@ pub fn chrome_dialog_paint_ops(request: &ChromeDialogRequest, width: f32, height
     let inner_w = (dialog_w - pad * 2.0).max(1.0);
     let glyphs_w = |label: &str| label.chars().count() as f32 * small * 0.62;
     let button_w = |label: &str| (glyphs_w(label) + gap * 4.0).max(72.0).min(inner_w);
-    let trailing: Vec<(ChromeDialogStop, &str)> = request.choices.iter().enumerate().map(|(index, choice)| (ChromeDialogStop::Choice(index), choice.label.as_str())).chain([(ChromeDialogStop::Confirm, request.confirm_label.as_str())]).collect();
+    let trailing: Vec<(ChromeDialogStop, &str)> = request.choices.iter().enumerate().map(|(index, choice)| (ChromeDialogStop::Choice(index), choice.label.as_str())).chain((!request.confirm_action.is_empty()).then_some((ChromeDialogStop::Confirm, request.confirm_label.as_str()))).collect();
     let mut action_rows: Vec<Vec<(ChromeDialogStop, &str, f32, Vec<String>)>> = vec![Vec::new()];
     let mut row_w = 0.0;
     for (stop, label) in trailing {
@@ -698,7 +836,8 @@ pub fn chrome_dialog_paint_ops(request: &ChromeDialogRequest, width: f32, height
     let row_heights: Vec<f32> = action_rows.iter().map(|row| control_h + row.iter().map(|(_, _, _, lines)| if lines.is_empty() { 0.0 } else { gap + lines.len() as f32 * line_small }).fold(0.0, f32::max)).collect();
     let cancel_w = (atlas.measure_text(&request.cancel_label, small).0 + gap * 4.0).max(72.0).min(inner_w);
     let cancel_footer = cancel_w + gap + row_w > inner_w;
-    let body_h = if request.body.is_empty() { 0.0 } else { line_small };
+    let body_lines: Vec<String> = atlas.wrap_lines(&request.body, inner_w, small).into_iter().map(|range| request.body[range].trim().to_string()).filter(|line| !line.is_empty()).collect();
+    let body_h = body_lines.len() as f32 * line_small;
     let actions_h = row_heights.iter().sum::<f32>() + gap * row_heights.len().saturating_sub(1) as f32 + if cancel_footer { gap + control_h } else { 0.0 };
     let dialog_h = pad * 2.0 + line_body + body_h + request.fields.len() as f32 * (line_small + control_h + gap) + gap + actions_h;
     let dialog = Rect::new((width - dialog_w) * 0.5, ((height - dialog_h) * 0.5).max(0.0), dialog_w, dialog_h);
@@ -711,8 +850,8 @@ pub fn chrome_dialog_paint_ops(request: &ChromeDialogRequest, width: f32, height
     let mut y = dialog.y + pad;
     ops.push(text(request.title.clone(), x, y + body, body, theme.text));
     y += line_body;
-    if !request.body.is_empty() {
-        ops.push(text(request.body.clone(), x, y + small, small, theme.text_muted));
+    for line in body_lines {
+        ops.push(text(line, x, y + small, small, theme.text_muted));
         y += line_small;
     }
     for (index, field) in request.fields.iter().enumerate() {
@@ -878,7 +1017,6 @@ pub fn intersect_content_rect(left: Rect, right: Rect) -> Option<Rect> {
 
 /// 📏️ Shared width pass for a menu level — also used to size a submenu BEFORE deciding which side of
 /// its parent row it opens on (see `render_context_menu_level`'s flip-left check).
-#[cfg(any(test, feature = "testkit"))]
 pub fn context_menu_level_width(items: &[ContextMenuItem], theme: &Theme) -> f32 {
     let mut w = 180.0;
     for item in items.iter().filter(|item| !item.separator || !item.label.is_empty()) {

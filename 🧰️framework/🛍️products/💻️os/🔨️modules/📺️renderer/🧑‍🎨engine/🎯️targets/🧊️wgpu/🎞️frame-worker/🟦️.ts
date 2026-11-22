@@ -66,7 +66,7 @@ installWgpuDynamicExtensionDoor(globalThis, async (record) => {
   const previous = dynamicExtensionModules.get(record.extensionId);
   dynamicExtensionModules.delete(record.extensionId);
   await previous?.dispose();
-  const module = await monitoredSuspension(`extension-install:${record.extensionId}`, () => loadPluginModule(record.extensionId, record.moduleUrl, bootAbort.signal, undefined, consumedTopics(record.extensionId)), suspensionLedger);
+  const module = await monitoredSuspension(`extension-install:${record.extensionId}`, () => loadPluginModule(record.extensionId, record.moduleUrl, bootAbort.signal, undefined, consumedTopics(record.extensionId), record.extends), suspensionLedger);
   dynamicExtensionModules.set(record.extensionId, module);
   void primeContributionManifest(record.extensionId, record.moduleUrl).catch(() => {});
   return { handle: pluginHandleForBridge(module), manifest: module.manifest };

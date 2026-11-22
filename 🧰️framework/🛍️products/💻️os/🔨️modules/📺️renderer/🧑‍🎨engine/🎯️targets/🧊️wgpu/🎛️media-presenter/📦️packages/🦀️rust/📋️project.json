@@ -1,0 +1,7 @@
+{
+  "name": "@semio-tech/os-renderer-wgpu-media-presenter-rs",
+  "tags": [
+    "scope:framework",
+    "language:rust"
+  ]
+}

@@ -1,0 +1,12 @@
+
+## used-forced-draught-oil-burner — support solids of pose-switched supports
+
+The check CLI (`support-switched`) refuses an anchor in `structure.supports` that a pose or clip contact span switches off, while `volume-anchor` refuses a `support` solid whose anchor is not in `structure.supports`. A component whose support changes from pose to pose (stored: crate seat; lifted: two hand grips; reinstalled: door flange) therefore cannot show its lift or door supports in the structure volume at all. Measured on this asset: 4 anchors (burner-seat, grip-front, grip-rear, door-flange) with support solids gave 16 `volume-anchor` findings once removed from `structure.supports`. Proposal: let a `support` solid name any anchor of kind `support` or `contact` that a pose or clip lists in `contacts`, and draw it only in those poses. Worked around: only the permanent skid supports are in `structure.supports` and carry support solids; the other supports are anchors used by the pose contacts.
+
+## used-wall-hung-gas-boiler — manifest row lost after publish
+
+Measured: the asset was published (row inserted, collection `used-hvac-components` at 7 assets). In a later session the catalog manifest `🗂️catalog/🔣️.json` held neither the `used-wall-hung-gas-boiler` entry nor its collection membership (collection at 8 assets without it), while the catalog document itself was still byte-identical to the candidate. The likely cause is a manifest write from outside `publish.ts`'s lock (another tool or a replica last-writer-wins overwrite based on an older manifest). Re-published with `publish.ts`; row and membership present once. Proposal: the coordinator re-runs `publish.ts` for every slug of the wave (idempotent: "row replaced") after the wave, or checks every published slug has its manifest row before the catalog suites.
+
+## used-wall-hung-gas-boiler — manifest row lost a second time
+
+Verification on 2026-11-22 found the row `used-wall-hung-gas-boiler` and its membership of `used-hvac-components` missing again (collection listed 8 assets without it), after they had been restored once. `publish.ts` writes under the lock, so some other writer of `S/🗂️catalog/🔣️.json` probably rewrites the manifest from a stale copy without taking the shared lock. Re-published (`collection used-hvac-components has 9 assets; powerW 24085`). Proposal: the coordinator re-runs `publish.ts` for every published slug of both waves after the last author finishes, and checks every manifest writer for the shared lock.

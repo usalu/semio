@@ -34,7 +34,7 @@
   },
   "emojiProjectJsonNodes": {
    "file": "projectNodes",
-   "start": "export async function emojiProjectJsonNodes(",
+   "start": "export function emojiProjectJsonNodes(",
    "end": "const results = (await Promise.all(configFiles"
   },
   "routerKeptFromSourceV1": {

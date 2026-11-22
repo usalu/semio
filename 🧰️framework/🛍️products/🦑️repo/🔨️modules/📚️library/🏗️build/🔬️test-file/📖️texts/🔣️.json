@@ -87,6 +87,10 @@
       "en": "FAILED  {file} ({suite}, {seconds} s{counts})",
       "de": "FEHLGESCHLAGEN  {file} ({suite}, {seconds} s{counts})"
     },
+    "row.error": {
+      "en": "  error: {error}",
+      "de": "  Fehler: {error}"
+    },
     "row.skipped": {
       "en": "SKIPPED (not passed)  {file} ({suite}: not declared for this host)",
       "de": "ÜBERSPRUNGEN (nicht bestanden)  {file} ({suite}: für diesen Rechner nicht deklariert)"

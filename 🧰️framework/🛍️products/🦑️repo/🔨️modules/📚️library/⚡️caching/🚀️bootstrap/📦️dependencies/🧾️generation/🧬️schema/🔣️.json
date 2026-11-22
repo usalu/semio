@@ -37,7 +37,7 @@
           "mode"
         ],
         "projectionDigestUnits": 32,
-        "walkStamp": "semio.dependency-generation-walk/3",
+        "walkStamp": "semio.dependency-generation-walk/4",
         "producer": {
           "scopeFiles": {
             "$manager": "producerInputs.scopeFiles"
@@ -460,6 +460,7 @@
       "additionalProperties": false,
       "required": [
         "path",
+        "owner",
         "sha256",
         "profileSha256"
       ],
@@ -468,6 +469,9 @@
           "type": "string",
           "minLength": 1,
           "maxLength": 2048
+        },
+        "owner": {
+          "$ref": "#/$defs/Scope"
         },
         "sha256": {
           "type": "string",

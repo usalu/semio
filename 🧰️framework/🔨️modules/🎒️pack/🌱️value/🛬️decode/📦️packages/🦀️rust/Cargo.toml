@@ -37,6 +37,7 @@ semio-framework-value-native-owned = { path = "../../../../../🌱️value/🛬�
 
 [dev-dependencies]
 semio-framework-value-testing-allocator = { path = "../../../../../🌱️value/🧪️testing/💾️allocator/📦️packages/🦀️rust" }
+semio-framework-value-testing-effect-bank = { path = "../../../../../🌱️value/🧪️testing/📥️admission/🎟️effect/📦️packages/🦀️rust" }
 semio-framework-pack-record = { path = "../../../📦️packages/🦀️rust" }
 semio-framework-trace = { path = "../../../../../⏱️trace/📦️packages/🦀️rust" }
 semio-framework-trace-memory-testing = { path = "../../../../../⏱️trace/🧮️memory/🧪️testing/📥️requests/📦️packages/🦀️rust" }

@@ -2,13 +2,8 @@
 # Native fallback of `repo run @semio-tech/semio-tech-play:build` when the graph service stalls. Usage: native-play.sh <prereqs|site|all|routing|browsers|verify|step NAME CWD CMD...>
 set -uo pipefail
 T="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)" || exit 1
-ROOT="$T"
-while [ ! -d "$ROOT/.🧬semio" ]; do
-  parent="$(dirname "$ROOT")"
-  [ "$parent" != "$ROOT" ] || exit 1
-  ROOT="$parent"
-done
-G="$T/🗑️generated/native"; mkdir -p "$G/done"
+ROOT="$(git -C "$T" rev-parse --show-toplevel)" || exit 1
+G="${NATIVE_PLAY_OUT:-$T/🗑️generated/native}"; export NATIVE_PLAY_OUT="$G"; mkdir -p "$G/done"
 export SEMIO_BUILD_MODE=release SEMIO_WORKSPACE_ROOT="$ROOT" SEMIO_TICKET_DIR="$T" SEMIO_UNIT_CACHE="${SEMIO_UNIT_CACHE:-off}"
 step() { local name="$1" cwd="$2"; shift 2
   if [ -f "$G/done/$name" ] && [ -z "${FORCE:-}" ]; then echo "[skip] $name"; return 0; fi

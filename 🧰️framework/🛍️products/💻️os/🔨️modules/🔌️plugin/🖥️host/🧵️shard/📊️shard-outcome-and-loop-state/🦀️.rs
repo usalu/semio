@@ -186,6 +186,8 @@ pub struct ShardLoop {
     pub running_jobs: BTreeSet<(u64, u64)>,
     /// 🪪️ Active replay identity and sequence cursor for every running job.
     pub job_turns: HashMap<(u64, u64), JobTurn>,
+    /// 🛰️ The last live-job snapshot a child-process shard told its parent, so an unchanged ledger is not sent again.
+    pub sent_job_snapshot: Option<Vec<u8>>,
     /// 📰️ Independently minted operation identity retained from spawn until terminal outcome.
     pub job_authorities: HashMap<(u64, u64), JobAuthority>,
     /// 📄️ Fixed, generation-qualified original spawn owners retained for live restart and replay.

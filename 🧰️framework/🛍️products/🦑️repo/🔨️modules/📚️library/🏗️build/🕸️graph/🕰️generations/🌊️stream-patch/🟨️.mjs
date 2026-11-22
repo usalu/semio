@@ -136,7 +136,8 @@ export async function patchFactIndexBytesV1(view,{drop=[],upserts=new Map(),appe
  await streamUpsertClassesV1({names:[...upserts.keys()].sort(compareCodePointsV1),rowBatches:name=>{const source=upserts.get(name);return source!==null&&typeof source==="object"&&source.ids instanceof Uint32Array&&source.log!==undefined?numberedBatchesV1(source,memos,idOfRow,pause):batchesOf(source);},ownerIds,idOfRow,rowCount:oldRows,classes,bulk:pairs>=INDEX_CHUNK_POLICY_V1.bulkUpsertRows,pause});
  for(const name of[...append.keys()].sort(compareCodePointsV1)){
   const owner=idOf(name),ids=new Set();
-  for await(const batch of batchesOf(append.get(name)))for(const row of batch)ids.add(idOfRow(row));
+  const source=append.get(name),numbered=source!==null&&typeof source==="object"&&source.ids instanceof Uint32Array&&source.log!==undefined;
+  for await(const batch of numbered?numberedBatchesV1(source,memos,idOfRow,pause):batchesOf(source)){const mapped=batch instanceof Uint32Array;for(const item of batch)ids.add(mapped?item:idOfRow(item));}
   classes.push({r:Uint32Array.from(ids).sort(),o:Uint32Array.of(owner)});
  }
  added.clear();byObject.clear();decoded.clear();memos.clear();paths=undefined;

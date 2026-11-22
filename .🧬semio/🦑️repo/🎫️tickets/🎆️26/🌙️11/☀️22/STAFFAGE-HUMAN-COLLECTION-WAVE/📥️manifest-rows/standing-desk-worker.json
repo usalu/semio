@@ -1,0 +1,51 @@
+{
+  "id": "standing-desk-worker",
+  "category": "humans",
+  "title": {
+    "en": "Standing Desk Worker",
+    "de": "Person am Stehpult"
+  },
+  "heightM": 1.786,
+  "widthM": 1.068,
+  "powerW": 422.7,
+  "poses": [
+    "typing",
+    "touchpad-scrolling",
+    "reading-arms-crossed"
+  ],
+  "clips": [
+    "typing",
+    "idle-breathing"
+  ],
+  "representations": {
+    "50": "authored",
+    "100": "authored",
+    "200": "authored",
+    "500": "authored"
+  },
+  "symbols": [],
+  "analytics": [
+    "thermal",
+    "transport",
+    "structural"
+  ],
+  "exports": [
+    "svg",
+    "pdf",
+    "dxf",
+    "dwg",
+    "png-sequence",
+    "mp4",
+    "webm",
+    "component",
+    "glb",
+    "fbx",
+    "model",
+    "model-zip"
+  ],
+  "distinction": {
+    "en": "A tall woman at a dual-motor sit-stand desk raised to standing height, typing on an open 15.6-inch laptop with pronated forearms and curled fingers on the home row; the desk stands on its own contact, the laptop (65 W) and the desk drives (200 W) carry nameplates.",
+    "de": "Eine große Frau an einem auf Stehhöhe hochgefahrenen Sitz-Steh-Tisch mit zwei Motoren, die mit einwärts gedrehten Unterarmen und gekrümmten Fingern auf der Grundreihe auf einem offenen 15,6-Zoll-Laptop tippt; der Tisch steht auf eigenem Kontakt, Laptop (65 W) und Tischantriebe (200 W) tragen Typenschilder."
+  },
+  "completion": "authored"
+}

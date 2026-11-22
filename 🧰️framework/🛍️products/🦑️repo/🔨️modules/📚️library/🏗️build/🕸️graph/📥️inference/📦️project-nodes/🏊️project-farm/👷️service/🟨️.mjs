@@ -5,7 +5,7 @@ import { adoptInferenceAuthorityV1, inferenceRecordIdentityV1, observeInferenceS
 import { shrinkBoundedCachesV1 } from "../../../../../../🏗️build/🧊️bounded/🟨️.mjs";
 import { withImplementationPinV1 } from "../../../../../../🏗️build/📥️inputs/🔏️revision/🟨️.mjs";
 import { withBuildGraphStagingV1 } from "../../../../../../🏗️build/📥️inputs/💾️storage/🟨️.mjs";
-import { createProjectInferenceEnvironmentV1, lookOwnersV1, observeProjectRecordV1, produceProjectRecordV1, warmProjectRecordV1 } from "../../🟨️.mjs";
+import { adoptProjectInferenceRegistryV1, createProjectInferenceEnvironmentV1, lookOwnersV1, observeProjectRecordV1, produceProjectRecordV1, warmProjectRecordV1 } from "../../🟨️.mjs";
 import { graphFarmIdentityV1 } from "../🪆️captured/🟨️.mjs";
 import poolSchema from "../🏊️pool/🧬️schema/🔣️.json" with { type: "json" };
 
@@ -41,6 +41,7 @@ function leafNameV1(path) {
 
 /** ▶️ Infers one project into the staging directory under the key and scope its parent uses, and answers the names of the leaves it published (the record, the blocks and receipts it wrote and the pack files of its record store), its cpu time and `peakMegabytes`, the memory THIS process grew by while it inferred (its peak over its resident size at the start of the job: the child's own need, never the parent's growth). */
 export async function run(job) {
+  adoptProjectInferenceRegistryV1(environment, job.registryDigest);
   if (job.warm === true) return warmProjectRecordV1(environment, job);
   if (job.look === true) return stagedWithinV1(join(staging, "look"), () => lookOwnersV1(environment, job));
   if (job.observe === true) return stagedWithinV1(join(staging, "observe"), () => observeProjectRecordV1(environment, job));

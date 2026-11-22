@@ -35,6 +35,20 @@ fn gis_component_assembly_declares_exact_package_identity_before_descriptor_emis
     assert_eq!(semio_s_artifact_gis_gismap::artifact_kind().id, fixture["artifacts"][0]["kind"].as_str().unwrap());
 }
 
+/// 🔀️ The navbar role switch renders only when ONE plugin manifest holds an editor and a viewer whose dialect coordinates are equal (`surfaceRoleAppsV1`), so each GIS artifact must publish exactly that pair.
+#[test]
+fn gis_manifest_publishes_one_editor_viewer_pair_per_artifact_dialect() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🪪️artifact-identity/🔣️.json")).unwrap();
+    let plugin = super::plugin().expect("GIS component must assemble");
+    for row in fixture["artifacts"].as_array().unwrap() {
+        let native = row["nativeDialect"].as_str().unwrap();
+        let pick = |role: semio_framework::AppRole| plugin.manifest.apps.iter().filter(|app| app.role == role && app.id.starts_with(native)).collect::<Vec<_>>();
+        let (editors, viewers) = (pick(semio_framework::AppRole::Editor), pick(semio_framework::AppRole::Viewer));
+        assert_eq!((editors.len(), viewers.len()), (1, 1), "{native} publishes exactly one editor and one viewer");
+        assert_eq!(editors[0].dialect, viewers[0].dialect, "{native} editor and viewer share one dialect coordinate");
+    }
+}
+
 /// 🧪️ Contract §2.5 — the read-only guarantee for a viewer whose ONE verb travels the RETAINED route,
 /// stated as the energy model viewer states it. `assert_viewer_never_mutates` drives `ViewerApp::handle`,
 /// the stateless seam; since the map viewer's `setCamera` became `InteractiveJobClassification::Migrated`

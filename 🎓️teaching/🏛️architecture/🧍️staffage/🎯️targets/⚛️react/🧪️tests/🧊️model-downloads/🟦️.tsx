@@ -39,6 +39,11 @@ describe("🧊️ GLB per pose", () => {
     const variants = (loaded.parser.json.extensions?.KHR_materials_variants?.variants ?? []).map((variant: { name: string }) => variant.name).sort();
     expect(variants).toEqual(["dark-line", "dark-solid", "forces", "light-line", "light-solid", "moments", "thermal"]);
     expect(loaded.animations).toHaveLength(0);
+    const nodes = loaded.parser.json.nodes as { name: string; mesh?: number; extras?: { tags?: string[] } }[];
+    const flow = nodes.filter((node) => node.extras?.tags?.includes("flow") === true && node.mesh !== undefined);
+    expect(flow.length, "the download carries the air flow as geometry").toBeGreaterThan(4);
+    for (const node of flow) expect(node.name).toMatch(/^s\d+-thermal-flow-(stream-\d+|vapour|fog)$/u);
+    expect(nodes.filter((node) => /emitter/u.test(node.name))).toEqual([]);
   });
 
   it("is the same bytes for the same request and takes the pose the request names, not the current one", async () => {

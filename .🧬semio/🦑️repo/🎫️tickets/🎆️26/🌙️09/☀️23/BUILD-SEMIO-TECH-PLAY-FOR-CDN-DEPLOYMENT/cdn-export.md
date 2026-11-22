@@ -5,6 +5,7 @@
 Needs a finished release cohort in `.cache/b/p/m/play/release/pages` (from `build`); it does not depend on `build`.
 
 ```
+# SEMIO_BUILD_MODE=release must be set: build, verify, export and test-release refuse an unset or prototype mode
 repo run @semio-tech/semio-tech-play:release-export                  # -> 🏢️semio-tech/🎡️play/dist/cdn
 repo run @semio-tech/semio-tech-play:release-export -- /some/folder  # custom, must be missing or empty
 ```

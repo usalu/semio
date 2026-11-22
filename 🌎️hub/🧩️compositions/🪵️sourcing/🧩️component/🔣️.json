@@ -7056,7 +7056,6 @@
             "children": [
               {
                 "kind": "stack",
-                "size": 0.34,
                 "children": [
                   {
                     "kind": "window",
@@ -7096,7 +7095,6 @@
               },
               {
                 "kind": "stack",
-                "size": 0.33,
                 "children": [
                   {
                     "kind": "window",

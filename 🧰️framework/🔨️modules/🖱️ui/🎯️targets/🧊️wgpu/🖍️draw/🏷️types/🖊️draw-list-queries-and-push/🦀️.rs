@@ -126,7 +126,7 @@ impl DrawList {
         self.clip_stack.clear();
         self.glass_content_stack.clear();
         self.motion_pending = false;
-        self.active_group = None;
+        self.group_stack = [None; GROUP_ALPHA_DEPTH];
         self.retained_output = None;
     }
 
@@ -139,7 +139,7 @@ impl DrawList {
             scissor = parent.intersect(&scissor);
         }
         self.scissor_stack.push(scissor);
-        self.layers.push(DrawLayer { scissor: Some(scissor), clip: self.clip_stack.last().cloned(), foreground_of: self.active_foreground_of(), group: self.active_group, ..DrawLayer::default() });
+        self.layers.push(DrawLayer { scissor: Some(scissor), clip: self.clip_stack.last().cloned(), foreground_of: self.active_foreground_of(), group: self.active_group(), ..DrawLayer::default() });
     }
 
     pub fn pop_scissor(&mut self) {
@@ -148,7 +148,7 @@ impl DrawList {
         }
         self.scissor_stack.pop();
         let parent = self.scissor_stack.last().copied();
-        self.layers.push(DrawLayer { scissor: parent, clip: self.clip_stack.last().cloned(), foreground_of: self.active_foreground_of(), group: self.active_group, ..DrawLayer::default() });
+        self.layers.push(DrawLayer { scissor: parent, clip: self.clip_stack.last().cloned(), foreground_of: self.active_foreground_of(), group: self.active_group(), ..DrawLayer::default() });
     }
 
     /// ✂️ Clips subsequent draw content to an exact union of non-overlapping rectangles.
@@ -190,7 +190,7 @@ impl DrawList {
             clip = parent.intersect(&clip);
         }
         self.clip_stack.push(clip.clone());
-        self.layers.push(DrawLayer { scissor: self.scissor_stack.last().copied(), clip: Some(clip), foreground_of: self.active_foreground_of(), group: self.active_group, ..DrawLayer::default() });
+        self.layers.push(DrawLayer { scissor: self.scissor_stack.last().copied(), clip: Some(clip), foreground_of: self.active_foreground_of(), group: self.active_group(), ..DrawLayer::default() });
         true
     }
 
@@ -199,7 +199,7 @@ impl DrawList {
             return;
         }
         self.clip_stack.pop();
-        self.layers.push(DrawLayer { scissor: self.scissor_stack.last().copied(), clip: self.clip_stack.last().cloned(), foreground_of: self.active_foreground_of(), group: self.active_group, ..DrawLayer::default() });
+        self.layers.push(DrawLayer { scissor: self.scissor_stack.last().copied(), clip: self.clip_stack.last().cloned(), foreground_of: self.active_foreground_of(), group: self.active_group(), ..DrawLayer::default() });
     }
 
     pub fn push_scene_pass(&mut self, mut pass: ScenePass3d) {
@@ -345,7 +345,7 @@ impl DrawList {
         }
         let index = self.glass_regions.len();
         let layer_index = self.layers.len();
-        self.layers.push(DrawLayer { scissor: self.scissor_stack.last().copied(), clip: self.clip_stack.last().cloned(), foreground_of: self.active_foreground_of(), group: self.active_group, ..DrawLayer::default() });
+        self.layers.push(DrawLayer { scissor: self.scissor_stack.last().copied(), clip: self.clip_stack.last().cloned(), foreground_of: self.active_foreground_of(), group: self.active_group(), ..DrawLayer::default() });
         self.glass_regions.push(GlassRegion { layer_index, rect, radius, tint: style.tint, alpha: style.alpha, blur_px: style.blur_px, saturate: style.saturate });
         index
     }
@@ -355,7 +355,7 @@ impl DrawList {
             return;
         }
         self.glass_content_stack.push(region);
-        self.layers.push(DrawLayer { scissor: self.scissor_stack.last().copied(), clip: self.clip_stack.last().cloned(), foreground_of: Some(region), group: self.active_group, ..DrawLayer::default() });
+        self.layers.push(DrawLayer { scissor: self.scissor_stack.last().copied(), clip: self.clip_stack.last().cloned(), foreground_of: Some(region), group: self.active_group(), ..DrawLayer::default() });
     }
 
     pub fn end_glass_content(&mut self) {
@@ -363,7 +363,7 @@ impl DrawList {
             return;
         }
         self.glass_content_stack.pop();
-        self.layers.push(DrawLayer { scissor: self.scissor_stack.last().copied(), clip: self.clip_stack.last().cloned(), foreground_of: self.active_foreground_of(), group: self.active_group, ..DrawLayer::default() });
+        self.layers.push(DrawLayer { scissor: self.scissor_stack.last().copied(), clip: self.clip_stack.last().cloned(), foreground_of: self.active_foreground_of(), group: self.active_group(), ..DrawLayer::default() });
     }
 
     pub fn push_glyph(&mut self, rect: [f32; 4], color: Rgba, uv_rect: [f32; 4]) {

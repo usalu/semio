@@ -27,14 +27,14 @@ export interface GenerationProducerV1{readonly files:readonly GenerationProducer
 export interface GenerationReceiptV1{
  readonly version:1;readonly purpose:"dependency-generation-receipt";readonly scope:string;readonly walkStamp:string;readonly runtime:GenerationRuntimeV1;readonly producer:GenerationProducerV1;readonly recipeSha256:string;readonly ownershipSha256:string;readonly required:readonly string[];
  readonly inputs:readonly Readonly<{scope:string;sources:readonly Readonly<{path:string;kind:"file"|"directory"|"missing";dev:string;ino:string;mode:number;sha256:string|null;profileSha256:string|null}>[]}>[];
- readonly membership:Readonly<{frontier:GenerationEvidenceV1;texts:readonly Readonly<{path:string;sha256:string;profileSha256:string|null}>[]}>;
+ readonly membership:Readonly<{frontier:GenerationEvidenceV1;texts:readonly Readonly<{path:string;owner:string;sha256:string;profileSha256:string|null}>[]}>;
  readonly bindings:readonly Readonly<{scope:string;pairs:readonly Readonly<{source:string;target:string}>[];observationSha256:string}>[];
  readonly ready:readonly Readonly<{scope:string;generation:string;location:string;fingerprint:string}>[];
  readonly execution:Readonly<{evidence:GenerationEvidenceV1;scopes:readonly Readonly<{scope:string;sha256:string}>[];runtimeSha256:string}>;
  readonly scopeReadSha256:string;readonly sha256:string;
 }
 /** 🌳️ Reports exactly what the ownership walk retained: directory listings, path states and manifest texts. */
-export interface GenerationMembershipV1{readonly root:string;readonly paths:readonly Readonly<{path:string;state:readonly (string|number)[];list?:readonly Readonly<{name:string;kind:string}>[]}>[];readonly texts:readonly Readonly<{path:string;sha256:string;profileSha256?:string|null}>[]}
+export interface GenerationMembershipV1{readonly root:string;readonly paths:readonly Readonly<{path:string;state:readonly (string|number)[];list?:readonly Readonly<{name:string;kind:string}>[]}>[];readonly texts:readonly Readonly<{path:string;owner:string;sha256:string;profileSha256?:string|null}>[]}
 /** 🔭️ Reports one physical observation of the provider walk exactly as it replays them; stamp and anchor are the colon-joined decimal fields named by the protocol. */
 export interface GenerationObservationV1{readonly path:string;readonly stamp:string|null;readonly anchor:string|null;readonly kind:string;readonly target:string|null;readonly full:boolean}
 /** 📥️ Collects everything a completed walk produced; nothing else may enter a receipt. */
@@ -137,7 +137,7 @@ const deferred=(reason:string,path?:string):GenerationCaptureResultV1=>Object.fr
 export async function captureGenerationReceiptV1(input:GenerationCaptureInputV1):Promise<GenerationCaptureResultV1>{
  const{workspace,storeRoot,control,membership}=input,threshold=BigInt(Math.trunc(input.startedAtMs)-protocol.settleMilliseconds)*1000000n;let work=0;
  const advance=async()=>{if(++work%protocol.checkWork===0)control.check();if(work%protocol.progressWork===0)await control.tick(work);};
- const frontier=evidenceSinkV1(protocol.frontierSuffix),listed=new Map<string,number>(),memo=new Map<string,boolean>(),rowsOf=membership.paths,count=rowsOf.length;
+ const scoped=new Set(input.required),foreign=new Set(membership.texts.filter(row=>!scoped.has(row.owner)).map(row=>row.path)),frontier=evidenceSinkV1(protocol.frontierSuffix),listed=new Map<string,number>(),memo=new Map<string,boolean>(),rowsOf=membership.paths,count=rowsOf.length;
  for(let index=0;index<count;index++){const row=rowsOf[index]!;if(row.list)listed.set(row.path,index);}
  const relevant=(path:string):boolean=>{
   const known=memo.get(path);if(known!==undefined)return known;
@@ -147,7 +147,7 @@ export async function captureGenerationReceiptV1(input:GenerationCaptureInputV1)
  };
  for(let index=0;index<count;index++){
   const row=rowsOf[index]!;await advance();const path=posixRelative(workspace,row.path);
-  if(!row.list){frontier.push(["s",path,...row.state]);continue;}
+  if(!row.list){if(!foreign.has(path))frontier.push(["s",path,...row.state]);continue;}
   const facts=lstatBig(row.path);
   if(!facts||!facts.isDirectory()||stateTuple(facts)!==JSON.stringify(row.state))return deferred("membership-directory-moved",path);
   frontier.push(["d",path,String(facts.dev),String(facts.ino),Number(facts.mode),String(facts.mtimeNs),String(facts.ctimeNs),facts.mtimeNs<threshold&&facts.ctimeNs<threshold?1:0,generationProjectionDigestV1(row.list),generationProjectionDigestV1(row.list.filter(entry=>entry.kind!=="directory"||relevant(join(row.path,entry.name)))),relevant(row.path)?1:0]);
@@ -158,11 +158,11 @@ export async function captureGenerationReceiptV1(input:GenerationCaptureInputV1)
   if(row.full&&row.stamp!==null){const parts=row.stamp.split(":");if(BigInt(parts[5]!)>=threshold||BigInt(parts[6]!)>=threshold)return deferred("provider-observation-unsettled",generationLocationV1(row.path,workspace,storeRoot));}
   observations.push(["o",generationLocationV1(row.path,workspace,storeRoot),kindLetter(row.kind),row.anchor,row.stamp,row.target,row.full?1:0]);
  }
- const inputs=input.inputs.map(group=>Object.freeze({scope:group.scope,sources:Object.freeze(group.sources.map(source=>Object.freeze({path:generationLocationV1(source.path,workspace,storeRoot),kind:source.kind,dev:source.dev,ino:source.ino,mode:source.mode,sha256:source.kind==="file"?generationSha256V1(source.bytes):null,profileSha256:source.kind==="file"?manifestProfileSha256V1(source.path,source.bytes):null})))}));
+ const inputs=input.inputs.filter(group=>scoped.has(group.scope)).map(group=>Object.freeze({scope:group.scope,sources:Object.freeze(group.sources.map(source=>Object.freeze({path:generationLocationV1(source.path,workspace,storeRoot),kind:source.kind,dev:source.dev,ino:source.ino,mode:source.mode,sha256:source.kind==="file"?generationSha256V1(source.bytes):null,profileSha256:source.kind==="file"?manifestProfileSha256V1(source.path,source.bytes):null})))}));
  const frontierFile=frontier.finish(),executionFile=observations.finish(),sha=(text:string)=>generationSha256V1(text);
  const receipt=sealGenerationReceiptV1({
   version:1,purpose:"dependency-generation-receipt",scope:input.scope,walkStamp:protocol.walkStamp,runtime:input.runtime,producer:input.producer,recipeSha256:input.recipeSha256,ownershipSha256:input.ownershipSha256,required:[...input.required],inputs,
-  membership:{frontier:frontierFile.evidence,texts:membership.texts.map(row=>({path:row.path,sha256:row.sha256,profileSha256:row.profileSha256??null}))},
+  membership:{frontier:frontierFile.evidence,texts:membership.texts.filter(row=>scoped.has(row.owner)).map(row=>({path:row.path,owner:row.owner,sha256:row.sha256,profileSha256:row.profileSha256??null}))},
   bindings:input.bindings.map(row=>({scope:row.scope,pairs:row.pairs.map(pair=>({source:generationLocationV1(pair.sourceDirectory,workspace,storeRoot),target:generationLocationV1(pair.targetDirectory,workspace,storeRoot)})),observationSha256:sha(row.observation)})),
   ready:input.ready.map(row=>({scope:row.scope,generation:row.generation,location:generationLocationV1(row.path,workspace,storeRoot),fingerprint:row.fingerprint})),
   execution:{evidence:executionFile.evidence,scopes:input.execution.scopes.map(row=>({scope:row.scope,sha256:row.sha256})),runtimeSha256:input.execution.runtimeSha256},scopeReadSha256:input.scopeReadSha256,
@@ -192,6 +192,7 @@ export async function verifyGenerationReceiptV1(input:GenerationVerifyInputV1):P
  try{
   control.check();
   if(receipt.walkStamp!==protocol.walkStamp)return mismatch("protocol-changed",undefined,receipt.walkStamp);
+  const owned=new Set(receipt.required);if(receipt.inputs.some(group=>!owned.has(group.scope))||receipt.membership.texts.some(row=>!owned.has(row.owner)))return mismatch("receipt-invalid");
   const movedField=movedRuntime(input.runtime(),receipt.runtime);if(movedField!==undefined)return mismatch("runtime-changed",undefined,movedField);
   const producer=input.producer(),sealed=generationCanonicalJsonV1(receipt.producer);
   if(generationCanonicalJsonV1(producer)!==sealed){

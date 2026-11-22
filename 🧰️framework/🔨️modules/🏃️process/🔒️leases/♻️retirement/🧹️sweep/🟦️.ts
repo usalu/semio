@@ -1,4 +1,5 @@
 import{resolve}from"node:path";
+import{setTimeout as pause}from"node:timers/promises";
 import{checkResourceLeaseControl,type ResourceLeaseControl}from"../../🎛️control/🟦️.ts";
 import{leaseStoreFreeRatioV1,retireIdleResourceLeasesV1,retireResourceQueueClaimsV1}from"../../🟦️.ts";
 import{resourceLeaseBusyV1,resourceLeaseRetirementIdlePolicyV1,resourceLeaseRetirementMessagesV1}from"../🟦️.ts";
@@ -23,7 +24,7 @@ export async function sweepResourceLeaseStoreV1(directory:string,control:Resourc
    checkResourceLeaseControl(control);const row=await retireIdleResourceLeasesV1(root,control,0,{idleMilliseconds:mode.idleMilliseconds,nowMilliseconds:now,maximumCandidates:mode.candidates,...patience});
    slices++;databases+=row.retired;queues+=row.queues;kept+=row.kept;freed+=row.allocatedBytes;
    if(row.complete){complete=true;break;}
-   await control.yieldContinuation();
+   await control.yieldContinuation();await pause(policy.slicePauseMilliseconds,undefined,{signal:control.signal}).catch(()=>checkResourceLeaseControl(control));
   }
   await stage("nested");
   const nested=await retireNestedLeaseStoresV1(root,control,{nowMilliseconds:now});stores+=nested.retired;kept+=nested.kept;freed+=nested.allocatedBytes;

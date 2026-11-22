@@ -50,7 +50,7 @@ export function defineMaintenanceBoundaries({ glue, glueSource }: {
   const failures: string[] = [];
   const scope = (source: string, marker: string, name: string) => interactivityCheckedRustBlockScope(source, marker, name, failures);
   const scopes = (...parts: (string | undefined)[]) => parts.every((part) => part !== undefined) ? parts.join("\n") : undefined;
-  const transaction = glue.slice(glue.indexOf("pub(crate) struct FrameTransaction"), glue.indexOf("pub(crate) struct AppFramePresentation"));
+  const transaction = glue.slice(glue.indexOf("struct FrameTransaction {"), glue.indexOf("struct AppFramePresentation"));
   const frameCursors = glue.slice(glue.indexOf("struct FrameBuildCursor"), glue.indexOf("struct FrameWheelCursor"));
   const buildBoundary = glue.slice(glue.indexOf("fn frame_before_input_step"), glue.indexOf("fn frame_after_input_step"));
   const finishBoundary = glue.slice(glue.indexOf("fn frame_after_input_step"), glue.indexOf("//#region 🔖️OsHostDecomposition — SemioApp deletion"));
@@ -61,7 +61,8 @@ export function defineMaintenanceBoundaries({ glue, glueSource }: {
   const maintenanceExecutionBoundary = glue.slice(glue.indexOf("struct FrameMaintenanceExecutionRegistry"), glue.indexOf("impl<R: MailboxRuntime> RuntimeMailbox<R> {"));
   const maintenanceRegistryBoundary = glue.slice(glue.indexOf("struct FrameMaintenanceExecutionRegistry"), glue.indexOf("struct FrameMaintenanceAuthority"));
   const maintenanceSpawnBoundary = glue.slice(glue.indexOf("fn try_spawn_frame_maintenance_reserved"), glue.indexOf("#[cfg(target_arch = \"wasm32\")]", glue.indexOf("fn try_spawn_frame_maintenance_reserved")));
-  const maintenanceTerminalBoundary = glue.slice(glue.indexOf("fn frame_maintenance_terminal_fault"), glue.indexOf("enum RuntimeApply"));
+  const maintenanceTerminalStart = glue.indexOf("fn frame_maintenance_terminal_fault");
+  const maintenanceTerminalBoundary = glue.slice(maintenanceTerminalStart, glue.indexOf("pub const WORLD3D_DEADLINE_CAPACITY", maintenanceTerminalStart < 0 ? 0 : maintenanceTerminalStart));
   const maintenanceWorkerTerminalStart = maintenanceSpawnBoundary.indexOf("if let Some(fault) = frame_maintenance_terminal_fault");
   const maintenanceWorkerTerminalBoundary = maintenanceSpawnBoundary.slice(maintenanceWorkerTerminalStart, maintenanceSpawnBoundary.indexOf("            } else {", maintenanceWorkerTerminalStart));
   return { scopes, scope, failures, transaction, frameCursors, buildBoundary, finishBoundary, deferredBoundary, maintenanceOwnerBoundary, maintenanceNativeOwnerBoundary, maintenanceCloseBoundary, maintenanceExecutionBoundary, maintenanceRegistryBoundary, maintenanceSpawnBoundary, maintenanceTerminalBoundary, maintenanceWorkerTerminalBoundary };
@@ -81,25 +82,25 @@ export function defineChromeAndEngineBoundaries({ scopes, scope, shell, engineCa
   readonly uiEngine: string;
 }) {
   const chromeBoundary = scopes(
-    scope(shell, "pub(crate) struct ShellChromeFrameCursor", "Shell chrome cursor"),
-    scope(shell, "enum ShellChromeFramePhase", "Shell chrome phase"),
-    scope(shell, "pub(crate) fn render_chrome_step", "Shell chrome step"),
+    scope(shell, "pub struct ShellChromeFrameCursor", "Shell chrome cursor"),
+    scope(shell, "pub enum ShellChromeFramePhase", "Shell chrome phase"),
+    scope(shell, "pub fn render_chrome_step", "Shell chrome step"),
   );
   const engineBoundary = engineCanvas.slice(engineCanvas.indexOf("const ENGINE_CANVAS_FRAME_PACKET_CAPACITY"), engineCanvas.indexOf("struct EngineGpuSurface"));
   const worldBoundary = world3d.slice(world3d.indexOf("const WORLD3D_FRAME_RESOURCE_CAPACITY"), world3d.indexOf("//#endregion 📦️PreparedWorldResources"));
   const atlasBoundary = prepared.slice(prepared.indexOf("pub const PREPARED_ATLAS_PAGE_BYTES"), prepared.indexOf("impl PreparedRasterPages"));
   const atlasGpuBoundary = gpu.slice(gpu.indexOf("struct PreparedAtlasUploadCursor"), gpu.indexOf("pub fn finish_prepared"));
   const atlasDrawBoundary = draw.slice(draw.indexOf("upload_glyph_atlas_page"), draw.indexOf("pub fn render_frame"));
-  const chromeMainBoundary = scope(shell, "fn render_main_window_step", "Shell main window");
-  const chromePanelBoundary = scope(shell, "fn render_panel_step", "Shell panel");
-  const chromeNavbarBoundary = scope(shell, "fn render_navbar_step", "Shell navbar");
-  const chromeTutorialBoundary = scope(shell, "fn render_tutorial_bar_step", "Shell tutorial");
-  const chromeFooterBoundary = scope(shell, "fn render_footer_step", "Shell footer");
-  const chromeOverlayStepBoundary = scope(shell, "fn render_overlay_step", "Shell overlay");
-  const chromeContextMenuBoundary = scope(shell, "fn render_context_menu_step", "Shell context menu");
-  const chromeTooltipBoundary = scope(shell, "fn render_chrome_tooltip_step", "Shell tooltip");
-  const chromeDialogBoundary = scope(shell, "fn render_chrome_dialog_step", "Shell dialog");
-  const chromeTourBoundary = scope(shell, "fn render_chrome_tour_step", "Shell tour");
+  const chromeMainBoundary = scope(shell, "pub fn render_main_window_step", "Shell main window");
+  const chromePanelBoundary = scope(shell, "pub fn render_panel_step", "Shell panel");
+  const chromeNavbarBoundary = scope(shell, "pub fn render_navbar_step", "Shell navbar");
+  const chromeTutorialBoundary = scope(shell, "pub fn render_tutorial_bar_step", "Shell tutorial");
+  const chromeFooterBoundary = scope(shell, "pub fn render_footer_step", "Shell footer");
+  const chromeOverlayStepBoundary = scope(shell, "pub fn render_overlay_step", "Shell overlay");
+  const chromeContextMenuBoundary = scope(shell, "pub fn render_context_menu_levels_step", "Shell context menu");
+  const chromeTooltipBoundary = scope(shell, "pub fn render_chrome_tooltip_step", "Shell tooltip");
+  const chromeDialogBoundary = scope(shell, "pub fn render_chrome_dialog_step", "Shell dialog");
+  const chromeTourBoundary = scope(shell, "pub fn render_chrome_tour_step", "Shell tour");
   const chromeOverlayBoundary = scopes(chromeOverlayStepBoundary, chromeContextMenuBoundary, chromeTooltipBoundary, chromeDialogBoundary, chromeTourBoundary);
   const shellChildren = scopes(chromeMainBoundary, chromePanelBoundary, chromeNavbarBoundary, chromeTutorialBoundary, chromeFooterBoundary, chromeOverlayBoundary);
   const documentBoundary = interactivityProductionSource(interpreterSource.slice(interpreterSource.indexOf("pub struct UiDocumentFrameCursor"), interpreterSource.indexOf("pub fn render_ui_document(")));
@@ -146,7 +147,9 @@ export function definePaintSceneAndTextBoundaries({ scopes, scope, paint, sceneS
   const sceneHostBoundary = interpreter.slice(interpreter.indexOf("impl ui_wgpu::wgpu::SceneHost for FrameworkSceneHost"), interpreter.indexOf("fn drive_mounted_layout_text_one"));
   const retainedImageBoundary = interpreter.slice(interpreter.indexOf("fn render_ui_image_step"), interpreter.indexOf("fn render_ui_image("));
   const retainedSceneBoundary = scenes.slice(scenes.indexOf("pub fn render_component_scene_step"), scenes.indexOf("pub fn render_component_scene("));
-  const findBoundary = shell.slice(shell.indexOf("pub struct ShellFindItems"));
+  const findStart = shell.indexOf("pub struct ShellFindItems {");
+  const findEnd = shell.indexOf("collector.try_push_at(active.generation, item)", findStart);
+  const findBoundary = shell.slice(findStart, findEnd < 0 ? undefined : findEnd + "collector.try_push_at(active.generation, item)".length);
   const maintenanceBoundary = shell.slice(shell.indexOf("struct ShellChromeMaintenance"), shell.indexOf("fn body_rect"));
   return { findBoundary, maintenanceBoundary, interactiveSyncBoundary, paintNodeBoundary, sceneNodeBoundary, sceneHostBoundary, retainedSceneBoundary, retainedImageBoundary };
 }
@@ -160,13 +163,13 @@ export function defineGroupPreferenceAndRequireHelpers({ scopes, scope, shell, s
   readonly failures: string[];
 }) {
   const chromeTextBoundary = scopes(
-    scope(shell, "fn chrome_text_step", "Shell chrome text step"),
-    scope(shell, "fn chrome_text_complete_step", "Shell chrome text completion"),
+    scope(shell, "pub fn chrome_text_step", "Shell chrome text step"),
+    scope(shell, "pub fn chrome_text_complete_step", "Shell chrome text completion"),
   );
-  const chromeGroupWidthBoundary = scope(shell, "fn retained_chrome_group_item_width", "Shell chrome group width");
+  const chromeGroupWidthBoundary = scope(shell, "pub fn retained_chrome_group_item_width", "Shell chrome group width");
   const chromeGroupStepBoundary = scopes(
-    scope(shell, "enum RetainedChromeGroupStep", "Shell chrome group phase"),
-    scope(shell, "fn render_retained_chrome_group_item_step(", "Shell chrome group step"),
+    scope(shell, "pub enum RetainedChromeGroupStep", "Shell chrome group phase"),
+    scope(shell, "pub fn render_retained_chrome_group_item_step(", "Shell chrome group step"),
     scope(shell, "fn render_retained_chrome_group_item_step_with_trailing", "Shell chrome group trailing step"),
   );
   const chromeGroupBoundary = scopes(chromeGroupWidthBoundary, chromeGroupStepBoundary);

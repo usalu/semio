@@ -1,0 +1,55 @@
+{
+ "id": "wisteria-pergola",
+ "category": "vegetation",
+ "title": {
+  "en": "Wisteria on Pergola",
+  "de": "Glyzinie an der Pergola"
+ },
+ "heightM": 3.1,
+ "widthM": 3.6,
+ "powerW": 0,
+ "poses": [
+  "flowering-calm",
+  "breezy",
+  "storm",
+  "flowering-night"
+ ],
+ "clips": [
+  "wind-sway",
+  "gust",
+  "diurnal-transpiration"
+ ],
+ "representations": {
+  "50": "authored",
+  "100": "authored",
+  "200": "authored",
+  "500": "authored"
+ },
+ "symbols": [
+  "wisteria-pergola-symbol"
+ ],
+ "analytics": [
+  "thermal",
+  "transport",
+  "structural"
+ ],
+ "exports": [
+  "svg",
+  "pdf",
+  "dxf",
+  "dwg",
+  "png-sequence",
+  "mp4",
+  "webm",
+  "component",
+  "glb",
+  "fbx",
+  "model",
+  "model-zip"
+ ],
+ "distinction": {
+  "en": "An old Chinese wisteria (Wisteria sinensis) in full flower on a freestanding C24 timber pergola, 3.6 m by 2.8 m and 3.1 m high: a twined trunk beside one post, leaders over six rafters and lilac racemes hanging between them. The pergola is passive structure.",
+  "de": "Eine alte Chinesische Glyzinie (Wisteria sinensis) in voller Blüte an einer freistehenden Holzpergola aus C24, 3,6 m mal 2,8 m und 3,1 m hoch: ein verwundener Stamm neben einem Pfosten, Leittriebe über sechs Sparren und lilafarbene Trauben, die zwischen ihnen hängen. Die Pergola ist passive Struktur."
+ },
+ "completion": "authored"
+}

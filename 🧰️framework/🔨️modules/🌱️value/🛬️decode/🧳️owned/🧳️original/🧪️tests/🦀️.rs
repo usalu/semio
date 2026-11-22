@@ -122,11 +122,12 @@ fn close_all<I:Sync+'static,T:NativeReceive<I>>(owner:NativeReceivingOriginal<I,
 }
 #[test]fn native_receiving_original_shell_requires_funded_input_and_receiver_custody(){
  let mut wallet=stock();let mut bank=scratch();let source=row_source(&mut bank);let pointer=std::ptr::from_ref(source.borrow().get());let(mut owner,heap)=observe(||Owner::new(source));assert_eq!(heap,(0,0));assert_eq!(std::ptr::from_ref(owner.borrow_input().unwrap().get()),pointer);assert!(!owner.receiver.reserved());let mut payer=Authorities::new();let mut callback=|_|true;let mut control=NativeDecodeControl::new(1<<20,&mut callback);
- for stage in 0..2{
+ let parts=<Row as NativeReceive<DslValue>>::receiver_template(false).unwrap().part_count();
+ for stage in 0..=parts{
   let fuel=wallet.remaining_work();let d=owner.demands(BODY,fuel).unwrap();let g=RetainedCloneGrant{maximum_items:1,..quoted(&wallet,d)};
   for denied in fixture::denials(g,d){let(turn,heap)=advance(&mut owner,&mut control,&mut payer,&wallet,denied);assert_eq!(turn.work,0);assert_eq!(progress(&turn),Default::default());assert_eq!(heap,(0,0));assert_eq!(owner.demands(BODY,fuel).unwrap(),d);}
   let(turn,heap)=advance(&mut owner,&mut control,&mut payer,&wallet,g);let p=progress(&turn);assert_eq!(turn.work,1);wallet.post(p,turn.work,g,heap);turn.result.unwrap();
-  assert!(owner.receiver.reserved());assert_eq!(owner.receiver.initialized(),stage==1);assert_eq!(p.retained_capacity_bytes,heap.0);
+  assert!(owner.receiver.reserved());assert_eq!(owner.receiver.initialized(),stage==parts);assert_eq!(p.retained_capacity_bytes,heap.0);
   assert_eq!(std::ptr::from_ref(owner.borrow_input().unwrap().get()),pointer);
  }
  close_all(owner,&mut wallet,&mut payer,&mut control,&mut Vec::new());
@@ -157,6 +158,22 @@ fn original_receiving_quotes_each_native_template_part() {
     }
     assert_eq!(parts, template.part_count());
     close_all(owner, &mut wallet, &mut payer, &mut control, &mut Vec::new());
+}
+
+#[test]
+fn a_derived_record_receiver_seeds_in_field_parts_instead_of_one_indivisible_copy(){
+ let law=serde_json::from_str::<serde_json::Value>(include_str!("🧫️fixtures/🌾️struct-seed.json")).unwrap();let n=|value:&serde_json::Value,key:&str|value[key].as_u64().unwrap() as usize;
+ let case=law["cases"].as_array().unwrap().iter().find(|case|case["owner"]=="Row").unwrap();
+ let template=<Row as NativeReceive<DslValue>>::receiver_template(false).unwrap();assert!(template.field_parts().is_some());
+ assert_eq!(template.part_count(),n(case,"parts"));assert_eq!(n(case,"parts"),n(&law,"fixedParts")+n(&law,"partsPerField")*n(case,"fields")+n(&law,"partsPerDefault")*n(case,"defaults"));
+ let whole=semio_framework_value_native_storage::NativeOwnedStorage::<<Row as NativeReceive<DslValue>>::Receiver>::seed_demand();
+ let mut wallet=stock();let mut bank=scratch();let mut owner=Owner::new(row_source(&mut bank));let mut payer=Authorities::new();let mut allow=|_|true;let mut control=NativeDecodeControl::new(1<<20,&mut allow);let mut parts=0;
+ while !owner.receiver.initialized(){
+  let demand=owner.demands(BODY,wallet.remaining_work()).unwrap();
+  if owner.receiver.reserved(){assert_eq!(demand,owner.receiver.template_seed_demand(template).unwrap());assert!(demand.copy_bytes<whole.copy_bytes,"part {parts} copies {} of the whole {} receiver",demand.copy_bytes,whole.copy_bytes);parts+=1;}
+  let grant=RetainedCloneGrant{maximum_items:1,..quoted(&wallet,demand)};let(turn,heap)=advance(&mut owner,&mut control,&mut payer,&wallet,grant);wallet.post(progress(&turn),turn.work,grant,heap);turn.result.unwrap();assert!(parts<=template.part_count());
+ }
+ assert_eq!(parts,template.part_count());close_all(owner,&mut wallet,&mut payer,&mut control,&mut Vec::new());
 }
 
 #[test]fn native_persistent_list_original_vector_owner_batches_actions_under_a_wide_grant(){

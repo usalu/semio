@@ -52,20 +52,20 @@ fn DRAW_LAWS_SOURCE() -> &'static str {
 #[test]
 fn a_refused_frame_preparation_names_its_fault_before_the_build_cancels() {
     let frame_job = semio_renderer_wgpu_test_support::repo_text("🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧵️frame-job/🦀️.rs");
-    let prepare_at = frame_job.find("ActiveFramePhase::Prepare(preparation) => {").expect("the prepare phase");
-    let refused_at = prepare_at + frame_job[prepare_at..].find("StepOutcome::Cancelled | StepOutcome::Fault(_) =>").expect("the refused arm");
-    let refused = &frame_job[refused_at..][..frame_job[refused_at..].find("ActiveFrameStep::Pending").expect("the refused arm ends on its own step")];
+    let prepare_at = frame_job.find("ActiveFramePhase::Prepare(preparation) => {\n                match preparation.drive_step(cx)").expect("the prepare phase");
+    let refused_at = prepare_at + frame_job[prepare_at..].find("FramePreparationStep::Fault)=>{").expect("the refused arm");
+    let refused = &frame_job[refused_at..][..frame_job[refused_at..].find("Err(failure)=>ActiveFrameStep::CloseFailure(failure)").expect("the refused arm ends on its own step")];
     assert!(refused.contains("preparation.fault()"), "the refused arm reads the preparation's own fault");
+    assert!(refused.contains("ActiveFrameStep::Fault("), "and the build reports that fault by name instead of a bare cancellation");
+    assert!(refused.find("ActiveFrameStep::Fault(").unwrap() > refused.find("preparation.fault()").unwrap());
 
-    for arm in [
-        "self.fault = Some(\"prepared render job admission was refused\")",
-        "self.fault = Some(\"prepared render job session admission was refused\")",
-        "self.fault = Some(\"prepared render job lost its session\")",
-        "self.fault = Some(\"prepared render job was cancelled\")",
-    ] {
-        assert!(LIBRARY_SOURCE().contains(arm), "every preparation refusal names itself: {arm}");
+    let preparation = semio_renderer_wgpu_test_support::repo_text("🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧊️renderer/🧾️frame-build/📋️frame-preparation/🦀️.rs");
+    for arm in ["self.fault=Some(\"prepared render job was cancelled\")", "self.fault=Some(\"prepared render job refused its terminal candidate\")"] {
+        assert!(preparation.contains(arm), "every terminal preparation refusal names itself: {arm}");
     }
-    assert!(LIBRARY_SOURCE().contains("session.checked_out_job_mut().and_then(|job| job.fault())"), "and a refusal from inside the prepared job carries that job's own fault string");
+    for typed in ["original prepared render admission remains rejected", "original prepared render session is absent", "original prepared worker resume was refused"] {
+        assert!(preparation.contains(&format!("refuse(\"{typed}\")")), "every admission refusal is a typed named error: {typed}");
+    }
 }
 
 #[test]
@@ -82,7 +82,7 @@ fn a_pre_submit_input_epoch_change_retires_and_reschedules_without_faulting_the_
     assert!(!render.contains("prepared frame input authority was stale before submit"), "normal pre-submit input supersession is not a surface fault");
     let stale_progress = render.split("PresentedInputCandidateProgress::Stale => {").nth(1).expect("the stale progress arm");
     let stale_progress = &stale_progress[..stale_progress.find("}\n                }").expect("the stale progress arm end")];
-    let stale_match = render.split("if !shell.presented_input_candidate_matches(input_candidate) {").nth(1).expect("the final exact witness check");
+    let stale_match = render.split("if !shell.input.presented_input_candidate_matches(input_candidate) {").nth(1).expect("the final exact witness check");
     let stale_match = &stale_match[..stale_match.find("}\n                drop(runtime);").expect("the exact witness check end")];
     for stale in [stale_progress, stale_match] {
         assert!(stale.contains("cursor.frame.packet = self.gate.abort_pending();"), "the stale observation returns the unsubmitted packet");

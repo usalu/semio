@@ -1,0 +1,12 @@
+{
+  "cases": [
+    {"name": "answered at once", "outcomes": ["ok"]},
+    {"name": "a miss is an answer", "outcomes": ["miss"]},
+    {"name": "a silent server marks the breaker at once and is not asked again", "outcomes": ["timeout"]},
+    {"name": "a refused connection marks the breaker at once and is not asked again", "outcomes": ["network"]},
+    {"name": "a timeout that fired late then an answer leaves no marker", "outcomes": ["stalled", "ok"]},
+    {"name": "a timeout that fired late then a miss leaves no marker", "outcomes": ["stalled", "miss"]},
+    {"name": "a timeout that fired late then a silent server marks the breaker", "outcomes": ["stalled", "timeout"]},
+    {"name": "a timeout that fired late then a refused connection marks the breaker", "outcomes": ["stalled", "network"]}
+  ]
+}

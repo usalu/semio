@@ -186,7 +186,7 @@ pub struct OriginalJobReturnBirth{work:Option<OriginalWorkAuthority<OriginalJobN
 impl OriginalJobReturnBirth{
  pub fn new()->Self{Self::default()}
  /// 🌱️ Production host entry: births the return table and publisher whenever a caller requested them, before the turn's business runs.
- pub fn service(&mut self,cx:&mut StepContext<'_>)->Result<(),OriginalTurnFailure>{if cx.return_birth_requested(){self.advance(cx)?;}Ok(())}
+ pub fn service(&mut self,cx:&mut StepContext<'_>)->Result<(),OriginalTurnFailure>{if cx.return_birth_requested(){self.advance(cx)?;}cx.admit_original_receiving_scope()?;Ok(())}
  pub fn authorities_ready(&self)->bool{self.work.is_some()&&self.construction.is_some()}
  pub fn terminal_is_empty(&self)->bool{self.work.is_none()&&self.construction.is_none()&&self.work_loan.is_none()&&self.construction_loan.is_none()&&self.work_born.is_none()&&self.construction_born.is_none()&&self.stash.is_empty()}
  fn paid_step<R>(cx:&mut StepContext<'_>,run:impl FnOnce(&mut StepContext<'_>,&mut RetainedAllocationEffect<'_>)->RetainedWorkOutcome<Option<Progress>,ValueError>,_marker:std::marker::PhantomData<R>)->Result<bool,OriginalTurnFailure>{

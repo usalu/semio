@@ -18,6 +18,10 @@ const unbornCleanupSchema=structuredClone(schema.definitions.UnbornCleanup);
 /** 🍼️ Pure obligations never establish that a child was unborn or that cleanup is funded. */
 export function nativeStorageUnbornCleanupDecisionV1(value:unknown):boolean{if(validateJsonSchemaSubset(unbornCleanupSchema,value).length)throw Error("Closed unborn funding cleanup evidence required");const row=value as{known:boolean;entered:boolean;ordinaryJoined:boolean;phase:string};return row.known&&!row.entered&&row.ordinaryJoined&&row.phase==="cleanup";}
 
+const unbornReservationSchema=structuredClone(schema.definitions.UnbornReservationRequest);
+/** 🧟️ Names the reserved funded-child rows of a directory that was never born: no namespace receipt, no physical child and no namespace directory, so their reserver died before any physical effect; callers must hold the exclusive child resource lease. */
+export function nativeStorageUnbornReservationsV1(value:unknown):readonly string[]{if(validateJsonSchemaSubset(unbornReservationSchema,value,schema,[exportedStorageSchema]).length)throw Error("Closed unborn reservation evidence required");const row=value as{state:{allocations:readonly{id:string;kind:string;phase:string;namespace?:unknown;funding?:unknown;child?:{directory:string;allocation:string}}[]};directory:string;childPresent:boolean;namespaceDirectoryPresent:boolean};if(row.childPresent||row.namespaceDirectoryPresent)return Object.freeze([]);return Object.freeze(row.state.allocations.filter(allocation=>allocation.phase==="reserved"&&allocation.kind==="compiler-state"&&allocation.namespace===undefined&&allocation.funding===undefined&&allocation.child?.directory===row.directory&&allocation.child.allocation===allocation.id).map(allocation=>allocation.id));}
+
 import{types}from"node:util";
 import type{NativeFixedPlatformOptionsV1}from"../🔌️port/🟦️.ts";
 import type{NativeStoragePolicyV1}from"../📜️journal/🟦️.ts";

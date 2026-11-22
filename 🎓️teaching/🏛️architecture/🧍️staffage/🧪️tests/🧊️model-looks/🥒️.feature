@@ -2,8 +2,8 @@
 Feature: The seven views are looks of one geometry, painted by the rules of the 2D views
   Every solid has a base material (its bone, role, tone and thermal regions) in the light-solid look; each of the seven views is a variant that rebinds the base materials, as the 2D depiction
   paints the same shapes seven ways. The tone ramp, paper, glazing opacity, thermal ramp, range, centre and environment, and the member ramp, symmetric range, sign convention and member
-  filter are the very functions of the 2D views (`thermalPaint`, `memberPaint`), not copies. Analytic colours animate over a clip as material colour channels. Force arrows, moment arcs
-  and emitter cones are glyph solids with the paper sizes of the 2D views at the requested scale, hidden in every view but their own.
+  filter are the very functions of the 2D views (`thermalPaint`, `memberPaint`), not copies. Analytic colours animate over a clip as material colour channels. Force arrows and moment arcs
+  are glyph solids with the paper sizes of the 2D views at the requested scale and the air flow of the thermal view is stream tubes, arrow heads and puffs in the colours of the 2D flow view, all hidden in every view but their own.
 
   THE REFERENCES are the 2D depiction (`depict`) for colours and sizes and three's colour management for sRGB to linear.
 

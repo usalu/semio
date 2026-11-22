@@ -168,45 +168,42 @@ fn publish_retained_action(input: &mut semio_ui_wgpu_input::InputState<ActionDes
  * or the payload carries no decodable semio-mime entry. */
 pub fn apply_drop_committed(window_id: &str, target: NodeId, y: f32, payload: &DragPayload, input: &mut semio_ui_wgpu_input::InputState<ActionDescriptor>) -> Result<(), semio_ui_action::BoundedActionFault> {
     let mime = ui_contract::TREE_ROW_REORDER_MIME;
-    let Some(encoded) = payload.get(mime) else {
-        return drop_target_action(window_id, target).map_or(Ok(()), |action| queue_drop_action(window_id, &action, decode_drop_payload(payload), input).map(|_| ()));
-    };
-    let row = UI_ENGINE.with(|cell| {
+    let tree_drop = UI_ENGINE.with(|cell| {
         let engine = cell.borrow();
         let tree = engine.tree(window_id)?;
-        let item = tree.authored_tree_item(target)?;
-        if !item.drag_data.as_ref()?.contains_key(mime) {
-            return None;
-        }
-        let action = semio_ui_retained_tree::reconcile::tree_item_drop_action(tree.document()?, &item.id)?;
-        let rect = tree.absolute_rect(target)?;
-        let position = match semio_ui_wgpu_engine::tree_row_reorder_position(rect, y) {
-            semio_ui_wgpu_input::TreeDropPosition::Before => "before",
-            semio_ui_wgpu_input::TreeDropPosition::After => "after",
-            semio_ui_wgpu_input::TreeDropPosition::Inside => return None,
-        };
-        Some((action, item.id.clone(), position))
+        let key = tree.authored_tree_item(target).map(|item| item.id.clone()).or_else(|| tree.authored_tree_section(target).map(|section| section.id.clone()))?;
+        let action = semio_ui_retained_tree::reconcile::tree_drop_action(tree.document()?, &key)?;
+        let position = tree.authored_tree_item(target).and_then(|_| engine.tree_row_frame(window_id, target)).map(|frame| semio_ui_wgpu_engine::tree_drop_position(frame.y, frame.h, y));
+        Some((action, key, position))
     });
-    if let Some((action, id, position)) = row {
-        let Some(mut patch) = decode_drop_object(encoded) else { return Ok(()) };
-        patch.insert("targetId".into(), Value::String(id));
-        patch.insert("dropPosition".into(), Value::String(position.into()));
-        queue_drop_action(window_id, &action, Some(patch), input)?;
-    }
+    let Some((action, key, position)) = tree_drop else {
+        return drop_target_action(window_id, target).map_or(Ok(()), |action| queue_drop_action(window_id, &action, decode_drop_payload(payload), input).map(|_| ()));
+    };
+    let patch = match payload.get(mime) {
+        Some(encoded) => {
+            let Some(wire) = position.and_then(semio_ui_wgpu_engine::TreeDrop::wire) else { return Ok(()) };
+            let Some(mut patch) = decode_drop_object(encoded) else { return Ok(()) };
+            patch.insert("targetId".into(), Value::String(key));
+            patch.insert("dropPosition".into(), Value::String(wire.into()));
+            patch
+        }
+        None => serde_json::Map::new(),
+    };
+    queue_drop_action(window_id, &action, Some(patch), input)?;
     Ok(())
 }
 
-/// 🫳️ The action the tree row `item_key` of `window_id` declares for a drop on it (its `Trigger::Drop` binding), `None` when the row is no drop target.
-pub fn tree_item_drop_action(window_id: &str, item_key: &str) -> Option<ActionDescriptor> {
-    UI_ENGINE.with(|cell| semio_ui_retained_tree::reconcile::tree_item_drop_action(cell.borrow().tree(window_id)?.document()?, item_key))
+/// 🫳️ The action a drop on the tree row or section `key` of `window_id` fires (its tree's `Trigger::Drop` binding), `None` when it is no drop target.
+pub fn tree_drop_action(window_id: &str, key: &str) -> Option<ActionDescriptor> {
+    UI_ENGINE.with(|cell| semio_ui_retained_tree::reconcile::tree_drop_action(cell.borrow().tree(window_id)?.document()?, key))
 }
 
-/// 🫳️ Drops `payload` on the tree row `item_key` of `window_id`: queues the row's drop action with the payload merged into its arguments, exactly as a drop on a `Stack` does. `Ok(false)` when the row declares no drop action or the payload carries no `application/x-semio-*` entry.
+/// 🫳️ Drops a plain or palette drag on the tree row or section `item_key` of `window_id`: queues the tree's drop action with its authored arguments and no payload, as React's `handleDrop` does (`dispatchTrigger(context, record, "drop")`). `Ok(false)` for a positional row drag or when the tree binds no drop action.
 pub fn apply_tree_row_drop(window_id: &str, item_key: &str, payload: &DragPayload, input: &mut semio_ui_wgpu_input::InputState<ActionDescriptor>) -> Result<bool, semio_ui_action::BoundedActionFault> {
     if payload.contains_key(ui_contract::TREE_ROW_REORDER_MIME) {
         return Ok(false);
     }
-    tree_item_drop_action(window_id, item_key).map_or(Ok(false), |action| queue_drop_action(window_id, &action, decode_drop_payload(payload), input))
+    tree_drop_action(window_id, item_key).map_or(Ok(false), |action| queue_drop_action(window_id, &action, Some(serde_json::Map::new()), input))
 }
 
 fn queue_drop_action(window_id: &str, action: &ActionDescriptor, patch: Option<serde_json::Map<String, Value>>, input: &mut semio_ui_wgpu_input::InputState<ActionDescriptor>) -> Result<bool, semio_ui_action::BoundedActionFault> {

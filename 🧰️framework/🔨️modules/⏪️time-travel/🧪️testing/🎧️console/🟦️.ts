@@ -13,7 +13,7 @@ export const pageErrors: { locale: Locale; step: number; text: string }[] = [];
 
 export const hardFaults: { locale: Locale; step: number; text: string }[] = [];
 
-export const BENIGN_RE = /contributions document sources|staged plugin module|\[stale\]|activate-[a-z0-9]+-react-prototype|transform freshness|Download the React DevTools/i;
+export const BENIGN_RE = /staged plugin module|\[stale\]|activate-[a-z0-9]+-react-prototype|transform freshness|Download the React DevTools/i;
 
 const HARD_FAULT_RE =
   /worker fault|\bunreachable\b|\[semio-plugin panic\]|panicked at|SemioFaultError|terminal-fault|admission failed|shard .* (lost|terminated)|native-owner-required|reactor-close-authority|native close terminal unavailable|actor-activation\.revoked/i;

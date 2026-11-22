@@ -34,7 +34,10 @@ impl<'ctx> PointerCtx<'ctx> {
         }
         if target.node_key == CONTROL_ID {
             match event {
-                ui_render::AccessibilityEvent::Activate => self.opening.cancel_icon_export(),
+                ui_render::AccessibilityEvent::Activate => {
+                    self.opening.cancel_icon_export();
+                    self.opening.cancel_video_render();
+                }
                 ui_render::AccessibilityEvent::Focus => {
                     input.blur_input();
                     self.input.accessibility_focused_control_id = Some(target.node_key.clone());
@@ -355,6 +358,9 @@ impl<'ctx> PointerCtx<'ctx> {
         input: &mut InputState<ActionDescriptor>,
     ) -> Result<(), String> {
         debug_log(&format!("[TRACE] wgpu-shell retained press window={window_id} kind={kind:?} down={down} action={:?}", action.as_ref().map(|descriptor| descriptor.action.clone())));
+        if let Some((local_x, local_y)) = self.input.pending_row_menu.take() {
+            self.open_context_menu(body.x + local_x, body.y + local_y, None).await;
+        }
         if down && !self.as_session().retained_surface_is_panel(window_id) {
             let owner = window_pane_owner(window_id).unwrap_or(window_id).to_string();
             self.chrome.chrome_build.clear_sibling_pane_focus(window_id);

@@ -72,3 +72,56 @@ Everything after the last shoulder correction, the 1:500 chest widening, the 2D 
 - `rework-07-2d.py` and the ruler leave `NEW shape` outlines to the author; bones whose drawing lived in a neighbour's shape lose it silently when the neighbour is re-cut (feet at 1:500).
 - The catalog file was written once in a layout that the shared `dump` did not reproduce byte for byte (whole-file re-layout on the first publish; later publishes round-trip).
 - The Read tool's PreToolUse hook timed out for every image from 02:25 on.
+
+## Pass 2 (second round), 2026-11-22
+
+Status: **partial**. Published; `r3-validate.ts animals/dairy-cow --catalog-only --volumes` ends `VALID animals/dairy-cow (catalog file as it is): schema 0, validateAsset 0, checkVolumes 0`, and the form with the source merged is `VALID` too. `rig-lateral-rest.md` existed at the start and at the end and was followed.
+
+### Reference added this pass (Holstein-Friesian cow, own knowledge)
+
+| Measure | Real | Before | After |
+|---|---|---|---|
+| Neck at the shoulder, depth × breadth | 0.55–0.60 × 0.30 m | 0.56 × 0.28 m | 0.58 × 0.30 m |
+| Neck at the throat, depth × breadth | 0.27–0.30 × 0.16–0.18 m | 0.20 × 0.15 m | 0.28 × 0.17 m |
+| Top line of the neck between withers and poll | dips 0.06–0.10 m | straight | dips 0.08 m |
+| Withers over the back | 0.02–0.04 m, no hump | 0.05 m hump over 0.2 m | 0.03 m, six stations |
+| Fore chest ahead of the point of the shoulder | 0.08–0.12 m (brisket only) | 0.20 m dome | 0.10 m |
+| Muzzle breadth / cheek depth | 0.16–0.18 / 0.18–0.20 m | 0.15 / 0.176 m | 0.17 / 0.19 m |
+| Scapula, dorsal border to glenoid, inclination outwards | 0.43–0.46 m, 12–15° | 0.44 m, 0° | 0.453 m, 13.8° |
+| Sternum | 0.50–0.55 m, flat, 7 sternebrae, ribs 1–8 | bent tube 0.45 m, reached rib 5 | flat bar 0.62 m with xiphoid, through the ventral ends of ribs 1–8 |
+| Mandible | 0.38–0.40 m, ramus 0.12 m with condyle and coronoid process | two flat plates | halves with ramus, condyle, coronoid process, incisors at the symphysis |
+
+### Looked at (read at full size unless noted)
+
+Before any change: 1:50 body six views with rig, right and front close-ups, 1:50 structure six views. After the trunk and girdle change: 1:50 body six views; poses `grazing-head-down`, `lying-resting`, `kneeling-front`, `lowering-hindquarters` and `walk-phase-0/2/4/6` (right side, tiled at half size); clips `cud-chewing` 2.5 s, `lie-down` 4 s and 8 s, `graze-and-chew` 6 s (tiled); 1:50 thermal six views; 1:50 structure six views after the skeleton change; `lying-resting` six views; 1:100, 1:200, 1:500 body (tiled), structure (tiled) and thermal (tiled); the 2D sheet of 1:50 at full size and of all four scales tiled; final 1:50 right side and structure front view (scapulae run from 0.09 m to the shoulder joints at 0.198 m, hip bones from the sacroiliac joints to the hip joints, limbs hang from them, feet on the ground).
+
+### What was rebuilt
+
+- **Rig, shoulder girdle** (`rework-dairy-cow-girdle.py`): the scapula bone now rests inclined 13.8° outwards (`abductionDeg`), from its dorsal border 0.09 m beside the plane to the shoulder joint at 0.198 m; the humerus hangs from its tip in the sagittal frame. Found and fixed: the inclined bone kept 0.44 m, which lifted the shoulder joint and the whole fore limb 12 mm off the ground; the bone is now 0.4531 m so that its sagittal length stays 0.44 m and the joint is where the drawings and poses have it. `advanceM` of the walk is the planted travel 1.0259 m. `lateral-ambiguous` accepts the flat scapula shapes (validator item 12).
+- **Body, all scales** (`rework-dairy-cow-trunk.py`, new, in the build chain after the body chisel): neck as top and bottom line tables (7 / 5 / 4 / 3 stations), neck crest and dewlap carried to the new lines, withers and back front (6 stations at 1:50, 4 at 1:100, the 0.98 station of the 1:200 trunk), fore chest shortened, muzzle and cheek breadth at every scale. Thermal follows by `of`.
+- **Structure** (`rework-dairy-cow-skeleton.py`, new, after the girdle chisel): 1:50 skull loft of nine stations with zygomatic arches and cheek-tooth rows, mandible halves with ramus, condyle, coronoid process and incisors, glenoid ends of both scapulae; skull of six stations at 1:100; sternum as a flat bar through the ventral ends of the sternal ribs at 1:50, 1:100 and 1:200.
+- **2D** (`rework-dairy-cow-2d.py --bones neck,head,jaw`, new option): neck, head and jaw shapes of every scale and view re-cut from the new body (the copy before this step is `🗑️generated/rework-dairy-cow/catalog-before-2d-pass2.json`).
+- **Decisions** (`rework-dairy-cow-decisions.py`): one more block per scale, en and de, for neck, top line, skull, sternum and the scapula placement.
+
+Rebuild chain: `rework-dairy-cow-build.sh` (rig, body, trunk, structure, girdle, skeleton, decisions) then `rework-dairy-cow-publish.py --keep-2d`.
+
+### Not looked at
+
+After the last change (scapula lengthened by 13 mm, which puts the shoulder joint back at its pass 1 place; every pose render above was made with the joint 12 mm higher and 6.5 mm further back) only the default pose was read (right side, structure front). The final renders of `grazing-head-down`, `kneeling-front`, `walk-phase-2` in three-quarter view and of `walk-cycle` at 0.9 s were produced but the image reader timed out twice (PreToolUse hook). No pose other than the default was looked at in 2D. No `--cut` thermal sheet.
+
+### Remaining (for the next pass)
+
+1. All poses and clips: read once more after the 13 mm scapula correction (expected: unchanged against pass 1 placement).
+2. `lying-resting`, `lie-down` end: the udder hangs about 0.07 m (teats 0.12 m) below the ground line. The pose's `dx`/`dy` on the udder bone do nothing (revolute joints realise only angles) and a positive `angleDeg` swings it lower; needs a pose-specific flattened udder solid or a prismatic udder joint. The stretched far fore leg has its hoof tip slightly below the ground and the folded near cannon dips about 0.03 m below it.
+3. 1:50 and 1:100 body: rump still boxy at the pin bones, coat patches stand 10–15 mm proud of the trunk as slabs (thick outline in the side view), rump/thigh seam visible, the shoulder mound stands about 0.03 m above the back line at the withers, head still one wedge loft plus jaw (only breadths corrected), ears, tail, udder, claws and dewclaws not re-modelled.
+4. 1:500 body and 2D: no coat patches (they exist only as thermal lofts because a 28 mm slab is below the feature); a Holstein at 1:500 should carry them as declared sheets or as tone in the trunk.
+5. Structure: ribs are still full hoops (sternal and asternal alike, no costal cartilages), pelvis members at 1:50–1:200 are the old ones moved, 1:50 udder ligament is a plain plate, scapula blade without spine relief, skulls at 1:200 and 1:500 are the old wedge.
+6. Thermal: `areaM2` not re-derived after the neck became deeper; plume and breath emitters not seen in any sheet (not visible without `--cut`).
+7. 2D: all limb, neck, head and jaw shapes are cleaned ruler outlines without `followTip`, not economical hand-drawn shapes; trunk shapes (`hindbody`, `chest`) were not re-cut after the withers and fore-chest change (within the silhouette rule, up to 25 mm at the withers and 50 mm at the hidden fore chest); hoof cleft strokes not redrawn; `representations[*].decisions` not updated; flat scapula shapes are exact at rest only.
+8. Default pose: near hind leg still trails with a tibia of about 45°.
+
+### Fundamental issues (outside this asset)
+
+- A revolute joint silently drops `dx`/`dy` of a pose offset (`effectiveOffset` in `🔨️modules/🦴️rig`); `validateAsset` does not report such dead offsets (the cow's `lying-resting` udder offset has been dead since it was written).
+- The Read tool's PreToolUse hook timed out again for images at the end of the pass.
+- `r3-2d.ts` once ran for more than 100 s on this asset at the start of the pass (4 s later on), probably host load.

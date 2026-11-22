@@ -3,7 +3,6 @@
 use super::*;
 
 impl EventRouter {
-    //#region 🔖️DragDropApi
     pub fn set_drag_payload(&mut self, node: NodeId, payload: DragPayload) {
         self.drag_payloads.insert(node, payload);
     }
@@ -34,7 +33,8 @@ impl EventRouter {
         let Some((pointer_id, id, CaptureKind::Press)) = self.capture.target else { return };
         let Some(payload) = self.drag_payloads.get(&id).cloned() else { return };
         let Some((origin_x, origin_y)) = self.press_origin else { return };
-        if (x - origin_x).powi(2) + (y - origin_y).powi(2) < DRAG_PROMOTE_THRESHOLD_SQ {
+        let palette = payload.contains_key(TREE_CATALOGUE_DRAG_MIME);
+        if !(if palette { tree_palette_drag_begins(x - origin_x, y - origin_y) } else { (x - origin_x).powi(2) + (y - origin_y).powi(2) >= DRAG_PROMOTE_THRESHOLD_SQ }) {
             return;
         }
         self.capture.target = Some((pointer_id, id, CaptureKind::Drag));
@@ -54,6 +54,47 @@ impl EventRouter {
         }
     }
 
+    /// 🫳️ The key of the tree row or section `node` is — the key its owning tree's drop binding answers to.
+    fn tree_drop_key(tree: &UiTree, node: NodeId) -> Option<&str> {
+        tree.authored_tree_item(node).map(|item| item.id.as_str()).or_else(|| tree.authored_tree_section(node).map(|section| section.id.as_str()))
+    }
+
+    /// 🫳️ Whether `node` is a tree row or section whose owning tree binds a drop action — React's `dropBinding`.
+    fn tree_node_drops(tree: &UiTree, node: NodeId) -> bool {
+        Self::tree_drop_key(tree, node).zip(tree.document()).is_some_and(|(key, document)| semio_ui_retained_tree::reconcile::tree_drop_action(document, key).is_some())
+    }
+
+    /// 🫳️ Stamps the tree the drag in flight may drop on — React's `isDropReady` (`draggedIds.length > 0 && handleDrop`): the owning tree of a dragged row whose tree binds a drop action. Cleared when no drag is in flight.
+    pub(super) fn sync_drop_ready(&self, tree: &mut UiTree) {
+        let ready = self.drag.as_ref().and_then(|drag| {
+            let owner = tree_row_owner(tree, drag.source)?;
+            Self::tree_node_drops(tree, drag.source).then_some((owner, drag.source))
+        });
+        tree.set_drop_ready(ready);
+    }
+
+    /// 📚️ Whether a catalogue drop on `row` clicks it — React's `catalogueTreeDragController.handleDrop` when the tree binds no drop action: the tree's rows carry the catalogue MIME somewhere, the drop carries a non-blank payload under it, and the target is an item (its `onClick`: activation, else the domain pick).
+    fn catalogue_row_click(tree: &UiTree, payload: &DragPayload, row: NodeId) -> bool {
+        fn carries(items: &[UiTreeItemNode]) -> bool {
+            items.iter().any(|item| item.drag_data.as_ref().is_some_and(|data| data.contains_key(TREE_CATALOGUE_DRAG_MIME)) || item.items.as_deref().is_some_and(carries))
+        }
+        payload.get(TREE_CATALOGUE_DRAG_MIME).map(String::as_str).filter(|encoded| tree_palette_payload(Some(*encoded))).is_some_and(|encoded| semio_framework_pack_json::parse(encoded, semio_framework_pack_json::JsonMemberPolicy::Replace).is_ok())
+            && tree.authored_tree_item(row).is_some()
+            && !Self::tree_node_drops(tree, row)
+            && tree_row_owner(tree, row).and_then(|owner| super::tree_roving_and_keys::tree_spec(tree, owner)).is_some_and(|spec| spec.sections.iter().any(|section| carries(&section.items)))
+    }
+
+    /// 📏️ The row frame a drop on `row` is resolved against: the row's own band (its header when it is an open group), never the subtree behind it — the element React's `getBoundingClientRect` measures.
+    pub fn tree_row_frame(&self, tree: &UiTree, row: NodeId) -> Option<Rect> {
+        let rect = node_abs_rect(tree, row)?;
+        let height = match tree.authored_tree_item(row) {
+            Some(item) => semio_ui_wgpu_mounted_layout::retained_tree_row_metrics(tree, row, &self.tree_drag_metrics).for_item(item).row_height.min(rect.h),
+            None => rect.h,
+        };
+        let y = if self.flow.block.is_reversed() { rect.y + rect.h - height } else { rect.y };
+        Some(Rect::new(rect.x, y, rect.w, height))
+    }
+
     /// 🎯️ Finds the nearest declared drop target whose predicate accepts the active drag.
     fn nearest_accepting_drop_target(&self, tree: &UiTree, from: NodeId) -> Option<NodeId> {
         let mime = ui_contract::TREE_ROW_REORDER_MIME;
@@ -61,11 +102,9 @@ impl EventRouter {
         let mut found = None;
         bubble(tree, from, |id| {
             let accepts_target = if reorder {
-                tree.authored_tree_item(id).zip(tree.document()).is_some_and(|(item, document)| {
-                    item.drag_data.as_ref().is_some_and(|data| data.contains_key(mime)) && semio_ui_retained_tree::reconcile::tree_item_drop_action(document, &item.id).is_some()
-                })
+                self.drag.as_ref().is_some_and(|drag| drag.source != id) && tree.authored_tree_item(id).is_some_and(|item| item.drag_data.as_ref().is_some_and(|data| data.contains_key(mime))) && Self::tree_node_drops(tree, id)
             } else {
-                tree.node(id).is_some_and(|node| node.flags.contains(NodeFlags::DROP_TARGET))
+                tree.node(id).is_some_and(|node| node.flags.contains(NodeFlags::DROP_TARGET)) || Self::tree_node_drops(tree, id) || self.drag.as_ref().is_some_and(|drag| Self::catalogue_row_click(tree, &drag.payload, id))
             };
             if !accepts_target {
                 return false;
@@ -83,20 +122,26 @@ impl EventRouter {
         });
         found
     }
-    //#endregion 🔖️DragDropApi
 
-    pub(super) fn commit_drag(&mut self, tree: &mut UiTree, root: NodeId, active_id: NodeId, x: f32, y: f32) -> Option<UiCommand> {
+    pub(super) fn commit_drag(&mut self, tree: &mut UiTree, root: NodeId, active_id: NodeId, x: f32, y: f32) -> Vec<UiCommand> {
         self.tree_drag_handle_press = None;
         if let Some(node) = tree.node_mut(active_id) {
             node.flags.set(NodeFlags::ACTIVE, false);
         }
         tree.mark_dirty(active_id, NodeFlags::DIRTY_PAINT);
         self.update_drag(tree, root, x, y);
-        let drag = self.drag.take()?;
+        let Some(drag) = self.drag.take() else { return Vec::new() };
         let window_id = self.window_id.clone();
-        Some(match drag.drop_target {
-            Some(target) => UiCommand::DropCommitted { window_id, source: drag.source, target, y, payload: drag.payload },
-            None => UiCommand::DropCancelled { window_id, source: drag.source },
-        })
+        let mut out = Vec::new();
+        match drag.drop_target {
+            Some(target) if Self::catalogue_row_click(tree, &drag.payload, target) => {
+                if let Some(owner) = tree_row_owner(tree, target) {
+                    self.select_tree_row(tree, owner, target, None, TreeMerge::Replace, true, false, &mut out);
+                }
+            }
+            Some(target) => out.push(UiCommand::DropCommitted { window_id, source: drag.source, target, y, payload: drag.payload }),
+            None => out.push(UiCommand::DropCancelled { window_id, source: drag.source }),
+        }
+        out
     }
 }

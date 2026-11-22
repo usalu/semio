@@ -95,7 +95,7 @@ fn registration(value: &Value) -> semio_renderer_wgpu_engine_attach::engine_surf
     let detail = match kind {
         "nodeGraph" => semio_renderer_wgpu_engine_attach::engine_surface_attach::EngineSurfaceKindDetail::NodeGraph,
         "tiledMap" => semio_renderer_wgpu_engine_attach::engine_surface_attach::EngineSurfaceKindDetail::TiledMap { selection_method: value["selectionMethod"].as_str().unwrap_or("rectangle").to_string() },
-        "board2d" => semio_renderer_wgpu_engine_attach::engine_surface_attach::EngineSurfaceKindDetail::Board2d { snapshot_json: value["snapshotJson"].as_str().unwrap_or_default().to_string() },
+        "board2d" => semio_renderer_wgpu_engine_attach::engine_surface_attach::EngineSurfaceKindDetail::Board2d { snapshot_json: value["snapshotJson"].as_str().unwrap_or_default().to_string(), suggestion_menu_json: None },
         "world3d" => semio_renderer_wgpu_engine_attach::engine_surface_attach::EngineSurfaceKindDetail::World3d { status_json: value["statusJson"].as_str().map(str::to_owned) },
         other => panic!("unknown surface kind {other}"),
     };

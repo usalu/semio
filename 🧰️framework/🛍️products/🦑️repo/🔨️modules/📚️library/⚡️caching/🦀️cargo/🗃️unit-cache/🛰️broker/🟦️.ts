@@ -13,7 +13,7 @@ export function brokerOfV1(environment:Environment):Endpoint|undefined{
  return environment.SEMIO_UNIT_CACHE_BROKER_REPLAY==="on"&&endpoint&&pass?{endpoint,pass}:undefined;
 }
 
-function exchange(endpoint:string,message:object,reply:"verdict"|"unit"):Promise<Record<string,unknown>|undefined>{
+function exchange(endpoint:string,message:object,reply:"verdict"|"unit"|"headroom"):Promise<Record<string,unknown>|undefined>{
  return new Promise(done=>{
   const socket=createConnection(endpoint),timer=setTimeout(()=>{socket.destroy();done(undefined);},policy.timeoutMilliseconds);let text="";
   const finish=(value:Record<string,unknown>|undefined)=>{clearTimeout(timer);socket.destroy();done(value);};
@@ -42,4 +42,11 @@ export async function replayCachedUnitV1(environment:Environment,facts:AdmitFact
  const broker=brokerOfV1(environment);if(!broker)return false;
  const row=await exchange(broker.endpoint,{v:1,op:"cached",pass:broker.pass,pid:process.pid,...facts,cacheKey,provenance:provenance??null},"verdict");
  return row?.admitted===true;
+}
+
+/** 🔭️ Asks the build's admission broker whether a unit with these facts would queue behind its memory budget right now, without joining the queue: `true` for wait, `false` for admit, `undefined` when no broker answers in time. */
+export async function brokerWouldWaitV1(environment:Environment,facts:AdmitFactsV1):Promise<boolean|undefined>{
+ const broker=brokerOfV1(environment);if(!broker)return undefined;
+ const row=await exchange(broker.endpoint,{v:1,op:"probe",pass:broker.pass,pid:process.pid,...facts},"headroom");
+ return typeof row?.wait==="boolean"?row.wait:undefined;
 }

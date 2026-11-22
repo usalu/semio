@@ -2,14 +2,14 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://semio.tech/schema/rustc-offload/v1",
   "title": "Rustc offload",
-  "description": "A machine under pressure hands one rustc unit of the fleet's unit cache to an unsaturated machine: the policy (thresholds, timeouts, virtual paths, platform properties), the manifest of one offloaded action, the events and the bilingual texts.",
+  "description": "A machine hands rustc units of the fleet's unit cache to any ready machine of the fleet (distribute), or to one named machine (pin): the policy (thresholds, timeouts, virtual paths, platform properties), the manifest of one offloaded action, the events and the bilingual texts.",
   "definitions": {
     "Mode": {
       "type": "string",
       "enum": [
-        "always",
-        "auto",
-        "never"
+        "never",
+        "distribute",
+        "pin"
       ]
     },
     "Reason": {
@@ -28,6 +28,10 @@
         "path-dependent-output",
         "worker-policy",
         "incomplete-inputs",
+        "crate-type",
+        "source-kind",
+        "cheap",
+        "pin-failed",
         "cancelled"
       ]
     },
@@ -44,7 +48,9 @@
         "tool",
         "root",
         "environment",
-        "crateTypes"
+        "crateTypes",
+        "wasm",
+        "link"
       ],
       "properties": {
         "version": {
@@ -55,7 +61,8 @@
           "additionalProperties": false,
           "required": [
             "environment",
-            "default"
+            "default",
+            "pinPrefix"
           ],
           "properties": {
             "environment": {
@@ -63,6 +70,10 @@
             },
             "default": {
               "$ref": "#/definitions/Mode"
+            },
+            "pinPrefix": {
+              "type": "string",
+              "minLength": 1
             }
           }
         },
@@ -80,6 +91,7 @@
             "maximumOutputBytes",
             "maximumClosureFiles",
             "maximumArgumentBytes",
+            "maximumCheckConfigurationBytes",
             "tokenWaitMilliseconds",
             "admissionMemoMilliseconds",
             "unitMegabytes",
@@ -128,6 +140,10 @@
               "type": "integer",
               "minimum": 1
             },
+            "maximumCheckConfigurationBytes": {
+              "type": "integer",
+              "minimum": 1
+            },
             "tokenWaitMilliseconds": {
               "type": "integer",
               "minimum": 0
@@ -162,7 +178,9 @@
             "actionSeconds",
             "probeMilliseconds",
             "requestMilliseconds",
-            "rideThroughMilliseconds"
+            "rideThroughMilliseconds",
+            "queueSaturatedMilliseconds",
+            "pinQueueMilliseconds"
           ],
           "properties": {
             "connectMilliseconds": {
@@ -200,6 +218,14 @@
             "rideThroughMilliseconds": {
               "type": "integer",
               "minimum": 1
+            },
+            "queueSaturatedMilliseconds": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "pinQueueMilliseconds": {
+              "type": "integer",
+              "minimum": 1
             }
           }
         },
@@ -213,6 +239,7 @@
             "package",
             "generated",
             "external",
+            "native",
             "root"
           ],
           "properties": {
@@ -234,6 +261,9 @@
             "external": {
               "type": "string"
             },
+            "native": {
+              "type": "string"
+            },
             "root": {
               "type": "string"
             }
@@ -250,7 +280,11 @@
             "target",
             "targetPrefix",
             "format",
-            "formatValue"
+            "formatValue",
+            "peak",
+            "queueValue",
+            "pin",
+            "sdk"
           ],
           "properties": {
             "offload": {
@@ -275,6 +309,18 @@
               "type": "string"
             },
             "formatValue": {
+              "type": "string"
+            },
+            "peak": {
+              "type": "string"
+            },
+            "queueValue": {
+              "type": "string"
+            },
+            "pin": {
+              "type": "string"
+            },
+            "sdk": {
               "type": "string"
             }
           }
@@ -363,6 +409,109 @@
           "type": "array",
           "items": {
             "type": "string"
+          }
+        },
+        "wasm": {
+          "type": "object",
+          "additionalProperties": false,
+          "description": "The one linked crate type that offloads, and only for WebAssembly targets: the targets, the crate types, the numeric linker arguments (full-match patterns) of the release's wasm-ld flags, how long such an action may run and how much memory placement reserves for it.",
+          "required": [
+            "targets",
+            "crateTypes",
+            "linkArguments",
+            "actionSeconds",
+            "peakMegabytes"
+          ],
+          "properties": {
+            "targets": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "crateTypes": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "linkArguments": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "actionSeconds": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "peakMegabytes": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        },
+        "link": {
+          "type": "object",
+          "additionalProperties": false,
+          "description": "What a native unit may link on another machine: the linked crate types, the linker arguments (full-match patterns), the kinds of `-l`, the kinds of `-L` search directories (always a directory shipped with the action), the system libraries and frameworks that the worker resolves against its own SDK, the directories that every machine has (dropped from a command line, never shipped) and the bound of `-l` arguments of one unit.",
+          "required": [
+            "crateTypes",
+            "arguments",
+            "libraryKinds",
+            "searchKinds",
+            "systemLibraries",
+            "frameworks",
+            "systemDirectories",
+            "maximumLibraries"
+          ],
+          "properties": {
+            "crateTypes": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "arguments": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "libraryKinds": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "searchKinds": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "systemLibraries": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "frameworks": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "systemDirectories": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "maximumLibraries": {
+              "type": "integer",
+              "minimum": 1
+            }
           }
         }
       }
@@ -540,19 +689,21 @@
     "version": 1,
     "mode": {
       "environment": "SEMIO_OFFLOAD",
-      "default": "auto"
+      "default": "distribute",
+      "pinPrefix": "pin:"
     },
     "limits": {
       "fanOutJobs": 12,
       "roundTripMilliseconds": 2500,
       "queueThresholdMilliseconds": 1500,
       "maximumInputFiles": 8192,
-      "maximumInputBytes": 536870912,
-      "maximumUploadBytes": 536870912,
+      "maximumInputBytes": 4294967296,
+      "maximumUploadBytes": 4294967296,
       "fleetStatusMilliseconds": 3000,
       "maximumOutputBytes": 1073741824,
-      "maximumClosureFiles": 4096,
+      "maximumClosureFiles": 32768,
       "maximumArgumentBytes": 262144,
+      "maximumCheckConfigurationBytes": 1048576,
       "tokenWaitMilliseconds": 30000,
       "admissionMemoMilliseconds": 2000,
       "unitMegabytes": 768,
@@ -561,14 +712,16 @@
     },
     "timeouts": {
       "connectMilliseconds": 3000,
-      "uploadMilliseconds": 90000,
+      "uploadMilliseconds": 300000,
       "queueMilliseconds": 8000,
       "executeMarginMilliseconds": 30000,
       "downloadMilliseconds": 120000,
       "actionSeconds": 1200,
       "probeMilliseconds": 4000,
       "requestMilliseconds": 20000,
-      "rideThroughMilliseconds": 20000
+      "rideThroughMilliseconds": 20000,
+      "queueSaturatedMilliseconds": 120000,
+      "pinQueueMilliseconds": 3600000
     },
     "virtual": {
       "base": ".semio-offload",
@@ -577,6 +730,7 @@
       "package": ".semio-offload/p",
       "generated": ".semio-offload/g",
       "external": ".semio-offload/x",
+      "native": ".semio-offload/n",
       "root": ".semio-offload/root"
     },
     "property": {
@@ -587,7 +741,11 @@
       "target": "semio-target",
       "targetPrefix": "semio-rustc-target-",
       "format": "semio-offload-format",
-      "formatValue": "argv-1"
+      "formatValue": "argv-1",
+      "peak": "semio-peak-mb",
+      "queueValue": "queue",
+      "pin": "semio-pin",
+      "sdk": "semio-sdk"
     },
     "tool": {
       "name": "rustc",
@@ -683,7 +841,99 @@
       "rlib",
       "proc-macro",
       "bin"
-    ]
+    ],
+    "wasm": {
+      "targets": [
+        "wasm32-unknown-unknown",
+        "wasm32-wasip2"
+      ],
+      "crateTypes": [
+        "cdylib"
+      ],
+      "linkArguments": [
+        "^--max-memory=[0-9]{1,12}$",
+        "^-zstack-size=[0-9]{1,10}$",
+        "^-Wl,--export=[A-Za-z_][A-Za-z0-9_]{0,200}$"
+      ],
+      "actionSeconds": 3600,
+      "peakMegabytes": 6144
+    },
+    "link": {
+      "crateTypes": [
+        "cdylib",
+        "dylib",
+        "staticlib"
+      ],
+      "arguments": [
+        "^-Wl,-undefined,dynamic_lookup$"
+      ],
+      "libraryKinds": [
+        "static",
+        "dylib",
+        "framework"
+      ],
+      "searchKinds": [
+        "native",
+        "all",
+        "framework"
+      ],
+      "systemLibraries": [
+        "System",
+        "c",
+        "m",
+        "pthread",
+        "dl",
+        "rt",
+        "util",
+        "iconv",
+        "objc",
+        "c++",
+        "c++abi",
+        "stdc++",
+        "gcc_s",
+        "z",
+        "resolv",
+        "sqlite3",
+        "bz2",
+        "xml2",
+        "ncurses",
+        "curl"
+      ],
+      "frameworks": [
+        "Accelerate",
+        "AppKit",
+        "AudioToolbox",
+        "AudioUnit",
+        "AVFoundation",
+        "Carbon",
+        "CoreAudio",
+        "CoreFoundation",
+        "CoreGraphics",
+        "CoreHaptics",
+        "CoreImage",
+        "CoreMedia",
+        "CoreServices",
+        "CoreText",
+        "CoreVideo",
+        "Foundation",
+        "IOKit",
+        "IOSurface",
+        "Metal",
+        "MetalKit",
+        "QuartzCore",
+        "Security",
+        "SystemConfiguration",
+        "UniformTypeIdentifiers"
+      ],
+      "systemDirectories": [
+        "/usr/lib",
+        "/System/Library/Frameworks",
+        "/Library/Frameworks",
+        "/Library/Developer/CommandLineTools/SDKs",
+        "/Applications/Xcode.app/Contents/Developer/Platforms"
+      ],
+      "maximumLibraries": 256
+    }
   },
   "messages": {
     "en": {
@@ -706,7 +956,11 @@
       "reason.worker-policy": "the action policy of a worker refuses its arguments",
       "reason.incomplete-inputs": "the other machine lacked an input",
       "reason.cancelled": "the build was cancelled",
-      "flag.invalid": "--offload takes always, auto or never, once."
+      "flag.invalid": "--offload takes never, distribute or pin:<origin>, once.",
+      "reason.crate-type": "its crate type is linked here",
+      "reason.source-kind": "its source is not a Rust file",
+      "reason.cheap": "it compiles faster than a round trip",
+      "reason.pin-failed": "the pinned machine could not take or finish it"
     },
     "de": {
       "offloaded": "Einheit {crate} auf {origin} ausgelagert ({milliseconds} ms).",
@@ -728,7 +982,11 @@
       "reason.worker-policy": "die Aktionsrichtlinie eines Workers lehnt ihre Argumente ab",
       "reason.incomplete-inputs": "der anderen Maschine fehlte eine Eingabe",
       "reason.cancelled": "der Build wurde abgebrochen",
-      "flag.invalid": "--offload nimmt always, auto oder never, genau einmal."
+      "flag.invalid": "--offload nimmt never, distribute oder pin:<Ursprung>, genau einmal.",
+      "reason.crate-type": "sein Crate-Typ wird hier gelinkt",
+      "reason.source-kind": "seine Quelle ist keine Rust-Datei",
+      "reason.cheap": "sie ist schneller kompiliert als ein Hin und Zurück",
+      "reason.pin-failed": "die festgelegte Maschine konnte sie nicht annehmen oder nicht beenden"
     }
   }
 }

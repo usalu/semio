@@ -140,20 +140,21 @@ fn action_descriptor(scope: &ui_contract::UiText, name: &ui_contract::UiText, ve
     ActionDescriptor { controller_id: scope.as_str().to_string(), action: if version == 1 { name.as_str().to_string() } else { format!("{}@{}", name.as_str(), version) }, args }
 }
 
-/// 🫳️ The action a tree row declares for a drop on it (its `Trigger::Drop` binding), found by the row's key in the published document; `None` when no row of that key declares one. Bounded by the document's node count.
-pub fn tree_item_drop_action(document: &UiDocumentTree, item_key: &str) -> Option<ActionDescriptor> {
-    let mut pending = vec![document.root_id()];
+/// 🫳️ The action a drop on the tree row or section `key` fires — its owning `Tree` record's `Trigger::Drop` binding, as React's `dropBinding` (`🗣️Interpreter/🧱️node-tree`); `None` when no row or section of that key sits under a tree that binds one. Bounded by the document's node count.
+pub fn tree_drop_action(document: &UiDocumentTree, key: &str) -> Option<ActionDescriptor> {
+    let mut pending = vec![(document.root_id(), None::<ActionDescriptor>)];
     let mut visited = 0usize;
-    while let Some(id) = pending.pop() {
+    while let Some((id, owner)) = pending.pop() {
         visited += 1;
         if visited > document.node_count() {
             return None;
         }
         let Some(record) = document.record(id) else { continue };
-        if record.key.as_str() == item_key && matches!(record.component, ui_contract::Component::TreeItem(_)) {
-            return record_action(record, ui_contract::Trigger::Drop, "");
+        if record.key.as_str() == key && matches!(record.component, ui_contract::Component::TreeItem(_) | ui_contract::Component::TreeSection(_)) {
+            return owner;
         }
-        pending.extend(record.children.iter().copied());
+        let owner = if matches!(record.component, ui_contract::Component::Tree(_)) { record_action(record, ui_contract::Trigger::Drop, "") } else { owner };
+        pending.extend(record.children.iter().map(|child| (*child, owner.clone())));
     }
     None
 }

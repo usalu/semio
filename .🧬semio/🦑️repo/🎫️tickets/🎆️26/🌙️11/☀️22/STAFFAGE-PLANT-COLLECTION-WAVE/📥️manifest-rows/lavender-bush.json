@@ -1,0 +1,55 @@
+{
+ "id": "lavender-bush",
+ "category": "vegetation",
+ "title": {
+  "en": "English Lavender",
+  "de": "Echter Lavendel"
+ },
+ "heightM": 0.6,
+ "widthM": 0.8,
+ "powerW": 0,
+ "poses": [
+  "calm",
+  "windy",
+  "storm",
+  "snow"
+ ],
+ "clips": [
+  "wind-sway",
+  "gust",
+  "diurnal-transpiration"
+ ],
+ "representations": {
+  "50": "authored",
+  "100": "authored",
+  "200": "authored",
+  "500": "unavailable"
+ },
+ "symbols": [
+  "lavender-bush-symbol"
+ ],
+ "analytics": [
+  "thermal",
+  "transport",
+  "structural"
+ ],
+ "exports": [
+  "svg",
+  "pdf",
+  "dxf",
+  "dwg",
+  "png-sequence",
+  "mp4",
+  "webm",
+  "component",
+  "glb",
+  "fbx",
+  "model",
+  "model-zip"
+ ],
+ "distinction": {
+  "en": "A low evergreen subshrub: a grey leaf cushion on a woody crown with a fanned crown of single flower stalks and spikes, whose stalks, not the mass, carry the wind sway.",
+  "de": "Niedriger immergrüner Halbstrauch: ein graues Blattpolster auf verholztem Wurzelhals mit einer Fächerkrone einzelner Blütenstiele und Ähren, deren Stiele, nicht die Masse, die Windschwingung tragen."
+ },
+ "completion": "authored"
+}

@@ -1,0 +1,56 @@
+{
+  "id": "honey-locust",
+  "category": "vegetation",
+  "title": {
+    "en": "Thornless Honey Locust",
+    "de": "Dornenlose Gleditschie"
+  },
+  "heightM": 15,
+  "widthM": 11.146,
+  "powerW": 0,
+  "poses": [
+    "calm",
+    "windy",
+    "storm",
+    "autumn-gold"
+  ],
+  "clips": [
+    "wind-sway",
+    "gust",
+    "diurnal-transpiration"
+  ],
+  "representations": {
+    "50": "authored",
+    "100": "authored",
+    "200": "authored",
+    "500": "authored"
+  },
+  "symbols": [
+    "honey-locust-symbol",
+    "tree-sign"
+  ],
+  "analytics": [
+    "thermal",
+    "transport",
+    "structural"
+  ],
+  "exports": [
+    "svg",
+    "pdf",
+    "dxf",
+    "dwg",
+    "png-sequence",
+    "mp4",
+    "webm",
+    "component",
+    "glb",
+    "fbx",
+    "model",
+    "model-zip"
+  ],
+  "distinction": {
+    "en": "A 15 m thornless honey locust (Gleditsia triacanthos f. inermis) whose short stem forks at 3 m into four arching main limbs: a broad vase-to-umbrella crown about 12 m wide of small flat sprays of fine pinnate leaves with sky between them, the lightest shade of the street trees.",
+    "de": "Eine 15 m hohe dornenlose Gleditschie (Gleditsia triacanthos f. inermis), deren kurzer Stamm sich in 3 m Höhe in vier bogige Hauptäste gabelt: eine breite Vasen- bis Schirmkrone von etwa 12 m Breite aus kleinen flachen Büscheln feinen Fiederlaubs mit Himmel dazwischen, der lichteste Schatten der Straßenbäume."
+  },
+  "completion": "authored"
+}

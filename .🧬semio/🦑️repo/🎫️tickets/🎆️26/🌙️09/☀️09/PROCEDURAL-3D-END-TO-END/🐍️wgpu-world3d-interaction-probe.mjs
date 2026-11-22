@@ -22,6 +22,7 @@
 import { chromium } from "playwright";
 import { writeFileSync, mkdirSync, readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
+import { exampleFixtureFor } from "./🐍️example-fixtures.mjs";
 
 const mode = process.env.SEMIO_PROBE_MODE ?? "";
 const role = process.env.SEMIO_PROBE_ROLE ?? "";
@@ -45,15 +46,7 @@ const urlFor = (example) => {
   if (!example) return stripped;
   return `${stripped}${stripped.includes("?") ? "&" : "?"}example=${encodeURIComponent(example)}`;
 };
-const EXAMPLES_ROOT = join(import.meta.dir, "..", "..", "..", "..", "..", "..", "..", "✏️s", "🔌️plugins", "🌀️procedural", "🗿️artifacts", "🧊️generation3d", "🏅️standards", "🔖️1", "🪆️subsets", "✳️any", "📚️examples");
-const fixtureFor = (example) => {
-  try {
-    const dir = readdirSync(EXAMPLES_ROOT).find((entry) => entry.endsWith(example));
-    return dir ? JSON.parse(readFileSync(join(EXAMPLES_ROOT, dir, "🧫️fixtures", "🧩️example", "🔣️.json"), "utf8")) : null;
-  } catch {
-    return null;
-  }
-};
+const fixtureFor = exampleFixtureFor;
 
 const runs = [];
 const allLines = [];

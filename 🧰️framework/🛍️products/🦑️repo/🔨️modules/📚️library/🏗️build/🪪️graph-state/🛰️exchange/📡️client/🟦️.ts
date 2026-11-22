@@ -66,21 +66,23 @@ async function readBlobBytesV1(response:Response,size:number,signal:AbortSignal)
  }
 }
 
-/** 📡️ Creates the client of one process. */
+/** 📡️ Creates the client of one process. A lookup whose timeout fired `breaker.lateMilliseconds` or more after its deadline says the event loop of this process was stalled, not that the server was silent (the answer may have arrived unread): it is asked once more with `breaker.confirmMilliseconds` before the unreachable marker is written; a silent server and a refused connection mark at once.
+ * @see ./🧪️tests/🚦️confirm/🟦️.ts */
 export function createGraphFleetClientV1(settings:GraphFleetSettingsV1,world:Readonly<{fetch?:typeof fetch}>={}):GraphFleetClientV1{
  const request=world.fetch??fetch,base=`${settings.endpoint}/${settings.instance}`,t=policy.timeouts,b=policy.breaker,headers=(extra:Record<string,string>={}):Record<string,string>=>({...(settings.token?{authorization:"Bearer "+settings.token}:{}),...extra});
  const faultOf=(status:number):GraphFleetFaultV1=>status===401||status===403?"denied":status===404||status===405?"unsupported":"down";
  const mark=(fault:GraphFleetFaultV1)=>stamp(settings.stateDirectory,fault==="denied"?"denied":fault==="unsupported"?"noclaims":"down");
- async function call(method:string,url:string,timeout:number,init:{body?:BodyInit;headers?:Record<string,string>}={},signal?:AbortSignal):Promise<GraphResponseV1|GraphFleetFaultV1>{
-  const answer=await attempt(method,url,timeout,init,signal);
+ async function call(method:string,url:string,timeout:number,init:{body?:BodyInit;headers?:Record<string,string>;confirm?:boolean}={},signal?:AbortSignal):Promise<GraphResponseV1|GraphFleetFaultV1>{
+  let answer=await attempt(method,url,timeout,init,signal);
+  if("error" in answer&&answer.error==="timeout"&&init.confirm===true&&answer.late>=b.lateMilliseconds)answer=await attempt(method,url,Math.max(timeout,b.confirmMilliseconds),init,signal);
   if("error" in answer){mark("down");return "down";}
   return answer;
  }
- async function attempt(method:string,url:string,timeout:number,init:{body?:BodyInit;headers?:Record<string,string>},signal?:AbortSignal):Promise<GraphResponseV1|{error:"timeout"|"network"}>{
+ async function attempt(method:string,url:string,timeout:number,init:{body?:BodyInit;headers?:Record<string,string>},signal?:AbortSignal):Promise<GraphResponseV1|{error:"timeout"|"network";late:number}>{
   signal?.throwIfAborted();
-  const deadline=AbortSignal.timeout(timeout),requestSignal=signal===undefined?deadline:AbortSignal.any([signal,deadline]);
+  const began=performance.now(),deadline=AbortSignal.timeout(timeout),requestSignal=signal===undefined?deadline:AbortSignal.any([signal,deadline]);
   try{const response=await request(url,{method,headers:headers(init.headers),signal:requestSignal,...(init.body===undefined?{}:{body:init.body})});return{status:response.status,response,signal:requestSignal};}
-  catch(error){signal?.throwIfAborted();return{error:(error as {name?:string})?.name==="TimeoutError"||(error as {name?:string})?.name==="AbortError"?"timeout":"network"};}
+  catch(error){signal?.throwIfAborted();return{error:(error as {name?:string})?.name==="TimeoutError"||(error as {name?:string})?.name==="AbortError"?"timeout":"network",late:Math.max(0,Math.round(performance.now()-began-timeout))};}
  }
  async function put(request:GraphPutTimeoutV1["request"],url:string,deadlineMilliseconds:number,init:{body:BodyInit;headers:Record<string,string>}):Promise<GraphPutV1>{
   const answer=await attempt("PUT",url,deadlineMilliseconds,init);
@@ -100,7 +102,7 @@ export function createGraphFleetClientV1(settings:GraphFleetSettingsV1,world:Rea
   breakerRemainingMilliseconds(){return Math.max(remaining(join(settings.stateDirectory,"down"),b.downMilliseconds),remaining(join(settings.stateDirectory,"denied"),b.deniedMilliseconds));},
   claimsUsable(){return settings.upload&&!fresh(join(settings.stateDirectory,"noclaims"),b.noClaimsMilliseconds);},
   async getResult(key,signal){
-   const answer=await call("GET",`${base}/ac/${key}`,t.lookupMilliseconds,{},signal);
+   const answer=await call("GET",`${base}/ac/${key}`,t.lookupMilliseconds,{confirm:true},signal);
    if(typeof answer==="string")return answer;
    if(answer.status!==200||signal?.aborted){await answer.response.body?.cancel().catch(()=>undefined);signal?.throwIfAborted();}
    if(answer.status===404)return "miss";

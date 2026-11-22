@@ -94,17 +94,7 @@ async fn every_command_round_trips_text_and_binary_under_its_declared_wire_keywo
     }
 }
 
-/// 🎯️ Every declared action maps to a typed command. The pre-migration `gis3d_ui` crate had NO
-/// `command_from_action` override at all — it inherited the trait default, which errors for every
-/// action, so the whole `{action,args}` host wire was dead. That crate never compiled (see the
-/// migration ticket), which is why the gap was invisible; this test locks the fix in.
-/// 🎯️ Every app-declared action must bridge through `command_from_action` and round-trip
-/// `command_id`. Uses the framework's own harness, which stages each action's declared args and
-/// knows the framework-injected ids to skip (`undo`/`copy`/`recordTutorial`/…).
-///
-/// 🩹️ This is the test that would have caught the pre-migration gap: `gis3d_ui` had NO
-/// `command_from_action` override, so every declared action fell through to the trait default's
-/// hard error and the whole `{action,args}` host wire was dead.
+/// 🎯️ Every app-declared action bridges through `command_from_action` and round-trips `command_id`.
 #[semio_framework_async_macros::async_test]
 async fn command_from_action_covers_every_declared_action_and_rejects_unknown_ones() {
     semio_plugin::artifact_app_laws::assert_declared_actions_bridge_to_commands::<EditorApp<Gis3dPlayApp>>(|| {
@@ -137,6 +127,30 @@ async fn the_manifest_stitches_every_taxonomy_node() {
     assert!(!definition.panel_tabs.iter().any(|tab| tab.body_key.as_deref().is_some_and(|key| key.starts_with("gis3d.play."))), "gis3d declares no app panels");
     assert!(definition.artifact_kinds.iter().any(|kind| kind.id == semio_s_artifact_gis_gismap::GISMAP_DIALECT.artifact_kind));
     assert!(!definition.artifact_kinds.iter().any(|kind| kind.id == "3d.mesh"));
+}
+
+/// 📐️ The reserved Measures and Engagements sections project for a Terrain window whose host utility register is non-empty.
+#[semio_framework_async_macros::async_test]
+async fn window_sections_project_while_the_host_utility_register_is_populated() {
+    use semio_plugin::PluginApp;
+    let mut app = app().await;
+    let mut view = context::main_window_view();
+    view.window_instances = vec![
+        semio_plugin::ViewWindowInstance { id: "terrain-a".into(), window_kind_id: terrain::GIS3D_PLAY_WINDOW_MAIN.into() },
+        semio_plugin::ViewWindowInstance { id: "terrain-b".into(), window_kind_id: terrain::GIS3D_PLAY_WINDOW_MAIN.into() },
+    ];
+    view.window_id = Some("terrain-a".into());
+    view.active_utility_by_window_id.insert("terrain-a".into(), Some("terrainRaise".into()));
+    view.active_utility_by_window_id.insert("terrain-b".into(), None);
+    for _ in 0..2 {
+        assert!(app.0.window_measures(&view).await.values().all(Vec::is_empty), "Terrain declares no window measures");
+        assert!(app.0.window_engagements(&view).await.len() <= 2);
+        assert!(app.0.tool_measures(&view).await.is_empty());
+        assert_eq!(view.active_utility_by_window_id.len(), 2, "the section projection returns every borrowed alias of the host register");
+    }
+    view.active_utility_by_window_id.retire_cold();
+    view.tool_run_trace_cursor_by_window_id.retire_cold();
+    context::close(&mut app);
 }
 
 #[semio_framework_async_macros::async_test]

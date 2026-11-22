@@ -1,0 +1,11 @@
+{
+  "variant": "stdio-xlsx",
+  "plugin": "stdio-office",
+  "app": "s.stdio.xlsx@ecma-376/*#editor",
+  "reactPort": 6272,
+  "wgpuPort": 6372,
+  "dependsOn": ["stdio"],
+  "manifest": "🌎️hub/🧩️compositions/🗄️stdio/🧩️extensions/💼️office/🧩️component/📦️packages/🦀️rust/Cargo.toml",
+  "contribution": "✏️s/🧑‍💻dev/🎭️variants/📕️stdio-xlsx/🧬️schema/🔣️.json",
+  "siblings": ["stdio-xlsx-strict", "stdio-xlsx-transitional"]
+}

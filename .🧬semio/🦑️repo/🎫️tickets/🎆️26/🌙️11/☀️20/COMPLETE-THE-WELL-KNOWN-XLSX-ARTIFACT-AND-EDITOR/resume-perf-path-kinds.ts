@@ -1,0 +1,2 @@
+const memo=JSON.parse(await Bun.file(process.argv[2]).text());const want=process.argv[3];
+const kinds:Record<string,number>={};const owners=new Set<number>();memo.owners.forEach((o:any,i:number)=>{for(const at of o.rows){const r=memo.observations[at];if(r.path.endsWith(want)){kinds[r.kind+(r.kind==="field"?":"+r.fact.format+":"+r.fact.pointer:r.kind==="analysis"?":"+String(r.fact.provider).slice(0,40):"")]=(kinds[r.kind]??0)+1;owners.add(i);}}});console.log(owners.size,kinds);

@@ -283,7 +283,7 @@
         "byteLength": {
           "type": "integer",
           "minimum": 1,
-          "maximum": 268435456
+          "maximum": 1073741824
         },
         "sha256": {
           "$ref": "#/$defs/digest"

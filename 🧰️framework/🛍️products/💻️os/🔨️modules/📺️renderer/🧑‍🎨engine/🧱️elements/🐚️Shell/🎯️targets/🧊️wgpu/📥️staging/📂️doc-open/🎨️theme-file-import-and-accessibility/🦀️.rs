@@ -18,6 +18,34 @@ pub use native_original_media::{NativeOriginalMediaPoll, NativeOriginalMediaTask
 mod native_file_open;
 #[cfg(not(target_arch = "wasm32"))]
 pub use native_file_open::{native_local_documents, NativeOpenedFile};
+#[path = "🗂️kept-open.rs"]
+mod kept_file_open;
+pub use kept_file_open::KeptFileRequest;
+#[path = "🧭️natural-route.rs"]
+mod natural_route;
+pub use natural_route::{browser_natural_format, route_browser_file, BrowserCatalog, BrowserOpenRouting, BrowserPickedFile, RangeCache};
+#[cfg(target_arch = "wasm32")]
+#[path = "🌐️open.rs"]
+mod browser_file_open;
+#[cfg(target_arch = "wasm32")]
+pub use browser_file_open::{admit_local_catalog_document, retire_local_catalog_document, browser_catalog, local_document_folder_uri, release_browser_picked_file, BrowserOpenedFile};
+
+const PICKED_FILE_REFUSALS: &str = include_str!("../../../../../../../../../📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/📂️picked-file-opening/🔣️.json");
+
+/// 🗣️ The refusal notice of the shared picked-file vocabulary with `{file}` filled: the shell's own language when the vocabulary carries it, every language joined otherwise (React's `pickedFileRefusalTextV1`).
+pub fn picked_file_refusal_text(reason: &str, file: &str, locale: Option<&str>) -> String {
+    let vocabulary: serde_json::Value = serde_json::from_str(PICKED_FILE_REFUSALS).expect("picked-file refusal vocabulary");
+    let row = &vocabulary["reasons"][reason];
+    let own = locale.and_then(|locale| row[locale].as_str());
+    let texts: Vec<&str> = own.map_or_else(|| ["en", "de"].iter().filter_map(|language| row[*language].as_str()).collect(), |text| vec![text]);
+    texts.iter().map(|text| text.replace("{file}", file)).collect::<Vec<_>>().join(" | ")
+}
+
+/// 🩺️ The fault code carried on the refusal notice (React's `pickedFileRefusalCodeV1`).
+pub fn picked_file_refusal_code(reason: &str) -> String {
+    let vocabulary: serde_json::Value = serde_json::from_str(PICKED_FILE_REFUSALS).expect("picked-file refusal vocabulary");
+    format!("{}{reason}", vocabulary["codePrefix"].as_str().unwrap_or_default())
+}
 
 //#region 📤️FileOpenImport
 /// 📥️ Turns one picker answer into the actions a shell dispatches — one per

@@ -137,7 +137,7 @@ test("several passes in a row stay equal to a full take, and a named path forget
 test("the owner loop answers from the memo before any look, remembers an owner only after its answer is final, and never in the late-closure mode",()=>{
  const text=readFileSync(new URL("../../🟨️.mjs",import.meta.url),"utf8");
  expect(text).toContain("const takenMemo=late?undefined:context.takenMemo");
- expect(text).toContain("serialize([registryDigest,commandRevision,late,[...projectsByRoot],componentRoots,contracts,context.registry??null])");
+ expect(text).toContain("serialize([registryDigest,commandRevision,late,[...projectsByRoot],componentRoots,contracts])");
  expect(text).toContain("try{await preloadTaken();await runTakeBesideInferV1({take:resolveOwners,");
  const finished=text.indexOf("result.projects[name].targets={...inactive,...result.projects[name].targets};noteProjectSizeV1(name,result.projects[name]);"),remembered=text.indexOf("takenMemo.remember(name,{key:memoKey,project:result.projects[name],rows:stored})");
  expect(finished).toBeGreaterThan(-1);expect(remembered).toBeGreaterThan(finished);expect(text.split("takenMemo.remember(").length).toBe(2);

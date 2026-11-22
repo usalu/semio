@@ -1,5 +1,5 @@
 import { BrowserInteractiveJobPort } from "../🔌️browser-interactive-job-port/🟦️.ts";
-import { type BrowserFrameDiagnostic, type BrowserFrameDirectives, type BrowserFrameFallbackState, type BrowserFrameIntrospectionProbe, type BrowserFrameLosslessEvent, type BrowserFrameReplaceableEvent, type BrowserFrameTransportOptions, type BrowserFrameWireEvent, type BrowserFrameWireLosslessEvent, type BrowserFrameWireReplaceableEvent, type BrowserFrameWorkerFaultCode, type BrowserFrameWorkerMessage, type BrowserFrameWorkerPort, type BrowserFrameWorkerStatus, type BrowserFrameWorkerStepReport, type BrowserHubDocumentRemote, FRAME_WORKER_ACCESSIBILITY_ID_BYTES, FRAME_WORKER_BYTE_CAPACITY, FRAME_WORKER_CONTINUOUS_PAGE_CAPACITY, FRAME_WORKER_HUB_DOCUMENT_CAPACITY, FRAME_WORKER_IMAGE_DECODE_BYTE_CAPACITY, FRAME_WORKER_INTROSPECTION_CAPACITY, FRAME_WORKER_INTROSPECTION_TIMEOUT_MS, FRAME_WORKER_LOSSLESS_ITEM_CAPACITY, FRAME_WORKER_LOSSLESS_PAGE_CAPACITY, FRAME_WORKER_MESSAGE_BYTE_CAPACITY, FRAME_WORKER_PENDING_REPLACEABLE_CAPACITY, FRAME_WORKER_POINTER_CAPACITY, FRAME_WORKER_TEXT_CHUNK_CODE_UNITS, type QueuedLossless } from "./📋️contract/🟦️.ts";
+import { type BrowserFrameDiagnostic, type BrowserFrameDirectives, type BrowserFrameFallbackState, type BrowserFrameIntrospectionProbe, type BrowserFrameLosslessEvent, type BrowserFramePickedFile, type BrowserFrameReplaceableEvent, type BrowserFrameTransportOptions, type BrowserFrameWireEvent, type BrowserFrameWireLosslessEvent, type BrowserFrameWireReplaceableEvent, type BrowserFrameWorkerFaultCode, type BrowserFrameWorkerMessage, type BrowserFrameWorkerPort, type BrowserFrameWorkerStatus, type BrowserFrameWorkerStepReport, type BrowserHubDocumentRemote, FRAME_WORKER_ACCESSIBILITY_ID_BYTES, FRAME_WORKER_BYTE_CAPACITY, FRAME_WORKER_CONTINUOUS_PAGE_CAPACITY, FRAME_WORKER_HUB_DOCUMENT_CAPACITY, FRAME_WORKER_IMAGE_DECODE_BYTE_CAPACITY, FRAME_WORKER_INTROSPECTION_CAPACITY, FRAME_WORKER_INTROSPECTION_TIMEOUT_MS, FRAME_WORKER_LOSSLESS_ITEM_CAPACITY, FRAME_WORKER_LOSSLESS_PAGE_CAPACITY, FRAME_WORKER_MESSAGE_BYTE_CAPACITY, FRAME_WORKER_PENDING_REPLACEABLE_CAPACITY, FRAME_WORKER_POINTER_CAPACITY, FRAME_WORKER_TEXT_CHUNK_CODE_UNITS, type QueuedLossless } from "./📋️contract/🟦️.ts";
 import { TurnClock, TurnLedger, type TurnOutcome } from "../⏱️turn-budget/🟦️.ts";
 import { BROWSER_MEDIA_CAPACITY, type BrowserMediaOperation, type BrowserMediaValue, mediaSlotAuthorityKey, parsePresentedMediaSlots, type PresentedMediaSlot } from "@semio-tech/framework-os/modules/renderer/engine/media/browser";
 import { bootPhaseCeilingMs, type BrowserBootPhase, describeBrowserBootSilence, evaluateBrowserBootLiveness, FRAME_WORKER_BOOT_LIVENESS_POLICY } from "../🫀️boot-liveness/🟦️.ts";
@@ -323,6 +323,22 @@ export class BrowserFrameTransport {
     if (this.status === "faulted" || this.status === "closed") return;
     try {
       this.worker.postMessage({ kind: "host-window-blur", lifecycle: this.lifecycle });
+    } catch {}
+  }
+
+  /** 🗂️ Hands the Worker the local document catalog the page's facet client holds; fire-and-forget like {@link setHostWindowBlur}. */
+  noteHostLocalCatalog(catalogJson: string): void {
+    if (this.status === "faulted" || this.status === "closed") return;
+    try {
+      this.worker.postMessage({ kind: "host-local-catalog", lifecycle: this.lifecycle, catalogJson });
+    } catch {}
+  }
+
+  /** 🛬️ Hands OS files the page took from a drop to the Worker. Posted at once, never batched, fire-and-forget like {@link setHostWindowBlur}. */
+  noteHostFileDrop(files: readonly BrowserFramePickedFile[]): void {
+    if (this.status === "faulted" || this.status === "closed" || files.length === 0) return;
+    try {
+      this.worker.postMessage({ kind: "host-file-drop", lifecycle: this.lifecycle, files });
     } catch {}
   }
 
@@ -692,7 +708,7 @@ export class BrowserFrameTransport {
       let tutorialVideo: TutorialVideoOverlayPlan | null;
       try { mediaSlots = this.acceptMediaSlots(message.mediaSlots); tutorialVideo = parseTutorialVideoPlan(message.tutorialVideo); }
       catch (error) { this.fail("protocol-violation", error instanceof Error ? error.message : String(error)); return; }
-      if (!this.runUiHook("directive-hook", () => this.onDirectives?.({ mediaSlots, tutorialVideo, cursor: message.cursor, fullscreen: message.fullscreen, generation: message.generation, workerDurationMs: message.workerDurationMs }))) return;
+      if (!this.runUiHook("directive-hook", () => this.onDirectives?.({ mediaSlots, tutorialVideo, cursor: message.cursor, fullscreen: message.fullscreen, unsaved: message.unsaved, generation: message.generation, workerDurationMs: message.workerDurationMs }))) return;
     }
     if (message.requestFrame || this.frameRequested || message.generation < this.generation) this.requestFrame();
     else if (message.generation === this.generation) this.replaceDeadlineTimer(message.nextDeadlineDelayMs);

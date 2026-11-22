@@ -78,3 +78,57 @@ Running report of the asset. Earlier work: author 03 of the first round (`rework
 - `validator.md` has no section "Rule changes authors must know" (the task pointed to it).
 - `r3-2d.ts` shows 1.42 m as the height dimension at 1:50 and 1.41 m at 1:500 for `dimensions.heightM` 1.409 (the dimension seems to be measured on the drawing, not read from `dimensions`).
 - The Read tool (image viewing) stopped responding near the end of the pass (hook timeout), so the last two sheets could not be judged.
+
+## Pass 2 (second round), 2026-11-22
+
+`rig-lateral-rest.md` existed at the start and at the end of the pass; the girdles of stage 14 follow it (clavicles and hip bones on lateral rest placement, arms and thighs re-parented without moving). Rule changes 1 to 19 of `validator.md` read; no open rule defect touched this asset.
+
+### Read on full sheets (image tool worked for the first half of the pass)
+
+- 1:50 structure: six views with the rig, back and three-quarter close-ups without the rig, front close-up; `leaning-back` six views with the rig.
+- 1:50 body: six views, back and front close-ups, `leaning-back` and `reading-screen` six views each.
+- 1:50 thermal six views; 1:200 body and structure; 1:500 structure.
+
+### Verdicts on the handed-over items
+
+1. Girdles on a sheet: the clavicles run from the manubrium out, back and slightly up to the acromion, the arms leave from their tips; the scapulae lie flat on the back of the rib cage (frontal plane, medial border beside the spine) in the default pose and in `leaning-back`; the iliac blades stand on the hip joints and flare outwards. No section turned edge-on by the quaternion change. Right.
+2. 1:500 structure: shoulder bars and hip bars are there and joined (the shoulder bar reads as a yoke from joint to joint in front and back view). Right for 75 mm.
+3. Clavicle motion: done, see below.
+4. Back view after the yoke change: a rounded upper back, no board edge. Front view of the knees: the black areas round the kneecaps are not creases of the model. The thighs are seen end-on in the front view, their upper and side faces lie at a grazing angle to the view and the sheet's depth-step edge detector paints them black (same picture at 1:200 with other sections). Knee extents are right (thigh end 63 mm in front of the knee axis, shank front 60 mm). Nothing changed.
+5. 1:50 thermal cut, 1:100 thermal, 1:200 body: read (the first two only as coarse rasters, see "How the second half was judged"); they are the same object, layers nested in the cut.
+6. Sleeve head: from behind a small step where the sleeve cap meets the yoke (about 5 mm). Left as it is; it reads as the armhole seam.
+7. `settle-back` at 4 s: the left arm passes through elbow out at shoulder height with the forearm up; plausible half-way position, not keyed.
+8. 2D hands at 1:100 / 1:200: not re-read (see open list).
+9. 1:200 / 1:500 hand as one blunt solid: confirmed right for the feature size on the sheets.
+
+### Rebuilt (`rework-seated-office-worker-15-skull-clavicle.py`, `-16-decisions.py`)
+
+- **Skull, 1:50 structure** (268 -> 276 solids): the face was one block in front of the cranium, with no orbits. It is now the maxilla below the orbits (100 mm wide at the cheek, 56 mm at the alveolar arch), the nasal bridge between them (25 mm wide), two zygomatic bones with their arches back to the temporal bone, a lateral orbital rim each and the supraorbital bar; the orbits are open recesses 43 mm wide and 42 mm high whose floor is the cranium 15 to 20 mm behind the rims. All on the member `head`. Coarser scales keep cranium, face block and mandible (rims of 12 to 15 mm are below their feature).
+- **Pose `leaning-back`**: `clavicle-l` rises 18 degrees with the raised arm; `arm-l` re-solved from (13.809, 150.063, -87.909) to (23.167, 133.62, -82.836) so that the arm keeps its posed direction exactly. The shoulder joint goes 48 mm up, 19 mm back and 10 mm in; the hand lies on the occiput (palm centre at the height of the head centre, 2 mm off the skull surface point) instead of on the nape. The clip `settle-back` inherits it through its pose keys.
+- **Decisions 1:50** (en, de): skull parts and the girdle bones named in the body decision.
+
+### Proof
+
+- After stage 15: `r3-validate.ts humans/seated-office-worker --volumes`: `VALID … schema 0, validateAsset 0, checkVolumes 0`; published with `volumes-insert.py`; after stage 16 `r3-validate.ts humans/seated-office-worker --catalog-only --volumes`: `VALID (catalog file as it is): schema 0, validateAsset 0, checkVolumes 0`.
+- Forward kinematics before and after the clavicle lift (`rework-03-fk.ts`): arm, forearm and hand moved as one rigid chain by (-0.019, +0.048, -0.010) m.
+
+### How the second half was judged
+
+The image tool stopped answering again (hook timeout, three attempts, also from the scratchpad) right after stage 15 was built. From then on the sheets were cropped and reduced with `sips` and read as character rasters of 2 to 16 px per cell. That shows silhouettes, gaps and the list colours, not surface quality. Judged this way only: the new skull (front view in `leaning-back`: brow bar, nasal bridge, both sockets, zygomatic bones and maxilla are where they were placed; side view: no part outside the head outline), the body of `leaning-back` after the clavicle lift (no gap between sleeve and yoke, hand behind the head), `settle-back` at 4 s, 1:50 thermal cut, 1:100 thermal.
+
+### Still open (for the next pass)
+
+- 1:50 structure, skull: never seen on a real sheet; look at front, side and three-quarter and correct rim thicknesses if the sockets read too wide (43 mm against about 40 mm in reality).
+- 1:50 body and structure, `leaning-back` after the clavicle lift: never seen on a real sheet (contact of the left hand with the occiput, shirt at the raised shoulder: there is no body solid on `clavicle-l`, the sleeve head alone carries the raised shoulder).
+- Clips: `typing` at 1.2 s and 3.6 s and `settle-back` at 1 s were rendered after the last change but not looked at; `settle-back` at 4 s only as a raster.
+- 2D drawings at 1:100 / 1:200: hands not re-read against the finger blocks; 2D of `leaning-back` at 1:50 not re-read after the clavicle lift (the arm shapes move 48 mm with the shoulder; the validation is green).
+- 1:100 structure: skull is still cranium, face block and mandible; orbits of 40 mm would be admissible at 15 mm feature as two recesses but were not modelled.
+- 1:50 body: sleeve head step at the armhole from behind; no finger nails or knuckle creases (below 7.5 mm).
+- No other pose or clip moves `clavicle-*` or `ilium-*` (not needed by `typing` and `reading-screen`).
+
+### Fundamental issues (outside this asset)
+
+- The Read tool (images) fails with "PreToolUse hook did not respond before its timeout" after roughly twenty image reads in a session, in both passes. Authors then cannot do the brief's "render, read" step.
+- `r3-sheet.ts`: faces at a grazing angle to the view are painted black by the depth-step edge detector (thighs seen end-on in every seated front view). It looks like a modelling defect and cost a diagnosis in two passes; the detector should compare the depth step with the slope of the face.
+- `r3-sheet.ts --only front --turn/--tilt`: turn and tilt are ignored for the orthogonal views without a message (they apply to the three-quarter view only).
+- `rework_03_lib.candidate_path` writes to `🗑️generated/r3-<slug>/`, not under the author's `rework-<slug>` folder.

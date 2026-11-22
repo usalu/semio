@@ -9,6 +9,11 @@ description = "Component crate of semio-s-artifact-stdio-pdf: glyph-list"
 [package.metadata.semio]
 role = "library"
 
+[package.metadata.semio.carve]
+owned = [
+  "standards::v1_7::subsets::base::modules::fonts::glyph_list",
+]
+
 [lints]
 workspace = true
 

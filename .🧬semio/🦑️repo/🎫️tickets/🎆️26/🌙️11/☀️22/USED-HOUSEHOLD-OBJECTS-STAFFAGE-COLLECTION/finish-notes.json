@@ -1,0 +1,235 @@
+{
+ "*": {
+  "state": "State found at 20:23: candidate published, catalog copy byte-equal to the candidate, manifest row equal to the row derived from the candidate, member of the collection `used-household-objects`; the full proof and the check CLI were re-run by the finisher and passed without a change to the document.",
+  "publish": "not re-published (no change); `finish-reconcile.ts` after the last publish of the wave: catalog copy equal, manifest row equal, collection member.",
+  "sheets": [
+   "Contact sheet of the 1:50 body sheets (six views each: front, right, back, left, top, three-quarter) of every pose that is not a key and of the middle instant of every clip, rendered from the candidate with `r3-sheet.ts` and opened as one image (`finish-sheets.py`, tiles 1100 px wide): every pose stands or hangs where its description says, nothing floats without a stated carrier, no part visibly interpenetrates another.",
+   "Rendered but NOT opened by the finisher: the body sheets of 1:100, 1:200 and 1:500, the thermal and structure sheets of 1:50 and the 2D drawings of every authored scale. For these only the measured rules of the full proof and the check CLI speak."
+  ],
+  "imperfect": [
+   "The author's own report with the researched reference table was never written; this report states what the document declares and what was measured, not the author's research notes.",
+   "Coarse-scale 3D sheets, thermal and structure sheets and the 2D drawings were not looked at by a person or agent in the finishing pass (see above)."
+  ]
+ },
+ "used-coffee-table": {
+  "imperfect": [
+   "Author's ledger note (wave.md, not re-measured unless stated): rigid-body structure approximation for carried/in-use (requests.md)."
+  ]
+ },
+ "used-extendable-dining-table": {
+  "imperfect": [
+   "Author's ledger note (wave.md, not re-measured unless stated): leaf thermal area uses folded value in extended poses."
+  ]
+ },
+ "used-recliner-chair": {
+  "imperfect": [
+   "Author's ledger note (wave.md, not re-measured unless stated): footrest single-link stand-in.",
+   "Author's ledger note (wave.md, not re-measured unless stated): blanket stays behind chair in use."
+  ]
+ },
+ "used-writing-desk": {
+  "imperfect": [
+   "Author's ledger note (wave.md, not re-measured unless stated): laptop and user loads only."
+  ]
+ },
+ "used-hinged-wardrobe": {
+  "imperfect": [
+   "Author's ledger note (wave.md, not re-measured unless stated): blanket aside in use.",
+   "Author's ledger note (wave.md, not re-measured unless stated): 1:500 doors without gaps."
+  ]
+ },
+ "used-high-chair": {
+  "imperfect": [
+   "Author's ledger note (wave.md, not re-measured unless stated): floor tile mass wrongly on hands when carried.",
+   "Author's ledger note (wave.md, not re-measured unless stated): hands/toddler loads only."
+  ]
+ },
+ "used-chest-of-drawers": {
+  "imperfect": [
+   "Author's ledger note (wave.md, not re-measured unless stated): blanket in front in use."
+  ]
+ },
+ "used-wingback-armchair": {
+  "imperfect": [
+   "Author's ledger note (wave.md, not re-measured unless stated): arm rolls approximate in tipped front/plan, wings straight slabs."
+  ]
+ },
+ "used-baby-cot": {
+  "imperfect": []
+ },
+ "used-shoe-cabinet": {
+  "imperfect": [
+   "Author's ledger note (wave.md, not re-measured unless stated): blanket massless.",
+   "Author's ledger note (wave.md, not re-measured unless stated): shoes loads only."
+  ]
+ },
+ "used-folding-bookcase-ladder": {
+  "imperfect": [
+   "Author's ledger note (wave.md, not re-measured unless stated): books/plants loads only.",
+   "Author's ledger note (wave.md, not re-measured unless stated): blanket and anchor massless."
+  ]
+ },
+ "used-bedside-table": {
+  "imperfect": [
+   "Author's ledger note (wave.md, not re-measured unless stated): blanket reaction as upward load (rigid-body solver).",
+   "Author's ledger note (wave.md, not re-measured unless stated): marks offset in tilted carried plan."
+  ]
+ },
+ "used-double-bed": {
+  "imperfect": [
+   "Author's ledger note (wave.md, not re-measured unless stated): rigid-body solver splits carried mattress weight with stack floor.",
+   "Author's ledger note (wave.md, not re-measured unless stated): 1:500 print generalisations."
+  ]
+ },
+ "used-corner-sofa": {
+  "imperfect": [
+   "No clip runs from `stored` to `in-use` (clips: `carry` stored to carried, `sit-down-three` from `in-use-empty`), so the feet sliding through the body only shows when a viewer blends the two poses directly (checked by the finisher in the clip keys).",
+   "The two blankets and the tote lie beside the sofa in the home poses (seen on the pose sheet)."
+  ]
+ },
+ "used-tv-sideboard": {
+  "imperfect": [
+   "Hinges and stays of the flaps are not modelled (author's ledger note).",
+   "The coordinator's orientation question is settled: the schema defines `widthM` along world x (ahead, the real depth of an object drawn in side elevation) and `depthM` along z, so 0.428 / 1.80 is the convention, as for `used-wall-unit`, `used-upright-piano` and `used-kitchen-base-cabinet`; no defect."
+  ]
+ },
+ "used-bunk-bed": {
+  "imperfect": [
+   "The ladder's 6.06 kg act 0.31 m too far inwards laterally when set up: the bone mass has no lateral centre and the ladder bone sits at z -0.219 m for its twist in the bundle (measured by the finisher from the rig; request for `comZ` in the umbrella requests.md).",
+   "Ladder hooks (4 mm steel) are not modelled (stated in the 2D decisions)."
+  ]
+ },
+ "used-coat-stand": {
+  "imperfect": [
+   "Author's ledger note (wave.md, not re-measured unless stated): rigid-body solver puts blanket weight on hands (requests.md).",
+   "Author's ledger note (wave.md, not re-measured unless stated): carried plan distorts curved feet.",
+   "Author's ledger note (wave.md, not re-measured unless stated): hang-coats clip has no motion.",
+   "Checked by the finisher: the clip `hang-coats` has ten tracks (nine loads growing hook by hook and the exposed fraction of the hooks) and no bone motion, because the coats are loads, not geometry."
+  ]
+ },
+ "used-bentwood-dining-chairs": {
+  "imperfect": [
+   "Author's ledger note (wave.md, not re-measured unless stated): in-use chairs all face one way (rig cannot turn them).",
+   "Author's ledger note (wave.md, not re-measured unless stated): carried chairs hang level."
+  ]
+ },
+ "used-kitchen-base-cabinet": {
+  "imperfect": [
+   "Author's ledger note (wave.md, not re-measured unless stated): joints 1.5 mm vs real 2-3.",
+   "Author's ledger note (wave.md, not re-measured unless stated): rigid-body solver puts blanket on grips.",
+   "Author's ledger note (wave.md, not re-measured unless stated): 1:200 silhouette artefact logged in requests.md."
+  ]
+ },
+ "used-wall-unit": {
+  "imperfect": [
+   "Author's ledger note (wave.md, not re-measured unless stated): bar flap front 2D lacks routed line, knob square.",
+   "Author's ledger note (wave.md, not re-measured unless stated): stays keyed every 15°."
+  ]
+ },
+ "used-crt-television": {
+  "imperfect": [
+   "Author's ledger note (wave.md, not re-measured unless stated): swivel joint unused by poses.",
+   "Seen by the finisher: in `in-use` the set stands on its swivel stand directly on the floor, as its description says; a television bench is not part of the asset."
+  ]
+ },
+ "used-washing-machine": {
+  "imperfect": [
+   "Author's ledger note (wave.md, not re-measured unless stated): hoses coiled in use.",
+   "Author's ledger note (wave.md, not re-measured unless stated): no door-open pose.",
+   "Author's ledger note (wave.md, not re-measured unless stated): spin drawn slow.",
+   "Author's ledger note (wave.md, not re-measured unless stated): rigid-body reactions shared with pallet."
+  ]
+ },
+ "used-microwave-oven": {
+  "imperfect": [
+   "Author's ledger note (wave.md, not re-measured unless stated): cardboard lies beside it in use."
+  ]
+ },
+ "used-tumble-dryer": {
+  "imperfect": [
+   "Author's ledger note (wave.md, not re-measured unless stated): drum hidden thermal-only so open aperture looks empty."
+  ]
+ },
+ "used-oil-filled-radiator": {
+  "imperfect": [
+   "Author's ledger note (wave.md, not re-measured unless stated): envelope fins counted closed by thermal coverage.",
+   "Author's ledger note (wave.md, not re-measured unless stated): cord stays wound in use."
+  ]
+ },
+ "used-moving-boxes": {
+  "imperfect": [
+   "Author's ledger note (wave.md, not re-measured unless stated): resting faces not outer surface (request).",
+   "Author's ledger note (wave.md, not re-measured unless stated): books loads only."
+  ]
+ },
+ "used-sewing-machine": {
+  "state": "State found at 20:23: published and proven (full proof VALID, check ✓ re-run by the finisher on the published document), but with the defect the coordinator had logged: in `in-use` and `threading` the machine floated 0.75 m above the floor without a table. Corrected by the finisher and re-published.",
+  "publish": "`published used-sewing-machine: 🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/🔌️appliances/used-sewing-machine/🔣️.json` / `manifest row replaced; collection used-household-objects has 35 assets; powerW 85`; then `r3-validate.ts appliances/used-sewing-machine --catalog-only`: `VALID … schema 0, validateAsset 0`; `finish-reconcile.ts`: copy equal, row equal, member.",
+  "sheets": [
+   "All three contact sheets of the corrected candidate were opened: poses (stored, carried, in-use, threading, carry at 5 s, stitching at 1.2 s), scales (body 1:100 and 1:200, thermal and structure 1:50) and 2D (1:50, 1:100, 1:200, line and solid rows of elevation, front and plan).",
+   "Seen: the group stands on the table in every home pose, the pedal and its coil lie on the floor under the table in `in-use` and `threading`, the closed case hangs clear of the table edge at hand height in `carried`, the hood hovers over the machine at 5 s of `carry`; table top and frame carry their own thermal regions; the 2D height dimension reads 1.14 m in elevation and front."
+  ],
+  "changes": [
+   "`assets/used-sewing-machine/author-used-sewing-machine.py`: new bone `table` (fixed to the ground at 0.75 m, 15.24 kg, section four legs 45 x 45 mm) with the parts `table-top` (laminate chipboard 0.80 x 0.60 x 0.025 m), four legs `table-leg-*` (beech 45 mm) and four apron rails `table-apron-*` (20 x 90 mm; 30 mm at 1:200) at every authored scale in body, thermal and structure lists and in the three 2D views; the blanket is now a child of the table; the floor contacts `floor-*` moved from the blanket to the table legs; materials `laminate-chipboard` and `beech-lacquered`, references `kitchen-table-catalogue` and `en-338-2016`, thermal regions `table-top` (1.03 m²) and `table-frame` (0.97 m²) with bindings in every pose.",
+   "Poses: `stored` is the group on its table; `in-use` and `threading` keep the machine on the folded blanket on the table and put pedal and coil on the floor under it (pedal-lift -0.762 m), contacts are the table legs and the pedal; `carried` lowers the hand to 0.76 m beside the table (carry-lift -0.402 m, limit widened to -0.45 m); new key `clear-key` so that the clip `carry` moves the case level past the table edge before the arm is let hang.",
+   "`dimensions`: 1.144 x 0.80 x 0.60 m, 27.418 kg (was 0.394 x 0.72 x 0.56 m, 12.178 kg); summary, pose and clip descriptions, structure and thermal assumptions, 2D and volume decisions, the 1:500 reason, tag `sewing-table` and `distinction.json` updated.",
+   "Front-view shapes are lifted to the floor datum (the script frame keeps y = 0 on the table top)."
+  ],
+  "measured": [
+   "Table: top 8.16 kg, legs 4.23 kg, aprons 2.85 kg from section x density (catalogue-typical 14-16 kg).",
+   "The centre-of-mass marker of the table in the structure lists sits in the apron at y -0.105 m, 22 mm above the computed centre (-0.127 m, in the air under the top), because `volumes-structure-coverage` requires member solids inside the body silhouette; the bone mass itself carries the exact value."
+  ],
+  "imperfect": [
+   "The folded blanket stays under the machine in use (as a damping mat) because it is a fixed storage aid on the table.",
+   "Rigid-body solver: in `carried` the table and blanket share reactions with the hand (umbrella requests.md).",
+   "Transitions between `stored` and `in-use` outside a clip move the pedal straight down through the table top (no clip does this)."
+  ]
+ },
+ "used-floor-lamp": {
+  "imperfect": [
+   "Author's ledger note (wave.md, not re-measured unless stated): cardboard in front of lamp in use."
+  ]
+ },
+ "used-electric-cooker": {
+  "imperfect": [
+   "Author's ledger note (wave.md, not re-measured unless stated): hotplates share one temperature."
+  ]
+ },
+ "used-wc-pan-cistern": {
+  "imperfect": [
+   "Author's ledger note (wave.md, not re-measured unless stated): revolve lateralScale axis vs README (filed by coordinator in requests.md).",
+   "Author's ledger note (wave.md, not re-measured unless stated): pan 22.8 kg 4% over range."
+  ]
+ },
+ "used-bathtub": {
+  "imperfect": [
+   "Author's ledger note (wave.md, not re-measured unless stated): shell inside/underside share one region.",
+   "Author's ledger note (wave.md, not re-measured unless stated): end view shows inside details over end wall.",
+   "Author's ledger note (wave.md, not re-measured unless stated): symmetric ends."
+  ]
+ },
+ "used-dishwasher": {
+  "imperfect": [
+   "Author's ledger note (wave.md, not re-measured unless stated): pallet 0.95 m behind in home poses."
+  ]
+ },
+ "used-washbasin-vanity": {
+  "imperfect": [
+   "Author's ledger note (wave.md, not re-measured unless stated): mirror doors cannot open (vertical hinge twist flagged).",
+   "Author's ledger note (wave.md, not re-measured unless stated): light bar 0.6 kg low.",
+   "Seen by the finisher: in the home poses the vanity hangs 0.136 m above the floor and the mirror cabinet at 1.06 m; both are wall-hung and the wall is surroundings, not part of the asset."
+  ]
+ },
+ "used-fridge-freezer": {
+  "imperfect": [
+   "Author's ledger note (wave.md, not re-measured unless stated): hand truck has no strap."
+  ]
+ },
+ "used-upright-piano": {
+  "imperfect": [
+   "Author's ledger note (wave.md, not re-measured unless stated): released strap rigid on edge in use.",
+   "Author's ledger note (wave.md, not re-measured unless stated): one strap only.",
+   "Seen by the finisher: in the home poses the released strap lies as a rigid rectangular frame on the floor beside the dolly."
+  ]
+ }
+}

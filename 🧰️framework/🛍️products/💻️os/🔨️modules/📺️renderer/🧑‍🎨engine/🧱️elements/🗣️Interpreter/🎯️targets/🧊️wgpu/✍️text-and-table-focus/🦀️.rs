@@ -144,7 +144,12 @@ fn apply_focused_text_editor_clipboard_key(key: &semio_ui_wgpu_input::KeyAction,
         }
         return Some(true);
     }
-    let outcome = with_live_text_editor(&focus, |scene| {
+    Some(copy_or_cut_text_editor(&focus, cut, input))
+}
+
+/// ✂️ Writes the editor's selection to the clipboard and, for a cut, removes it — the one body of the Ctrl+C/X chords and the selection menu's Copy and Cut rows.
+fn copy_or_cut_text_editor(focus: &FocusedTextEditor, cut: bool, input: &mut semio_ui_wgpu_input::InputState<ActionDescriptor>) -> bool {
+    let outcome = with_live_text_editor(focus, |scene| {
         let Some(text) = semio_renderer_wgpu_engine_text::text_editor::text_editor_selection_text(scene) else { return Ok(false) };
         write_owned_os_clipboard(text, input);
         if cut {
@@ -153,7 +158,7 @@ fn apply_focused_text_editor_clipboard_key(key: &semio_ui_wgpu_input::KeyAction,
             Ok(true)
         }
     });
-    Some(match outcome {
+    match outcome {
         Some(Ok(consumed)) => consumed,
         Some(Err(fault)) => {
             input.record_action_fault(fault);
@@ -163,7 +168,136 @@ fn apply_focused_text_editor_clipboard_key(key: &semio_ui_wgpu_input::KeyAction,
             FOCUSED_TEXT_EDITOR.with(|cell| *cell.borrow_mut() = None);
             false
         }
+    }
+}
+
+/// 🖱️ The verbs of the text-selection context menu — React's `buildTextSelectionContextMenuItems` rows (`🖱️ContextMenu/📝️text-selection`).
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum TextSelectionVerb {
+    Cut,
+    Copy,
+    Paste,
+    SelectAll,
+}
+
+impl TextSelectionVerb {
+    /// 🏷️ The verb a shared-schema row names (`cut`, `copy`, `paste`, `selectAll`).
+    pub fn parse(name: &str) -> Option<Self> {
+        Some(match name {
+            "cut" => Self::Cut,
+            "copy" => Self::Copy,
+            "paste" => Self::Paste,
+            "selectAll" => Self::SelectAll,
+            _ => return None,
+        })
+    }
+}
+
+thread_local! {
+    static PENDING_TEXT_INPUT_VERBS: std::cell::RefCell<std::collections::VecDeque<(String, NodeId, TextSelectionVerb)>> = const { std::cell::RefCell::new(std::collections::VecDeque::new()) };
+    static PENDING_TEXT_SELECTION_VERBS: std::cell::RefCell<std::collections::VecDeque<(FocusedTextEditor, TextSelectionVerb)>> = const { std::cell::RefCell::new(std::collections::VecDeque::new()) };
+    #[cfg(target_arch = "wasm32")]
+    static PENDING_TEXT_SELECTION_PASTES: std::cell::RefCell<std::collections::VecDeque<(FocusedTextEditor, String)>> = const { std::cell::RefCell::new(std::collections::VecDeque::new()) };
+}
+
+/// 📖️ The non-empty selection of the text editor under a WINDOW-LOCAL point — what React's `isPointerEventOnDomTextSelection` and `readDomTextSelection` read when a secondary press lands on selected text.
+pub fn text_editor_selection_at(window_id: &str, x: f32, y: f32) -> Option<String> {
+    UI_ENGINE.with(|cell| {
+        let engine = cell.borrow();
+        let hit = engine.scene_at(window_id, x, y).filter(|hit| hit.kind == semio_ui_declaration::ui::SurfaceKind::TextEditor)?;
+        let UiNode::ComponentScene(scene) = &engine.tree(window_id)?.node(hit.node)?.spec.0 else { return None };
+        semio_renderer_wgpu_engine_text::text_editor::text_editor_selection_text(scene).filter(|text| !text.is_empty())
     })
+}
+
+/// 📖️ The selected text of the retained text field under a WINDOW-LOCAL point (empty while collapsed); `None` when no text field is there. A field offers the menu even without a selection, as the browser's own input menu does.
+pub fn text_input_selection_at(window_id: &str, x: f32, y: f32) -> Option<String> {
+    UI_ENGINE.with(|cell| cell.borrow().text_input_at(window_id, x, y).map(|(_, selection)| selection))
+}
+
+/// 🖱️ Parks one selection-menu verb for the retained text field under a WINDOW-LOCAL point; the scene step applies it with the input state. `false` when no text field is there.
+pub fn queue_text_input_verb_at(window_id: &str, x: f32, y: f32, verb: TextSelectionVerb) -> bool {
+    let Some((node, _)) = UI_ENGINE.with(|cell| cell.borrow().text_input_at(window_id, x, y)) else { return false };
+    PENDING_TEXT_INPUT_VERBS.with(|cell| cell.borrow_mut().push_back((window_id.to_owned(), node, verb)));
+    true
+}
+
+/// 🖱️ Takes the parked retained text-field verbs, each as the window, field and the key of the chord the field answers (`x`, `c`, `v`, `a`).
+pub fn take_text_input_verbs() -> Vec<(String, NodeId, &'static str)> {
+    let verbs = PENDING_TEXT_INPUT_VERBS.with(|cell| std::mem::take(&mut *cell.borrow_mut()));
+    verbs.into_iter().map(|(window_id, node, verb)| (window_id, node, match verb {
+        TextSelectionVerb::Cut => "x",
+        TextSelectionVerb::Copy => "c",
+        TextSelectionVerb::Paste => "v",
+        TextSelectionVerb::SelectAll => "a",
+    })).collect()
+}
+
+/// 🖱️ Parks one selection-menu verb for the text editor under a WINDOW-LOCAL point; the scene step applies it with the input state. `false` when no live text editor is there.
+pub fn queue_text_selection_verb_at(window_id: &str, x: f32, y: f32, verb: TextSelectionVerb) -> bool {
+    let focus = UI_ENGINE.with(|cell| {
+        let engine = cell.borrow();
+        let hit = engine.scene_at(window_id, x, y).filter(|hit| hit.kind == semio_ui_declaration::ui::SurfaceKind::TextEditor)?;
+        let generation = engine.surface_generation(window_id)?;
+        let UiNode::ComponentScene(scene) = &engine.tree(window_id)?.node(hit.node)?.spec.0 else { return None };
+        text_editor_focus_in(&engine, window_id, generation, hit.node, &scene.host_id)
+    });
+    let Some(focus) = focus else { return false };
+    PENDING_TEXT_SELECTION_VERBS.with(|cell| cell.borrow_mut().push_back((focus, verb)));
+    true
+}
+
+/// 🖱️ Applies the parked selection-menu verbs: Copy and Cut share the chord body, Select All selects the whole buffer, Paste reads the clipboard (native job lane, browser promise). `true` when any ran.
+pub fn drain_text_selection_verbs(input: &mut semio_ui_wgpu_input::InputState<ActionDescriptor>) -> bool {
+    #[cfg(target_arch = "wasm32")]
+    let pasted = PENDING_TEXT_SELECTION_PASTES.with(|cell| std::mem::take(&mut *cell.borrow_mut()));
+    #[cfg(target_arch = "wasm32")]
+    for (focus, text) in &pasted {
+        apply_text_editor_text_at(focus, text, input);
+    }
+    let verbs = PENDING_TEXT_SELECTION_VERBS.with(|cell| std::mem::take(&mut *cell.borrow_mut()));
+    let ran = !verbs.is_empty();
+    for (focus, verb) in verbs {
+        match verb {
+            TextSelectionVerb::Copy | TextSelectionVerb::Cut => {
+                copy_or_cut_text_editor(&focus, verb == TextSelectionVerb::Cut, input);
+            }
+            TextSelectionVerb::SelectAll => {
+                let outcome = with_live_text_editor(&focus, |scene| scene.text_editor.as_ref().map(|editor| semio_renderer_wgpu_engine_text::text_editor::text_editor_set_selection_into(scene, 0, editor.buffer.len(), input)));
+                if let Some(Some(Err(fault))) = outcome {
+                    input.record_action_fault(fault);
+                }
+            }
+            TextSelectionVerb::Paste => paste_into_text_editor(focus, input),
+        }
+    }
+    #[cfg(target_arch = "wasm32")]
+    return ran || !pasted.is_empty();
+    #[cfg(not(target_arch = "wasm32"))]
+    ran
+}
+
+#[cfg(all(not(target_arch = "wasm32"), not(any(test, feature = "testkit"))))]
+fn paste_into_text_editor(focus: FocusedTextEditor, input: &mut semio_ui_wgpu_input::InputState<ActionDescriptor>) {
+    if let Err(fault) = queue_text_editor_clipboard_read(focus, input) {
+        input.record_action_fault(fault);
+    }
+}
+
+#[cfg(all(not(target_arch = "wasm32"), any(test, feature = "testkit")))]
+fn paste_into_text_editor(focus: FocusedTextEditor, input: &mut semio_ui_wgpu_input::InputState<ActionDescriptor>) {
+    if let Some(text) = read_os_clipboard() {
+        apply_text_editor_text_at(&focus, &text, input);
+    }
+}
+
+#[cfg(target_arch = "wasm32")]
+fn paste_into_text_editor(focus: FocusedTextEditor, _input: &mut semio_ui_wgpu_input::InputState<ActionDescriptor>) {
+    semio_framework_async::browser::spawn_local(async move {
+        if let Some(text) = semio_ui_wgpu_hosting::host::clipboard_read_text().await {
+            PENDING_TEXT_SELECTION_PASTES.with(|cell| cell.borrow_mut().push_back((focus, text)));
+        }
+    });
 }
 
 /// ⌨️ Commits host-delivered paste or composition text into the exact accepted editor focus.

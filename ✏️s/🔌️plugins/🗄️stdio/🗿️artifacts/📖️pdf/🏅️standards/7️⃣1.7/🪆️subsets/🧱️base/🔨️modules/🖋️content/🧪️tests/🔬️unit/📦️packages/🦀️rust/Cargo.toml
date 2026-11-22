@@ -9,6 +9,25 @@ description = "Component crate of semio-s-artifact-stdio-pdf: mut-family"
 [package.metadata.semio]
 role = "library"
 
+[package.metadata.semio.carve]
+owned = [
+  "standards::v1_7::subsets::a::schema::mutations::tests",
+  "standards::v1_7::subsets::base::io::binary::mutations",
+  "standards::v1_7::subsets::base::io::binary::mutations::receiving",
+  "standards::v1_7::subsets::base::io::binary::mutations::receiving::leaves",
+  "standards::v1_7::subsets::base::io::binary::mutations::receiving::metadata",
+  "standards::v1_7::subsets::base::io::binary::mutations::receiving::object",
+  "standards::v1_7::subsets::base::io::text::mutations",
+  "standards::v1_7::subsets::base::modules::content::tests",
+  "standards::v1_7::subsets::base::modules::content::tests::content_program",
+  "standards::v1_7::subsets::base::schema::mutations",
+  "standards::v1_7::subsets::base::schema::mutations::history_target",
+  "standards::v1_7::subsets::vt::io::text::mutations::set_dpart_root",
+  "standards::v1_7::subsets::x::io::binary::mutations",
+  "standards::v1_7::subsets::x::io::text::mutations",
+  "standards::v1_7::subsets::x::schema::mutations",
+]
+
 [lints]
 workspace = true
 

@@ -36,11 +36,11 @@ export class RemoteExecutionLoadTableV1{
  }
 }
 
-/** 👷️ A registered worker as the placement sees it. */
-export type PlacementWorkerV1=Readonly<{id:string;name:string;origin:string;properties:readonly RemoteExecutionPropertyV1[];concurrency:number;running:number;waiting:boolean;draining:boolean;refusedUntilMs:number}>;
+/** 👷️ A registered worker as the placement sees it; `committedMegabytes` is the peak that the scheduler already placed on it and that its next load report may not show yet. */
+export type PlacementWorkerV1=Readonly<{id:string;name:string;origin:string;properties:readonly RemoteExecutionPropertyV1[];concurrency:number;running:number;waiting:boolean;draining:boolean;refusedUntilMs:number;committedMegabytes?:number}>;
 
-/** 🎬️ A queued action as the placement sees it: the properties it requires, the workers (by origin, else name) that already failed it and who asked for it. */
-export type PlacementOperationV1=Readonly<{id:string;platform:readonly RemoteExecutionPropertyV1[];tried:ReadonlySet<string>;requester:string|undefined}>;
+/** 🎬️ A queued action as the placement sees it: the properties it requires, the workers (by origin, else name) that already failed it, who asked for it and the megabytes it needs at its peak (0 when it declares none). */
+export type PlacementOperationV1=Readonly<{id:string;platform:readonly RemoteExecutionPropertyV1[];tried:ReadonlySet<string>;requester:string|undefined;peakMegabytes?:number}>;
 
 /** 🧭️ The identity of a worker in `tried` and in the requester check: its origin. */
 export const placementKeyV1=(worker:Pick<PlacementWorkerV1,"origin"|"name">):string=>worker.origin===""?worker.name:worker.origin;
@@ -53,11 +53,11 @@ export function placementRequiredV1(platform:readonly RemoteExecutionPropertyV1[
  return [...own,...add("Arch",identity.arch),...add("OSFamily",identity.os),...add("semio-toolchain",identity.toolchain),...add("semio-target",identity.target)];
 }
 
-/** 🚦️ Whether a worker has headroom to be given one more action now: not draining, a free slot, not in its refusal cool-down, and (when its machine reports) neither critical pressure nor its own admission saying no. A machine that has not reported yet counts as having headroom. */
-export function placementHasHeadroomV1(worker:PlacementWorkerV1,entry:RemoteExecutionLoadEntryV1|undefined,nowMs:number):boolean{
+/** 🚦️ Whether a worker has headroom to be given one more action now: not draining, a free slot, not in its refusal cool-down, and (when its machine reports) neither critical pressure nor its own admission saying no. An action with a declared peak (`peakMegabytes`) also needs the machine's reported free memory, less what the scheduler already placed on it, to cover that peak, so a machine that has not reported never gets one. A machine that has not reported yet has headroom for every other action. */
+export function placementHasHeadroomV1(worker:PlacementWorkerV1,entry:RemoteExecutionLoadEntryV1|undefined,nowMs:number,peakMegabytes:number=0):boolean{
  if(worker.draining||worker.running>=worker.concurrency||nowMs<worker.refusedUntilMs)return false;
- if(entry===undefined)return true;
- return entry.report.pressure!=="critical"&&entry.report.headroom;
+ if(entry===undefined)return peakMegabytes<=0;
+ return entry.report.pressure!=="critical"&&entry.report.headroom&&(peakMegabytes<=0||entry.report.freeMegabytes-(worker.committedMegabytes??0)>=peakMegabytes);
 }
 
 /** 📏️ How loaded the machine of a worker is, lower is better: its local work (running and queued builds beside the remote actions it reports) plus the remote actions the scheduler knows about, per core, a raised pressure level and the load average. */
@@ -84,7 +84,7 @@ export function planDispatchV1(queue:readonly PlacementOperationV1[],workers:rea
   const required=placementRequiredV1(operation.platform,operation.requester===undefined?undefined:table.get(operation.requester));
   let best:PlacementWorkerV1|undefined,bestScore=Infinity;
   for(const worker of free.values()){
-   if(!placementCompatibleV1(operation,worker,required)||!placementHasHeadroomV1(worker,table.get(worker.origin),nowMs))continue;
+   if(!placementCompatibleV1(operation,worker,required)||!placementHasHeadroomV1(worker,table.get(worker.origin),nowMs,operation.peakMegabytes??0))continue;
    const score=placementScoreV1(worker,table.get(worker.origin));
    if(score<bestScore||score===bestScore&&best!==undefined&&(worker.running<best.running||worker.running===best.running&&worker.name<best.name)){best=worker;bestScore=score;}
   }
@@ -94,12 +94,12 @@ export function planDispatchV1(queue:readonly PlacementOperationV1[],workers:rea
  return plan;
 }
 
-/** 🔢️ How the registered workers stand for one action right now: all of them, those the platform key lets run it (never its requester, never one that failed it), those with headroom, and those that are both, the candidates. The one counting behind every answer to "is another machine idle": the check at submission and the answer the build door asks for. */
-export function placementIdleCountV1(operation:PlacementOperationV1,workers:readonly PlacementWorkerV1[],table:Pick<RemoteExecutionLoadTableV1,"get">,nowMs:number):Readonly<{workers:number;compatible:number;headroom:number;candidates:number}>{
+/** 🔢️ How the registered workers stand for one action right now: all of them, those the platform key lets run it (never its requester, never one that failed it), those with headroom, and those that are both, the candidates, with the free action slots (`slots`) of the candidates, the width a build sizes its jobs to. The one counting behind every answer to "is another machine idle": the check at submission and the answer the build door asks for. */
+export function placementIdleCountV1(operation:PlacementOperationV1,workers:readonly PlacementWorkerV1[],table:Pick<RemoteExecutionLoadTableV1,"get">,nowMs:number):Readonly<{workers:number;compatible:number;headroom:number;candidates:number;slots:number}>{
  const required=placementRequiredV1(operation.platform,operation.requester===undefined?undefined:table.get(operation.requester));
- let compatible=0,headroom=0,candidates=0;
- for(const worker of workers){const fits=placementCompatibleV1(operation,worker,required),room=placementHasHeadroomV1(worker,table.get(worker.origin),nowMs);if(fits)compatible++;if(room)headroom++;if(fits&&room)candidates++;}
- return Object.freeze({workers:workers.length,compatible,headroom,candidates});
+ let compatible=0,headroom=0,candidates=0,slots=0;
+ for(const worker of workers){const fits=placementCompatibleV1(operation,worker,required),room=placementHasHeadroomV1(worker,table.get(worker.origin),nowMs,operation.peakMegabytes??0);if(fits)compatible++;if(room)headroom++;if(fits&&room){candidates++;slots+=Math.max(1,worker.concurrency-worker.running);}}
+ return Object.freeze({workers:workers.length,compatible,headroom,candidates,slots});
 }
 
 /** 🔭️ Whether any registered worker other than the requester could take the action right now (waiting or not): the question `semio-offload=if-idle` asks at submission. */

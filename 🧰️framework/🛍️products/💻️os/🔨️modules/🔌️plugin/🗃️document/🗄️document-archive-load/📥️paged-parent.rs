@@ -93,7 +93,7 @@ impl<P: ArtifactStoreSnapshot> PagedArchiveParent<P> {
         let mut progress = Default::default();
         let mut primary = None;
         let mut effect_work = 0;
-        let completed = cx.with_native_receiving_work(&mut scope, |native, issued, work| {
+        let completed = cx.with_native_receiving_work(&mut scope, Default::default(), |native, issued, work| {
             if let Some(receiver) = self.receiver.as_mut() {
                 if receiver.is_ready() { return Ok(()); }
                 let demand = receiver.demands(source, issued.maximum_copy_bytes)?;

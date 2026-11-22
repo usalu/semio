@@ -75,6 +75,16 @@ export async function receive(message: BrowserFrameUiMessage): Promise<void> {
     frameTurns?.request();
     return;
   }
+  if (message.kind === "host-local-catalog") {
+    ownedStep("host-local-catalog", () => bindings?.semioWgpuHostLocalCatalog?.(message.catalogJson));
+    frameTurns?.request();
+    return;
+  }
+  if (message.kind === "host-file-drop") {
+    ownedStep("host-file-drop", () => bindings?.semioWgpuHostFileDrop?.(JSON.stringify(message.files)));
+    frameTurns?.request();
+    return;
+  }
   if (message.kind === "job-submit" || message.kind === "job-input-page" || message.kind === "job-cancel") {
     if (!interactiveJobs) {
       fault("interactive-job-not-ready", "interactive job arrived before Worker boot completed");

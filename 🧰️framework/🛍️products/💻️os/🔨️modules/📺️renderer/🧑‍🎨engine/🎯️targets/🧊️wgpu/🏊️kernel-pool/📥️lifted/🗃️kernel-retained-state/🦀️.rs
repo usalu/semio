@@ -27,6 +27,8 @@ pub struct KernelPoolState {
     /// by) → the kernel's own bit-packed `ActorId`, minted by `Kernel::activate`.
     pub instances: HashMap<u32, ActorId>,
     pub next_instance_id: u32,
+    /// 🧩️ Runtime-activated extensions: `extension_id` → the instance id the live activation answered, so a second activation is refused and the instance's close forgets it.
+    pub live_extensions: HashMap<String, u32>,
     /// 🖼️ One retained semantic [`UiSnapshotState`] plus its last published generation-qualified
     /// document lease per `(instance, surface)`. Every [`UiPatchOp`] is applied through the
     /// contract's retained, quota-bounded [`UiPatchApplyProducer`]; a rejection preserves both

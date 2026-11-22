@@ -51,12 +51,22 @@ export function writeElasticGrowthV1(directory:string,bytes:number):void{
  try{rows=JSON.parse(readFileSync(file,"utf8"));}catch{}
  mkdirSync(dirname(file),{recursive:true});writeFileSync(file,JSON.stringify({...rows,[basename(directory)]:bytes}));
 }
+let pinnedHostFreeBytesV1:number|undefined;
+/** 📌️ Pins the host free bytes every image still to be born is sized from (`undefined` restores the live host volume), so a deterministic caller such as a private test repository sizes images independently of the disk and load of the host it runs on; images already born keep their receipt. */
+export function pinHostFreeBytesForSizingV1(bytes:number|undefined):void{
+ if(bytes!==undefined&&!(Number.isSafeInteger(bytes)&&bytes>0))throw Error("Positive pinned host free bytes required");
+ pinnedHostFreeBytesV1=bytes;
+}
+/** 🌡️ The host free bytes a new image is sized from: the pinned bytes, else the live volume that holds the partitions, or undefined when it cannot be measured. */
+function hostFreeForSizingV1(directory:string):{availableBytes:number}|undefined{
+ return pinnedHostFreeBytesV1===undefined?nativeFreeSpaceSyncV1(dirname(directory)):{availableBytes:pinnedHostFreeBytesV1};
+}
 /** 🪪️ The capacity of an elastic image: the one its receipt pins (clamped down to the rule's maximum, never snapped up to the declared minimum) when an image exists, else the elastic size a new image would get, raised to the grown size a pressed predecessor recorded as far as the host allows; an unreadable receipt keeps the declared capacity. */
 export function effectiveCapacityV1(directory:string,minimumBytes:number,rule:ElasticRuleV1):number{
  const receipt=readImageReceiptBytesV1(directory);
  if(receipt===null)return minimumBytes;
  if(receipt!=="missing")return Math.min(receipt,rule.maximumBytes);
- const host=nativeFreeSpaceSyncV1(dirname(directory));if(!host)return minimumBytes;
+ const host=hostFreeForSizingV1(directory);if(!host)return minimumBytes;
  const base=elasticCapacityV1(rule,elasticMinimumV1(rule,minimumBytes,host.availableBytes),host.availableBytes),grown=readElasticGrowthV1(directory);
  return Math.max(base,Math.min(grown,rule.maximumBytes,Math.floor(host.availableBytes*(100-rule.hostFreeReservePercent)/100/rule.alignBytes)*rule.alignBytes));
 }
@@ -65,7 +75,7 @@ export function pinnedCapacityV1(directory:string,declaredBytes:number,hostShare
  const receipt=readImageReceiptBytesV1(directory);
  if(typeof receipt==="number"&&receipt<=declaredBytes)return receipt;
  if(receipt!=="missing"||hostSharePercent===undefined)return declaredBytes;
- const host=nativeFreeSpaceSyncV1(dirname(directory));
+ const host=hostFreeForSizingV1(directory);
  return host?hostShareCapacityV1(declaredBytes,hostSharePercent,host.availableBytes):declaredBytes;
 }
 

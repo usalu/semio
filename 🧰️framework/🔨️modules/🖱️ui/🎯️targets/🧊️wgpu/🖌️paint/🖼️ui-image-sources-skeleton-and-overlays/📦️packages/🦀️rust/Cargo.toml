@@ -1,0 +1,31 @@
+[package]
+workspace = "../../../../../../../.."
+name = "semio-ui-wgpu-paint-overlay"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "semio wgpu paint overlay: ui image admission, skeleton blocks, overlay chrome and tooltips"
+
+[package.metadata.semio]
+role = "framework"
+id = "ui-wgpu-paint-overlay"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-pixels = { path = "../../../../../../../🔲️pixels/📦️packages/🦀️rust" }
+semio-ui-declaration = { path = "../../../../../../📜️declaration/📦️packages/🦀️rust" }
+semio-ui-draw-contract = { path = "../../../../🖍️draw/🏷️types/📦️packages/🦀️rust" }
+semio-ui-text = { path = "../../../../../../🔤️typography/📦️packages/🦀️rust" }
+semio-ui-theme = { path = "../../../../../../🎨️styling/🎭️theme/📦️packages/🦀️rust" }
+semio-ui-wgpu-layout = { path = "../../../../🧱️layout-stack/📦️packages/🦀️rust" }
+semio-ui-wgpu-widget-kit = { path = "../../../../🪀️widgets/🧰️kit/📦️packages/🦀️rust" }

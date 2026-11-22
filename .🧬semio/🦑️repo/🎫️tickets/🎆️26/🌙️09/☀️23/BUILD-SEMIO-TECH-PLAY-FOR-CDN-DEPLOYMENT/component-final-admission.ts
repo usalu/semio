@@ -1,0 +1,10 @@
+import {readFileSync} from "node:fs";
+import {ADMISSION_POLICY_V1,admissionMemoryShareV1,admissionReserveBytesV1,admitWaitersV1,componentFinalPeaksV1,predictPeakBytesV1,readUnitHistoryV1,unitKeyV1} from "../../../../../../../🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🎟️admission/🟦️.ts";
+const root=new URL("../../../../../../../",import.meta.url).pathname,GiB=2**30,physical=Number(process.env.PHYSICAL??17179869184),tokens=6,parallelism=10,nonRustc=Number(process.env.NON_RUSTC_GIB??2.2)*GiB;
+const history=await readUnitHistoryV1(root+".cache/b/r/m/components/build-telemetry/units.jsonl"),names=readFileSync(new URL("component-final-packages.txt",import.meta.url),"utf8").split("\n").filter(Boolean);
+const share=admissionMemoryShareV1(physical,tokens,parallelism),budget=share-admissionReserveBytesV1(share)-nonRustc,pool=componentFinalPeaksV1(history,"release");
+const predicted=names.map(name=>{const key=unitKeyV1({package:name,crate:name.replaceAll("-","_"),target:"wasm32-wasip2",crateTypes:["cdylib"]},"release"),rows=history.get(key)??[];return{name,recorded:rows.length,bytes:predictPeakBytesV1(rows.map(row=>row.peakRssBytes),{kloc:0,component:pool})};});
+const waiters=predicted.map((row,arrival)=>({predictedBytes:row.bytes,expectedWallMs:null,remainingMs:0,arrival}));
+const admitted=admitWaitersV1({budgetBytes:budget,frozen:false,nowMs:0,running:[]},waiters);
+const f=(n:number)=>(n/GiB).toFixed(2);
+console.log(JSON.stringify({physicalGiB:f(physical),shareGiB:f(share),reserveOfShareGiB:f(admissionReserveBytesV1(share)),nonRustcGiB:f(nonRustc),budgetGiB:f(budget),poolRows:pool.length,poolGiB:pool.map(f),componentFinalBytesGiB:f(ADMISSION_POLICY_V1.componentFinalBytes),finals:predicted.length,withHistory:predicted.filter(row=>row.recorded).length,coldPredictionGiB:f(predicted.find(row=>!row.recorded)?.bytes??0),predictions:predicted.filter(row=>row.recorded).map(row=>[row.name,row.recorded,f(row.bytes)]),concurrentAtStart:admitted.length},null,1));

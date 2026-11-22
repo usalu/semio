@@ -1,0 +1,10 @@
+[
+{"op":"region-set","id":"shirt-sleeves","set":{"areaM2":0.3503}},
+{"op":"region-set","id":"blanket","set":{"areaM2":3.391}},
+{"op":"set","path":["poses",{"id":"cross-legged-eating"},"thermal","regions","shirt-sleeves","exposedFraction"],"value":0.8558},
+{"op":"set","path":["poses",{"id":"cross-legged-resting"},"thermal","regions","shirt-sleeves","exposedFraction"],"value":0.8558},
+{"op":"set","path":["poses",{"id":"leaning-back"},"thermal","regions","shirt-sleeves","exposedFraction"],"value":0.8558},
+{"op":"set","path":["poses",{"id":"cross-legged-eating"},"thermal","regions","blanket","exposedFraction"],"value":0.3716},
+{"op":"set","path":["poses",{"id":"cross-legged-resting"},"thermal","regions","blanket","exposedFraction"],"value":0.3716},
+{"op":"set","path":["poses",{"id":"leaning-back"},"thermal","regions","blanket","exposedFraction"],"value":0.3716}
+]

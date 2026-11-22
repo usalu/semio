@@ -14,7 +14,7 @@ const api={...await import(new URL("../../../../../../🏗️build/📤️argume
 const require=createRequire(import.meta.url),nxRoot=dirname(require.resolve("nx/package.json"));
 const {createTaskGraph}=require(resolve(nxRoot,"dist/src/tasks-runner/create-task-graph.js"));
 function inputs(rawArguments:string[]=[],forward=false){
- const started=Date.now(),capabilities={workspaceRoot:"/repo",arguments:["nx","run",fixture.selected,...(rawArguments.length?["--",...rawArguments]:[])],buildMode:"prototype",native:structuredClone(fixture.resources),selection:[] as string[]};
+ const started=Date.now(),capabilities={workspaceRoot:"/repo",codeRoot:"/repo",arguments:["nx","run",fixture.selected,...(rawArguments.length?["--",...rawArguments]:[])],buildMode:"prototype",native:structuredClone(fixture.resources),selection:[] as string[]};
  capabilities.selection=[...capabilities.arguments];
  const original={version:1,policy:{version:1,owner:"original-nx-child-law",maximumElapsedMilliseconds:10000},deadlineEpochMilliseconds:started+10000,capabilities};
  const projects:any={app:{root:"app",targets:{test:{options:{command:"bun app"}}}}},tasks:any={[fixture.selected]:{id:fixture.selected,target:{project:"app",target:"test"}}};
@@ -104,7 +104,7 @@ test("production native caller binds canonical artifacts and actual selected arg
  const policy=JSON.parse(readFileSync(new URL("../../../../../📦️artifacts/📋️native-orchestration/🔣️policy.json",import.meta.url),"utf8"));
  expect(new Ajv({strict:true}).compile(nativeSchema.$defs.NativeOwnerExecutionPolicyV1)(policy)).toBe(true);
  for(const row of fixture.producerCases){
-  const original={version:1,policy:{version:1,owner:"actual-nx-parent",maximumElapsedMilliseconds:0},deadlineEpochMilliseconds:null,capabilities:{workspaceRoot:"/repo",buildMode:row.buildMode,arguments:row.original,selection:["nx",...row.selected],native:structuredClone(row.native)}};
+  const original={version:1,policy:{version:1,owner:"actual-nx-parent",maximumElapsedMilliseconds:0},deadlineEpochMilliseconds:null,capabilities:{workspaceRoot:"/repo",codeRoot:"/repo",buildMode:row.buildMode,arguments:row.original,selection:["nx",...row.selected],native:structuredClone(row.native)}};
   const before=JSON.stringify(original),environment={...row.environment,SEMIO_SCRIPT_PROCESS_INVOCATION:JSON.stringify(original)};
   const observed=producer.nativeNxChildEnvironmentV1("/repo",original,row.selected,environment),issued=JSON.parse(observed.SEMIO_SCRIPT_PROCESS_INVOCATION);
   expect(issued.policy).toEqual(original.policy);expect(issued.deadlineEpochMilliseconds).toBeNull();expect(issued.capabilities.arguments).toEqual(row.original);expect(issued.capabilities.selection).toEqual(["nx",...row.selected]);
@@ -124,7 +124,7 @@ test("original Nx launch issues authority for each actual provision user and wat
  const ts=(await import("typescript")).default,bootstrapPath=new URL("../../../../📜️script.ts",import.meta.url),text=readFileSync(bootstrapPath,"utf8"),tree=ts.createSourceFile(bootstrapPath.pathname,text,ts.ScriptTarget.Latest,true);
  let source="";const find=(node:any)=>{if(ts.isVariableDeclaration(node)&&node.name.getText(tree)==="launch"&&node.initializer)source=node.initializer.getText(tree);ts.forEachChild(node,find);};find(tree);expect(source.length).toBeGreaterThan(0);
  const bootstrap=await import(bootstrapPath.href),producer=await import(new URL("../../../../../📦️artifacts/📋️native-orchestration/📥️caller/🟦️.ts",import.meta.url).href),processApi=await import(new URL("../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts",import.meta.url).href);
- const original=processApi.createScriptProcessEnvelope({version:1,owner:"original-launch-parent",maximumElapsedMilliseconds:0},{workspaceRoot:"/repo",buildMode:fixture.buildModes[0],arguments:["nx","run","workspace:dev"]},Date.now()),environment={SEMIO_SCRIPT_PROCESS_INVOCATION:JSON.stringify(original)};
+ const original=processApi.createScriptProcessEnvelope({version:1,owner:"original-launch-parent",maximumElapsedMilliseconds:0},{workspaceRoot:"/repo",codeRoot:"/repo",buildMode:fixture.buildModes[0],arguments:["nx","run","workspace:dev"]},Date.now()),environment={SEMIO_SCRIPT_PROCESS_INVOCATION:JSON.stringify(original)};
  for(const compile of [(text:string)=>new Bun.Transpiler({loader:"ts"}).transformSync(text),(text:string)=>ts.transpileModule(text,{compilerOptions:{target:ts.ScriptTarget.ES2022}}).outputText]){
   let observed:any,admissions=0;const children:any[]=[];const {leaseInvocationChainV1}=await import("@semio-tech/process/leases");
   const spawn=(program:string,args:string[],options:any)=>{observed={program,args,options};return {pid:1};};
@@ -139,7 +139,7 @@ test("actual caller never fabricates native authority or selects another origina
  const originalArguments=["nx","run","app:test"],validate=new Ajv({strict:true}).compile(schema);
  for(const law of fixture.callerReceivingCases){
   const resources={...structuredClone(fixture.resources),artifactDirectory:"/repo/caller-artifacts"};
-  const capabilities:any={workspaceRoot:"/repo",buildMode:fixture.buildModes[0],arguments:originalArguments,native:resources,selection:originalArguments};
+  const capabilities:any={workspaceRoot:"/repo",codeRoot:"/repo",buildMode:fixture.buildModes[0],arguments:originalArguments,native:resources,selection:originalArguments};
   if(law.kind==="missingNative")delete capabilities.native;
   if(law.kind==="missingSelection")delete capabilities.selection;
   if(law.kind==="differentSelection")capabilities.selection=["nx","run","foreign:test"];
@@ -156,9 +156,9 @@ test("actual normal Nx launch preserves ordinary original envelopes without nati
  const processApi=await import(new URL("../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts",import.meta.url).href);
  for(const capabilities of fixture.normalCallerCapabilities){
   const now=Date.now(),original={version:1,policy:{version:1,owner:"original-normal-nx",maximumElapsedMilliseconds:10000},deadlineEpochMilliseconds:now+10000,capabilities},before=JSON.stringify(original),environment={SEMIO_SCRIPT_PROCESS_INVOCATION:before,ORIGINAL_NORMAL_INPUT:"same-source"};
-  expect(processApi.readScriptProcessEnvelope(original,now)).toBe(original);
+  expect(JSON.stringify(processApi.readScriptProcessEnvelope(original,now))).toBe(JSON.stringify(original));
   const output=producer.nativeNxChildEnvironmentV1("/repo",original,["exec","--projects=workspace","--excludeTaskDependencies","--skip-nx-cache","--","bun","original-input"],environment),issued=JSON.parse(output.SEMIO_SCRIPT_PROCESS_INVOCATION!);
-  expect(processApi.readScriptProcessEnvelope(issued,now)).toBe(issued);expect(issued).toEqual(original);expect(output.ORIGINAL_NORMAL_INPUT).toBe(environment.ORIGINAL_NORMAL_INPUT);expect(output.CARGO_TARGET_DIR).toBeUndefined();expect(output.CARGO_NET_OFFLINE).toBeUndefined();expect(issued.capabilities.native).toBeUndefined();expect(issued.capabilities.selection).toBeUndefined();expect(JSON.stringify(original)).toBe(before);expect(environment.SEMIO_SCRIPT_PROCESS_INVOCATION).toBe(before);
+  expect(JSON.stringify(processApi.readScriptProcessEnvelope(issued,now))).toBe(JSON.stringify(issued));expect(JSON.stringify(issued)).toBe(JSON.stringify(original));expect(output.ORIGINAL_NORMAL_INPUT).toBe(environment.ORIGINAL_NORMAL_INPUT);expect(output.CARGO_TARGET_DIR).toBeUndefined();expect(output.CARGO_NET_OFFLINE).toBeUndefined();expect(issued.capabilities.native).toBeUndefined();expect(issued.capabilities.selection).toBeUndefined();expect(JSON.stringify(original)).toBe(before);expect(environment.SEMIO_SCRIPT_PROCESS_INVOCATION).toBe(before);
  }
 });
 
@@ -168,9 +168,9 @@ test("trusted outer Nx issuer owns production policy and declares child selectio
  for(const row of fixture.producerCases){
   const commands=[row.selected,...fixture.launchCases],capabilities=producer.createNativeNxCallerCapabilitiesV1("/repo",row.original,row.selected,row.environment,commands),parent=processApi.createScriptProcessEnvelope({version:1,owner:"trusted-outer-launch",maximumElapsedMilliseconds:0},capabilities,Date.now()),before=JSON.stringify(parent);
   expect(capabilities.native.transport).toEqual(policy.transport);expect(capabilities.native.child).toEqual(policy.child);expect(capabilities.native.network.offline).toBe(row.offline);expect(capabilities.launches).toEqual(commands.map((args:string[])=>["nx",...args]));expect(admit(capabilities),JSON.stringify(admit.errors)).toBe(true);
-  for(const selected of commands){const child=producer.issueSelectedNxCallerEnvelopeV1("/repo",parent,selected);expect(child.policy).toBe(parent.policy);expect(child.deadlineEpochMilliseconds).toBeNull();expect(child.capabilities.native).toBe(capabilities.native);expect(child.capabilities.arguments).toBe(capabilities.arguments);expect(child.capabilities.selection).toEqual(["nx",...selected]);expect(admit(child.capabilities)).toBe(true);}
+  for(const selected of commands){const child=producer.issueSelectedNxCallerEnvelopeV1("/repo",parent,selected);expect(child.policy).toEqual(parent.policy);expect(child.deadlineEpochMilliseconds).toBeNull();expect(child.capabilities.native).toEqual(capabilities.native);expect(child.capabilities.arguments).toEqual(capabilities.arguments);expect(child.capabilities.selection).toEqual(["nx",...selected]);expect(admit(child.capabilities)).toBe(true);}
   expect(()=>producer.issueSelectedNxCallerEnvelopeV1("/repo",parent,["run","undeclared:foreign"])).toThrow();expect(JSON.stringify(parent)).toBe(before);
-  const bound=processApi.createScriptProcessEnvelope(parent.policy,{workspaceRoot:capabilities.workspaceRoot,buildMode:capabilities.buildMode,arguments:capabilities.arguments,native:capabilities.native,selection:capabilities.selection},Date.now());expect(producer.issueSelectedNxCallerEnvelopeV1("/repo",bound,row.selected)).toBe(bound);expect(()=>producer.issueSelectedNxCallerEnvelopeV1("/repo",bound,["run","undeclared:foreign"])).toThrow();
+  const bound=processApi.createScriptProcessEnvelope(parent.policy,{workspaceRoot:capabilities.workspaceRoot,codeRoot:capabilities.codeRoot,buildMode:capabilities.buildMode,arguments:capabilities.arguments,native:capabilities.native,selection:capabilities.selection},Date.now());expect(JSON.stringify(producer.issueSelectedNxCallerEnvelopeV1("/repo",bound,row.selected))).toBe(JSON.stringify(bound));expect(()=>producer.issueSelectedNxCallerEnvelopeV1("/repo",bound,["run","undeclared:foreign"])).toThrow();
   const oracle=Bun.spawnSync([registeredToolExecutableV1("node"),"-e","process.stdout.write(JSON.stringify(require('node:path').resolve(process.argv[1],process.argv[2])))","--","/repo",row.artifact]);expect(oracle.exitCode).toBe(0);expect(capabilities.native.artifactDirectory).toBe(JSON.parse(new TextDecoder().decode(oracle.stdout)));
  }
 });
@@ -194,17 +194,17 @@ test("actual native private argument transport preserves selected child argv",as
 test("actual native owner process receives original build mode policy and deadline",async()=>{
  const {NativeScript}=await import(new URL("../../../../../📦️artifacts/📋️native-orchestration/🟦️.ts",import.meta.url).href),processApi=await import(new URL("../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts",import.meta.url).href);
  const artifacts=process.env.SEMIO_TEST_ARTIFACT_DIR;if(!artifacts)throw Error("Original generated test output directory required");
- const root=process.cwd(),directory=mkdtempSync(join(artifacts,"native-handoff-")),saved=process.env.SEMIO_SCRIPT_PROCESS_INVOCATION;
- const artifactDirectory=resolve(root,".🧬semio/🦑️repo/⚡️cache/cargo/canonical-architecture"),schemaOracle=new Ajv({strict:true}).addSchema(cargoExecutionSchema).compile(nativeSchema);
- try{
+ const root=process.cwd(),directory=mkdtempSync(join(artifacts,"native-handoff-")),saved=process.env.SEMIO_SCRIPT_PROCESS_INVOCATION,savedTarget=process.env.CARGO_TARGET_DIR;
+ const artifactDirectory=resolve(root,process.env.CARGO_TARGET_DIR??(Bun.TOML.parse(readFileSync(join(root,".cargo/config.toml"),"utf8"))as any).build["target-dir"]),schemaOracle=new Ajv({strict:true}).addSchema(cargoExecutionSchema).compile(nativeSchema);
+ try{process.env.CARGO_TARGET_DIR=artifactDirectory;
   for(const mode of fixture.buildModes){
    const output=join(directory,mode+".json"),program="const fs=require('node:fs');fs.writeFileSync(process.argv[1],JSON.stringify(JSON.parse(process.env.SEMIO_SCRIPT_PROCESS_INVOCATION)));",arguments_=["-e",program,output],command={kind:"native-owner-command",manifest:fixture.ownerHandoff.manifest,workingDirectory:".",program:"node",arguments:arguments_};
-   const capabilities={version:1,buildMode:mode,repositoryRoot:root,artifactDirectory,command,transport:fixture.resources.transport,child:fixture.resources.child,network:fixture.resources.network};
+   const capabilities={version:1,buildMode:mode,repositoryRoot:root,codeRoot:root,artifactDirectory,command,transport:fixture.resources.transport,child:fixture.resources.child,network:fixture.resources.network};
    const original=processApi.createScriptProcessEnvelope({version:1,owner:fixture.ownerHandoff.parentOwner,maximumElapsedMilliseconds:fixture.ownerHandoff.maximumElapsedMilliseconds},capabilities,Date.now()),before=JSON.stringify(original);
    process.env.SEMIO_SCRIPT_PROCESS_INVOCATION=JSON.stringify({...original,capabilities:{buildMode:fixture.ownerHandoff.staleMode}});
    await processApi.withScriptProcessEnvelope(original,async(invocation:any)=>{await new NativeScript(root,root,invocation).run(["owner-command","--manifest",command.manifest,"--cwd",".","--",command.program,...arguments_]);});
    const observed=JSON.parse(readFileSync(output,"utf8"));expect(schemaOracle(observed.capabilities),JSON.stringify(schemaOracle.errors)).toBe(true);expect(observed.capabilities).toEqual(capabilities);expect(observed.policy).toEqual(original.policy);expect(observed.deadlineEpochMilliseconds).toBeLessThanOrEqual(original.deadlineEpochMilliseconds);expect(observed.deadlineEpochMilliseconds).toBeGreaterThan(Date.now());expect(JSON.stringify(original)).toBe(before);
   }
- }finally{if(saved===undefined)delete process.env.SEMIO_SCRIPT_PROCESS_INVOCATION;else process.env.SEMIO_SCRIPT_PROCESS_INVOCATION=saved;rmSync(directory,{recursive:true,force:true});}
+ }finally{if(savedTarget===undefined)delete process.env.CARGO_TARGET_DIR;else process.env.CARGO_TARGET_DIR=savedTarget;if(saved===undefined)delete process.env.SEMIO_SCRIPT_PROCESS_INVOCATION;else process.env.SEMIO_SCRIPT_PROCESS_INVOCATION=saved;rmSync(directory,{recursive:true,force:true});}
 });
 

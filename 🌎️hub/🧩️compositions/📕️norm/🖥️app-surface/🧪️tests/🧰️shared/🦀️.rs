@@ -1,4 +1,4 @@
-use semio_plugin::artifact_app_laws::{close_registered_fixture_app, fixture_identity, render_registered_fixture_app, OriginalFixtureScope};
+use semio_plugin::artifact_app_laws::{close_registered_fixture_app, fixture_identity, render_registered_fixture_app, FixtureUiArena, OriginalFixtureScope};
 use semio_plugin::{AppDefinition, Locale, PanelTabDefinition, PluginApp, Terminology, ViewModel};
 use std::collections::BTreeSet;
 
@@ -53,7 +53,7 @@ async fn check_surface<A: PluginApp>(app: &mut A, scope: &mut OriginalFixtureSco
     }
     match render_registered_fixture_app(app, &"x".repeat(70_000), &view, scope.cx()).await {
         Ok(_) => return Err(format!("{} accepted an oversized surface identity", fixture.app_id)),
-        Err(refusal) => std::mem::forget(refusal),
+        Err(refusal) => scope.retire_failure(refusal),
     }
     Ok(fixture.body_keys.len())
 }
@@ -63,12 +63,13 @@ async fn norm_public_surfaces_render_all_declared_bodies() {
     let mut fixture: Fixture = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
     assert_eq!(fixture.contract_id, "semio.norm.surface-render/v1");
     assert_eq!(fixture.rows.len(), 30);
-    assert_eq!(fixture.rows.iter().map(|row| row.body_keys.len()).sum::<usize>(), 191);
+    assert_eq!(fixture.rows.iter().map(|row| row.body_keys.len()).sum::<usize>(), 195);
     fixture.rows.retain(|row| VARIANTS.contains(&row.variant.as_str()));
     assert_eq!(fixture.rows.len(), VARIANTS.len() * 2);
     let plugin = plugin().expect("the real plugin must assemble its complete surface registry");
     assert_eq!(plugin.manifest.apps.iter().map(|app| app.id.clone()).collect::<BTreeSet<_>>(), fixture.rows.iter().map(|row| row.app_id.clone()).collect());
     assert_eq!(plugin.artifact_definitions().definitions().map(|definition| definition.identity().as_str().to_owned()).collect::<BTreeSet<_>>(), fixture.rows.iter().map(|row| format!("s.{}.{}", plugin.manifest.plugin_id, row.variant)).collect());
+    let _arena = FixtureUiArena::admit();
     let mut visited = BTreeSet::new();
     let mut rendered = 0;
     for row in &fixture.rows {

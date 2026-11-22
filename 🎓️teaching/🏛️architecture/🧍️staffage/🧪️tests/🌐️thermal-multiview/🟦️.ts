@@ -1,4 +1,4 @@
-/** 🌐️ Thermal and transport multiview: one physical state per instant, three projections. The thermal field and the air transport are solved in world metres (ahead x, up y, left z) and only projected to the elevation (x, y), the front (z, y) and the plan (x, z), so every region carries the same value, legend and range in all three views, parcels, pathlines and emitters sit at the same world place, a moving emitter (jogger breath, generator exhaust) projects consistently, wind drifts parcels sideways in the plan, and scrubbing equals playing.
+/** 🌐️ Thermal and transport multiview: one physical state per instant, three projections. The thermal field and the air transport are solved in world metres (ahead x, up y, left z) and only projected to the elevation (x, y), the front (z, y) and the plan (x, z), so every region carries the same value, legend and range in all three views, the vapour puffs, parcel paths and stream arrows of the flow view sit at the same world place, a moving emitter (jogger breath, generator exhaust) projects consistently, wind drifts parcels sideways in the plan, and scrubbing equals playing.
  *
  * THE REFERENCE is numpy (🐍️.py): the passive wind drift of a zero-momentum parcel, the orthographic projection of world points and the symmetric auto range.
  *
@@ -9,11 +9,13 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import type { Asset, Environment, Viewpoint } from "../../🧬️schema/🟦️.ts";
-import type { DrawingItem, DrawingScene, EvaluationQuery, TransportField, TransportLayer, Vec3 } from "../../🔨️modules/🔗️contracts/🟦️.ts";
+import { FLOW_HIDDEN, FLOW_LAYERS, type DrawingItem, type DrawingScene, type EvaluationQuery, type FlowMarks, type TransportField, type Vec3 } from "../../🔨️modules/🔗️contracts/🟦️.ts";
 import { defaultDepictionOptions, depict } from "../../🔨️modules/🎨️depiction/🟦️.ts";
 import { evaluate } from "../../🔨️modules/🧮️evaluation/🟦️.ts";
 import { areaWeighted, environmentAt, historyPlan, solveThermalAt, thermalSession } from "../../🔨️modules/🌡️thermal/🟦️.ts";
-import { DEFAULT_TURBULENCE, solveTransport } from "../../🔨️modules/💨️transport/🟦️.ts";
+import { DEFAULT_TURBULENCE, flowDetailOf, flowMarks, solveTransport } from "../../🔨️modules/💨️transport/🟦️.ts";
+import { FLOW_STYLE, FLOW_VEIL_BANDS } from "../../🔨️modules/🎨️depiction/🌊️flow-view/🟦️.ts";
+import { lookingOf } from "../../🔨️modules/🎨️depiction/🔭️views/🟦️.ts";
 import { ambientAt } from "../../🔨️modules/💨️transport/🌬️ambient/🟦️.ts";
 import { SCENARIOS, scenario } from "../../🧫️fixtures/💨️transport/🟦️.ts";
 import { STAFFAGE_ROOT, requireTool } from "../🧰️support/🧰️.ts";
@@ -21,7 +23,6 @@ import { python } from "../🧰️support/🐍️.ts";
 import { catalog } from "../🧊️three-views/🧰️.ts";
 
 const VIEWPOINTS: readonly Viewpoint[] = ["elevation", "front", "plan"];
-const LAYERS: readonly TransportLayer[] = ["parcels", "pathlines", "streamlines", "condensation"];
 const DENOMINATOR = 50;
 const select = { kind: "scale", scale: { denominator: DENOMINATOR } } as const;
 const assets = catalog();
@@ -34,7 +35,16 @@ const centre = (item: DrawingItem): { x: number; y: number } => {
   const ys = points.map((p) => p.y);
   return { x: (Math.min(...xs) + Math.max(...xs)) / 2, y: (Math.min(...ys) + Math.max(...ys)) / 2 };
 };
-const parcelIndex = (item: DrawingItem): number => Number(item.id.split(":").at(-1));
+const puffIndex = (item: DrawingItem): number => Number(item.id.split(":")[1]);
+const marksOf = (field: TransportField, viewpoint: Viewpoint): FlowMarks => {
+  const looking = lookingOf(viewpoint);
+  return flowMarks(field.flow!, field.flow!.timeS, { ...flowDetailOf(DENOMINATOR), eye: { toward: { x: -looking.x, y: -looking.y, z: -looking.z } } });
+};
+const moist = (marks: FlowMarks): number[] => marks.puffs.flatMap((puff, i) => (puff.vapourExcessKgPerKg * 1000 > FLOW_STYLE.vapourThresholdGKg && marks.puffVisible[i]! > FLOW_HIDDEN ? [i] : []));
+const shown = (visible: readonly number[], segment: number): boolean => Math.round(Math.min(visible[segment]!, visible[segment + 1]!) * FLOW_VEIL_BANDS) / FLOW_VEIL_BANDS > FLOW_HIDDEN;
+const pathIds = (marks: FlowMarks): string[] => marks.trails.flatMap((trail) => trail.points.slice(1).flatMap((_, segment) => (shown(trail.visible, segment) && (segment === 0 || !shown(trail.visible, segment - 1)) ? [trail.parcel] : [])));
+const parcelOf = (item: DrawingItem): string => item.id.slice("flow-path:".length, item.id.lastIndexOf(":"));
+const clouds = (scene: DrawingScene): DrawingItem[] => itemsOf(scene).filter((i) => i.id.startsWith("flow-vapour:") && i.id.endsWith(":0"));
 const world = (viewpoint: Viewpoint, p: Vec3): { u: number; v: number } => (viewpoint === "front" ? { u: p.z, v: p.y } : viewpoint === "plan" ? { u: p.x, v: p.z } : { u: p.x, v: p.y });
 
 const CASES: { readonly name: string; readonly asset: string; readonly query: EvaluationQuery }[] = [
@@ -89,63 +99,96 @@ describe("🌐️ thermal view in elevation, front and plan", () => {
   });
 });
 
-describe("🌐️ transport overlay in elevation, front and plan", () => {
+describe("🌐️ flow view in elevation, front and plan", () => {
   for (const c of CASES)
-    it(`projects one world transport field to the same place in all three views: ${c.name}`, () => {
+    it(`projects one world flow field to the same place in all three views: ${c.name}`, () => {
       const asset = assetOf(c.asset);
       const state = evaluate(asset, c.query, select);
-      const field = solveTransport(asset, c.query, asset.thermal.environment, { maxAgeS: 4 });
+      const field = solveTransport(asset, c.query, asset.thermal.environment, { maxAgeS: 4, flow: true });
       expect(field.parcels.length).toBeGreaterThan(10);
       expect(field.pathlines.length).toBeGreaterThan(5);
+      const everywhere = new Set<string>();
       for (const viewpoint of VIEWPOINTS) {
-        const scene = depict(state, { ...defaultDepictionOptions("light-solid", "en", DENOMINATOR, viewpoint), transport: LAYERS }, { transport: field });
-        const items = itemsOf(scene).filter((i) => i.id.startsWith("parcel:"));
-        expect(items.length).toBe(field.parcels.length);
-        items.forEach((item) => {
-          const i = parcelIndex(item);
+        const marks = marksOf(field, viewpoint);
+        expect(marks.trails.length).toBeGreaterThan(0);
+        expect(marks.ribbons.length).toBeGreaterThan(0);
+        const scene = depict(state, { ...defaultDepictionOptions("light-solid", "en", DENOMINATOR, viewpoint), flow: FLOW_LAYERS }, { transport: field });
+        const drawnClouds = clouds(scene);
+        expect(drawnClouds.map(puffIndex)).toEqual(moist(marks));
+        drawnClouds.forEach((item) => {
           const at = centre(item);
           const m = modelOf(scene, at.x, at.y);
-          const w = world(viewpoint, field.parcels[i]!.at);
+          const w = world(viewpoint, marks.puffs[puffIndex(item)]!.at);
           expect(m.u).toBeCloseTo(w.u, 5);
           expect(m.v).toBeCloseTo(w.v, 5);
         });
-        const lines = itemsOf(scene).filter((i) => i.id.startsWith("pathline:"));
-        expect(lines.length).toBe(field.pathlines.filter((l) => l.points.length >= 2).length);
+        const lines = itemsOf(scene).filter((i) => i.id.startsWith("flow-path:"));
+        expect(lines.map(parcelOf).filter((parcel, i, all) => all.indexOf(parcel) === i)).toEqual(pathIds(marks).filter((parcel, i, all) => all.indexOf(parcel) === i));
+        for (const line of lines) {
+          everywhere.add(parcelOf(line));
+          const history = field.pathlines.find((candidate) => candidate.parcel === parcelOf(line))!;
+          const start = Number(line.id.slice(line.id.lastIndexOf(":") + 1));
+          const drawn = line.kind === "path" ? line.commands.flatMap((command) => (command.op === "Z" ? [] : [modelOf(scene, command.x, command.y)])) : [];
+          expect(drawn.length).toBeGreaterThan(1);
+          drawn.forEach((m, i) => {
+            const w = world(viewpoint, history.points[start + i]!);
+            expect(m.u).toBeCloseTo(w.u, 5);
+            expect(m.v).toBeCloseTo(w.v, 5);
+          });
+        }
+        expect(new Set(itemsOf(scene).filter((i) => i.id.startsWith("flow-stream:")).map((i) => i.id.split(":")[1])).size).toBeLessThanOrEqual(marks.ribbons.length);
       }
+      expect(everywhere.size).toBeGreaterThan(0);
     });
 
   it("solves the same world parcels whichever view asks for them", () => {
     const asset = assetOf("jogger");
     const query: EvaluationQuery = { kind: "clip", clip: "run-cycle", timeS: 2.3 };
     const state = evaluate(asset, query, select);
-    const direct = solveTransport(asset, query, asset.thermal.environment, { maxAgeS: 30 });
-    const ids = (scene: DrawingScene) => itemsOf(scene).filter((i) => i.id.startsWith("parcel:")).map((i) => i.id).sort();
-    const scenes = VIEWPOINTS.map((viewpoint) => depict(state, { ...defaultDepictionOptions("light-solid", "en", DENOMINATOR, viewpoint), transport: ["parcels"] }));
-    expect(ids(scenes[1]!)).toEqual(ids(scenes[0]!));
-    expect(ids(scenes[2]!)).toEqual(ids(scenes[0]!));
-    expect(ids(scenes[0]!).length).toBe(direct.parcels.length);
+    const direct = solveTransport(asset, query, asset.thermal.environment, { maxAgeS: 30, flow: true });
+    const parcels = (scene: DrawingScene) => [...new Set(itemsOf(scene).filter((i) => i.id.startsWith("flow-path:")).map(parcelOf))].sort();
+    const scenes = VIEWPOINTS.map((viewpoint) => depict(state, { ...defaultDepictionOptions("light-solid", "en", DENOMINATOR, viewpoint), flow: ["pathlines", "moisture"] }));
+    const kept = VIEWPOINTS.map((viewpoint) => marksOf(direct, viewpoint));
+    expect(kept[1]!.trails.map((trail) => trail.parcel)).toEqual(kept[0]!.trails.map((trail) => trail.parcel));
+    expect(kept[2]!.trails.map((trail) => trail.parcel)).toEqual(kept[0]!.trails.map((trail) => trail.parcel));
+    expect(kept[0]!.trails.length).toBeGreaterThan(0);
+    scenes.forEach((scene, i) => {
+      expect(parcels(scene)).toEqual([...new Set(pathIds(kept[i]!))].sort());
+      expect(clouds(scene).map(puffIndex)).toEqual(moist(kept[i]!));
+    });
+    expect(scenes.some((scene) => parcels(scene).length > 0)).toBe(true);
   });
 
-  it("draws the legends of the transport layers identically in every view", () => {
+  it("draws the legends of the flow layers identically in every view", () => {
     const asset = assetOf("jogger");
     const query: EvaluationQuery = { kind: "clip", clip: "run-cycle", timeS: 2.3 };
     const state = evaluate(asset, query, select);
-    const legends = VIEWPOINTS.map((viewpoint) => depict(state, { ...defaultDepictionOptions("light-solid", "en", DENOMINATOR, viewpoint), transport: LAYERS }).legends);
+    const legends = VIEWPOINTS.map((viewpoint) => depict(state, { ...defaultDepictionOptions("light-solid", "en", DENOMINATOR, viewpoint), flow: FLOW_LAYERS }).legends);
     expect(legends[1]).toEqual(legends[0]);
     expect(legends[2]).toEqual(legends[0]);
     expect(legends[0]!.length).toBeGreaterThan(1);
   });
 
-  it("draws an emitter pointing at the viewer end-on instead of as a zero-length arrow", () => {
-    const asset = assetOf("excavator");
+  it("draws no arrow head on a stream that points at the viewer instead of a head without a direction", () => {
+    const asset = assetOf("cooking-pot");
     const query: EvaluationQuery = { kind: "pose", pose: asset.presentation.defaultPose, timeS: 5 };
     const state = evaluate(asset, query, select);
-    const field = solveTransport(asset, query, asset.thermal.environment, { maxAgeS: 2 });
-    const stack = field.emitters.find((e) => e.emitter === "exhaust-stack")!;
-    expect(stack.direction.y).toBeGreaterThan(0.99);
-    const plan = depict(state, { ...defaultDepictionOptions("light-solid", "en", DENOMINATOR, "plan"), transport: ["parcels"] }, { transport: field });
-    const marker = itemsOf(plan).find((i) => i.id === "emitter:exhaust-stack")!;
-    expect(marker.kind === "path" && marker.commands.some((c) => c.op === "C")).toBe(true);
+    const field = solveTransport(asset, query, { ...asset.thermal.environment, windMS: 0 }, { maxAgeS: 2, flow: true });
+    expect(field.emitters.some((e) => e.active && e.direction.y > 0.99)).toBe(true);
+    const arrowsOf = (viewpoint: Viewpoint) => marksOf(field, viewpoint).ribbons.flatMap((ribbon) => ribbon.arrows.flatMap((arrow, j) => (ribbon.visible[Math.max(0, ribbon.points.indexOf(arrow.at))]! > FLOW_HIDDEN ? [{ id: `flow-arrow:${ribbon.stream}:${j}`, direction: arrow.direction }] : [])));
+    const arrows = arrowsOf("plan");
+    const upright = arrows.filter((arrow) => Math.abs(arrow.direction.x) + Math.abs(arrow.direction.z) < 0.2);
+    expect(upright.length).toBeGreaterThan(0);
+    const drawn = (viewpoint: Viewpoint) => new Set(itemsOf(depict(state, { ...defaultDepictionOptions("light-solid", "en", DENOMINATOR, viewpoint), flow: ["streams"] }, { transport: field })).filter((i) => i.id.startsWith("flow-arrow:")).map((i) => i.id));
+    const plan = drawn("plan");
+    const elevation = drawn("elevation");
+    const side = new Set(arrowsOf("elevation").map((arrow) => arrow.id));
+    expect(upright.some((arrow) => side.has(arrow.id))).toBe(true);
+    for (const arrow of upright) {
+      expect(plan.has(arrow.id)).toBe(false);
+      expect(elevation.has(arrow.id)).toBe(side.has(arrow.id));
+    }
+    expect([...plan].sort()).toEqual(arrows.filter((arrow) => Math.abs(arrow.direction.x) + Math.abs(arrow.direction.z) >= 0.2).map((arrow) => arrow.id).sort());
   });
 });
 
@@ -253,7 +296,7 @@ describe("🌐️ one environment, one clock, one weighting", () => {
     expect(legend.convention.de).toContain("außerhalb des festen Bereichs");
   });
 
-  it("states in both languages what the absence of a hatch means, in every view and for thermal and transport", () => {
+  it("states in both languages what the absence of a hatch means in every thermal view, and the second reading of moist air in every flow view", () => {
     const query: EvaluationQuery = { kind: "pose", pose: jogger.presentation.defaultPose, timeS: 0 };
     const state = evaluate(jogger, query, select);
     for (const viewpoint of VIEWPOINTS) {
@@ -263,10 +306,10 @@ describe("🌐️ one environment, one clock, one weighting", () => {
       const off = depict(state, { ...defaultDepictionOptions("thermal", "en", DENOMINATOR, viewpoint, "light"), patterns: false }).legends[0]!;
       expect(off.convention.en).toContain("Hatching is off");
       expect(off.convention.de).toContain("Schraffur ist aus");
-      const field = solveTransport(jogger, { kind: "clip", clip: "run-cycle", timeS: 2.3 }, jogger.thermal.environment, { maxAgeS: 4 });
-      const air = depict(evaluate(jogger, { kind: "clip", clip: "run-cycle", timeS: 2.3 }, select), { ...defaultDepictionOptions("light-solid", "en", DENOMINATOR, viewpoint), transport: ["parcels"] }, { transport: field }).legends.find((l) => l.quantity === "excess-temperature")!;
-      expect(air.convention.en).toContain("unhatched = within ±35 %");
-      expect(air.convention.de).toContain("unschraffiert = innerhalb von ±35 %");
+      const field = solveTransport(jogger, { kind: "clip", clip: "run-cycle", timeS: 2.3 }, jogger.thermal.environment, { maxAgeS: 4, flow: true });
+      const air = depict(evaluate(jogger, { kind: "clip", clip: "run-cycle", timeS: 2.3 }, select), { ...defaultDepictionOptions("light-solid", "en", DENOMINATOR, viewpoint), flow: ["moisture"] }, { transport: field }).legends.find((l) => l.quantity === "flow-vapour-excess")!;
+      expect(air.convention.en).toContain("dotted lines");
+      expect(air.convention.de).toContain("gepunktete Linien");
     }
   });
 
@@ -338,11 +381,11 @@ describe("🌐️ numpy reference", () => {
     });
     const jogger = assetOf("jogger");
     const query: EvaluationQuery = { kind: "clip", clip: "run-cycle", timeS: 2.3 };
-    const field = solveTransport(jogger, query, jogger.thermal.environment, { maxAgeS: 4 });
+    const field = solveTransport(jogger, query, jogger.thermal.environment, { maxAgeS: 4, flow: true });
     const k = 1000 / DENOMINATOR;
     const state = evaluate(jogger, query, select);
-    const points = field.parcels.map((p) => [p.at.x, p.at.y, p.at.z]);
-    const scenesByView = Object.fromEntries(VIEWPOINTS.map((viewpoint) => [viewpoint, depict(state, { ...defaultDepictionOptions("light-solid", "en", DENOMINATOR, viewpoint), transport: ["parcels"] }, { transport: field })])) as Record<Viewpoint, DrawingScene>;
+    const points = marksOf(field, "elevation").puffs.map((p) => [p.at.x, p.at.y, p.at.z]);
+    const scenesByView = Object.fromEntries(VIEWPOINTS.map((viewpoint) => [viewpoint, depict(state, { ...defaultDepictionOptions("light-solid", "en", DENOMINATOR, viewpoint), flow: ["moisture"] }, { transport: field })])) as Record<Viewpoint, DrawingScene>;
     const thermal = solveThermalAt(jogger, query, undefined);
     const values = jogger.thermal.regions.map((r) => thermal.regions[r.id]!.surfaceTempC);
     const ranges = [{ centre: thermal.environment.airTempC, minSpan: 1, values }];
@@ -354,10 +397,12 @@ describe("🌐️ numpy reference", () => {
       drift.forEach((d, i) => d.observed.forEach((p, j) => (expect(p[0]).toBeCloseTo(reference.drift[i]![j]![0]!, 4), expect(p[1]).toBeCloseTo(reference.drift[i]![j]![1]!, 4))));
       for (const viewpoint of VIEWPOINTS) {
         const scene = scenesByView[viewpoint];
-        const items = itemsOf(scene).filter((i) => i.id.startsWith("parcel:"));
+        const items = clouds(scene);
+        expect(items.map(puffIndex)).toEqual(moist(marksOf(field, viewpoint)));
+        expect(viewpoint !== "elevation" || items.length > 0).toBe(true);
         items.forEach((item) => {
           const at = centre(item);
-          const expected = reference.projection[viewpoint][parcelIndex(item)]!;
+          const expected = reference.projection[viewpoint][puffIndex(item)]!;
           expect(at.x - scene.metadata.origin.xMm).toBeCloseTo(expected[0]!, 5);
           expect(at.y - scene.metadata.origin.yMm).toBeCloseTo(expected[1]!, 5);
         });

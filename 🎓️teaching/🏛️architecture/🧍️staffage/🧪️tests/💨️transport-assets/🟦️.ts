@@ -31,8 +31,8 @@ describe("💨️ real assets", () => {
     const h = 1 / 120;
     let compared = 0;
     for (const boundary of [1.2, 2.4, 3.6]) {
-      const before = solveTransport(commuter, walk(boundary - h), cold, { streamlines: false });
-      const after = solveTransport(commuter, walk(boundary + h), cold, { streamlines: false });
+      const before = solveTransport(commuter, walk(boundary - h), cold, {});
+      const after = solveTransport(commuter, walk(boundary + h), cold, {});
       for (const p of before.parcels) {
         const q = after.parcels.find((c) => c.id === p.id);
         if (q === undefined) continue;
@@ -45,7 +45,7 @@ describe("💨️ real assets", () => {
   });
 
   it("emits breath only from the nostrils or mouth of the head and never from the plume anchor", () => {
-    const field = solveTransport(commuter, walk(6), cold, { streamlines: false });
+    const field = solveTransport(commuter, walk(6), cold, {});
     const emitters = new Set(field.parcels.map((p) => p.emitter));
     expect(emitters.has("nose-breath") || emitters.has("mouth-breath")).toBe(true);
     expect(field.parcels.filter((p) => p.emitter === "body-plume").every((p) => p.carries === "airflow")).toBe(true);
@@ -59,7 +59,7 @@ describe("💨️ real assets", () => {
       ...excavator,
       clips: [{ ...excavator.clips.find((c) => c.id === "start-and-idle")!, id: "ramp", durationS: 14, tracks: [{ target: "operating:engine-load", ease: "linear", keys: [{ t: 0, v: 0 }, { t: 0.8, v: 0.5 }, { t: 1.5, v: 0.2 }, { t: 6, v: 0.2 }, { t: 8, v: 1 }, { t: 14, v: 1 }] }, { target: "emitter:exhaust-stack", ease: "step", keys: [{ t: 0, v: 0 }, { t: 0.8, v: 1 }] }] }],
     };
-    const at = (t: number) => solveTransport(ramp, { kind: "clip", clip: "ramp", timeS: t }, cold, { streamlines: false });
+    const at = (t: number) => solveTransport(ramp, { kind: "clip", clip: "ramp", timeS: t }, cold, {});
     expect(at(0.6).parcels.length).toBe(0);
     const bornEarliest = Math.min(...at(3).parcels.map((p) => p.bornS));
     expect(bornEarliest).toBeGreaterThanOrEqual(0.8 - 1e-9);
@@ -72,12 +72,12 @@ describe("💨️ real assets", () => {
 
   it("gives the oak distributed vapour-only transpiration and never a breathing effect", () => {
     expect(oak.thermal.respiration).toBeUndefined();
-    const field = solveTransport(oak, { kind: "clip", clip: "wind-sway", timeS: 12 }, oak.thermal.environment, { streamlines: false });
+    const field = solveTransport(oak, { kind: "clip", clip: "wind-sway", timeS: 12 }, oak.thermal.environment, {});
     expect(field.respiration).toBeNull();
     expect(field.parcels.length).toBeGreaterThan(20);
     expect(field.parcels.every((p) => p.carries === "vapour")).toBe(true);
     expect(new Set(field.parcels.map((p) => p.id.split("#")[0])).size).toBeGreaterThanOrEqual(8);
-    expect(field.condensation.length).toBe(0);
+    expect(field.parcels.filter((p) => p.condensateKgPerKg > 0).length).toBe(0);
   });
 
   it("solves the region temperatures of an evaporating vent in the environment of each instant, so a timeline equals the session-free solve", () => {
@@ -85,7 +85,7 @@ describe("💨️ real assets", () => {
     const warm: Environment = { ...cold, airTempC: 30, meanRadiantTempC: 30, relativeHumidity: 0.4 };
     const timeline = { keys: [{ t: 0, environment: cold, ease: "linear" as const }, { t: 200, environment: warm, ease: "linear" as const }] };
     const boil = { kind: "clip", clip: "boil", timeS: 120 } as const;
-    const settings = { maxAgeS: 1, pathlines: false, streamlines: false };
+    const settings = { maxAgeS: 1, pathlines: false };
     const shared = solveTransport(kettle, boil, timeline, settings);
     const alone = solveTransport(structuredClone(kettle), boil, timeline, { ...settings, thermal: (state) => solveThermalAt(state.asset, state.query, timeline) });
     expect(shared.parcels.length).toBeGreaterThan(0);

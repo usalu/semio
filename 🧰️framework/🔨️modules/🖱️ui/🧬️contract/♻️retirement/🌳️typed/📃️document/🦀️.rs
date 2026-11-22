@@ -3,7 +3,7 @@
 use super::*;
 use crate::{UiArenaHandback, UiArenaHandbacks, UiTypedRetirementCursor, UiValueRetirementStep};
 
-static DOCUMENT_HANDBACKS: UiArenaHandbacks<UI_DOCUMENT_LEASE_SLOTS, 1> = UiArenaHandbacks::new();
+pub(super) static DOCUMENT_HANDBACKS: UiArenaHandbacks<UI_DOCUMENT_LEASE_SLOTS, 1> = UiArenaHandbacks::new();
 
 //#region 🧵️SlotTraversal
 impl UiDocumentArena {
@@ -233,6 +233,3 @@ pub fn close_ui_document_page_with_grant(maximum_items: usize, maximum_bytes: us
 }
 //#endregion 🧵️SlotTraversal
 
-#[cfg(test)]
-#[path = "../🧪️tests/🔬️document/🦀️.rs"]
-mod tests;

@@ -338,9 +338,11 @@ impl<'ctx> PointerCtx<'ctx> {
                     context_menu_item_at_path(&menu.items, &path)?.action.clone()
                 });
                 let origin = self.input.context_menu.as_ref().map(|menu| (menu.x, menu.y));
-                self.input.context_menu = None;
+                if !self.input.suggestion_search.as_ref().is_some_and(|search| search.popup) {
+                    self.input.context_menu = None;
+                }
                 if let Some(action) = action {
-                    let claimed = origin.is_some_and(|(x, y)| self.input.claim_text_editor_menu_action(&action, x, y));
+                    let claimed = self.input.claim_text_selection_action(&action) || origin.is_some_and(|(x, y)| self.input.claim_text_editor_menu_action(&action, x, y));
                     if !claimed {
                         self.as_actions().dispatch_action(action).await?;
                     }

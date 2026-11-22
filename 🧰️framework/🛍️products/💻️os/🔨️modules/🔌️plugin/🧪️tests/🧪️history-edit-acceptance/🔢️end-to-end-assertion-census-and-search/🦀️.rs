@@ -2,11 +2,10 @@
 
 use super::*;
 
-/// 🚪️ Closes the registered app while the original editor, preview or Report still owns its source.
-pub async fn assert_closes_live_history_session<A, M>(manifest: fn() -> App, fixtures: &std::path::Path, directory: &str)
+/// 🎯️ The one authored fixture case under `directory`; every other case's operation is retired cold.
+fn acceptance_close_case<A>(fixtures: &std::path::Path, directory: &str) -> AcceptanceCase<A::Mutation>
 where
     A: ArtifactApp + Default,
-    M: ReferenceSpaceMember + MemberFactory + Send + 'static,
     <A as ArtifactApp>::Snapshot: pack::snapshot::ArtifactDsl,
 {
     let mut selected = None;
@@ -18,7 +17,69 @@ where
             ::protocol::Mutation::<A::Snapshot>::retire_cold(case.op);
         }
     }
-    let case = selected.expect("authored live history close fixture");
+    selected.expect("authored live history close fixture")
+}
+
+/// 🧯️ Closes the registered app while an undo is still a pending reserved route, and again once its finished job queued the
+/// reserved commit, on the first authored fixture case that seeds an undoable edit: the close ladder retires each commit's
+/// action metadata before its lease, so no commit drops unretired.
+pub async fn assert_closes_mid_reserved_commit<A, M>(plugin: &str, manifest: fn() -> App, fixtures: &std::path::Path)
+where
+    A: ArtifactApp + Default,
+    M: ReferenceSpaceMember + MemberFactory + Send + 'static,
+    <A as ArtifactApp>::Snapshot: pack::snapshot::ArtifactDsl,
+{
+    let mut caller = artifact_app_laws::OriginalFixtureCaller::admit().expect("reserved commit close caller");
+    let mut cx = acceptance_context(&mut caller);
+    let mut cases = acceptance_cases::<A>(fixtures).into_iter();
+    let mut exercised = None;
+    'cases: for case in cases.by_ref() {
+        for queued in [false, true] {
+            let Ok(mut app) = Box::pin(acceptance_seeded::<A, M>(manifest, &case.base, &[&case.op], true, &mut cx)).await else {
+                assert!(!queued, "{plugin}: reserved commit close fixture {} seeded once but not twice", case.directory);
+                ::protocol::Mutation::<A::Snapshot>::retire_cold(case.op);
+                continue 'cases;
+            };
+            let meta = ActionMeta { actor: app.stores.store.local_actor_id().0.as_str().into(), ..acceptance_meta() };
+            let admitted = semio_plugin_testing_laws::with_authoring_identity!(|identity|
+                artifact_app_laws::dispatch_fixture_action(&mut app, "undo", None, &meta, &mut identity, &mut cx, acceptance_policy().close).await)
+                .unwrap_or_else(|failure| panic!("{plugin}: undo of {} faulted: {failure:?}", case.directory));
+            let (job, input) = admitted.requested_effects.iter().find_map(|effect| match effect {
+                semio_framework::kernel::Effect::SpawnJob { job, kind, input, .. } if kind == semio_framework::kernel::FRAMEWORK_RESERVED_JOB_KIND => Some((*job, input.clone())),
+                _ => None,
+            }).unwrap_or_else(|| panic!("{plugin}: undo of {} admits no reserved spawn-job", case.directory));
+            if queued {
+                let output = semio_plugin_reactor_jobs::reserved::drive_framework_reserved_registry_job(job, input, &mut cx).expect("reserved undo job output");
+                assert!(app.admit_reserved_spawned_job(job, Ok(output)).expect("reserved undo commit admission"), "{plugin}: the finished undo job must queue its reserved commit");
+            }
+            artifact_app_laws::close_registered_fixture_app(&mut app, acceptance_policy(), &mut cx)
+                .unwrap_or_else(|failure| panic!("{plugin}: close with a {} reserved undo of {} failed: {failure:?}", if queued { "queued" } else { "pending" }, case.directory));
+            assert!(app.close_terminal_is_empty());
+        }
+        exercised = Some(case.directory.clone());
+        ::protocol::Mutation::<A::Snapshot>::retire_cold(case.op);
+        break;
+    }
+    for case in cases {
+        ::protocol::Mutation::<A::Snapshot>::retire_cold(case.op);
+    }
+    match exercised {
+        Some(directory) => ::std::println!("[reserved-commit-close] {plugin}: closed mid undo on {directory}"),
+        None => ::std::println!("[reserved-commit-close] {plugin}: no authored fixture case seeds an undoable edit"),
+    }
+    let fuel = cx.fuel_remaining();
+    drop(cx);
+    caller.retire(fuel).expect("reserved commit close caller retirement");
+}
+
+/// 🚪️ Closes the registered app while the original editor, preview or Report still owns its source.
+pub async fn assert_closes_live_history_session<A, M>(manifest: fn() -> App, fixtures: &std::path::Path, directory: &str)
+where
+    A: ArtifactApp + Default,
+    M: ReferenceSpaceMember + MemberFactory + Send + 'static,
+    <A as ArtifactApp>::Snapshot: pack::snapshot::ArtifactDsl,
+{
+    let case = acceptance_close_case::<A>(fixtures, directory);
     let mut caller = artifact_app_laws::OriginalFixtureCaller::admit().expect("history close caller");
     let mut cx = acceptance_context(&mut caller);
     for (settle_preview, replay, step_replacement) in [

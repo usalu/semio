@@ -1,0 +1,20 @@
+{
+  "title": "Staffage Human Collection Wave",
+  "emoji": "🧍",
+  "status": "open",
+  "description": "Extend the architectural staffage catalog (🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/👤️humans) with a huge collection of new handcrafted people (work, hospitality, care, construction, children, elderly, sports, mobility, leisure, culture, chores, services, accessibility, weather, crowds, logistics) via a massive parallel wave of Opus 5.5 agents, each asset passing the staffage check, with manifest rows, collections and tests synced.",
+  "goal": "🎯runningdrawing",
+  "sessions": [],
+  "interactions": [
+    {
+      "kind": "ticket.open",
+      "date": "2026-11-22 16:00:00",
+      "author": "",
+      "system": "mac",
+      "client": "claude-code",
+      "checkpoint": "",
+      "prompt": "Use as massive wave of Opus 5.5. agents to extend the staffage with huge collection of people. Start wave immediately as fast as you can.",
+      "llm": "opus-5-5"
+    }
+  ]
+}

@@ -48,9 +48,9 @@ const codegenValue=(args:readonly string[],name:string):string|undefined=>args.f
 /** 🍎️ Whether the unit links for macOS: Apple's linker options belong to the Mach-O link only, so a unit cross-compiled to another target (a wasm component linked by `wasm-component-ld` on a macOS host) gets none of them. Cargo gives no `--target` to the host's own units (proc-macros, build scripts). */
 export const appleLinkV1=(args:readonly string[]):boolean=>{const target=argumentValues(args,"--target")[0];return target===undefined||/-apple-/u.test(target);};
 
-/** 🧷️ The linker flag that gives a proc-macro library the same install name wherever it is linked: the output path (a lane directory, a worker's work directory) would otherwise be inside the linked bytes. The library is loaded by the compiler by path, so the name is never used to find it. `[]` off macOS and for every other crate type. */
+/** 🧷️ The linker flag that gives a proc-macro, cdylib or dylib library the same install name wherever it is linked: the output path (a lane directory, a worker's work directory) would otherwise be inside the linked bytes. The library is loaded by path (by the compiler, a plugin host or `dlopen`), so the name is never used to find it. `[]` off macOS and for every other crate type. */
 export function installNameArgumentsV1(args:readonly string[],platform:NodeJS.Platform=process.platform):readonly string[]{
- if(platform!=="darwin"||!appleLinkV1(args)||args.some(argument=>argument.includes("install_name"))||!argumentValues(args,"--crate-type").includes("proc-macro"))return[];
+ if(platform!=="darwin"||!appleLinkV1(args)||args.some(argument=>argument.includes("install_name"))||!argumentValues(args,"--crate-type").some(type=>type==="proc-macro"||type==="cdylib"||type==="dylib"))return[];
  const name=argumentValues(args,"--crate-name")[0];
  return name===undefined?[]:["-Clink-arg=-Wl,-install_name,@rpath/lib"+name+(codegenValue(args,"extra-filename")??"")+".dylib"];
 }

@@ -115,7 +115,7 @@ const SHELL_HOST_FILES = [
 ] as const;
 /** 🧷️ The adversarial text a collaborator plants in the note for the (g) chain: the canary of the
  * untrusted-content law, so this gate and the laws probe one and the same string. */
-const UNTRUSTED_LAW = "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/💡️services/🧫️fixtures/🧷️untrusted-content/🔣️.json";
+const UNTRUSTED_LAW = "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/💡️services/🧪️tests/🧫️fixtures/🧷️untrusted-content/🔣️.json";
 const UNTRUSTED_CONTENT_SCHEMA = "semio.mcp.untrusted-content/v1";
 
 /** 🧷️ The canary as text plus its base64 spelling for each of its three byte alignments. */

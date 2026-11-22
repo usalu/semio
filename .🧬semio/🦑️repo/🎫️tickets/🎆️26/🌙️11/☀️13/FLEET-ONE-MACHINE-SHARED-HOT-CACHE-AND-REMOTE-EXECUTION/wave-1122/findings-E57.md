@@ -1,0 +1,6 @@
+# Findings E57 (outside the lane)
+
+1. `caller-environment` daemon-startup test ("actual immutable Node daemon startup admits one producer across parallel clients") times out at its own 30 s under load 25-35 (4 parallel node clients, each behind an Original admission). With the Nx funding wedge gone it is now the first failure of the file; it is a load-sensitive test budget, not a product fault proven here.
+2. `repo test-file` reports "The sources of the build implementation moved while this task was running (51 files ...)" and sends SIGTERM to the running work when the test times out; the 51-file list is stable across runs, so the moved-sources baseline looks stale (whole-graph seal running), not a real edit race.
+3. Files still red for test-side reasons (not product): `🛠️tools/📥️use/🧪️tests` and `🏁️startup/🚦️service` and `🏇️waiter` need the private repository workspace (toolkit-use "reached the live repository store"; service: sandbox workspace has no `nx.json`; waiter: authorizer not loaded). Adding an `nx-namespace` fileLauncher row only moves their first error, so no row was added.
+4. `native-caller` last test ("actual native owner process receives original build mode policy and deadline") runs `NativeScript` against the live checkout and its cargo preparation store: needs the private repository workspace plus a manifest copy (E48 class).

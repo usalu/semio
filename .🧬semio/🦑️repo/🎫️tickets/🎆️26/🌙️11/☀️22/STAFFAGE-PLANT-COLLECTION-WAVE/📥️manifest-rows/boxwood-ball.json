@@ -1,0 +1,55 @@
+{
+  "id": "boxwood-ball",
+  "category": "vegetation",
+  "title": {
+    "en": "Boxwood Ball",
+    "de": "Buchskugel"
+  },
+  "heightM": 0.8013,
+  "widthM": 0.8053,
+  "powerW": 0,
+  "poses": [
+    "calm",
+    "windy",
+    "storm",
+    "snow"
+  ],
+  "clips": [
+    "wind-sway",
+    "gust",
+    "diurnal-transpiration"
+  ],
+  "representations": {
+    "50": "authored",
+    "100": "authored",
+    "200": "authored",
+    "500": "authored"
+  },
+  "symbols": [
+    "boxwood-ball-symbol"
+  ],
+  "analytics": [
+    "thermal",
+    "transport",
+    "structural"
+  ],
+  "exports": [
+    "svg",
+    "pdf",
+    "dxf",
+    "dwg",
+    "png-sequence",
+    "mp4",
+    "webm",
+    "component",
+    "glb",
+    "fbx",
+    "model",
+    "model-zip"
+  ],
+  "distinction": {
+    "en": "A single clipped topiary sphere of boxwood planted in the ground: a stiff evergreen leaf skin on five short stems, the smallest clipped plant of the collection, whose snow pose loads the cap.",
+    "de": "Eine einzelne geschnittene Formkugel aus Buchs, im Boden gepflanzt: eine steife immergrüne Laubhaut auf fünf kurzen Stämmen, die kleinste Schnittpflanze der Sammlung; in der Schneepose lastet Schnee auf der Kappe."
+  },
+  "completion": "authored"
+}

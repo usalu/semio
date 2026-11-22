@@ -36,6 +36,11 @@ export function budgetStretchV1(ratio: number, policy: ContentionPolicyV1 = CONT
   return Number.isFinite(ratio) ? Math.min(high, Math.max(low, ratio)) : low;
 }
 
+/** 🧮️ A declared budget in milliseconds stretched by the contention `ratio` (the contention this process met at its first deadline when none is given, so every deadline of one run stretches by the same factor), clamped to the policy bounds; every runner, envelope and plan deadline derives from its declared budget through this one function. */
+export function stretchedBudgetMillisecondsV1(milliseconds: number, ratio?: number, policy: ContentionPolicyV1 = CONTENTION_POLICY_V1): number {
+  return Math.ceil(milliseconds * budgetStretchV1(ratio ?? (launchRatio ??= sharedHostContentionV1()().ratio), policy));
+}
+
 /** ⚖️ The budget as work, not as wall time: every wall millisecond is worth `1/stretch` budget milliseconds, so a run that needs its budget on an idle host is never stopped on a busy one and a run that never ends is stopped after at most `stretch` times its budget. */
 export type BudgetClockV1 = Readonly<{
   advance: (wallMilliseconds: number, stretch: number) => void;
@@ -95,7 +100,7 @@ export function hostContentionV1(options: Readonly<{ policy?: ContentionPolicyV1
 /** 🕰️ The wall clock: no host is ever busy, the budget counts exact wall time (for callers that need a fixed deadline). */
 export const wallClockContentionV1: ContentionSourceV1 = () => Object.freeze({ ratio: 1, load: 0, cores: 1, source: "wall" as const });
 
-let shared: ContentionSourceV1 | undefined;
+let shared: ContentionSourceV1 | undefined, launchRatio: number | undefined;
 
 /** 🧵️ The contention source of this process, kept so a probing platform smooths across all budgets of the process. */
 export function sharedHostContentionV1(): ContentionSourceV1 {

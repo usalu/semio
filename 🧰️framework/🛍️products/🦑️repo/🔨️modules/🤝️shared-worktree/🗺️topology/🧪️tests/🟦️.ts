@@ -222,7 +222,8 @@ test("the worker service keeps the replica daemon alive on every platform",()=>{
  const group=fixture.topology.groups[0]!;
  const linux=workerServiceV1(topology,group.id,"linux"),macos=workerServiceV1(topology,group.id,"macos"),windows=workerServiceV1(topology,group.id,"windows");
  expect(linux).not.toContain("WorkingDirectory");
- expect(linux).toContain("ExecStart=/bin/sh __WORKER_HOME__/.local/share/semio/fleet/entry/boot.sh run");
+ expect(linux).toContain('ExecStart=/bin/sh "__WORKER_HOME__/.local/share/semio/fleet/entry/service/replica.sh"');
+ expect(linux).toContain("AmbientCapabilities=CAP_SYS_NICE");
  expect(linux).not.toContain(SCRIPT);
  expect(linux).toContain("Restart=always");
  expect(linux).toContain("User=%i");
@@ -410,12 +411,13 @@ test("the Linux group server exports the store, mounts the peers read-only by th
   expect(parts["exports"]).toContain(` ${other.nfs.host}(ro,sync,no_subtree_check)`);
   expect(parts["fstab"]).toContain(`${other.nfs.host}:${other.nfs.export} ${(group.peers as unknown as Record<string,string>)[other.id]} nfs vers=3,ro,hard,`);
  }
- expect(parts["cache-unit"]).toContain("Environment=SEMIO_FLEET_NETWORK=10.1.0.0/24");expect(parts["cache-unit"]).toContain("ExecStart=/usr/local/bin/repo remote-cache serve --host fleet --port 6090 --directory /var/lib/semio-remote-cache --max-bytes 214748364800");
- expect(parts["cache-unit"]).toContain("EnvironmentFile=/etc/semio/remote-cache.env");
+ expect(parts["cache-launch"]).toContain("export SEMIO_FLEET_NETWORK=10.1.0.0/24");expect(parts["cache-launch"]).toContain("exec /usr/local/bin/repo remote-cache serve --host fleet --port 6090 --directory /var/lib/semio-remote-cache --max-bytes 214748364800");
+ expect(parts["cache-launch"]).toContain(". /etc/semio/remote-cache.env");
+ expect(parts["cache-unit"]).toContain('ExecStart=/bin/sh "__WORKER_HOME__/.local/share/semio/fleet/entry/service/cache.sh"');
  expect(parts["cache-unit"]).toContain("Restart=always");
  expect(parts["cache-environment"]).toBe("SEMIO_REMOTE_CACHE_SERVER_READ_TOKEN=<read-token>\nSEMIO_REMOTE_CACHE_SERVER_WRITE_TOKEN=<write-token>");
- expect(parts["relay-unit"]).toContain(`WorkingDirectory=__WORKER_HOME__/semio/${REPLICA}`);
- expect(parts["relay-unit"]).toContain(`ExecStart=/usr/local/bin/repo ./${SCRIPT} relay`);
+ expect(parts["relay-launch"]).toContain(`cd "__WORKER_HOME__/semio/${REPLICA}" && exec /usr/local/bin/repo ./${SCRIPT} relay`);
+ expect(parts["relay-unit"]).toContain('ExecStart=/bin/sh "__WORKER_HOME__/.local/share/semio/fleet/entry/service/relay.sh"');
  expect(parts["relay-unit"]).toContain("Restart=always");
  expect(parts["relay-peers"]).toBe("b2=/mnt/peers/b2,c3=/mnt/peers/c3");
  expect(plan).toContain(parts["exports"]!);
@@ -486,7 +488,7 @@ test("the facts quote their values for both shells",()=>{
 
 test("the Linux server plan runs the replica and the relay as the semio account and rebuilds the bootstrap archive through the relay",()=>{
  const parts=serverPartsV1(topology,"a1");
- expect(Object.keys(parts)).toEqual(["prepare","provision","start","exports-target","exports","sysctl-target","sysctl","fstab","relay-peers","cache-environment-target","cache-environment","cache-target","cache-unit","replica-unit","relay-target","relay-unit"]);
+ expect(Object.keys(parts)).toEqual(["prepare","provision","start","exports-target","exports","sysctl-target","sysctl","fstab","relay-peers","cache-environment-target","cache-environment","cache-target","cache-unit","cache-launch-target","cache-launch","replica-unit","relay-launch-target","relay-launch","relay-target","relay-unit"]);
  expect(parts["sysctl-target"]).toBe("/etc/sysctl.d/91-semio-fleet-server.conf");
  expect(parts["sysctl"]).toBe("fs.leases-enable=0");
  expect(parts["prepare"]).toContain("--create-home --home-dir /var/lib/semio");
@@ -508,12 +510,13 @@ test("every worker and every group server gets a daily compaction next to its re
  const linux=workerPartsV1(topology,"a1","linux"),macos=workerPartsV1(topology,"b2","macos"),windows=workerPartsV1(topology,"c3","windows");
  expect(linux["compact-target"]).toBe("/etc/systemd/system/semio-fleet-compact@.service");
  expect(linux["timer-target"]).toBe("/etc/systemd/system/semio-fleet-compact@.timer");
- expect(linux["compact-definition"]).toContain(`ExecStart=/usr/local/bin/repo ./${SCRIPT} compact`);
+ expect(linux["compact-launch-definition"]).toContain(`exec /usr/local/bin/repo ./${SCRIPT} compact`);
+ expect(linux["compact-definition"]).toContain('ExecStart=/bin/sh "__WORKER_HOME__/.local/share/semio/fleet/entry/service/compact.sh"');
  expect(linux["compact-definition"]).toContain("Type=oneshot");
- expect(linux["compact-definition"]).not.toContain("--collect-blobs");
+ expect(linux["compact-launch-definition"]).not.toContain("--collect-blobs");
  expect(macos["compact-definition"]).not.toContain("--collect-blobs");
  expect(windows["compact-definition"]).not.toContain("--collect-blobs");
- expect(workerPartsV1(topology,"a1","linux",true)["compact-definition"]).toContain(`ExecStart=/usr/local/bin/repo ./${SCRIPT} compact --collect-blobs`);
+ expect(workerPartsV1(topology,"a1","linux",true)["compact-launch-definition"]).toContain(`exec /usr/local/bin/repo ./${SCRIPT} compact --collect-blobs`);
  expect(workerPartsV1(topology,"b2","macos",true)["compact-definition"]).toContain(`<string>./${SCRIPT}</string><string>compact</string><string>--collect-blobs</string>`);
  expect(workerPartsV1(topology,"c3","windows",true)["compact-definition"]).toContain(`<Arguments>--headless repo ./${SCRIPT} compact --collect-blobs</Arguments>`);
  expect(workerPartsV1(topology,"a1","linux",true)["definition"]).toBe(linux["definition"]);
@@ -732,7 +735,7 @@ test("every Linux mount option string revalidates names, because a head replaced
 });
 
 test("the Linux cache unit starts without a locale, because the launcher refuses a start that chooses no language",()=>{
- expect(serverPartsV1(topology,"a1")["cache-unit"]).toContain("Environment=SEMIO_LANGUAGE=en");
+ expect(serverPartsV1(topology,"a1")["cache-launch"]).toContain("export SEMIO_LANGUAGE=en");
  const shell=readFileSync(join(import.meta.dirname,"..","🥾️provision",readdirSync(join(import.meta.dirname,"..","🥾️provision")).find(name=>name.endsWith(".sh"))!),"utf8");
  expect(shell).toContain("LANGUAGE_CHOICE=${SEMIO_LANGUAGE:-en}");
  expect(shell).toContain('"SEMIO_LANGUAGE=$LANGUAGE_CHOICE"');
@@ -1433,15 +1436,19 @@ test("every service definition declares its scheduling class: ProcessType on mac
  expect(mac["compact-definition"]).toContain("<key>ProcessType</key><string>Background</string>");
  expect(mac["compact-definition"]).toContain("<key>LowPriorityIO</key><true/>");
  expect(mac["compact-definition"]).toContain("<key>Nice</key><integer>10</integer>");
- expect(linux["definition"]).toContain("Nice=-5\nCPUSchedulingPolicy=other\nIOSchedulingClass=best-effort\nIOSchedulingPriority=2");
- expect(linux["compact-definition"]).toContain("Nice=10\nCPUSchedulingPolicy=idle\nIOSchedulingClass=idle");
+ expect(linux["launch-definition"]).toContain("renice -n -5 -p $$");
+ expect(linux["launch-definition"]).toContain("ionice -c 2 -n 2 -p $$");
+ expect(linux["compact-launch-definition"]).toContain("renice -n 10 -p $$");
+ expect(linux["compact-launch-definition"]).toContain("chrt --idle -p 0 $$");
+ expect(linux["compact-launch-definition"]).toContain("ionice -c 3 -p $$");
+ for(const unit of [linux["definition"]!,linux["compact-definition"]!])for(const key of["Nice=","CPUSchedulingPolicy=","IOSchedulingClass="])expect(unit).not.toContain(key);
  expect(windows["definition"]).toContain("<Priority>3</Priority>");
  expect(windows["compact-definition"]).toContain("<Priority>8</Priority>");
  expect(windows["mount-definition"]).not.toContain("<Priority>");
  for(const id of ids)for(const platform of PLATFORMS){
   let parts:Readonly<Record<string,string>>;
   try{parts=serverPartsV1(topology,id);}catch{continue;}
-  if(platform==="linux"&&parts["cache-unit"]?.includes("[Service]")){expect(parts["cache-unit"]).toContain("Nice=-5");expect(parts["relay-unit"]).toContain("Nice=0");}
+  if(platform==="linux"&&parts["cache-unit"]?.includes("[Service]")){expect(parts["cache-launch"]).toContain("renice -n -5");expect(parts["relay-launch"]).toContain("renice -n 0");expect(parts["cache-unit"]).not.toContain("Nice=");}
   if(parts["cache-unit"]?.includes("<plist")){expect(parts["cache-unit"]).toContain("<key>ProcessType</key><string>Interactive</string>");expect(parts["relay-unit"]).toContain("<key>ProcessType</key><string>Standard</string>");}
   if(parts["cache-unit"]?.startsWith("<?xml version=\"1.0\" encoding=\"UTF-16\"")){expect(parts["cache-unit"]).toContain("<Priority>3</Priority>");expect(parts["relay-unit"]).toContain("<Priority>5</Priority>");}
  }

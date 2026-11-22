@@ -283,84 +283,6 @@ impl<'ctx> ChromeOverlaysCtx<'ctx> {
         false
     }
 
-    pub fn render_context_menu_step(&mut self, cursor: &mut ShellChromeChildCursor, overlay: &mut DrawList, atlas: &mut FontAtlas, icons: &IconAtlas, input: &mut InputState<ActionDescriptor>, theme: &Theme, viewport_w: f32, viewport_h: f32) -> bool {
-        let Some(menu) = self.input.context_menu.as_ref() else {
-            close_chrome_overlay_glass_content(cursor, overlay);
-            return true;
-        };
-        let row_h = theme.control_height;
-        let menu_w = 240.0_f32.min(viewport_w.max(0.0));
-        let menu_h = (menu.items.len() as f32 * row_h + 8.0).min((viewport_h - 8.0).max(row_h + 8.0));
-        let rect = Rect::new(menu.x.clamp(0.0, (viewport_w - menu_w).max(0.0)), menu.y.clamp(0.0, (viewport_h - menu_h).max(0.0)), menu_w, menu_h);
-        match cursor.scalar {
-            0 => {
-                open_chrome_overlay_glass_content(cursor, overlay, rect, theme.border_radius, theme.glass(Level::Menu));
-                cursor.rect = Some(rect);
-                cursor.scalar = 1;
-            }
-            1 => {
-                overlay.push_scissor(rect);
-                cursor.scalar = 2;
-            }
-            2 => {
-                let Some(item) = menu.items.get(cursor.item) else {
-                    cursor.scalar = 3;
-                    return false;
-                };
-                let row = Rect::new(rect.x + 4.0, rect.y + 4.0 + cursor.item as f32 * row_h - menu.scroll_offset, rect.w - 8.0, row_h);
-                if row.y + row.h > rect.y && row.y < rect.y + rect.h {
-                    if item.separator {
-                        overlay.push_solid([row.x + 4.0, row.y + row.h * 0.5, row.w - 8.0, theme.stroke_hairline], theme.text_muted);
-                    } else {
-                        if !cursor.flag {
-                            let active = menu.active.first().copied() == Some(cursor.item);
-                            overlay.push_rounded([row.x, row.y, row.w, row.h], if active { theme.accent } else { theme.button }, theme.border_radius);
-                            let icon = item.icon.as_deref().unwrap_or("circle-dot");
-                            chrome_icon(overlay, icons, icon, row.x + 8.0, row.y + (row.h - theme.font_size_body) * 0.5, theme.font_size_body, if item.disabled { theme.text_muted } else { theme.text });
-                            cursor.flag = true;
-                            return false;
-                        }
-                        match chrome_text_complete_step(
-                            overlay,
-                            atlas,
-                            &item.painted_label(),
-                            row.x + theme.font_size_body + theme.gap_standard * 2.0,
-                            row.y + (row.h + theme.font_size_small) * 0.5 - 1.0,
-                            (row.w - theme.font_size_body - theme.gap_standard * 3.0).max(1.0),
-                            theme.font_size_small,
-                            if item.disabled { theme.text_muted } else { theme.text },
-                            &mut cursor.glyph,
-                        ) {
-                            Ok(false) => return false,
-                            Ok(true) => {}
-                            Err(()) => {
-                                cursor.fault = true;
-                                cursor.glyph.reset();
-                            }
-                        }
-                        cursor.flag = false;
-                        item.register_hit(row, input);
-                    }
-                }
-                cursor.item += 1;
-            }
-            3 => {
-                overlay.pop_scissor();
-                cursor.scalar = 4;
-            }
-            4 => {
-                close_chrome_overlay_glass_content(cursor, overlay);
-                if cursor.fault {
-                    self.chrome.error = Some("Shell context-menu text exceeded the retained glyph boundary".to_string());
-                    cursor.fault = false;
-                }
-                return true;
-            }
-            _ => return false,
-        }
-        false
-    }
-
     /// 💡️ `tooltips: "none"` (the shipped `compact` driver) shows no hover tooltip at all —
     /// React's `useControlTooltipText` returns `undefined` before it composes any text, so the
     /// hint never mounts. The armed hover is dropped too, so flipping the driver back does not
@@ -655,13 +577,19 @@ impl<'ctx> ChromeOverlaysCtx<'ctx> {
         let is_de = self.prefs.locale_id == "de";
         let locale = self.prefs.active_locale();
         match kind {
-            StatusStackKind::Bootstrap => self.sync.sync_reseed.iter().map(|_| StatusCell { text: shell_chrome_string("status.bootstrap.rebootstrap", is_de).to_string(), action: None }).collect(),
+            StatusStackKind::Bootstrap => {
+                let restoring = self.sync.sync_bootstrap_progress.map(|(received_bytes, total_bytes, received_chunks, total_chunks)| {
+                    let text = shell_chrome_string("status.bootstrap.progress", is_de).replace("{{received}}", &received_bytes.to_string()).replace("{{total}}", &total_bytes.to_string()).replace("{{chunks}}", &received_chunks.to_string()).replace("{{totalChunks}}", &total_chunks.to_string());
+                    StatusCell { text, progress: Some(if total_bytes == 0 { 0.0 } else { received_bytes as f32 / total_bytes as f32 }), action: Some(StatusAction { control_id: STATUS_STACK_BOOTSTRAP_CANCEL_CONTROL_ID.to_string(), label: shell_chrome_string("status.bootstrap.cancel", is_de).to_string(), event: None }) }
+                });
+                restoring.into_iter().chain(self.sync.sync_reseed.iter().map(|_| StatusCell { text: shell_chrome_string("status.bootstrap.rebootstrap", is_de).to_string(), progress: None, action: None })).collect()
+            }
             StatusStackKind::ExecutionTarget => self
                 .opening
                 .document_opening
                 .as_ref()
-                .filter(|opening| matches!(opening.phase, ShellDocumentOpenPhase::Resolving))
-                .map(|opening| StatusCell { text: document_opening_banner_text(opening, chrome_now_ms(), is_de), action: Some(StatusAction { control_id: STATUS_STACK_EXECUTION_TARGET_CANCEL_CONTROL_ID.to_string(), label: shell_chrome_string("document.open.cancel", is_de).to_string(), event: None }) })
+                .filter(|opening| matches!(opening.phase, ShellDocumentOpenPhase::Resolving) || (matches!(opening.phase, ShellDocumentOpenPhase::Instantiating) && opening.observed_native_transfer_progress != 0))
+                .map(|opening| StatusCell { text: document_opening_banner_text(opening, chrome_now_ms(), is_de), progress: opening.observed_native_transfer_progress.checked_sub(1).map(|percent| f32::from(percent.min(100)) / 100.0), action: Some(StatusAction { control_id: STATUS_STACK_EXECUTION_TARGET_CANCEL_CONTROL_ID.to_string(), label: shell_chrome_string("document.open.cancel", is_de).to_string(), event: None }) })
                 .into_iter()
                 .collect(),
             StatusStackKind::ArtifactCreation => {
@@ -675,7 +603,7 @@ impl<'ctx> ChromeOverlaysCtx<'ctx> {
                     HubArtifactCatalogPhase::Unavailable => Some(HubArtifactCreationLabel::CatalogUnavailable),
                 };
                 if let Some(label) = catalog_label {
-                    cells.push(StatusCell { text: hub_artifact_creation_label(label, locale).to_string(), action: None });
+                    cells.push(StatusCell { text: hub_artifact_creation_label(label, locale).to_string(), progress: None, action: None });
                 }
                 if let Some(operation) = creation.operation.as_ref() {
                     let terminal = hub_artifact_creation_terminal(operation.phase);
@@ -697,11 +625,28 @@ impl<'ctx> ChromeOverlaysCtx<'ctx> {
                         None
                     };
                     cells.push(StatusCell {
-                        text: format!("{}\n{}\n{status}", hub_artifact_creation_label(HubArtifactCreationLabel::Heading, locale), operation.intent.name),
+                        text: {
+                            let mut text = format!("{}\n{}\n{status}", hub_artifact_creation_label(HubArtifactCreationLabel::Heading, locale), operation.intent.name);
+                            let elapsed = directory_now_ms().saturating_sub(operation.issued_at_ms);
+                            if !terminal && elapsed >= semio_renderer_wgpu_hub_workspace::hub_connection::ARTIFACT_CREATION_WAITING_AFTER_MS {
+                                text.push('\n');
+                                text.push_str(&hub_artifact_creation_label(HubArtifactCreationLabel::Waiting, locale).replace("{elapsed}", &semio_renderer_wgpu_hub_workspace::hub_connection::hub_artifact_creation_elapsed_text(elapsed, locale)));
+                            }
+                            text
+                        },
+                        progress: None,
                         action: action.map(|(label, action)| StatusAction { control_id: format!("{STATUS_STACK_ARTIFACT_CREATION_ACTION_CONTROL_ID_PREFIX}{action}"), label: hub_artifact_creation_label(label, locale).to_string(), event: Some(ActionDescriptor { controller_id: "framework".into(), action: action.into(), args: None }) }),
                     });
                 }
                 cells
+            }
+            StatusStackKind::SessionAuthority => {
+                let identity = shell_identity_resolution(self.directory.identity_env.is_some(), self.directory.identity.is_some(), false, self.directory.verified_session_authority.is_some(), self.directory.identity_offline);
+                match identity {
+                    ShellIdentityResolution::Pending => vec![StatusCell { text: shell_chrome_string("status.sessionAuthority.pending", is_de).to_string(), progress: None, action: Some(StatusAction { control_id: STATUS_STACK_SESSION_AUTHORITY_CANCEL_CONTROL_ID.to_string(), label: shell_chrome_string("status.sessionAuthority.cancel", is_de).to_string(), event: None }) }],
+                    ShellIdentityResolution::HubUnavailable => vec![StatusCell { text: shell_chrome_string("status.sessionAuthority.unavailable", is_de).to_string(), progress: None, action: None }],
+                    _ => Vec::new(),
+                }
             }
             StatusStackKind::RouteAdmission => {
                 let route = self.opening.uri_history.get(self.opening.uri_index).map_or("/", String::as_str);
@@ -712,9 +657,9 @@ impl<'ctx> ChromeOverlaysCtx<'ctx> {
                     ShellRouteAdmission::AwaitSignIn => ("status.routeAdmission.awaitSignIn", true),
                     ShellRouteAdmission::ApplyOffline => ("status.routeAdmission.applyOffline", false),
                 };
-                let mut cells = vec![StatusCell { text: shell_chrome_string(key, is_de).to_string(), action: None }];
+                let mut cells = vec![StatusCell { text: shell_chrome_string(key, is_de).to_string(), progress: None, action: None }];
                 if offers_sign_in {
-                    cells.push(StatusCell { text: String::new(), action: Some(StatusAction { control_id: STATUS_STACK_ROUTE_ADMISSION_ACTION_CONTROL_ID.to_string(), label: shell_chrome_string("status.routeAdmission.signIn", is_de).to_string(), event: None }) });
+                    cells.push(StatusCell { text: String::new(), progress: None, action: Some(StatusAction { control_id: STATUS_STACK_ROUTE_ADMISSION_ACTION_CONTROL_ID.to_string(), label: shell_chrome_string("status.routeAdmission.signIn", is_de).to_string(), event: None }) });
                 }
                 cells
             }
@@ -725,7 +670,12 @@ impl<'ctx> ChromeOverlaysCtx<'ctx> {
     pub fn apply_status_action(&mut self, control_id: &str) {
         match control_id {
             STATUS_STACK_EXECUTION_TARGET_CANCEL_CONTROL_ID => self.opening.cancel_document_opening(),
+            STATUS_STACK_BOOTSTRAP_CANCEL_CONTROL_ID => self.sync.sync_bootstrap_cancel = true,
             STATUS_STACK_ROUTE_ADMISSION_ACTION_CONTROL_ID => self.directory.hub_workspace_open = true,
+            STATUS_STACK_SESSION_AUTHORITY_CANCEL_CONTROL_ID => {
+                self.directory.clear_hub_session_owner();
+                self.directory.identity_offline = true;
+            }
             _ => {}
         }
     }

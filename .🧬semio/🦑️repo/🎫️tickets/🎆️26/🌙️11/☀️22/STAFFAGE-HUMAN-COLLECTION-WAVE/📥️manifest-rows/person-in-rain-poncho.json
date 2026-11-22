@@ -1,0 +1,54 @@
+{
+  "id": "person-in-rain-poncho",
+  "category": "humans",
+  "title": {
+    "en": "Person in Rain Poncho",
+    "de": "Person im Regenponcho"
+  },
+  "heightM": 1.883,
+  "widthM": 0.543,
+  "powerW": 151.9,
+  "poses": [
+    "standing",
+    "head-bowed",
+    "contact-left",
+    "passing-right"
+  ],
+  "clips": [
+    "walk-in-rain",
+    "idle-breathing"
+  ],
+  "representations": {
+    "50": "authored",
+    "100": "authored",
+    "200": "authored",
+    "500": "authored"
+  },
+  "symbols": [
+    "walking-direction-marker"
+  ],
+  "analytics": [
+    "thermal",
+    "transport",
+    "structural"
+  ],
+  "exports": [
+    "svg",
+    "pdf",
+    "dxf",
+    "dwg",
+    "png-sequence",
+    "mp4",
+    "webm",
+    "component",
+    "glb",
+    "fbx",
+    "model",
+    "model-zip"
+  ],
+  "distinction": {
+    "en": "A man of 1.83 m walking through steady rain under a hooded yellow PVC poncho that hangs from the shoulders to just above the knees and hides the arms, over fleece and softshell, with trousers and wellington boots: standing, with the head bowed and walking, with a walk in the rain and idle breathing; the wet poncho and hood are evaporating surfaces.",
+    "de": "Ein Mann von 1,83 m, der bei Dauerregen unter einem gelben PVC-Poncho mit Kapuze geht, der von den Schultern bis knapp über die Knie fällt und die Arme verbirgt, über Fleece und Softshell, mit Hose und Gummistiefeln: stehend, mit gesenktem Kopf und gehend, mit einem Gang im Regen und ruhigem Atmen; der nasse Poncho und die Kapuze sind verdunstende Flächen."
+  },
+  "completion": "authored"
+}

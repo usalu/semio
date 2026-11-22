@@ -86,6 +86,11 @@ fn infer_jpx_space(resources: &impl PdfArtifactResourcePort, image: &PdfImage) -
 
 fn coded_samples(resources: &impl PdfArtifactResourcePort, reference: &ArtifactRef, size: (u32, u32), channels: usize) -> Option<Vec<u8>> {
     let PdfObject::Stream { data, filters, .. } = resources.resolve(reference).ok()? else { return None };
+    if filters.iter().all(|filter| !filter.is_image_codec()) {
+        require_pdf_artifact_kind(reference, "s.stdio.samples").ok()?;
+        let expected = (size.0 as usize).checked_mul(size.1 as usize)?.checked_mul(channels)?;
+        return (matches!(filters.as_slice(), [] | [PdfStreamFilter::Flate { .. }]) && data.len() == expected).then_some(data);
+    }
     let codec = filters.iter().find(|filter| filter.is_image_codec())?;
     let kind = match codec {
         PdfStreamFilter::Dct { .. } => "s.stdio.jpeg",

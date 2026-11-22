@@ -13,6 +13,8 @@ pub struct TextEditorAccessibilityEntry {
     pub rect: Rect,
     pub value: String,
     read_only: bool,
+    busy: bool,
+    invalid: bool,
 }
 
 fn collect_text_editor_accessibility_entries(tree: &semio_ui_retained_tree::tree::UiTree, node: NodeId, origin: (f32, f32), depth: usize, entries: &mut Vec<TextEditorAccessibilityEntry>) {
@@ -22,6 +24,7 @@ fn collect_text_editor_accessibility_entries(tree: &semio_ui_retained_tree::tree
     if let UiNode::ComponentScene(scene) = &retained.spec.0 {
         if scene.component_kind == semio_ui_declaration::ui::SurfaceKind::TextEditor && scene.presence.visible() && !semio_renderer_wgpu_scene_state::scene_host_retiring(&scene.host_id) {
             if let Some(value) = semio_renderer_wgpu_engine_text::text_editor::text_editor_accessibility_value(scene) {
+                let draft = semio_renderer_wgpu_engine_text::text_editor::text_editor_explicit_draft_status(scene);
                 entries.push(TextEditorAccessibilityEntry {
                     scene_node: node,
                     host_id: scene.host_id.clone(),
@@ -31,6 +34,8 @@ fn collect_text_editor_accessibility_entries(tree: &semio_ui_retained_tree::tree
                     rect: Rect::new(absolute.0, absolute.1, width, height),
                     value,
                     read_only: semio_renderer_wgpu_engine_text::text_editor::text_editor_is_read_only(scene),
+                    busy: draft.pending,
+                    invalid: draft.error.is_some(),
                 });
             }
         }
@@ -60,7 +65,7 @@ fn append_text_editor_accessibility_nodes(window_id: &str, tree: &semio_ui_retai
         let focused = focus.as_ref().is_some_and(|focus| focus.window_id == window_id && focus.node == entry.scene_node && focus.host_id == entry.host_id);
         nodes.push(ui_contract::AccessibilityProjectionNode {
             value_step: None,
-            invalid: false,
+            invalid: entry.invalid,
             set_size: None,
             pos_in_set: None,
             tone: None,
@@ -92,7 +97,7 @@ fn append_text_editor_accessibility_nodes(window_id: &str, tree: &semio_ui_retai
             value_max: None,
             value_now: None,
             value_text: Some(entry.value),
-            busy: false, sort: None,
+            busy: entry.busy, sort: None,
         });
     }
 }

@@ -5,13 +5,13 @@ import {randomBytes} from "node:crypto";
 import {FLEET_POLICY_V1} from "../🪪️identity/🟦️.ts";
 import {readKeySamplesRefV1,type KeySamplesRefV1} from "../🔑️key-samples/🟦️.ts";
 
-/** 📊️ The four unit counts a machine keeps for `repo fleet-status`. */
+/** 📊️ The unit counts a machine keeps for `repo fleet-status`; `skipped` has no file of its own, it is the sum of the reason files (`countSkipV1`), so a skip without a reason cannot exist. */
 export type UnitCountKindV1="localHit"|"remoteHit"|"miss"|"stored"|"skipped";
-const KINDS:readonly UnitCountKindV1[]=["localHit","remoteHit","miss","stored","skipped"];
+const KINDS:readonly Exclude<UnitCountKindV1,"skipped">[]=["localHit","remoteHit","miss","stored"];
 const directory=(workspace:string)=>machinePathV1(workspace,".cache","f","unit-counters");
 
 /** 🔢️ Counts one decision: a single byte appended to the kind's file, which POSIX makes atomic across any number of processes, so the hot path takes no lock and loses nothing. Never throws. */
-export function countUnitV1(workspace:string|undefined,kind:UnitCountKindV1):void{
+export function countUnitV1(workspace:string|undefined,kind:Exclude<UnitCountKindV1,"skipped">):void{
  if(!workspace)return;
  try{
   const base=directory(workspace);
@@ -22,10 +22,9 @@ export function countUnitV1(workspace:string|undefined,kind:UnitCountKindV1):voi
 
 const SKIP=/^[a-z][a-z0-9-]{0,40}$/u,skipDirectory=(workspace:string)=>join(directory(workspace),"skip");
 
-/** 🚫️ Counts one unit that was compiled here and not shared with the fleet, by the reason name (`breaker-denied`, `breaker-down`, `read-only`, `path-dependent`, `root-key-failed`, `diverged`, `upload-dropped`, `upload-failed`, `publish-refused`, `bypass-native-link`, ...): the `skipped` count grows by one and so does the reason's file, both single appended bytes, so the reasons always add up to `skipped`. A name that is no reason is counted as `other`. Never throws. */
+/** 🚫️ Counts one unit that was compiled here and not shared with the fleet, by the reason name (`breaker-denied`, `breaker-down`, `read-only`, `path-dependent`, `root-key-failed`, `diverged`, `upload-dropped`, `upload-failed`, `publish-refused`, `bypass-native-link`, ...): the reason's file grows by one appended byte, and `skipped` is the sum of the reason files, so a skip is always explained. A name that is no reason is counted as `other`. Never throws. */
 export function countSkipV1(workspace:string|undefined,reason:string):void{
  if(!workspace)return;
- countUnitV1(workspace,"skipped");
  try{const base=skipDirectory(workspace),name=SKIP.test(reason)?reason:"other";try{appendFileSync(join(base,name),"1");}catch{mkdirSync(base,{recursive:true});appendFileSync(join(base,name),"1");}}catch{}
 }
 
@@ -54,19 +53,13 @@ export function readFallbacksV1(root:string):Readonly<Record<string,number>>{
  return Object.freeze(found);
 }
 
-/** 🧾️ The skip reasons so that they always add up to the `skipped` count: units counted before their reason was recorded (an older wrapper wrote only the count) appear as `unrecorded`, so a skip is never invisible. */
-export function accountedSkipsV1(skipped:number,reasons:Readonly<Record<string,number>>):Readonly<Record<string,number>>{
- const missing=skipped-Object.values(reasons).reduce((total,count)=>total+count,0);
- return Object.freeze(missing>0?{...reasons,unrecorded:missing}:{...reasons});
-}
-
-/** 📖️ The counters as package D's load reporter reads them (`Counters` of the fleet schema): the sizes of the counter files and the skipped units by reason, the time since the first count and zero offload counts, which the offload client owns. */
+/** 📖️ The counters as package D's load reporter reads them (`Counters` of the fleet schema): the sizes of the counter files and the skipped units by reason (their sum is the skipped count), the time since the first count and zero offload counts, which the offload client owns. */
 export function readBuildCountersV1(workspace:string):Readonly<{version:1;wallMs:number;unit:Record<UnitCountKindV1,number>;skipReasons:Readonly<Record<string,number>>;keySamples?:KeySamplesRefV1;offload:Readonly<{out:number;refused:number;fellBack:number}>}>{
  const base=directory(workspace),size=(name:string)=>{try{return statSync(join(base,name)).size;}catch{return 0;}};
  let since=Date.now();try{since=Number(readFileSync(join(base,"since"),"utf8"))||since;}catch{}
- const keySamples=readKeySamplesRefV1(workspace);
+ const keySamples=readKeySamplesRefV1(workspace),skipReasons=readSkipReasonsV1(workspace),skipped=Object.values(skipReasons).reduce((total,count)=>total+count,0);
  let offload={out:0,refused:0,fellBack:0};try{const previous=JSON.parse(readFileSync(machinePathV1(workspace,".cache","f","build-counters.json"),"utf8")) as {offload?:typeof offload};if(previous.offload)offload={out:Number(previous.offload.out)||0,refused:Number(previous.offload.refused)||0,fellBack:Number(previous.offload.fellBack)||0};}catch{}
- return Object.freeze({version:1,wallMs:Math.max(0,Date.now()-since),unit:Object.fromEntries(KINDS.map(kind=>[kind,size(kind)])) as Record<UnitCountKindV1,number>,skipReasons:accountedSkipsV1(size("skipped"),readSkipReasonsV1(workspace)),...keySamples===undefined?{}:{keySamples},offload});
+ return Object.freeze({version:1,wallMs:Math.max(0,Date.now()-since),unit:{...Object.fromEntries(KINDS.map(kind=>[kind,size(kind)])),skipped} as Record<UnitCountKindV1,number>,skipReasons,...keySamples===undefined?{}:{keySamples},offload});
 }
 
 /** 💾️ Writes `<worktree>/.cache/f/build-counters.json` (atomically) from the counter files; the file keeps the `offload` object another writer put there. */

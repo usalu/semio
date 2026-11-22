@@ -1,0 +1,342 @@
+{
+  "schema": "semio.xlsx.third-party-pairs/v1",
+  "description": "Every committed before/after pair of the base subset that a third-party tool produced (openpyxl for the grid kinds, jszip + fast-xml-parser for the four OPC plumbing kinds), with the wire mutation that turns its before into its after. Language-agnostic: the Rust oracle judges its own computation of each mutation against the committed after; the same table drives a python or bun verifier.",
+  "pairs": [
+    {
+      "id": "insert-sheet-applied",
+      "generator": "openpyxl@3.1.5",
+      "fixture": "➕️insert-sheet-applied",
+      "compare": "grid",
+      "outcome": "applied",
+      "mutation": {
+        "kind": "insert-sheet",
+        "params": {
+          "sheet": {
+            "name": "Sheet2",
+            "cells": []
+          }
+        }
+      }
+    },
+    {
+      "id": "remove-sheet-applied",
+      "generator": "openpyxl@3.1.5",
+      "fixture": "➖️remove-sheet-applied",
+      "compare": "grid",
+      "outcome": "applied",
+      "mutation": {
+        "kind": "remove-sheet",
+        "params": {
+          "name": "Sheet2"
+        }
+      }
+    },
+    {
+      "id": "rename-sheet-applied",
+      "generator": "openpyxl@3.1.5",
+      "fixture": "🏷️rename-sheet-applied",
+      "compare": "grid",
+      "outcome": "applied",
+      "mutation": {
+        "kind": "rename-sheet",
+        "params": {
+          "name": "Sheet1",
+          "newName": "Renamed"
+        }
+      }
+    },
+    {
+      "id": "set-cell-applied",
+      "generator": "openpyxl@3.1.5",
+      "fixture": "✍️set-cell-applied",
+      "compare": "grid",
+      "outcome": "applied",
+      "mutation": {
+        "kind": "set-cell",
+        "params": {
+          "address": {
+            "partPath": "xl/worksheets/sheet1.xml",
+            "nodePath": [
+              4,
+              0,
+              1
+            ],
+            "namespaceUri": "http://schemas.openxmlformats.org/spreadsheetml/2006/main",
+            "localName": "c",
+            "revision": "0000000000000000"
+          },
+          "value": {
+            "kind": "number",
+            "value": 2
+          }
+        }
+      }
+    },
+    {
+      "id": "remove-cell-applied",
+      "generator": "openpyxl@3.1.5",
+      "fixture": "🧽️remove-cell-applied",
+      "compare": "grid",
+      "outcome": "applied",
+      "mutation": {
+        "kind": "remove-cell",
+        "params": {
+          "address": {
+            "partPath": "xl/worksheets/sheet1.xml",
+            "nodePath": [
+              4,
+              0,
+              1
+            ],
+            "namespaceUri": "http://schemas.openxmlformats.org/spreadsheetml/2006/main",
+            "localName": "c",
+            "revision": "0000000000000000"
+          }
+        }
+      }
+    },
+    {
+      "id": "insert-cell-applied",
+      "generator": "handcrafted from openpyxl@3.1.5 bytes",
+      "fixture": "➕️insert-cell-applied",
+      "compare": "grid",
+      "outcome": "applied",
+      "mutation": {
+        "kind": "insert-cell",
+        "params": {
+          "address": {
+            "worksheet": {
+              "partPath": "xl/worksheets/sheet1.xml",
+              "nodePath": [
+                4
+              ],
+              "namespaceUri": "http://schemas.openxmlformats.org/spreadsheetml/2006/main",
+              "localName": "sheetData",
+              "revision": "45adfcee8f78a2f0"
+            },
+            "row": 2,
+            "column": 0
+          },
+          "value": {
+            "kind": "number",
+            "value": 42
+          }
+        }
+      }
+    },
+    {
+      "id": "set-shared-string-applied",
+      "generator": "handcrafted from openpyxl@3.1.5 bytes",
+      "fixture": "🔤️set-shared-string-applied",
+      "compare": "grid",
+      "outcome": "applied",
+      "mutation": {
+        "kind": "set-shared-string",
+        "params": {
+          "index": 0,
+          "value": "World"
+        }
+      }
+    },
+    {
+      "id": "set-relationship-inserts-an-external-hyperlink-first",
+      "generator": "jszip@3.10.2 + fast-xml-parser@5.11.2",
+      "fixture": "📎️set-relationship-inserts-an-external-hyperlink-first",
+      "compare": "plumbing",
+      "outcome": "applied",
+      "mutation": {
+        "kind": "set-relationship",
+        "params": {
+          "owner": "",
+          "id": "rIdOracleLink",
+          "relType": "http://schemas.openxmlformats.org/officeDocument/2006/relationships/hyperlink",
+          "target": "https://example.invalid/oracle",
+          "external": true,
+          "index": 0
+        }
+      }
+    },
+    {
+      "id": "set-relationship-appends-an-external-hyperlink",
+      "generator": "jszip@3.10.2 + fast-xml-parser@5.11.2",
+      "fixture": "📎️set-relationship-appends-an-external-hyperlink",
+      "compare": "plumbing",
+      "outcome": "applied",
+      "mutation": {
+        "kind": "set-relationship",
+        "params": {
+          "owner": "",
+          "id": "rIdOracleLink",
+          "relType": "http://schemas.openxmlformats.org/officeDocument/2006/relationships/hyperlink",
+          "target": "https://example.invalid/oracle",
+          "external": true
+        }
+      }
+    },
+    {
+      "id": "set-relationship-retypes-the-last-root-relationship",
+      "generator": "jszip@3.10.2 + fast-xml-parser@5.11.2",
+      "fixture": "📎️set-relationship-retypes-the-last-root-relationship",
+      "compare": "plumbing",
+      "outcome": "applied",
+      "mutation": {
+        "kind": "set-relationship",
+        "params": {
+          "owner": "",
+          "id": "rId3",
+          "relType": "http://example.invalid/relationships/oracle-retyped",
+          "target": "docProps/app.xml",
+          "external": false
+        }
+      }
+    },
+    {
+      "id": "set-relationship-no-op-identical-relationship",
+      "generator": "jszip@3.10.2 + fast-xml-parser@5.11.2",
+      "fixture": "📎️set-relationship-no-op-identical-relationship",
+      "compare": "plumbing",
+      "outcome": "applied",
+      "mutation": {
+        "kind": "set-relationship",
+        "params": {
+          "owner": "",
+          "id": "rId3",
+          "relType": "http://schemas.openxmlformats.org/officeDocument/2006/relationships/extended-properties",
+          "target": "docProps/app.xml",
+          "external": false
+        }
+      }
+    },
+    {
+      "id": "remove-relationship-drops-the-last-root-relationship",
+      "generator": "jszip@3.10.2 + fast-xml-parser@5.11.2",
+      "fixture": "🧷️remove-relationship-drops-the-last-root-relationship",
+      "compare": "plumbing",
+      "outcome": "applied",
+      "mutation": {
+        "kind": "remove-relationship",
+        "params": {
+          "owner": "",
+          "id": "rId3"
+        }
+      }
+    },
+    {
+      "id": "remove-relationship-drops-an-added-hyperlink",
+      "generator": "jszip@3.10.2 + fast-xml-parser@5.11.2",
+      "fixture": "🧷️remove-relationship-drops-an-added-hyperlink",
+      "compare": "plumbing",
+      "outcome": "applied",
+      "mutation": {
+        "kind": "remove-relationship",
+        "params": {
+          "owner": "",
+          "id": "rIdOracleLink"
+        }
+      }
+    },
+    {
+      "id": "remove-relationship-rejected-missing-id",
+      "generator": "jszip@3.10.2 + fast-xml-parser@5.11.2",
+      "fixture": "🧷️remove-relationship-rejected-missing-id",
+      "compare": "plumbing",
+      "outcome": "rejected",
+      "mutation": {
+        "kind": "remove-relationship",
+        "params": {
+          "owner": "",
+          "id": "rIdNothing"
+        }
+      }
+    },
+    {
+      "id": "set-content-type-inserts-a-default-first",
+      "generator": "jszip@3.10.2 + fast-xml-parser@5.11.2",
+      "fixture": "📇️set-content-type-inserts-a-default-first",
+      "compare": "plumbing",
+      "outcome": "applied",
+      "mutation": {
+        "kind": "set-content-type",
+        "params": {
+          "isOverride": false,
+          "name": "zzoracle",
+          "contentType": "application/x-oracle",
+          "index": 0
+        }
+      }
+    },
+    {
+      "id": "set-content-type-retypes-an-existing-default",
+      "generator": "jszip@3.10.2 + fast-xml-parser@5.11.2",
+      "fixture": "📇️set-content-type-retypes-an-existing-default",
+      "compare": "plumbing",
+      "outcome": "applied",
+      "mutation": {
+        "kind": "set-content-type",
+        "params": {
+          "isOverride": false,
+          "name": "xml",
+          "contentType": "application/x-oracle-retyped"
+        }
+      }
+    },
+    {
+      "id": "set-content-type-no-op-identical-entry",
+      "generator": "jszip@3.10.2 + fast-xml-parser@5.11.2",
+      "fixture": "📇️set-content-type-no-op-identical-entry",
+      "compare": "plumbing",
+      "outcome": "applied",
+      "mutation": {
+        "kind": "set-content-type",
+        "params": {
+          "isOverride": false,
+          "name": "rels",
+          "contentType": "application/vnd.openxmlformats-package.relationships+xml"
+        }
+      }
+    },
+    {
+      "id": "set-content-type-rejected-default-in-another-case",
+      "generator": "jszip@3.10.2 + fast-xml-parser@5.11.2",
+      "fixture": "📇️set-content-type-rejected-default-in-another-case",
+      "compare": "plumbing",
+      "outcome": "rejected",
+      "mutation": {
+        "kind": "set-content-type",
+        "params": {
+          "isOverride": false,
+          "name": "ZZORACLE",
+          "contentType": "application/x-oracle-other"
+        }
+      }
+    },
+    {
+      "id": "remove-content-type-drops-an-added-default",
+      "generator": "jszip@3.10.2 + fast-xml-parser@5.11.2",
+      "fixture": "🧺️remove-content-type-drops-an-added-default",
+      "compare": "plumbing",
+      "outcome": "applied",
+      "mutation": {
+        "kind": "remove-content-type",
+        "params": {
+          "isOverride": false,
+          "name": "zzoracle"
+        }
+      }
+    },
+    {
+      "id": "remove-content-type-rejected-missing-entry",
+      "generator": "jszip@3.10.2 + fast-xml-parser@5.11.2",
+      "fixture": "🧺️remove-content-type-rejected-missing-entry",
+      "compare": "plumbing",
+      "outcome": "rejected",
+      "mutation": {
+        "kind": "remove-content-type",
+        "params": {
+          "isOverride": false,
+          "name": "nothing"
+        }
+      }
+    }
+  ]
+}

@@ -23,7 +23,7 @@ export type SelectedHeadV1=Readonly<{version:1;revision:number;scope:string;plat
 /** 📥️ The generation of a head as the reader's machine installs it: the graph text at its own root, the rows of every owner in its own spelling. */
 export type SelectedFetchedV1=Readonly<{head:SelectedHeadV1;graph:string;rowsByOwner:ReadonlyMap<string,readonly ObservationRowV1[]>;admission:readonly SelectedAdmissionEntryV1[]}>;
 
-/** 🗝️ The key of the head of one scope: the domain, the semantics revision, the platform and the digest of the scope (selection and owner registry), never a path, a state root, a home directory or a host name. */
+/** 🗝️ The key of the head of one scope: the domain, the semantics revision, the platform and the digest of the scope (the selection alone: the owner registry is a `global` row of the generation, so an edit of it makes the head of another registry stale and never gives the scope a new key), never a path, a state root, a home directory or a host name. */
 export function selectedHeadKeyV1(input:Readonly<{scope:string;platform:string;revision?:number}>):string{return sha(JSON.stringify([policy.domain,"head",input.revision??policy.revision,input.platform,input.scope]));}
 
 /** 🪢️ The retention slot of a head: a head of a newer revision supersedes the older ones of the same scope and platform. */

@@ -22,3 +22,12 @@ export function classifyOffloadExitV1(input:Readonly<{exitCode:number;stderr:str
  }
  return "compile-result";
 }
+
+/** 🩺️ What a compiler said when an input of the action was missing, for the event that explains the fall-back: the `message` of the first structured diagnostic (with the first source file it names), else its first line; at most 240 characters. */
+export function offloadIncompleteDetailV1(stderr:string):string{
+ for(const line of stderr.split("\n")){
+  if(!line.startsWith("{"))continue;
+  try{const row=JSON.parse(line) as {message?:unknown;spans?:{file_name?:unknown}[]};if(typeof row.message==="string"){const file=row.spans?.find(span=>typeof span.file_name==="string")?.file_name;return(row.message+(typeof file==="string"?` (${file})`:"")).slice(0,240);}}catch{}
+ }
+ return(stderr.split("\n")[0]??"").slice(0,240);
+}

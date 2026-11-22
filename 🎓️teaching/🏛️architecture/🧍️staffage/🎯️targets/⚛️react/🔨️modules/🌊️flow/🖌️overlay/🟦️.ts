@@ -1,17 +1,17 @@
-/** 🖌️ `FlowOverlay`: draws the marks of a flow field on a 2D canvas laid over a figure — the same streams, tracers, vapour clouds and fog, in the same colours and paper sizes, as the paper drawing of the library, but redrawn every frame so the tracers move with the clock.
+/** 🖌️ `FlowOverlay`: draws the marks of a flow field on a 2D canvas laid over a figure — the same streams, tracers, vapour clouds, fog and parcel paths, in the same colours and paper sizes, as the paper drawing of the library, but redrawn every frame so the tracers move with the clock.
  *
  * The owner supplies the projection of a world point (ahead x, up y, left z) to canvas pixels and how many pixels a paper millimetre is: a drawing passes its own paper mapping, the 3D stage its camera. Vapour clouds are radial gradients (soft Gaussian puffs), fog is a white cloud whose common outline is a cyan rim. The canvas never takes pointer events and is hidden from assistive technology: the legend and the status of the figure say what it shows.
  *
  * @see ../../../../../🔨️modules/🎨️depiction/🌊️flow-view/🟦️.ts — the paper twin (`flowView`) and the shared paint
  */
-import { FLOW_STYLE, flowDetailOf, flowMarks, flowPaint } from "@teaching/staffage";
-import type { DisplayRange, FlowField, FlowLayer, FlowPaint, Vec3 } from "@teaching/staffage";
+import { FLOW_HIDDEN, FLOW_STYLE, flowDetailOf, flowMarks, flowPaint } from "@teaching/staffage";
+import type { DisplayRange, FlowEye, FlowField, FlowLayer, FlowMarkDetail, FlowPaint, Vec3 } from "@teaching/staffage";
 
-/** 🧭️ How world points land on the canvas: `project` writes CSS pixels (x right, y down) into `out` and returns false for a point that cannot be shown (behind a perspective camera); `pxPerMm` is the size of a paper millimetre in CSS pixels. */
-export type FlowProjection = { readonly project: (at: Vec3, out: [number, number]) => boolean; readonly pxPerMm: number };
+/** 🧭️ How world points land on the canvas: `project` writes CSS pixels (x right, y down) into `out` and returns false for a point that cannot be shown (behind a perspective camera); `pxPerMm` is the size of a paper millimetre in CSS pixels; `eye` is where the view is seen from (the direction towards the viewer of an orthographic view or the place of a perspective camera): with it every segment of a stream, a tracer and every puff that lies behind the body of the asset is left out and what lies behind or inside foliage is drawn fainter, as on paper (absent: nothing is hidden). */
+export type FlowProjection = { readonly project: (at: Vec3, out: [number, number]) => boolean; readonly pxPerMm: number; readonly eye?: FlowEye };
 
 /** 🎛️ What one frame of the overlay shows. */
-export type FlowFrame = { readonly flow: FlowField | null; readonly timeS: number; readonly layers: readonly FlowLayer[]; readonly theme: "light" | "dark"; readonly range: DisplayRange; readonly denominator: number; readonly projection: FlowProjection };
+export type FlowFrame = { readonly flow: FlowField | null; readonly timeS: number; readonly layers: readonly FlowLayer[]; readonly theme: "light" | "dark"; readonly range: DisplayRange; readonly denominator: number; readonly detail?: FlowMarkDetail; readonly projection: FlowProjection };
 
 /** 📐️ The longest side of the backing store in device pixels: a figure zoomed far in is drawn coarser instead of allocating a huge canvas. */
 export const MAX_BACKING_PX = 4096;
@@ -42,12 +42,12 @@ export class FlowOverlay {
     this.#ratio = ratio;
   }
 
-  #paintOf(flow: FlowField, theme: "light" | "dark", range: DisplayRange): FlowPaint {
+  #paintOf(flow: FlowField, theme: "light" | "dark", range: DisplayRange, strokeMm: number | undefined): FlowPaint {
     let cache = this.#paints.get(flow);
     if (cache === undefined) this.#paints.set(flow, (cache = new Map()));
-    const key = `${theme}:${JSON.stringify(range)}`;
+    const key = `${theme}:${JSON.stringify(range)}:${strokeMm ?? ""}`;
     let paint = cache.get(key);
-    if (paint === undefined) cache.set(key, (paint = flowPaint(theme, flow, range)));
+    if (paint === undefined) cache.set(key, (paint = flowPaint(theme, flow, range, strokeMm)));
     return paint;
   }
 
@@ -61,8 +61,8 @@ export class FlowOverlay {
     const { flow, layers, projection } = frame;
     if (flow === null || layers.length === 0) return;
     const want = new Set(layers);
-    const paint = this.#paintOf(flow, frame.theme, frame.range);
-    const marks = flowMarks(flow, frame.timeS, flowDetailOf(frame.denominator));
+    const paint = this.#paintOf(flow, frame.theme, frame.range, frame.detail?.strokeMm);
+    const marks = flowMarks(flow, frame.timeS, { ...flowDetailOf(frame.denominator, frame.detail), ...(projection.eye === undefined ? {} : { eye: projection.eye }) });
     const mm = projection.pxPerMm;
     const a: [number, number] = [0, 0];
     const b: [number, number] = [0, 0];
@@ -76,15 +76,16 @@ export class FlowOverlay {
     c.lineCap = "round";
     c.lineJoin = "round";
     if (want.has("moisture"))
-      for (const puff of marks.puffs) {
+      for (const [index, puff] of marks.puffs.entries()) {
         const g = puff.vapourExcessKgPerKg * 1000;
-        if (g <= FLOW_STYLE.vapourThresholdGKg) continue;
+        const seen = marks.puffVisible[index]!;
+        if (g <= FLOW_STYLE.vapourThresholdGKg || seen <= FLOW_HIDDEN) continue;
         const r = radiusOf(puff.at, puff.radiusM);
         if (r <= 0 || !projection.project(puff.at, a)) continue;
         const colour = paint.vapourColour(g);
         const gradient = c.createRadialGradient(a[0], a[1], 0, a[0], a[1], r);
-        gradient.addColorStop(0, rgba(colour, paint.vapourOpacity(g)));
-        gradient.addColorStop(0.55, rgba(colour, paint.vapourOpacity(g) * 0.55));
+        gradient.addColorStop(0, rgba(colour, paint.vapourOpacity(g) * seen));
+        gradient.addColorStop(0.55, rgba(colour, paint.vapourOpacity(g) * 0.55 * seen));
         gradient.addColorStop(1, rgba(colour, 0));
         c.fillStyle = gradient;
         c.beginPath();
@@ -92,18 +93,19 @@ export class FlowOverlay {
         c.fill();
       }
     if (want.has("fog")) {
-      const fog = marks.puffs.filter((puff) => puff.condensateKgPerKg > 0);
-      c.strokeStyle = rgba(paint.fogRim, 0.9);
+      const seen = new Map(marks.puffs.map((puff, index) => [puff, marks.puffVisible[index]!]));
+      const fog = marks.puffs.filter((puff) => puff.condensateKgPerKg > 0 && seen.get(puff)! > FLOW_HIDDEN);
       c.lineWidth = Math.max(1, 0.3 * mm);
       for (const puff of fog) {
         if (!projection.project(puff.at, a)) continue;
+        c.strokeStyle = rgba(paint.fogRim, 0.9 * seen.get(puff)!);
         c.beginPath();
         c.arc(a[0], a[1], radiusOf(puff.at, puff.radiusM), 0, 2 * Math.PI);
         c.stroke();
       }
       for (const puff of fog) {
         if (!projection.project(puff.at, a)) continue;
-        c.fillStyle = rgba(paint.fogColour, paint.fogOpacity(puff.condensateKgPerKg * 1000));
+        c.fillStyle = rgba(paint.fogColour, paint.fogOpacity(puff.condensateKgPerKg * 1000) * seen.get(puff)!);
         c.beginPath();
         c.arc(a[0], a[1], radiusOf(puff.at, puff.radiusM), 0, 2 * Math.PI);
         c.fill();
@@ -113,9 +115,10 @@ export class FlowOverlay {
       for (const ribbon of marks.ribbons) {
         let open = false;
         for (let i = 1; i < ribbon.points.length; i++) {
-          if (!projection.project(ribbon.points[i - 1]!, a) || !projection.project(ribbon.points[i]!, b)) continue;
+          const seen = Math.min(ribbon.visible[i - 1]!, ribbon.visible[i]!);
+          if (seen <= FLOW_HIDDEN || !projection.project(ribbon.points[i - 1]!, a) || !projection.project(ribbon.points[i]!, b)) continue;
           const speed = (ribbon.speedMS[i - 1]! + ribbon.speedMS[i]!) / 2;
-          c.strokeStyle = rgba(paint.excessColour((ribbon.excessK[i - 1]! + ribbon.excessK[i]!) / 2), paint.streamOpacity(speed));
+          c.strokeStyle = rgba(paint.excessColour((ribbon.excessK[i - 1]! + ribbon.excessK[i]!) / 2), paint.streamOpacity(speed) * seen);
           c.lineWidth = Math.max(1.1, paint.streamWidthMm(speed) * mm);
           c.beginPath();
           c.moveTo(a[0], a[1]);
@@ -125,7 +128,8 @@ export class FlowOverlay {
         }
         if (!open) continue;
         for (const arrow of ribbon.arrows) {
-          if (!projection.project(arrow.at, a) || !projection.project({ x: arrow.at.x + arrow.direction.x * 0.05, y: arrow.at.y + arrow.direction.y * 0.05, z: arrow.at.z + arrow.direction.z * 0.05 }, b)) continue;
+          const at = Math.max(0, ribbon.points.indexOf(arrow.at));
+          if (ribbon.visible[at]! <= FLOW_HIDDEN || !projection.project(arrow.at, a) || !projection.project({ x: arrow.at.x + arrow.direction.x * 0.05, y: arrow.at.y + arrow.direction.y * 0.05, z: arrow.at.z + arrow.direction.z * 0.05 }, b)) continue;
           const dx = b[0] - a[0];
           const dy = b[1] - a[1];
           const l = Math.hypot(dx, dy);
@@ -134,7 +138,7 @@ export class FlowOverlay {
           const uy = dy / l;
           const length = Math.max(4, FLOW_STYLE.headLengthMm * mm);
           const half = Math.max(1.5, (FLOW_STYLE.headWidthMm * mm) / 2);
-          c.fillStyle = rgba(paint.excessColour(ribbon.excessK[Math.max(0, ribbon.points.indexOf(arrow.at))]!), 0.95);
+          c.fillStyle = rgba(paint.excessColour(ribbon.excessK[at]!), 0.95 * ribbon.visible[at]!);
           c.beginPath();
           c.moveTo(a[0], a[1]);
           c.lineTo(a[0] - ux * length - uy * half, a[1] - uy * length + ux * half);
@@ -149,14 +153,30 @@ export class FlowOverlay {
       for (const ribbon of marks.ribbons)
         for (let i = 1; i < ribbon.points.length; i++) {
           const g = Math.min(ribbon.vapourExcessKgPerKg[i - 1]!, ribbon.vapourExcessKgPerKg[i]!) * 1000;
-          if (g <= FLOW_STYLE.vapourThresholdGKg || !projection.project(ribbon.points[i - 1]!, a) || !projection.project(ribbon.points[i]!, b)) continue;
-          c.strokeStyle = rgba(paint.vapourColour(g), 0.9);
+          const seen = Math.min(ribbon.visible[i - 1]!, ribbon.visible[i]!);
+          if (g <= FLOW_STYLE.vapourThresholdGKg || seen <= FLOW_HIDDEN || !projection.project(ribbon.points[i - 1]!, a) || !projection.project(ribbon.points[i]!, b)) continue;
+          c.strokeStyle = rgba(paint.vapourColour(g), 0.9 * seen);
           c.beginPath();
           c.moveTo(a[0], a[1]);
           c.lineTo(b[0], b[1]);
           c.stroke();
         }
       c.setLineDash([]);
+    }
+    if (want.has("pathlines")) {
+      c.lineWidth = Math.max(1, FLOW_STYLE.pathMm * paint.strokeScale * mm);
+      for (const trail of marks.trails) {
+        const colour = paint.excessColour(trail.excessK);
+        for (let i = 1; i < trail.points.length; i++) {
+          const seen = Math.min(trail.visible[i - 1]!, trail.visible[i]!);
+          if (seen <= FLOW_HIDDEN || !projection.project(trail.points[i - 1]!, a) || !projection.project(trail.points[i]!, b)) continue;
+          c.strokeStyle = rgba(colour, (0.9 * seen * (trail.fade[i - 1]! + trail.fade[i]!)) / 2);
+          c.beginPath();
+          c.moveTo(a[0], a[1]);
+          c.lineTo(b[0], b[1]);
+          c.stroke();
+        }
+      }
     }
     if (want.has("tracers"))
       for (const streak of marks.streaks) {
@@ -166,8 +186,9 @@ export class FlowOverlay {
         const n = streak.points.length;
         let drawn = false;
         for (let i = 1; i < n; i++) {
-          if (!projection.project(streak.points[i - 1]!, a) || !projection.project(streak.points[i]!, b)) continue;
-          c.strokeStyle = rgba(colour, 0.9 * streak.opacity * (0.25 + (0.75 * i) / (n - 1)));
+          const seen = Math.min(streak.visible[i - 1]!, streak.visible[i]!);
+          if (seen <= FLOW_HIDDEN || !projection.project(streak.points[i - 1]!, a) || !projection.project(streak.points[i]!, b)) continue;
+          c.strokeStyle = rgba(colour, 0.9 * streak.opacity * seen * (0.25 + (0.75 * i) / (n - 1)));
           c.lineWidth = width * (0.5 + (0.5 * i) / (n - 1));
           c.beginPath();
           c.moveTo(a[0], a[1]);
@@ -175,25 +196,26 @@ export class FlowOverlay {
           c.stroke();
           drawn = true;
         }
-        if (!drawn) continue;
+        const shown = streak.opacity * streak.visible[n - 1]!;
+        if (!drawn || shown <= FLOW_HIDDEN || !projection.project(streak.points[n - 1]!, b)) continue;
         const g = streak.vapourExcessKgPerKg * 1000;
         const head = Math.max(1.8, FLOW_STYLE.tracerHeadMm * mm);
         c.beginPath();
-        if (streak.condensateKgPerKg > 0) {
+        if (streak.condensateKgPerKg * 1000 > FLOW_STYLE.fogThresholdGKg) {
           c.arc(b[0], b[1], head * 1.3, 0, 2 * Math.PI);
-          c.fillStyle = rgba(paint.fogColour, streak.opacity);
+          c.fillStyle = rgba(paint.fogColour, shown);
           c.fill();
-          c.strokeStyle = rgba(paint.fogRim, streak.opacity);
+          c.strokeStyle = rgba(paint.fogRim, shown);
           c.lineWidth = 1;
           c.stroke();
         } else if (want.has("moisture") && g > FLOW_STYLE.vapourThresholdGKg) {
           c.arc(b[0], b[1], head * 1.3, 0, 2 * Math.PI);
-          c.strokeStyle = rgba(paint.vapourColour(g), streak.opacity);
+          c.strokeStyle = rgba(paint.vapourColour(g), shown);
           c.lineWidth = Math.max(1, 0.14 * mm);
           c.stroke();
         } else {
           c.arc(b[0], b[1], head, 0, 2 * Math.PI);
-          c.fillStyle = rgba(colour, streak.opacity);
+          c.fillStyle = rgba(colour, shown);
           c.fill();
         }
       }

@@ -1,0 +1,53 @@
+{
+ "id": "person-carrying-shopping-bags",
+ "category": "humans",
+ "title": {
+  "en": "Person Carrying Shopping Bags",
+  "de": "Person mit Einkaufstaschen"
+ },
+ "heightM": 1.803,
+ "widthM": 0.385,
+ "powerW": 165.2,
+ "poses": [
+  "standing",
+  "contact-left",
+  "passing-right"
+ ],
+ "clips": [
+  "walk-cycle",
+  "idle-breathing"
+ ],
+ "representations": {
+  "50": "authored",
+  "100": "authored",
+  "200": "authored",
+  "500": "authored"
+ },
+ "symbols": [
+  "walking-direction-marker"
+ ],
+ "analytics": [
+  "thermal",
+  "transport",
+  "structural"
+ ],
+ "exports": [
+  "svg",
+  "pdf",
+  "dxf",
+  "dwg",
+  "png-sequence",
+  "mp4",
+  "webm",
+  "component",
+  "glb",
+  "fbx",
+  "model",
+  "model-zip"
+ ],
+ "distinction": {
+  "en": "A 1.78 m man in overcoat and scarf walking with a full 4.5 kg paper shopping bag in each fist (baguette and leek showing): straight loaded arms with little swing, bags clear of the legs with a slight pendulum lag, 3.5 met at 4 km/h.",
+  "de": "Ein Mann von 1,78 m in Mantel und Schal, der mit je einer vollen Papiertüte von 4,5 kg in jeder Faust geht (Baguette und Lauch schauen heraus): gestreckte belastete Arme mit wenig Schwung, Tüten frei neben den Beinen mit leichtem Pendelnachlauf, 3,5 met bei 4 km/h."
+ },
+ "completion": "authored"
+}

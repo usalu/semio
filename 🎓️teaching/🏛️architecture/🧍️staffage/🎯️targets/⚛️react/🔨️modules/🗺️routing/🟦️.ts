@@ -2,7 +2,7 @@
  *
  * Route: `#/` overview · `#/all` · `#/<category>` · `#/<category>/<asset>` · `#/collections[/<id>]` · `#/compare` · `#/playground` (the section playground) · `#/playground/plan` (the floor plan playground) · `#/playground/3d` (the 3D playground).
  * Parameters carry only what differs from the default, in a stable order, so `format(parse(x))` is canonical and a link reproduces the state: filters (`q cat an h root done sort dir`),
- * the viewer (`view vp cam vl scale pose|clip t zoom pan bg th tq fq range pat fl dg air mrt rh wind sun`; `fl` lists the air flow layers of the thermal view, `s` streams, `t` tracers, `m` moisture, `f` fog, `0` none; `vp` is `elevation`, `front`, `plan`, `axonometric` or `model`, `cam` the camera preset of the 3D model), the comparison (`p` per pane) and the playground (`p` per placement, `len`, `dep`, `tl`, `cam`, `vp` of its section tab).
+ * the viewer (`view vp cam vl scale pose|clip t zoom pan bg th tq fq range pat fl dg rate loop xs xf xd`, then the air: `env` the reference environment preset, `air mrt sky gnd rh wind wdir sun dif hpa` the values set by hand (°C, per cent, m/s, the bearing the air moves towards in degrees with 0 ahead and 90 to the asset's left, W/m², hPa), `wp z0 zr ti tf tt life seed` the conditions of the flow (`wp=log` the logarithmic wind profile with roughness length and reference height in m, turbulence intensity in per cent, its floor in m/s and its Lagrangian time in s, parcel life in s, seed) and `fsp fst fpe fex ftr fsw` the detail of the flow marks (spacing and shortest streak in paper mm, tracer period and exposure in s, the fading trail of the parcel paths in s, the width of the widest stream in paper mm); `fl` lists the air flow layers of the thermal view, `s` streams, `t` tracers, `m` moisture, `f` fog, `p` parcel paths, `0` none; `vp` is `elevation`, `front`, `plan`, `axonometric` or `model`, `cam` the camera preset of the 3D model), the comparison (`p` per pane) and the playground (`p` per placement, `len`, `dep`, `tl`, `cam`, `vp` of its section tab).
  * The reader's own preferences — language, theme — are never part of a link.
  *
  * @see ../🔎️search/🟦️.ts — filter parameters
@@ -10,8 +10,9 @@
  */
 import { useCallback, useMemo, useSyncExternalStore } from "react";
 import { CATEGORIES, FORCE_QUANTITIES, THERMAL_QUANTITIES, PLANAR_VIEWPOINTS, VIEWS } from "@teaching/staffage";
-import type { CategoryId, DisplayRange, FlowLayer, ForceQuantity, Slug, Text, ThermalQuantity, View, PlanarViewpoint } from "@teaching/staffage";
-import { ALL_FLOW_LAYERS, flowLayersCode, flowLayersFrom } from "../🌊️flow/🟦️.ts";
+import type { CategoryId, DisplayRange, FlowLayer, FlowMarkDetail, ForceQuantity, Slug, Text, ThermalQuantity, View, PlanarViewpoint } from "@teaching/staffage";
+import { ENVIRONMENT_QUANTITIES, isPreset, readQuantities, writeQuantities, type EnvironmentOverride } from "../🌤️environments/🟦️.ts";
+import { SHOWN_FLOW_LAYERS, FLOW_DEFAULTS, FLOW_QUANTITIES, MARK_DEFAULTS, MARK_QUANTITIES, flowLayersCode, flowLayersFrom, type FlowSettings } from "../🌊️flow/🟦️.ts";
 import { CAMERA_PRESETS, DEFAULT_CAMERA, isCameraPreset, type CameraPresetName } from "../🧊️spatial/🟦️.ts";
 import { isViewpointKey, type ViewpointKey } from "../🔭️viewpoints/🟦️.ts";
 import { BACKGROUNDS, DEFAULT_DEPTH_M, DEFAULT_LENGTH_M, SECTION_VIEWPOINTS, TRACK_DEFAULTS, clampTimeline, clampTrack, type Background, type Placement, type Playground, type SectionViewpoint, type Selection } from "../💾️persistence/🟦️.ts";
@@ -124,13 +125,12 @@ export const sameRoute = (a: Route, b: Route): boolean => routePath(a) === route
 /** 🖼️ The ground of a viewer: by view, or the reader's choice. */
 export type ViewerBackground = "auto" | Background;
 
-/** 🌤️ The environment values the reader moved off the asset's reference case (relative humidity as a fraction). */
-export type EnvironmentOverride = { readonly airTempC?: number; readonly meanRadiantTempC?: number; readonly relativeHumidity?: number; readonly windMS?: number; readonly solarWM2?: number };
+export type { EnvironmentOverride };
 
 /** 📈️ Which member diagrams the force and moment views draw. */
 export type DiagramToggles = { readonly axial: boolean; readonly shear: boolean; readonly moment: boolean; readonly freeBody: boolean };
 
-/** 🎛️ Everything the viewer shows besides the asset: view, scale, what is posed or played, zoom and analytic options. */
+/** 🎛️ Everything the viewer shows besides the asset: view, scale, what is posed or played, zoom, analytic options and the air: the reference environment preset (`null`: the asset's own), the environment values set by hand on top of it, the flow layers, the conditions of the flow and the detail of its marks (each only where it differs from its default). */
 export type ViewerState = {
   readonly view: View;
   readonly viewpoint: ViewpointKey;
@@ -148,8 +148,11 @@ export type ViewerState = {
   readonly range: DisplayRange;
   readonly patterns: boolean;
   readonly diagrams: DiagramToggles;
+  readonly preset: Slug | null;
   readonly environment: EnvironmentOverride;
   readonly flow: readonly FlowLayer[];
+  readonly flowSettings: FlowSettings;
+  readonly flowDetail: FlowMarkDetail;
   readonly rate: number;
   readonly loop: boolean;
   readonly sheet: "single" | "all-views";
@@ -175,8 +178,11 @@ export const DEFAULT_VIEWER: ViewerState = {
   range: { mode: "auto" },
   patterns: true,
   diagrams: { axial: false, shear: false, moment: true, freeBody: true },
+  preset: null,
   environment: {},
-  flow: ALL_FLOW_LAYERS,
+  flow: SHOWN_FLOW_LAYERS,
+  flowSettings: {},
+  flowDetail: {},
   rate: 1,
   loop: true,
   sheet: "single",
@@ -195,6 +201,7 @@ const number = (value: string | null): number | null => {
 };
 const clamp = (value: number, low: number, high: number): number => Math.min(Math.max(value, low), high);
 const round = (value: number, places: number): number => Number(value.toFixed(places));
+const offDefault = <K extends string>(values: Partial<Record<K, number>>, defaults: Readonly<Record<K, number>>): Partial<Record<K, number>> => Object.fromEntries(Object.entries(values).filter(([key, value]) => value !== defaults[key as K])) as Partial<Record<K, number>>;
 
 /** 📥️ The viewer of an address query; unknown or out-of-range values fall back to the default. */
 export function viewerFromParams(params: URLSearchParams): ViewerState {
@@ -215,7 +222,8 @@ export function viewerFromParams(params: URLSearchParams): ViewerState {
   const spanK = number(params.get("span"));
   const diagrams = params.get("dg");
   const t =number(params.get("t"));
-  const env = { airTempC: number(params.get("air")), meanRadiantTempC: number(params.get("mrt")), relativeHumidity: number(params.get("rh")), windMS: number(params.get("wind")), solarWM2: number(params.get("sun")) };
+  const get = (name: string): string | null => params.get(name);
+  const preset = params.get("env");
   return {
     view: isView(view) ? view : base.view,
     viewpoint: isViewpointKey(viewpoint) ? viewpoint : base.viewpoint,
@@ -239,13 +247,10 @@ export function viewerFromParams(params: URLSearchParams): ViewerState {
     sheet: params.get("xs") === "all" ? "all-views" : "single",
     fps: number(params.get("xf")) !== null ? clamp(number(params.get("xf"))!, 12, 60) : null,
     durationS: number(params.get("xd")) !== null && number(params.get("xd"))! > 0 ? clamp(number(params.get("xd"))!, 0.1, 600) : null,
-    environment: {
-      ...(env.airTempC === null ? {} : { airTempC: clamp(env.airTempC, -60, 70) }),
-      ...(env.meanRadiantTempC === null ? {} : { meanRadiantTempC: clamp(env.meanRadiantTempC, -60, 90) }),
-      ...(env.relativeHumidity === null ? {} : { relativeHumidity: clamp(env.relativeHumidity / 100, 0, 1) }),
-      ...(env.windMS === null ? {} : { windMS: clamp(env.windMS, 0, 40) }),
-      ...(env.solarWM2 === null ? {} : { solarWM2: clamp(env.solarWM2, 0, 1400) }),
-    },
+    preset: isPreset(preset) ? preset : null,
+    environment: readQuantities(ENVIRONMENT_QUANTITIES, get, "param"),
+    flowSettings: { ...offDefault(readQuantities(FLOW_QUANTITIES, get, "param"), FLOW_DEFAULTS), ...(params.get("wp") === "log" ? { profile: "logarithmic" as const } : {}) },
+    flowDetail: offDefault(readQuantities(MARK_QUANTITIES, get, "param"), MARK_DEFAULTS),
   };
 }
 
@@ -278,12 +283,13 @@ export function viewerToParams(viewer: ViewerState, into: URLSearchParams = new 
   if (viewer.sheet === "all-views") into.set("xs", "all");
   if (viewer.fps !== null) into.set("xf", String(round(viewer.fps, 0)));
   if (viewer.durationS !== null) into.set("xd", String(round(viewer.durationS, 2)));
-  const { environment } = viewer;
-  if (environment.airTempC !== undefined) into.set("air", String(round(environment.airTempC, 1)));
-  if (environment.meanRadiantTempC !== undefined) into.set("mrt", String(round(environment.meanRadiantTempC, 1)));
-  if (environment.relativeHumidity !== undefined) into.set("rh", String(round(environment.relativeHumidity * 100, 0)));
-  if (environment.windMS !== undefined) into.set("wind", String(round(environment.windMS, 1)));
-  if (environment.solarWM2 !== undefined) into.set("sun", String(round(environment.solarWM2, 0)));
+  const set = (name: string, value: string): void => into.set(name, value);
+  if (viewer.preset !== null) into.set("env", viewer.preset);
+  writeQuantities(ENVIRONMENT_QUANTITIES, viewer.environment, set);
+  const { profile, ...settings } = viewer.flowSettings;
+  if (profile === "logarithmic") into.set("wp", "log");
+  writeQuantities(FLOW_QUANTITIES, settings, set);
+  writeQuantities(MARK_QUANTITIES, viewer.flowDetail, set);
   return into;
 }
 //#endregion 🎛️Viewer

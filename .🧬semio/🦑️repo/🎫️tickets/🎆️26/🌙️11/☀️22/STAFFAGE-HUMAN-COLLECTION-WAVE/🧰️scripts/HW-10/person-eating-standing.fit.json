@@ -1,0 +1,212 @@
+{
+ "rest": {
+  "bottle": {
+   "angleDeg": 88.806,
+   "abductionDeg": -17.066,
+   "twistDeg": 0
+  },
+  "sandwich": {
+   "angleDeg": 80.446,
+   "abductionDeg": 5.929,
+   "twistDeg": 38.697
+  }
+ },
+ "taking-a-bite": {
+  "thigh-l": {
+   "angleDeg": -1
+  },
+  "shank-l": {
+   "angleDeg": -5
+  },
+  "foot-l": {
+   "angleDeg": 6
+  },
+  "toe-l": {
+   "angleDeg": 0
+  },
+  "thigh-r": {
+   "angleDeg": -1
+  },
+  "shank-r": {
+   "angleDeg": -5
+  },
+  "foot-r": {
+   "angleDeg": 6
+  },
+  "toe-r": {
+   "angleDeg": 0
+  },
+  "torso": {
+   "angleDeg": -2
+  },
+  "neck": {
+   "angleDeg": -7
+  },
+  "head": {
+   "angleDeg": -3
+  },
+  "ponytail": {
+   "angleDeg": 6
+  },
+  "arm-l": {
+   "angleDeg": -15.037,
+   "abductionDeg": 9.426,
+   "twistDeg": 8.651
+  },
+  "forearm-l": {
+   "angleDeg": 30.681,
+   "twistDeg": -25.101
+  },
+  "hand-l": {
+   "angleDeg": 60,
+   "abductionDeg": -5.441,
+   "twistDeg": -11.523
+  },
+  "arm-r": {
+   "angleDeg": 76.297,
+   "abductionDeg": -29.514,
+   "twistDeg": -34.315
+  },
+  "forearm-r": {
+   "angleDeg": 123.404,
+   "twistDeg": 9.699
+  },
+  "hand-r": {
+   "angleDeg": -13.939,
+   "abductionDeg": 33.016,
+   "twistDeg": 5.912
+  }
+ },
+ "drinking-from-bottle": {
+  "thigh-l": {
+   "angleDeg": -1
+  },
+  "shank-l": {
+   "angleDeg": -5
+  },
+  "foot-l": {
+   "angleDeg": 6
+  },
+  "toe-l": {
+   "angleDeg": 0
+  },
+  "thigh-r": {
+   "angleDeg": -1
+  },
+  "shank-r": {
+   "angleDeg": -5
+  },
+  "foot-r": {
+   "angleDeg": 6
+  },
+  "toe-r": {
+   "angleDeg": 0
+  },
+  "torso": {
+   "angleDeg": 1
+  },
+  "neck": {
+   "angleDeg": 4
+  },
+  "head": {
+   "angleDeg": 10
+  },
+  "ponytail": {
+   "angleDeg": -8
+  },
+  "arm-r": {
+   "angleDeg": 11.408,
+   "abductionDeg": -19.689,
+   "twistDeg": -26.55
+  },
+  "forearm-r": {
+   "angleDeg": 97.967,
+   "twistDeg": 3.018
+  },
+  "hand-r": {
+   "angleDeg": -60,
+   "abductionDeg": -10.935,
+   "twistDeg": -22.51
+  },
+  "arm-l": {
+   "angleDeg": 77.276,
+   "abductionDeg": 13.222,
+   "twistDeg": 25.071
+  },
+  "forearm-l": {
+   "angleDeg": 120.838,
+   "twistDeg": -4.519
+  },
+  "hand-l": {
+   "angleDeg": 6.197,
+   "abductionDeg": 4.173,
+   "twistDeg": 6.227
+  }
+ },
+ "chewing": {
+  "thigh-l": {
+   "angleDeg": -1
+  },
+  "shank-l": {
+   "angleDeg": -5
+  },
+  "foot-l": {
+   "angleDeg": 6
+  },
+  "toe-l": {
+   "angleDeg": 0
+  },
+  "thigh-r": {
+   "angleDeg": -1
+  },
+  "shank-r": {
+   "angleDeg": -5
+  },
+  "foot-r": {
+   "angleDeg": 6
+  },
+  "toe-r": {
+   "angleDeg": 0
+  },
+  "torso": {
+   "angleDeg": 0
+  },
+  "neck": {
+   "angleDeg": -1
+  },
+  "head": {
+   "angleDeg": 3
+  },
+  "ponytail": {
+   "angleDeg": -1
+  },
+  "arm-r": {
+   "angleDeg": 11.408,
+   "abductionDeg": -19.689,
+   "twistDeg": -26.55
+  },
+  "forearm-r": {
+   "angleDeg": 97.967,
+   "twistDeg": 3.018
+  },
+  "hand-r": {
+   "angleDeg": -60,
+   "abductionDeg": -10.935,
+   "twistDeg": -22.51
+  },
+  "arm-l": {
+   "angleDeg": -15.037,
+   "abductionDeg": 9.426,
+   "twistDeg": 8.651
+  },
+  "forearm-l": {
+   "angleDeg": 30.681,
+   "twistDeg": -25.101
+  },
+  "hand-l": {
+   "angleDeg": 60,
+   "abductionDeg": -5.441,
+   "twistDeg": -11.523
+  }
+ }
+}

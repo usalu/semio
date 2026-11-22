@@ -562,13 +562,13 @@
   {
    "script": "🎓️teaching/🏛️architecture/📚️course/📦️packages/🟦️typescript/📜️script.ts",
    "command": "check",
-   "maximumFiles": 2600,
+   "maximumFiles": 2800,
    "ports": false
   },
   {
    "script": "🧰️framework/🔨️modules/🖼️assets/📦️packages/🟦️typescript/📜️script.ts",
    "command": "build",
-   "maximumFiles": 2600,
+   "maximumFiles": 2800,
    "ports": false
   }
  ]

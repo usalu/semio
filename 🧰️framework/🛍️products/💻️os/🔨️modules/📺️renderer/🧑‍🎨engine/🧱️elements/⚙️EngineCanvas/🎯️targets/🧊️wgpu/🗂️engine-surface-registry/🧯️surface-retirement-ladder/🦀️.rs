@@ -276,6 +276,7 @@ impl EngineSurfaceRetirement {
             || Self::close_string(&mut cache.area_brush_size)
             || Self::close_string(&mut cache.size_key)
             || Self::close_string(&mut cache.tool_run_trace_window_id)
+            || Self::close_string(&mut cache.suggestion_menu_json)
         {
             return false;
         }

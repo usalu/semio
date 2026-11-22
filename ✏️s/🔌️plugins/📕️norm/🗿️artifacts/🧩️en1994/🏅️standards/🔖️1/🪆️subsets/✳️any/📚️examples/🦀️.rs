@@ -13,8 +13,14 @@ extern crate semio_framework_value_derive as value_derive;
 pub mod composite_bridge_girder;
 #[path = "🏢️composite-floor-beam/🦀️.rs"]
 pub mod composite_floor_beam;
+#[cfg(test)]
+#[path = "🏢️composite-floor-beam/🧪️tests/🧩️example/🦀️.rs"]
+mod example_composite_floor_beam;
 #[path = "🏢️composite-floor-beam-failing/🦀️.rs"]
 pub mod composite_floor_beam_failing;
+#[cfg(test)]
+#[path = "🏢️composite-floor-beam-failing/🧪️tests/🧩️example/🦀️.rs"]
+mod example_composite_floor_beam_failing;
 #[cfg(test)]
 #[path = "🌉️composite-bridge-girder/🧪️tests/🧩️example/🦀️.rs"]
 mod example;

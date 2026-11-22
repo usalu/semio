@@ -102,7 +102,7 @@ export type CarveSlice = {
 };
 
 /** 🔨️ Groups declarations into slices: coupled children (via `super::`), tests, and component siblings stay together; a test module that needs no `super::` item and names one of the detaching types becomes a slice of its own, so it can live in the crate of that type instead of cycling back to the module it tests. */
-export function buildSlices(tree: DeclTree, readonlyFileTexts: (absolute: string) => string | null, trace: (message: string) => void = () => undefined, options: { readonly detachTestsMentioning?: ReadonlySet<string>; readonly detachAllTests?: boolean } = {}): { slices: CarveSlice[]; namespaces: Set<string> } {
+export function buildSlices(tree: DeclTree, readonlyFileTexts: (absolute: string) => string | null, trace: (message: string) => void = () => undefined, options: { readonly detachTestsMentioning?: ReadonlySet<string>; readonly detachAllTests?: boolean; readonly detachWithoutHostUse?: boolean; readonly keepNamespaceKids?: boolean } = {}): { slices: CarveSlice[]; namespaces: Set<string> } {
   const union = new UnionFind();
   const reachOf = new Map<string, number>();
   for (const decl of tree.decls.values()) {
@@ -130,6 +130,7 @@ export function buildSlices(tree: DeclTree, readonlyFileTexts: (absolute: string
       if (text === null) return false;
       if (detaching.size && parent.node.inline && [...detaching].some((name) => new RegExp(`\\b${name}\\b`, "u").test(text))) return true;
       if (!options.detachAllTests) return false;
+      if (options.detachWithoutHostUse) return true;
       const hostText = readonlyFileTexts(decl.declFile) ?? "";
       const privateUse = hostPrivate(hostText, identifierSet(text), declaredNames(text), text, parent.eff);
       if (privateUse.items.length || privateUse.relative.length || privateUse.carry.length) return false;
@@ -145,7 +146,7 @@ export function buildSlices(tree: DeclTree, readonlyFileTexts: (absolute: string
     for (const kid of all) if (detached(kid)) trace(`detach ${kid.id} from ${parent.id}`);
     if (!kids.length) continue;
     if (parent.node.inline) {
-      const anyCoupled = kids.some((kid) => kid.testOnly || subtreeCoupled(kid));
+      const anyCoupled = !(options.keepNamespaceKids && parent.inlineRoot && parent.node.pathAttribute !== null) && kids.some((kid) => kid.testOnly || subtreeCoupled(kid));
       if (anyCoupled) trace(`union kids of ${parent.id}: ${kids.filter((kid) => kid.testOnly || subtreeCoupled(kid)).map((kid) => kid.id + (kid.testOnly ? "[test]" : "[super]")).join(", ")}`);
       if (anyCoupled) for (const kid of kids) union.union(kids[0]!.id, kid.id);
       const component = kids.find((kid) => kid.isComponent);

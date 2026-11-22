@@ -29,7 +29,7 @@
         "beatByState": {"running": 30000, "backoff": 30000, "waiting": 120000, "observing": 60000, "server": 120000, "ready": 120000},
         "heartbeatNames": ["pool.json", "attest.json"],
         "leaseRenewMilliseconds": 10000,
-        "leaseStaleMilliseconds": 60000,
+        "leaseStaleMilliseconds": 60000, "refreshMaximumAgeMilliseconds": 86400000,
         "humanFreshMilliseconds": 90000,
         "humanMaximumMilliseconds": 7200000,
         "graceMilliseconds": 10000,
@@ -47,7 +47,7 @@
         "refusalLineCharacters": 4000,
         "mirrorErrorLines": 8,
         "mirrorErrorPatterns": ["^(?:Internal error|Error|error)[: ]", "\\b(?:EPERM|EACCES|EBUSY|ENOSPC|ENOENT|EEXIST|EDQUOT)\\b", "(?:^|\\s)(?:failed|refused|panicked)\\b", "^\\[DATA\\] Store dependency installer (?:failed|stderr) "],
-        "longRefusalPatterns": ["^\\[DATA\\] Store dependency installer (?:failed|stderr) ","^(?:The project graph could not be read|Der Projektgraph konnte|graph: plan (?:stop|stage)|Graph: Plan)","^(?:Internal error: )?Current expected JavaScript dependency binding required \\{\"version\":1,\"purpose\":\"javascript-dependency-binding-mismatch\","],
+        "longRefusalPatterns": ["^\\[DATA\\] Store dependency installer (?:failed|stderr|move failure) ","^(?:The project graph could not be read|Der Projektgraph konnte|graph: plan (?:stop|stage)|Graph: Plan)","^(?:Internal error: )?Current expected JavaScript dependency binding required \\{\"version\":1,\"purpose\":\"javascript-dependency-binding-mismatch\","],
         "sliceReport": {"name": "slice-memory.json", "fileBytes": 65536},
         "mirrorBytes": 65536,
         "mirrorMilliseconds": 10000,
@@ -55,6 +55,10 @@
         "mirrorPrefix": "ready-log-",
         "timingsName": "ready-timings.json",
         "memoryFloorMegabytes": 1536,
+        "memoryFloorShareBasisPoints": 800,
+        "memoryFloorMinimumMegabytes": 512,
+        "memoryWaitMaximumMilliseconds": 600000,
+        "inodeSweepRetryMilliseconds": 1800000,
         "megabytesPerJob": 1536,
         "tailLines": 20,
         "failureWindowBytes": 1048576,
@@ -140,6 +144,7 @@
         },
         "holderSince": {"anyOf": [{"type": "null"}, {"$ref": "#/definitions/WatchdogInteger"}]},
         "holderEvidence": {"anyOf": [{"type": "null"}, {"$ref": "#/definitions/WatchdogDigest"}]},
+        "graphCounter": {"$ref": "#/definitions/WatchdogInteger"},
         "semantics": {"type": "object", "maxProperties": 32, "additionalProperties": {"anyOf": [{"type": "null"}, {"$ref": "#/definitions/WatchdogDigest"}]}},
         "cpu": {"type": "array", "maxItems": 512, "items": {"type": "array", "minItems": 2, "maxItems": 2, "items": {"$ref": "#/definitions/WatchdogInteger"}}},
         "windows": {"$ref": "#/definitions/WindowsWatchdogSample"},
@@ -230,7 +235,6 @@
       "const": {
         "en": {
           "ready": "Ready: every stage is current.",
-          "sidecar-restarting": "Stage {stage} is waiting for the worker supervisor to restart with updated code.",
           "human-running": "A person is running the setup on this machine; this machine only observes.",
           "lease-held": "Another runner on this machine (process {holder}) holds the setup lease; this runner waits and observes.",
           "memory-low": "Not enough free memory for stage {stage} ({available} MB free, {needed} MB needed); waiting.",
@@ -255,7 +259,6 @@
         },
         "de": {
           "ready": "Bereit: jede Stufe ist aktuell.",
-          "sidecar-restarting": "Stufe {stage} wartet auf den Neustart des Worker-Aufsehers mit aktualisiertem Code.",
           "human-running": "Eine Person führt das Setup auf dieser Maschine aus; diese Maschine beobachtet nur.",
           "lease-held": "Ein anderer Läufer auf dieser Maschine (Prozess {holder}) hält die Setup-Sperre; dieser Läufer wartet und beobachtet.",
           "memory-low": "Zu wenig freier Speicher für Stufe {stage} ({available} MB frei, {needed} MB nötig); wartet.",
@@ -282,17 +285,17 @@
     },
     "Reasons": {
       "const": {
-        "en": {"first-run": "First run of stage {stage} on this machine.", "inputs-changed": "Inputs of stage {stage} changed since it last succeeded.", "previous-failed": "Stage {stage} failed before; retrying after the back-off.", "stalled": "Stage {stage} showed nothing new for 10 minutes and was stopped; started again at once.", "code-changed": "Stage {stage} waited more than 10 minutes for a named holder while its code changed and was stopped; started again at once with the new code.", "code-stale": "Stage {stage} had run for at least 30 minutes while its code changed and was stopped; started again at once with the new code, what it finished stays stored.", "step-overdue": "Stage {stage} ran a step of its read far past the bound the step declares, with nothing else moving, and was stopped; started again with the current code after a short back-off.", "holder-silent": "Stage {stage} waited for a named holder of the dependency store that has not renewed its registration for more than 5 minutes (it may be blocked) and was stopped; started again after the back-off.", "adopted": "Adopted stage {stage}, which was already running; not restarted.", "binary-missing": "The repo binary is missing, starting again at stage {stage}."},
-        "de": {"first-run": "Erster Lauf der Stufe {stage} auf dieser Maschine.", "inputs-changed": "Die Eingaben der Stufe {stage} haben sich seit ihrem letzten Erfolg geändert.", "previous-failed": "Stufe {stage} schlug zuvor fehl; neuer Versuch nach der Wartezeit.", "stalled": "Stufe {stage} zeigte 10 Minuten lang nichts Neues und wurde beendet; sofort neu gestartet.", "code-changed": "Stufe {stage} wartete mehr als 10 Minuten auf einen benannten Halter, während sich ihr Code änderte, und wurde beendet; sofort neu gestartet mit dem neuen Code.", "code-stale": "Stufe {stage} lief mindestens 30 Minuten, während sich ihr Code änderte, und wurde beendet; sofort neu gestartet mit dem neuen Code, alles Fertige bleibt gespeichert.", "step-overdue": "Stufe {stage} führte einen Schritt ihres Lesens weit über die Grenze aus, die der Schritt erklärt, ohne dass sich sonst etwas bewegte, und wurde beendet; nach kurzer Wartezeit mit dem aktuellen Code neu gestartet.", "holder-silent": "Stufe {stage} wartete auf einen benannten Halter des Abhängigkeitsspeichers, der seine Anmeldung seit mehr als 5 Minuten nicht erneuert hat (womöglich blockiert), und wurde beendet; nach der Wartezeit neu gestartet.", "adopted": "Stufe {stage} übernommen, sie lief schon; nicht neu gestartet.", "binary-missing": "Das repo-Programm fehlt, Neustart bei Stufe {stage}."}
+        "en": {"first-run": "First run of stage {stage} on this machine.", "inputs-changed": "Inputs of stage {stage} changed since it last succeeded.", "previous-failed": "Stage {stage} failed before; retrying after the back-off.", "stalled": "Stage {stage} showed nothing new for 10 minutes and was stopped; started again at once.", "code-changed": "Stage {stage} waited more than 10 minutes for a named holder while its code changed and was stopped; started again at once with the new code.", "code-stale": "Stage {stage} had run for at least 30 minutes while its code changed and was stopped; started again at once with the new code, what it finished stays stored.", "step-overdue": "Stage {stage} ran a step of its read far past the bound the step declares, with nothing else moving, and was stopped; started again with the current code after a short back-off.", "holder-silent": "Stage {stage} waited for a named holder of the dependency store that has not renewed its registration for more than 5 minutes (it may be blocked) and was stopped; started again after the back-off.", "adopted": "Adopted stage {stage}, which was already running; not restarted.", "binary-missing": "The repo binary is missing, starting again at stage {stage}.", "refreshing": "Ready, refreshing stage {stage} in the background: its inputs changed; the worker keeps serving and stays ready unless this check fails."},
+        "de": {"first-run": "Erster Lauf der Stufe {stage} auf dieser Maschine.", "inputs-changed": "Die Eingaben der Stufe {stage} haben sich seit ihrem letzten Erfolg geändert.", "previous-failed": "Stufe {stage} schlug zuvor fehl; neuer Versuch nach der Wartezeit.", "stalled": "Stufe {stage} zeigte 10 Minuten lang nichts Neues und wurde beendet; sofort neu gestartet.", "code-changed": "Stufe {stage} wartete mehr als 10 Minuten auf einen benannten Halter, während sich ihr Code änderte, und wurde beendet; sofort neu gestartet mit dem neuen Code.", "code-stale": "Stufe {stage} lief mindestens 30 Minuten, während sich ihr Code änderte, und wurde beendet; sofort neu gestartet mit dem neuen Code, alles Fertige bleibt gespeichert.", "step-overdue": "Stufe {stage} führte einen Schritt ihres Lesens weit über die Grenze aus, die der Schritt erklärt, ohne dass sich sonst etwas bewegte, und wurde beendet; nach kurzer Wartezeit mit dem aktuellen Code neu gestartet.", "holder-silent": "Stufe {stage} wartete auf einen benannten Halter des Abhängigkeitsspeichers, der seine Anmeldung seit mehr als 5 Minuten nicht erneuert hat (womöglich blockiert), und wurde beendet; nach der Wartezeit neu gestartet.", "adopted": "Stufe {stage} übernommen, sie lief schon; nicht neu gestartet.", "binary-missing": "Das repo-Programm fehlt, Neustart bei Stufe {stage}.", "refreshing": "Bereit, Stufe {stage} wird im Hintergrund aufgefrischt: ihre Eingaben haben sich geändert; der Worker bedient weiter und bleibt bereit, außer diese Prüfung schlägt fehl."}
       }
     },
     "Reason": {
       "type": "object", "additionalProperties": false, "required": ["code", "en", "de"],
-      "properties": {"code": {"enum": ["first-run", "inputs-changed", "previous-failed", "stalled", "code-changed", "code-stale", "step-overdue", "holder-silent", "adopted", "binary-missing"]}, "en": {"type": "string"}, "de": {"type": "string"}}
+      "properties": {"code": {"enum": ["first-run", "inputs-changed", "previous-failed", "stalled", "code-changed", "code-stale", "step-overdue", "holder-silent", "adopted", "binary-missing", "refreshing"]}, "en": {"type": "string"}, "de": {"type": "string"}}
     },
     "Refusal": {
       "type": "object", "additionalProperties": false, "required": ["code", "en", "de"],
-      "properties": {"code": {"enum": ["sidecar-restarting", "human-running", "lease-held", "memory-low", "stage-failed", "tooling-compiler", "stage-timeout", "stage-stalled", "stage-stall-exhausted", "stage-code-changed", "stage-code-stale", "stage-step-overdue", "stage-holder-silent", "store-full", "disk-short", "disk-unmeasured", "disk-collecting", "disk-consumers", "loop-failed", "spawn-failed", "interrupted", "server"]}, "en": {"type": "string"}, "de": {"type": "string"}}
+      "properties": {"code": {"enum": ["human-running", "lease-held", "memory-low", "stage-failed", "tooling-compiler", "stage-timeout", "stage-stalled", "stage-stall-exhausted", "stage-code-changed", "stage-code-stale", "stage-step-overdue", "stage-holder-silent", "store-full", "disk-short", "disk-unmeasured", "disk-collecting", "disk-consumers", "loop-failed", "spawn-failed", "interrupted", "server"]}, "en": {"type": "string"}, "de": {"type": "string"}}
     },
     "Timings": {
       "description": "Per-stage timings of one worker in the store under `v1/origins/<origin>/ready-timings.json`: newest last. A drained physical stage has no attempt count in this supervisor. A null digest means no verified launch digest was available. An observed end bounds the duration when the wrapper receipt is unavailable.",
@@ -342,6 +345,7 @@
         "tail": {"type": "array", "items": {"type": "string"}},
         "nextAttemptMs": {"type": ["integer", "null"]},
         "readyMs": {"type": ["integer", "null"]},
+        "refreshing": {"type": "boolean"},
         "startedMs": {"type": "integer"},
         "updatedMs": {"type": "integer"},
         "beatMilliseconds": {"type": "integer", "minimum": 1}

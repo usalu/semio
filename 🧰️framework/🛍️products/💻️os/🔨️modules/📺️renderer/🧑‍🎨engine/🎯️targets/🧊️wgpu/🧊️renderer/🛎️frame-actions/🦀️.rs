@@ -421,6 +421,12 @@ fn fail_frame_action_batch(input: &mut InputState<ActionDescriptor>, actions: &m
     actions.retire_failed_batch_step(input).unwrap_or(Err(fault))
 }
 
+/// 🩺️ The one `[TRACE] frame input action` line: one per materialized input action entering the frame, never per tick.
+/// Language-agnostic oracle: `🧫️fixtures/🚦️frame-demand-and-traces/🔣️.json`.
+pub fn frame_input_action_line(controller_id: &str, action: &str) -> String {
+    format!("[TRACE] frame input action controller={controller_id} action={action}")
+}
+
 pub fn transfer_frame_input_action(input: &mut InputState<ActionDescriptor>, actions: &mut FrameActionOwners) -> Result<FrameInputActionStep, &'static str> {
     if let Some(step) = actions.retire_failed_batch_step(input) {
         return step;
@@ -461,6 +467,7 @@ pub fn transfer_frame_input_action(input: &mut InputState<ActionDescriptor>, act
             return fail_frame_action_batch(input, actions, "bounded frame input action failed materialization");
         }
     };
+    log_debug(&frame_input_action_line(&action.descriptor.controller_id, &action.descriptor.action));
     match actions.stage_batch_action(action) {
         FrameActionBatchStage::Pending => Ok(FrameInputActionStep::Pending),
         FrameActionBatchStage::Published => Ok(FrameInputActionStep::Transferred),
@@ -789,15 +796,13 @@ impl FrameMaintenanceAuthority {
     }
 }
 
-/// 🛑️ Classifies one maintenance terminal guard before any field work moves.
+/// 🛑️ Classifies cancel and stale maintenance terminals. A passed deadline is not terminal: the owner stays live and the caller defers.
 #[cfg(not(target_arch = "wasm32"))]
-pub fn frame_maintenance_terminal_fault(cancelled: bool, stale: bool, deadline_exceeded: bool) -> Option<&'static str> {
+pub fn frame_maintenance_terminal_fault(cancelled: bool, stale: bool) -> Option<&'static str> {
     if cancelled {
         Some("frame maintenance cancelled")
     } else if stale {
         Some("frame maintenance generation became stale")
-    } else if deadline_exceeded {
-        Some("frame maintenance deadline expired")
     } else {
         None
     }

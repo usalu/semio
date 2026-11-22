@@ -53,7 +53,7 @@ pub(super) fn tree_item(document: &UiDocumentTree, record: &UiNodeRecord, surfac
         description: props.description.as_ref().map(|value| value.as_str().to_string()),
         icon_id: props.icon.as_ref().map(icon_name),
         presence: UiPresence { selected: props.selected == Some(true), ..record_presence(record) },
-        default_open: props.default_open,
+        default_open: props.default_open.or(detail.is_some().then_some(true)),
         action: row_activation(record),
         actions: row_actions(&props.row_actions, props.target.as_ref()),
         draggable: props.draggable,

@@ -297,7 +297,7 @@ impl AppPresenter {
             drop(runtime);
             return Ok(mailbox.close_world_cursor_wake_step());
         };
-        if !interaction.shell.opening.close_icon_export_step(cx)? {
+        if !interaction.shell.opening.close_icon_export_step(cx)? || !interaction.shell.opening.close_video_render_step() {
             return Ok(false);
         }
         if interaction.shell.surfaces.advance_world3d_retirement_step() {

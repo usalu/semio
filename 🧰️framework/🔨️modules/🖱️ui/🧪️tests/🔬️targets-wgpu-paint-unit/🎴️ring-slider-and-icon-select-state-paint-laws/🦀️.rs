@@ -276,3 +276,26 @@ fn the_mono_flag_reaches_the_edit_measurement_the_mono_face_is_a_different_advan
     assert!(!UiInputNode { commit: Some("blur".into()), ..input }.uses_mono_face());
 }
 
+
+#[test]
+fn a_hosted_extension_mounts_its_rows_as_stacked_children_and_an_unhosted_one_mounts_none() {
+    use semio_ui_declaration::ui::{ui_external_slot, ui_text};
+    use semio_ui_locale::Label;
+    use semio_ui_retained_tree::reconcile::{extension_row_key, register_extension_host, retire_extension_host};
+    let id = "law.extension.host@1";
+    register_extension_host(id, "Law host", |_| vec![ui_text(Label::data("one")), ui_text(Label::data("two"))]);
+    let (mut tree, root, theme, _atlas) = setup(&ui_external_slot("plugin", "app", id, "{}"));
+    drive_sync(&mut tree, root, &theme, None);
+    assert_eq!(tree.composite_row_count(), 2, "one retained child per row the host renders");
+    let row = |index: usize| find_child_by_key(&tree, root, &NodeKey::Explicit(extension_row_key(id, index))).expect("the row mounted under the slot");
+    let (first, second) = (tree.node(row(0)).unwrap().layout.clone(), tree.node(row(1)).unwrap().layout.clone());
+    assert!(matches!(&tree.node(row(1)).unwrap().spec.0, UiNode::Text(_)));
+    assert_eq!((first.y, second.y), (0.0, theme.control_height_small + theme.gap_standard), "rows stack top to bottom at the control height and standard gap");
+    assert_eq!(first.height, theme.control_height_small);
+    drive_sync(&mut tree, root, &theme, None);
+    assert_eq!(tree.composite_row_count(), 2, "a second pass re-finds the rows by key");
+    retire_extension_host(id);
+    let (mut bare, bare_root, theme, _atlas) = setup(&ui_external_slot("plugin", "app", id, "{}"));
+    drive_sync(&mut bare, bare_root, &theme, None);
+    assert_eq!(bare.composite_row_count(), 0, "a retired host leaves the unavailable line, no children");
+}

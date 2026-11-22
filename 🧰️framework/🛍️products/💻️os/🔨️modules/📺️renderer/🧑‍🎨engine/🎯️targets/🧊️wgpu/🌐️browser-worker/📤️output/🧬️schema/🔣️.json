@@ -87,6 +87,7 @@
         "mediaSlots",
         "cursor",
         "fullscreen",
+        "unsaved",
         "requestFrame",
         "nextDeadlineDelayMs",
         "continueFrame",
@@ -216,6 +217,9 @@
             "boolean",
             "null"
           ]
+        },
+        "unsaved": {
+          "type": "boolean"
         },
         "requestFrame": {
           "type": "boolean"

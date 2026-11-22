@@ -1,0 +1,8 @@
+[
+{"op":"region-set","id":"backpack","set":{"areaM2":0.3581}},
+{"op":"set","path":["poses",{"id":"hands-in-pockets"},"thermal","regions","backpack","exposedFraction"],"value":0.6007},
+{"op":"set","path":["poses",{"id":"weight-on-left"},"thermal","regions","backpack","exposedFraction"],"value":0.6007},
+{"op":"set","path":["poses",{"id":"weight-on-right"},"thermal","regions","backpack","exposedFraction"],"value":0.6007},
+{"op":"set","path":["poses",{"id":"hands-in-hoodie-pocket"},"thermal","regions","backpack","exposedFraction"],"value":0.6007},
+{"op":"set","path":["poses",{"id":"looking-ahead"},"thermal","regions","backpack","exposedFraction"],"value":0.6007}
+]

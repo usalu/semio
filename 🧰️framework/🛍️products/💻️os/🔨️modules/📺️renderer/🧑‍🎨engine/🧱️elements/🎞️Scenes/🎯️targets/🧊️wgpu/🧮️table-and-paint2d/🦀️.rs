@@ -276,6 +276,7 @@ pub struct TableMetrics {
     pub row_h: f32,
     pub(crate) pad: f32,
     col_w: f32,
+    columns: usize,
     pub(crate) handle_size: f32,
     pub body: Rect,
 }
@@ -284,8 +285,9 @@ pub fn table_metrics(inner: Rect, columns: usize, theme: &Theme) -> TableMetrics
     let header_h = theme.control_height * 1.33;
     TableMetrics {
         header_h,
-        row_h: theme.control_height,
+        row_h: semio_ui_wgpu_layout::table::table_row_height(theme.control_height),
         pad: theme.padding_standard,
+        columns,
         col_w: semio_ui_wgpu_layout::table::table_fill_track_px(inner.w, columns),
         handle_size: theme.control_height_small.min(theme.control_height),
         body: Rect::new(inner.x, inner.y + header_h, inner.w, inner.h - header_h),
@@ -305,7 +307,40 @@ fn table_cell_rect(inner: Rect, row_y: f32, column_index: usize, metrics: &Table
         x += reservation;
         width = (width - reservation).max(1.0);
     }
+    if column_index + 1 == metrics.columns {
+        width = (width - semio_ui_wgpu_layout::table::TABLE_ROW_MENU_TRIGGER_PX).max(1.0);
+    }
     Rect::new(x, row_y, width, metrics.row_h)
+}
+
+/// 🧲️ ⋯ The row's context-menu trigger rect (React's `ContextMenuTriggerButton` in the last cell) and the framework verb it fires: `openRowContextMenu` with the menu's anchor in surface-local pixels, which the shell resolves against the window body exactly as a right-click on the row.
+fn table_row_menu_trigger(metrics: &TableMetrics, row_y: f32, spacing: f32) -> Rect {
+    let (x, y, w, h) = semio_ui_wgpu_layout::table::table_row_menu_trigger((metrics.body.x, row_y, metrics.body.w, metrics.row_h), spacing, false);
+    Rect::new(x, y, w, h)
+}
+
+fn table_row_menu_action(metrics: &TableMetrics, row_y: f32) -> ActionDescriptor {
+    let (x, y) = semio_ui_wgpu_layout::table::table_row_menu_anchor((metrics.body.x, row_y, metrics.body.w, metrics.row_h));
+    ActionDescriptor { controller_id: "framework".into(), action: "openRowContextMenu".into(), args: Some(semio_framework::DslValue::Object(vec![("x".into(), semio_framework::DslValue::float(f64::from(x))), ("y".into(), semio_framework::DslValue::float(f64::from(y)))])) }
+}
+
+/// 🦽️ ⋯ The trigger's accessibility cells, one per visible row: a button named `label` (`ui.contextMenu.more`) that opens the row's menu.
+fn table_row_menu_accessibility_cells(scene: &UiComponentSceneNode, inner: Rect, label: &str, theme: &Theme) -> Vec<TableButtonAccessibilityCell> {
+    let Some(table) = scene.table.as_ref() else { return Vec::new() };
+    let Ok(columns) = serde_json::from_str::<Vec<TableColumn>>(&table.columns_json) else { return Vec::new() };
+    let Ok(rows) = serde_json::from_str::<Vec<Value>>(&table.rows_json) else { return Vec::new() };
+    let metrics = table_metrics(inner, columns.len(), theme);
+    let scroll = scroll_offset(&scene.host_id, "body");
+    let last_column = columns.last().map(|column| column.id.clone()).unwrap_or_default();
+    rows.iter()
+        .enumerate()
+        .filter_map(|(row_index, row)| {
+            let row_y = metrics.body.y + row_index as f32 * metrics.row_h - scroll;
+            let rect = table_visible_rect(table_row_menu_trigger(&metrics, row_y, theme.padding_standard), metrics.body)?;
+            let row_id = table_row_id(row, row_index);
+            Some(TableButtonAccessibilityCell { key: format!("{}.row.{}.menu", scene.host_id, row_id), label: label.into(), row_id, column_id: last_column.clone(), button_index: usize::MAX, rect, action: table_row_menu_action(&metrics, row_y) })
+        })
+        .collect()
 }
 
 pub fn table_transfer_start(scene: &UiComponentSceneNode, inner: Rect, x: f32, y: f32, theme: &Theme, driver_drag: UiDriverDrag) -> Option<SceneListTransferStart> {
@@ -651,6 +686,9 @@ pub fn table_button_accessibility_cells(scene: &UiComponentSceneNode, inner: Rec
 
 pub fn table_button_accessibility_activate(scene: &UiComponentSceneNode, key: &str, input: &mut semio_ui_wgpu_input::InputState<ActionDescriptor>) -> Option<Result<(), semio_ui_action::BoundedActionFault>> {
     let control = accepted_table_button_accessibility_cells(&scene.host_id).into_iter().find(|control| control.key == key)?;
+    if control.button_index == usize::MAX {
+        return (control.key == format!("{}.row.{}.menu", scene.host_id, control.row_id)).then(|| write_scene_action(input, &control.action));
+    }
     let table = scene.table.as_ref()?;
     let columns: Vec<TableColumn> = serde_json::from_str(&table.columns_json).ok()?;
     if !columns.iter().any(|column| column.id == control.column_id) {
@@ -744,6 +782,9 @@ pub fn table_hit(scene: &UiComponentSceneNode, inner: Rect, x: f32, y: f32, them
     let control_id = format!("{}.row.{}", scene.host_id, row_id);
     let draggable = table.row_drag_mime.is_some() && row.get("_drag").is_some();
     let row_y = metrics.body.y + index as f32 * metrics.row_h - scroll;
+    if table_row_menu_trigger(&metrics, row_y, theme.padding_standard).contains(x, y) {
+        return Some(SceneListHit::row(format!("{}.row.{}.menu", scene.host_id, row_id), Some(table_row_menu_action(&metrics, row_y))));
+    }
     if draggable && driver_drag == UiDriverDrag::Handle && table_transfer_handle_rect(Rect::new(metrics.body.x, row_y, metrics.body.w, metrics.row_h), theme).contains(x, y) {
         return Some(SceneListHit::row(format!("{}.row.{}.drag", scene.host_id, row_id), None));
     }
@@ -841,6 +882,10 @@ pub fn render_table(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut Framew
                 draw_text(ctx, &text, cell_rect.x, y + row_h * 0.65, theme.font_size_small, if selected || hovered { theme.active_foreground } else { theme.text });
             }
         }
+        let trigger = table_row_menu_trigger(&metrics, y, theme.padding_standard);
+        let glyph_width = theme.font_size_small * 0.9;
+        draw_text(ctx, "\u{22ef}", trigger.x + (trigger.w - glyph_width) * 0.5, y + row_h * 0.65, theme.font_size_small, if selected || hovered { theme.active_foreground } else { theme.text_muted });
+        ctx.input.register_hit(HitTarget { rect: trigger, event: Some(table_row_menu_action(&metrics, y)), control_id: Some(format!("{}.row.{}.menu", scene.host_id, row_id)), kind: HitKind::Generic, drag_axis: None, drag_data: None });
         if draggable && driver_drag == UiDriverDrag::Handle {
             let handle = table_transfer_handle_rect(row_rect, theme);
             if let Some(icons) = ctx.icons {
@@ -856,7 +901,9 @@ pub fn render_table(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut Framew
     }
     stage_table_stepper_accessibility_cells(&scene.host_id, table_stepper_accessibility_cells(scene, bounds, driver_drag));
     stage_table_editable_text_accessibility_cells(&scene.host_id, table_editable_text_accessibility_cells(scene, bounds, driver_drag));
-    stage_table_button_accessibility_cells(&scene.host_id, table_button_accessibility_cells(scene, bounds, driver_drag));
+    let mut button_cells = table_button_accessibility_cells(scene, bounds, driver_drag);
+    button_cells.extend(table_row_menu_accessibility_cells(scene, bounds, labels.row_menu, theme));
+    stage_table_button_accessibility_cells(&scene.host_id, button_cells);
     ctx.draw.pop_scissor();
 }
 

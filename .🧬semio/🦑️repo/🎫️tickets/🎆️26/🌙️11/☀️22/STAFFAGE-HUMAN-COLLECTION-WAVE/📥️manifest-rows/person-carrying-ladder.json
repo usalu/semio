@@ -1,0 +1,51 @@
+{
+  "id": "person-carrying-ladder",
+  "category": "humans",
+  "title": {
+    "en": "Person Carrying Ladder",
+    "de": "Person mit geschulterter Leiter"
+  },
+  "heightM": 1.966,
+  "widthM": 2.915,
+  "powerW": 387.6,
+  "poses": [
+    "carrying",
+    "standing-shouldered",
+    "tipping-up"
+  ],
+  "clips": [
+    "carry-walk",
+    "tip-and-settle"
+  ],
+  "representations": {
+    "50": "authored",
+    "100": "authored",
+    "200": "authored",
+    "500": "authored"
+  },
+  "symbols": [],
+  "analytics": [
+    "thermal",
+    "transport",
+    "structural"
+  ],
+  "exports": [
+    "svg",
+    "pdf",
+    "dxf",
+    "dwg",
+    "png-sequence",
+    "mp4",
+    "webm",
+    "component",
+    "glb",
+    "fbx",
+    "model",
+    "model-zip"
+  ],
+  "distinction": {
+    "en": "An electrician of 1.82 m in a hard hat, high-visibility vest, work trousers, gloves and safety boots walking with a 2.88 m aluminium single ladder of ten rungs (5 kg) on edge on his right shoulder: carrying, standing with the ladder shouldered and tipping it up, with a carrying walk and a tip-and-settle sequence; 2.9 m long with the ladder.",
+    "de": "Ein Elektriker von 1,82 m mit Schutzhelm, Warnweste, Arbeitshose, Handschuhen und Sicherheitsstiefeln, der mit einer 2,88 m langen Aluminium-Anlegeleiter mit zehn Sprossen (5 kg) hochkant auf der rechten Schulter geht: tragend, stehend mit geschulterter Leiter und beim Aufrichten, mit einem Gang im Tragen und einer Abfolge aus Aufrichten und Absetzen; mit der Leiter 2,9 m lang."
+  },
+  "completion": "authored"
+}

@@ -50,6 +50,7 @@ semio-framework-canvas = { path = "../../../../../../../../../../🔨️modules/
 semio-framework-io-base64 = { path = "../../../../../../../../../../🔨️modules/🚪️io/🔤️base64/📦️packages/🦀️rust" }
 semio-os-infinite-board-normal-focus = { path = "../../../../../../../♾️infinite/🎲️board/🔌️ports/➡️directed/➕️normal/🎯️focus/📦️packages/🦀️rust" }
 semio-os-infinite-board-normal-gestures = { path = "../../../../../../../♾️infinite/🎲️board/🔌️ports/➡️directed/➕️normal/🕹️gestures/📦️packages/🦀️rust" }
+semio-os-infinite-board-dag-host = { path = "../../../../../../../♾️infinite/🎲️board/🔌️ports/➡️directed/🕸️dag/🧭️host/📦️packages/🦀️rust" }
 semio-os-kernel = { path = "../../../../../../../../📦️packages/🦀️rust" }
 semio-os-node-graph = { path = "../../../../../🧱️elements/🕸️NodeGraph/📦️packages/🦀️rust" }
 semio-renderer-camera = { path = "../../../../../🧱️elements/🎞️Scenes/⏱️camera/📦️packages/🦀️rust" }
@@ -65,6 +66,7 @@ semio-ui-scene-views = { path = "../../../../../../../../../../🔨️modules/�
 semio-ui-theme = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🎨️styling/🎭️theme/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
 serde_json = "1.0.140"
+ui_gpu = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖍️draw/📦️packages/🦀️rust", package = "semio-ui-wgpu-render" }
 ui_styling = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust", package = "semio-ui-styling" }
 semio-ui-wgpu-input = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/📥️input/📦️packages/🦀️rust" }
 

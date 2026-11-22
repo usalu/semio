@@ -5,7 +5,6 @@ use super::retained_typed_input::{P3ProvisionalFold,ProvisionalTypedInputWork};
 use super::retained_scratch_testing::ScratchCaller;
 use semio_framework_artifact_flow_flow::FlowHostSnapshot;
 use semio_framework_job::{OriginalSourceBinding,close_original_effect_step};
-use semio_framework_value::retirement::RetireOwned;
 fn close(work:&mut ProvisionalTypedInputWork,caller:&mut ScratchCaller){
  work.begin_close();for _ in 0..32768{if work.terminal_is_empty(){return}caller.turn(|cx|cx.with_original_retirement(|same|{let body=same.retained_grant().maximum_copy_bytes;let d=work.next_close_demands(body)?;close_original_effect_step(same,d,|effect|work.close_step(body,effect))?;Ok(())}));}panic!("typed landing did not close original owners")
 }
@@ -21,7 +20,7 @@ fn provisional_typed_input_lands_like_the_original_central_operation_with_one_fu
   let expected_wire=semio_framework_pack_json::to_json_string(&original);assert_eq!(expected_wire,semio_framework_pack_json::to_json_string(&expected),"{}",case["name"]);expected.retire_cold();original.retire_cold();
   let((mut source,mutation),seed)=semio_framework_trace::observe_heap_allocations_on_this_thread(||{
    let source:FlowHostSnapshot=semio_framework_pack_json::from_json_str(&before_wire,semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
-   let mutation:super::Generation3dMutation=semio_framework_pack_json::from_json_str(&mutation_wire,semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();(source,mutation)
+   let mutation:Generation3dMutation=semio_framework_pack_json::from_json_str(&mutation_wire,semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();(source,mutation)
   });assert!(!seed.overflowed);
   let mut caller=ScratchCaller::new(&policy,items,seed.requested_bytes.checked_sub(seed.released_bytes).unwrap());
   let mut work=caller.turn(|cx|{let Ok(NativeProvisionalFold::Additional(P3ProvisionalFold::Input(work)))=<super::retained_provisional_dispatch::ProvisionalFolds as NativeProvisionalFolds<Generation3dMutation>>::into_fold_original(mutation,OriginalSourceBinding::borrow(cx))else{panic!("typed landing fixture dispatch")};Ok(work)});

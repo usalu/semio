@@ -9,6 +9,37 @@ description = "Component crate of semio-s-artifact-stdio-pdf: pdf-snapshot-value
 [package.metadata.semio]
 role = "library"
 
+[package.metadata.semio.carve]
+owned = [
+  "editor::pdf14::tests",
+  "editor::pdf14a::tests",
+  "editor::pdf14x::tests",
+  "editor::pdf17::tests",
+  "editor::pdf17a::tests",
+  "editor::pdf17e::tests",
+  "editor::pdf17h::tests",
+  "editor::pdf17ua::tests",
+  "editor::pdf17vt",
+  "editor::pdf17x::tests",
+  "standards::v1_7",
+  "standards::v1_7::io_registry",
+  "standards::v1_7::subsets::base::schema::snapshot::pdf_snapshot_value_tests",
+  "viewer::pdf14::tests",
+  "viewer::pdf14a::tests",
+  "viewer::pdf14x::tests",
+  "viewer::pdf17",
+  "viewer::pdf17::tests",
+  "viewer::pdf17a",
+  "viewer::pdf17a::tests",
+  "viewer::pdf17e",
+  "viewer::pdf17e::tests",
+  "viewer::pdf17h",
+  "viewer::pdf17h::tests",
+  "viewer::pdf17ua",
+  "viewer::pdf17ua::tests",
+  "viewer::pdf17x",
+]
+
 [lints]
 workspace = true
 
@@ -16,6 +47,9 @@ workspace = true
 path = "🦀️.rs"
 
 [dependencies]
+semio-s-artifact-stdio-pdf-editor-kit = { path = "../../../../../../✏️editor/🧰️kit/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-pdf-presence-lane = { path = "../../../../../../✏️editor/👥️presence/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-pdf-view-lane = { path = "../../../../../../✏️editor/🫧️transient/📦️packages/🦀️rust" }
 semio-framework-pixels = { path = "../../../../../../../../../../../../../../../🧰️framework/🔨️modules/🔲️pixels/📦️packages/🦀️rust" }
 semio-framework-io-base64 = { path = "../../../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🔤️base64/📦️packages/🦀️rust" }
 pack = { workspace = true }

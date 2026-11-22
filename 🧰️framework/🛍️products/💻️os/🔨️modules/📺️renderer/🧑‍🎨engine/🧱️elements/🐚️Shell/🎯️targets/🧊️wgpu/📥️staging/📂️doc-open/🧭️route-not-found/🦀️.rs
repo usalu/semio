@@ -5,8 +5,9 @@ use semio_renderer_wgpu_shell_vocab::shell_chrome_format;
 use serde::Serialize;
 
 pub const SHELL_HUB_ROUTE: &str = "/hub";
-pub use semio_renderer_wgpu_shell_docs::ROUTE_NOT_FOUND_PANEL_ID;
+pub use semio_renderer_wgpu_shell_docs::{PLUGIN_RECOVERY_PANEL_ID, ROUTE_NOT_FOUND_PANEL_ID};
 pub const NAVIGATE_SHELL_URI_ACTION: &str = "navigateShellUri";
+pub const QUARANTINE_PLUGIN_ACTION: &str = "quarantinePlugin";
 
 /// 🧭️ Classifies a shell history path into landing, space (optionally studio) or unknown.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize)]
@@ -68,6 +69,40 @@ impl OpeningState {
             padding: None,
             id: Some(ROUTE_NOT_FOUND_PANEL_ID.into()),
             children: vec![settings_text_row(&shell_chrome_format("common.routeNotFound", is_de, &[("path", path)])), home],
+            presence: UiPresence::default(),
+            activate: None,
+            drop_action: None,
+            drop_overlay: None,
+            menu: None,
+        })
+    }
+
+    /// 🩺️ React's `PluginRecoveryPanel`: the title, the crashed or quarantined copy and the two verbs, Restart (`reloadPlugin`) and Disable (`quarantinePlugin`), both naming `plugin_id`.
+    pub fn build_plugin_recovery_ui(&self, plugin_id: &str, quarantined: bool, prefs: &PrefsState) -> UiNode {
+        let is_de = prefs.locale_id == "de";
+        let verb = |id: &str, icon: IconName, key: &str, action: &str| {
+            UiNode::Button(UiButtonNode {
+                id: Some(format!("os.plugin-recovery.{id}")),
+                icon_id: icon,
+                label: Label::data(shell_chrome_string(key, is_de)),
+                action: ActionDescriptor { controller_id: "framework".into(), action: action.into(), args: semio_renderer_wgpu_host_base::action_args_json!({ "pluginId": plugin_id }) },
+                style: None,
+                presence: UiPresence::default(),
+                menu: None,
+            })
+        };
+        let message = if quarantined { "plugins.recovery.quarantined" } else { "plugins.recovery.crashed" };
+        UiNode::Stack(UiStackNode {
+            direction: "column".into(),
+            gap: None,
+            padding: None,
+            id: Some(PLUGIN_RECOVERY_PANEL_ID.into()),
+            children: vec![
+                settings_text_row(shell_chrome_string("plugins.recovery.title", is_de)),
+                settings_text_row(shell_chrome_string(message, is_de)),
+                verb("restart", IconName::RotateCcw, "plugins.recovery.restartApp", "reloadPlugin"),
+                verb("disable", IconName::EyeOff, "plugins.recovery.disablePlugin", QUARANTINE_PLUGIN_ACTION),
+            ],
             presence: UiPresence::default(),
             activate: None,
             drop_action: None,

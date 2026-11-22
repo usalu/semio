@@ -1,0 +1,14 @@
+{
+  "why": "The one language-neutral corpus of the app labels overlay: React's `resolveAppLabel` / `normalizeAppLabelsOverlay` and the Rust `AppLabelsOverlay::resolve` answer it identically. The overlay is the `labels` section a program publishes beside its bodies; an absent map is empty and an id the overlay does not name keeps the manifest label.",
+  "overlay": {
+    "exampleLabels": { "hexagonal-mushroom-column": "Pilz-Säule", "box-shell-preview": "Box preview" },
+    "actionLabels": { "undo": "Rückgängig" }
+  },
+  "cases": [
+    { "name": "an-example-the-overlay-names-takes-its-label", "kind": "example", "id": "hexagonal-mushroom-column", "fallback": "Hexagonal mushroom column", "expected": "Pilz-Säule" },
+    { "name": "an-example-the-overlay-omits-keeps-the-manifest-label", "kind": "example", "id": "two-room-corridor", "fallback": "Two-room corridor", "expected": "Two-room corridor" },
+    { "name": "a-label-of-another-kind-never-answers-an-example", "kind": "example", "id": "undo", "fallback": "undo", "expected": "undo" },
+    { "name": "an-action-label-reads-the-action-map", "kind": "action", "id": "undo", "fallback": "Undo", "expected": "Rückgängig" },
+    { "name": "a-kind-with-no-map-keeps-the-fallback", "kind": "dialog", "id": "undo", "fallback": "Dialog", "expected": "Dialog" }
+  ]
+}

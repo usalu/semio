@@ -580,6 +580,10 @@ pub fn encode_video_runs(encoder: &mut dyn VideoEncoder, runs: &[VideoFrameRun<'
 }
 //#endregion 🔖️Pipeline
 
+/// 🔓️ The decode half: the MP4 this tier writes back to RGBA8 pictures (`🔓️decode/🦀️.rs`).
+#[path = "🔓️decode/🦀️.rs"]
+pub mod decode;
+
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;

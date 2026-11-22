@@ -104,6 +104,17 @@ pub fn component_scene_set_caret_visible(host_id: &str, surface_id: &str, kind: 
 /// honours it.
 ///
 /// @see `♾️infinite/🎲️board/🔌️ports/➡️directed/🕸️dag/🦀️.rs` — `DagHost::fit_camera_to_content`
+/// 📷️ The camera the node graph is already showing, without moving it.
+pub fn node_graph_current_camera(surface_id: &str) -> Option<[f64; 3]> {
+    ENGINE_SURFACES.with(|cell| {
+        let surfaces = cell.borrow();
+        match surfaces.get(surface_id)?.node_graph.as_ref()? {
+            NodeGraphEngine::Flow(host) => Some(host.camera()),
+            NodeGraphEngine::Dag(host) => Some([host.dag.graph.host_snapshot.camera.x, host.dag.graph.host_snapshot.camera.y, host.dag.graph.host_snapshot.camera.zoom]),
+        }
+    })
+}
+
 pub fn node_graph_fit_camera(surface_id: &str) -> Option<[f64; 3]> {
     ENGINE_SURFACES.with(|cell| {
         let mut surfaces = cell.borrow_mut();

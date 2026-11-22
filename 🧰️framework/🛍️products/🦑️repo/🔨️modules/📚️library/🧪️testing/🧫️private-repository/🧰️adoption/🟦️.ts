@@ -37,8 +37,8 @@ export function adoptInstalledRustToolchainForV1(workspace:string,checkout:strin
  try{copyFileSync(join(resolve(checkout),"rust-toolchain.toml"),join(resolve(workspace),"rust-toolchain.toml"),constants.COPYFILE_EXCL);}catch(error){if((error as NodeJS.ErrnoException).code!=="EEXIST")throw error;}
  adoptRustToolchainReadOnlyV1(workspace,adoption);return adoption;
 }
-/** 🧰️ Names the installed Nx toolkit for a test process that no suite runner granted one: the identity of the newest complete installation, read in place and never written. */
+/** 🧰️ Names the installed Nx toolkit of a test process (the one its suite runner granted, else the newest complete installation) and adopts its directory and the pristine SDK snapshot it derives from read-only, so a test reads it in place and never writes it. */
 export function adoptInstalledNxToolkitIdentityV1(checkout:string,environment:NodeJS.ProcessEnv=process.env):string|undefined{
- if(environment.SEMIO_NX_TOOLING_IDENTITY)return environment.SEMIO_NX_TOOLING_IDENTITY;
- try{return environment.SEMIO_NX_TOOLING_IDENTITY=adoptInstalledToolV1(checkout,"nx-toolkit").identity;}catch{return undefined;}
+ const granted=environment.SEMIO_NX_TOOLING_IDENTITY;
+ try{const toolkit=adoptInstalledToolV1(checkout,"nx-toolkit","en",granted||undefined);try{adoptInstalledToolV1(checkout,"nx-sdk","en",JSON.parse(readFileSync(join(toolkit.directory,".semio-sdk-material.json"),"utf8")).snapshot);}catch{}return environment.SEMIO_NX_TOOLING_IDENTITY=toolkit.identity;}catch{return granted||undefined;}
 }

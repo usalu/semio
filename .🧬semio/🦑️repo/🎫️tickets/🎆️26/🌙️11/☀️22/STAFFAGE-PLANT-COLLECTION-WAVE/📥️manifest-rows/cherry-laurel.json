@@ -1,0 +1,55 @@
+{
+  "id": "cherry-laurel",
+  "category": "vegetation",
+  "title": {
+    "en": "Cherry Laurel",
+    "de": "Kirschlorbeer"
+  },
+  "heightM": 3.017,
+  "widthM": 3.6362,
+  "powerW": 0,
+  "poses": [
+    "calm",
+    "windy",
+    "storm",
+    "wet-snow"
+  ],
+  "clips": [
+    "wind-sway",
+    "gust",
+    "diurnal-transpiration"
+  ],
+  "representations": {
+    "50": "authored",
+    "100": "authored",
+    "200": "authored",
+    "500": "authored"
+  },
+  "symbols": [
+    "cherry-laurel-symbol"
+  ],
+  "analytics": [
+    "thermal",
+    "transport",
+    "structural"
+  ],
+  "exports": [
+    "svg",
+    "pdf",
+    "dxf",
+    "dwg",
+    "png-sequence",
+    "mp4",
+    "webm",
+    "component",
+    "glb",
+    "fbx",
+    "model",
+    "model-zip"
+  ],
+  "distinction": {
+    "en": "A loose, unclipped evergreen shrub of five stems carrying lumpy masses of large leathery leaves, broader than high, whose wet-snow pose splays the masses outwards.",
+    "de": "Ein lockerer, ungeschnittener immergrüner Strauch aus fünf Stämmen mit knolligen Massen großer ledriger Blätter, breiter als hoch; in der Nassschneepose spreizen sich die Massen nach außen."
+  },
+  "completion": "authored"
+}

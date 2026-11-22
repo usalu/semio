@@ -1,20 +1,16 @@
 import {expect,test} from "bun:test";
 import {Database} from "bun:sqlite";
-import ts from "typescript";
-import {mkdirSync,mkdtempSync,readFileSync,rmSync} from "node:fs";
+import {loadProductFunctionsV1} from "../../../../../../../../🧪️testing/🧩️extracted-function/🟦️.ts";
+import {mkdirSync,mkdtempSync,rmSync} from "node:fs";
 import {join} from "node:path";
 import {acquireFreshResourceLeaseRetryingV1,acquireResourceLease,checkResourceLeaseControl,resourceLeasePathV1,type ResourceLease} from "../../../../../../../../🔒️leases/🟦️.ts";
 import {createIssuedResourceControlV1,createRequestedIssuedResourceControlV1} from "../../../../../../../../🧭️routing/📥️invocation/🏃️process/🟦️.ts";
 import {declareBuildTestEnvelopeV1,withBuildTestInvocationV1} from "../../../../../../../../🧪️testing/📥️invocation/🟦️.ts";
 import fixture from "./🔣️.json" with {type:"json"};
 
-declareBuildTestEnvelopeV1({owner:"test:native-input-journal-admission",maximumElapsedMilliseconds:120000,capabilities:{artifacts:true}});
+declareBuildTestEnvelopeV1({owner:"test:native-input-journal-admission",maximumElapsedMilliseconds:120000,capabilities:{}});
 
 test("the protected input journal tolerates bounded catalog contention and never waits for a real writer",()=>withBuildTestInvocationV1(async original=>{
- const source=readFileSync(new URL("../../../🟦️.ts",import.meta.url),"utf8"),tree=ts.createSourceFile("native-input-journal.ts",source,ts.ScriptTarget.Latest,true);
- const body=tree.statements.find((node):node is ts.FunctionDeclaration=>ts.isFunctionDeclaration(node)&&node.name?.text==="withProtectedArtifactInputJournalV1");
- if(!body)throw Error("Actual fixed input journal owner required");
- const journal=ts.transpileModule(body.getText(tree),{compilerOptions:{target:ts.ScriptTarget.ES2022}}).outputText;
  const oracle=new Database(":memory:"),scratch=mkdtempSync(join(process.env.SEMIO_TEST_ARTIFACT_DIR!,"ij-"));
  const outer=createIssuedResourceControlV1(original,"cache:journal-admission",20000);
  try{
@@ -54,7 +50,7 @@ test("the protected input journal tolerates bounded catalog contention and never
      readArtifactRetirementJournalV1:async()=>({stamp:"exact",text:sample.action==="drift"&&++reads===2?"changed":"current"}),
      protectedParentFailureV1:(failures:unknown[],error:unknown)=>failures.push(error)
     };
-    const run=new Function(...Object.keys(ports),journal+";return withProtectedArtifactInputJournalV1;")(...Object.values(ports));
+    const run=(await loadProductFunctionsV1(new URL("../../../🟦️.ts",import.meta.url),["withProtectedArtifactInputJournalV1"],ports)).withProtectedArtifactInputJournalV1;
     try{
      await run(held,control,async()=>{called++;});
      success=true;

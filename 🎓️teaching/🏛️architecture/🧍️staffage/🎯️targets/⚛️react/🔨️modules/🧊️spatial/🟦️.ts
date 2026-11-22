@@ -42,7 +42,7 @@ export type SpatialRequest = {
   readonly range?: DisplayRange;
   readonly theme?: "light" | "dark";
   readonly scales?: readonly number[];
-  /** 🌊️ The layers of the air flow shown over the thermal view; with any layer the model is built without emitter markers, since the flow itself shows where air leaves. */
+  /** 🌊️ The layers of the air flow the stage animates over the thermal view. They are not part of the model: the model of the stage never carries flow geometry, so the flow is shown once. */
   readonly flow?: readonly FlowLayer[];
 };
 
@@ -73,7 +73,7 @@ export function scaleChoices(asset: Asset, language: Language): readonly ScaleCh
 export function modelKey(asset: Asset, request: SpatialRequest): string {
   const { query } = request;
   const what = query.kind === "pose" ? ["pose", query.pose] : query.kind === "clip" ? ["clip", query.clip] : [query.kind];
-  return JSON.stringify([asset.id, what, request.environment ?? null, request.thermalQuantity ?? null, request.forceQuantity ?? null, request.range?.mode === "span" ? request.range.spanK : null, request.theme ?? null, request.scales ?? null, (request.flow?.length ?? 0) > 0]);
+  return JSON.stringify([asset.id, what, request.environment ?? null, request.thermalQuantity ?? null, request.forceQuantity ?? null, request.range?.mode === "span" ? request.range.spanK : null, request.theme ?? null, request.scales ?? null]);
 }
 
 /** 🗣️ The spoken description of the model state in a language: the asset, pose or clip with its time, the representation, the scale and the camera. */

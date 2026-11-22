@@ -1,0 +1,51 @@
+{
+  "id": "hiker-with-trekking-poles",
+  "category": "humans",
+  "title": {
+    "en": "Hiker with Trekking Poles",
+    "de": "Wanderer mit Trekkingstöcken"
+  },
+  "heightM": 1.81,
+  "widthM": 0.7409,
+  "powerW": 165.6,
+  "poses": [
+    "standing-with-poles",
+    "resting-on-poles",
+    "uphill-stride"
+  ],
+  "clips": [
+    "uphill-walk",
+    "idle-breathing"
+  ],
+  "representations": {
+    "50": "authored",
+    "100": "authored",
+    "200": "authored",
+    "500": "authored"
+  },
+  "symbols": [],
+  "analytics": [
+    "thermal",
+    "transport",
+    "structural"
+  ],
+  "exports": [
+    "svg",
+    "pdf",
+    "dxf",
+    "dwg",
+    "png-sequence",
+    "mp4",
+    "webm",
+    "component",
+    "glb",
+    "fbx",
+    "model",
+    "model-zip"
+  ],
+  "distinction": {
+    "en": "A hiker in softshell jacket, trekking trousers, ankle-high boots and a peaked wool cap with a 30 litre daypack, walking uphill with two telescopic trekking poles planted in diagonal rhythm; standing with the poles, resting on them and the uphill stride, the poles as slender members with their own contacts.",
+    "de": "Eine wandernde Person in Softshelljacke, Trekkinghose, knöchelhohen Wanderschuhen und Wollmütze mit Schirm und einem Tagesrucksack von 30 Litern geht mit zwei Teleskop-Trekkingstöcken im Diagonalrhythmus bergauf; Stehen mit den Stöcken, Aufstützen und der Bergaufschritt, die Stöcke als schlanke Stäbe mit eigenen Kontakten."
+  },
+  "completion": "authored"
+}

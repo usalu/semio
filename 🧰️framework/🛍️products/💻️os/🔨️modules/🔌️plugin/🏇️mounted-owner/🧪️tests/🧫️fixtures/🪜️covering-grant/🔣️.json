@@ -1,0 +1,182 @@
+[
+ {
+  "id": "funded-demand-keeps-the-loan",
+  "loan": {
+   "items": 64,
+   "copy": 32768,
+   "capacity": 16777216,
+   "release": 1048576,
+   "depth": 64
+  },
+  "demand": {
+   "copy": 1000,
+   "capacity": 0,
+   "release": 0,
+   "depth": 1
+  },
+  "ceiling": {
+   "items": 64,
+   "copy": 2094757945,
+   "capacity": 2094757945,
+   "release": 2094757945,
+   "depth": 64
+  },
+  "expected": {
+   "items": 64,
+   "copy": 32768,
+   "capacity": 16777216,
+   "release": 1048576,
+   "depth": 64
+  }
+ },
+ {
+  "id": "step-above-32-kib-is-covered-to-the-power-of-two",
+  "loan": {
+   "items": 64,
+   "copy": 32768,
+   "capacity": 16777216,
+   "release": 1048576,
+   "depth": 64
+  },
+  "demand": {
+   "copy": 33976,
+   "capacity": 0,
+   "release": 0,
+   "depth": 1
+  },
+  "ceiling": {
+   "items": 64,
+   "copy": 2094757945,
+   "capacity": 2094757945,
+   "release": 2094757945,
+   "depth": 64
+  },
+  "expected": {
+   "items": 64,
+   "copy": 65536,
+   "capacity": 16777216,
+   "release": 1048576,
+   "depth": 64
+  }
+ },
+ {
+  "id": "member-open-above-the-loan-is-covered",
+  "loan": {
+   "items": 64,
+   "copy": 32768,
+   "capacity": 16777216,
+   "release": 1048576,
+   "depth": 64
+  },
+  "demand": {
+   "copy": 377696,
+   "capacity": 0,
+   "release": 0,
+   "depth": 1
+  },
+  "ceiling": {
+   "items": 64,
+   "copy": 2094757945,
+   "capacity": 2094757945,
+   "release": 2094757945,
+   "depth": 64
+  },
+  "expected": {
+   "items": 64,
+   "copy": 524288,
+   "capacity": 16777216,
+   "release": 1048576,
+   "depth": 64
+  }
+ },
+ {
+  "id": "demand-beyond-the-ceiling-clamps-and-stays-unfunded",
+  "loan": {
+   "items": 64,
+   "copy": 32768,
+   "capacity": 16777216,
+   "release": 1048576,
+   "depth": 64
+  },
+  "demand": {
+   "copy": 1073741824,
+   "capacity": 0,
+   "release": 0,
+   "depth": 1
+  },
+  "ceiling": {
+   "items": 64,
+   "copy": 263862856,
+   "capacity": 263862856,
+   "release": 263862856,
+   "depth": 64
+  },
+  "expected": {
+   "items": 64,
+   "copy": 263862856,
+   "capacity": 16777216,
+   "release": 1048576,
+   "depth": 64
+  }
+ },
+ {
+  "id": "ceiling-below-the-loan-never-narrows-it",
+  "loan": {
+   "items": 64,
+   "copy": 32768,
+   "capacity": 16777216,
+   "release": 1048576,
+   "depth": 64
+  },
+  "demand": {
+   "copy": 40000,
+   "capacity": 0,
+   "release": 0,
+   "depth": 1
+  },
+  "ceiling": {
+   "items": 64,
+   "copy": 100,
+   "capacity": 100,
+   "release": 100,
+   "depth": 64
+  },
+  "expected": {
+   "items": 64,
+   "copy": 32768,
+   "capacity": 16777216,
+   "release": 1048576,
+   "depth": 64
+  }
+ },
+ {
+  "id": "capacity-above-the-loan-is-covered",
+  "loan": {
+   "items": 64,
+   "copy": 32768,
+   "capacity": 16777216,
+   "release": 1048576,
+   "depth": 64
+  },
+  "demand": {
+   "copy": 0,
+   "capacity": 20971520,
+   "release": 0,
+   "depth": 1
+  },
+  "ceiling": {
+   "items": 64,
+   "copy": 2094757945,
+   "capacity": 263862856,
+   "release": 467039831,
+   "depth": 64
+  },
+  "expected": {
+   "items": 64,
+   "copy": 32768,
+   "capacity": 33554432,
+   "release": 1048576,
+   "depth": 64
+  }
+ }
+]

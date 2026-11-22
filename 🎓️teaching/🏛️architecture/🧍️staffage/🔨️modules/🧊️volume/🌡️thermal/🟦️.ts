@@ -1,17 +1,16 @@
-/** 🌡️ The thermal look of the model: one material per thermal-region set, painted from the solved field with the very ramp, range, centre and environment rules of the 2D thermal view (`thermalPaint`: surface temperature centred on the air temperature, `shared` −20…60 °C or the `spanK` range of the scene, warm above the centre, regions merged by area × exposure),
- * and the emitters as translucent cone glyphs coloured by their temperature excess on the transport ramp (±20 K).
+/** 🌡️ The thermal look of the model: one material per thermal-region set, painted from the solved field with the very ramp, range, centre and environment rules of the 2D thermal view (`thermalPaint`: surface temperature centred on the air temperature, `shared` −20…60 °C or the `spanK` range of the scene, warm above the centre, regions merged by area × exposure).
+ * The air around the body is not part of this look: the flow parts of ../🌊️flow carry it.
  *
  * A solid without a thermal region, or whose regions carry no value for the quantity, is grey like in the 2D view (glazing 40 % opaque); a valued glazing is 60 % opaque.
  * A region of several layers is modelled as nested shells (one solid set per layer, innermost first): its outermost shell shows the surface value, every inner shell the skin value beneath the layers (the skin temperature) for the temperature quantities and the region value for the fluxes.
  *
  * @see ../../🎨️depiction/🌡️thermal-view/🟦️.ts — `thermalPaint`
- * @see ../../💨️transport/🟦️.ts — `solveTransport`
+ * @see ../🌊️flow/🟦️.ts — the air flow of the thermal scenes
  */
 import type { Asset, Slug, Text } from "../../../🧬️schema/🟦️.ts";
-import type { DisplayRange, EmitterState, ThermalField, ThermalQuantity } from "../../🔗️contracts/🟦️.ts";
-import { type Theme, divergingColour, toneColour, tx } from "../../🎨️depiction/🖍️palette/🟦️.ts";
+import type { DisplayRange, ThermalField, ThermalQuantity } from "../../🔗️contracts/🟦️.ts";
+import { type Theme, toneColour, tx } from "../../🎨️depiction/🖍️palette/🟦️.ts";
 import { thermalPaint } from "../../🎨️depiction/🌡️thermal-view/🟦️.ts";
-import { SHARED_EXCESS_K } from "../../🎨️depiction/💨️transport-view/🟦️.ts";
 import { type LookSpec, type Paint, type Surface } from "../🎨️looks/🟦️.ts";
 
 /** ⚙️ What the thermal look reads besides the field. */
@@ -47,10 +46,4 @@ export function thermalLook(asset: Asset, settings: ThermalSettings, surfaces: r
       return out;
     },
   };
-}
-
-/** 🔥️ The paint of an emitter glyph: the temperature excess over the ambient air on the diverging ramp of the transport view (warm above), 55 % opaque. */
-export function emitterPaint(state: EmitterState, airTempC: number, theme: Theme): Paint {
-  const excess = state.temperatureC - airTempC;
-  return { hex: divergingColour(excess, { min: -SHARED_EXCESS_K, centre: 0, max: SHARED_EXCESS_K }, true, theme), alpha: 0.55 };
 }

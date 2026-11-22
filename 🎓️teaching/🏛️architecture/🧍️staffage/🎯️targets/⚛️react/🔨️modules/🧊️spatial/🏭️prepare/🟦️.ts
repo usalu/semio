@@ -1,4 +1,5 @@
 /** 🏭️ The model pipeline of the 3D view: an asset at a request becomes one procedural neutral model with a scene per authored scale and mode (`modelOfAsset`), every scene is tessellated at the quality of its own scale (`qualityOf`, the rule of the downloads) and gets its feature edges for the line views, in cooperative slices that report progress and stop on cancellation. The prepared document is kept for the next time the same asset, pose or clip and analytic settings are asked for; the clip keeps its root motion exactly as the downloads do, the viewer follows the figure instead of cutting its travel.
+ * The air flow is shown once: the stage animates it live over the model (the flow overlay), so the model of the stage is built without flow geometry (`flowGeometry: false`); the downloads carry the developed flow as geometry instead.
  *
  * Progress is one fraction over four weighted phases (the viewer's own scene preparation is the fourth and is reported by the stage). Cancellation rejects with an `AbortError`, never with a half-built document.
  *
@@ -29,9 +30,8 @@ const CAPACITY = 3;
 const prepared = new WeakMap<Asset, Map<string, ModelDocument>>();
 
 /** 🧾️ The options of a model that do not name a pose or clip: the analytic settings (environment, thermal span, quantities, theme) of a request. */
-export function analyticOptionsOf(request: Pick<SpatialRequest, "environment" | "thermalQuantity" | "forceQuantity" | "range" | "theme" | "flow">): Pick<AssetModelOptions, "environment" | "thermalSpanK" | "thermalQuantity" | "forceQuantity" | "theme" | "emitterMarkers"> {
+export function analyticOptionsOf(request: Pick<SpatialRequest, "environment" | "thermalQuantity" | "forceQuantity" | "range" | "theme">): Pick<AssetModelOptions, "environment" | "thermalSpanK" | "thermalQuantity" | "forceQuantity" | "theme"> {
   return {
-    ...((request.flow?.length ?? 0) > 0 ? { emitterMarkers: false } : {}),
     ...(request.environment === undefined ? {} : { environment: request.environment }),
     ...(request.thermalQuantity === undefined ? {} : { thermalQuantity: request.thermalQuantity }),
     ...(request.forceQuantity === undefined ? {} : { forceQuantity: request.forceQuantity }),
@@ -40,15 +40,15 @@ export function analyticOptionsOf(request: Pick<SpatialRequest, "environment" | 
   };
 }
 
-/** 🌟️ The options `modelOfAsset` makes the model of a request from: {@link analyticOptionsOf}, the pose or the clip (its first instant is the static state) and every authored scale. A transition has no model. */
+/** 🌟️ The options `modelOfAsset` makes the model of the stage from: {@link analyticOptionsOf}, the pose or the clip (its first instant is the static state), every authored scale and no flow geometry (the stage animates the air flow itself). A transition has no model. */
 export function modelOptionsOf(_asset: Asset, request: SpatialRequest): AssetModelOptions {
   const { query } = request;
   if (query.kind === "transition") throw new ModelRequestError("model-bad-option", "transition");
-  const base = { ...analyticOptionsOf(request), ...(request.scales === undefined ? {} : { scales: request.scales }) };
+  const base = { ...analyticOptionsOf(request), flowGeometry: false, ...(request.scales === undefined ? {} : { scales: request.scales }) };
   return query.kind === "pose" ? { ...base, at: { kind: "pose", pose: query.pose }, poses: [query.pose], clips: [] } : { ...base, at: { kind: "clip", clip: query.clip, timeS: 0 }, poses: [], clips: [query.clip] };
 }
 
-/** ✂️ The document without the feature edges of its glyphs: a glyph (arrow, arc, emitter cone) is drawn only by the analytic variants that give it a visible material, so the outline of a glyph that is invisible in the other variants would hang in the picture as stray lines. */
+/** ✂️ The document without the feature edges of its glyphs: a glyph (arrow, arc, centre of mass) is drawn only by the analytic variants that give it a visible material, so the outline of a glyph that is invisible in the other variants would hang in the picture as stray lines. */
 export function withoutGlyphEdges(document: ModelDocument): ModelDocument {
   const glyphMeshes = new Set(document.nodes.filter((node) => node.mesh !== undefined && node.tags?.includes("glyph") === true).map((node) => node.mesh));
   return { ...document, meshes: document.meshes.map((mesh) => (glyphMeshes.has(mesh.id) ? { ...mesh, primitives: mesh.primitives.filter((primitive) => primitive.mode !== "lines") } : mesh)) };

@@ -1,0 +1,45 @@
+{
+  "schema": "semio.ui.tree-drop/v1",
+  "positions": [
+    { "name": "top edge", "top": 100, "height": 24, "y": 100, "position": "before" },
+    { "name": "just inside the top quarter", "top": 100, "height": 24, "y": 105.9, "position": "before" },
+    { "name": "the quarter line is inside", "top": 100, "height": 24, "y": 106, "position": "inside" },
+    { "name": "middle", "top": 100, "height": 24, "y": 112, "position": "inside" },
+    { "name": "the three-quarter line is inside", "top": 100, "height": 24, "y": 118, "position": "inside" },
+    { "name": "just inside the bottom quarter", "top": 100, "height": 24, "y": 118.1, "position": "after" },
+    { "name": "bottom edge", "top": 100, "height": 24, "y": 124, "position": "after" }
+  ],
+  "kinds": [
+    { "rowReorder": true, "defaultMime": true, "foreign": false, "kind": "rowReorder" },
+    { "rowReorder": false, "defaultMime": true, "foreign": false, "kind": "plain" },
+    { "rowReorder": false, "defaultMime": true, "foreign": true, "kind": "other" },
+    { "rowReorder": false, "defaultMime": false, "foreign": true, "kind": "other" }
+  ],
+  "previews": [
+    { "name": "reorder before", "kind": "rowReorder", "position": "before", "accepts": true, "source": false, "frame": [10, 100, 200, 24], "shape": "line", "rect": [10, 100, 200, 2] },
+    { "name": "reorder after", "kind": "rowReorder", "position": "after", "accepts": true, "source": false, "frame": [10, 100, 200, 24], "shape": "line", "rect": [10, 122, 200, 2] },
+    { "name": "reorder inside is refused", "kind": "rowReorder", "position": "inside", "accepts": true, "source": false, "frame": [10, 100, 200, 24], "shape": null, "rect": null },
+    { "name": "reorder onto its own row is refused", "kind": "rowReorder", "position": "before", "accepts": true, "source": true, "frame": [10, 100, 200, 24], "shape": null, "rect": null },
+    { "name": "reorder onto a row without the MIME is refused", "kind": "rowReorder", "position": "after", "accepts": false, "source": false, "frame": [10, 100, 200, 24], "shape": null, "rect": null },
+    { "name": "plain before", "kind": "plain", "position": "before", "accepts": false, "source": true, "frame": [0, 0, 100, 20], "shape": "line", "rect": [0, 0, 100, 2] },
+    { "name": "plain inside nests", "kind": "plain", "position": "inside", "accepts": false, "source": false, "frame": [0, 40, 100, 20], "shape": "box", "rect": [0, 40, 100, 20] },
+    { "name": "palette previews nothing", "kind": "other", "position": "after", "accepts": true, "source": false, "frame": [0, 0, 100, 20], "shape": null, "rect": null }
+  ],
+  "box": { "frame": [10, 40, 100, 20], "border": [[10, 40, 100, 2], [10, 58, 100, 2], [10, 42, 2, 16], [108, 42, 2, 16]], "borderAlpha": 0.8, "fillAlpha": 0.1, "borderWidth": 2 },
+  "palette": {
+    "mime": "application/x-semio-catalogue-item",
+    "payloads": [
+      { "payload": "{\"id\":\"a\"}", "starts": true },
+      { "payload": "   ", "starts": false },
+      { "payload": "", "starts": false },
+      { "payload": null, "starts": false }
+    ],
+    "travel": [
+      { "dx": 0, "dy": 0, "begins": false },
+      { "dx": 5, "dy": 0, "begins": false },
+      { "dx": 3, "dy": 4, "begins": false },
+      { "dx": 6, "dy": 0, "begins": true },
+      { "dx": -4, "dy": 5, "begins": true }
+    ]
+  }
+}

@@ -1,11 +1,11 @@
-/** 📡️ `FlowSession`: the client of the flow solver for one figure. It opens a session for an asset, a pose or clip and an environment, asks for the field of the time its clock shows, and tells its owner what is going on: developing (with a fraction and a cancel), ready, cancelled or failed.
+/** 📡️ `FlowSession`: the client of the flow solver for one figure. It opens a session for an asset, a pose or clip, an environment and the conditions of its air (turbulence, wind profile, parcel life, seed), asks for the field of the time its clock shows, and tells its owner what is going on: developing (with a fraction and a cancel), ready, cancelled or failed.
  *
- * The solver runs in one shared worker of the page (the asset is posted once and released with its last session); where workers are missing the same solver runs in the page in cooperative slices. Requests are back-pressured: while a frame is being solved only the latest later time is kept.
+ * The solver runs in one shared worker of the page (the asset is posted once and released with its last session); where workers are missing, or the worker fails to load, the same solver runs in the page in cooperative slices and the open sessions and their latest frames are handed to it. Requests are back-pressured: while a frame is being solved only the latest later time is kept.
  *
  * @see ../🧵️server/🟦️.ts — the protocol and the solver
  * @see ../🟦️.ts — the time rules
  */
-import type { Asset, Environment, EvaluationQuery, FlowField } from "@teaching/staffage";
+import type { Asset, Environment, EvaluationQuery, FlowConditions, FlowField } from "@teaching/staffage";
 import { FLOW_DEVELOP_S, FLOW_REFRESH_HZ, flowPeriodS, flowTimeS } from "../🟦️.ts";
 import { FlowServer, type FlowMessage, type FlowReply } from "../🧵️server/🟦️.ts";
 
@@ -21,16 +21,37 @@ function portOf(): Port {
   if (port !== null) return port;
   const listeners = new Map<number, (reply: FlowReply) => void>();
   const receive = (reply: FlowReply): void => listeners.get(reply.session)?.(reply);
-  let post: (message: FlowMessage) => void;
+  const held = { assets: new Map<number, FlowMessage>(), opens: new Map<number, FlowMessage>(), frames: new Map<number, FlowMessage>() };
+  const local = (): ((message: FlowMessage) => void) => {
+    const server = new FlowServer((reply) => queueMicrotask(() => receive(reply)));
+    return (message) => server.post(message);
+  };
+  let send: (message: FlowMessage) => void;
   try {
     if (typeof Worker !== "function") throw new Error("no worker");
     const worker = new Worker(new URL("../🧵️server/worker.ts", import.meta.url), { type: "module" });
     worker.onmessage = ({ data }: MessageEvent<FlowReply>) => receive(data);
-    post = (message) => worker.postMessage(message);
+    worker.onerror = () => {
+      worker.terminate();
+      send = local();
+      for (const message of [...held.assets.values(), ...held.opens.values(), ...held.frames.values()]) send(message);
+    };
+    send = (message) => worker.postMessage(message);
   } catch {
-    const server = new FlowServer((reply) => queueMicrotask(() => receive(reply)));
-    post = (message) => server.post(message);
+    send = local();
   }
+  const post = (message: FlowMessage): void => {
+    if (message.kind === "asset") held.assets.set(message.id, message);
+    else if (message.kind === "release") held.assets.delete(message.id);
+    else if (message.kind === "open") held.opens.set(message.session, message);
+    else if (message.kind === "frame") held.frames.set(message.session, message);
+    else if (message.kind === "cancel") held.frames.delete(message.session);
+    else {
+      held.opens.delete(message.session);
+      held.frames.delete(message.session);
+    }
+    send(message);
+  };
   return (port = { post, listeners, assets: new WeakMap() });
 }
 
@@ -42,6 +63,7 @@ export class FlowSession {
   #asset: Asset | null = null;
   #query: EvaluationQuery | null = null;
   #periodS = 0;
+  #developS = FLOW_DEVELOP_S;
   #lastS: number | null = null;
   #sentS: number | null = null;
   #waiting = false;
@@ -67,8 +89,8 @@ export class FlowSession {
     return this.#elapsedS;
   }
 
-  /** 🚪️ Opens (or reopens) the session for an asset at a pose or clip under an environment; the first {@link frame} starts the solve. */
-  open(asset: Asset, query: EvaluationQuery, environment: Environment): void {
+  /** 🚪️ Opens (or reopens) the session for an asset at a pose or clip under an environment and the conditions of its air; the first {@link frame} starts the solve. The life of a parcel (`maxAgeS`, {@link FLOW_DEVELOP_S} when absent) is also how long the flow has developed when it is first shown; `pathlines` asks for the paths the parcels travelled. */
+  open(asset: Asset, query: EvaluationQuery, environment: Environment, conditions: FlowConditions = {}, pathlines = false): void {
     this.close();
     const link = portOf();
     let reference = link.assets.get(asset);
@@ -81,8 +103,9 @@ export class FlowSession {
     this.#asset = asset;
     this.#query = query;
     this.#periodS = flowPeriodS(asset, query);
+    this.#developS = conditions.maxAgeS ?? FLOW_DEVELOP_S;
     link.listeners.set(this.#id, (reply) => this.#receive(reply));
-    link.post({ kind: "open", session: this.#id, asset: reference.id, query, environment, maxAgeS: FLOW_DEVELOP_S, periodS: this.#periodS });
+    link.post({ kind: "open", session: this.#id, asset: reference.id, query, environment, conditions: { ...conditions, maxAgeS: this.#developS }, periodS: this.#periodS, pathlines });
     this.#set({ phase: "idle", fraction: 0, message: "" });
   }
 
@@ -99,7 +122,7 @@ export class FlowSession {
     this.#durationS = durationS;
     const quantised = Math.round(clockS * FLOW_REFRESH_HZ) / FLOW_REFRESH_HZ;
     const elapsed = Math.round(this.#elapsedS * FLOW_REFRESH_HZ) / FLOW_REFRESH_HZ;
-    const timeS = flowTimeS(this.#query, this.#periodS, quantised, elapsed, this.#lastS);
+    const timeS = flowTimeS(this.#query, this.#periodS, quantised, elapsed, this.#lastS, this.#developS);
     if (timeS === this.#sentS) return;
     if (this.#waiting) return void (this.#queued = timeS);
     this.#send(timeS);

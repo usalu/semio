@@ -1,0 +1,53 @@
+{
+  "id": "person-signing",
+  "category": "humans",
+  "title": {
+    "en": "Person Signing",
+    "de": "Gebärdende Person"
+  },
+  "heightM": 1.72,
+  "widthM": 0.565,
+  "powerW": 146.1,
+  "poses": [
+    "relaxed",
+    "signing-ready",
+    "sign-house",
+    "sign-thank-you",
+    "sign-you"
+  ],
+  "clips": [
+    "signing-phrase",
+    "idle-breathing"
+  ],
+  "representations": {
+    "50": "authored",
+    "100": "authored",
+    "200": "authored",
+    "500": "authored"
+  },
+  "symbols": [],
+  "analytics": [
+    "thermal",
+    "transport",
+    "structural"
+  ],
+  "exports": [
+    "svg",
+    "pdf",
+    "dxf",
+    "dwg",
+    "png-sequence",
+    "mp4",
+    "webm",
+    "component",
+    "glb",
+    "fbx",
+    "model",
+    "model-zip"
+  ],
+  "distinction": {
+    "en": "An adult of 1.69 m in a fleece hoodie, jeans and canvas sneakers communicating in sign language with articulated fingers: relaxed, hands ready in the signing space and the signs HOUSE, THANK YOU and YOU, with a signed phrase and idle breathing; the hand shapes are posed finger by finger.",
+    "de": "Eine erwachsene Person von 1,69 m in Fleece-Kapuzenpullover, Jeans und Stoffsneakern, die mit einzeln beweglichen Fingern gebärdet: entspannt, mit bereiten Händen im Gebärdenraum und mit den Gebärden HAUS, DANKE und DU, mit einem gebärdeten Satz und ruhigem Atmen; die Handformen sind Finger für Finger gestellt."
+  },
+  "completion": "authored"
+}

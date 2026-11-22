@@ -291,7 +291,7 @@ impl<'ctx> OverlaysViewCtx<'ctx> {
                 return false;
             }
             3 => {
-                if !self.as_chrome_overlays().render_context_menu_step(cursor, overlay, atlas, icons, input, theme, width, height) {
+                if !self.render_context_menu_levels_step(cursor, overlay, atlas, icons, input, theme, width, height) {
                     return false;
                 }
                 cursor.scalar = 0;
@@ -442,7 +442,12 @@ impl<'ctx> OverlaysViewCtx<'ctx> {
             }
             10 => {
                 if let Some(rect) = self.input.keyboard_focus_ring_rect(input) {
-                    overlay.push_shared_border(rect, theme.stroke_hairline, theme.selected, semio_ui_draw_contract::SharedBorderState::Focus);
+                    let active = self.input.accessibility_focused_control_id.as_deref().and_then(|key| self.chrome.presented_chrome_accessibility.iter().find(|node| node.key == key)).is_some_and(|node| node.selected == Some(true) || node.pressed == Some(true));
+                    overlay.push_shared_border(rect, theme.stroke_hairline, if active { theme.border_emphasized } else { theme.selected }, semio_ui_draw_contract::SharedBorderState::Focus);
+                    if let Some((x, baseline, width, size, color, true)) = self.input.accessibility_focused_control_id.as_deref().and_then(semio_renderer_wgpu_shell_view_chrome::chrome_label_span) {
+                        let focus = &semio_renderer_wgpu_shell_chrome_state::chrome_parity_constants().focus;
+                        overlay.push_solid([x, baseline + size * focus.underline_offset_em, width, focus.underline_thickness_px], color);
+                    }
                 }
                 cursor.phase = 11;
                 return false;

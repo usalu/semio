@@ -3,6 +3,7 @@ Feature: 3D downloads
     Given the sample figure with the exports glb, fbx and model
     When the GLB of the pose stand is exported
     Then it validates with the Khronos glTF validator with no errors and no warnings, three's GLTFLoader loads it, and it holds the seven views as material variants
+    And its thermal scenes carry the air flow as stream, vapour and fog nodes, and no node is named for an emitter
     And it is named asset_pose_model_all_1-100.glb and is the same bytes for the same request
   Scenario: FBX per clip
     When the FBX of the clip walk is exported in the thermal representation

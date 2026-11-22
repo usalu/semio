@@ -321,6 +321,19 @@ impl<E: ArtifactEditor> ArtifactApp for EditorApp<E> {
         interaction: &InteractionView<'_>,
         cx: &mut semio_framework_job::StepContext<'_>,
     ) -> semio_plugin_ownership::sdk_fault::OriginalRenderResult<ComponentTree> { E::render_with_work_context(work, owner, body_key, source, doc, cfg, view_state, transient, interaction, cx) }
+    async fn render_with_peers(
+        owner: &ArtifactInstanceOperationOwnerHandle,
+        body_key: &str,
+        doc: &ArtifactView<'_, Self::Snapshot>,
+        cfg: &ConfigView<'_, Self::Config>,
+        view_state: &ViewModel,
+        transient: &TransientView<'_, Self::Transient>,
+        interaction: &InteractionView<'_>,
+        peers: &PresencePeersView<'_, Self::Presence>,
+        cx:&mut semio_framework_job::StepContext<'_>,
+    ) -> semio_plugin_ownership::sdk_fault::OriginalRenderResult<ComponentTree> {
+        E::render_with_peers(owner, body_key, doc, cfg, view_state, transient, interaction, peers, cx)
+    }
     async fn render_with_request_context(
         owner: &ArtifactInstanceOperationOwnerHandle,
         body_key: &str,

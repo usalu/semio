@@ -1,0 +1,30 @@
+import{test}from"bun:test";
+import{readdirSync,writeFileSync}from"node:fs";
+import{join}from"node:path";
+const observation=await import("../../🟨️.mjs") as any;
+const scheduling=await import("../../../📥️source/🔏️closure/🗓️scheduling/🟦️.ts") as any;
+const out=process.env.E81_OUT;
+test.skipIf(out===undefined)("probe",()=>{
+ const prefixes:string[]=scheduling.buildSchedulingPrefixesV1(),root="/Users/ueli/Documents/semio/";
+ const dir=process.env.E81_DIR!;
+ const groups:Record<string,Record<string,number>>={},total:Record<string,number>={},sched:Record<string,number>={},examples:Record<string,string[]>={},perRecord:any[]=[],moved:any[]=[];
+ for(const f of readdirSync(dir).filter(f=>f.endsWith(".json"))){
+  let record:any;try{record=observation.readInferenceRecordOrMissV1(join(dir,f),{say:()=>{}});}catch(e:any){(globalThis as any).err??=String(e.message).slice(0,200);continue;}
+  if(!record){(globalThis as any).miss=((globalThis as any).miss??0)+1;continue;}
+  const rows=record.header.observations as any[];let s=0;
+  for(const row of rows){
+   total[row.kind]=(total[row.kind]??0)+1;if(["exists","field","global","file","analysis","readdirNames","readdir"].includes(row.kind)){const g=String(row.path).replace(root,"").split("/").slice(0,row.kind==="file"?14:6).join("/").slice(0,240);const m=(groups[row.kind]??={});m[g]=(m[g]??0)+1;}
+   const path=String(row.path).replace(root,"");
+   if(prefixes.some(p=>path.includes(p))){s++;sched[row.kind]=(sched[row.kind]??0)+1;(examples[row.kind]??=[]).length<6&&examples[row.kind].push(path.slice(0,160));}
+  }
+  perRecord.push({f,rows:rows.length,sched:s});
+  if(process.env.E81_MOVED==="1"){
+   for(const row of rows){
+    if(row.kind==="closure"||row.kind==="global"||row.kind==="registry")continue;
+    let holds=true;try{holds=observation.observationRowFreshV1?observation.observationRowFreshV1(row):true;}catch{holds=true;}
+    if(!holds){moved.push({f,kind:row.kind,path:String(row.path).replace(root,"").slice(0,260)});break;}
+   }
+  }
+ }
+ writeFileSync(out!,JSON.stringify({groups,err:(globalThis as any).err,miss:(globalThis as any).miss,records:perRecord.length,prefixes:prefixes.length,total,sched,examples,top:perRecord.sort((a,b)=>b.sched-a.sched).slice(0,10),moved},null,1));
+});

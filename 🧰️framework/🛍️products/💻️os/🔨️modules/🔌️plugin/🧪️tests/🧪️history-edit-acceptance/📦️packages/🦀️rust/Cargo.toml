@@ -37,6 +37,7 @@ semio-plugin-instance-app = { path = "../../../../🧵️instance/📦️package
 semio-plugin-mounted-owner = { path = "../../../../🏇️mounted-owner/📦️packages/🦀️rust" }
 semio-plugin-ownership = { path = "../../../../🏛️ownership/🧱️owner/📦️packages/🦀️rust" }
 semio-plugin-reactor-app = { path = "../../../../⚛️reactor/🔌️app/📦️packages/🦀️rust" }
+semio-plugin-reactor-jobs = { path = "../../../../⚛️reactor/💼️jobs/📦️packages/🦀️rust" }
 semio-plugin-time-travel = { path = "../../../../⏪️time-travel/📦️packages/🦀️rust" }
 semio-plugin-window-config = { path = "../../../../🪟️window/🎚️config/📦️packages/🦀️rust" }
 semio-plugin-window-transient = { path = "../../../../🪟️window/📦️packages/🦀️rust" }

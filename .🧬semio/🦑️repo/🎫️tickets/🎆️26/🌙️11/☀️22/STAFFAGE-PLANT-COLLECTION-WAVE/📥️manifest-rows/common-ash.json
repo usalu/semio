@@ -1,0 +1,58 @@
+{
+ "id": "common-ash",
+ "category": "vegetation",
+ "title": {
+  "en": "Common Ash",
+  "de": "Gemeine Esche"
+ },
+ "heightM": 25.6,
+ "widthM": 15.769,
+ "powerW": 0,
+ "poses": [
+  "summer-calm",
+  "summer-breeze",
+  "gale",
+  "spring-flush",
+  "seed-keys",
+  "wet-snow"
+ ],
+ "clips": [
+  "wind-sway",
+  "gust",
+  "diurnal-transpiration"
+ ],
+ "representations": {
+  "50": "authored",
+  "100": "authored",
+  "200": "authored",
+  "500": "authored"
+ },
+ "symbols": [
+  "common-ash-symbol",
+  "tree-sign"
+ ],
+ "analytics": [
+  "thermal",
+  "transport",
+  "structural"
+ ],
+ "exports": [
+  "svg",
+  "pdf",
+  "dxf",
+  "dwg",
+  "png-sequence",
+  "mp4",
+  "webm",
+  "component",
+  "glb",
+  "fbx",
+  "model",
+  "model-zip"
+ ],
+ "distinction": {
+  "en": "A 25.6 m common ash (Fraxinus excelsior) with a tall pale grey stem of 0.8 m forking at 10 m into three leaders, upturned limb tips and an open 15 m crown of pinnate-leaf clusters through which the sky shows.",
+  "de": "Eine 25,6 m hohe Gemeine Esche (Fraxinus excelsior) mit hohem, hellgrauem Stamm von 0,8 m, der sich in 10 m in drei Leittriebe gabelt, aufgebogenen Astspitzen und einer offenen Krone von 15 m aus Fiederblattbüscheln, durch die der Himmel scheint."
+ },
+ "completion": "authored"
+}

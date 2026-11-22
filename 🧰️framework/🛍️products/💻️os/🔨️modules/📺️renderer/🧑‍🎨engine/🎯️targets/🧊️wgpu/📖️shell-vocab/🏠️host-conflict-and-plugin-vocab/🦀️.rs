@@ -31,6 +31,8 @@ pub(super) fn shell_chrome_host_conflict_and_plugin(key: &'static str, is_de: bo
         ("display.unavailable", true) => Some("Anzeige nicht verfügbar"),
         ("common.name", false) => Some("Name"),
         ("common.name", true) => Some("Name"),
+        ("contextMenu.more", false) => Some("More"),
+        ("contextMenu.more", true) => Some("Mehr"),
         ("common.noData", false) => Some("No data"),
         ("common.noData", true) => Some("Keine Daten"),
         ("common.noFileSystemNodes", false) => Some("No file system nodes"),

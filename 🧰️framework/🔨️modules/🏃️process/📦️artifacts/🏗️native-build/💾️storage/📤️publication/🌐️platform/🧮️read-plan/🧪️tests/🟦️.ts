@@ -1,6 +1,7 @@
 import {expect,test} from "bun:test";
 import Ajv from "ajv";
 import {createHash} from "node:crypto";
+import {loadProductFunctionsV1} from "../../../../../../../🧪️testing/🧩️extracted-function/🟦️.ts";
 import schema from "../🧬️schema/🔣️.json" with {type:"json"};
 import {spawnSync} from "node:child_process";
 import {lstatSync,mkdirSync,mkdtempSync,readFileSync,rmSync,symlinkSync,writeFileSync,renameSync} from "node:fs";
@@ -97,9 +98,6 @@ test("the platform no longer counts staging, reading or observing against a fixe
 test("ordinary input read authenticates one retained directory traversal and every file",async()=>{
  const ts=await import("typescript"),layout=fixture.ordinaryRead,validate=new Ajv({strict:true}).compile(schema.definitions.OrdinaryReadFixture);
  expect(validate(layout)).toBe(true);
- const source=readFileSync(join(import.meta.dir,"..","..","🟦️.ts"),"utf8"),tree=ts.createSourceFile("owned-input-read.ts",source,ts.ScriptTarget.Latest,true);
- const names=["protectedArtifactInputAnchorV1","protectedArtifactInputStampV1","verifyProtectedArtifactInputFilesV1"],functions=names.map(name=>tree.statements.find(node=>ts.isFunctionDeclaration(node)&&node.name?.text===name)!);
- const code=ts.transpileModule(functions.map(node=>node.getText(tree)).join("\n")+";return verifyProtectedArtifactInputFilesV1;",{compilerOptions:{target:ts.ScriptTarget.ES2022}}).outputText;
  for(const row of layout.cases){
   const base=mkdtempSync(join(tmpdir(),"ir-"));
   try{
@@ -128,7 +126,7 @@ test("ordinary input read authenticates one retained directory traversal and eve
     const parent=dirname(full);
     renameSync(parent,parent+".prior");symlinkSync(parent+".prior",parent,"junction");
    }
-   const stop=new AbortController(),check=()=>stop.signal.throwIfAborted(),run=new Function("nativeProtectedArtifactInputProtocolV1","protectedArtifactInputChunkV1","freemem","protectedArtifactInputRecordedV1","visitProtectedArtifactInputDirectoriesV1","protectedArtifactInputHashedV1","artifactRetirementHashV1","readProtectedArtifactInputV1","nativeArtifactInputStepV1",code)(()=>({}),protectedArtifactInputChunkV1,freemem,recorded,visitProtectedArtifactInputDirectoriesV1,protectedArtifactInputHashedV1,createHash,readProtectedArtifactInputV1,()=>1);
+   const stop=new AbortController(),check=()=>stop.signal.throwIfAborted(),run=(await loadProductFunctionsV1(new URL("../../🟦️.ts",import.meta.url),["verifyProtectedArtifactInputFilesV1"],{nativeProtectedArtifactInputProtocolV1:()=>({}),protectedArtifactInputChunkV1,freemem,protectedArtifactInputRecordedV1:recorded,visitProtectedArtifactInputDirectoriesV1,protectedArtifactInputHashedV1,artifactRetirementHashV1:createHash,readProtectedArtifactInputV1,nativeArtifactInputStepV1:()=>1})).verifyProtectedArtifactInputFilesV1;
    const tracked=(directory:ArtifactRelativeDirectoryV1):ArtifactRelativeDirectoryV1=>Object.freeze({...directory,
     stat:()=>directory.stat(),entry:(name:string)=>directory.entry(name),
     withDirectoryPath:async<T>(entries:readonly ArtifactRelativePathEntryV1[],body:(opened:ArtifactRelativeDirectoryV1)=>Promise<T>)=>directory.withDirectoryPath(entries,openedDirectory=>{opened++;return body(tracked(openedDirectory));}),

@@ -13,7 +13,7 @@ import {fleetHostReadingV1,graphServiceHeapBytesV1,graphServiceLimitMegabytesV1}
 import {settleGraphMemoryV1} from "../../../🧠️memory/🧽️settle/🟨️.mjs";
 import {READY_SLICE_REPORT_POLICY_V1} from "../../../🧠️memory/📋️slice-report/🏷️owner/🟦️.ts";
 import {placeServiceOutsideJobsV1,prepareServiceGroupV1,releaseOwnServiceGroupV1,runsInServiceGroupV1,serviceLaunchArgumentsV1,sweepEmptyServiceGroupsV1} from "../../../🧱️job-limits/🐧️cgroup/🟦️.ts";
-import {appendServiceExitRowV1} from "../../🧾️exit-log/🟨️.mjs";
+import {appendServiceExitRowV1,completeServiceStartRowV1} from "../../🧾️exit-log/🟨️.mjs";
 import {ACCESS_PROOF_VERSION_V1,accessDirectoryV1,consentIdentityV1,createMountReproofV1,launchdRefusalV1,launcherDigestV1,probeConsentV1,protectedFolderOfV1,sampleAccessInChildV1,writeAccessReceiptV1} from "../../🔐️consent/🟨️.mjs";
 import {ensureLauncherConsentV1,launchdRouteV1,listServiceJobsV1,startViaLaunchdV1} from "./🍎️launchd/🟨️.mjs";
 import {createResponsibilityWatchV1} from "../../🔐️consent/🧷️responsibility/🟨️.mjs";
@@ -74,7 +74,7 @@ export async function runHostForegroundV1({implementation,loadGraph,loadSlice,id
  let responsibilityTimer;
  try{
   try{await service.start();}catch(error){if(error?.code==="running"){record({reason:"adopted",code:0});return 0;}throw error;}
-  appendServiceExitRowV1(runtime.directory,{event:"start",at:Date.now(),pid:process.pid,tag:runtime.tag});
+  completeServiceStartRowV1(runtime.directory,{pid:process.pid,tag:runtime.tag});
   if(!seen.own&&seen.responsible!==undefined){
    responsibilityTimer=setInterval(()=>{void watch.tick().then(now=>{if(!now.lost||stopping!==undefined)return;log("responsible-gone","was="+now.was+" now="+now.now+" pid="+process.pid+": the app that held the file access of this service ended, so it is judged against its own runtime from now on; a client starts the next one under its own access / die App, deren Dateizugriff dieser Dienst trug, ist beendet, daher wird er ab jetzt als eigene Laufzeit beurteilt; ein Client startet den nächsten mit seinem eigenen Zugriff");stop("responsible-gone",{responsibleWas:now.was,responsibleNow:now.now});}).catch(()=>{});},Math.max(50,policy?.responsibilityCheckMilliseconds??HOST_POLICY_V1.responsibilityCheckMilliseconds));
    responsibilityTimer.unref?.();

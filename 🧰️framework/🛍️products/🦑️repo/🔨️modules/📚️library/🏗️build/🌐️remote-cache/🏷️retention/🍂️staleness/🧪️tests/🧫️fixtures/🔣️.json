@@ -1,0 +1,1001 @@
+{
+ "scenarios": [
+  {
+   "name": "generation A, nothing edited: every declared entry is live, the entry without a declaration is not judged",
+   "now": 10000000,
+   "grace": 600000,
+   "toolchains": null,
+   "retired": [],
+   "tree": {
+    "core/lib.rs": "core v1",
+    "core/util.rs": "util v1",
+    "mid/lib.rs": "mid v1",
+    "top/main.rs": "top v1",
+    "other/lib.rs": "other v1"
+   },
+   "entries": [
+    {
+     "key": "core",
+     "storedAt": 0,
+     "refs": [
+      "blob:core"
+     ],
+     "declared": true,
+     "kind": "rust-unit",
+     "toolchain": "t1",
+     "sources": {
+      "core/lib.rs": "core v1",
+      "core/util.rs": "util v1"
+     },
+     "externs": [
+      "blob:serde",
+      "blob:old"
+     ]
+    },
+    {
+     "key": "mid",
+     "storedAt": 0,
+     "refs": [
+      "blob:mid"
+     ],
+     "declared": true,
+     "kind": "rust-unit",
+     "toolchain": "t1",
+     "sources": {
+      "mid/lib.rs": "mid v1"
+     },
+     "externs": [
+      "blob:core"
+     ]
+    },
+    {
+     "key": "top",
+     "storedAt": 0,
+     "refs": [
+      "blob:top"
+     ],
+     "declared": true,
+     "kind": "rust-unit",
+     "toolchain": "t1",
+     "sources": {
+      "top/main.rs": "top v1"
+     },
+     "externs": [
+      "blob:mid"
+     ]
+    },
+    {
+     "key": "other",
+     "storedAt": 0,
+     "refs": [
+      "blob:other"
+     ],
+     "declared": true,
+     "kind": "rust-unit",
+     "toolchain": "t1",
+     "sources": {
+      "other/lib.rs": "other v1"
+     },
+     "externs": [
+      "blob:serde"
+     ]
+    },
+    {
+     "key": "serde",
+     "storedAt": 0,
+     "refs": [
+      "blob:serde"
+     ],
+     "declared": true,
+     "kind": "rust-unit",
+     "toolchain": "t1",
+     "sources": {},
+     "externs": []
+    },
+    {
+     "key": "old",
+     "storedAt": 0,
+     "refs": [
+      "blob:old"
+     ],
+     "declared": true,
+     "kind": "rust-unit",
+     "toolchain": "t1",
+     "sources": {},
+     "externs": []
+    },
+    {
+     "key": "nxtask",
+     "storedAt": 0,
+     "refs": [
+      "blob:nxtask"
+     ],
+     "declared": false
+    }
+   ],
+   "expected": {
+    "core": "live",
+    "mid": "live",
+    "top": "live",
+    "other": "live",
+    "serde": "live",
+    "old": "live",
+    "nxtask": "undeclared"
+   }
+  },
+  {
+   "name": "one crate edited: that unit and its transitive dependents are stale, the independent one stays, a registry unit only the stale unit consumed is unreached",
+   "now": 10000000,
+   "grace": 600000,
+   "toolchains": null,
+   "retired": [],
+   "tree": {
+    "core/lib.rs": "core v2",
+    "core/util.rs": "util v1",
+    "mid/lib.rs": "mid v1",
+    "top/main.rs": "top v1",
+    "other/lib.rs": "other v1"
+   },
+   "entries": [
+    {
+     "key": "core",
+     "storedAt": 0,
+     "refs": [
+      "blob:core"
+     ],
+     "declared": true,
+     "kind": "rust-unit",
+     "toolchain": "t1",
+     "sources": {
+      "core/lib.rs": "core v1",
+      "core/util.rs": "util v1"
+     },
+     "externs": [
+      "blob:serde",
+      "blob:old"
+     ]
+    },
+    {
+     "key": "mid",
+     "storedAt": 0,
+     "refs": [
+      "blob:mid"
+     ],
+     "declared": true,
+     "kind": "rust-unit",
+     "toolchain": "t1",
+     "sources": {
+      "mid/lib.rs": "mid v1"
+     },
+     "externs": [
+      "blob:core"
+     ]
+    },
+    {
+     "key": "top",
+     "storedAt": 0,
+     "refs": [
+      "blob:top"
+     ],
+     "declared": true,
+     "kind": "rust-unit",
+     "toolchain": "t1",
+     "sources": {
+      "top/main.rs": "top v1"
+     },
+     "externs": [
+      "blob:mid"
+     ]
+    },
+    {
+     "key": "other",
+     "storedAt": 0,
+     "refs": [
+      "blob:other"
+     ],
+     "declared": true,
+     "kind": "rust-unit",
+     "toolchain": "t1",
+     "sources": {
+      "other/lib.rs": "other v1"
+     },
+     "externs": [
+      "blob:serde"
+     ]
+    },
+    {
+     "key": "serde",
+     "storedAt": 0,
+     "refs": [
+      "blob:serde"
+     ],
+     "declared": true,
+     "kind": "rust-unit",
+     "toolchain": "t1",
+     "sources": {},
+     "externs": []
+    },
+    {
+     "key": "old",
+     "storedAt": 0,
+     "refs": [
+      "blob:old"
+     ],
+     "declared": true,
+     "kind": "rust-unit",
+     "toolchain": "t1",
+     "sources": {},
+     "externs": []
+    },
+    {
+     "key": "nxtask",
+     "storedAt": 0,
+     "refs": [
+      "blob:nxtask"
+     ],
+     "declared": false
+    }
+   ],
+   "expected": {
+    "core": "stale:edited",
+    "mid": "stale:extern",
+    "top": "stale:extern",
+    "other": "live",
+    "serde": "live",
+    "old": "unreached",
+    "nxtask": "undeclared"
+   }
+  },
+  {
+   "name": "a module file of a crate edited is as good as its entry file",
+   "now": 10000000,
+   "grace": 600000,
+   "toolchains": null,
+   "retired": [],
+   "tree": {
+    "core/lib.rs": "core v1",
+    "core/util.rs": "util v2",
+    "mid/lib.rs": "mid v1",
+    "top/main.rs": "top v1",
+    "other/lib.rs": "other v1"
+   },
+   "entries": [
+    {
+     "key": "core",
+     "storedAt": 0,
+     "refs": [
+      "blob:core"
+     ],
+     "declared": true,
+     "kind": "rust-unit",
+     "toolchain": "t1",
+     "sources": {
+      "core/lib.rs": "core v1",
+      "core/util.rs": "util v1"
+     },
+     "externs": [
+      "blob:serde",
+      "blob:old"
+     ]
+    },
+    {
+     "key": "mid",
+     "storedAt": 0,
+     "refs": [
+      "blob:mid"
+     ],
+     "declared": true,
+     "kind": "rust-unit",
+     "toolchain": "t1",
+     "sources": {
+      "mid/lib.rs": "mid v1"
+     },
+     "externs": [
+      "blob:core"
+     ]
+    },
+    {
+     "key": "top",
+     "storedAt": 0,
+     "refs": [
+      "blob:top"
+     ],
+     "declared": true,
+     "kind": "rust-unit",
+     "toolchain": "t1",
+     "sources": {
+      "top/main.rs": "top v1"
+     },
+     "externs": [
+      "blob:mid"
+     ]
+    },
+    {
+     "key": "other",
+     "storedAt": 0,
+     "refs": [
+      "blob:other"
+     ],
+     "declared": true,
+     "kind": "rust-unit",
+     "toolchain": "t1",
+     "sources": {
+      "other/lib.rs": "other v1"
+     },
+     "externs": [
+      "blob:serde"
+     ]
+    },
+    {
+     "key": "serde",
+     "storedAt": 0,
+     "refs": [
+      "blob:serde"
+     ],
+     "declared": true,
+     "kind": "rust-unit",
+     "toolchain": "t1",
+     "sources": {},
+     "externs": []
+    },
+    {
+     "key": "old",
+     "storedAt": 0,
+     "refs": [
+      "blob:old"
+     ],
+     "declared": true,
+     "kind": "rust-unit",
+     "toolchain": "t1",
+     "sources": {},
+     "externs": []
+    },
+    {
+     "key": "nxtask",
+     "storedAt": 0,
+     "refs": [
+      "blob:nxtask"
+     ],
+     "declared": false
+    }
+   ],
+   "expected": {
+    "core": "stale:edited",
+    "mid": "stale:extern",
+    "top": "stale:extern",
+    "other": "live",
+    "serde": "live",
+    "old": "unreached",
+    "nxtask": "undeclared"
+   }
+  },
+  {
+   "name": "a deleted crate is stale (deleted) and so are its dependents",
+   "now": 10000000,
+   "grace": 600000,
+   "toolchains": null,
+   "retired": [],
+   "tree": {
+    "core/util.rs": "util v1",
+    "mid/lib.rs": "mid v1",
+    "top/main.rs": "top v1",
+    "other/lib.rs": "other v1"
+   },
+   "entries": [
+    {
+     "key": "core",
+     "storedAt": 0,
+     "refs": [
+      "blob:core"
+     ],
+     "declared": true,
+     "kind": "rust-unit",
+     "toolchain": "t1",
+     "sources": {
+      "core/lib.rs": "core v1",
+      "core/util.rs": "util v1"
+     },
+     "externs": [
+      "blob:serde",
+      "blob:old"
+     ]
+    },
+    {
+     "key": "mid",
+     "storedAt": 0,
+     "refs": [
+      "blob:mid"
+     ],
+     "declared": true,
+     "kind": "rust-unit",
+     "toolchain": "t1",
+     "sources": {
+      "mid/lib.rs": "mid v1"
+     },
+     "externs": [
+      "blob:core"
+     ]
+    },
+    {
+     "key": "top",
+     "storedAt": 0,
+     "refs": [
+      "blob:top"
+     ],
+     "declared": true,
+     "kind": "rust-unit",
+     "toolchain": "t1",
+     "sources": {
+      "top/main.rs": "top v1"
+     },
+     "externs": [
+      "blob:mid"
+     ]
+    },
+    {
+     "key": "other",
+     "storedAt": 0,
+     "refs": [
+      "blob:other"
+     ],
+     "declared": true,
+     "kind": "rust-unit",
+     "toolchain": "t1",
+     "sources": {
+      "other/lib.rs": "other v1"
+     },
+     "externs": [
+      "blob:serde"
+     ]
+    },
+    {
+     "key": "serde",
+     "storedAt": 0,
+     "refs": [
+      "blob:serde"
+     ],
+     "declared": true,
+     "kind": "rust-unit",
+     "toolchain": "t1",
+     "sources": {},
+     "externs": []
+    },
+    {
+     "key": "old",
+     "storedAt": 0,
+     "refs": [
+      "blob:old"
+     ],
+     "declared": true,
+     "kind": "rust-unit",
+     "toolchain": "t1",
+     "sources": {},
+     "externs": []
+    },
+    {
+     "key": "nxtask",
+     "storedAt": 0,
+     "refs": [
+      "blob:nxtask"
+     ],
+     "declared": false
+    }
+   ],
+   "expected": {
+    "core": "stale:deleted",
+    "mid": "stale:extern",
+    "top": "stale:extern",
+    "other": "live",
+    "serde": "live",
+    "old": "unreached",
+    "nxtask": "undeclared"
+   }
+  },
+  {
+   "name": "an entry stored within the grace is never stale or unreached, whatever the tree says; the registry unit it still consumes is live",
+   "now": 10000000,
+   "grace": 600000,
+   "toolchains": null,
+   "retired": [],
+   "tree": {
+    "core/lib.rs": "core v2",
+    "core/util.rs": "util v1",
+    "mid/lib.rs": "mid v1",
+    "top/main.rs": "top v1",
+    "other/lib.rs": "other v1"
+   },
+   "entries": [
+    {
+     "key": "core",
+     "storedAt": 9999000,
+     "refs": [
+      "blob:core"
+     ],
+     "declared": true,
+     "kind": "rust-unit",
+     "toolchain": "t1",
+     "sources": {
+      "core/lib.rs": "core v1",
+      "core/util.rs": "util v1"
+     },
+     "externs": [
+      "blob:serde",
+      "blob:old"
+     ]
+    },
+    {
+     "key": "mid",
+     "storedAt": 0,
+     "refs": [
+      "blob:mid"
+     ],
+     "declared": true,
+     "kind": "rust-unit",
+     "toolchain": "t1",
+     "sources": {
+      "mid/lib.rs": "mid v1"
+     },
+     "externs": [
+      "blob:core"
+     ]
+    },
+    {
+     "key": "top",
+     "storedAt": 0,
+     "refs": [
+      "blob:top"
+     ],
+     "declared": true,
+     "kind": "rust-unit",
+     "toolchain": "t1",
+     "sources": {
+      "top/main.rs": "top v1"
+     },
+     "externs": [
+      "blob:mid"
+     ]
+    },
+    {
+     "key": "other",
+     "storedAt": 0,
+     "refs": [
+      "blob:other"
+     ],
+     "declared": true,
+     "kind": "rust-unit",
+     "toolchain": "t1",
+     "sources": {
+      "other/lib.rs": "other v1"
+     },
+     "externs": [
+      "blob:serde"
+     ]
+    },
+    {
+     "key": "serde",
+     "storedAt": 0,
+     "refs": [
+      "blob:serde"
+     ],
+     "declared": true,
+     "kind": "rust-unit",
+     "toolchain": "t1",
+     "sources": {},
+     "externs": []
+    },
+    {
+     "key": "old",
+     "storedAt": 9999000,
+     "refs": [
+      "blob:old"
+     ],
+     "declared": true,
+     "kind": "rust-unit",
+     "toolchain": "t1",
+     "sources": {},
+     "externs": []
+    },
+    {
+     "key": "nxtask",
+     "storedAt": 0,
+     "refs": [
+      "blob:nxtask"
+     ],
+     "declared": false
+    }
+   ],
+   "expected": {
+    "core": "grace",
+    "mid": "stale:extern",
+    "top": "stale:extern",
+    "other": "live",
+    "serde": "live",
+    "old": "live",
+    "nxtask": "undeclared"
+   }
+  },
+  {
+   "name": "a toolchain that is not the fleet's makes an entry stale, its dependents with it, and the registry unit only it consumed unreached",
+   "now": 10000000,
+   "grace": 600000,
+   "toolchains": [
+    "t2"
+   ],
+   "retired": [],
+   "tree": {
+    "core/lib.rs": "core v1",
+    "core/util.rs": "util v1",
+    "mid/lib.rs": "mid v1",
+    "top/main.rs": "top v1",
+    "other/lib.rs": "other v1"
+   },
+   "entries": [
+    {
+     "key": "core",
+     "storedAt": 0,
+     "refs": [
+      "blob:core"
+     ],
+     "declared": true,
+     "kind": "rust-unit",
+     "toolchain": "t1",
+     "sources": {
+      "core/lib.rs": "core v1",
+      "core/util.rs": "util v1"
+     },
+     "externs": [
+      "blob:serde",
+      "blob:old"
+     ]
+    },
+    {
+     "key": "mid",
+     "storedAt": 0,
+     "refs": [
+      "blob:mid"
+     ],
+     "declared": true,
+     "kind": "rust-unit",
+     "toolchain": "t2",
+     "sources": {
+      "mid/lib.rs": "mid v1"
+     },
+     "externs": [
+      "blob:core"
+     ]
+    },
+    {
+     "key": "top",
+     "storedAt": 0,
+     "refs": [
+      "blob:top"
+     ],
+     "declared": true,
+     "kind": "rust-unit",
+     "toolchain": "t2",
+     "sources": {
+      "top/main.rs": "top v1"
+     },
+     "externs": [
+      "blob:mid"
+     ]
+    },
+    {
+     "key": "other",
+     "storedAt": 0,
+     "refs": [
+      "blob:other"
+     ],
+     "declared": true,
+     "kind": "rust-unit",
+     "toolchain": "t2",
+     "sources": {
+      "other/lib.rs": "other v1"
+     },
+     "externs": [
+      "blob:serde"
+     ]
+    },
+    {
+     "key": "serde",
+     "storedAt": 0,
+     "refs": [
+      "blob:serde"
+     ],
+     "declared": true,
+     "kind": "rust-unit",
+     "toolchain": "t2",
+     "sources": {},
+     "externs": []
+    },
+    {
+     "key": "old",
+     "storedAt": 0,
+     "refs": [
+      "blob:old"
+     ],
+     "declared": true,
+     "kind": "rust-unit",
+     "toolchain": "t2",
+     "sources": {},
+     "externs": []
+    },
+    {
+     "key": "nxtask",
+     "storedAt": 0,
+     "refs": [
+      "blob:nxtask"
+     ],
+     "declared": false
+    }
+   ],
+   "expected": {
+    "core": "stale:toolchain",
+    "mid": "stale:extern",
+    "top": "stale:extern",
+    "other": "live",
+    "serde": "live",
+    "old": "unreached",
+    "nxtask": "undeclared"
+   }
+  },
+  {
+   "name": "a consumed blob that an earlier retirement took makes the dependent stale; a blob nobody ever held is unknown and ignored",
+   "now": 10000000,
+   "grace": 600000,
+   "toolchains": null,
+   "retired": [
+    "blob:gone"
+   ],
+   "tree": {
+    "a/lib.rs": "a v1",
+    "b/lib.rs": "b v1"
+   },
+   "entries": [
+    {
+     "key": "a",
+     "storedAt": 0,
+     "refs": [
+      "blob:a"
+     ],
+     "declared": true,
+     "kind": "rust-unit",
+     "toolchain": "t1",
+     "sources": {
+      "a/lib.rs": "a v1"
+     },
+     "externs": [
+      "blob:gone"
+     ]
+    },
+    {
+     "key": "b",
+     "storedAt": 0,
+     "refs": [
+      "blob:b"
+     ],
+     "declared": true,
+     "kind": "rust-unit",
+     "toolchain": "t1",
+     "sources": {
+      "b/lib.rs": "b v1"
+     },
+     "externs": [
+      "blob:never-held"
+     ]
+    }
+   ],
+   "expected": {
+    "a": "stale:extern",
+    "b": "live"
+   }
+  },
+  {
+   "name": "two entries hold the same blob: the dependent is live while one holder is live",
+   "now": 10000000,
+   "grace": 600000,
+   "toolchains": null,
+   "retired": [],
+   "tree": {
+    "lib/old.rs": "edited",
+    "lib/new.rs": "v2",
+    "app/main.rs": "app v1"
+   },
+   "entries": [
+    {
+     "key": "lib-old",
+     "storedAt": 0,
+     "refs": [
+      "blob:lib"
+     ],
+     "declared": true,
+     "kind": "rust-unit",
+     "toolchain": "t1",
+     "sources": {
+      "lib/old.rs": "v1"
+     },
+     "externs": []
+    },
+    {
+     "key": "lib-new",
+     "storedAt": 0,
+     "refs": [
+      "blob:lib"
+     ],
+     "declared": true,
+     "kind": "rust-unit",
+     "toolchain": "t1",
+     "sources": {
+      "lib/new.rs": "v2"
+     },
+     "externs": []
+    },
+    {
+     "key": "app",
+     "storedAt": 0,
+     "refs": [
+      "blob:app"
+     ],
+     "declared": true,
+     "kind": "rust-unit",
+     "toolchain": "t1",
+     "sources": {
+      "app/main.rs": "app v1"
+     },
+     "externs": [
+      "blob:lib"
+     ]
+    }
+   ],
+   "expected": {
+    "lib-old": "stale:edited",
+    "lib-new": "live",
+    "app": "live"
+   }
+  },
+  {
+   "name": "a registry chain is live while a live workspace unit consumes its head and unreached once nobody does",
+   "now": 10000000,
+   "grace": 600000,
+   "toolchains": null,
+   "retired": [],
+   "tree": {
+    "app/main.rs": "app v2"
+   },
+   "entries": [
+    {
+     "key": "app",
+     "storedAt": 0,
+     "refs": [
+      "blob:app"
+     ],
+     "declared": true,
+     "kind": "rust-unit",
+     "toolchain": "t1",
+     "sources": {
+      "app/main.rs": "app v1"
+     },
+     "externs": [
+      "blob:r1"
+     ]
+    },
+    {
+     "key": "r1",
+     "storedAt": 0,
+     "refs": [
+      "blob:r1"
+     ],
+     "declared": true,
+     "kind": "rust-unit",
+     "toolchain": "t1",
+     "sources": {},
+     "externs": [
+      "blob:r2"
+     ]
+    },
+    {
+     "key": "r2",
+     "storedAt": 0,
+     "refs": [
+      "blob:r2"
+     ],
+     "declared": true,
+     "kind": "rust-unit",
+     "toolchain": "t1",
+     "sources": {},
+     "externs": []
+    },
+    {
+     "key": "lonely",
+     "storedAt": 0,
+     "refs": [
+      "blob:lonely"
+     ],
+     "declared": true,
+     "kind": "rust-unit",
+     "toolchain": "t1",
+     "sources": {},
+     "externs": []
+    }
+   ],
+   "expected": {
+    "app": "stale:edited",
+    "r1": "unreached",
+    "r2": "unreached",
+    "lonely": "unreached"
+   }
+  },
+  {
+   "name": "a registry chain stays live behind a live workspace unit",
+   "now": 10000000,
+   "grace": 600000,
+   "toolchains": null,
+   "retired": [],
+   "tree": {
+    "app/main.rs": "app v1"
+   },
+   "entries": [
+    {
+     "key": "app",
+     "storedAt": 0,
+     "refs": [
+      "blob:app"
+     ],
+     "declared": true,
+     "kind": "rust-unit",
+     "toolchain": "t1",
+     "sources": {
+      "app/main.rs": "app v1"
+     },
+     "externs": [
+      "blob:r1"
+     ]
+    },
+    {
+     "key": "r1",
+     "storedAt": 0,
+     "refs": [
+      "blob:r1"
+     ],
+     "declared": true,
+     "kind": "rust-unit",
+     "toolchain": "t1",
+     "sources": {},
+     "externs": [
+      "blob:r2"
+     ]
+    },
+    {
+     "key": "r2",
+     "storedAt": 0,
+     "refs": [
+      "blob:r2"
+     ],
+     "declared": true,
+     "kind": "rust-unit",
+     "toolchain": "t1",
+     "sources": {},
+     "externs": []
+    },
+    {
+     "key": "lonely",
+     "storedAt": 0,
+     "refs": [
+      "blob:lonely"
+     ],
+     "declared": true,
+     "kind": "rust-unit",
+     "toolchain": "t1",
+     "sources": {},
+     "externs": []
+    }
+   ],
+   "expected": {
+    "app": "live",
+    "r1": "live",
+    "r2": "live",
+    "lonely": "unreached"
+   }
+  }
+ ]
+}

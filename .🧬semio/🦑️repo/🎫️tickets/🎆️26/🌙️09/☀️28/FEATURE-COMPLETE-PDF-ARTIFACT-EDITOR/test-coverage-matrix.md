@@ -1,0 +1,108 @@
+# 🧪 PDF Editor Test Coverage Matrix
+
+Read-only audit for ticket `FEATURE-COMPLETE-PDF-ARTIFACT-EDITOR`, dated 2026-11-22. Rule checked (CLAUDE.md): every feature needs at least one language-agnostic JSON fixture (F) and an independent third-party oracle (O), and its output must be reproduced by a run (R). No source file was changed and no git write command was run.
+
+## Path abbreviations
+
+| Abbreviation | Expands to |
+|---|---|
+| PDF | `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf` (repo-relative) |
+| BASE | `PDF/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base` |
+| EDIT | `BASE/✏️editor` |
+| PAGE | `EDIT/🖼️page` |
+| FW | `🧰️framework/🛍️products/💻️os/🔨️modules` |
+| GEN | `🗑️generated/` (ticket folder) |
+
+Fixture and test paths are relative to the root named in the cell. Oracle scripts are in the ticket root unless stated. Log times are the file modification times.
+
+## Matrix
+
+F = JSON fixture present. O = third-party oracle script or library present. R = last run result found in GEN logs.
+
+| # | Feature | F: fixture path | Rust/TS test(s) | O: oracle | R: last run (log, time) | Flags |
+|---|---|---|---|---|---|---|
+| 1 | Open PDF (small 963 B file and mounted open) | none for the 963 B file. Malformed input: GEN `pdf-mounted-invalid-oracle-input.pdf` (not a JSON fixture) | `original_guest_failure_debit_interrupted_output_retirement_holds_the_exchange_until_terminal_empty` (FW `🔌️plugin/⚛️reactor/🔄️turn/🧪️tests/⚖️invocation-failure/🦀️.rs`); `original_store_close_work_charges_every_unmetered_physical_receipt` (FW `🔌️plugin/♻️lifecycle/🏪️stores/🧪️tests/🦀️.rs`); `natural_file_publication_checkpoints_follow_the_contract_quantum_not_every_pack_slice` (FW `🔌️plugin/🧪️tests/🧬️mutation-fixtures-surface/📄️natural-file-reserved-job-laws/🦀️.rs`) | `g1-g3-checkpoint-oracle.py` (checkpoint schedule only); `pdf-invalid-open-oracle.py` (malformed input only) | Store close test ok (GEN `g1-g3/stores2.log`). Two sibling store tests FAILED in the same log (`original_disposer_frame_has_its_own_physical_release`, `original_transient_detach_allocates_no_replacement_and_retires_exact_frames`). Reactor test: `g1-g3/reactor.log` exit=1. Surface: `g1-g3/surface.log` E0432. Mounted rotation smoke: `pdf-browser-full-contract.log` (11-20 04:23) "2 tests failed" | F missing (963 B case). O partial. R: retirement and checkpoint tests never ran; mounted open never passed |
+| 2 | Render pages (text, vector, image, form, annotation, embedded TrueType) | PAGE/🧪️tests/🔬️unit/🧪️page-viewport.json, `🧪️text-paint.json`, `🧪️vector-paint.json`, `🧪️image-paint.json`, `🧪️form-paint.json`, `🧪️annotation-appearance.json`, `🧪️truetype-outline.json`, `🧪️paint-fidelity.json` (20 to 31 MuPDF cases) | `canvas_paints_nested_form_content_at_its_pdf_placement`, `canvas_paints_selected_annotation_appearance_at_the_authored_rect`, `canvas_paints_the_embedded_true_type_program_as_curved_outlines`, `canvas_paints_authored_type3_glyphs_and_pdf_text_adjustments` (PAGE unit tests) | `pdf-paint-fidelity-oracle.py` (MuPDF 1.26.7); `viewport-oracle.py`, `vector-oracle.py`, `text-oracle.py`, `truetype-outline-oracle.py`, `type3-glyph-oracle.py` | GEN `native-replay-current-product-page_editor_tests.log` (11-20 21:09): 47 pass, 3 fail. The four named tests pass. Last full run: GEN `page-tests-1.txt` (11-22 09:41): 55 pass, 2 fail (`canvas_paint_matches_mupdf_probes`, `thumbnails_scale_each_page_and_reorder_through_move_page`) | Probe fixture never passed after the compositor fix. R partial |
+| 3 | Text edit (replace run, font size, font reassignment) | PAGE/🧪️tests/🔬️unit/🧪️move-text-run.json, `🧪️font-edit.json`, `🧪️text-rendering.json` | `set_text_replaces_the_run_and_keeps_the_rectangle` (PAGE unit; no log line found); `registered_pdf_font_change_preserves_encoded_text_and_the_next_line` (EDIT/🧪️tests/🔬️unit/🦀️.rs) | `text-replacement-oracle.py`, `pdf-font-size-oracle.py`, `font-reassignment-oracle.py` (no governed result) | Font change test: FAILED in GEN `pdf-native-open-authority-retry.log` (11-21 10:58, latest) and `pdf-editor-native-gate-snapshot-repair.log` (11-20 22:07). `set_text_*`: no log | R failing / unrun |
+| 4 | Annotations, create (note, highlight, underline, strike-out, squiggly, ink, link) | PAGE/🧪️tests/🔬️unit/✍️authoring/🧪️authoring.json (12 annotation cases) | `created_annotations_follow_the_fixture_and_round_trip_through_lopdf` (PAGE/✍️authoring tests `🦀️.rs`) | lopdf (Rust, reference subtypes in BASE/🔮️oracles); `📜️annotation-appearance-oracle.py` (MuPDF) | Never run. The authoring test crate never compiled (GEN `authoring-run8.txt`, `page-tests-2.txt`). No test result line | R never run |
+| 5 | Annotations, edit (move, style, markup, appearance) | PAGE/🧪️tests/🔬️unit/🧪️annotation-appearance.json | `annotation_markup_form_settings_and_extra_entries_publish` (PAGE unit) | `📜️annotation-appearance-oracle.py`, `📜️controlled-annotations-oracle.py` | ok in GEN `native-replay-current-product-page_editor_tests.log` (11-20 21:09) | R passed (edit path). Appearance probe lives in row 2 |
+| 6 | Form fill (text, checkbox, radio, combo) | PAGE/🧪️tests/🔬️unit/✍️authoring/🧪️authoring.json (13 fill cases); `🧪️field-controls.json`; PAGE/🧪️tests/🔬️unit/🧪️form-paint.json | `form_fills_follow_the_fixture_and_regenerate_appearances`, `checkbox_and_radio_gain_state_appearances_that_lopdf_reads`, `a_selected_widget_shows_its_value_and_fills_through_the_inspector_action` (PAGE/✍️authoring) | lopdf (Rust); `📜️oriented-form-oracle.py`, `📜️form-shading-oracle.py` | Never run | R never run |
+| 7 | Page insert, move, remove (widgets and links renumbered) | PAGE/🧪️tests/🔬️unit/✍️authoring/🧪️authoring.json (7 structure cases). Mutation level only: BASE/🧪️tests/🧫️fixtures/🧬️mutations (1.4 insert/move/remove round trips under `🏅️standards/4️⃣1.4`) | `page_structure_actions_renumber_widgets_and_links_per_the_fixture`, `page_structure_round_trips_through_the_independent_reader` (PAGE/✍️authoring); `registered_pdf_page_and_authoring_actions_undo_and_redo_step_by_step` (EDIT unit) | lopdf (Rust); `📜️pdf-page-history-oracle.py`, `📜️page-tree-oracle.py` | Never run for the 1.7 editor. Reorder through `move_page` in the thumbnail test FAILED (GEN `page-tests-1.txt`, 11-22 09:41) | R never run (and one failing) |
+| 8 | Page replace (blank or from picked PDF) | PAGE/🧪️tests/🔬️unit/✍️authoring/🧪️authoring.json | `replacing_a_page_keeps_the_others_and_drops_stale_widgets` (PAGE/✍️authoring); 3 `replace-page` mutation tests in BASE/🧬️schema/🧬️mutations | lopdf page counts only | Never run | R never run |
+| 9 | Merge pages or documents | PAGE/🧪️tests/🔬️unit/✍️authoring/🧪️authoring.json (merge cases) | `merging_inserts_picked_pages_with_renamed_used_resources_only`, `merging_refuses_garbage_and_missing_pages`, `merging_rewires_form_widgets_and_keeps_names_unique`, `merge_and_extract_stop_when_cancelled_and_report_progress` (PAGE/✍️authoring) | lopdf page counts only. No MuPDF or independent renderer check | Never run | R never run. O partial |
+| 10 | Extract or split pages to a new PDF | PAGE/🧪️tests/🔬️unit/✍️authoring/🧪️authoring.json (extract cases) | `extraction_writes_standalone_pdfs_that_lopdf_counts`, `extract_and_pick_actions_emit_download_and_picker_effects` (PAGE/✍️authoring) | lopdf only | Never run. Split beyond extract is not implemented (code map) | R never run. Split is not a feature yet |
+| 11 | Save and export (native save, segmented Original producer) | BASE large fixture: `🧪️tests/🧫️fixtures/🏞️large-original-image/🔣️.json` (9,437,877 B) with schema `🧬️schema/🔣️.json`; EDIT `🧪️tests/🧫️fixtures/📄️natural-file-edit/🔣️.json`; `📝️native-page-edit/🔣️.json` | `paged_natural_decode_round_trips_a_large_original_image_exactly` (EDIT unit, never run); `registered_segmented_save_writes_the_large_original_image_and_reopens_exactly` (EDIT/💾️native-save/🧪️tests/🔬️original-save/🦀️.rs); `controlled_pdf_terminal_publication_requires_both_owned_headers` (EDIT unit) | `g5-large-image-oracle.py` (PyMuPDF; hash of the 9.4 MB PDF and image samples); `pdf-segmented-save-oracle.py`, `pdf-save-visible-graph-oracle.py`, `pdf-save-box-graft-oracle.py` | GEN `g10-save3.log` (11-22 15:07): `registered_segmented_save...` FAILED (`left: None`, `right: Some(true)`). `controlled_pdf_terminal...` ok in GEN `pdf-editor-native-gate-image-contract-retry.log` (11-21 02:52). `visible-save-green.log`: wasm link failure. Paged decode: no log | R failing (latest run) |
+| 12 | Reopen (archive reopen; PDF reopen of saved output) | Archive: FW/`📡️spr/🧵️channel/🧪️tests/🧫️fixtures/📦️large-archive/🔣️.json`; `…/📥️ingress/🧪️tests/🧫️fixtures/🧭️reopen-route/🔣️.json`, `…/📬️folder-load-wire/🔣️.json`; ticket root `large-reopen-law.json` | `reopen_above_the_former_ceiling_matches_the_language_neutral_law` (semio-os-channel-archive-ingress, test `reopen-law`); `large_document_archives_match_the_language_neutral_law`; `reopen_route_matches_the_language_neutral_law`; `folder_archive_load_wire_matches_the_language_neutral_law`; TS `admission.test.ts` | `large-reopen-oracle.py`, `large-reopen-check.py`, `g7-large-archive-oracle.py`, `g7-folder-load-oracle.py` | GEN `g7-reopen4.log` (11-22 09:28): 1 passed (9.6 MB archive). `g7-channel2.log` ok. `g7-route.log` ok. `g7-wire.log` ok. Earlier `g7-reopen`, `-2`, `-3` FAILED. Mounted PDF reopen above 4 MiB: no log | R archive layer passed. PDF-level reopen never run |
+| 13 | Undo and redo | none (scripted Rust sequences) | `registered_pdf_draft_publishes_once_refuses_stale_and_undoes_redoes` (EDIT unit); `registered_pdf_page_and_authoring_actions_undo_and_redo_step_by_step` (EDIT unit) | none independent. Each step compares stored snapshots from the same engine (self-check) | Draft test: ok in GEN `pdf-editor-native-gate-factory-repair.log` (11-21 00:51), FAILED in `pdf-editor-native-gate-image-contract-retry.log` (11-21 02:52, latest). Step-by-step test: never run | F missing. O missing. R latest failing |
+| 14 | Zoom (fit page, fit width, steps, actual size) | PAGE/🧪️tests/🔬️unit/🧪️viewer-navigation.json | `zoom_modes_and_steps_match_the_fixture` (PAGE unit, line 1560) | none. `viewer-navigation-oracle.py` covers search only | Never run. View crate never compiled (`viewer-navigation-features.md`) | O missing. R never run. Window not wired (transient lane not built) |
+| 15 | Search (text hits, match case, next and previous, cancel) | PAGE/🧪️tests/🔬️unit/🧪️viewer-navigation.json | `search_finds_every_hit_and_matches_the_oracle_fixture`, `search_cancellation_stops_before_the_next_page_and_keeps_the_hits_so_far` (PAGE unit, lines 1591 and 1604) | `viewer-navigation-oracle.py` (Python re, self-test only; no GEN log) | Never run | R never run. Window not wired |
+| 16 | Thumbnails and drag reorder | PAGE/🧪️tests/🔬️unit/🧪️viewer-navigation.json | `thumbnails_scale_each_page_and_reorder_through_move_page` (PAGE unit, line 1625) | none | FAILED in GEN `page-tests-1.txt` (11-22 09:41): UI arena registration (framework code) | O missing. R failing |
+| 17 | Fonts, base-14 (Helvetica, Times, Courier, Symbol, ZapfDingbats) | PAGE/🧪️tests/🔬️unit/🧪️paint-fidelity.json (cases `base14-*`); PAGE/🧪️tests/🔬️unit/🧪️text-paint.json | `every_base14_program_exists_matches_its_provenance_and_is_selected` (BASE/🔨️modules/🔤️fonts/🧪️tests/🔬️unit/🦀️.rs); `canvas_paints_base14_glyph_outlines_at_the_pdf_baseline` (PAGE unit) | `pdf-base14-mupdf-oracle.py`, `📜️pdf-base14-codec-check.ts`, `base14-outline-verification.md` (FontTools and MuPDF; 54 and 200 glyph boxes, ticket doc) | No governed log. Searched all GEN logs for both test names: no hit | F ok. O ok (ticket doc). R never run in governed build |
+| 18 | Codec, CCITT (G3 and G4, libtiff) | BASE/🔨️modules/🎞️paint-codecs/🧪️tests/🔬️codecs/🧪️codecs.json (8 CCITT vectors) | `ccitt_matches_libtiff_vectors` (paint-codecs `codec_tests`) | `📜️ccitt-oracle.py` (libtiff via Pillow) | ok in GEN `paint-codecs-test.log` (11-22 14:37, 5 of 5) | Only raster-level MuPDF case `codec-ccitt-g4` is unrun. R passed |
+| 19 | Codec, JPX (JPEG 2000, palettes, code-block styles, SMaskInData) | `codecs.json` (12 vectors) | `jpx_matches_openjpeg_vectors` | `📜️jpx-oracle.py`, `📜️jpx-palette-oracle.py` (OpenJPEG via Pillow; MuPDF) | ok in `paint-codecs-test.log` (14:37) | Bypass and other styles covered. MuPDF case `codec-jpx-smask-in-data` unrun. R passed (codec level) |
+| 20 | Codec, JBIG2 (generic, refinement, symbol, text, halftone, pattern, Huffman) | `codecs.json` (19 cases) | `jbig2_matches_mupdf_rasters` | `📜️jbig2-oracle.py` (MuPDF and jbig2dec) | ok in `paint-codecs-test.log` (14:37) | Huffman refinement and aggregates unsupported; no fixture case for them. R passed (codec level) |
+| 21 | DCT, including YCCK and inverted YCCK | PAGE/🧪️tests/🔬️unit/🧪️coded-image.json; `paint-fidelity.json` (cases `codec-dct-ycck`, `-inverted`) | `coded_image::coded_image_preview_matches_mupdf` (PAGE unit) | `controlled-dct-oracle.py`, `paged-jpeg-oracle.py`, `generate-coded-image-oracle.py` | `coded_image` FAILED in GEN `native-replay-page_editor_tests.log` (11-20 19:24), passed in `native-replay-current-product-page_editor_tests.log` (11-20 21:09). YCCK probe: not run in governed build | No codec-level DCT test with YCCK. Paged DCT route not wired to picker. R partial |
+| 22 | Shadings (axial, radial, function-based, mesh types 4 to 7) | PAGE/🧪️tests/🔬️unit/🧪️shading-paint.json; `paint-fidelity.json` (shading and mesh cases) | `appearances_glyphs_objects_and_mesh_bytes_publish` (PAGE unit, passed); probe through `canvas_paint_matches_mupdf_probes` (FAILED 11-22 09:41, fixed in source, not rerun) | `mesh-shading-oracle.py` (MuPDF); `pdf-paint-fidelity-oracle.py`; `📜️postscript` analytic cases in `codecs.json` | No governed run of the mesh decoder: `paint-codecs-test.log` has five tests and none is mesh. Standalone rustc runs only (3 of 4 mesh types full pass, per `paint-fidelity.md`) | M-run for mesh. R partial |
+| 23 | Image insert and replace (PNG, sample donation, placement) | PAGE/🧪️tests/🔬️unit/🧪️image-paint.json, `🧪️image-move.json`; `EDIT/📄️document/🖼️image-authoring` fixtures | `set_image_replaces_samples_and_keeps_the_placement` (PAGE unit; no log line); `registered_pdf_png_picker_publishes_an_atomic_revision_guarded_image_edit` (EDIT unit) | `image-oracle.py`, `pdf-raw-png-history-oracle.py`, `set-image-check.py`, `set-image-u32-check.py` | `registered_pdf_png_picker...` FAILED in GEN `pdf-editor-native-gate-factory-repair.log` (11-21 00:51). `set_image_replaces...` no log. Mounted PNG authoring journey never passed (`image-authoring-browser.ts`) | R failing or unrun |
+| 24 | Large files (9.4 MB PDF open, edit, save, reopen; 473 KB PNG; 2.1 MB JPEG) | `large-original-image/🔣️.json`; `image-route/🔣️.json` (Pillow-measured routes); `large-archive/🔣️.json` | `paged_natural_decode_round_trips_a_large_original_image_exactly` (never run); `natural_file_route_opens_reexports_and_reopens_large_sampled_images` (EDIT unit, FAILED in GEN `pdf-native-open-authority-retry.log` 11-21 10:58, `pdf-editor-native-gate-factory-repair.log` 11-21 00:51, `pdf-editor-native-gate-snapshot-repair.log` 11-20 22:07); `natural_file_route_opens_large_retained_type1_document_and_reexports` and `…_vector_document_and_reexports` (FAILED 11-21 02:52); `picked_raster_routes_match_the_pillow_measured_law` (`g14-route.log`, exit 101, never ran) | `g5-large-image-oracle.py` (PyMuPDF); `g14-image-route-oracle.py`; `g7-large-archive-oracle.py` | Native sender (9.44 MB in 2,305 pages): 8 of 8 per `g4-g6-natural-source-integration.md`; `native-natural-source/` holds `received.pdf`, but no result line in GEN. Mounted: none passed | Blocks E2E. R failing or unrun |
+| 25 | Cancellation and progress (codecs, native natural source, merge, extract, mounted cancel) | `codecs.json` (cancel cases) | `every_codec_stops_when_cancelled` (ok, `paint-codecs-test.log` 14:37); `cancelled_native_import_drops_the_inflight_kernel_request` and `reads_exact_binary_file_and_retires_cancelled_picker` (ok, GEN `pdf-open-native-cancellation-green.log`); `refuses_bad_pages_and_retires_only_paid_capacity_after_cancel` (ok, GEN `paid-media-ingress-latest.log`); `merge_and_extract_stop_when_cancelled_and_report_progress` (never run); mounted `cancel-large` (never run) | `image-cancel-oracle.py` (ticket root) | As listed. Synchronous merge and extract run on a 20 s deadline, not a user cancel token | R passed (codec, native sender); R never run (merge, extract, mounted) |
+| 26 | i18n, English and German | none (labels are inline; no label fixture) | `authoring_actions_are_declared_with_english_and_german_labels`, `the_page_inspector_offers_every_authoring_control_in_both_languages`, `the_entry_forms_render_in_both_languages_with_a_labelled_add_input` (PAGE/✍️authoring); `set_language` (PAGE unit, line 272) | none | No log line for any of these tests (name scan of all GEN logs) | F missing. O missing. R never run |
+| 27 | Accessibility (tagged structure, reading order, text layer) | none | `text_layer_lists_a_real_document_in_reading_order_with_localized_labels` (EDIT unit); BASE/♿️ua mutation tests | none (no PDF/UA checker such as veraPDF) | ok in GEN `pdf-editor-native-gate-image-contract-retry.log` (11-21 02:52). FAILED in `…factory-repair.log` (11-21 00:51) and `…snapshot-repair.log` (11-20 22:07). Not in `…integrated-save-archive.log` (11-21 04:34) | F missing. O missing. R passed on last run, but evidence is thin |
+| 28 | Multi-user and presence | `👥️presence/🧬️schema/🔣️.json` (schema placeholder only; not a behaviour fixture) | none | none | none. Feature not implemented (60 `📌️.empty.md` placeholders) | F missing. O missing. R not implemented |
+
+## Flags
+
+### Missing fixture (F)
+
+- Row 1: small 963 B open case and mounted open have no JSON fixture.
+- Row 13: undo and redo have no JSON fixture.
+- Row 26: i18n has no label fixture.
+- Row 27: accessibility has no fixture.
+- Row 28: presence has only a schema placeholder.
+
+### Missing oracle (O)
+
+- Row 1: no MuPDF or independent check of a successful open.
+- Row 9: merge uses lopdf page counts only. No MuPDF render comparison.
+- Row 10: extract uses lopdf only.
+- Row 13: undo and redo compare the engine with itself.
+- Row 14: zoom has no oracle.
+- Row 16: thumbnails have no oracle.
+- Row 26: i18n has no oracle.
+- Row 27: accessibility has no PDF/UA checker.
+- Row 28: presence has no oracle.
+
+### Never run or not compiled (R)
+
+- Rows 4, 6, 7, 8, 9, 10: the authoring test crate has never compiled or passed (GEN `authoring-run8.txt`, `page-tests-2.txt`).
+- Row 14, 15: viewer-navigation tests have no log line.
+- Row 17: base-14 governed tests have no log line.
+- Row 11: `paged_natural_decode_round_trips_a_large_original_image_exactly` has no log line.
+- Row 24: `picked_raster_routes_match_the_pillow_measured_law` exited 101 (GEN `g14-route.log`).
+- Row 25: merge and extract cancellation, mounted `cancel-large`.
+- Row 28: not implemented.
+- Mounted suites (`pdf-browser-smoke`, `image-authoring-browser`, `pdf-hub-image-check-in`, `pdf-browser-mounted-suite`): no passing run in any GEN log (the closest is `pdf-browser-full-contract.log` with 2 failures).
+
+### Last run failed (R)
+
+- Row 3: `registered_pdf_font_change_preserves_encoded_text_and_the_next_line` (GEN `pdf-native-open-authority-retry.log`, 11-21 10:58).
+- Row 11: `registered_segmented_save_writes_the_large_original_image_and_reopens_exactly` (GEN `g10-save3.log`, 11-22 15:07).
+- Row 13: `registered_pdf_draft_publishes_once_refuses_stale_and_undoes_redoes` (GEN `pdf-editor-native-gate-image-contract-retry.log`, 11-21 02:52).
+- Row 16: `thumbnails_scale_each_page_and_reorder_through_move_page` (GEN `page-tests-1.txt`, 11-22 09:41).
+- Row 2: `canvas_paint_matches_mupdf_probes` (GEN `page-tests-1.txt`, 11-22 09:41). Fixed in source, not rerun.
+- Row 23: `registered_pdf_png_picker_publishes_an_atomic_revision_guarded_image_edit` (GEN `pdf-editor-native-gate-factory-repair.log`, 11-21 00:51).
+- Row 24: `natural_file_route_opens_reexports_and_reopens_large_sampled_images` and the two `large_retained_*` tests (GEN `pdf-native-open-authority-retry.log`, 11-21 10:58; `pdf-editor-native-gate-image-contract-retry.log`, 11-21 02:52). Panic: "tool proof catalog must exactly join migrated generated declarations to live concrete factories".
+- Row 1: G1-G3 store tests `original_disposer_frame_has_its_own_physical_release` and `original_transient_detach_allocates_no_replacement_and_retires_exact_frames` (GEN `g1-g3/stores2.log`). Reactor and surface builds failed (`g1-g3/reactor.log` exit=1, `g1-g3/surface.log` E0432).
+
+## Passing runs (for reference)
+
+- Codecs, CCITT, JPX, JBIG2, PostScript, cancellation: GEN `paint-codecs-test.log` (5 of 5, 11-22 14:37).
+- Archive reopen above former 4 MiB ceiling: GEN `g7-reopen4.log` (1 of 1, 11-22 09:28). Large-document archive law: `g7-channel2.log`. Reopen route and folder-load wire: `g7-route.log`, `g7-wire.log`.
+- Page editor, 47 of 50: GEN `native-replay-current-product-page_editor_tests.log` (11-20 21:09). Includes annotation markup, embedded TrueType, Type 3, nested forms, selected annotation appearance, image replacement.
+- Native natural source cancellation: GEN `pdf-open-native-cancellation-green.log`.
+
+## Summary
+
+- Rows with F, O and a passing R on the editor layer: none. The three codec rows (CCITT, JPX, JBIG2) and the archive reopen row meet all three conditions, but only at codec or archive level, not in the PDF editor.
+- The 1.7 editor's authoring features (rows 4 to 10), zoom and search (rows 14, 15), i18n (26) and presence (28) have no governed run.
+- The mounted end-to-end journey (open, edit, save, reopen of the 9.4 MB fixture) has no passing run.

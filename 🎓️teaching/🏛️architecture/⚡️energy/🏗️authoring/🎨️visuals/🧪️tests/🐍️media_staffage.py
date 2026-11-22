@@ -15,7 +15,7 @@ from pathlib import Path
 BRIDGE = Path(__file__).parent.parent / "🧍️staffage/🐍️.py"
 CASES = json.loads((BRIDGE.parent / "🧪️tests/🔣️.json").read_text(encoding="utf-8"))
 FUNCTIONS = {"_fresh", "_imports", "_digest_label", "_lf","_number", "canonical_json", "revision_of", "_source_digest", "_catalog_bytes", "_presets", "asset_revision", "preset_revision", "_preset_revisions", "entry_issues", "cast_key", "casts_in"}
-CONSTANTS = {"_FRESH_S", "_IMPORT", "_INDEX","_VIEWPOINTS", "_VIEWS", "_THEMES", "_SCALES", "_TRANSPORT_LAYERS", "_CAST_KEYS", "_BUNDLED", "_KEY_LENGTH"}
+CONSTANTS = {"_FRESH_S", "_IMPORT", "_INDEX","_VIEWPOINTS", "_VIEWS", "_THEMES", "_SCALES", "_FLOW_LAYERS", "_FLOW_OPTIONS", "_CAST_KEYS", "_BUNDLED", "_KEY_LENGTH"}
 
 
 def bridge():

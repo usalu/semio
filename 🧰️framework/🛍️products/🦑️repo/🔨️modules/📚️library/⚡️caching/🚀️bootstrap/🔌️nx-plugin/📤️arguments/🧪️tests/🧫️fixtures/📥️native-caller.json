@@ -48,7 +48,7 @@
     [
       "value/Cargo.toml",
       "value",
-      "bun",
+      "repo",
       [
         "/repo/value/📜️script.ts",
         "generate"
@@ -57,7 +57,7 @@
     [
       "ui/Cargo.toml",
       "ui",
-      "bun",
+      "repo",
       [
         "/repo/ui/📜️script.ts",
         "generate"
@@ -145,9 +145,9 @@
       ],
       "environment": {},
       "offline": false,
-      "artifact": ".🧬semio/🦑️repo/⚡️cache/cargo/canonical-architecture",
+      "artifact": "target",
       "native": {
-        "artifactDirectory": "/repo/.🧬semio/🦑️repo/⚡️cache/cargo/canonical-architecture",
+        "artifactDirectory": "/repo/target",
         "transport": {
           "maximumBytes": 134217728,
           "maximumLines": 1000000
@@ -248,7 +248,7 @@
     }
   ],
   "launchResources": {
-    "artifactDirectory": "/repo/.🧬semio/🦑️repo/⚡️cache/cargo/canonical-architecture",
+    "artifactDirectory": "/repo/target",
     "transport": {
       "maximumBytes": 134217728,
       "maximumLines": 1000000

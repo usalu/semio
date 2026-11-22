@@ -1,0 +1,51 @@
+{
+  "id": "painter-at-easel",
+  "category": "humans",
+  "title": {
+    "en": "Painter at an Easel",
+    "de": "Malender an der Staffelei"
+  },
+  "heightM": 1.867,
+  "widthM": 1.657,
+  "powerW": 167.5,
+  "poses": [
+    "painting",
+    "mixing-paint",
+    "stepping-back-to-look"
+  ],
+  "clips": [
+    "painting-strokes",
+    "idle-breathing"
+  ],
+  "representations": {
+    "50": "authored",
+    "100": "authored",
+    "200": "authored",
+    "500": "authored"
+  },
+  "symbols": [],
+  "analytics": [
+    "thermal",
+    "transport",
+    "structural"
+  ],
+  "exports": [
+    "svg",
+    "pdf",
+    "dxf",
+    "dwg",
+    "png-sequence",
+    "mp4",
+    "webm",
+    "component",
+    "glb",
+    "fbx",
+    "model",
+    "model-zip"
+  ],
+  "distinction": {
+    "en": "A 74-year-old plein-air painter of 1.65 m in tweed jacket, flat cap and spectacles, slightly stooped at a beech A-frame easel 1.86 m high with a 50 by 60 cm canvas, a flat bristle brush in the right hand and a palette on the left thumb: painting, mixing paint and stepping back to look, with a loop of brush strokes and idle breathing.",
+    "de": "Ein 74-jähriger Freiluftmaler von 1,65 m in Tweedjacke, Schiebermütze und Brille, leicht gebeugt an einer 1,86 m hohen Staffelei aus Buche mit einer Leinwand von 50 mal 60 cm, einen Flachpinsel in der rechten Hand und eine Palette am linken Daumen: beim Malen, beim Mischen der Farbe und beim Zurücktreten zum Betrachten, mit einer Schleife aus Pinselstrichen und ruhigem Atmen."
+  },
+  "completion": "authored"
+}

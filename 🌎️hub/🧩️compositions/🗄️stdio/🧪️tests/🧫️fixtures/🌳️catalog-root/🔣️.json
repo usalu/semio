@@ -4,7 +4,7 @@
   "packageId": "semio:stdio",
   "wasmOut": "semio_hub_stdio_component.wasm",
   "limits": {
-    "artifactBytes": 268435456,
+    "artifactBytes": 1073741824,
     "ioChunkBytes": 65536,
     "deadlineMs": 1200000
   },

@@ -3,6 +3,75 @@
 use super::*;
 
 impl ShardLoop {
+    fn ledger_owner(&self) -> usize {
+        self.replay_seeds.as_ptr() as usize
+    }
+
+    /// 💼️ Makes the spawned-job ledger list exactly the jobs this shard drives (running or mounted for replay and not closing), with their step counts and the kind their spawn declared.
+    pub(super) fn reconcile_job_ledger(&self) {
+        let mounted = self.replay_seeds.iter().flatten().filter(|seed| seed.close_reason.is_none());
+        let live: BTreeSet<(u64, u64)> = self.running_jobs.iter().copied().chain(mounted.clone().map(|seed| (seed.actor, seed.job))).collect();
+        let kind_of = |actor: u64, job: u64| {
+            let seed = mounted.clone().find(|seed| seed.actor == actor && seed.job == job);
+            seed.and_then(|seed| seed.kind_owner.clone().or_else(|| seed.materialized_kind.as_ref().map(|bytes| String::from_utf8_lossy(bytes).into_owned()))).filter(|kind| !kind.is_empty()).unwrap_or_default()
+        };
+        let rows: Vec<LiveJob> = live
+            .into_iter()
+            .map(|(actor, job)| {
+                let turn = self.job_turns.get(&(actor, job));
+                LiveJob { actor, job, kind: kind_of(actor, job), steps: turn.map_or(0, |turn| turn.step_sequence), reports_progress: turn.is_some_and(|turn| turn.operation.preview_sequence > 0) }
+            })
+            .collect();
+        reconcile_spawned_jobs(self.ledger_owner(), &rows);
+    }
+
+    /// 🛰️ A shard hosted by a child process keeps its parent's Task Manager informed: the jobs of this process's ledger go over the pipe whenever they change, and the cancels the parent sent come back as presses on this process's own rows. Any other transport has no side channel and does nothing.
+    pub(super) fn exchange_job_side_channel(&mut self) {
+        let ShardTransports::Stdio(transport) = &self.transport else { return };
+        let snapshot = encode_live_jobs(&local_live_jobs());
+        if self.sent_job_snapshot.as_ref() != Some(&snapshot) {
+            transport.send_jobs(&snapshot);
+            self.sent_job_snapshot = Some(snapshot);
+        }
+        for (actor, job) in transport.take_job_cancels() {
+            cancel_spawned_job(&format!("{actor}#{job}"));
+        }
+    }
+
+    /// 🛑️ Applies the job cancels the Task Manager queued for this shard through the path a guest's `Effect::CancelJob` takes: a mounted replay seed is closed as cancelled, a running job is cancelled in its instance first, and a failed cancel retires the actor.
+    pub(super) async fn apply_ledger_cancels(&mut self) -> Result<(), PluginHostError> {
+        for (actor_id, job) in take_job_cancels(self.ledger_owner()) {
+            if let Some(index) = self.replay_seeds.iter().position(|seed| seed.as_ref().is_some_and(|seed| seed.actor == actor_id && seed.job == job && !matches!(seed.phase, ReplaySeedPhase::Retained))) {
+                Self::begin_replay_seed_close_owned(&mut self.replay_seeds, &mut self.running_jobs, &mut self.job_turns, &mut self.job_authorities, &mut self.job_placement, index, ReplaySeedCloseReason::Cancelled);
+            } else if self.running_jobs.contains(&(actor_id, job)) {
+                let mut funds = self.job_funds(actor_id);
+                let Some(instance) = self.instances.get_mut(&actor_id) else { continue };
+                let cancelled = match funds.as_mut() {
+                    Ok(funds) => self.runtime.cancel_job_funded(instance, funds, job).await,
+                    Err(_) => Err(TurnFault::Trapped("cancel-job has no Kernel-issued actor batch".to_string())),
+                };
+                match cancelled {
+                    Ok(()) => {
+                        if let Some(index) = self.replay_seeds.iter().position(|seed| seed.as_ref().is_some_and(|seed| seed.actor == actor_id && seed.job == job)) {
+                            Self::begin_replay_seed_close_owned(&mut self.replay_seeds, &mut self.running_jobs, &mut self.job_turns, &mut self.job_authorities, &mut self.job_placement, index, ReplaySeedCloseReason::Cancelled);
+                        } else {
+                            self.running_jobs.remove(&(actor_id, job));
+                            self.job_turns.remove(&(actor_id, job));
+                            self.job_authorities.remove(&(actor_id, job));
+                            self.job_placement.remove(&(actor_id, job));
+                        }
+                    }
+                    Err(fault) => {
+                        let message = format!("ShardLoop::pump: cancel-job {job} failed; actor {actor_id} retired: {}", turn_fault_message(&fault));
+                        self.unregister(ActorId(actor_id)).await;
+                        self.send_outcome(&ShardOutcome::Fault { actor: actor_id, message }).await?;
+                    }
+                }
+            }
+        }
+        Ok(())
+    }
+
     /// 🚦 One actor's turn: takes its collected `events` out of `events_by_actor`, runs
     /// [`super::GuestRuntime::execute_turn`], admits `SpawnJob`/`CancelJob` effects, and sends the
     /// resulting [`ShardOutcome`]. A failed guest cancellation retires the actor before reuse.

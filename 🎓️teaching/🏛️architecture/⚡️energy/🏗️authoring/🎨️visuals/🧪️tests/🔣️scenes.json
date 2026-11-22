@@ -103,7 +103,7 @@
     "clearance": 0.2,
     "factor": "I_{s,max} = 800"
   },
-  "transport_figure": {
+  "flow_figure": {
     "casts": [
       "shared-person-pathlines",
       "shared-office-worker-pathlines",

@@ -6,6 +6,12 @@ import {compileJsonSchemaSubset,type CompiledJsonSchemaSubset} from "../../../..
  * @see ./🧬️schema/🔣️.json */
 export const SLOT_HEADER_V1="x-semio-slot";
 
+/** 🧾️ What a published entry was built from (`Declaration` of the slot schema): kind, toolchain, workspace sources with digests and the digests of the files of other entries it consumed. */
+export type DeclarationV1=Readonly<{version:1;kind:"rust-unit"|"build-script-run"|"stage-output";toolchain:string;sources:readonly Readonly<{path:string;sha256:string}>[];externs:readonly string[]}>;
+
+/** 🚦️ How staleness acts: `off` judges nothing, `dry-run` only records what it would retire or refuse, `enforce` retires and refuses. */
+export type StalenessModeV1="off"|"dry-run"|"enforce";
+
 /** 🪢️ The kinds of unit a slot identifies. */
 export type SlotDomainV1="rust-unit"|"nx-task"|"stage-output";
 
@@ -24,7 +30,7 @@ export function isSlotIdV1(value:unknown):value is string{return typeof value===
 const shapes=new Map<string,CompiledJsonSchemaSubset>(),shapeOf=(definition:string):CompiledJsonSchemaSubset=>{let check=shapes.get(definition);if(!check){check=compileJsonSchemaSubset({$ref:`#/definitions/${definition}`},schema);shapes.set(definition,check);}return check;};
 
 /** 🛡️ Validates a document against a named definition of the slot schema and names the first problem. */
-export function requireSlotShapeV1(definition:"Retention"|"Meta"|"Claim"|"AuditReport",value:unknown,message:string):void{
+export function requireSlotShapeV1(definition:"Retention"|"Meta"|"Claim"|"AuditReport"|"Declaration"|"Staleness"|"StalenessReport",value:unknown,message:string):void{
  const errors=shapeOf(definition).validate(value);
  if(errors.length)throw Error(`${message}: ${errors[0]}`);
 }
@@ -65,6 +71,3 @@ export function classifySlotsV1(rows:Iterable<SlotRowV1>,input:Readonly<{now:num
  }
  return verdicts;
 }
-
-/** 🥇️ The order in which a size budget may take entries, least valuable tier first: retained before unslotted before current; `expired` entries are not part of it (they go first, whatever the budget says). */
-export function slotBudgetTierV1(state:SlotStateV1):number{return state==="expired"?-1:state==="retained"?0:state==="unslotted"?1:2;}

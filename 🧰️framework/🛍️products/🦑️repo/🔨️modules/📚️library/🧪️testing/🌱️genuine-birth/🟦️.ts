@@ -2,6 +2,7 @@ import{machinePathV1}from"../../../../../../🔨️modules/🏃️process/🏗�
 import {prepareRepoCpuTestProfileArgumentsV1} from "../../🏗️build/⏱️profile/📊️cpu/🟨️.mjs";
 import { basename, dirname, isAbsolute, join, relative, resolve } from "node:path";
 import { realpath } from "node:fs/promises";
+import { createHash } from "node:crypto";
 import { createRequire } from "node:module";
 import { advanceScriptInvocation, createIssuedResourceControlV1, createScriptProcessEnvelope, scriptInvocationEnvironment, withScriptProcessEnvelope, type ScriptInvocation } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runOwnedCommand } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️owned-execution/🟦️.ts";
@@ -15,7 +16,7 @@ import schema from "./🧬️schema/🔣️.json" with { type: "json" };
 import {refuseBuildV1} from "../../🏗️build/📖️texts/🟦️.ts";
 
 /** 🌱️ Names one declared way of giving a test file a genuine Original process birth. */
-export type GenuineBirthV1 = Readonly<{ id: string; arguments: readonly string[]; sdk: boolean; environment: Readonly<Record<string, string>>; after?: string; preparation?: "target-execution"; namespace?: boolean }>;
+export type GenuineBirthV1 = Readonly<{ id: string; arguments: readonly string[]; sdk: boolean; environment: Readonly<Record<string, string>>; after?: string; preparation?: "target-execution"; namespace?: boolean; watcher?: boolean }>;
 
 /** 📋️ Carries the complete authored birth ladder after closed schema admission. */
 export type GenuineBirthPolicyV1 = Readonly<{ version: 1; owner: string; maximumElapsedMilliseconds: number; childTimeoutMilliseconds: number; buildMode: "prototype" | "release"; artifactRoute: string; births: readonly GenuineBirthV1[] }>;
@@ -103,8 +104,8 @@ export async function runGenuineBunTestV1(request: GenuineBunTestRequestV1): Pro
     return withRepositoryNxStorageV1(root, original, phase, async bind => {
       const identity = basename(await realpath(machinePathV1(root, ".nx/installation"))), admission = projectionAdmissionV1(createRequire(import.meta.url)("../../🟨️.mjs"));
       admission.admit();
-      const bound = await bind(identity, null, admission.identity());
-      try { return await withSdk({ ...bound.environment, SEMIO_NX_IMPLEMENTATION_IDENTITY: admission.identity() }); } finally { await bound.release(); }
+      const watcher = birth.watcher ? createHash("sha256").update(`${root}\0${birth.id}`).digest("hex").slice(0, 24) : undefined, bound = await bind(identity, watcher === undefined ? null : createHash("sha256").update(`${root}\0${birth.id}\0graph`).digest("hex"), admission.identity(), root, watcher);
+      try { return await withSdk({ ...bound.environment, SEMIO_NX_IMPLEMENTATION_IDENTITY: admission.identity(), SEMIO_NX_WATCHER_IDENTITY: watcher }); } finally { await bound.release(); }
     });
   });
 }

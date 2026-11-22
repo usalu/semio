@@ -22,7 +22,7 @@ const bin = requireMcpBinary(repoRoot);
 const ownerRoot = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
 const moduleRoot = join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp");
 const readJson = (...segments: string[]): any => JSON.parse(readFileSync(join(moduleRoot, ...segments), "utf8"));
-const composition = JSON.parse(readFileSync(join(ownerRoot, "🧫️fixtures/🧷️untrusted-content/🔣️.json"), "utf8"));
+const composition = JSON.parse(readFileSync(join(ownerRoot, "🧪️tests/🧫️fixtures/🧷️untrusted-content/🔣️.json"), "utf8"));
 const law = JSON.parse(readFileSync(join(repoRoot, composition.lawPath), "utf8"));
 const mcpSchema = readJson("🧬️schema", "🔣️.json");
 const artifactSchema = readJson("🗿️artifact", "🧬️schema", "🔣️.json");

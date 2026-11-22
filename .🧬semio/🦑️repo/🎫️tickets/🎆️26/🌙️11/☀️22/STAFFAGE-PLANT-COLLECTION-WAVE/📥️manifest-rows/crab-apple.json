@@ -1,0 +1,56 @@
+{
+ "id": "crab-apple",
+ "category": "vegetation",
+ "title": {
+  "en": "Crab Apple, Wild, with Fruit",
+  "de": "Holzapfel, wild, mit Früchten"
+ },
+ "heightM": 6.992,
+ "widthM": 7.659,
+ "powerW": 0,
+ "poses": [
+  "summer-green-fruit",
+  "autumn-fruit",
+  "fruit-breeze",
+  "autumn-gale"
+ ],
+ "clips": [
+  "wind-sway",
+  "gust",
+  "diurnal-transpiration"
+ ],
+ "representations": {
+  "50": "authored",
+  "100": "authored",
+  "200": "authored",
+  "500": "authored"
+ },
+ "symbols": [
+  "crab-apple-symbol",
+  "tree-sign"
+ ],
+ "analytics": [
+  "thermal",
+  "transport",
+  "structural"
+ ],
+ "exports": [
+  "svg",
+  "pdf",
+  "dxf",
+  "dwg",
+  "png-sequence",
+  "mp4",
+  "webm",
+  "component",
+  "glb",
+  "fbx",
+  "model",
+  "model-zip"
+ ],
+ "distinction": {
+  "en": "A mature European wild crab apple (Malus sylvestris): a short, slightly leaning and twisted stem of 1.3 m, four low limbs spreading almost horizontally, a central leader and thorny spur shoots under a dense, broad and rounded crown hung with small yellow-green crab apples of 3 cm, carried as a seasonal fruit load from green fruit set to the full autumn load.",
+  "de": "Ein ausgewachsener Europäischer Holzapfel (Malus sylvestris): ein kurzer, leicht geneigter und gedrehter Stamm von 1,3 m, vier tiefe, fast waagerecht ausladende Leitäste, ein Mitteltrieb und dornige Kurztriebe unter einer dichten, breiten und runden Krone, behängt mit kleinen gelbgrünen Holzäpfeln von 3 cm, als jahreszeitliche Fruchtlast vom grünen Fruchtansatz bis zur vollen Herbstlast geführt."
+ },
+ "completion": "authored"
+}

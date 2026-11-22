@@ -3,21 +3,19 @@ use semio_framework_test_fixtures::fixture_text;
 
 //#region 🧪️DocumentComparison
 fn fixture() -> serde_json::Value {
-    serde_json::from_str(fixture_text!("../../⚖️compare/📃️document/🧪️tests/🧫️fixtures/🔣️.json")).unwrap()
+    serde_json::from_str(fixture_text!("../../../../⚖️compare/📃️document/🧪️tests/🧫️fixtures/🔣️.json")).unwrap()
 }
 fn document(component: crate::Component) -> UiDocumentLease {
     let fixture = fixture();
     let mut builder = UiDocumentBuilder::try_new(fixture["documentGeneration"].as_u64().unwrap(), SurfaceId::try_from("comparison").unwrap(), UiRevision(fixture["revision"].as_u64().unwrap()), Some(UiNodeId(41)), 0).unwrap();
-    let mut record = tests::leaf_record(41, "first");
+    let mut record = arena_testkit::leaf_record(41, "first");
     record.component = component;
     builder.try_push(record).unwrap();
-    builder.try_push(tests::leaf_record(9, "second")).unwrap();
+    builder.try_push(arena_testkit::leaf_record(9, "second")).unwrap();
     builder.finish().unwrap()
 }
 fn data(lease: &UiDocumentLease) -> serde_json::Value {
-    let arena = UI_DOCUMENT_ARENA.lock().unwrap();
-    let slot = arena.slot(lease.handle.unwrap()).unwrap();
-    serde_json::to_value(&slot.nodes.entries).unwrap()
+    arena_testkit::with_slot_entries(arena_testkit::handle(lease).unwrap(), |entries| serde_json::to_value(entries).unwrap()).unwrap()
 }
 fn close_document(lease: &mut UiDocumentLease) {
     for _ in 0..500_000 {
@@ -61,16 +59,13 @@ fn retained_document_component_compare_reads_exact_lease_without_copy_and_preser
     let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let _gate = crate::arena_test_gate();
     let fixture = fixture();
-    let components: serde_json::Value = serde_json::from_str(fixture_text!("../../♻️retirement/🌳️typed/🧩️components.json")).unwrap();
+    let components: serde_json::Value = serde_json::from_str(fixture_text!("../../../../♻️retirement/🌳️typed/🧩️components.json")).unwrap();
     for row in components["cases"].as_array().unwrap() {
         for grant in fixture["grants"].as_array().unwrap() {
             let mut keeper = document(serde_json::from_value(row["component"].clone()).unwrap());
             let before = data(&keeper);
             assert_eq!(before.as_array().unwrap().iter().map(|record| record["id"].as_u64().unwrap()).collect::<Vec<_>>(), vec![41, 9]);
-            let pointer = {
-                let arena = UI_DOCUMENT_ARENA.lock().unwrap();
-                &arena.slot(keeper.handle.unwrap()).unwrap().nodes.get_index(0).unwrap().component as *const _
-            };
+            let pointer = arena_testkit::first_component_address(arena_testkit::handle(&keeper).unwrap());
             let mut owner = start(keeper.try_alias().unwrap(), serde_json::from_value(row["component"].clone()).unwrap());
             assert!(!owner.advance(0, 4096).unwrap().progressed);
             assert!(!owner.advance(1, 0).unwrap().progressed);
@@ -85,10 +80,7 @@ fn retained_document_component_compare_reads_exact_lease_without_copy_and_preser
             close(&mut owner, 64);
             assert_eq!(equal, Some(true));
             assert_eq!(data(&keeper), before);
-            let after = {
-                let arena = UI_DOCUMENT_ARENA.lock().unwrap();
-                &arena.slot(keeper.handle.unwrap()).unwrap().nodes.get_index(0).unwrap().component as *const _
-            };
+            let after = arena_testkit::first_component_address(arena_testkit::handle(&keeper).unwrap());
             assert_eq!(pointer, after);
             assert_eq!(keeper.header().unwrap().node_count, 2);
             close_document(&mut keeper);
@@ -165,7 +157,7 @@ fn retained_document_component_compare_cancel_and_contention_keep_live_document_
     let (entered_tx, entered_rx) = std::sync::mpsc::channel();
     let (release_tx, release_rx) = std::sync::mpsc::channel();
     let holder = std::thread::spawn(move || {
-        let _arena = UI_DOCUMENT_ARENA.lock().unwrap();
+        let _arena = arena_testkit::hold_document_arena();
         entered_tx.send(()).unwrap();
         release_rx.recv().unwrap();
     });
@@ -178,7 +170,7 @@ fn retained_document_component_compare_cancel_and_contention_keep_live_document_
         _ => panic!("busy document admission must not wait"),
     };
     let mut owner = start(lease, incoming);
-    let arena = UI_DOCUMENT_ARENA.lock().unwrap();
+    let arena = arena_testkit::hold_document_arena();
     let step = owner.advance(1, 4096).unwrap();
     let close_step = owner.close_step(1, 64).unwrap();
     drop(arena);
@@ -196,7 +188,7 @@ fn retained_document_component_compare_final_reads_transfer_exact_root_to_one_re
     let value = serde_json::json!({"type":"extension","extension":"final","props":{"é":["éé"]}});
     for mode in fixture["finalReadModes"].as_array().unwrap() {
         let lease = document(serde_json::from_value(value.clone()).unwrap());
-        let handle = lease.handle.unwrap();
+        let handle = arena_testkit::handle(&lease).unwrap();
         match mode.as_str().unwrap() {
             "sole" => {
                 let mut owner = start(lease, serde_json::from_value(value.clone()).unwrap());
@@ -227,8 +219,7 @@ fn retained_document_component_compare_final_reads_transfer_exact_root_to_one_re
             }
             _ => unreachable!(),
         }
-        let arena = UI_DOCUMENT_ARENA.lock().unwrap();
-        assert!(arena.slot(handle).is_none());
+        assert!(!arena_testkit::slot_present(handle));
     }
 }
 //#endregion 🧪️DocumentComparison

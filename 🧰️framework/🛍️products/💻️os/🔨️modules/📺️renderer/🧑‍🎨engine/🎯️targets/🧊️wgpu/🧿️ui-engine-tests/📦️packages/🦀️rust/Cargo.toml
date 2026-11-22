@@ -53,6 +53,7 @@ semio-os-infinite-board-normal-host = { path = "../../../../../../../♾️infin
 semio-framework-pack-json = { path = "../../../../../../../../../../🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
 semio-framework-surface = { path = "../../../../../../../../../../🔨️modules/🗺️surface/📦️packages/🦀️rust" }
 semio-framework-trace = { workspace = true }
+semio-ui-contract-values = { workspace = true, features = ["testkit"] }
 semio-ui-declaration = { path = "../../../../../../../../../../🔨️modules/🖱️ui/📜️declaration/📦️packages/🦀️rust" }
 semio-ui-draw-contract = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖍️draw/🏷️types/📦️packages/🦀️rust" }
 semio-ui-layout = { path = "../../../../../../../../../../🔨️modules/🖱️ui/📜️declaration/📐️layout/📦️packages/🦀️rust" }

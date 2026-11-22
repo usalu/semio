@@ -21,7 +21,7 @@ pub(super) enum GridValue {
 pub(super) type GridSheet = (String, Vec<(u32, u32, GridValue)>);
 
 /// 📥️ Independent read: every sheet, every non-empty cell, through `calamine`'s resolved
-/// `Data` — this IS the reader's own semantic view; it cannot and does not distinguish a
+/// `Data`, at its absolute position (`used_cells` is relative to the range's own start) — this IS the reader's own semantic view; it cannot and does not distinguish a
 /// shared-string reference from an inline string (see module doc comment).
 pub(super) fn read_workbook_grid(input: &[u8]) -> Result<Vec<GridSheet>, String> {
     use calamine::{Data, Reader, Xlsx};
@@ -30,6 +30,7 @@ pub(super) fn read_workbook_grid(input: &[u8]) -> Result<Vec<GridSheet>, String>
     for name in workbook.sheet_names() {
         let range = workbook.worksheet_range(&name).map_err(|error| format!("independent reader could not read sheet {name:?}: {error}"))?;
         let mut cells = Vec::new();
+        let (origin_row, origin_col) = range.start().unwrap_or((0, 0));
         for (row, col, value) in range.used_cells() {
             let value = match value {
                 Data::Int(v) => GridValue::Number(*v as f64),
@@ -42,7 +43,7 @@ pub(super) fn read_workbook_grid(input: &[u8]) -> Result<Vec<GridSheet>, String>
                 Data::Error(kind) => return Err(format!("sheet {name:?} cell ({row},{col}) is a formula error the independent reader cannot project: {kind:?}")),
                 Data::Empty => continue,
             };
-            cells.push((row as u32, col as u32, value));
+            cells.push((origin_row + row as u32, origin_col + col as u32, value));
         }
         sheets.push((name, cells));
     }
@@ -285,6 +286,32 @@ pub(super) mod cell_address {
             return Err(format!("cell reference {reference:?} is out of range"));
         }
         Ok((sheet_name(&parts, &part_path)?, row - 1, column - 1))
+    }
+
+    /// 🧭️ `(sheet name, 0-based row, 0-based column)` of the vacancy a wire `XlsxCellVacancyAddress` names in `input`: the worksheet address is walked to its `sheetData`
+    /// element through the same independent XML reader as [`addressed_cell`], the row is one-based and the column zero-based exactly as the wire declares them.
+    pub fn addressed_vacancy(input: &[u8], address: &Json) -> Result<(String, u32, u32), String> {
+        let parts = read_parts(input)?;
+        let worksheet = address.get("worksheet").ok_or("the vacancy address carries no `worksheet`")?;
+        let part_path = worksheet.str("partPath");
+        let mut node = &root(part_bytes(&parts, &part_path).ok_or_else(|| format!("the addressed part {part_path} is not in the package"))?)?;
+        for step in worksheet.array("nodePath") {
+            let (Json::Number(index), Node::Element { children, .. }) = (&step, node) else { return Err(format!("node path {} descends through a non-element", worksheet.to_string())) };
+            node = children.get(*index as usize).ok_or_else(|| format!("node path child {index} is outside the element"))?;
+        }
+        let Node::Element { name, .. } = node else { return Err("the node path ends on a non-element".to_string()) };
+        if local(name) != "sheetData" || local(name) != worksheet.str("localName") {
+            return Err(format!("the node path ends on <{name}>, not the addressed sheetData element"));
+        }
+        let row = match address.get("row") {
+            Some(Json::Number(row)) if *row >= 1.0 => *row as u32,
+            other => return Err(format!("the vacancy row must be a number >= 1, got {other:?}")),
+        };
+        let column = match address.get("column") {
+            Some(Json::Number(column)) if *column >= 0.0 => *column as u32,
+            other => return Err(format!("the vacancy column must be a number >= 0, got {other:?}")),
+        };
+        Ok((sheet_name(&parts, &part_path)?, row - 1, column))
     }
 }
 //#endregion 🔖️CellAddress

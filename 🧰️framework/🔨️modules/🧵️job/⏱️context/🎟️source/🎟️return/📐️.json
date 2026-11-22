@@ -11,7 +11,7 @@
     "maximumTurns": 100000
   },
   "deniedWork": 0,
-  "bindWork": 1,
+  "bindWork": 0,
   "cachedWork": 0,
   "copyBytes": 0
 }

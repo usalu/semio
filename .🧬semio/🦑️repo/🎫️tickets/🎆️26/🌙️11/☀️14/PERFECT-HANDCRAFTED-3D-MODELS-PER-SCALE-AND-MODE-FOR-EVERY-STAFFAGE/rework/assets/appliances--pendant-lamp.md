@@ -58,3 +58,55 @@ Earlier batch report `rework/16.md` section 10: "nothing changed", remaining "th
 ### Fundamental issues
 
 - `r3-project2d.ts --check` leaves `slender` solids out of the projection but removes their 2D shape, so every asset with a slender member reports a false low silhouette IoU (here 0.84–0.87 with a Hausdorff distance of 0.30 m, exactly half the cord). The per-shape round trips are right (0.93–0.995).
+
+## Pass 1 (second round) (2026-11-22, afternoon)
+
+Source `volumes/appliances/pendant-lamp.json` and catalog were identical at the start (the first pass was published). Judged anew from cuts of every scale and list, the 1:50 six-view sheet, an underside view, every pose and two instants of every clip.
+
+### Measured against the reference table above
+
+| Feature | Reality | 1:50 model | Verdict |
+|---|---|---|---|
+| Drop | 0.6–1.2 m | 0.80 m (rose 24, cord 600, collar 30, dome 138.5, lamp tip 7.5 below the rim) | right |
+| Shade | 250–300 x 120–150 mm, 0.6 mm sheet, 5–6 mm bead | 266 x 138.5 mm, 0.6 mm, 6 mm bead, flat 34 mm seat at the apex | right |
+| Collar / E27 holder | 30 x 30 mm / 40 x 65 mm | 31 x 30.7 mm / 40 (42.4 beads) x 65 mm, bore 28.4 mm | right |
+| A60 lamp | 60 x 105 mm, widest 73 mm from the contact | 60 x 105 mm, widest at 73 mm | right |
+| Rose | 80–100 x 25–60 mm | 100 x 24 mm, solid (a real rose is a hollow cup) | lower end, kept |
+| Pivot | cord grip under the rose | revolute ±20° at the rose underside, grip reaches 10 mm lower | right within 1.4 mm at 8° |
+
+### Defects found
+
+- 1:200 body: the dome had six stations and read as a faceted cone, coarser than the 1:500 dome (seven stations); the glass pear had five stations.
+- 1:200 body: the brass lampholder (40 x 63 mm, above the 30 mm feature) was part of the `bulb` solid and so drawn in glass, visible from below.
+- 1:200 drawing: the shade outline of the side and front elevation carried the same six facets.
+- 1:50, 1:100, 1:500 (all lists), 1:200 structure, rig, poses, clips: judged right for their feature size, unchanged.
+
+### Rebuilt
+
+- 1:200 body: `shade` re-turned at nine stations measured on the 1:50 curve with an evenly offset 3 mm shell (collar stays its 31 mm neck: 0.155 mm on paper cannot be printed apart); new `socket` on the `holder` bone (brass sleeve 40 x 62.6 mm from the inner face of the dome to the mouth); `bulb` is the glass pear alone at eleven stations, hanging from the socket mouth.
+- 1:200 thermal: `th-bulb` now references the body pear (`of: bulb`); `th-lampholder` unchanged.
+- 2D 1:200: `shade` redrawn in side and front elevation to the nine stations (plan is the same 266 mm circle).
+- Decisions: body text of 1:200 rewritten (en, de).
+- Chisel: `rework-pendant-lamp-pass2.py` (`--root` for the two drawing outlines).
+
+### Rendered and read after the last volume change
+
+Right-side cuts of body, thermal and structure at 1:200; underside three-quarter at 1:100, 1:200, 1:500; 1:50 poses `off`, `dimmed`, `swinging`, `swinging-back` (right side), `swinging` from the front and the top; clips `pendulum-swing` (0.42 s, 1.2 s), `switch-on-warm-up` (2 s, 100 s), `switch-off-cool-down` (2 s, 100 s); `swinging` three-quarter at 1:100, 1:200, 1:500; 2D at 1:50 (default pose) and at 1:200 after the redraw. Rendered before the change and not again because nothing in them changed: cuts of all lists at 1:50, 1:100, 1:500, the 1:50 six-view sheet. Not rendered this round: the 2D drawing at 1:100 and 2D in the swinging pose (unchanged since the first pass, which read them).
+
+### Validation
+
+`r3-validate.ts appliances/pendant-lamp --volumes`: `VALID … schema 0, validateAsset 0, checkVolumes 0`; published with `volumes-insert.py`; `--catalog-only --volumes`: `VALID appliances/pendant-lamp (catalog file as it is): schema 0, validateAsset 0, checkVolumes 0`.
+
+### What remains imperfect
+
+- Rig: one planar pendulum; no swing across the view and no flex of the cord.
+- 1:50 rose: a solid 100 x 24 mm disc, not a hollow cup with terminal block; shallow type.
+- 1:50 lamp: opaque glass, no stem or filament in 3D (only in the drawing); the E27 thread of the cap is not turned (hidden in the holder, 1.5 mm deep).
+- 1:500: lampholder and lamp remain one lump in glass tone (40 mm and 60 mm are below the 75 mm feature); the revolved pear is visibly polygonal from below.
+- 1:200 / 1:500 thermal: the lampholder region is a stub 1 mm proud of the shade neck.
+- 1:500 has no 2D drawing (`unavailable`).
+
+### Fundamental issues
+
+- As above (`r3-project2d.ts --check` and slender solids); none new.
+- The MCP server `semio`/ticket tools were not used by this author pass (workflow step inside an open ticket).

@@ -1,13 +1,19 @@
 import {afterAll,expect,test} from "bun:test";
 import {spawnSync} from "node:child_process";
-import {mkdirSync,mkdtempSync,realpathSync,rmSync,symlinkSync} from "node:fs";
+import {mkdirSync,mkdtempSync,realpathSync,rmSync,symlinkSync,writeFileSync} from "node:fs";
 import {tmpdir} from "node:os";
-import {join} from "node:path";
+import {join,resolve} from "node:path";
 import fixture from "./🧫️fixtures/🔣️.json" with {type:"json"};
 import {keyEnvironmentV1,neutralRustflagsV1,normalizeRustcArgumentsV1,sdkIdentityV1,sha256V1,unitKeyV1,UNIT_CACHE_POLICY_V1} from "../../🔏️key/🟦️.ts";
 import {machineNeutralRemapV1} from "../../🧭️remap/🟦️.ts";
-import {portableRootsV1,remoteKeyV1,type PlatformV1} from "../../🛰️fleet/🪪️identity/🟦️.ts";
-import {accountedSkipsV1,countSkipV1,countUnitV1,readBuildCountersV1,readSkipReasonsV1,skipNameV1,writeBuildCountersV1} from "../../🛰️fleet/📊️counters/🟦️.ts";
+import {localKeyV1,localTextV1,portableKeyV1,portableRootsV1,portableTextV1,remoteKeyV1,toolRootsV1,type PlatformV1} from "../../🛰️fleet/🪪️identity/🟦️.ts";
+import {buildRunKeyInputV1,buildScriptIdentityV1,markBuildScriptIdentityV1} from "../../🏗️buildscript/🔑️run-key/🟦️.ts";
+import {packRunV1,unpackRunV1,runFileNameV1,runFilePathV1} from "../../🏗️buildscript/📦️run-wire/🟦️.ts";
+import {compilerWrittenV1,keyGapV1,unitSourcesV1} from "../../🔏️key/🔗️sources/🟦️.ts";
+import {readGapsV1,recordGapsV1} from "../../🔏️key/🕳️gaps/🟦️.ts";
+import type {BuildEntryV1} from "../../💾️store/🟦️.ts";
+import {buildKeyEnvironmentV1} from "../../🔏️key/🟦️.ts";
+import {countSkipV1,countUnitV1,readBuildCountersV1,readSkipReasonsV1,skipNameV1,writeBuildCountersV1} from "../../🛰️fleet/📊️counters/🟦️.ts";
 import {unsharedReasonV1,type FleetUnitV1} from "../../🛰️fleet/🟦️.ts";
 import {churnReportV1,traceDifferencesV1,type UnitLookupV1} from "../../💾️store/🟦️.ts";
 import {readRemoteExecutionCountersV1} from "../../../../../🏗️build/🌐️remote-execution/🌡️load/🟦️.ts";
@@ -103,13 +109,15 @@ test("a unit that was compiled but not shared says why: read-only or a full spoo
  expect(unsharedReasonV1(unit(true))).toBe("spool-full");
 });
 
-test("the skip reasons always add up to the skipped count: units counted before their reason was recorded show as unrecorded",()=>{
- expect(accountedSkipsV1(10,{"read-only":4})).toEqual({"read-only":4,unrecorded:6});
- expect(accountedSkipsV1(4,{"read-only":4})).toEqual({"read-only":4});
- expect(accountedSkipsV1(0,{})).toEqual({});
+test("the skipped count is the sum of the reason files, so no skip is unrecorded; the sum equals an independent python reading of the files",()=>{
  const workspace=mkdtempSync(join(tmpdir(),"skip-unrecorded-"));
- try{for(let count=0;count<3;count++)countUnitV1(workspace,"skipped");countSkipV1(workspace,"read-only");const counters=readBuildCountersV1(workspace);expect(counters.unit.skipped).toBe(4);expect(counters.skipReasons).toEqual({"read-only":1,unrecorded:3});}
- finally{rmSync(workspace,{recursive:true,force:true});}
+ try{
+  for(const reason of["read-only","read-only","spool-full","unreadable-source","publish-error"])countSkipV1(workspace,reason);
+  const counters=readBuildCountersV1(workspace);
+  expect(counters.unit.skipped).toBe(5);expect(counters.skipReasons).toEqual({"read-only":2,"spool-full":1,"unreadable-source":1,"publish-error":1});expect("unrecorded" in counters.skipReasons).toBe(false);
+  const python=spawnSync("python3",["-c","import os,sys\nd=os.path.join(sys.argv[1],'.cache','f','unit-counters','skip')\nprint(sum(os.path.getsize(os.path.join(d,n)) for n in os.listdir(d)))",workspace],{encoding:"utf8"});
+  expect(python.status).toBe(0);expect(Number(python.stdout)).toBe(counters.unit.skipped);
+ }finally{rmSync(workspace,{recursive:true,force:true});}
 });
 
 test("the traced keys of one crate name the argument and the environment entry that differ between them",()=>{
@@ -132,4 +140,138 @@ test("the rendering of the compiler's messages (colour, width, ansi or short tex
  const plain=["--crate-name","a","--error-format=json","--json","artifacts,future-incompat","--color","never","src/lib.rs"],short=["--crate-name","a","--error-format=json","--json=diagnostic-short,artifacts,future-incompat","src/lib.rs"];
  expect(normalize(base)).toEqual(normalize(plain));expect(normalize(base)).toEqual(normalize(short));
  expect(normalize(base)).not.toEqual(normalize(["--crate-name","a","--error-format=json","--json=diagnostic-rendered-ansi,artifacts","src/lib.rs"]));
+});
+
+type Home=Readonly<{root:string;home:string;cargo:string;rustup:string;tools:string}>;
+const homeA=():Home=>{const root=directory("ha")+"/Users/ueli/Documents/semio";return{root,home:"/Users/ueli",cargo:root+"/.cache/b/r/m/cargo/home",rustup:"/Users/ueli/.rustup",tools:"/opt/a"};};
+const homeB=():Home=>({root:directory("hb")+"/Users/Shared/semio",home:"/home/deck",cargo:"/home/deck/.cargo",rustup:"/srv/rust/rustup",tools:"/opt/b"});
+const homeEnvironment=(machine:Home)=>({HOME:machine.home,CARGO_HOME:machine.cargo,RUSTUP_HOME:machine.rustup});
+
+function registryKey(machine:Home,mutate:(roots:ReturnType<typeof portableRootsV1>)=>ReturnType<typeof portableRootsV1>=roots=>roots){
+ const directoryOfCrate=machine.cargo+"/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.229",lane=machine.root+"/.cache/lane-x/t-"+sha256V1(machine.root).slice(0,8);
+ const raw=["--crate-name","serde","--edition=2021","src/lib.rs","--crate-type","lib","--emit=dep-info,metadata,link","-C","metadata=0a1b2c","--cfg",'feature="std"',"--out-dir",lane+"/deps","--remap-path-prefix="+machine.cargo+"/registry/src=","--sysroot",machine.rustup+"/toolchains/nightly-aarch64-apple-darwin","-C","link-arg=-L"+machine.cargo+"/lib","-L","dependency="+lane+"/deps"];
+ const environment=keyEnvironmentV1({CARGO_MANIFEST_DIR:directoryOfCrate,CARGO_PKG_NAME:"serde",CARGO_PKG_VERSION:"1.0.229",CARGO_CRATE_NAME:"serde",CARGO_ENCODED_RUSTFLAGS:"--remap-path-prefix="+machine.cargo+"/registry/src=\u001f-Zthreads=0",...homeEnvironment(machine)},undefined);
+ const normalized=normalizeRustcArgumentsV1(raw,new Map(),undefined),input={toolchain:fixture.toolchain,normalized,sourceSha256:sha256V1("serde source"),externs:[],environment};
+ const roots=mutate(portableRootsV1({cwd:directoryOfCrate,workspace:machine.root,hints:[directoryOfCrate],...toolRootsV1(homeEnvironment(machine))}));
+ return{remote:remoteKeyV1(platform,input,roots),normalized,environment};
+}
+
+function workspaceKey(machine:Home,tools:boolean){
+ const manifest=machine.root+"/🧰️framework/crates/demo",lane=machine.root+"/.cache/lane-y/t-"+sha256V1(machine.root).slice(0,8);
+ const raw=["--crate-name","demo","--edition=2024","🧰️framework/crates/demo/src/lib.rs","--crate-type","lib","-C","metadata=ff00ee","--out-dir",lane+"/deps","-C","link-arg=-L"+machine.cargo+"/lib","--sysroot",machine.rustup+"/toolchains/nightly-aarch64-apple-darwin","--extern","dep=#abc"];
+ const environment=keyEnvironmentV1({CARGO_MANIFEST_DIR:manifest,CARGO_PKG_NAME:"demo",CARGO_PKG_VERSION:"0.1.0",CARGO_CRATE_NAME:"demo",...homeEnvironment(machine)},undefined);
+ const input={toolchain:fixture.toolchain,normalized:normalizeRustcArgumentsV1(raw.slice(0,-2),new Map(),undefined),sourceSha256:sha256V1("demo source"),externs:[],environment};
+ const roots=portableRootsV1({cwd:machine.root,workspace:machine.root,hints:[manifest,machine.root],...tools?toolRootsV1(homeEnvironment(machine)):{}});
+ return remoteKeyV1(platform,input,roots);
+}
+
+test("a registry crate and a workspace crate give one fleet key on two machines with other home, Cargo home, rustup home and checkout root (one machine keeps its Cargo home inside the checkout, the other checks out below Users/Shared)",()=>{
+ const a=homeA(),b=homeB();
+ expect(registryKey(a).remote).toBe(registryKey(b).remote);
+ expect(workspaceKey(a,true)).toBe(workspaceKey(b,true));
+ expect(workspaceKey(a,false),"without the tool roots the Cargo home and the rustup home split the key").not.toBe(workspaceKey(b,false));
+ expect(registryKey(a,roots=>roots.filter(root=>!root.token.includes("cargo-home"))).remote,"without the Cargo home root the registry crate splits").not.toBe(registryKey(b,roots=>roots.filter(root=>!root.token.includes("cargo-home"))).remote);
+});
+
+test("what is an input still moves the key of a registry crate: its version, and a toolchain at another place in the rustup home",()=>{
+ const a=homeA(),base=registryKey(a).remote;
+ expect(registryKey({...a,rustup:"/Users/ueli/.rustup"}).remote).toBe(base);
+ expect(registryKey(a,roots=>roots.filter(root=>root.token!=="@@semio-rustup-home@@")).remote).not.toBe(base);
+});
+
+test("the portable key of the registry crate equals an independent recomputation by python's hashlib over its tokenised inputs",()=>{
+ const a=homeA(),b=homeB(),roots=(machine:Home)=>portableRootsV1({cwd:machine.cargo+"/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.229",workspace:machine.root,...toolRootsV1(homeEnvironment(machine))});
+ const compute=(machine:Home)=>{const key=registryKey(machine),text=(value:string)=>portableTextV1(value,roots(machine));const input={toolchain:fixture.toolchain,normalized:key.normalized,sourceSha256:sha256V1("serde source"),externs:[],environment:key.environment};return{ours:portableKeyV1(input,roots(machine)),normalized:key.normalized.map(text),environment:key.environment.map(([name,value])=>[name,text(value)])};};
+ const one=compute(a),two=compute(b);expect(one.ours).toBe(two.ours);
+ const run=spawnSync("python3",["-I","-c","import hashlib,json,sys;d=json.load(sys.stdin);print(hashlib.sha256(json.dumps([d['namespace'],d['toolchain'],d['normalized'],d['source'],[],d['environment']],separators=(',',':'),ensure_ascii=False).encode()).hexdigest())"],{input:JSON.stringify({namespace:UNIT_CACHE_POLICY_V1.namespace,toolchain:fixture.toolchain,normalized:two.normalized,source:sha256V1("serde source"),environment:two.environment}),encoding:"utf8"});
+ expect(run.status).toBe(0);expect(run.stdout.trim()).toBe(two.ours);
+});
+
+const runEnvironment=(machine:Home,directory:string)=>({CARGO_PKG_NAME:"ring",CARGO_PKG_VERSION:"0.17.0",CARGO_MANIFEST_DIR:directory,TARGET:"aarch64-apple-darwin",HOST:"aarch64-apple-darwin",PROFILE:"release",RUSTC:machine.rustup+"/toolchains/nightly/bin/rustc",RUSTC_WRAPPER:machine.root+"/bin/semio-unit-cache",RUSTC_LINKER:machine.tools+"/bin/cc",CARGO_ENCODED_RUSTFLAGS:"--remap-path-prefix="+machine.cargo+"/registry/src=\u001f-Zthreads=0",DEP_Z_ROOT:directory+"/out",CARGO_FEATURE_STD:"1",NUM_JOBS:"8",...homeEnvironment(machine)});
+
+function runKey(machine:Home,binary:string){
+ const directory=machine.cargo+"/registry/src/index.crates.io-1949cf8c6b5b557f/ring-0.17.0",environment=runEnvironment(machine,directory);
+ const roots=portableRootsV1({cwd:directory,workspace:machine.root,hints:[directory],...toolRootsV1(environment)}),input=buildRunKeyInputV1({toolchain:fixture.toolchain,identity:binary,args:[],environment,laneRoot:undefined});
+ return{local:localKeyV1(input,roots),remote:remoteKeyV1(platform,input,roots),input,tokenised:portableTextV1(JSON.stringify(input.environment),roots)};
+}
+
+test("a build script run gives one key on two machines with other compiler, wrapper and linker paths, flags remapped to other homes and Cargo homes, other dependency output directories and other checkout roots; NUM_JOBS and the home directories are no inputs",()=>{
+ const a=runKey(homeA(),"unit:"+"1".repeat(64)),b=runKey(homeB(),"unit:"+"1".repeat(64));
+ expect(a.local).toBe(b.local);expect(a.remote).toBe(b.remote);
+ expect(a.tokenised).not.toContain("/Users/ueli");expect(a.tokenised).toContain("@@semio-cwd@@");
+ expect(b.tokenised).not.toContain("/home/deck");expect(b.tokenised).toBe(a.tokenised);
+ expect(a.input.environment.map(([name])=>name)).not.toContain("NUM_JOBS");
+ expect(runKey(homeA(),"unit:"+"2".repeat(64)).remote,"another executable is another run").not.toBe(a.remote);
+ const changed=buildRunKeyInputV1({toolchain:fixture.toolchain,identity:"unit:"+"1".repeat(64),args:[],environment:{...runEnvironment(homeA(),"/x/ring"),CARGO_FEATURE_STD:"0"},laneRoot:undefined});
+ expect(changed.environment).not.toEqual(a.input.environment);
+ expect(buildKeyEnvironmentV1({RUSTC:"/a/b/rustc",RUSTC_WRAPPER:"C:\\tools\\wrap.exe"},undefined)).toEqual([["RUSTC","⟨tool⟩rustc"],["RUSTC_WRAPPER","⟨tool⟩wrap"]]);
+});
+
+test("a build script executable is keyed by the unit it was compiled from while its identity file names its bytes, else by its bytes",()=>{
+ const base=directory("bin"),real=join(base,"build_script_build.real");writeFileSync(real,"binary one");
+ const sha=sha256V1("binary one");
+ expect(buildScriptIdentityV1(real,sha)).toBe("bytes:"+sha);
+ markBuildScriptIdentityV1(real,"a".repeat(64),["/work"],sha);
+ const named=buildScriptIdentityV1(real,sha);expect(named).toMatch(/^unit:[0-9a-f]{64}$/u);
+ writeFileSync(real,"binary two, other bytes of the same unit on another machine");
+ const other=sha256V1("binary two, other bytes of the same unit on another machine");
+ expect(buildScriptIdentityV1(real,other),"an identity file never vouches for other bytes").toBe("bytes:"+other);
+ markBuildScriptIdentityV1(real,"a".repeat(64),["/work"],other);expect(buildScriptIdentityV1(real,other)).toBe(named);
+ markBuildScriptIdentityV1(real,"a".repeat(64),["/elsewhere"],other);expect(buildScriptIdentityV1(real,other),"a unit that embeds other paths is another identity").not.toBe(named);
+});
+
+function runEntry(machine:Home,blobs:Map<string,Uint8Array>,text:string):BuildEntryV1{
+ const put=(value:string|Uint8Array)=>{const bytes=typeof value==="string"?Buffer.from(value):value,sha=sha256V1(bytes);blobs.set(sha,bytes);return sha;};
+ const header=put("cfg"),generated=put("pub const NAME: &str = \"ring\";\n"+text),binary=put(new Uint8Array([0,1,2,3,255]));
+ return{version:1,key:"k".repeat(64).replace(/k/gu,"1"),package:"ring",facts:[{path:"build.rs",kind:"file",sha256:header},{path:".",kind:"package",sha256:sha256V1("tree")}],environment:[{name:"CC",value:null}],outputs:[{path:"nested/dir/gen.rs",sha256:generated,bytes:10,executable:false,template:true},{path:"table.bin",sha256:binary,bytes:5,executable:false,template:false}],stdout:put("cargo:rerun-if-changed=build.rs\ncargo:rustc-link-search="+machine.cargo+"/registry/src/x/lib\n"),stderr:null,createdMs:1};
+}
+
+test("a build script run travels between two machines: roots become tokens on the way out and the other machine's roots on the way in; output names with slashes survive",()=>{
+ const a=homeA(),b=homeB(),blobs=new Map<string,Uint8Array>(),entry=runEntry(a,blobs,"// from "+a.cargo+"/registry/src/y\n");
+ const header={key:"2".repeat(64),localKey:"3".repeat(64),slot:"4".repeat(64),platform,costMs:7};
+ const rootsA=portableRootsV1({cwd:a.root,workspace:a.root,...toolRootsV1(homeEnvironment(a))}),rootsB=portableRootsV1({cwd:b.root,workspace:b.root,...toolRootsV1(homeEnvironment(b))});
+ const packed=packRunV1(entry,header,rootsA,sha=>blobs.get(sha),[a.home]);
+ if(typeof packed==="string")throw Error(packed);
+ expect(packed.unit.outputs.map(output=>output.name).sort()).toEqual(["f:nested%2Fdir%2Fgen.rs","f:table.bin","run.json"]);
+ const wire=new Map(packed.contents),texts=[...wire.values()].map(bytes=>Buffer.from(bytes).toString("latin1")).join("\n");
+ expect(texts).not.toContain(a.cargo);expect(texts).toContain("@@semio-cargo-home@@");
+ const stored=new Map<string,Uint8Array>(),back=unpackRunV1({localKey:"5".repeat(64),roots:rootsB,manifest:packed.unit,blobs:wire,put:bytes=>{const sha=sha256V1(bytes);stored.set(sha,bytes);return sha;}});
+ expect(back.outputs.map(output=>output.path).sort()).toEqual(["nested/dir/gen.rs","table.bin"]);
+ const text=(sha:string|null)=>Buffer.from(stored.get(sha!)!).toString("utf8");
+ expect(text(back.stdout)).toContain("cargo:rustc-link-search="+b.cargo+"/registry/src/x/lib");expect(text(back.stdout)).not.toContain(a.cargo);
+ expect(text(back.outputs.find(output=>output.path==="nested/dir/gen.rs")!.sha256)).toContain(b.cargo+"/registry/src/y");
+ expect([...stored.get(back.outputs.find(output=>output.path==="table.bin")!.sha256)!]).toEqual([0,1,2,3,255]);
+ expect(back.facts.find(fact=>fact.kind==="package")!.sha256).toBe(sha256V1("tree"));expect(back.key).toBe("5".repeat(64));
+ expect(runFilePathV1(runFileNameV1("a%2Fb/c%d"))).toBe("a%2Fb/c%d");
+});
+
+test("a build script run that still names a directory of its machine after its roots became tokens stays local, with its reason; so does one that does not fit a manifest",()=>{
+ const a=homeA(),blobs=new Map<string,Uint8Array>(),rootsA=portableRootsV1({cwd:a.root,workspace:a.root,...toolRootsV1(homeEnvironment(a))}),header={key:"2".repeat(64),localKey:"3".repeat(64),slot:"4".repeat(64),platform,costMs:7},read=(sha:string)=>blobs.get(sha);
+ const home=packRunV1(runEntry(a,blobs,"// "+a.home+"/.local/share\n"),header,rootsA,read,[a.home]);
+ expect(typeof home==="string"&&home.startsWith("path-dependent")).toBe(true);
+ const leaking=runEntry(a,blobs,"x"),binary=new Uint8Array([0,...Buffer.from(a.cargo+"/lib"),0]),sha=sha256V1(binary);blobs.set(sha,binary);
+ expect(String(packRunV1({...leaking,outputs:[...leaking.outputs,{path:"lib.a",sha256:sha,bytes:binary.length,executable:false,template:false}]},header,rootsA,read))).toMatch(/^path-dependent: lib\.a holds/u);
+ expect(packRunV1({...leaking,outputs:[{...leaking.outputs[0]!,path:"d/".repeat(120)+"x"}]},header,rootsA,read)).toBe("name-too-long");
+ expect(packRunV1({...leaking,outputs:Array.from({length:70},(_,index)=>({...leaking.outputs[1]!,path:"f"+index}))},header,rootsA,read)).toBe("too-many-files");
+});
+
+test("the files a finished compilation read although the scan missed them are recorded per unit identity and keyed by the next compilation; the observation file a proc-macro writes for the receipt is no input",()=>{
+ const machine=homeA(),root=directory("gap"),base=directory("gap-tree"),entry=join(base,"lib.rs"),extra=join(base,"files","data.json"),roots=portableRootsV1({cwd:base,workspace:base});
+ mkdirSync(join(base,"files"));writeFileSync(entry,"fn main(){}");writeFileSync(extra,"{\"a\":1}");
+ const slot="6".repeat(64),digest=(path:string)=>path.endsWith("data.json")?sha256V1("one"):sha256V1("entry");
+ const observation=base+"/semio-compiler-resources/1795376000000-4242-0/observation.json",dep="lib.rs: lib.rs files/data.json "+observation+"\n";
+ const gap=keyGapV1({cwd:base,covered:new Set([entry]),keyedNames:new Set(),depInfo:dep});
+ expect(gap).toEqual(["files/data.json"]);
+ expect(compilerWrittenV1("/x/target/semio-compiler-resources/17-9-3/observation.json")).toBe(true);expect(compilerWrittenV1("/x/semio-compiler-resources/17-9/observation.json")).toBe(false);
+ expect(readGapsV1(root,slot,roots)).toEqual([]);
+ expect(recordGapsV1(root,slot,{cwd:base,paths:gap,roots})).toBe(true);expect(recordGapsV1(root,slot,{cwd:base,paths:gap,roots}),"a second record of the same file changes nothing").toBe(false);
+ const recorded=readGapsV1(root,slot,roots);expect(recorded).toEqual([{name:"@@semio-cwd@@/files/data.json",path:extra}]);
+ return unitSourcesV1(entry,undefined,undefined,digest,recorded).then(async keyed=>{
+  const plain=await unitSourcesV1(entry,undefined,undefined,digest);
+  expect(keyed!.sha256).not.toBe(plain!.sha256);expect(keyed!.rows.map(row=>row[0])).toContain("⟨gap⟩/@@semio-cwd@@/files/data.json");
+  const other=await unitSourcesV1(entry,undefined,undefined,path=>path.endsWith("data.json")?sha256V1("two"):sha256V1("entry"),recorded);
+  expect(other!.sha256,"a changed file moves the key").not.toBe(keyed!.sha256);
+  expect(keyGapV1({cwd:base,covered:new Set(keyed!.files.map(file=>resolve(file))),keyedNames:new Set(),depInfo:dep}),"the recorded file is covered now").toEqual([]);
+  const moved=directory("gap-moved");expect(readGapsV1(root,slot,portableRootsV1({cwd:moved,workspace:moved}))[0]!.path).toBe(join(moved,"files","data.json"));
+ });
 });

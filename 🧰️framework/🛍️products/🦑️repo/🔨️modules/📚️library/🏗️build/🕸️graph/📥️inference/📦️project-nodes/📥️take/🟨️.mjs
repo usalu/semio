@@ -215,7 +215,7 @@ export function createTakeLedgerV1(total) {
     state(name) { return states.get(name); },
     counts,
     line(language) { return fill(TEXTS[language === "de" ? "de" : "en"].progress, counts()); },
-    staleRowLine(language, name, row) { return fill(TEXTS[language === "de" ? "de" : "en"].staleRow, { name, kind: row.kind, path: row.path, fact: row.fact, why: row.why === undefined ? "" : (language === "de" ? "; Grund: " : "; reason: ") + row.why }); },
+    staleRowLine(language, name, row) { const texts = TEXTS[language === "de" ? "de" : "en"]; return fill(texts.staleRow, { name, kind: row.kind, path: row.path, fact: row.fact, digests: row.recorded === undefined ? "" : fill(texts.staleDigests, { recorded: row.recorded, current: row.current ?? "-" }), why: row.why === undefined ? "" : (language === "de" ? "; Grund: " : "; reason: ") + row.why }); },
     staleLine(language, name) { return fill(TEXTS[language === "de" ? "de" : "en"].staleOwner, { name, count: counts().stale }); },
     waveLine(language) { const row = counts(); return fill(TEXTS[language === "de" ? "de" : "en"].wave, row); },
   });
@@ -364,6 +364,12 @@ export function createAdoptCountersV1() {
       return fill(TEXTS[language === "de" ? "de" : "en"].adopt, { ...row, staleKinds: tally(row.staleKinds), faultKinds: tally(faults), cancelled });
     },
   });
+}
+
+/** 📣️ The structured event of one owner whose stored record did not hold: the first moved row with its recorded and current digest and the sentence in both languages, as the schema `StaleRowEvent` defines it (`source` is `take` in the take pass, `infer` in the inference of the owner).
+ * @see ./🧪️tests/🏷️stale-event */
+export function staleRowEventV1(name, source, row, ledger) {
+  return Object.freeze({ owner: name, source, kind: row.kind, path: row.path, ...(row.fact === undefined ? {} : { fact: row.fact }), recorded: row.recorded ?? "-", current: row.current ?? "-", ...(row.why === undefined ? {} : { why: row.why }), text: Object.freeze({ en: ledger.staleRowLine("en", name, row), de: ledger.staleRowLine("de", name, row) }) });
 }
 
 /** 🩺️ Counts one unsuccessful look and lets the take pass move on when the exchange is already unavailable. */

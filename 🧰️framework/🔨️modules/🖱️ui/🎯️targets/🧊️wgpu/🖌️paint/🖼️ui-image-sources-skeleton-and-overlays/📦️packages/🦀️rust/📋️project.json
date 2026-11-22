@@ -1,0 +1,7 @@
+{
+  "name": "@semio-tech/ui-wgpu-paint-overlay-rs",
+  "tags": [
+    "scope:framework",
+    "language:rust"
+  ]
+}

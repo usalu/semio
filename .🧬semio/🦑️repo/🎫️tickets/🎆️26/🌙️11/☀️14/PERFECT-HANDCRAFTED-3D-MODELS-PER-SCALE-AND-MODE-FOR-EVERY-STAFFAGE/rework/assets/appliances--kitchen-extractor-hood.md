@@ -67,3 +67,48 @@ Chisel: `rework-kitchen-extractor-hood-model.py` (`candidate` writes the source 
 - `volumes-structure-coverage` treats `damper-left` / `damper-right` (no mass, hidden flaps) as load-bearing and wants a member solid at every scale, also at 1:500.
 - `volumes-feature` accepts 0.6 mm sheets at any scale when the thickness equals a thermal layer gauge; that let the 1:50 sheet list pass as 1:100 / 1:200 model.
 - `volumes-insert.py` runs on import (no `__main__` guard), and the catalog file is not in its `dump` format, so root members cannot be rewritten byte-stable with it.
+
+## Pass 1 (second round) (2026-11-22)
+
+Chisel: `rework-kitchen-extractor-hood-pass2.py` (`source` edits the volume source in place, `root` rewrites `representations` of the catalog file). Source and catalog were identical at the start; the reference table of pass 1 stands (re-measured on the sheets: 0.90 x 0.50 m canopy, 246 mm, rim 45 mm, top plate 0.26 x 0.20 m, chimney 250 x 190 mm, duct 150 mm at 85 mm from the wall, wheel 134 mm, 80 mm left of centre, 0.915 m in all).
+
+### Found (the state of pass 1 was INVALID under the rules of 01:23 and later)
+
+| Scale, list | Part | Defect |
+| --- | --- | --- |
+| 1:50 body | base panel with cassettes, latches, meshes, lamps (12 solids) | floated 5.4 mm above the return flange of the rim, touching nothing (`volumes-connected`) |
+| 1:50 body | `wheel-inlet-ring` | revolved strip of 3 x 17 mm, below the feature and no sheet (`volumes-feature`) |
+| 1:50 / 1:100 structure | `member-hip-left/right` | angle bars ending 6.9 / 3.1 mm short of the rim: open load path; a square-cut angle cannot reach the rim corner without leaving the slope planes (hip meets the rim at 48 degrees) |
+| 1:200 / 1:500 structure | hips | the same invented bars inside solid wedges |
+| 1:100 body | `blower-motor` | floated 6 mm in the bore of the scroll, touching neither wheel nor housing |
+| 2D 1:50 / 1:100 elevation | `blower-wheel`, `rotor-disc-section` | drawn on the spinning wheel bone (`lateral-ambiguous`, up to 1.34 mm wrong on paper) |
+
+### Rebuilt
+
+- 1:50 body: `rim-upstand`, the 5.4 mm fold of the return flange up to the base panel (0.6 mm sheet, ring 0.876 x 0.476 m), so rim, hem, base panel, cassettes and lamps are one object; the same solid in the thermal shell (`th-rim-upstand`).
+- 1:50 body: `wheel-inlet-ring` is the flat shroud annulus it is (r 51 to 67 mm, 1.5 mm, declared `sheet`); the 3 mm bell-mouth lip is below the feature and left out.
+- Structure at all four scales: the hip bars are gone; the stressed skin is the structure. 1:50 and 1:100 take the three sloping sheets / plates as members (`member-skin-front/left/right`), 1:200 and 1:500 the three pyramid wedges. Back plate, rim, top plate, chimney channels, joints, supports and masses unchanged.
+- 1:100 body: the motor has its 40 mm hub through the housing wall to the wheel drum.
+- 2D: the two wheel outlines of the section are bound to the canopy (a turned part looks the same at every angle), same position on paper.
+- `decisions`: 1:50 underside text (hem) and the structure text of all four scales rewritten (en, de).
+
+### Validation
+
+`r3-validate.ts appliances/kitchen-extractor-hood --catalog-only --volumes`: `VALID … schema 0, validateAsset 0, checkVolumes 0` (after `volumes-insert.py`).
+
+### Rendered and read after the last change
+
+1:50 body (six views, before), body cut from below (hem, cassettes, wheel, dampers), structure, thermal cut, pose `off` cut (six views), `low` top (leaves at 46 degrees), `medium` front cut, clips `blower-inspection` t 1.1 front cut and `step-down-and-off` t 100 top; 1:100 body cut, structure, thermal cut; 1:200 body, structure, thermal cut; 1:500 body, structure, thermal cut; 2D 1:50 and 1:100.
+
+### Remaining (not signed)
+
+- Rendered, not read: 1:100 body uncut, clip `blower-inspection` t 0.3, clip `switch-on-warm-up` t 2, 2D 1:200.
+- Rig: the prismatic `chimney-top` joint (-101 … +76 mm) is still moved by no pose or clip; its axis sense is unproven in a render.
+- 1:50 body: lamps are plain 120 x 50 mm diffuser sheets without bezel (a 6 mm bezel is below the feature); no mains cable, no chimney fixing screws; `filter-latch-*` sit 0.5 mm above the rim edge, 5.5 mm below the cassette face (recess not modelled).
+- Structure 1:100 to 1:500: the fan and wheel masses lie inside the closed skin and show only in a cut; 1:500 `member-chimney-top` is a channel with 20 mm walls kept from pass 1.
+- 2D: front view `chimney-upper` is drawn 0.25 m wide, the model is 0.244 m (0.06 mm on paper at 1:50); 2D `decisions` of 1:50 / 1:100 do not mention the section outlines.
+
+### Fundamental issues (in addition to pass 1)
+
+- `volumes-feature`: a revolved thin ring (shroud, washer, flange) cannot be declared `sheet` (it is measured by its 3 x 17 mm section as a strip), while the same ring as an extrusion with a hole passes; the rule should measure a revolve by the ring it sweeps.
+- The validity of a published asset silently changed with the rule changes of 01:23 to 03:30 (this asset went from VALID to 1 + 4 findings without any edit); there is no catalog-wide re-validation list after a rule change.

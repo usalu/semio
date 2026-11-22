@@ -12,6 +12,8 @@
         "coldBaseBytes": 644245094,
         "coldBytesPerKloc": 41943040,
         "componentFinalBytes": 6442450944,
+        "componentColdQuantile": 0.5,
+        "componentColdMinimumRows": 3,
         "headroom": 1.15,
         "quantile": 0.95,
         "window": 8,
@@ -174,6 +176,26 @@
         "provenance": {"anyOf": [{"$ref": "#/definitions/ProvenanceV1"}, {"type": "null"}]}
       }
     },
+    "HeadroomV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "v",
+        "op",
+        "wait"
+      ],
+      "properties": {
+        "v": {
+          "const": 1
+        },
+        "op": {
+          "const": "headroom"
+        },
+        "wait": {
+          "type": "boolean"
+        }
+      }
+    },
     "RecallRequestV1": {
       "type": "object",
       "additionalProperties": false,
@@ -291,6 +313,7 @@
       }
     },
     "ObservationV1": {
+      "description": "One observation of a unit key, one newline-terminated JSON line of units.jsonl; the unterminated tail of the file is an interrupted append and is dropped. Identity is (key, atMs): a later row of the same identity (the end-of-run refinement with the critical-path remainingMs) replaces an earlier one (the row appended when the unit completed, remainingMs = wallMs).",
       "type": "object",
       "additionalProperties": false,
       "required": [

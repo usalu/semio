@@ -16,6 +16,7 @@ import providerSchema from "./🧬️schema/🔣️.json" with { type: "json" };
 import { contentTypeForStaticDirAsset, serveFileWithValidatorsV1 } from "./📤️file-serving/🟦️.ts";
 import { createTileProxyMiddleware, tileProxyVitePlugin } from "./🛰️tile-proxy/🟦️.ts";
 import { createMeshCollectionMiddleware, meshCollectionVitePlugin, type MeshCollectionAssetSpecV1} from "./🗺️mesh-collection/🟦️.ts";
+import { semioAssetShipsToBrowserV1 } from "./🗃️assets/🟦️.ts";
 
 // #endregion 🔌️Adapters
 
@@ -145,7 +146,7 @@ export function staticDirVitePlugin(repoRoot: string, spec: StaticDirectoryAsset
         const dest = resolve(outDir, destName);
         mkdirSync(outDir, { recursive: true });
         if (existsSync(dest)) rmSync(dest, { recursive: true, force: true });
-        cpSync(fixtureRoot, dest, { recursive: true });
+        cpSync(fixtureRoot, dest, { recursive: true, filter: (source) => source === fixtureRoot || semioAssetShipsToBrowserV1(relative(fixtureRoot, source)) });
       },
     },
   ];

@@ -18,6 +18,7 @@ import {
   BROWSER_ACTOR_SECTION_KEYS,
   browserActorPanelKeysV1,
   browserActorSectionValuesV1,
+  uiRefreshSectionsOnlyV1,
   withoutUiRefreshSectionsV1,
   type BrowserActorUiStoresV1
 } from "../../🛣️route-and-chrome/🟦️.tsx";
@@ -69,6 +70,19 @@ describe("browser actor panels", () => {
     expect(stripped === null ? null : Object.fromEntries(Object.entries(stripped).filter(([, value]) => value !== undefined))).toEqual({ viewState, windows: request.windows, panels: [], labels: { hash: "l" } });
     expect(withoutUiRefreshSectionsV1({ viewState, windows: [], panels: [], engagements: {}, measures: {}, tools: {}, catalogue: {} })).toBeNull();
     expect(withoutUiRefreshSectionsV1(null)).toBeNull();
+  });
+
+  it("crosses window bodies and reserved sections as two requests so a section fault cannot discard the bodies", () => {
+    const viewState = {} as PluginViewState;
+    const request: PluginUiRefreshRequest = { viewState, windows: [{ key: "gis3d-main", bodyKey: "gis3d.play.composite" }], panels: [{ key: "data", bodyKey: "data" }], engagements: { hash: "e" }, measures: { hash: "m" }, tools: {}, catalogue: undefined, labels: { hash: "l" } };
+    const sections = uiRefreshSectionsOnlyV1(request);
+    expect(sections).toEqual({ viewState, windows: [], panels: [], engagements: { hash: "e" }, measures: { hash: "m" }, tools: {}, catalogue: undefined });
+    const bodies = withoutUiRefreshSectionsV1(request);
+    expect(bodies?.windows).toEqual(request.windows);
+    expect(bodies?.panels).toEqual(request.panels);
+    expect([bodies?.engagements, bodies?.measures, bodies?.tools, bodies?.catalogue]).toEqual([undefined, undefined, undefined, undefined]);
+    expect(uiRefreshSectionsOnlyV1({ viewState, windows: request.windows, panels: [] })).toBeNull();
+    expect(uiRefreshSectionsOnlyV1(null)).toBeNull();
   });
 });
 //#endregion 🧪️Tests

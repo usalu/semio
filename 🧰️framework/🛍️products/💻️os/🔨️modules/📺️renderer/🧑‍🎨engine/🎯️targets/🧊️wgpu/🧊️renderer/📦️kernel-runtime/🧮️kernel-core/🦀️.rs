@@ -409,6 +409,13 @@ pub struct ExtensionRecord {
     pub capability_requests: Vec<CapabilityGrant>,
 }
 
+impl ExtensionRecord {
+    /// 🧩️ The activation identity of a runtime-installed extension: package and extension id are the same string and `capabilities` are the capability names its package manifest requests, as unscoped requests (`scope: None`) — the web registry's own `manifest.caps` of an extension. They are only REQUESTS: activation grants the intersection with the host's own grants, never more.
+    pub fn installed(extension_id: &str, capabilities: &[String]) -> Self {
+        Self { extension_id: extension_id.to_string(), package: PackageId(extension_id.to_string()), capability_requests: capabilities.iter().map(|capability| CapabilityGrant { capability: capability.clone(), scope: None }).collect() }
+    }
+}
+
 /// 🧩️ `by_parent[plugin_id]` = every installed extension whose descriptor `extends == plugin_id`
 /// — exactly the "descriptors carry `extends`... zero special-casing" design requirement.
 pub struct ExtensionIndex {
@@ -463,6 +470,14 @@ pub fn valid_instance_open_purpose(purpose: &ActorInstanceOpenPurpose) -> bool {
     }
 }
 
+/// 📞️ What a queued call event is: an inbound `Event::Request` from the shell instance `origin` (its capability rides `message_endpoint`, its payload `message_payload`), or the `Event::Completed` answer to a request this actor made (its pack bytes ride `message_payload`).
+#[derive(Clone)]
+pub enum QueuedCallRole {
+    Request { origin: String },
+    CompletedOk,
+    CompletedFault,
+}
+
 #[derive(Clone, Copy)]
 pub enum QueuedKernelEventKind {
     SurfaceVisible,
@@ -470,6 +485,7 @@ pub enum QueuedKernelEventKind {
     MessageShell,
     MessageBackbone,
     OriginalMedia,
+    Call,
 }
 
 pub struct QueuedKernelEvent {
@@ -482,9 +498,15 @@ pub struct QueuedKernelEvent {
     pub message_endpoint: Option<String>,
     pub message_payload: Option<Vec<u8>>,
     original_media: Option<QueuedOriginalMedia>,
+    call: Option<(u64, QueuedCallRole)>,
 }
 
 impl QueuedKernelEvent {
+    /// 🧪️ A surface-visible event holding only `surface` (no body key, no view state), as the queue-shutdown law drains it unit by unit.
+    pub fn surface_only(surface: String) -> Self {
+        Self { kind: Some(QueuedKernelEventKind::SurfaceVisible), surface: Some(surface), surface_body_key: None, surface_view_state: None, staged_instance: None, staged_request: None, message_endpoint: None, message_payload: None, original_media: None, call: None }
+    }
+
     pub fn try_from_events(events: Vec<Event>) -> Result<Self, RejectedKernelEvents> {
         let mut events = std::collections::VecDeque::from(events);
         if events.len() != 1 {
@@ -492,16 +514,26 @@ impl QueuedKernelEvent {
         }
         match events.pop_front().expect("one queued event is present") {
             Event::SurfaceVisible { surface, body_key, view_state } => {
-                Ok(Self { kind: Some(QueuedKernelEventKind::SurfaceVisible), surface: Some(surface), surface_body_key: Some(body_key), surface_view_state: Some(view_state), staged_instance: None, staged_request: None, message_endpoint: None, message_payload: None, original_media: None })
+                Ok(Self { kind: Some(QueuedKernelEventKind::SurfaceVisible), surface: Some(surface), surface_body_key: Some(body_key), surface_view_state: Some(view_state), staged_instance: None, staged_request: None, message_endpoint: None, message_payload: None, original_media: None, call: None })
             }
             Event::StagedFormRequested { instance, surface, body_key, request } => {
-                Ok(Self { kind: Some(QueuedKernelEventKind::StagedFormRequested), surface: Some(surface), surface_body_key: Some(body_key), surface_view_state: None, staged_instance: Some(instance), staged_request: Some(request), message_endpoint: None, message_payload: None, original_media: None })
+                Ok(Self { kind: Some(QueuedKernelEventKind::StagedFormRequested), surface: Some(surface), surface_body_key: Some(body_key), surface_view_state: None, staged_instance: Some(instance), staged_request: Some(request), message_endpoint: None, message_payload: None, original_media: None, call: None })
             }
             Event::Message { source: MessageEndpoint::Shell { instance }, payload } if !payload.is_empty() && payload.len() <= semio_plugin::document_backbone_binding::DOCUMENT_BACKBONE_BINDING_CONTROL_MAXIMUM_BYTES => {
-                Ok(Self { kind: Some(QueuedKernelEventKind::MessageShell), surface: None, surface_body_key: None, surface_view_state: None, staged_instance: None, staged_request: None, message_endpoint: Some(instance.0), message_payload: Some(payload), original_media: None })
+                Ok(Self { kind: Some(QueuedKernelEventKind::MessageShell), surface: None, surface_body_key: None, surface_view_state: None, staged_instance: None, staged_request: None, message_endpoint: Some(instance.0), message_payload: Some(payload), original_media: None, call: None })
             }
             Event::Message { source: MessageEndpoint::Backbone { uri }, payload } if !payload.is_empty() && payload.len() <= store_sync::os_store::backbone::BACKBONE_HOT_MESSAGE_MAXIMUM_BYTES => {
-                Ok(Self { kind: Some(QueuedKernelEventKind::MessageBackbone), surface: None, surface_body_key: None, surface_view_state: None, staged_instance: None, staged_request: None, message_endpoint: Some(uri), message_payload: Some(payload), original_media: None })
+                Ok(Self { kind: Some(QueuedKernelEventKind::MessageBackbone), surface: None, surface_body_key: None, surface_view_state: None, staged_instance: None, staged_request: None, message_endpoint: Some(uri), message_payload: Some(payload), original_media: None, call: None })
+            }
+            Event::Request { req, from: MessageEndpoint::Shell { instance }, capability, payload } if !capability.is_empty() => {
+                Ok(Self { kind: Some(QueuedKernelEventKind::Call), surface: None, surface_body_key: None, surface_view_state: None, staged_instance: None, staged_request: None, message_endpoint: Some(capability), message_payload: Some(payload), original_media: None, call: Some((req.0, QueuedCallRole::Request { origin: instance.0 })) })
+            }
+            Event::Completed { req, result } => {
+                let (role, payload) = match result {
+                    semio_framework::kernel::RequestOutcome::Ok(bytes) => (QueuedCallRole::CompletedOk, bytes),
+                    semio_framework::kernel::RequestOutcome::Err(bytes) => (QueuedCallRole::CompletedFault, bytes),
+                };
+                Ok(Self { kind: Some(QueuedKernelEventKind::Call), surface: None, surface_body_key: None, surface_view_state: None, staged_instance: None, staged_request: None, message_endpoint: None, message_payload: Some(payload), original_media: None, call: Some((req.0, role)) })
             }
             rejected => {
                 events.push_front(rejected);
@@ -527,7 +559,7 @@ impl QueuedKernelEvent {
             .map_err(|event| RejectedKernelEvents { events: [event].into() })?;
         Ok(Self { kind: Some(QueuedKernelEventKind::OriginalMedia), surface: None, surface_body_key: None,
             surface_view_state: None, staged_instance: None, staged_request: None, message_endpoint: None,
-            message_payload: None, original_media: Some(original_media) })
+            message_payload: None, original_media: Some(original_media), call: None })
     }
 
     pub fn into_event(mut self) -> Event {
@@ -544,6 +576,16 @@ impl QueuedKernelEvent {
                 body_key: self.surface_body_key.take().expect("queued staged body is present"),
                 request: self.staged_request.take().expect("queued original staged request is present"),
             },
+            QueuedKernelEventKind::Call => {
+                let (req, role) = self.call.take().expect("queued call identity is present");
+                let req = semio_framework::kernel::RequestId(req);
+                let payload = self.message_payload.take().expect("queued call payload is present");
+                match role {
+                    QueuedCallRole::Request { origin } => Event::Request { req, from: MessageEndpoint::Shell { instance: semio_framework::kernel::PluginInstanceId(origin) }, capability: self.message_endpoint.take().expect("queued call capability is present"), payload },
+                    QueuedCallRole::CompletedOk => Event::Completed { req, result: semio_framework::kernel::RequestOutcome::Ok(payload) },
+                    QueuedCallRole::CompletedFault => Event::Completed { req, result: semio_framework::kernel::RequestOutcome::Err(payload) },
+                }
+            }
             QueuedKernelEventKind::MessageShell => Event::Message {
                 source: MessageEndpoint::Shell { instance: semio_framework::kernel::PluginInstanceId(self.message_endpoint.take().expect("queued shell-message instance is present")) },
                 payload: self.message_payload.take().expect("queued shell-message payload is present"),
@@ -641,10 +683,23 @@ impl RejectedKernelEvents {
     }
 }
 
+/// 🧩️ The wire schema of a LIVE extension activation: the DECLARED host plugin (`parent_plugin`, the extension's `extends`, as the web registry keys `extensionsByParent` by `dependsOn[0]`) and one live instance of that plugin the extension joins (its actor is linked to that parent actor, so closing the parent still takes it down; an instance of any other plugin is refused) and the extension's own activation identity — the same [`ExtensionRecord`] the startup cascade of `activate_extensions_of` reads from the generated registry, here supplied at runtime by the store door. The extension's wasm travels as the request's `CreateAppRequestOwner` (the one bounded, cancellable compile intake every native program uses).
+#[derive(Clone)]
+pub struct ExtensionActivation {
+    pub parent_instance: u32,
+    pub parent_plugin: String,
+    pub extension: ExtensionRecord,
+}
+
 pub enum KernelRequest {
     CreateApp {
         owner: CreateAppRequestOwner,
         purpose: ActorInstanceOpenPurpose,
+    },
+    /// 🧩️ Activates a runtime-installed extension beside a live parent WITHOUT re-creating the parent; answered as `KernelOutcome::Created(instance)`, where `instance` is the extension's own instance id (its surfaces and its close address it like any app instance; `DestroyApp` retires it).
+    ActivateExtension {
+        owner: CreateAppRequestOwner,
+        activation: ExtensionActivation,
     },
     DestroyApp {
         owner: Arc<KernelCloseSubmission>,
@@ -699,7 +754,7 @@ pub fn kernel_request_interleavable(request: &KernelRequest, busy: u32) -> bool 
     match request {
         KernelRequest::Exchange { instance, .. } | KernelRequest::AdvanceRetained { instance, .. } | KernelRequest::AdvanceProductReplay { instance } | KernelRequest::ExchangeCommands { instance, .. } => *instance != busy,
         KernelRequest::MountProductReplay { owner } | KernelRequest::RetireProductReplay { owner } => owner.instance != busy,
-        KernelRequest::CreateApp { .. } | KernelRequest::AcknowledgeJobProgress { .. } => true,
+        KernelRequest::CreateApp { .. } | KernelRequest::ActivateExtension { .. } | KernelRequest::AcknowledgeJobProgress { .. } => true,
         KernelRequest::DestroyApp { .. } | KernelRequest::CloseRealm { .. } | KernelRequest::RetireProductReplayRefusal { .. } | KernelRequest::CloseRejectedCommandBuild { .. } | KernelRequest::CloseRejectedEvents { .. } => false,
     }
 }
@@ -709,6 +764,7 @@ impl KernelRequest {
         match self {
             Self::ExchangeCommands { driver, .. } => (driver.remaining_pages(), driver.remaining_bytes()),
             Self::CloseRejectedCommandBuild { owner, .. } => (owner.remaining_pages(), owner.remaining_bytes()),
+            Self::ActivateExtension { .. } => (0, 0),
             Self::CreateApp { purpose, .. } => (0, match purpose {
                 ActorInstanceOpenPurpose::Ordinary => 0,
                 ActorInstanceOpenPurpose::NaturalSource { declaration, .. } =>

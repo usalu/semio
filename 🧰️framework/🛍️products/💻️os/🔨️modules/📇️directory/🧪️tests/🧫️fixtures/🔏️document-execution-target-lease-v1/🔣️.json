@@ -285,7 +285,7 @@
     "assetBody": "semio.hub.document-open-intent/v1",
     "openPlanPath": "/spaces/raum%3A%C3%A4/documents/karte%3A%E6%9D%B1%E4%BA%AC/open-plan",
     "socketGrantPath": "/spaces/raum%3A%C3%A4/documents/karte%3A%E6%9D%B1%E4%BA%AC/socket-grants",
-    "componentMaxBytes": 268435456,
+    "componentMaxBytes": 1073741824,
     "descriptorMaxBytes": 4194304,
     "manifestMaxBytes": 8192,
     "progressUnitBytes": 65536,
@@ -677,7 +677,7 @@
       "name": "component-max-plus-one",
       "stage": "component",
       "kind": "component-max-plus-one",
-      "value": 67108865,
+      "value": 1073741825,
       "expected": "unpublished"
     },
     {
@@ -977,7 +977,7 @@
       "path": [
         "wasmBytes"
       ],
-      "value": 268435457,
+      "value": 1073741825,
       "accepted": false
     },
     {

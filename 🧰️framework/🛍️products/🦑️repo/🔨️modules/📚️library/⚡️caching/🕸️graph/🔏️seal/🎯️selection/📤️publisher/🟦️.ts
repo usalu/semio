@@ -4,10 +4,11 @@ import {checkResourceLeaseControl,requireMaterializedPathV1,type ResourceLeaseCo
 import {withGraphPublicationLeaseV1,type GraphPublicationLeaseV1} from "../../../📤️publication/🟦️.ts";
 import {createHash,randomUUID} from "node:crypto";
 import {lstat,readFile,writeFile,rename,rm,realpath,mkdir} from "node:fs/promises";
-import {isAbsolute,join,relative} from "node:path";
+import {basename,dirname,isAbsolute,join,relative} from "node:path";
 import {createSelectedGraphSourceReceiptV1,selectedGraphSourceReceiptHoldsV1,isGlobalGraphIdentityPathV1,validateSelectedGraphValueV1,type SelectedGraphJournalWitnessV1,type SelectedGraphScopeV1,type SelectedGraphSourcePortsV1,type SelectedGraphSourceReceiptV1} from "../🟦️.ts";
 import {graphEnvironmentIdentityV1} from "../../../../🚀️bootstrap/🔌️nx-plugin/🌍️environment/🟦️.ts";
 import {observationsHold} from "../../../../../🏗️build/👁️observation/🟨️.mjs";
+import {sweepDeadProducerPublicationsV1} from "../../../../../🏗️build/👁️observation/🪦️producer-publications/🟨️.mjs";
 
 /** 🔏️ The graph producer binds its native file map and inference authorities to the live observer. */
 export interface SelectedGraphPublisherReceiptV1 {readonly version:1;readonly root:string;readonly rootDirectory:Readonly<{device:string;inode:string}>;readonly pid:number;readonly startedAt:number;readonly toolingIdentity:string;readonly environmentIdentity:string;readonly journal:SelectedGraphJournalWitnessV1;readonly graph:Readonly<Record<string,readonly string[]>>;readonly receipts:Readonly<Record<string,string>>;}
@@ -63,7 +64,7 @@ export async function writeSelectedGraphPublisherReceiptV1(root:string,directory
   const receipt:SelectedGraphPublisherReceiptV1={version:1,root,rootDirectory:{device:String(rootStatus.dev),inode:String(rootStatus.ino)},pid:process.pid,startedAt,toolingIdentity:ports.toolingIdentity,environmentIdentity:graphEnvironmentIdentityV1(ports.environment),journal,graph,receipts:evidence};
   validateSelectedGraphValueV1("PublisherReceiptV1",receipt);await publisherInputs(directory,receipt,undefined,root);
   const after=await ports.capture({roots:[],files:[]});if(JSON.stringify(after)!==JSON.stringify(journal)||JSON.stringify(await graphStamps(directory))!==JSON.stringify(graph))throw Error("Original selected graph publication changed during capture");
-  check();const encoded=JSON.stringify(receipt);await withNxGraphAuxiliaryCapacityV1(root,ports.environment,{version:1,extraBytes:Math.ceil(Buffer.byteLength(encoded)/4096)*4096},async()=>{check();await writeFile(temporary,encoded,{flag:"wx"});check();await rename(temporary,file);check();});return true;
+  check();const encoded=JSON.stringify(receipt);await withNxGraphAuxiliaryCapacityV1(root,ports.environment,{version:1,extraBytes:Math.ceil(Buffer.byteLength(encoded)/4096)*4096},async()=>{check();await writeFile(temporary,encoded,{flag:"wx"});check();await rename(temporary,file);check();});if(basename(dirname(directory))==="selections")await sweepDeadProducerPublicationsV1(dirname(directory),{signal}).catch(()=>undefined);return true;
  }catch(error){signal?.throwIfAborted();if(process.env.SEMIO_BUILD_PROFILE_INPUTS==="1"||process.env.NX_VERBOSE_LOGGING==="true"){}return false;}finally{await rm(temporary,{force:true});}
  },ports.publication);
 }

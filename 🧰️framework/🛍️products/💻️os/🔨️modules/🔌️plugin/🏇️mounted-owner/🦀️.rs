@@ -31,15 +31,21 @@ pub struct MountedOwnerJobReceiptV1 {
     pub terminal_is_empty: bool,
 }
 
+/// 🪜️ Raises copy, capacity, release and depth to the covering power of two of an indivisible demand, never past `ceiling` and never below `loan`.
+pub fn covering_grant(loan: RetainedCloneGrant, demand: RetirementDemand, ceiling: RetainedCloneGrant) -> RetainedCloneGrant {
+    let cover = |current: usize, needed: usize, limit: usize| if needed <= current { current } else { needed.checked_next_power_of_two().unwrap_or(needed).min(limit).max(current) };
+    RetainedCloneGrant { maximum_copy_bytes: cover(loan.maximum_copy_bytes, demand.copy_bytes, ceiling.maximum_copy_bytes), maximum_capacity_bytes: cover(loan.maximum_capacity_bytes, demand.capacity_bytes, ceiling.maximum_capacity_bytes), maximum_release_bytes: cover(loan.maximum_release_bytes, demand.release_bytes, ceiling.maximum_release_bytes), maximum_depth: cover(loan.maximum_depth, demand.depth, ceiling.maximum_depth), ..loan }
+}
+
 impl MountedOwnerPolicyV1 {
-    /// 🎛️ The interactive component embedding every hub composition grants per host turn: 64 one-item units batched within the turn, 16 MiB capacity so a whole-document clone fits one apply, 1 MiB release and 32 KiB copy (ticket 26/09/23 BUILD-SEMIO-TECH-PLAY-FOR-CDN-DEPLOYMENT, `📓️2026-10-12-publication-perf.md`).
+    /// 🎛️ The interactive component embedding every hub composition grants per host turn: 64 one-item units batched within the turn, 16 MiB capacity so a whole-document clone fits one apply, 1 MiB release and the covering power-of-two copy of the largest indivisible step (ticket 26/09/23 BUILD-SEMIO-TECH-PLAY-FOR-CDN-DEPLOYMENT, `📓️2026-10-12-publication-perf.md`).
     pub const INTERACTIVE_COMPONENT: Self = {
         let grant = RetainedCloneGrant { maximum_items: 64, maximum_copy_bytes: Self::covering_copy_bytes(Self::LARGEST_INDIVISIBLE_STEP_COPY_BYTES), maximum_capacity_bytes: 16_777_216, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
         Self { preparation: grant, maintenance: grant, close: grant }
     };
 
-    /// 📐️ The largest indivisible per-step copy demand any retained owner posts: a history-replay preparation step (22,608 B birth + 11,368 B parent, measured). A host grant below it leaves undo and time travel unfundable forever.
-    pub const LARGEST_INDIVISIBLE_STEP_COPY_BYTES: usize = 33_976;
+    /// 📐️ The largest indivisible per-step copy demand any retained owner posts, measured: a store-replacement member open (377,696 B), a member record receive (277,538 B) and a history-replay preparation step (33,976 B). A host grant below it leaves archive loads, undo and time travel unfundable forever.
+    pub const LARGEST_INDIVISIBLE_STEP_COPY_BYTES: usize = 377_696;
 
     /// 🪜️ Smallest power-of-two copy grant (never below 32 KiB) that covers one indivisible step demand.
     pub const fn covering_copy_bytes(demand: usize) -> usize {
@@ -68,6 +74,7 @@ pub struct MountedOwnerTurnV1<'turn, 'context> {
     identity: MountedOwnerIdentityV1,
     phase: MountedOwnerPhaseV1,
     grant: RetainedCloneGrant,
+    ceiling: RetainedCloneGrant,
     progress: RetainedCloneProgress,
     current_progress: RetainedCloneProgress,
     context: &'turn mut StepContext<'context>,
@@ -96,7 +103,8 @@ impl<'turn, 'context> MountedOwnerTurnV1<'turn, 'context> {
         let policy_grant=policy.grant(phase);let original=context.retained_grant();
         let grant=RetainedCloneGrant {maximum_items:policy_grant.maximum_items.min(original.maximum_items),maximum_copy_bytes:policy_grant.maximum_copy_bytes.min(original.maximum_copy_bytes),maximum_capacity_bytes:policy_grant.maximum_capacity_bytes.min(original.maximum_capacity_bytes),maximum_release_bytes:policy_grant.maximum_release_bytes.min(original.maximum_release_bytes),maximum_depth:policy_grant.maximum_depth.min(original.maximum_depth)};
         if grant.maximum_items == 0 { return Ok(None); }
-        Ok(Some(Self { identity: expected, phase, grant, progress: RetainedCloneProgress::default(), current_progress: RetainedCloneProgress::default(), context }))
+        let ceiling=RetainedCloneGrant{maximum_items:grant.maximum_items,..original};
+        Ok(Some(Self { identity: expected, phase, grant, ceiling, progress: RetainedCloneProgress::default(), current_progress: RetainedCloneProgress::default(), context }))
     }
 
     fn scheduling_should_yield(&self)->bool{if self.phase==MountedOwnerPhaseV1::Close{self.context.retirement_should_yield()}else{self.context.should_yield()}}
@@ -166,6 +174,34 @@ impl<'turn, 'context> MountedOwnerTurnV1<'turn, 'context> {
         with_progress: impl FnOnce(S, RetainedCloneProgress) -> S,
         producer: impl FnOnce(&mut StepContext<'context>, RetainedCloneGrant) -> Result<S, E>,
     ) -> Result<S, E> {
+        let (call, total) = (self.grant(), self.grant);
+        self.lifecycle(call, total, with_progress, producer)
+    }
+
+    /// 📐️ The physical authority an indivisible step may be covered up to: the mounted item batch over the original turn's remaining copy, capacity and release stock. The maintenance ladder widens each unit grant with [`covering_grant`] under exactly this ceiling.
+    pub fn covering_ceiling(&self) -> RetainedCloneGrant {
+        let original = self.context.retained_grant();
+        RetainedCloneGrant { maximum_items: self.grant().maximum_items, ..original }
+    }
+
+    /// 🪜️ [`Self::advance_lifecycle`] for a producer that covers an indivisible step larger than the mounted loan: its receipt is accepted against [`Self::covering_ceiling`], the same authority the producer widened its unit grant under, never beyond it.
+    pub fn advance_covering_lifecycle<S: semio_framework_value::RetirementReceipt, E: From<ValueError>>(
+        &mut self,
+        with_progress: impl FnOnce(S, RetainedCloneProgress) -> S,
+        producer: impl FnOnce(&mut StepContext<'context>, RetainedCloneGrant) -> Result<S, E>,
+    ) -> Result<S, E> {
+        let call = self.covering_ceiling();
+        let total = RetainedCloneGrant { maximum_items: self.grant.maximum_items, ..self.ceiling };
+        self.lifecycle(call, total, with_progress, producer)
+    }
+
+    fn lifecycle<S: semio_framework_value::RetirementReceipt, E: From<ValueError>>(
+        &mut self,
+        bound: RetainedCloneGrant,
+        total: RetainedCloneGrant,
+        with_progress: impl FnOnce(S, RetainedCloneProgress) -> S,
+        producer: impl FnOnce(&mut StepContext<'context>, RetainedCloneGrant) -> Result<S, E>,
+    ) -> Result<S, E> {
         if self.scheduling_should_yield() || self.grant().maximum_items == 0 {
             return Ok(S::retirement_yield());
         }
@@ -177,7 +213,7 @@ impl<'turn, 'context> MountedOwnerTurnV1<'turn, 'context> {
         let (actual, current) = self.receive_posted(before, reserved_before)?;
         let step = result?;
         let reported = step.retirement_progress().unwrap_or_default();
-        if (reported != actual && reported != current) || !current.fits(grant) || !self.current_progress.fits(self.grant) || current != RetainedCloneProgress::default() && self.context.original_turn_fuel_remaining() == before_fuel {
+        if (reported != actual && reported != current) || !current.fits(bound) || !self.current_progress.fits(total) || current != RetainedCloneProgress::default() && self.context.original_turn_fuel_remaining() == before_fuel {
             return Err(ValueError::literal(ValueRefusalKind::InvariantViolated, "original lifecycle receipt differs from its caller authority").with_retained_progress(actual).into());
         }
         Ok(if reported == actual { step } else { with_progress(step, actual) })

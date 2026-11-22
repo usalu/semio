@@ -5,9 +5,6 @@ pub const UI_WORKER_RETIREMENT_POLICY:RetainedCloneGrant=RetainedCloneGrant{maxi
 pub fn ui_worker_retirement_permits(demand:RetirementDemand)->bool{
  demand.copy_bytes<=UI_WORKER_RETIREMENT_POLICY.maximum_copy_bytes&&demand.capacity_bytes<=UI_WORKER_RETIREMENT_POLICY.maximum_capacity_bytes&&demand.release_bytes<=UI_WORKER_RETIREMENT_POLICY.maximum_release_bytes&&demand.depth<=UI_WORKER_RETIREMENT_POLICY.maximum_depth
 }
-#[cfg(test)]
-#[path="🧪️tests/🦀️.rs"]
-mod tests;
 
 /// 🚥️ Publishes structural denial without spending any original owner currency.
 pub fn ui_worker_retirement_admission(demand:RetirementDemand)->Result<(),ValueRefusalKind>{

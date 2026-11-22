@@ -3,6 +3,7 @@
 //! Members of tier-1 crates are methods of their component struct with the lower components as parameters; use-case members stay `impl ShellState` and address the components as `self.<component>.<field>`; a private item that crossed a module boundary was widened to `pub(super)`.
 
 use super::*;
+use semio_renderer_wgpu_ui_engine::retained_ui_engine::{retained_tree_drop_preview, tree_drop_box_border, TreeDropShape, TREE_DROP_BOX_BORDER_ALPHA, TREE_DROP_BOX_FILL_ALPHA};
 
 //#region ShellInput
 impl<'ctx> PanelsViewCtx<'ctx> {
@@ -10,8 +11,15 @@ impl<'ctx> PanelsViewCtx<'ctx> {
         if !self.input.pointer_input_is_modal() {
             let retained = input.hit_at(input.pointer_x, input.pointer_y).and_then(|hit| self.input.retained_hit_window(hit));
             if let Some((window_id, body)) = retained {
-                if let Some(marker) = semio_renderer_wgpu_ui_engine::retained_ui_engine::retained_tree_row_reorder_marker(&window_id) {
-                    overlay.push_solid([body.x + marker.x, body.y + marker.y, marker.w, marker.h], theme.accent);
+                match retained_tree_drop_preview(&window_id) {
+                    Some(TreeDropShape::Line([x, y, w, h])) => overlay.push_solid([body.x + x, body.y + y, w, h], theme.accent),
+                    Some(TreeDropShape::Box(frame)) => {
+                        overlay.push_solid([body.x + frame[0], body.y + frame[1], frame[2], frame[3]], theme.accent.with_alpha(theme.accent.a * TREE_DROP_BOX_FILL_ALPHA));
+                        for [x, y, w, h] in tree_drop_box_border(frame) {
+                            overlay.push_solid([body.x + x, body.y + y, w, h], theme.accent.with_alpha(theme.accent.a * TREE_DROP_BOX_BORDER_ALPHA));
+                        }
+                    }
+                    None => {}
                 }
             }
         }

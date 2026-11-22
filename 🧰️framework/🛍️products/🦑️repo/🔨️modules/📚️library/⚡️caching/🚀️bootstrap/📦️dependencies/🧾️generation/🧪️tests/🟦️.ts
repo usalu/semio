@@ -57,7 +57,7 @@ async function capture(root:string,store:string,startedAtMs:number,subject:Subje
   input:GenerationCaptureInputV1={
    workspace:root,storeRoot:store,scope:".",startedAtMs,runtime,producer:glue.observeJavascriptDependencyGenerationProducerV1(root,store,["."],subject.ambient),recipeSha256:"c".repeat(64),ownershipSha256:"d".repeat(64),required:["."],
    inputs:[{scope:".",sources:[directory(root),source(join(root,"package.json")),source(join(root,"bun.lock")),absent(join(root,"bunfig.toml"))]}],
-   membership:{...walked,texts:walked.texts.map(row=>({...row,profileSha256:manifestProfileSha256V1(row.path,readFileSync(join(root,row.path)))}))},bindings:[{scope:".",pairs,observation:bindingText(pairs)}],ready:[{scope:".",generation:"e".repeat(64),path:join(store,"j/g1/bindings.json"),fingerprint:readyFingerprint(join(store,"j/g1/bindings.json"))}],
+   membership:{...walked,texts:walked.texts.map(row=>({...row,owner:walked.textOwners[row.path]!,profileSha256:manifestProfileSha256V1(row.path,readFileSync(join(root,row.path)))}))},bindings:[{scope:".",pairs,observation:bindingText(pairs)}],ready:[{scope:".",generation:"e".repeat(64),path:join(store,"j/g1/bindings.json"),fingerprint:readyFingerprint(join(store,"j/g1/bindings.json"))}],
    execution:{scopes:[{scope:".",sha256:"f".repeat(64)}],runtimeSha256:runtime.sha256,observations},scopeReadSha256:"0".repeat(64),control:control({ticks:0,checks:0}),
   };
  const receiptsAndBindings=[{scope:".",generation:"e".repeat(64),fingerprint:input.ready[0]!.fingerprint}],scopeReadSha256=generationSha256V1(JSON.stringify([receiptsAndBindings,[[".",input.bindings[0]!.observation]],input.execution.scopes])),sealed={...input,scopeReadSha256};

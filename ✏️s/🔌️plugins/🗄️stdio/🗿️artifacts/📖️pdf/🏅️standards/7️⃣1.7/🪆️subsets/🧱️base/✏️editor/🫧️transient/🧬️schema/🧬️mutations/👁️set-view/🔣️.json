@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/✏️editor/🫧️transient/🧬️schema/🧬️mutations/👁️set-view",
+  "semanticKind": "set-view",
+  "displayName": "Set View",
+  "emoji": "👁️",
+  "aggregateVariant": "SetView",
+  "payloadSchema": "🧬️schema/🔣️.json",
+  "textOpcode": "set-view",
+  "binaryTag": 0,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "apply-only",
+  "outcomeClasses": ["applied", "no-op"],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": ["rust", "text", "binary", "json-schema"]
+}

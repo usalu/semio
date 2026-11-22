@@ -1,0 +1,6 @@
+[
+  { "id": "browser-mounted-grant", "items": 64, "copy": 32768, "capacity": 16777216, "release": 1048576, "depth": 64, "fuel": 2000000, "maximumLoadTurns": 4096 },
+  { "id": "browser-mounted-grant-low-fuel", "items": 64, "copy": 32768, "capacity": 16777216, "release": 1048576, "depth": 64, "fuel": 200000, "maximumLoadTurns": 4096 },
+  { "id": "interactive-component", "items": 64, "copy": 524288, "capacity": 16777216, "release": 1048576, "depth": 4096, "fuel": 2000000, "maximumLoadTurns": 4096 },
+  { "id": "browser-mounted-grant-below-the-largest-step", "items": 64, "copy": 4096, "capacity": 16777216, "release": 1048576, "depth": 64, "fuel": 2000000, "maximumLoadTurns": 4096 }
+]

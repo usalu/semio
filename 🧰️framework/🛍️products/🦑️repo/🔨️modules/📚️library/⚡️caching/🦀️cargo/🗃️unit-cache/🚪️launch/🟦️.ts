@@ -101,7 +101,7 @@ export function fleetRemoteEnvironmentV1(environment:Readonly<Record<string,stri
 }
 
 /** 🧩️ The environment block that routes every compiler call of one Cargo process through the unit cache: Cargo runs the stand-in as `<wrapper> <rustc> <arguments>`, the wrapper script serves a unit from the cache or falls back to the memory-admitting scheduler for every miss. `RUSTC` stays the real compiler, so build scripts that exec it work whatever the file mode of the script or `PATH`. A launcher adds this after its storage admission and never before; without a `scheduler` a miss runs the compiler directly. */
-export function unitCacheEnvironmentV1(input:Readonly<{cacheRoot:string;lane:string;laneRoot:string;scheduler?:string;compiler:string;toolchain:string;focus:readonly string[];slots?:number;workspaceRoot?:string;environment?:Readonly<Record<string,string|undefined>>;runtime?:string;platform?:NodeJS.Platform;build?:UnitCacheNativeBuildV1;features?:Readonly<{buildScripts?:boolean;brokerReplay?:boolean}>}>):Record<string,string>{
+export function unitCacheEnvironmentV1(input:Readonly<{cacheRoot:string;lane:string;laneRoot:string;scheduler?:string;compiler:string;toolchain:string;focus:readonly string[];slots?:number;lightSlots?:number;workspaceRoot?:string;environment?:Readonly<Record<string,string|undefined>>;runtime?:string;platform?:NodeJS.Platform;build?:UnitCacheNativeBuildV1;features?:Readonly<{buildScripts?:boolean;brokerReplay?:boolean}>}>):Record<string,string>{
  const workspace=input.workspaceRoot??fleetCacheRootV1(input.environment??process.env);
  let wrapper:string;
  try{wrapper=ensureUnitCacheShimV1(input.cacheRoot,input.runtime,undefined,input.platform,input.build);}
@@ -115,6 +115,7 @@ export function unitCacheEnvironmentV1(input:Readonly<{cacheRoot:string;lane:str
   SEMIO_UNIT_CACHE_TOOLCHAIN:input.toolchain,
   SEMIO_UNIT_CACHE_SLOTS:String(input.slots??(Number((input.environment??process.env).SEMIO_UNIT_CACHE_SLOTS)||availableParallelism())),
   SEMIO_UNIT_CACHE_FOCUS:input.focus.join(","),
+  ...(input.lightSlots?{SEMIO_UNIT_CACHE_LIGHT_SLOTS:String(input.lightSlots)}:{}),
   ...(input.features?.buildScripts?{SEMIO_UNIT_CACHE_BUILD_SCRIPTS:"on"}:{}),
   ...(input.features?.brokerReplay?{SEMIO_UNIT_CACHE_BROKER_REPLAY:"on"}:{}),
   ...(workspace?{SEMIO_UNIT_CACHE_WORKSPACE_ROOT:workspace}:{}),

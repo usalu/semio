@@ -239,7 +239,9 @@ fn merging_inserts_picked_pages_with_renamed_used_resources_only() {
     assert_eq!(*page, 1);
     let bytes = encode_pdf(&snapshot).unwrap();
     assert_eq!(oracle::reference_page_count(&bytes).unwrap(), 4);
-    assert_eq!(oracle::reference_page_operator_names(&bytes).unwrap()[1].first().map(String::as_str), Some("BT"));
+    let theirs = oracle::reference_page_operator_names(&bytes).unwrap();
+    let source_ops = oracle::reference_page_operator_names(&encode_pdf(&source).unwrap()).unwrap();
+    assert_eq!((&theirs[1], &theirs[2]), (&source_ops[0], &source_ops[1]), "merged pages keep their content operators");
     run(&mut snapshot, "merge-document", vec![("page", number(0.0)), ("payload", text(&data_url(&source))), ("extra", text("1"))]).unwrap();
     assert!(snapshot.fonts.iter().any(|font| font.id == "m2_F1") && snapshot.pages.len() == 5);
 }
@@ -288,6 +290,8 @@ fn extraction_writes_standalone_pdfs_that_lopdf_counts() {
     let source = source_document();
     let bytes = extract_pdf(&source, &[2, 0]).unwrap();
     assert_eq!(oracle::reference_page_count(&bytes).unwrap(), 2);
+    let original = oracle::reference_page_operator_names(&encode_pdf(&source).unwrap()).unwrap();
+    assert_eq!(oracle::reference_page_operator_names(&bytes).unwrap(), vec![original[2].clone(), original[0].clone()], "the independent reader sees the picked pages' content unchanged");
     let reread = crate::standards::v1_7::subsets::base::io::import::decode_pdf(&bytes).unwrap();
     assert_eq!(reread.pages.iter().map(|page| (page.width(), page.height())).collect::<Vec<_>>(), vec![(90.0, 90.0), (100.0, 100.0)]);
     assert_eq!(reread.fonts.iter().map(|font| font.id.as_str()).collect::<Vec<_>>(), vec!["F1"]);
@@ -493,4 +497,34 @@ fn page_edits_renumber_outline_entries_and_named_destinations() {
     assert_eq!(removed.outlines[1].destination, None);
     assert_eq!(removed.outlines[0].children[0].destination, Some(go(1)));
     assert!(removed.named_destinations.iter().any(|named| named.name == "first" && named.destination == go(0)));
+}
+
+#[test]
+fn the_generic_entry_form_edits_every_dictionary_family_through_set_entry() {
+    use crate::standards::v1_7::subsets::base::schema::snapshot::{PdfDictEntry, PdfObject};
+    let mut snapshot = form_document();
+    for family in fixture_controls()["entryFamilies"].as_array().unwrap() {
+        let family = family.as_str().unwrap();
+        run(&mut snapshot, "set-entry", vec![("object", text(family)), ("text", text("Mark=Yes"))]).unwrap();
+        let rows = entry_rows(&snapshot, family);
+        assert!(rows.contains(&("Mark".to_string(), "Yes".to_string(), true)), "{family}: {rows:?}");
+        run(&mut snapshot, "set-entry", vec![("object", text(family)), ("extra", text("Mark")), ("text", text("No"))]).unwrap();
+        assert!(entry_rows(&snapshot, family).contains(&("Mark".to_string(), "No".to_string(), true)), "{family}");
+        run(&mut snapshot, "set-entry", vec![("object", text(family)), ("extra", text("Mark")), ("text", text(""))]).unwrap_or_else(|error| panic!("{family}: {error}"));
+        assert!(!entry_rows(&snapshot, family).iter().any(|(key, _, _)| key == "Mark"), "{family}");
+    }
+    assert!(run(&mut snapshot, "set-entry", vec![("object", text("fonts")), ("text", text("a=b"))]).is_err());
+    assert!(run(&mut snapshot, "set-entry", vec![("object", text("catalog")), ("text", text("novalue"))]).is_err());
+    snapshot.catalog_extra.push(PdfDictEntry::new("Count", PdfObject::Int(3)));
+    assert!(entry_rows(&snapshot, "catalog").iter().any(|(key, _, editable)| key == "Count" && !editable));
+}
+
+#[test]
+fn the_entry_forms_render_in_both_languages_with_a_labelled_add_input() {
+    let snapshot = form_document();
+    for locale in [semio_ui_locale::Locale::En, semio_ui_locale::Locale::De] {
+        let (names, shown) = panel(&snapshot, Some("p0:paper"), locale);
+        assert_eq!(names.iter().filter(|name| *name == "set-entry").count(), 4, "{locale:?}");
+        assert!(shown.len() >= 4, "{shown:?}");
+    }
 }

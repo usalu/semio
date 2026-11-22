@@ -3,8 +3,7 @@ import * as fs from "node:fs";
 import {createHash} from "node:crypto";
 import {dirname,join,relative} from "node:path";
 import Ajv from "ajv";
-import ts from "typescript";
-import {evaluateExtractedFunctionV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧩️extracted-function/🟦️.ts";
+import {loadProductFunctionsV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧩️extracted-function/🟦️.ts";
 import {testPythonV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";
 import {testScratchRootV1} from "../../../../../../../../🔨️modules/🏃️process/🧪️testing/🏖️sandbox/🟦️.ts";
 import {buildInputSourceRoleV1,buildNativeSourceObservationV1,buildSourceDemandV1,registryOwnerIndexesV1} from "../../../🕸️graph/🚪️admission/🟦️.ts";
@@ -79,18 +78,12 @@ test("a missing file or failing provider keeps the same failure and its original
 }));
 
 test("actual owner compile discovery uses one physical Source image to record the exact file and both parser facts",()=>withFiles(async file=>{
- const source=ts.createSourceFile("owner.mjs",fs.readFileSync(new URL("../../../🕸️graph/📥️inference/🔎️owner-discovery/🟨️.mjs",import.meta.url),"utf8"),ts.ScriptTarget.Latest,true,ts.ScriptKind.JS);
- const declaration=source.statements.find(node=>ts.isFunctionDeclaration(node)&&node.name?.text==="discoverBuildOwnerAdmissionFactsV1");
- if(!declaration)throw Error("Actual owner discovery required");
  const workspaceRoot=dirname(file),owner={name:"fixture",root:".",manifest:"📋️project.json",packages:[]},input=relative(workspaceRoot,file);
  const module=registerSourceAnalysisV1({id:"test:source-analysis-pair:owner-module",revision,analyze:()=>({imports:[],runtimeImports:[]})});
  const references=registerSourceAnalysisV1({id:"test:source-analysis-pair:owner-references",revision,analyze:()=>({runtime:{imports:[],requires:[]}})});
- const coordinates=ts.createSourceFile("coordinates.mjs",fs.readFileSync(new URL("../../../🕸️graph/📥️inference/📍️coordinates/🟨️.mjs",import.meta.url),"utf8"),ts.ScriptTarget.Latest,true,ts.ScriptKind.JS);
- const guard=coordinates.statements.find(node=>ts.isFunctionDeclaration(node)&&node.name?.text==="requirePhysicalSourceV1");
- if(!guard)throw Error("Actual physical Source guard required");
- const requirePhysicalSourceV1=evaluateExtractedFunctionV1(guard.getText(coordinates).replace(/^export\s+/,""),"requirePhysicalSourceV1",{dirname,lstatSync:observedFs.lstatSync});
- const execute=evaluateExtractedFunctionV1(declaration.getText(source).replace(/^export\s+/,""),"discoverBuildOwnerAdmissionFactsV1",{
-  libraryBootstrap:Promise.resolve(),join,relative,requirePhysicalSourceV1,buildPath:(path:string)=>path.replaceAll("\\","/"),readPhysicalSource:(path:string)=>path===file?observedFs.readFileSync(file):Buffer.from(JSON.stringify({name:owner.name})),createScriptInputCache:()=>({}),cargoTargets:async()=>({}),componentBuildTargets:()=>({}),existsSync:()=>false,yieldInferenceV1:async()=>{},buildInputSourceRoleV1,buildNativeSourceObservationV1,buildSourceDemandV1,ownerAdmissionSchema,registryOwnerIndexesV1,parserTypescriptV1:()=>({sys:{}}),observedTypeScriptHost:()=>({}),
+ const {requirePhysicalSourceV1}=await loadProductFunctionsV1(new URL("../../../🕸️graph/📥️inference/📍️coordinates/🟨️.mjs",import.meta.url),["requirePhysicalSourceV1"],{dirname,lstatSync:observedFs.lstatSync});
+ const {discoverBuildOwnerAdmissionFactsV1:execute}=await loadProductFunctionsV1(new URL("../../../🕸️graph/📥️inference/🔎️owner-discovery/🟨️.mjs",import.meta.url),["discoverBuildOwnerAdmissionFactsV1"],{
+  libraryBootstrap:Promise.resolve(),askOwnerRegistryV1:()=>undefined,join,relative,requirePhysicalSourceV1,buildPath:(path:string)=>path.replaceAll("\\","/"),readPhysicalSource:(path:string)=>path===file?observedFs.readFileSync(file):Buffer.from(JSON.stringify({name:owner.name})),createScriptInputCache:()=>({}),cargoTargets:async()=>({}),componentBuildTargets:()=>({}),existsSync:()=>false,yieldInferenceV1:async()=>{},buildInputSourceRoleV1,buildNativeSourceObservationV1,buildSourceDemandV1,ownerAdmissionSchema,registryOwnerIndexesV1,parserTypescriptV1:()=>({sys:{}}),observedTypeScriptHost:()=>({}),
   projectWithDefaults:async()=>({namedInputs:{chosen:[]}}),WORKSPACE_POLICY:{},readBuildSourceInputMatchesV1:async()=>({matched:[input],compileByTarget:new Map([["chosen",new Set([input])]])}),relativeScriptInputs:async()=>[],prepareSourceAnalysesV1:()=>({module,references}),observedSourceAnalysisPairV1:pair,
  });
  let stats=0,reads=0;

@@ -3,7 +3,7 @@ use semio_framework_test_fixtures::fixture_text;
 
 //#region 🧪️Assembly
 fn fixture() -> serde_json::Value {
-    serde_json::from_str(fixture_text!("../../📃️document/🎟️assembly/🧪️tests/🧫️fixtures/🔣️.json")).unwrap()
+    serde_json::from_str(fixture_text!("../../../../📃️document/🎟️assembly/🧪️tests/🧫️fixtures/🔣️.json")).unwrap()
 }
 fn open() -> UiDocumentAssembly {
     let data = fixture();
@@ -55,7 +55,7 @@ fn retained_document_assembly_places_exact_pages_and_preserves_wire_and_payload_
     let _gate = crate::arena_test_gate();
     let data = fixture();
     let mut owner = open();
-    let mut first = tests::leaf_record(41, "first");
+    let mut first = arena_testkit::leaf_record(41, "first");
     first.component = serde_json::from_value(serde_json::json!({"type":"surface","kind":"canvas-2d","docSchema":"wire","doc":{"bytes":[1,2,3,4]},"bindings":[]})).unwrap();
     let pointer = match &first.component {
         crate::Component::Surface(props) => props.doc.bytes.as_slice().as_ptr(),
@@ -64,7 +64,7 @@ fn retained_document_assembly_places_exact_pages_and_preserves_wire_and_payload_
     let mut source = Some(first);
     assert!(!owner.place_one(&mut source, 1, 0).unwrap().progressed);
     assert_eq!(owner.allocated_bytes().unwrap(), 0);
-    let allocated = place(&mut owner, &mut source) + place(&mut owner, &mut Some(tests::leaf_record(9, "second")));
+    let allocated = place(&mut owner, &mut source) + place(&mut owner, &mut Some(arena_testkit::leaf_record(9, "second")));
     assert!(allocated > 0 && allocated < 32768);
     let mut lease = finish(&mut owner);
     let read = lease.try_read().unwrap();
@@ -88,9 +88,9 @@ fn retained_document_assembly_rejects_duplicate_without_consuming_input_and_canc
     let _gate = crate::arena_test_gate();
     for bytes in fixture()["closeGrants"].as_array().unwrap() {
         let mut owner = open();
-        place(&mut owner, &mut Some(tests::leaf_record(41, "original")));
+        place(&mut owner, &mut Some(arena_testkit::leaf_record(41, "original")));
         let before = owner.allocated_bytes().unwrap();
-        let mut duplicate = Some(tests::leaf_record(41, "duplicate"));
+        let mut duplicate = Some(arena_testkit::leaf_record(41, "duplicate"));
         let mut error = None;
         for _ in 0..10 {
             match owner.place_one(&mut duplicate, 1, 32768) {
@@ -123,7 +123,7 @@ fn retained_document_assembly_rejects_duplicate_without_consuming_input_and_canc
 fn retained_document_assembly_and_read_alias_do_not_wait_on_contended_arena() {
     let _gate = crate::arena_test_gate();
     let mut owner = open();
-    place(&mut owner, &mut Some(tests::leaf_record(41, "live")));
+    place(&mut owner, &mut Some(arena_testkit::leaf_record(41, "live")));
     let mut lease = finish(&mut owner);
     let mut alias = None;
     assert!(!lease.try_alias_into(&mut alias, 0).unwrap());
@@ -132,7 +132,7 @@ fn retained_document_assembly_and_read_alias_do_not_wait_on_contended_arena() {
     let (ready_tx, ready_rx) = std::sync::mpsc::channel();
     let (release_tx, release_rx) = std::sync::mpsc::channel();
     let holder = std::thread::spawn(move || {
-        let _guard = UI_DOCUMENT_ARENA.lock().unwrap();
+        let _guard = arena_testkit::hold_document_arena();
         ready_tx.send(()).unwrap();
         release_rx.recv().unwrap();
     });
@@ -157,7 +157,7 @@ fn retained_document_assembly_and_read_alias_do_not_wait_on_contended_arena() {
 fn retained_document_assembly_reports_metadata_initialization_separately_from_empty_payload_capacity() {
     let _gate = crate::arena_test_gate();
     let mut owner = open();
-    let mut source = Some(tests::leaf_record(41, "first"));
+    let mut source = Some(arena_testkit::leaf_record(41, "first"));
     let mut allocated = 0;
     let mut initialized = 0;
     for _ in 0..1000 {

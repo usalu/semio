@@ -27,8 +27,8 @@
     },
     "laws": {
       "type": "array",
-      "minItems": 216,
-      "maxItems": 216,
+      "minItems": 221,
+      "maxItems": 221,
       "items": {
         "type": "object",
         "additionalProperties": false,
@@ -62,6 +62,14 @@
           "originalAssertions": {
             "type": "integer",
             "minimum": 0
+          },
+          "removedAssertions": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "removalReason": {
+            "type": "string",
+            "minLength": 1
           },
           "originalName": {
             "type": "string",

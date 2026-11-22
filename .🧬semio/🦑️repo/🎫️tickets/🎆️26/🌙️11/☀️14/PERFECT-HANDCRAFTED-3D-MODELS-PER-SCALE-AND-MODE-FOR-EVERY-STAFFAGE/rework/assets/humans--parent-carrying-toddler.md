@@ -60,3 +60,27 @@ Bilateral symmetry: every `-l` solid has its `-r` twin in all twelve lists (4 sc
 - Host: the PreToolUse hook of the Read tool and of the browser tools timed out for the rest of the session ("host client may be unreachable"); Bash kept working. An author cannot look at renders while this lasts.
 - `r3-validate` results drift over the night without a change of the asset: a document that was `VALID` at 01:46 failed at 02:20 with `lateral-ambiguous` (intended new rule) and with a `PRINT nominal-feature` of 0.198 mm against 0.2 mm on a shape nobody touched. Print-feature limits that are met to 1 % flip with unrelated tool edits; a tolerance or a stable measure would stop this.
 - `rework-05-draw2d.py` is a projection of the solids into the drawing (one outline per solid); the brief asks for economical hand-drawn shapes. Not changed in this pass.
+
+## Pass 2 (second round), 2026-11-22 afternoon to 17:27, cut off; finished by the umbrella finisher 20:55–21:10
+
+State found by the finisher: catalog and volumes source of 03:50 (pass 1 above). A later author had changed `rework-05-parent-carrying-toddler-roots.py` and `…-model.py` (17:16) and built the candidate `🗑️generated/r3-parent-carrying-toddler/🔣️.json` (17:17), validated it (`validate.txt` 17:18: `VALID … checkVolumes 0`) and was looking at it through character art (`rework-pct-ascii.py`) when the session was cut off; nothing was published and no report written. Measured difference candidate against catalog (items 2, 3 and 4 of the open list of pass 1):
+
+- **Rig**: clavicles 0.163 m, running out, up and back (`angleDeg` 71.3, `abductionDeg` ±65.1, `twistDeg` ±159.5; joint −8…35° with a twist range), scapula a real bone of 0.203 m from the acromion (was a 40 mm link), upper arms hung from it with solved offsets. 48 bones as before.
+- **Structure**: `ilium`, `ischium` (and the other hip-bone solids) bound to `hip-bone-l/-r` with their transform; new `acromion-l/-r`, `coracoid-l/-r` at 1:50 and 1:100; scapula, spine of scapula, neck and glenoid re-expressed on the scapula bone; femur, tibia and humerus of 1:500 changed.
+- **Body / thermal**: coat yokes re-expressed on the new clavicles, jeans shanks with the ankle taper (item 4), their thermal twins.
+- **2D**: 10 to 44 shapes per view and scale redrawn by `rework-05-draw2d.py`; decisions of 1:50.
+
+Finished:
+- 20:58 candidate: `r3-validate.ts --file … --volumes` → `VALID file/r3-parent-carrying-toddler (file as it is): schema 0, validateAsset 0, checkVolumes 0`.
+- Published with `rework-05-parent-carrying-toddler-publish.py` (new, calls `kit.publish`).
+- Check CLI then `✗`: `clip walk-carrying@0.750: the union of 12 polygon(s) with area cannot be built`. Measured with `finisher-union-probe.ts`: at 1:50 and 1:100 the extruded front shape `glove-thenar-l` (bone `hand-l`) is seen exactly edge-on because `walk-6` hangs the far upper arm exactly plumb (0°); its twelve prism faces overlap by 0.04 mm and the product's `unionPolygons` gives up. Shared-code defect, reported in `requests.md` of the umbrella ticket. Asset side: `ARM_SWING` of walk-6 is 1° instead of 0° (`…-roots.py` line 234; `rework-05-parent-carrying-toddler-walk6.py` applies the same two angles to the built candidate), which is within the swing between −8° and 9° of its neighbours.
+- 21:09, published again: check CLI `✓ parent-carrying-toddler (1/1)`, all four scales suitable (1:500 min feature 0.202 mm); `r3-validate.ts humans/parent-carrying-toddler --catalog-only --volumes` → `VALID humans/parent-carrying-toddler (catalog file as it is): schema 0, validateAsset 0, checkVolumes 0`. Source = catalog.
+
+Sheets read at full size by the finisher (candidate before the 1° change): 1:50 body `standing-carry` six views, 1:50 body `hoisting`, 1:50 structure from behind. Verdict: the parent stands upright with the toddler seated on the near forearm against the chest, coat, sleeves, jeans with ankle taper and boots read right, both poses close without cracks; the skeleton shows scapulae as blades on their own bones, clavicles from sternum to acromion, pelvis with hip bones, full limbs of both figures. Rendered but not read: 1:500 body, 1:50 structure six views, 2D 1:50.
+
+Remains imperfect, stated plainly:
+- The iliac wing is still a flat extruded slab (0.13 m wide, seen from behind it reads as two rectangular plates beside the sacrum), not a curved blade.
+- 1:500 min feature is 0.202 mm against the 0.2 mm limit: any change of the drawing can tip it.
+- The 2D drawings are projections of the solids (`rework-05-draw2d.py`), not economical hand-drawn shapes.
+- `🧊️model-skeleton` named this asset (breath outlets) and `🧊️three-views` named its drawings in the validator's list of 15:00; neither suite was rerun by the finisher (reserved for the umbrella coordinator).
+- Poses `walk-1` … `walk-7`, both clips, thermal at any scale, 1:100 and 1:200 were not looked at after this pass; the toddler's legs still stick forward in the side view (item 5 of pass 1).

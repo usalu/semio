@@ -166,23 +166,17 @@ export type Parcel = { readonly id: string; readonly emitter: Slug; readonly bor
 /** 〰️ The path one parcel actually travelled from its emission to now (world space): a pathline. */
 export type Pathline = { readonly parcel: string; readonly emitter: Slug; readonly points: readonly Vec3[]; readonly ages: readonly number[] };
 
-/** 🌊️ An instantaneous streamline of the velocity field at the evaluated time, seeded at `seed`: tangent to the velocity everywhere at
- * this instant, not a particle path. */
-export type Streamline = { readonly seed: Vec3; readonly points: readonly Vec3[]; readonly speedMS: readonly number[] };
-
 /** 🏭️ The state of one emitter at the evaluated instant. */
 export type EmitterState = { readonly emitter: Slug; readonly kind: string; readonly at: Vec3; readonly direction: Vec3; readonly volumeFlowM3S: number; readonly exitVelocityMS: number; readonly temperatureC: number; readonly vapourKgPerKg: number; readonly active: boolean };
 
-/** 🌬️ The air transport at the evaluated instant: emitter states, parcels, their pathlines, instantaneous streamlines, the buoyant
- * body/surface plume and visible condensation. Deterministic in (asset, query, environment timeline); identical whether reached by
- * playing or scrubbing. */
+/** 🌬️ The air transport at the evaluated instant: emitter states, the parcels of every jet, plume, breath and transpiration (a parcel with
+ * `condensateKgPerKg` > 0 is visible condensation), their pathlines and, when asked for, the flow field every drawing of the air reads
+ * (`flow`). Deterministic in (asset, query, environment timeline); identical whether reached by playing or scrubbing. */
 export type TransportField = {
   readonly timeS: number;
   readonly emitters: readonly EmitterState[];
   readonly parcels: readonly Parcel[];
   readonly pathlines: readonly Pathline[];
-  readonly streamlines: readonly Streamline[];
-  readonly condensation: readonly { readonly at: Vec3; readonly radiusM: number; readonly condensateKgPerKg: number }[];
   readonly flow: FlowField | null;
   readonly respiration: RespirationState | null;
   readonly model: { readonly stepS: number; readonly maxAgeS: number; readonly seed: number };
@@ -196,35 +190,59 @@ export type FlowStream = { readonly seed: Vec3; readonly role: "source" | "entra
 /** ☁️ One puff of the flow field: a parcel with its entrained radius and what it carries. */
 export type FlowPuff = { readonly at: Vec3; readonly radiusM: number; readonly excessK: number; readonly vapourExcessKgPerKg: number; readonly condensateKgPerKg: number; readonly carries: "airflow" | "vapour" };
 
-/** 🌊️ The thermodynamic flow field at the evaluated instant (world metres): streams, puffs, the ambient air they are read against (`dewPointC` is the temperature below which that air condenses) and the tracer model (`stepM` arc-length step of the streams, a tracer every `periodS` seconds whose streak covers `exposureS` seconds of travel). */
+/** 🐾️ One path of the flow field: the way one parcel actually travelled from its emission to now (`points`, oldest first, with the parcel's age in seconds at each point, so the last age is its age now) and what the parcel carries now. In unsteady flow (breath, a moving emitter, gusts) paths differ from streams. */
+export type FlowPath = { readonly parcel: string; readonly emitter: Slug; readonly points: readonly Vec3[]; readonly ageS: readonly number[]; readonly excessK: number; readonly vapourExcessKgPerKg: number; readonly condensateKgPerKg: number };
+
+/** 🪨️ One obstacle of the air: a part of the evaluated body as the superellipsoid `(|q₁|ᵖ + |q₂|ᵖ + |q₃|ᵖ)^(1/p) = 1`, `q_i = axes_i·(x − centre)/radiiM_i` (world metres; exponent 2 an ellipsoid, 4 a rounded cylinder, 8 a rounded box). `blockage` is the share of the undisturbed normal flow it stops: 1 for a `solid` (a wall: no air crosses it, it hides what lies behind it),
+ * less for a `lattice` (sparse solids such as the limbs of a crown) and for `foliage` (a porous canopy), which slow the air and veil what lies behind them. */
+export type FlowObstacle = { readonly id: Slug; readonly kind: "solid" | "lattice" | "foliage"; readonly centre: Vec3; readonly axes: readonly [Vec3, Vec3, Vec3]; readonly radiiM: readonly [number, number, number]; readonly exponent: 2 | 4 | 8; readonly blockage: number };
+
+/** 👁️ Where a flow is seen from: `toward` is the world direction from the scene to a far viewer (an orthographic drawing), `at` the world place of the eye (a perspective camera). */
+export type FlowEye = { readonly toward: Vec3 } | { readonly at: Vec3 };
+
+/** 🙈️ The visibility (0…1, see `FlowRibbon.visible`) up to which a mark counts as hidden behind the body and is not drawn by any renderer. */
+export const FLOW_HIDDEN = 0.02;
+
+/** 🌊️ The thermodynamic flow field at the evaluated instant (world metres): streams, puffs, the paths the parcels travelled (`paths`; empty when the solver was asked for no pathlines), the obstacles the air flows around (`obstacles`: the body of the asset at that instant; they also hide the marks behind them), the ambient air they are read against (`dewPointC` is the temperature below which that air condenses) and the tracer model (`stepM` arc-length step of the streams, a tracer every `periodS` seconds whose streak covers `exposureS` seconds of travel). */
 export type FlowField = {
   readonly timeS: number;
   readonly streams: readonly FlowStream[];
   readonly puffs: readonly FlowPuff[];
+  readonly paths: readonly FlowPath[];
+  readonly obstacles: readonly FlowObstacle[];
+  /** 📦️ The box the flow is shown in: streams end at its faces, puffs and paths outside it are left out. A drawing reserves its paper, so the frames of a sequence keep one extent. */
+  readonly domain: { readonly min: Vec3; readonly max: Vec3 };
   readonly ambient: { readonly airTempC: number; readonly relativeHumidity: number; readonly dewPointC: number; readonly windMS: number; readonly windDirectionDeg: number; readonly pressurePa: number };
   readonly model: { readonly stepM: number; readonly periodS: number; readonly exposureS: number };
 };
 
-/** 🎗️ A drawn stream: its points with their state and the places and directions of its arrow heads. */
-export type FlowRibbon = { readonly stream: number; readonly role: FlowStream["role"]; readonly emitter: Slug | null; readonly points: readonly Vec3[]; readonly speedMS: readonly number[]; readonly excessK: readonly number[]; readonly vapourExcessKgPerKg: readonly number[]; readonly condensateKgPerKg: readonly number[]; readonly arrows: readonly { readonly at: Vec3; readonly direction: Vec3 }[] };
+/** 🎗️ A drawn stream: its points with their state, how much of each point the eye of the marks sees past the obstacles (`visible`: 0 hidden behind the body, 1 in the open, between behind or inside foliage; all 1 without an eye) and the places and directions of its arrow heads. */
+export type FlowRibbon = { readonly stream: number; readonly role: FlowStream["role"]; readonly emitter: Slug | null; readonly points: readonly Vec3[]; readonly speedMS: readonly number[]; readonly excessK: readonly number[]; readonly vapourExcessKgPerKg: readonly number[]; readonly condensateKgPerKg: readonly number[]; readonly visible: readonly number[]; readonly arrows: readonly { readonly at: Vec3; readonly direction: Vec3 }[] };
 
-/** ☄️ A tracer of the instant: the path it covered during the exposure (tail first, head last), the state at its head and its fade (0…1). */
-export type FlowStreak = { readonly stream: number; readonly role: FlowStream["role"]; readonly points: readonly Vec3[]; readonly speedMS: number; readonly excessK: number; readonly vapourExcessKgPerKg: number; readonly condensateKgPerKg: number; readonly opacity: number };
+/** ☄️ A tracer of the instant: the path it covered during the exposure (tail first, head last), the state at its head, its fade (0…1) and how much of each point the eye sees (`visible`, as for a ribbon). */
+export type FlowStreak = { readonly stream: number; readonly role: FlowStream["role"]; readonly points: readonly Vec3[]; readonly speedMS: number; readonly excessK: number; readonly vapourExcessKgPerKg: number; readonly condensateKgPerKg: number; readonly opacity: number; readonly visible: readonly number[] };
 
-/** ✨️ The generalised, view-neutral marks of a flow field at one time: what every drawing of the flow (paper, screen, 3D) projects. */
-export type FlowMarks = { readonly timeS: number; readonly ribbons: readonly FlowRibbon[]; readonly streaks: readonly FlowStreak[]; readonly puffs: readonly FlowPuff[] };
+/** 👣️ A drawn path: the kept part of one {@link FlowPath} (`path` is its index in the field), oldest point first, with per point the seconds since the parcel was there (`agoS`, 0 at its head) and the fade 0…1 of a trail (1 everywhere without a trail; with a trail of `trailS` seconds `1 − agoS / trailS`, the first point interpolated to where the fade is 0), how much of each point the eye of the marks sees past the obstacles (`visible`, as for a ribbon) and the temperature excess the parcel carries now. */
+export type FlowTrail = { readonly path: number; readonly parcel: string; readonly emitter: Slug; readonly points: readonly Vec3[]; readonly agoS: readonly number[]; readonly fade: readonly number[]; readonly visible: readonly number[]; readonly excessK: number };
 
-/** 🖍️ What the transport overlay draws: the analytical layers of the parcel model. */
-export const TRANSPORT_LAYERS = ["parcels", "pathlines", "streamlines", "condensation"] as const;
+/** ✨️ The generalised, view-neutral marks of a flow field at one time: what every drawing of the flow (paper, screen, 3D) projects; `puffVisible` is how much of each puff the eye of the marks sees past the obstacles (1 without an eye). */
+export type FlowMarks = { readonly timeS: number; readonly ribbons: readonly FlowRibbon[]; readonly streaks: readonly FlowStreak[]; readonly puffs: readonly FlowPuff[]; readonly puffVisible: readonly number[]; readonly trails: readonly FlowTrail[] };
 
-/** 🌊️ The layers of the thermodynamic flow view: `streams` (stream ribbons with arrow heads), `tracers` (advected particles as streaks), `moisture` (vapour clouds) and `fog` (condensed droplets where the dew point is crossed). */
-export const FLOW_LAYERS = ["streams", "tracers", "moisture", "fog"] as const;
+/** 🌪️ The conditions of the air a flow is solved in besides its environment: ambient turbulence (`intensity` = σ_u over the wind speed, `floorMS` the smallest σ_u, `lagrangianTimeS` the integral time scale), the wind profile (absent: uniform; else a logarithmic boundary layer of roughness length `z0M` that reaches the environment's wind speed at `referenceHeightM`), the life of a parcel `maxAgeS` (s) and the seed of the turbulent random walk. */
+export type FlowConditions = { readonly turbulence?: { readonly intensity: number; readonly floorMS: number; readonly lagrangianTimeS: number }; readonly boundaryLayer?: { readonly z0M: number; readonly referenceHeightM: number }; readonly maxAgeS?: number; readonly seed?: number };
+
+/** 🔎️ The generalisation and timing of flow marks on paper: the smallest spacing of streams and puffs and the shortest streak in paper millimetres, the seconds between two tracers of a stream, the seconds of travel a streak covers and `loopS`, the seconds after which the tracers of every stream repeat (the release interval of a stream is stretched until a whole number of them fits, so the frames of a loop of that length close; absent: no such period).
+ * Paths: `spacingMm` thins them as it thins streams; `trailS` keeps only the last seconds of every path as a fading trail (absent: the whole path from the emission at full strength). Weight: `strokeMm` is the paper width of the widest stream in millimetres, every line of the flow scales with it (absent: the hairlines of a print, `FLOW_STYLE.streamMaxMm`). */
+export type FlowMarkDetail = { readonly spacingMm?: number; readonly minStreakMm?: number; readonly periodS?: number; readonly exposureS?: number; readonly loopS?: number; readonly trailS?: number; readonly strokeMm?: number };
+
+/** 🌊️ The layers of the thermodynamic flow view, the one vocabulary of drawn air: `streams` (stream ribbons with arrow heads), `tracers` (advected particles as streaks), `moisture` (vapour clouds), `fog` (condensed droplets where the dew point is crossed) and `pathlines` (the path each parcel actually travelled, the honest picture of unsteady flow such as breath). */
+export const FLOW_LAYERS = ["streams", "tracers", "moisture", "fog", "pathlines"] as const;
+
+/** 🌱️ The layers a thermal view shows unless told otherwise: everything but `pathlines`, whose turbulent paths are the analytical reading a reader asks for. */
+export const DEFAULT_FLOW_LAYERS = ["streams", "tracers", "moisture", "fog"] as const satisfies readonly (typeof FLOW_LAYERS)[number][];
 
 /** 📤️ One of {@link FLOW_LAYERS}. */
 export type FlowLayer = (typeof FLOW_LAYERS)[number];
-
-/** 🪧️ One of {@link TRANSPORT_LAYERS}. */
-export type TransportLayer = (typeof TRANSPORT_LAYERS)[number];
 //#endregion 🌡️Thermal
 
 //#region 🏗️Structure
@@ -348,13 +366,14 @@ export type DepictionCommon = {
   readonly transparent: boolean;
   readonly marginMm: number;
   readonly thermalQuantity: ThermalQuantity;
-  readonly transport: readonly TransportLayer[];
   /** 🌊️ The layers of the thermodynamic flow view drawn over the figure; absent or empty draws none. */
   readonly flow?: readonly FlowLayer[];
   /** ⏱️ Seconds the flow has developed before the query time when the depiction solves the transport itself (a pose at time 0 has emitted nothing yet); absent is 0. */
   readonly flowDevelopS?: number;
-  readonly transportStrokeMm?: number;
-  readonly transportTrailS?: number;
+  /** 🌪️ The conditions of the air the flow is solved in besides the environment; absent uses the solver's defaults. */
+  readonly flowConditions?: FlowConditions;
+  /** 🔎️ How the flow marks are generalised and timed instead of the rule of the drawing scale; absent members keep that rule. */
+  readonly flowDetail?: FlowMarkDetail;
   readonly profile: PrintProfile;
   readonly representation: RepresentationSelector;
   readonly forceQuantity: ForceQuantity;
@@ -362,8 +381,6 @@ export type DepictionCommon = {
   readonly patterns: boolean;
   /** 🧊️ The shape roles drawn (a level of detail): absent draws every role; the paper extent still reaches every shape of the representation. */
   readonly roles?: readonly ShapeRole[];
-  /** 🧊️ The fraction (0, 1] of parcels and pathlines drawn, every ceil(1 / density)-th by emission index; absent draws all. */
-  readonly transportDensity?: number;
   readonly theme?: "light" | "dark";
   readonly environment?: Environment;
   readonly environmentTimeline?: EnvironmentTimeline;

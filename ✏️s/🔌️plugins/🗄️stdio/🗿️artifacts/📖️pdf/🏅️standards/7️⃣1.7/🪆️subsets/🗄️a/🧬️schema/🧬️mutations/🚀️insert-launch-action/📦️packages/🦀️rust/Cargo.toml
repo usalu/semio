@@ -9,6 +9,37 @@ description = "Component crate of semio-s-artifact-stdio-pdf: mut-family"
 [package.metadata.semio]
 role = "library"
 
+[package.metadata.semio.carve]
+owned = [
+  "standards::v1_7::subsets::a::schema::mutations::insert_launch_action",
+  "standards::v1_7::subsets::a::schema::mutations::remove_af_relationship",
+  "standards::v1_7::subsets::a::schema::mutations::remove_launch_action",
+  "standards::v1_7::subsets::a::schema::mutations::remove_output_intent",
+  "standards::v1_7::subsets::a::schema::mutations::set_af_relationship",
+  "standards::v1_7::subsets::a::schema::mutations::set_output_intent",
+  "standards::v1_7::subsets::e::schema::mutations::embed_font_file",
+  "standards::v1_7::subsets::e::schema::mutations::insert_encryption_dictionary",
+  "standards::v1_7::subsets::e::schema::mutations::insert_javascript_action",
+  "standards::v1_7::subsets::e::schema::mutations::remove_encryption_dictionary",
+  "standards::v1_7::subsets::e::schema::mutations::remove_font_file",
+  "standards::v1_7::subsets::e::schema::mutations::remove_javascript_action",
+  "standards::v1_7::subsets::x::io::binary::mutations::set_output_intent",
+  "standards::v1_7::subsets::x::schema::mutations::embed_font_file",
+  "standards::v1_7::subsets::x::schema::mutations::insert_encryption_dictionary",
+  "standards::v1_7::subsets::x::schema::mutations::insert_javascript_action",
+  "standards::v1_7::subsets::x::schema::mutations::insert_launch_action",
+  "standards::v1_7::subsets::x::schema::mutations::insert_media_annotation",
+  "standards::v1_7::subsets::x::schema::mutations::remove_encryption_dictionary",
+  "standards::v1_7::subsets::x::schema::mutations::remove_font_file",
+  "standards::v1_7::subsets::x::schema::mutations::remove_javascript_action",
+  "standards::v1_7::subsets::x::schema::mutations::remove_launch_action",
+  "standards::v1_7::subsets::x::schema::mutations::remove_media_annotation",
+  "standards::v1_7::subsets::x::schema::mutations::remove_output_intent",
+  "standards::v1_7::subsets::x::schema::mutations::remove_trim_box",
+  "standards::v1_7::subsets::x::schema::mutations::set_output_intent",
+  "standards::v1_7::subsets::x::schema::mutations::set_trim_box",
+]
+
 [lints]
 workspace = true
 

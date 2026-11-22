@@ -1,7 +1,7 @@
 /** 🪟️ The three-view sheet: top view above the side view, front view beside it, in aligned projection, every cell a window of the same drawing at the same zoom.
  *
  * {@link ThreeViewSheet} draws a given layout; all three figures share one asset, query, clock, view mode, scale and environment, so scrubbing moves them on the same frame and a metre measures the same in each. A cell whose
- * viewpoint cannot be drawn keeps its place and shows the reason in words. {@link StaffageViews} is the reusable component that measures its box and fits the sheet (or takes a fixed zoom, 1 = print size) and finds its own layout.
+ * viewpoint cannot be drawn keeps its place and shows the reason in words. The air flow of the thermal view is drawn in every cell from the same solve settings and moves with the same clock; only the focused cell reports its field (`onFlow`). {@link StaffageViews} is the reusable component that measures its box and fits the sheet (or takes a fixed zoom, 1 = print size) and finds its own layout.
  *
  * @see ../🟦️.ts — the layout and the resolutions
  * @see ../../🧍️figure/🟦️.tsx — the figure of each cell
@@ -18,7 +18,7 @@ import { defaultQuery } from "../../🧮️pipeline/🟦️.ts";
 import { SHEET_ORDER, VIEWPOINT_NAMES, VIEWPOINT_PHRASES, sheetOf, viewpointWord, type Sheet } from "../🟦️.ts";
 
 /** 🎛️ What the three figures share beyond asset, instant and scale. */
-export type SheetFigureOptions = Pick<StaffageFigureProps, "theme" | "transparent" | "annotations" | "thermalQuantity" | "forceQuantity" | "range" | "patterns" | "diagrams" | "environment" | "onInspect">;
+export type SheetFigureOptions = Pick<StaffageFigureProps, "theme" | "transparent" | "annotations" | "thermalQuantity" | "forceQuantity" | "range" | "patterns" | "diagrams" | "environment" | "flow" | "flowConditions" | "flowDetail" | "onFlow" | "onInspect">;
 
 /** ⚙️ The props of {@link ThreeViewSheet}. */
 export type ThreeViewSheetProps = {
@@ -40,6 +40,7 @@ export type ThreeViewSheetProps = {
 /** 🔭️ Draws the given sheet at a zoom. */
 export function ThreeViewSheet(props: ThreeViewSheetProps): ReactElement {
   const { asset, language, sheet, zoom, focus, onFocus, onEvaluated } = props;
+  const { onFlow, ...shared } = props.figure ?? {};
   const { layout, resolutions } = sheet;
   const mm = (value: number): string => `${value * zoom}mm`;
   const column = (viewpoint: PlanarViewpoint): number => layout.cells[viewpoint].column;
@@ -92,7 +93,8 @@ export function ThreeViewSheet(props: ThreeViewSheetProps): ReactElement {
                   zoom={zoom}
                   fit="paper"
                   live
-                  {...props.figure}
+                  {...shared}
+                  {...(focused && onFlow !== undefined ? { onFlow } : {})}
                   {...(focused && onEvaluated !== undefined ? { onEvaluated } : {})}
                 />
               </FigureBoundary>
@@ -135,7 +137,7 @@ export function StaffageViews(props: StaffageViewsProps): ReactElement {
   const { asset, language, view, scale, zoom = "fit" } = props;
   const [attach, size] = useSize({ width: 800, height: 600 });
   const queries = useMemo(() => [props.query ?? defaultQuery(asset, 0)], [asset, props.query]);
-  const sheet = useMemo(() => sheetOf(asset, queries, { view, denominator: scale.denominator, language, ...(props.figure?.theme === undefined ? {} : { theme: props.figure.theme }) }), [asset, queries, view, scale.denominator, language, props.figure?.theme]);
+  const sheet = useMemo(() => sheetOf(asset, queries, { view, denominator: scale.denominator, language, ...(props.figure?.theme === undefined ? {} : { theme: props.figure.theme }), flow: (props.figure?.flow?.length ?? 0) > 0 }), [asset, queries, view, scale.denominator, language, props.figure?.theme, (props.figure?.flow?.length ?? 0) > 0]);
   const fit = Math.min((size.width - 8) / (sheet.layout.widthMm * CSS_PX_PER_MM), (size.height - 8) / (sheet.layout.heightMm * CSS_PX_PER_MM));
   const effective = zoom === "fit" ? Math.max(0.05, fit) : zoom;
   const note = viewpointWord("viewpoints.sheetScale", language, { mm: formatNumber(mmPerMetre(scale), 1, language), scale: scale.denominator });

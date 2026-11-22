@@ -1,4 +1,6 @@
+import {join} from "node:path";
 import {cacheTextV1,formatCacheBytesV1,type CacheLanguageV1,type CacheLedgerV1} from "../../../⚡️caching/💾️storage/🧾️ledger/🟦️.ts";
+import {sweepDeadProducerPublicationsV1} from "../../👁️observation/🪦️producer-publications/🟨️.mjs";
 
 /** 🔌️ What the reclaim needs from the repository: the single-flight lease, the retained graph partition owner, the optional member indexing of its groups, its free space and the two shared recoveries; tests replace them. */
 export type GraphReclaimPortsV1=Readonly<{
@@ -8,12 +10,19 @@ export type GraphReclaimPortsV1=Readonly<{
  index?(image:object):Promise<Readonly<{groups:number;indexed:number;busy:number;refused:number;compacted:number;cancelled:boolean}>>;
  supersede?(image:object,dryRun:boolean):Promise<Readonly<{groups:number;busy:number;skipped:number;headers:number;removed:number;bytes:number;cancelled:boolean}>>;
  closures?(image:object,dryRun:boolean):Promise<Readonly<{candidates:number;removed:number;bytes:number;busy:number;unvouched:number;cancelled:boolean}>>;
+ publications?(image:object,dryRun:boolean):Promise<Readonly<{candidates:number;removed:number;bytes:number;cancelled:boolean}>>;
  closureStores?(image:object,dryRun:boolean):Promise<Readonly<{stores:number;entries:number;layers:number;values:number;kept:number;bytes:number;graceMilliseconds:number;cancelled:boolean}>>;
  free(image:object):Promise<number>;
  selected(image:object,request:Readonly<{minimumAvailableBytes:number;wait:false}>):Promise<unknown>;
  optional(image:object,request:Readonly<{minimumAvailableBytes:number}>):Promise<unknown>;
  lru?(image:object,dryRun:boolean):Promise<Readonly<{usedBytes:number;maximumBytes:number;targetBytes:number;remainingBytes:number;retiredGroups:number;retiredFiles:number;retiredBytes:number;busy:number;protected:number;cancelled:boolean}>>;
 }>;
+
+/** 🪦️ Sweeps the per-process producer publications (`p-<pid>`) of processes that are gone below the selections of the graph image: nothing reads them once their process ended, a live process keeps its own. */
+export async function graphProducerPublicationsV1(imageRoot:string,dryRun:boolean,signal:AbortSignal):Promise<Readonly<{candidates:number;removed:number;bytes:number;cancelled:boolean}>>{
+ const report=await sweepDeadProducerPublicationsV1(join(imageRoot,"inference","selections"),{dryRun,signal});
+ return{candidates:report.candidates.length,removed:report.removed,bytes:report.bytes,cancelled:report.cancelled};
+}
 
 /** 🚰️ Reclaims optional graph caches up to the ledger's target free space, in the background and under the shared hold of the retained graph image: first it removes the observation blocks no record names any more (the inventory of the graph image is finite and every re-inference supersedes blocks), retires the least recently written optional groups while the optional cache holds more than its low-water mark (its own limit, whatever the free space), then collects the closure stores (entries superseded in their slot and layers or values no entry names, after a grace), then it indexes the groups no member index vouches for yet (leaves are read without a lease, each group's non-blocking writer lease is held only while rows are appended, because a group is retired by its index and an lstat of each member), then reclaims scope by scope, never the exclusive maintenance of the image unless that is not enough. Under physical pressure, first tries idle selected publications and indexed optional scopes without waiting on live graph writers. Returns the localized report lines. */
 export async function reclaimGraphOptionalV1(workspace:string,ledger:CacheLedgerV1,dryRun:boolean,language:CacheLanguageV1,ports:GraphReclaimPortsV1):Promise<string>{
@@ -28,6 +37,7 @@ export async function reclaimGraphOptionalV1(workspace:string,ledger:CacheLedger
   const lines:string[]=[],finish=(line:string)=>[...lines,line].join("\n"),targetAvailableBytes=reclaim.targetAvailableBytes;
   const recovered=(before:number,after:number)=>finish(text("gc.graph.done",{freed:formatCacheBytesV1(Math.max(0,after-before)),free:formatCacheBytesV1(after),target:formatCacheBytesV1(targetAvailableBytes)}));
   const before=dryRun?undefined:await ports.free(image),pressed=before!==undefined&&before<targetAvailableBytes;
+  if(ports.publications){const report=await ports.publications(image,dryRun);if(report.candidates)lines.push(text(dryRun?"gc.graph.publications.plan":"gc.graph.publications.done",{count:report.candidates,bytes:formatCacheBytesV1(report.bytes)}));if(report.cancelled)return finish(text("error.cancelled"));}
   if(pressed){
    await ports.selected(image,{minimumAvailableBytes:targetAvailableBytes,wait:false});
    let free=await ports.free(image);

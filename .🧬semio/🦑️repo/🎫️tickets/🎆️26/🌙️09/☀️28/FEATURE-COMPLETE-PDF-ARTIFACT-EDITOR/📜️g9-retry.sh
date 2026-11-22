@@ -1,6 +1,6 @@
 #!/bin/sh
 # usage: g9-retry.sh NAME repo-args... ; retries while the build tool itself is mid-edit
-D=".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️28/FEATURE-COMPLETE-PDF-ARTIFACT-EDITOR/🗑️generated/g9"; n=$1; shift
+D=".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️28/FEATURE-COMPLETE-PDF-ARTIFACT-EDITOR/🗑️generated/g9/r2"; n=$1; shift
 for a in $(seq 1 30); do
   SEMIO_LANGUAGE=en repo "$@" --output=static > "$D/$n.$a.log" 2>&1; c=$?
   echo "attempt $a exit $c" >> "$D/$n.status"

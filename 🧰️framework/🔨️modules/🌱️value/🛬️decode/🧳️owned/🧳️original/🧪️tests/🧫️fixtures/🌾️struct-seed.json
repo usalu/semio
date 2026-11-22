@@ -1,0 +1,8 @@
+{
+  "fixedParts": 19,
+  "partsPerField": 2,
+  "partsPerDefault": 1,
+  "cases": [
+    {"owner": "Row", "fields": 1, "defaults": 0, "parts": 21}
+  ]
+}

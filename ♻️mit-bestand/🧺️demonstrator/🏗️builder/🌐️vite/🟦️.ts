@@ -10,7 +10,7 @@ import { builtPluginModulesRootIn } from "../../../../🧰️framework/🛍️pr
 import { buildModePolicy, readBuildMode } from "../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { playgroundFlowWasmDevStubPlugin, playgroundSceneHostOptimizeDeps, playgroundSceneHostResolveAliases, semioAssetsVitePlugin, semioEmojiIndexHtmlVitePlugin, semioHostHtmlVitePlugin, semioViteBuild, staticDirVitePlugin, semioServeCloseVitePlugin } from "../../../../🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript/🏗️builder/🌐️vite/🟦️.ts";
+import { playgroundFlowWasmDevStubPlugin, playgroundSceneHostOptimizeDeps, playgroundSceneHostResolveAliases, semioReferencedAssetsVitePlugin, semioEmojiIndexHtmlVitePlugin, semioKatexWoff2OnlyVitePlugin, semioHostHtmlVitePlugin, semioViteBuild, staticDirVitePlugin, semioServeCloseVitePlugin } from "../../../../🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript/🏗️builder/🌐️vite/🟦️.ts";
 import { demonstratorGisMapTileServeMode } from "../../🔨️modules/📦️site/🗺️tile-serve-mode/🟦️.ts";
 import { MODULE_EXTENSION_ROUTE, MODULE_PLUGIN_ROUTE } from "../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📦️deployment/🟦️.ts";
 import { devStreamMuxServer, semioBackboneVitePlugin, semioBlobVitePlugin, semioActivationVitePlugin } from "../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/🔌️vite-plugins/🟦️.ts";
@@ -56,7 +56,7 @@ export default defineOwnedBuildConfigFactory(({ command, mode }) => {
   publicDir: path.join(playDir, "🌐️public"),
   assetsInclude: ["**/*.wasm"],
   worker: { format: "es" },
-  define: { "import.meta.vitest": "undefined" },
+  define: { "import.meta.vitest": "undefined", ...(command === "build" ? { "import.meta.env.VITE_SEMIO_AGENT_BRIDGE_OFFER": JSON.stringify("") } : {}) },
   resolve: {
     alias: [
       { find: /^@semio-tech\/presentation$/u, replacement: path.resolve(repoRoot, "🧰️framework/🛍️products/🎤️presentation/📦️packages/🟦️typescript/🟦️.ts") },
@@ -101,7 +101,8 @@ export default defineOwnedBuildConfigFactory(({ command, mode }) => {
     ...(development ? [demonstratorUnionReceiptVitePlugin({ workspace: repoRoot })] : []),
     ...(development ? [semioActivationVitePlugin({ receiptDirectory: development.receiptDirectory, moduleRoot: pluginModulesDir, installRoot: installedExtensionsDir, components: demonstratorActivationComponents(repoRoot) })] : []),
     ...(command === "serve" ? [semioExtensionStoreVitePlugin({ installRoot: installedExtensionsDir, repoRoot, streams: devStreamMuxServer })] : []),
-    ...semioAssetsVitePlugin(repoRoot),
+    semioKatexWoff2OnlyVitePlugin(),
+    ...semioReferencedAssetsVitePlugin(repoRoot),
     ...(command === "build" ? [browserArtifactVitePlugin(demonstratorRuntimeAssetSources(repoRoot, profile))] : [
       ...pluginModuleDirNames.flatMap((name) => staticDirVitePlugin(repoRoot, { kind: "static-dir", route: `${MODULE_PLUGIN_ROUTE}/${name}`, root: path.relative(repoRoot, path.join(pluginModulesDir, name)) })),
       ...staticDirVitePlugin(repoRoot, { kind: "static-dir", route: `${MODULE_PLUGIN_ROUTE}/🪞️vendor`, root: path.relative(repoRoot, demonstratorRuntimeAssetSources(repoRoot, profile).find(row => row.owner === "infinite:fonts")!.root) }),

@@ -16,4 +16,7 @@ pub mod aluminium_roof_purlin;
 mod example;
 #[path = "🏚️noncompliant-multi-fail/🦀️.rs"]
 pub mod noncompliant_multi_fail;
+#[cfg(test)]
+#[path = "🏚️noncompliant-multi-fail/🧪️tests/🧩️example/🦀️.rs"]
+mod example_noncompliant_multi_fail;
 //#endregion 🪢️Mounts

@@ -10,7 +10,7 @@ import { SoftwareBackend } from "../../../../../../../🧰️framework/🔨️mo
 import { translator } from "../../🔨️modules/🌐️i18n/🟦️.ts";
 import { ENGLISH } from "../../🔨️modules/🌐️i18n/🔠️english/🟦️.ts";
 import { GERMAN } from "../../🔨️modules/🌐️i18n/🔡️german/🟦️.ts";
-import { preparedOf, prepareModel } from "../../🔨️modules/🧊️spatial/🏭️prepare/🟦️.ts";
+import { modelOptionsOf, preparedOf, prepareModel } from "../../🔨️modules/🧊️spatial/🏭️prepare/🟦️.ts";
 import { ModelStage, type StageOptions, type StageState } from "../../🔨️modules/🧊️spatial/🖥️stage/🟦️.ts";
 import { qualityOf } from "@teaching/staffage";
 import { CAMERA_PRESETS, describeModel, modelKey, sceneOf, variantOf } from "../../🔨️modules/🧊️spatial/🟦️.ts";
@@ -105,6 +105,19 @@ describe("🎭️ representations are variants of one model", () => {
     expect(sceneOf({ scale: 100, view: "dark-line" })).toBe("s100-body");
     expect(modelKey(sampleFigure, { ...base, query: clip })).not.toBe(modelKey(sampleFigure, base));
     expect(modelKey(sampleFigure, { ...base, thermalQuantity: "skin-temperature" })).not.toBe(modelKey(sampleFigure, base));
+  });
+
+  it("shows the air flow once: the model of the stage carries no flow geometry whatever layers the reader turns on, and the layers never rebuild it", async () => {
+    const thermal = { ...base, view: "thermal", scales: [200] } as const;
+    for (const flow of [undefined, [], ["streams", "tracers", "moisture", "fog"]] as const) {
+      const request = { ...thermal, ...(flow === undefined ? {} : { flow }) };
+      expect(modelOptionsOf(sampleFigure, request).flowGeometry).toBe(false);
+      expect(modelKey(sampleFigure, request)).toBe(modelKey(sampleFigure, thermal));
+    }
+    const document = await prepareModel(sampleFigure, { ...thermal, flow: ["streams"] });
+    expect(document.nodes.filter((node) => node.tags?.includes("flow") === true || /flow|emitter/u.test(node.id))).toEqual([]);
+    expect(document.materials.filter((material) => /flow|emitter/u.test(material.id))).toEqual([]);
+    expect(await prepareModel(sampleFigure, thermal)).toBe(document);
   });
 
   it("selects the scene of the scale and mode of the request without rebuilding the model: 1:100 light-solid is s100-body, thermal at 1:50 is s50-thermal, forces at 1:200 is s200-structure, and a scale with no model is refused by name", async () => {

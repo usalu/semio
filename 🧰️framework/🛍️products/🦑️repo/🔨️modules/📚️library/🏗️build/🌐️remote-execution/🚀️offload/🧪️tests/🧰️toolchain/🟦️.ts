@@ -33,7 +33,9 @@ for(const row of fixture.cases)test(row.name,()=>{
   if(!row.offers){expect(offer).toBeUndefined();return;}
   const digest=spawnSync(python,["-I","-c","import hashlib, sys; print(hashlib.sha256(sys.stdin.buffer.read()).hexdigest()[:16])"],{input:identity,encoding:"utf8",timeout:10000});
   expect(digest.status,digest.stderr).toBe(0);
-  expect(offer).toEqual({
+  const sdk=offer!.properties.filter(property=>property.name==="semio-sdk");
+  expect(sdk.length,"only a macOS worker names its SDK").toBe(process.platform==="darwin"?1:0);
+  expect({...offer!,properties:offer!.properties.filter(property=>property.name!=="semio-sdk")}).toEqual({
    tools:{rustc:{path:compiler,readable:[sysroot]}},
    toolchain:{commit:fixture.commit,host:row.host,digest:digest.stdout.trim(),targets:row.targets},
    properties:[{name:"semio-offload-format",value:"argv-1"},...row.targets.map(target=>({name:"semio-rustc-target-"+target,value:"1"}))],

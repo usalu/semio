@@ -9,6 +9,36 @@ description = "Component crate of semio-s-artifact-stdio-pdf: mut-base"
 [package.metadata.semio]
 role = "library"
 
+[package.metadata.semio.carve]
+owned = [
+  "standards::v1_7::subsets::base::io::binary::mutations::insert_annotation",
+  "standards::v1_7::subsets::base::io::binary::mutations::insert_page",
+  "standards::v1_7::subsets::base::io::binary::mutations::remove_annotation",
+  "standards::v1_7::subsets::base::io::binary::mutations::remove_catalog_entry",
+  "standards::v1_7::subsets::base::io::binary::mutations::remove_content",
+  "standards::v1_7::subsets::base::io::binary::mutations::remove_dict_entry",
+  "standards::v1_7::subsets::base::io::binary::mutations::remove_embedded_file",
+  "standards::v1_7::subsets::base::io::binary::mutations::remove_form",
+  "standards::v1_7::subsets::base::io::binary::mutations::remove_image",
+  "standards::v1_7::subsets::base::io::binary::mutations::remove_named_destination",
+  "standards::v1_7::subsets::base::io::binary::mutations::remove_object",
+  "standards::v1_7::subsets::base::io::binary::mutations::remove_trailer_entry",
+  "standards::v1_7::subsets::base::io::binary::mutations::replace_content",
+  "standards::v1_7::subsets::base::io::binary::mutations::set_acro_form",
+  "standards::v1_7::subsets::base::io::binary::mutations::set_dict_entry",
+  "standards::v1_7::subsets::base::io::binary::mutations::set_embedded_file",
+  "standards::v1_7::subsets::base::io::binary::mutations::set_encryption",
+  "standards::v1_7::subsets::base::io::binary::mutations::set_ext_g_state",
+  "standards::v1_7::subsets::base::io::binary::mutations::set_font",
+  "standards::v1_7::subsets::base::io::binary::mutations::set_metadata",
+  "standards::v1_7::subsets::base::io::binary::mutations::set_outlines",
+  "standards::v1_7::subsets::base::io::binary::mutations::set_output_intents",
+  "standards::v1_7::subsets::base::io::binary::mutations::set_page_layout",
+  "standards::v1_7::subsets::base::io::binary::mutations::set_properties",
+  "standards::v1_7::subsets::base::io::binary::mutations::set_shading",
+  "standards::v1_7::subsets::base::io::binary::mutations::set_trailer_entry",
+]
+
 [lints]
 workspace = true
 

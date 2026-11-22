@@ -1,0 +1,376 @@
+{
+  "depth": 0.42,
+  "rimMS": 20.0,
+  "sectors": [
+    "ahead",
+    "aheadLeft",
+    "left",
+    "behindLeft",
+    "behind",
+    "behindRight",
+    "right",
+    "aheadRight"
+  ],
+  "cases": [
+    {
+      "view": "elevation",
+      "bearingDeg": 0,
+      "speedMS": 1.0,
+      "point": [
+        0.22360679775,
+        0.0
+      ],
+      "solvedBearingDeg": 0,
+      "solvedSpeedMS": 1.0,
+      "sector": "ahead"
+    },
+    {
+      "view": "elevation",
+      "bearingDeg": 90,
+      "speedMS": 1.5,
+      "point": [
+        0.0,
+        -0.115021737076
+      ],
+      "solvedBearingDeg": 90,
+      "solvedSpeedMS": 1.5,
+      "sector": "left"
+    },
+    {
+      "view": "elevation",
+      "bearingDeg": 180,
+      "speedMS": 0.2,
+      "point": [
+        -0.1,
+        -0.0
+      ],
+      "solvedBearingDeg": 180,
+      "solvedSpeedMS": 0.2,
+      "sector": "behind"
+    },
+    {
+      "view": "elevation",
+      "bearingDeg": 270,
+      "speedMS": 5.0,
+      "point": [
+        -0.0,
+        0.21
+      ],
+      "solvedBearingDeg": 270,
+      "solvedSpeedMS": 5.0,
+      "sector": "right"
+    },
+    {
+      "view": "elevation",
+      "bearingDeg": 45,
+      "speedMS": 20.0,
+      "point": [
+        0.707106781187,
+        -0.296984848098
+      ],
+      "solvedBearingDeg": 45,
+      "solvedSpeedMS": 20.0,
+      "sector": "aheadLeft"
+    },
+    {
+      "view": "elevation",
+      "bearingDeg": 135,
+      "speedMS": 0.5,
+      "point": [
+        -0.111803398875,
+        -0.046957427527
+      ],
+      "solvedBearingDeg": 135,
+      "solvedSpeedMS": 0.5,
+      "sector": "behindLeft"
+    },
+    {
+      "view": "elevation",
+      "bearingDeg": 200,
+      "speedMS": 3.2,
+      "point": [
+        -0.375877048314,
+        0.057459384079
+      ],
+      "solvedBearingDeg": 200,
+      "solvedSpeedMS": 3.2,
+      "sector": "behind"
+    },
+    {
+      "view": "elevation",
+      "bearingDeg": 315,
+      "speedMS": 12.0,
+      "point": [
+        0.547722557505,
+        0.230043474152
+      ],
+      "solvedBearingDeg": 315,
+      "solvedSpeedMS": 12.0,
+      "sector": "aheadRight"
+    },
+    {
+      "view": "elevation",
+      "bearingDeg": 359,
+      "speedMS": 7.3,
+      "point": [
+        0.604060283358,
+        0.004428442816
+      ],
+      "solvedBearingDeg": 359,
+      "solvedSpeedMS": 7.3,
+      "sector": "ahead"
+    },
+    {
+      "view": "elevation",
+      "bearingDeg": 10,
+      "speedMS": 0.1,
+      "point": [
+        0.069636424032,
+        -0.005157087767
+      ],
+      "solvedBearingDeg": 10,
+      "solvedSpeedMS": 0.1,
+      "sector": "ahead"
+    },
+    {
+      "view": "front",
+      "bearingDeg": 0,
+      "speedMS": 1.0,
+      "point": [
+        0.0,
+        0.093914855055
+      ],
+      "solvedBearingDeg": 0,
+      "solvedSpeedMS": 1.0,
+      "sector": "ahead"
+    },
+    {
+      "view": "front",
+      "bearingDeg": 90,
+      "speedMS": 1.5,
+      "point": [
+        0.273861278753,
+        0.0
+      ],
+      "solvedBearingDeg": 90,
+      "solvedSpeedMS": 1.5,
+      "sector": "left"
+    },
+    {
+      "view": "front",
+      "bearingDeg": 180,
+      "speedMS": 0.2,
+      "point": [
+        0.0,
+        -0.042
+      ],
+      "solvedBearingDeg": 180,
+      "solvedSpeedMS": 0.2,
+      "sector": "behind"
+    },
+    {
+      "view": "front",
+      "bearingDeg": 270,
+      "speedMS": 5.0,
+      "point": [
+        -0.5,
+        -0.0
+      ],
+      "solvedBearingDeg": 270,
+      "solvedSpeedMS": 5.0,
+      "sector": "right"
+    },
+    {
+      "view": "front",
+      "bearingDeg": 45,
+      "speedMS": 20.0,
+      "point": [
+        0.707106781187,
+        0.296984848098
+      ],
+      "solvedBearingDeg": 45,
+      "solvedSpeedMS": 20.0,
+      "sector": "aheadLeft"
+    },
+    {
+      "view": "front",
+      "bearingDeg": 135,
+      "speedMS": 0.5,
+      "point": [
+        0.111803398875,
+        -0.046957427527
+      ],
+      "solvedBearingDeg": 135,
+      "solvedSpeedMS": 0.5,
+      "sector": "behindLeft"
+    },
+    {
+      "view": "front",
+      "bearingDeg": 200,
+      "speedMS": 3.2,
+      "point": [
+        -0.13680805733,
+        -0.157868360292
+      ],
+      "solvedBearingDeg": 200,
+      "solvedSpeedMS": 3.2,
+      "sector": "behind"
+    },
+    {
+      "view": "front",
+      "bearingDeg": 315,
+      "speedMS": 12.0,
+      "point": [
+        -0.547722557505,
+        0.230043474152
+      ],
+      "solvedBearingDeg": 315,
+      "solvedSpeedMS": 12.0,
+      "sector": "aheadRight"
+    },
+    {
+      "view": "front",
+      "bearingDeg": 359,
+      "speedMS": 7.3,
+      "point": [
+        -0.010543911467,
+        0.253705319011
+      ],
+      "solvedBearingDeg": 359,
+      "solvedSpeedMS": 7.3,
+      "sector": "ahead"
+    },
+    {
+      "view": "front",
+      "bearingDeg": 10,
+      "speedMS": 0.1,
+      "point": [
+        0.012278780397,
+        0.029247298093
+      ],
+      "solvedBearingDeg": 10,
+      "solvedSpeedMS": 0.1,
+      "sector": "ahead"
+    },
+    {
+      "view": "plan",
+      "bearingDeg": 0,
+      "speedMS": 1.0,
+      "point": [
+        0.22360679775,
+        0.0
+      ],
+      "solvedBearingDeg": 0,
+      "solvedSpeedMS": 1.0,
+      "sector": "ahead"
+    },
+    {
+      "view": "plan",
+      "bearingDeg": 90,
+      "speedMS": 1.5,
+      "point": [
+        0.0,
+        -0.273861278753
+      ],
+      "solvedBearingDeg": 90,
+      "solvedSpeedMS": 1.5,
+      "sector": "left"
+    },
+    {
+      "view": "plan",
+      "bearingDeg": 180,
+      "speedMS": 0.2,
+      "point": [
+        -0.1,
+        -0.0
+      ],
+      "solvedBearingDeg": 180,
+      "solvedSpeedMS": 0.2,
+      "sector": "behind"
+    },
+    {
+      "view": "plan",
+      "bearingDeg": 270,
+      "speedMS": 5.0,
+      "point": [
+        -0.0,
+        0.5
+      ],
+      "solvedBearingDeg": 270,
+      "solvedSpeedMS": 5.0,
+      "sector": "right"
+    },
+    {
+      "view": "plan",
+      "bearingDeg": 45,
+      "speedMS": 20.0,
+      "point": [
+        0.707106781187,
+        -0.707106781187
+      ],
+      "solvedBearingDeg": 45,
+      "solvedSpeedMS": 20.0,
+      "sector": "aheadLeft"
+    },
+    {
+      "view": "plan",
+      "bearingDeg": 135,
+      "speedMS": 0.5,
+      "point": [
+        -0.111803398875,
+        -0.111803398875
+      ],
+      "solvedBearingDeg": 135,
+      "solvedSpeedMS": 0.5,
+      "sector": "behindLeft"
+    },
+    {
+      "view": "plan",
+      "bearingDeg": 200,
+      "speedMS": 3.2,
+      "point": [
+        -0.375877048314,
+        0.13680805733
+      ],
+      "solvedBearingDeg": 200,
+      "solvedSpeedMS": 3.2,
+      "sector": "behind"
+    },
+    {
+      "view": "plan",
+      "bearingDeg": 315,
+      "speedMS": 12.0,
+      "point": [
+        0.547722557505,
+        0.547722557505
+      ],
+      "solvedBearingDeg": 315,
+      "solvedSpeedMS": 12.0,
+      "sector": "aheadRight"
+    },
+    {
+      "view": "plan",
+      "bearingDeg": 359,
+      "speedMS": 7.3,
+      "point": [
+        0.604060283358,
+        0.010543911467
+      ],
+      "solvedBearingDeg": 359,
+      "solvedSpeedMS": 7.3,
+      "sector": "ahead"
+    },
+    {
+      "view": "plan",
+      "bearingDeg": 10,
+      "speedMS": 0.1,
+      "point": [
+        0.069636424032,
+        -0.012278780397
+      ],
+      "solvedBearingDeg": 10,
+      "solvedSpeedMS": 0.1,
+      "sector": "ahead"
+    }
+  ]
+}

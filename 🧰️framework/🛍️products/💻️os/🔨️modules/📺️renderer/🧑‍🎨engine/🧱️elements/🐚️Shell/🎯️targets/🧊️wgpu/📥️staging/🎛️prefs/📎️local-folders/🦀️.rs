@@ -23,7 +23,9 @@ pub const FOLDER_RECONNECT_CONTROL_ID: &str = "s-folder-reconnect";
 pub const FOLDER_FORGET_CONTROL_ID: &str = "s-folder-forget";
 
 /// 📐️ The band's widest extent on one row; wider, it wraps compact.
-const FOLDER_BAND_MAX_WIDTH: f32 = 720.0;
+fn folder_band_max_width(width: f32) -> f32 {
+    width * semio_renderer_wgpu_shell_chrome_state::chrome_parity_constants().sizes.folder_band_max_width_fraction
+}
 
 /// 📐️ One laid-out reconnect band: the strip, the message's lines and the two buttons.
 #[derive(Clone, Debug, PartialEq)]
@@ -39,7 +41,7 @@ pub struct FolderReconnectBandPlan {
 /// buttons below it.
 pub fn folder_reconnect_band_plan(message: String, reconnect: String, forget: String, below: Option<Rect>, width: f32, height: f32, theme: &Theme) -> FolderReconnectBandPlan {
     let floor = below.map_or(height, |rect| rect.y);
-    let layout = chrome_band_layout(&message, " ", &[reconnect.as_str(), forget.as_str()], floor, width, FOLDER_BAND_MAX_WIDTH, theme);
+    let layout = chrome_band_layout(&message, " ", &[reconnect.as_str(), forget.as_str()], floor, width, folder_band_max_width(width), theme);
     let (reconnect_rect, forget_rect) = (layout.buttons[0], layout.buttons[1]);
     FolderReconnectBandPlan { band: layout.band, lines: layout.lines, buttons: [(FOLDER_RECONNECT_CONTROL_ID, FOLDER_RECONNECT_ACTION, reconnect, reconnect_rect), (FOLDER_FORGET_CONTROL_ID, FOLDER_FORGET_ACTION, forget, forget_rect)] }
 }
@@ -87,3 +89,70 @@ pub enum LocalFolderText {
     Unidentified,
 }
 //#endregion 🔖️Reconnect
+
+//#region 🔖️LocalFiles
+/// 🆔️ The listing's own nodes: the band's status id and the prefix of each document button's control id (`<prefix><documentId>`).
+pub const LOCAL_FILES_STATUS_ID: &str = "s-local-files";
+
+pub const LOCAL_FILE_CONTROL_PREFIX: &str = "s-local-file.";
+
+/// 🎬️ The verb a document button dispatches on the shell's sync controller: reopen that kept document (React's `openKeptFile`).
+pub const LOCAL_FILE_OPEN_ACTION: &str = "openKeptFile";
+
+/// 📜️ The listing's scroll region: when the documents do not fit above the footer, the wheel moves the first listed row, like React's section growing past the viewport.
+pub const LOCAL_FILES_SCROLL_ID: &str = "s-local-files.scroll";
+
+/// 🗣️ The listing's title (React's `LocalFilesV1` `title` label).
+pub fn local_files_title(locale: Locale) -> &'static str {
+    match locale {
+        Locale::En => "Files on this device",
+        Locale::De => "Dateien auf diesem Gerät",
+    }
+}
+
+/// 📐️ One laid-out listing band: the strip, its title line, the visible window of the list (one button per kept document: control id, document id, name, box), the pixel pitch of one row, the largest first row and the scroll thumb when rows are hidden.
+#[derive(Clone, Debug, PartialEq)]
+pub struct LocalFilesBandPlan {
+    pub band: Rect,
+    pub lines: Vec<ChromeBandLine>,
+    pub buttons: Vec<(String, String, String, Rect)>,
+    pub row_pitch: f32,
+    pub max_first_row: usize,
+    pub thumb: Option<Rect>,
+}
+
+impl PrefsState {
+    /// 📐️ This frame's listing band, stacked bottom-centre above `below` (the folder offer, else the history bands): React's `<ul>`, one button per kept document, all of them. Rows the space above `below` cannot hold scroll by `scroll` pixels (whole rows); `None` while the device keeps no document with a surface.
+    pub fn local_files_band_plan_for(&self, rows: &[LocalFileRow], below: Option<Rect>, scroll: f32, theme: &Theme, chrome: &ChromeState) -> Option<LocalFilesBandPlan> {
+        if rows.is_empty() {
+            return None;
+        }
+        let (pad, gap, small) = (theme.padding_standard, theme.gap_standard, theme.font_size_small);
+        let glyph_w = |text: &str| text.chars().count() as f32 * small * 0.6;
+        let title = local_files_title(self.active_locale());
+        let row_h = theme.size_large();
+        let pitch = row_h + gap * 0.5;
+        let title_h = small * 1.6;
+        let head_h = pad + title_h + gap * 0.5;
+        let floor = below.map_or(chrome.screen_h, |rect| rect.y);
+        let widest = rows.iter().map(|row| glyph_w(row.name.as_str()) + pad * 2.0).fold(glyph_w(title), f32::max);
+        let width = (widest + pad * 2.0).min((chrome.screen_w * 0.9).min(folder_band_max_width(chrome.screen_w))).max(1.0);
+        let fit = (((floor - theme.navbar_height - pad - head_h) / pitch).floor().max(1.0)) as usize;
+        let visible = fit.min(rows.len());
+        let max_first_row = rows.len() - visible;
+        let first = ((scroll.max(0.0) / pitch).floor() as usize).min(max_first_row);
+        let band_h = head_h + visible as f32 * pitch;
+        let band = Rect::new(((chrome.screen_w - width) * 0.5).max(0.0), (floor - band_h).max(0.0), width, band_h);
+        let inner = (width - pad * 2.0).max(1.0);
+        let top = band.y + pad * 0.5 + title_h + gap * 0.5;
+        let lines = vec![ChromeBandLine { text: title.to_string(), rect: Rect::new(band.x + pad, band.y + pad * 0.5, inner, title_h) }];
+        let buttons = rows.iter().skip(first).take(visible).enumerate().map(|(index, row)| (format!("{LOCAL_FILE_CONTROL_PREFIX}{}", row.document_id), row.document_id.clone(), row.name.clone(), Rect::new(band.x + pad, top + index as f32 * pitch, inner, row_h))).collect();
+        let thumb = (visible < rows.len()).then(|| {
+            let track = visible as f32 * pitch;
+            let share = visible as f32 / rows.len() as f32;
+            Rect::new(band.x + band.w - pad * 0.5 - theme.stroke_hairline * 2.0, top + track * first as f32 / rows.len() as f32, theme.stroke_hairline * 2.0, track * share)
+        });
+        Some(LocalFilesBandPlan { band, lines, buttons, row_pitch: pitch, max_first_row, thumb })
+    }
+}
+//#endregion 🔖️LocalFiles

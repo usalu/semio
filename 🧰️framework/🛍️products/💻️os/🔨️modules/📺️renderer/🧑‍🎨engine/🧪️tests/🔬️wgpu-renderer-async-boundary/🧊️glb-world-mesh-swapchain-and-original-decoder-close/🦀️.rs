@@ -187,7 +187,7 @@ fn the_swapchain_is_acquired_written_and_presented_in_one_prepared_opportunity()
     let present = &present[..present.find("PreparedGpuPresentPhase::Complete =>").unwrap_or(present.len())];
     let acquire = present.find("get_current_texture").expect("the acquire");
     let blit = present.find("blit_prepared_composite").expect("the composite blit onto the acquired texture");
-    let submit = present.find("self.queue.submit").expect("the submit");
+    let submit = present.find("self.roots.queue.submit").expect("the submit");
     let present_call = present.find("frame.present()").expect("the present");
     assert!(acquire < blit && blit < submit && submit < present_call, "acquire, write, submit and present are one straight line inside one opportunity");
 
@@ -212,7 +212,7 @@ fn glass_snapshots_the_accumulated_composite_at_its_authored_command() {
     let backdrop = ladder.split("PreparedGpuPresentPhase::SnapshotBackdrop =>").nth(1).unwrap();
     let backdrop = &backdrop[..backdrop.find("PreparedGpuPresentPhase::BlurScene =>").unwrap()];
     assert!(backdrop.contains("prepared_glass_command(packet, cursor.command)?"), "the snapshot validates its exact command owner");
-    assert!(backdrop.contains("blit_prepared_composite(&self.device, &mut encoder, scene.mip_view(0), composite)"), "earlier content forms the backdrop");
+    assert!(backdrop.contains("blit_prepared_composite(&self.roots.device, &mut encoder, scene.mip_view(0), composite)"), "earlier content forms the backdrop");
     assert!(!backdrop.contains("cursor.command ="), "snapshotting retains the current glass command");
     let glass = ladder.split("PreparedGpuPresentPhase::CompositeGlass =>").nth(1).unwrap();
     let glass = &glass[..glass.find("PreparedGpuPresentPhase::Present =>").unwrap()];
@@ -253,12 +253,12 @@ fn presented_ink_intent_barrier_progresses_before_gpu_submit_and_holds_runtime_i
 
     let acknowledge = LIBRARY_SOURCE().split("AppPresentPhase::Acknowledge => {").nth(1).expect("the acknowledgement phase");
     let acknowledge = &acknowledge[..acknowledge.find("AppPresentPhase::ProgressAcknowledge =>").expect("the next presenter phase")];
-    let input_ack = acknowledge.find("shell.acknowledge_presented_input").expect("the exact input witness acknowledgement");
+    let input_ack = acknowledge.find("acknowledge_presented_input(input, input_candidate)").expect("the exact input witness acknowledgement");
     let packet_ack = acknowledge.find("gate.acknowledge_presented").expect("the prepared packet acknowledgement");
     assert!(input_ack < packet_ack, "a refused input witness keeps the packet witness live for a Pending retry");
 
-    let host_build = WINT_APP_SOURCE().split("fn build_and_publish_snapshot(").nth(1).expect("the host build pump");
-    let host_build = &host_build[..host_build.find("fn present_snapshot").expect("the host presentation half")];
+    let host_build = WINT_APP_SOURCE().split("fn pump_frame_inputs(").nth(1).expect("the host input pump");
+    let host_build = &host_build[..host_build.find("fn build_and_publish_snapshot_on_original_caller(").expect("the host build half")];
     let ingress_gate = host_build.find("holds_presented_input_publication").expect("the input-publication critical section");
     let runtime_pump = host_build.find("pump_pending_applies").expect("the runtime apply pump");
     assert!(ingress_gate < runtime_pump, "runtime input cannot enter between the last preflight and acknowledgement");
@@ -273,13 +273,13 @@ fn component_close_retires_its_creating_frame_before_external_progress_and_readm
     assert_eq!(law["expected"]["sameGenerationReadmitted"], true);
     assert_eq!(law["expected"]["closingHostPublications"].as_array().map(Vec::len), Some(0));
 
-    let host_build = WINT_APP_SOURCE().split("fn build_and_publish_snapshot(").nth(1).expect("the host build pump");
+    let host_build = WINT_APP_SOURCE().split("fn pump_frame_inputs(").nth(1).expect("the host input pump");
     let host_build = &host_build[..host_build.find("fn present_snapshot").expect("the host presentation half")];
     let close_step = host_build.find("self.advance_component_surface_close(cx)?").expect("one bounded component-close step");
     let event_drain = host_build.find("if !self.events.is_empty()").expect("the unrelated input drain");
-    let close_gate = host_build.find("if !component_close_pending").expect("the component-close frame-admission gate");
+    let close_gate = host_build.find("if !crate::os_host::component_surface_close_pending(){").expect("the component-close frame-admission gate");
     let frame_admission = host_build.find("self.presenter.admit_next_frame").expect("the unrelated frame admission");
-    let snapshot_publication = host_build.find("self.snapshot_sink.publish").expect("the immutable snapshot publication");
+    let snapshot_publication = host_build.find("self.snapshot_sink.publish_on_original_caller").expect("the immutable snapshot publication");
     assert!(close_step < event_drain && event_drain < close_gate && close_gate < frame_admission && frame_admission < snapshot_publication, "input remains queued while the bridge gates frame admission until terminal");
     assert!(host_build[close_step..event_drain].contains("InvalidationReason::RESOURCE_READY"), "the nonterminal close retains its bounded progress wake while the sibling advances");
 

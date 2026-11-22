@@ -9,6 +9,40 @@ description = "Component crate of semio-s-artifact-stdio-pdf: mut-family"
 [package.metadata.semio]
 role = "library"
 
+[package.metadata.semio.carve]
+owned = [
+  "standards::v1_7::subsets::e::schema::mutations::remove_output_intent::tests",
+  "standards::v1_7::subsets::e::schema::mutations::set_output_intent::tests",
+  "standards::v1_7::subsets::ua::io",
+  "standards::v1_7::subsets::ua::io::binary",
+  "standards::v1_7::subsets::ua::io::derived_analysis",
+  "standards::v1_7::subsets::ua::io::derived_composition",
+  "standards::v1_7::subsets::ua::io::derived_construction",
+  "standards::v1_7::subsets::ua::io::mutation_bridge",
+  "standards::v1_7::subsets::ua::io::text",
+  "standards::v1_7::subsets::ua::schema::mutations::embed_font_file::tests",
+  "standards::v1_7::subsets::ua::schema::mutations::remove_display_doc_title::tests",
+  "standards::v1_7::subsets::ua::schema::mutations::remove_font_file::tests",
+  "standards::v1_7::subsets::ua::schema::mutations::remove_lang::tests",
+  "standards::v1_7::subsets::ua::schema::mutations::remove_mark_info::tests",
+  "standards::v1_7::subsets::ua::schema::mutations::remove_struct_tree_root::tests",
+  "standards::v1_7::subsets::ua::schema::mutations::set_display_doc_title::tests",
+  "standards::v1_7::subsets::ua::schema::mutations::set_info_title::tests",
+  "standards::v1_7::subsets::ua::schema::mutations::set_lang::tests",
+  "standards::v1_7::subsets::ua::schema::mutations::set_mark_info::tests",
+  "standards::v1_7::subsets::ua::schema::mutations::set_struct_tree_root::tests",
+  "standards::v1_7::subsets::vt::schema::mutations::embed_font_file::tests",
+  "standards::v1_7::subsets::vt::schema::mutations::insert_encryption_dictionary::tests",
+  "standards::v1_7::subsets::vt::schema::mutations::insert_javascript_action::tests",
+  "standards::v1_7::subsets::vt::schema::mutations::insert_launch_action::tests",
+  "standards::v1_7::subsets::vt::schema::mutations::insert_media_annotation::tests",
+  "standards::v1_7::subsets::vt::schema::mutations::remove_dpart_metadata::tests",
+  "standards::v1_7::subsets::vt::schema::mutations::remove_dpart_root::tests",
+  "standards::v1_7::subsets::vt::schema::mutations::remove_encryption_dictionary::tests",
+  "standards::v1_7::subsets::vt::schema::mutations::remove_font_file::tests",
+  "standards::v1_7::subsets::vt::schema::mutations::remove_javascript_action::tests",
+]
+
 [lints]
 workspace = true
 

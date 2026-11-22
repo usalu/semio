@@ -1832,8 +1832,8 @@
       ]
      ],
      "plane": "yz",
-     "from": 0.0,
-     "to": 8.0,
+     "from": 0.036,
+     "to": 7.964,
      "region": "beam-sides",
      "sectionFaces": [
       "-w",
@@ -1867,8 +1867,8 @@
       ]
      ],
      "plane": "yz",
-     "from": 0.0,
-     "to": 8.0,
+     "from": 0.036,
+     "to": 7.964,
      "region": "beam-sides",
      "sectionFaces": [
       "+w",
@@ -1902,8 +1902,8 @@
       ]
      ],
      "plane": "yz",
-     "from": 0.0,
-     "to": 8.0,
+     "from": 0.036,
+     "to": 7.964,
      "region": "beam-top",
      "sectionFaces": [
       "-v"
@@ -1935,7 +1935,7 @@
       ]
      ],
      "plane": "yz",
-     "from": 0.0,
+     "from": 0.036,
      "to": 0.12,
      "region": "beam-soffit",
      "sectionFaces": [
@@ -2002,10 +2002,66 @@
      ],
      "plane": "yz",
      "from": 7.88,
-     "to": 8.0,
+     "to": 7.964,
      "region": "beam-soffit",
      "sectionFaces": [
       "+v"
+     ]
+    },
+    {
+     "id": "th-end-grain-left",
+     "kind": "box",
+     "bone": "beam",
+     "material": "glulam",
+     "role": "body",
+     "tone": 0.6,
+     "size": [
+      0.036,
+      0.6,
+      0.16
+     ],
+     "transform": {
+      "translation": [
+       0.018,
+       0.0,
+       0.0
+      ]
+     },
+     "region": "beam-end-grain",
+     "sectionFaces": [
+      "+v",
+      "-v",
+      "+w",
+      "-w",
+      "+u"
+     ]
+    },
+    {
+     "id": "th-end-grain-right",
+     "kind": "box",
+     "bone": "beam",
+     "material": "glulam",
+     "role": "body",
+     "tone": 0.6,
+     "size": [
+      0.036,
+      0.6,
+      0.16
+     ],
+     "transform": {
+      "translation": [
+       7.982,
+       0.0,
+       0.0
+      ]
+     },
+     "region": "beam-end-grain",
+     "sectionFaces": [
+      "+v",
+      "-v",
+      "+w",
+      "-w",
+      "-u"
      ]
     },
     {
@@ -2160,6 +2216,10 @@
     {
      "en": "Structure: the member is the real 160 x 600 mm GL24h section over the full 8 m (the glued lamellae act as one section); the pin bearing is a 10 mm steel pad with a 10 mm knife edge under the left plate centre, the roller bearing a 20 mm steel roller across the width under the right plate centre, both standing on the ground at their anchors 7.88 m apart; the slider of the moving load is a 100 x 160 x 7.5 mm steel load plate on the top face, where the point load enters the beam. The self-weight is distributed uniformly along the member, so no concentrated mass is modelled.",
      "de": "Tragwerk: das Glied ist der echte Querschnitt GL24h 160 x 600 mm über die vollen 8 m (die verleimten Lamellen wirken als ein Querschnitt); das Festlager ist eine 10-mm-Stahlplatte mit 10-mm-Schneide unter der Mitte der linken Platte, das Rollenlager eine 20-mm-Stahlrolle über die Breite unter der Mitte der rechten Platte, beide stehen am Boden an ihren Ankern im Abstand von 7,88 m; der Schlitten der wandernden Last ist eine Stahllastplatte 100 x 160 x 7,5 mm auf der Oberseite, wo die Einzellast in den Balken eintritt. Das Eigengewicht ist gleichmäßig über das Glied verteilt, daher ist keine Einzelmasse modelliert."
+    },
+    {
+     "en": "Thermal ends: the two end-grain faces are a region of their own (0.16 x 0.60 m each). Each is a 36 mm storage skin over the full section that closes the tube of the four face skins, which now run between the two end skins (butt joint; the 36 mm rim of an end skin is a section face, so the end region measures exactly its face and the long faces give up 0.9 % of their length).",
+     "de": "Thermische Enden: die beiden Hirnholzflächen sind eine eigene Region (je 0,16 x 0,60 m). Jede ist eine 36-mm-Speicherschale über den vollen Querschnitt, die das Rohr der vier Flächenschalen schließt; diese laufen jetzt zwischen den beiden Stirnschalen (stumpfer Stoß; der 36-mm-Rand einer Stirnschale ist Schnittfläche, sodass die Stirnregion genau ihre Fläche misst und die Längsflächen 0,9 % ihrer Länge abgeben)."
     }
    ]
   },
@@ -2670,8 +2730,8 @@
       ]
      ],
      "plane": "yz",
-     "from": 0.0,
-     "to": 8.0,
+     "from": 0.036,
+     "to": 7.964,
      "region": "beam-sides",
      "sectionFaces": [
       "-w",
@@ -2705,8 +2765,8 @@
       ]
      ],
      "plane": "yz",
-     "from": 0.0,
-     "to": 8.0,
+     "from": 0.036,
+     "to": 7.964,
      "region": "beam-sides",
      "sectionFaces": [
       "+w",
@@ -2740,8 +2800,8 @@
       ]
      ],
      "plane": "yz",
-     "from": 0.0,
-     "to": 8.0,
+     "from": 0.036,
+     "to": 7.964,
      "region": "beam-top",
      "sectionFaces": [
       "-v"
@@ -2773,11 +2833,67 @@
       ]
      ],
      "plane": "yz",
-     "from": 0.0,
-     "to": 8.0,
+     "from": 0.036,
+     "to": 7.964,
      "region": "beam-soffit",
      "sectionFaces": [
       "+v"
+     ]
+    },
+    {
+     "id": "th-end-grain-left",
+     "kind": "box",
+     "bone": "beam",
+     "material": "glulam",
+     "role": "body",
+     "tone": 0.6,
+     "size": [
+      0.036,
+      0.6,
+      0.16
+     ],
+     "transform": {
+      "translation": [
+       0.018,
+       0.0,
+       0.0
+      ]
+     },
+     "region": "beam-end-grain",
+     "sectionFaces": [
+      "+v",
+      "-v",
+      "+w",
+      "-w",
+      "+u"
+     ]
+    },
+    {
+     "id": "th-end-grain-right",
+     "kind": "box",
+     "bone": "beam",
+     "material": "glulam",
+     "role": "body",
+     "tone": 0.6,
+     "size": [
+      0.036,
+      0.6,
+      0.16
+     ],
+     "transform": {
+      "translation": [
+       7.982,
+       0.0,
+       0.0
+      ]
+     },
+     "region": "beam-end-grain",
+     "sectionFaces": [
+      "+v",
+      "-v",
+      "+w",
+      "-w",
+      "-u"
      ]
     },
     {
@@ -2916,6 +3032,10 @@
     {
      "en": "Structure: the true member section; the pin is a plain 120 mm steel wedge of the plate height with its edge under the beam, the roller a 20 mm roller across the width; the slider of the moving load is the load plate on the top face, 15 mm thick (one smallest feature).",
      "de": "Tragwerk: der wahre Gliedquerschnitt; das Festlager ist ein einfacher 120-mm-Stahlkeil in Plattenhöhe mit der Schneide unter dem Balken, das Rollenlager eine 20-mm-Rolle über die Breite; der Schlitten der wandernden Last ist die Lastplatte auf der Oberseite, 15 mm dick (eine kleinste Einzelheit)."
+    },
+    {
+     "en": "Thermal ends: the end-grain faces keep their own 36 mm skins over the full section, as at 1:50; the four face skins run between them.",
+     "de": "Thermische Enden: die Hirnholzflächen behalten wie bei 1:50 ihre eigenen 36-mm-Schalen über den vollen Querschnitt; die vier Flächenschalen laufen dazwischen."
     }
    ]
   },
@@ -3007,8 +3127,8 @@
       ]
      ],
      "plane": "yz",
-     "from": 0.0,
-     "to": 8.0,
+     "from": 0.036,
+     "to": 7.964,
      "region": "beam-sides",
      "sectionFaces": [
       "-w"
@@ -3036,8 +3156,8 @@
       ]
      ],
      "plane": "yz",
-     "from": 0.0,
-     "to": 8.0,
+     "from": 0.036,
+     "to": 7.964,
      "region": "beam-sides",
      "sectionFaces": [
       "+w"
@@ -3065,8 +3185,8 @@
       ]
      ],
      "plane": "yz",
-     "from": 0.0,
-     "to": 8.0,
+     "from": 0.036,
+     "to": 7.964,
      "region": "beam-top",
      "sectionFaces": [
       "-w",
@@ -3095,12 +3215,68 @@
       ]
      ],
      "plane": "yz",
-     "from": 0.0,
-     "to": 8.0,
+     "from": 0.036,
+     "to": 7.964,
      "region": "beam-soffit",
      "sectionFaces": [
       "-w",
       "+w"
+     ]
+    },
+    {
+     "id": "th-end-grain-left",
+     "kind": "box",
+     "bone": "beam",
+     "material": "glulam",
+     "role": "body",
+     "tone": 0.6,
+     "size": [
+      0.036,
+      0.6,
+      0.16
+     ],
+     "transform": {
+      "translation": [
+       0.018,
+       0.0,
+       0.0
+      ]
+     },
+     "region": "beam-end-grain",
+     "sectionFaces": [
+      "+v",
+      "-v",
+      "+w",
+      "-w",
+      "+u"
+     ]
+    },
+    {
+     "id": "th-end-grain-right",
+     "kind": "box",
+     "bone": "beam",
+     "material": "glulam",
+     "role": "body",
+     "tone": 0.6,
+     "size": [
+      0.036,
+      0.6,
+      0.16
+     ],
+     "transform": {
+      "translation": [
+       7.982,
+       0.0,
+       0.0
+      ]
+     },
+     "region": "beam-end-grain",
+     "sectionFaces": [
+      "+v",
+      "-v",
+      "+w",
+      "-w",
+      "-u"
      ]
     },
     {
@@ -3217,6 +3393,10 @@
     {
      "en": "Structure: member, a 30 mm pin wedge and a 30 mm roller (the smallest feature; their top 10 mm reach into the member as the bearing zone); the load shoe is merged into the member, the moving load is shown by its force glyph.",
      "de": "Tragwerk: Glied, ein 30-mm-Festlagerkeil und eine 30-mm-Rolle (kleinste Einzelheit; ihre oberen 10 mm reichen als Auflagerzone ins Glied); der Lastschuh geht im Glied auf, die wandernde Last zeigt ihr Kraftsymbol."
+    },
+    {
+     "en": "Thermal ends: a 36 mm end-grain slab over the full section at each end closes the four face prisms, which run between the slabs.",
+     "de": "Thermische Enden: eine 36-mm-Hirnholzscheibe über den vollen Querschnitt schließt an jedem Ende die vier Flächenprismen, die zwischen den Scheiben laufen."
     }
    ]
   },
@@ -3268,8 +3448,8 @@
       ]
      ],
      "plane": "yz",
-     "from": 0.0,
-     "to": 8.0,
+     "from": 0.075,
+     "to": 7.925,
      "region": "beam-sides",
      "sectionFaces": [
       "-w"
@@ -3297,8 +3477,8 @@
       ]
      ],
      "plane": "yz",
-     "from": 0.0,
-     "to": 8.0,
+     "from": 0.075,
+     "to": 7.925,
      "region": "beam-sides",
      "sectionFaces": [
       "+w"
@@ -3326,8 +3506,8 @@
       ]
      ],
      "plane": "yz",
-     "from": 0.0,
-     "to": 8.0,
+     "from": 0.075,
+     "to": 7.925,
      "region": "beam-top",
      "sectionFaces": [
       "-w",
@@ -3356,12 +3536,68 @@
       ]
      ],
      "plane": "yz",
-     "from": 0.0,
-     "to": 8.0,
+     "from": 0.075,
+     "to": 7.925,
      "region": "beam-soffit",
      "sectionFaces": [
       "-w",
       "+w"
+     ]
+    },
+    {
+     "id": "th-end-grain-left",
+     "kind": "box",
+     "bone": "beam",
+     "material": "glulam",
+     "role": "body",
+     "tone": 0.6,
+     "size": [
+      0.075,
+      0.545,
+      0.16
+     ],
+     "transform": {
+      "translation": [
+       0.0375,
+       0.0275,
+       0.0
+      ]
+     },
+     "region": "beam-end-grain",
+     "sectionFaces": [
+      "+v",
+      "-v",
+      "+w",
+      "-w",
+      "+u"
+     ]
+    },
+    {
+     "id": "th-end-grain-right",
+     "kind": "box",
+     "bone": "beam",
+     "material": "glulam",
+     "role": "body",
+     "tone": 0.6,
+     "size": [
+      0.075,
+      0.545,
+      0.16
+     ],
+     "transform": {
+      "translation": [
+       7.9625,
+       0.0275,
+       0.0
+      ]
+     },
+     "region": "beam-end-grain",
+     "sectionFaces": [
+      "+v",
+      "-v",
+      "+w",
+      "-w",
+      "-u"
      ]
     },
     {
@@ -3514,6 +3750,10 @@
     {
      "en": "Minimal: thermal and structure keep the counts of 1:200 because they are already the least that carries the asset: four face prisms and two plate blocks keep every thermal region, and member, pin and roller are the whole load path of a simply supported beam.",
      "de": "Minimal: Thermik und Tragwerk behalten die Anzahlen von 1:200, weil sie bereits das Wenigste sind, das das Asset trägt: vier Flächenprismen und zwei Plattenblöcke erhalten jede thermische Region, und Glied, Festlager und Rollenlager sind der ganze Lastpfad eines Einfeldträgers."
+    },
+    {
+     "en": "Thermal ends: the end grain is a 75 mm slab (the smallest feature) at each end above the bearing block; the four face prisms run between the slabs.",
+     "de": "Thermische Enden: das Hirnholz ist an jedem Ende eine 75-mm-Scheibe (kleinste Einzelheit) über dem Lagerblock; die vier Flächenprismen laufen zwischen den Scheiben."
     }
    ]
   }

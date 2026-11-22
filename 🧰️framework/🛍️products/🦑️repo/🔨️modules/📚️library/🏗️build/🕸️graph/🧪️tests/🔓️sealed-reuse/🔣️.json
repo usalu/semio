@@ -7,7 +7,7 @@
     },
     "readSealedBuildGraphV1": {
       "start": "async function readSealedBuildGraphV1(",
-      "end": "/** 💾️ Publishes only a current graph"
+      "end": "/** 🔌️ Requires the pinned selected view to carry exactly"
     },
     "loadBuildGraphAttemptV1": {
       "start": "async function loadBuildGraphAttemptV1(",
@@ -35,7 +35,7 @@
       "name": "the early receipt probe leaves before the workspace inventory is read",
       "function": "loadBuildGraphAttemptV1",
       "before": "if(options.sealedOnly){",
-      "after": "const inventory=async()=>"
+      "after": "const inventory=async("
     },
     {
       "name": "the graph is published as its compact form",
@@ -46,7 +46,7 @@
     {
       "name": "the caller receives the expanded graph that the compact publication was written from",
       "function": "loadBuildGraphAttemptV1",
-      "before": "readBuildGraphV1(await portableInputs(root,compact,invocation,phaseControl))",
+      "before": "readBuildGraphV1(await sliceReadStepV1(\"seal\",()=>portableInputs(root,compact,invocation,phaseControl)))",
       "after": "await rename(temporary,path)"
     },
     {

@@ -1,0 +1,56 @@
+{
+  "id": "prickly-pear",
+  "category": "vegetation",
+  "title": {
+    "en": "Prickly Pear",
+    "de": "Feigenkaktus"
+  },
+  "heightM": 2.5812,
+  "widthM": 2.0432,
+  "powerW": 0,
+  "poses": [
+    "fruiting",
+    "night-stomata-open",
+    "windy",
+    "storm",
+    "snow"
+  ],
+  "clips": [
+    "wind-sway",
+    "gust",
+    "diurnal-transpiration"
+  ],
+  "representations": {
+    "50": "authored",
+    "100": "authored",
+    "200": "authored",
+    "500": "authored"
+  },
+  "symbols": [
+    "prickly-pear-symbol"
+  ],
+  "analytics": [
+    "thermal",
+    "transport",
+    "structural"
+  ],
+  "exports": [
+    "svg",
+    "pdf",
+    "dxf",
+    "dwg",
+    "png-sequence",
+    "mp4",
+    "webm",
+    "component",
+    "glb",
+    "fbx",
+    "model",
+    "model-zip"
+  ],
+  "distinction": {
+    "en": "The archive's only cladode cactus: a 3 m clump of forty flat obovate pads in four generations on a short woody trunk, each pad on its own bone at the margin of its parent, with ripe fruits on the young pads; CAM, transpiring at night.",
+    "de": "Der einzige Flachsprosskaktus des Archivs: ein 3 m hoher Busch aus vierzig flachen, verkehrt eiförmigen Sprossen in vier Generationen auf kurzem holzigem Stamm, jeder Spross an eigenem Knochen am Rand seines Muttersprosses, mit reifen Früchten an den jungen Sprossen; CAM, transpiriert nachts."
+  },
+  "completion": "authored"
+}

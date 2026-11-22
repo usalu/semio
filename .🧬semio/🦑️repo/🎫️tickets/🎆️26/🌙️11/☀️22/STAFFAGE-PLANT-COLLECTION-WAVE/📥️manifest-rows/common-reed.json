@@ -1,0 +1,55 @@
+{
+  "id": "common-reed",
+  "category": "vegetation",
+  "title": {
+    "en": "Common Reed",
+    "de": "Schilfrohr"
+  },
+  "heightM": 3.0,
+  "widthM": 1.56,
+  "powerW": 0,
+  "poses": [
+    "calm",
+    "windy",
+    "storm",
+    "snow"
+  ],
+  "clips": [
+    "wind-sway",
+    "gust",
+    "diurnal-transpiration"
+  ],
+  "representations": {
+    "50": "authored",
+    "100": "authored",
+    "200": "authored",
+    "500": "authored"
+  },
+  "symbols": [
+    "common-reed-symbol"
+  ],
+  "analytics": [
+    "thermal",
+    "transport",
+    "structural"
+  ],
+  "exports": [
+    "svg",
+    "pdf",
+    "dxf",
+    "dwg",
+    "png-sequence",
+    "mp4",
+    "webm",
+    "component",
+    "glb",
+    "fbx",
+    "model",
+    "model-zip"
+  ],
+  "distinction": {
+    "en": "A vertical wetland grass: nine tall, separate culms with broad two-ranked flag leaves and dense nodding purplish panicles; it whips quickly in the wind and lodges in a gale, unlike the fountain of a tussock grass.",
+    "de": "Ein senkrechtes Sumpfgras: neun hohe, einzeln stehende Halme mit breiten, zweizeiligen Fahnenblättern und dichten, nickenden, violetten Rispen; es peitscht schnell im Wind und legt sich im Sturm um, anders als die Fontäne eines Horstgrases."
+  },
+  "completion": "authored"
+}

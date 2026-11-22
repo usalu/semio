@@ -9,6 +9,34 @@ description = "Component crate of semio-s-artifact-stdio-pdf: model"
 [package.metadata.semio]
 role = "library"
 
+[package.metadata.semio.carve]
+owned = [
+  "examples::demo",
+  "standards::v1_4::subsets::base::io::sqlite",
+  "standards::v1_7::subsets::base::io::binary::inferences",
+  "standards::v1_7::subsets::base::io::error",
+  "standards::v1_7::subsets::base::io::text::inferences",
+  "standards::v1_7::subsets::base::io::text_string",
+  "standards::v1_7::subsets::base::io::text_string::tests",
+  "standards::v1_7::subsets::base::modules::fonts::metrics",
+  "standards::v1_7::subsets::base::modules::fonts::truetype",
+  "standards::v1_7::subsets::base::modules::fonts::truetype::outline",
+  "standards::v1_7::subsets::base::schema::mutations::support",
+  "standards::v1_7::subsets::base::schema::snapshot::model",
+  "standards::v1_7::subsets::base::schema::snapshot::model::annotations_and_forms",
+  "standards::v1_7::subsets::base::schema::snapshot::model::canonical",
+  "standards::v1_7::subsets::base::schema::snapshot::model::colour_and_graphics_state",
+  "standards::v1_7::subsets::base::schema::snapshot::model::content_operators",
+  "standards::v1_7::subsets::base::schema::snapshot::model::document_metadata",
+  "standards::v1_7::subsets::base::schema::snapshot::model::font_model",
+  "standards::v1_7::subsets::base::schema::snapshot::model::navigation",
+  "standards::v1_7::subsets::base::schema::snapshot::model::object_model",
+  "standards::v1_7::subsets::base::schema::snapshot::model::octets",
+  "standards::v1_7::subsets::base::schema::snapshot::model::octets::output_tests",
+  "standards::v1_7::subsets::base::schema::snapshot::model::page_model",
+  "standards::v1_7::subsets::base::schema::snapshot::model::xobjects",
+]
+
 [lints]
 workspace = true
 

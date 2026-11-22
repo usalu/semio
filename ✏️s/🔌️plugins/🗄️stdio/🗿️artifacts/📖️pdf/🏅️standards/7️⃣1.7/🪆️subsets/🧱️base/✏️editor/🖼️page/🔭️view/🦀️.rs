@@ -6,6 +6,10 @@ use semio_s_artifact_stdio_pdf_page_coordinates::PageViewport;
 use semio_s_artifact_stdio_pdf_snapshot_2::standards::v1_7::subsets::base::schema::snapshot::PdfSnapshot;
 use serde_json::{json, Value};
 
+#[path = "🎬️actions/🦀️.rs"]
+mod actions;
+pub use self::actions::*;
+
 #[path = "🔍️search/🦀️.rs"]
 mod search;
 pub use self::search::*;

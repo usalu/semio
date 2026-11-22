@@ -39,7 +39,8 @@
       "pattern": "^[a-f0-9]{64}$"
     },
     "maximumFiles": {
-      "const": 384
+      "description": "Ceiling of the captured source closure of the reader entry. Measured 408 files on 2026-11-22: 390 of them come through the one import of the repository cache store (withRepositoryCacheStoreV1) that the reader needs; the reader itself adds three files. The ceiling therefore tracks the store closure (it grew from 384 with the funding, journal and platform-contract modules) and is the store's bound with headroom, not a bound on the reader; the exclusion of publication and compiler capture is pinned by the forbidden list, not by the count.",
+      "const": 416
     },
     "maximumBytes": {
       "const": 16777216

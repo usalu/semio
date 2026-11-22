@@ -4,7 +4,7 @@ use protocol::{ColdMutation, Mutation, OpBinary, OpText};
 use semio_framework_test_fixtures::fixture_text;
 
 fn block_on_gis_map_windows<F: std::future::Future>(future: F) -> F::Output {
-    let mut future = std::pin::pin!(future);
+    let mut future = Box::pin(future);
     let waker = std::task::Waker::noop();
     let mut context = std::task::Context::from_waker(waker);
     loop {

@@ -89,7 +89,7 @@ impl<const HAS_CHILD: bool> ArtifactApp for ComposedParentApp<HAS_CHILD> {
     type TransientMutation = PublicationTransientMutation;
     type Command = NoConfigMutation;
 
-    fn reference_birth()->Option<fn()->Result<Self::Snapshot,semio_plugin::Fault>>{Some(||{
+    fn reference_birth()->Option<fn()->Result<Self::Snapshot,Fault>>{Some(||{
         Ok(Self::Snapshot { slot: HAS_CHILD.then(|| ParentFixtureChild::new("child-1".into(), ArtifactRef {
             artifact_id: "child-1".into(),
             dialect: ArtifactDialect { artifact_kind: "s.test.child".into(), standard: "native".into(), subset: "*".into() },
@@ -116,18 +116,6 @@ impl<const HAS_CHILD: bool> ArtifactApp for ComposedParentApp<HAS_CHILD> {
         Some(recursive_fixture_owners::<Self::Snapshot>("recursive-parent", grant))
     }
     fn build_document_store_disposer() -> Option<Box<dyn ArtifactOwnedDisposer<store::ArtifactStore<Self::Snapshot, Self::Mutation>>>> { Some(bounded_document_store_disposer()) }
-    fn build_document_store_initialization_job(
-        envelope: store::os_store::store_schema::ArtifactEnvelope<Self::Snapshot, Self::Mutation>,
-        _replacement: Option<semio_framework_job::ReplacementIdentity>,
-        actor: protocol::ActorId,
-    ) -> semio_plugin_ownership::store_lifecycle::ArtifactInitializationAdmission<Self::Snapshot, Self::Mutation> {
-        let exact = envelope.schema == Self::DOCUMENT_SCHEMA && envelope.dialect == Some(Self::DIALECT.into()) && envelope.cursor.is_some();
-        let Some(candidate_generation) = generation.0.checked_add(1) else { return Err(envelope) };
-        if !exact {
-            return Err(envelope);
-        }
-        Ok(semio_plugin_ownership::store_lifecycle::ArtifactStoreInitializationJob::new(Box::new(ReadyComposedParentInitialization::new(envelope, candidate_generation, actor))))
-    }
     fn build_config_store_disposer() -> Option<Box<dyn ArtifactOwnedDisposer<store::ConfigStore<Self::Config, Self::ConfigMutation>>>> { TestApp::<false>::build_config_store_disposer() }
     fn build_draft_store_disposer() -> Option<Box<dyn ArtifactOwnedDisposer<store::DraftStore<Self::Draft, Self::DraftMutation>>>> { TestApp::<false>::build_draft_store_disposer() }
     fn build_presence_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> { TestApp::<false>::build_presence_local_root_retirement_factory() }
@@ -140,7 +128,8 @@ type RecursiveFixtureChild = store::os_store::artifact_child::ArtifactChild<Test
 
 #[derive(Clone, Debug, Default, PartialEq, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue, semio_framework_schema::ArtifactSchema)]
 #[artifact_schema(id = "s.test.child")]
-struct RecursiveBranchSnapshot {
+#[doc(hidden)]
+pub struct RecursiveBranchSnapshot {
     #[state(artifact)]
     pub count: i32,
     #[state(artifact)]
@@ -191,7 +180,8 @@ fn from_sqlite_database(database: &store::sqlite_snapshot::SqliteDatabase, contr
 }
 
 #[derive(Clone, Debug, Default, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
-struct RecursiveBranchDiff {
+#[doc(hidden)]
+pub struct RecursiveBranchDiff {
     pub count: Option<i32>,
 }
 

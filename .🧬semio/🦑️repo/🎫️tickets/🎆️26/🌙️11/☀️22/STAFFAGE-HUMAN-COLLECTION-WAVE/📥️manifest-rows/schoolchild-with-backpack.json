@@ -1,0 +1,55 @@
+{
+  "id": "schoolchild-with-backpack",
+  "category": "humans",
+  "title": {
+    "en": "Schoolchild with Backpack",
+    "de": "Schulkind mit Rucksack"
+  },
+  "heightM": 1.294,
+  "widthM": 0.443,
+  "powerW": 166.4,
+  "poses": [
+    "walking-midstance",
+    "walking-heel-strike",
+    "holding-straps",
+    "waiting-at-kerb"
+  ],
+  "clips": [
+    "walk-to-school",
+    "hitch-backpack",
+    "idle-breathing"
+  ],
+  "representations": {
+    "50": "authored",
+    "100": "authored",
+    "200": "authored",
+    "500": "authored"
+  },
+  "symbols": [
+    "walking-schoolchild-marker"
+  ],
+  "analytics": [
+    "thermal",
+    "transport",
+    "structural"
+  ],
+  "exports": [
+    "svg",
+    "pdf",
+    "dxf",
+    "dwg",
+    "png-sequence",
+    "mp4",
+    "webm",
+    "component",
+    "glb",
+    "fbx",
+    "model",
+    "model-zip"
+  ],
+  "distinction": {
+    "en": "An eight-year-old on the way to school with a loaded school backpack of a tenth of the body mass: long-sleeved top and trousers, a mature walking gait with a slight forward lean against the load, waiting at the kerb and hitching the backpack up, where the running child sprints in summer clothes with a small daypack.",
+    "de": "Ein achtjähriges Kind auf dem Schulweg mit einem beladenen Schulrucksack von einem Zehntel der Körpermasse: Langarmshirt und Hose, ein reifer Gang mit leichter Vorneigung gegen die Last, Warten am Bordstein und Hochziehen des Rucksacks, während das rennende Kind in Sommerkleidung mit kleinem Tagesrucksack sprintet."
+  },
+  "completion": "authored"
+}

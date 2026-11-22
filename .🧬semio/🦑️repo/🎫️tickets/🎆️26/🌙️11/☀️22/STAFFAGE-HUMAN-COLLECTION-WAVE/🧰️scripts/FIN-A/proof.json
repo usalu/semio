@@ -1,0 +1,505 @@
+{
+ "standing-desk-worker": {
+  "at": "2026-11-22 20:26",
+  "validate": 0,
+  "check": "✓ standing-desk-worker (1/1)",
+  "scales": {
+   "500": "suitable under office-laser: min stroke 0.180 mm, min gap – mm, min feature 0.216 mm",
+   "200": "suitable under office-laser: min stroke 0.100 mm, min gap – mm, min feature 0.229 mm",
+   "100": "suitable under office-laser: min stroke 0.100 mm, min gap – mm, min feature 0.260 mm",
+   "50": "suitable under office-laser: min stroke 0.100 mm, min gap – mm, min feature 0.287 mm"
+  },
+  "gate": "bounding box within one feature at every scale; IoU at least 0.943 (all 12 views at or above 0.92); largest boundary distance above two features in 0 of 12 views; checkVolumes 10 findings (4 volumes-connected, 3 volumes-structure-coverage, 3 volumes-thermal-coverage). Side/front/top per scale: 1:500 IoU 0.946/0.950/0.986, distance 42/35/23 mm; 1:200 IoU 0.943/0.961/0.991, distance 42/35/22 mm; 1:100 IoU 0.985/0.981/0.997, distance 15/19/11 mm; 1:50 IoU 0.989/0.985/0.998, distance 14/13/11 mm",
+  "numbers": {
+   "bbox": 0,
+   "lowIou": 0,
+   "worstIou": 0.943,
+   "hausdorff": 0,
+   "volumeFindings": 10,
+   "rules": {
+    "volumes-connected": 4,
+    "volumes-thermal-coverage": 3,
+    "volumes-structure-coverage": 3
+   }
+  }
+ },
+ "presenter-at-flipchart": {
+  "at": "2026-11-22 21:55",
+  "validate": 0,
+  "check": "✓ presenter-at-flipchart (1/1)",
+  "scales": {
+   "500": "suitable under office-laser: min stroke 0.170 mm, min gap – mm, min feature 0.236 mm",
+   "200": "suitable under office-laser: min stroke 0.130 mm, min gap – mm, min feature 0.213 mm",
+   "100": "suitable under office-laser: min stroke 0.130 mm, min gap – mm, min feature 0.260 mm",
+   "50": "suitable under office-laser: min stroke 0.180 mm, min gap – mm, min feature 0.324 mm"
+  },
+  "gate": "bounding box within one feature at every scale; IoU at least 0.947 (all 12 views at or above 0.92); largest boundary distance above two features in 5 of 12 views; checkVolumes 14 findings (3 volumes-connected, 7 volumes-structure-coverage, 4 volumes-thermal-coverage). Side/front/top per scale: 1:500 IoU 0.947/0.978/0.949, distance 32/32/22 mm; 1:200 IoU 0.947/0.981/0.961, distance 30/38/25 mm; 1:100 IoU 0.951/0.979/0.961, distance 37/34/19 mm; 1:50 IoU 0.953/0.981/0.962, distance 30/33/20 mm",
+  "numbers": {
+   "bbox": 0,
+   "lowIou": 0,
+   "worstIou": 0.947,
+   "hausdorff": 5,
+   "volumeFindings": 14,
+   "rules": {
+    "volumes-structure-coverage": 7,
+    "volumes-thermal-coverage": 4,
+    "volumes-connected": 3
+   }
+  }
+ },
+ "office-worker-carrying-laptop": {
+  "at": "2026-11-22 20:28",
+  "validate": 0,
+  "check": "✓ office-worker-carrying-laptop (1/1)",
+  "scales": {
+   "500": "suitable under office-laser: min stroke 0.145 mm, min gap – mm, min feature 0.223 mm",
+   "200": "suitable under office-laser: min stroke 0.180 mm, min gap – mm, min feature 0.235 mm",
+   "100": "suitable under office-laser: min stroke 0.100 mm, min gap – mm, min feature 0.296 mm",
+   "50": "suitable under office-laser: min stroke 0.100 mm, min gap – mm, min feature 0.343 mm"
+  },
+  "gate": "bounding box within one feature at every scale; IoU at least 0.938 (all 12 views at or above 0.92); largest boundary distance above two features in 0 of 12 views; checkVolumes 2 findings (2 volumes-connected). Side/front/top per scale: 1:500 IoU 0.989/0.989/0.938, distance 10/16/52 mm; 1:200 IoU 0.996/0.994/0.948, distance 10/16/53 mm; 1:100 IoU 0.996/0.993/0.962, distance 4/16/23 mm; 1:50 IoU 0.998/0.997/0.989, distance 4/14/14 mm",
+  "numbers": {
+   "bbox": 0,
+   "lowIou": 0,
+   "worstIou": 0.938,
+   "hausdorff": 0,
+   "volumeFindings": 2,
+   "rules": {
+    "volumes-connected": 2
+   }
+  }
+ },
+ "waiter-with-tray": {
+  "at": "2026-11-22 22:06",
+  "validate": 0,
+  "check": "✓ waiter-with-tray (1/1)",
+  "scales": {
+   "500": "suitable under office-laser: min stroke 0.130 mm, min gap – mm, min feature 0.224 mm",
+   "200": "suitable under office-laser: min stroke 0.100 mm, min gap – mm, min feature 0.244 mm",
+   "100": "suitable under office-laser: min stroke 0.100 mm, min gap – mm, min feature 0.237 mm",
+   "50": "suitable under office-laser: min stroke 0.100 mm, min gap – mm, min feature 0.295 mm"
+  },
+  "gate": "bounding box within one feature at every scale; IoU at least 0.940 (all 12 views at or above 0.92); largest boundary distance above two features in 5 of 12 views; checkVolumes 0 findings. Side/front/top per scale: 1:500 IoU 0.946/0.950/0.940, distance 85/56/34 mm; 1:200 IoU 0.945/0.960/0.950, distance 80/41/21 mm; 1:100 IoU 0.978/0.954/0.951, distance 15/34/23 mm; 1:50 IoU 0.981/0.957/0.952, distance 17/46/23 mm",
+  "numbers": {
+   "bbox": 0,
+   "lowIou": 0,
+   "worstIou": 0.94,
+   "hausdorff": 5,
+   "volumeFindings": 0,
+   "rules": {}
+  }
+ },
+ "barista": {
+  "at": "2026-11-22 22:07",
+  "validate": 0,
+  "check": "✓ barista (1/1)",
+  "scales": {
+   "500": "suitable under office-laser: min stroke 0.130 mm, min gap – mm, min feature 0.204 mm",
+   "200": "suitable under office-laser: min stroke 0.100 mm, min gap – mm, min feature 0.282 mm",
+   "100": "suitable under office-laser: min stroke 0.100 mm, min gap – mm, min feature 0.244 mm",
+   "50": "suitable under office-laser: min stroke 0.100 mm, min gap – mm, min feature 0.236 mm"
+  },
+  "gate": "bounding box within one feature at every scale; IoU at least 0.914 (1 of 12 views below 0.92); largest boundary distance above two features in 3 of 12 views; checkVolumes 7 findings (4 volumes-connected, 1 volumes-cross-scale, 1 volumes-silhouette, 1 volumes-views-disagree). Side/front/top per scale: 1:500 IoU 0.931/0.934/0.914, distance 55/48/17 mm; 1:200 IoU 0.936/0.943/0.931, distance 40/39/19 mm; 1:100 IoU 0.973/0.943/0.945, distance 15/38/17 mm; 1:50 IoU 0.974/0.952/0.946, distance 17/39/15 mm",
+  "numbers": {
+   "bbox": 0,
+   "lowIou": 1,
+   "worstIou": 0.914,
+   "hausdorff": 3,
+   "volumeFindings": 7,
+   "rules": {
+    "volumes-cross-scale": 1,
+    "volumes-connected": 4,
+    "volumes-views-disagree": 1,
+    "volumes-silhouette": 1
+   }
+  }
+ },
+ "nurse-walking": {
+  "at": "2026-11-22 21:41",
+  "validate": 0,
+  "check": "✓ nurse-walking (1/1)",
+  "scales": {
+   "500": "suitable under office-laser: min stroke 0.130 mm, min gap – mm, min feature 0.244 mm",
+   "200": "suitable under office-laser: min stroke 0.180 mm, min gap – mm, min feature 0.291 mm",
+   "100": "suitable under office-laser: min stroke 0.100 mm, min gap – mm, min feature 0.294 mm",
+   "50": "suitable under office-laser: min stroke 0.130 mm, min gap – mm, min feature 0.346 mm"
+  },
+  "gate": "bounding box within one feature at every scale; IoU at least 0.937 (all 12 views at or above 0.92); largest boundary distance above two features in 2 of 12 views; checkVolumes 5 findings (2 volumes-connected, 2 volumes-thermal-coverage, 1 volumes-views-disagree). Side/front/top per scale: 1:500 IoU 0.963/0.972/0.937, distance 135/36/20 mm; 1:200 IoU 0.992/0.986/0.981, distance 43/15/7 mm; 1:100 IoU 0.992/0.993/0.990, distance 39/5/5 mm; 1:50 IoU 0.996/0.995/0.983, distance 4/15/21 mm",
+  "numbers": {
+   "bbox": 0,
+   "lowIou": 0,
+   "worstIou": 0.937,
+   "hausdorff": 2,
+   "volumeFindings": 5,
+   "rules": {
+    "volumes-connected": 2,
+    "volumes-thermal-coverage": 2,
+    "volumes-views-disagree": 1
+   }
+  }
+ },
+ "doctor-with-clipboard": {
+  "at": "2026-11-22 20:30",
+  "validate": 0,
+  "check": "✓ doctor-with-clipboard (1/1)",
+  "scales": {
+   "500": "suitable under office-laser: min stroke 0.130 mm, min gap – mm, min feature 0.208 mm",
+   "200": "suitable under office-laser: min stroke 0.180 mm, min gap – mm, min feature 0.208 mm",
+   "100": "suitable under office-laser: min stroke 0.100 mm, min gap – mm, min feature 0.217 mm",
+   "50": "suitable under office-laser: min stroke 0.130 mm, min gap – mm, min feature 0.282 mm"
+  },
+  "gate": "bounding box within one feature at every scale; IoU at least 0.969 (all 12 views at or above 0.92); largest boundary distance above two features in 0 of 12 views; checkVolumes 0 findings. Side/front/top per scale: 1:500 IoU 0.969/0.986/0.977, distance 16/16/15 mm; 1:200 IoU 0.981/0.992/0.988, distance 14/14/6 mm; 1:100 IoU 0.984/0.995/0.990, distance 11/8/7 mm; 1:50 IoU 0.985/0.997/0.993, distance 9/10/6 mm",
+  "numbers": {
+   "bbox": 0,
+   "lowIou": 0,
+   "worstIou": 0.969,
+   "hausdorff": 0,
+   "volumeFindings": 0,
+   "rules": {}
+  }
+ },
+ "patient-with-iv-pole": {
+  "at": "2026-11-22 22:06",
+  "validate": 0,
+  "check": "✓ patient-with-iv-pole (1/1)",
+  "scales": {
+   "500": "suitable under office-laser: min stroke 0.130 mm, min gap – mm, min feature 0.206 mm",
+   "200": "suitable under office-laser: min stroke 0.100 mm, min gap – mm, min feature 0.262 mm",
+   "100": "suitable under office-laser: min stroke 0.100 mm, min gap – mm, min feature 0.300 mm",
+   "50": "suitable under office-laser: min stroke 0.130 mm, min gap – mm, min feature 0.310 mm"
+  },
+  "gate": "bounding box within one feature at every scale; IoU at least 0.936 (all 12 views at or above 0.92); largest boundary distance above two features in 0 of 12 views; checkVolumes 0 findings. Side/front/top per scale: 1:500 IoU 0.980/0.981/0.973, distance 24/16/15 mm; 1:200 IoU 0.936/0.988/0.977, distance 30/8/7 mm; 1:100 IoU 0.990/0.984/0.985, distance 17/17/7 mm; 1:50 IoU 0.991/0.992/0.990, distance 14/14/8 mm",
+  "numbers": {
+   "bbox": 0,
+   "lowIou": 0,
+   "worstIou": 0.936,
+   "hausdorff": 0,
+   "volumeFindings": 0,
+   "rules": {}
+  }
+ },
+ "construction-worker-with-shovel": {
+  "at": "2026-11-22 21:42",
+  "validate": 0,
+  "check": "✓ construction-worker-with-shovel (1/1)",
+  "scales": {
+   "500": "suitable under office-laser: min stroke 0.130 mm, min gap – mm, min feature 0.200 mm",
+   "200": "suitable under office-laser: min stroke 0.130 mm, min gap – mm, min feature 0.276 mm",
+   "100": "suitable under office-laser: min stroke 0.100 mm, min gap – mm, min feature 0.350 mm",
+   "50": "suitable under office-laser: min stroke 0.100 mm, min gap – mm, min feature 0.450 mm"
+  },
+  "gate": "bounding box within one feature at every scale; IoU at least 0.931 (all 12 views at or above 0.92); largest boundary distance above two features in 4 of 12 views; checkVolumes 8 findings (3 volumes-connected, 3 volumes-thermal-coverage, 2 volumes-views-disagree). Side/front/top per scale: 1:500 IoU 0.977/0.947/0.936, distance 15/130/28 mm; 1:200 IoU 0.987/0.970/0.941, distance 20/28/23 mm; 1:100 IoU 0.986/0.970/0.931, distance 22/34/27 mm; 1:50 IoU 0.986/0.970/0.934, distance 23/33/27 mm",
+  "numbers": {
+   "bbox": 0,
+   "lowIou": 0,
+   "worstIou": 0.931,
+   "hausdorff": 4,
+   "volumeFindings": 8,
+   "rules": {
+    "volumes-connected": 3,
+    "volumes-views-disagree": 2,
+    "volumes-thermal-coverage": 3
+   }
+  }
+ },
+ "worker-with-jackhammer": {
+  "at": "2026-11-22 21:42",
+  "validate": 0,
+  "check": "✓ worker-with-jackhammer (1/1)",
+  "scales": {
+   "500": "suitable under office-laser: min stroke 0.130 mm, min gap – mm, min feature 0.212 mm",
+   "200": "suitable under office-laser: min stroke 0.130 mm, min gap – mm, min feature 0.259 mm",
+   "100": "suitable under office-laser: min stroke 0.100 mm, min gap – mm, min feature 0.340 mm",
+   "50": "suitable under office-laser: min stroke 0.100 mm, min gap – mm, min feature 0.314 mm"
+  },
+  "gate": "bounding box within one feature at every scale; IoU at least 0.946 (all 12 views at or above 0.92); largest boundary distance above two features in 4 of 12 views; checkVolumes 8 findings (3 volumes-connected, 5 volumes-thermal-coverage). Side/front/top per scale: 1:500 IoU 0.980/0.946/0.969, distance 23/60/16 mm; 1:200 IoU 0.987/0.977/0.958, distance 51/22/23 mm; 1:100 IoU 0.987/0.973/0.950, distance 26/37/26 mm; 1:50 IoU 0.985/0.974/0.953, distance 20/39/26 mm",
+  "numbers": {
+   "bbox": 0,
+   "lowIou": 0,
+   "worstIou": 0.946,
+   "hausdorff": 4,
+   "volumeFindings": 8,
+   "rules": {
+    "volumes-connected": 3,
+    "volumes-thermal-coverage": 5
+   }
+  }
+ },
+ "surveyor-with-total-station": {
+  "at": "2026-11-22 21:43",
+  "validate": 0,
+  "check": "✓ surveyor-with-total-station (1/1)",
+  "scales": {
+   "500": "suitable under office-laser: min stroke 0.130 mm, min gap – mm, min feature 0.216 mm",
+   "200": "suitable under office-laser: min stroke 0.130 mm, min gap – mm, min feature 0.248 mm",
+   "100": "suitable under office-laser: min stroke 0.100 mm, min gap – mm, min feature 0.327 mm",
+   "50": "suitable under office-laser: min stroke 0.100 mm, min gap – mm, min feature 0.334 mm"
+  },
+  "gate": "bounding box within one feature at every scale; IoU at least 0.939 (all 12 views at or above 0.92); largest boundary distance above two features in 6 of 12 views; checkVolumes 12 findings (3 volumes-connected, 9 volumes-thermal-coverage). Side/front/top per scale: 1:500 IoU 0.970/0.939/0.941, distance 41/175/37 mm; 1:200 IoU 0.975/0.967/0.948, distance 60/27/22 mm; 1:100 IoU 0.982/0.980/0.965, distance 59/24/130 mm; 1:50 IoU 0.981/0.980/0.960, distance 60/24/25 mm",
+  "numbers": {
+   "bbox": 0,
+   "lowIou": 0,
+   "worstIou": 0.939,
+   "hausdorff": 6,
+   "volumeFindings": 12,
+   "rules": {
+    "volumes-connected": 3,
+    "volumes-thermal-coverage": 9
+   }
+  }
+ },
+ "walking-toddler": {
+  "at": "2026-11-22 20:31",
+  "validate": 0,
+  "check": "✓ walking-toddler (1/1)",
+  "scales": {
+   "500": "suitable under office-laser: min stroke 0.130 mm, min gap – mm, min feature 0.224 mm",
+   "200": "suitable under office-laser: min stroke 0.180 mm, min gap – mm, min feature 0.250 mm",
+   "100": "suitable under office-laser: min stroke 0.100 mm, min gap – mm, min feature 0.270 mm",
+   "50": "suitable under office-laser: min stroke 0.100 mm, min gap – mm, min feature 0.208 mm"
+  },
+  "gate": "bounding box within one feature at every scale; IoU at least 0.857 (5 of 12 views below 0.92); largest boundary distance above two features in 1 of 12 views; checkVolumes 6 findings (1 volumes-silhouette, 5 volumes-thermal-coverage). Side/front/top per scale: 1:500 IoU 0.918/0.928/0.857, distance 17/18/18 mm; 1:200 IoU 0.965/0.965/0.899, distance 10/15/17 mm; 1:100 IoU 0.977/0.966/0.906, distance 14/10/16 mm; 1:50 IoU 0.972/0.968/0.909, distance 11/11/18 mm",
+  "numbers": {
+   "bbox": 0,
+   "lowIou": 5,
+   "worstIou": 0.857,
+   "hausdorff": 1,
+   "volumeFindings": 6,
+   "rules": {
+    "volumes-silhouette": 1,
+    "volumes-thermal-coverage": 5
+   }
+  }
+ },
+ "schoolchild-with-backpack": {
+  "at": "2026-11-22 20:32",
+  "validate": 0,
+  "check": "✓ schoolchild-with-backpack (1/1)",
+  "scales": {
+   "500": "suitable under office-laser: min stroke 0.130 mm, min gap – mm, min feature 0.240 mm",
+   "200": "suitable under office-laser: min stroke 0.180 mm, min gap – mm, min feature 0.250 mm",
+   "100": "suitable under office-laser: min stroke 0.100 mm, min gap – mm, min feature 0.247 mm",
+   "50": "suitable under office-laser: min stroke 0.100 mm, min gap – mm, min feature 0.234 mm"
+  },
+  "gate": "bounding box within one feature at every scale; IoU at least 0.907 (2 of 12 views below 0.92); largest boundary distance above two features in 2 of 12 views; checkVolumes 7 findings (4 volumes-structure-coverage, 3 volumes-thermal-coverage). Side/front/top per scale: 1:500 IoU 0.918/0.941/0.907, distance 136/40/34 mm; 1:200 IoU 0.961/0.965/0.933, distance 15/40/21 mm; 1:100 IoU 0.981/0.976/0.952, distance 23/19/19 mm; 1:50 IoU 0.983/0.979/0.950, distance 26/13/21 mm",
+  "numbers": {
+   "bbox": 0,
+   "lowIou": 2,
+   "worstIou": 0.907,
+   "hausdorff": 2,
+   "volumeFindings": 7,
+   "rules": {
+    "volumes-structure-coverage": 4,
+    "volumes-thermal-coverage": 3
+   }
+  }
+ },
+ "teenager-with-headphones": {
+  "at": "2026-11-22 20:33",
+  "validate": 0,
+  "check": "✓ teenager-with-headphones (1/1)",
+  "scales": {
+   "500": "suitable under office-laser: min stroke 0.130 mm, min gap – mm, min feature 0.258 mm",
+   "200": "suitable under office-laser: min stroke 0.100 mm, min gap – mm, min feature 0.278 mm",
+   "100": "suitable under office-laser: min stroke 0.100 mm, min gap – mm, min feature 0.302 mm",
+   "50": "suitable under office-laser: min stroke 0.100 mm, min gap – mm, min feature 0.320 mm"
+  },
+  "gate": "bounding box within one feature at every scale; IoU at least 0.939 (all 12 views at or above 0.92); largest boundary distance above two features in 3 of 12 views; checkVolumes 0 findings. Side/front/top per scale: 1:500 IoU 0.978/0.968/0.963, distance 9/23/8 mm; 1:200 IoU 0.985/0.971/0.939, distance 33/27/20 mm; 1:100 IoU 0.986/0.978/0.941, distance 35/30/20 mm; 1:50 IoU 0.991/0.983/0.963, distance 15/23/35 mm",
+  "numbers": {
+   "bbox": 0,
+   "lowIou": 0,
+   "worstIou": 0.939,
+   "hausdorff": 3,
+   "volumeFindings": 0,
+   "rules": {}
+  }
+ },
+ "elderly-person-knitting": {
+  "at": "2026-11-22 20:34",
+  "validate": 0,
+  "check": "✓ elderly-person-knitting (1/1)",
+  "scales": {
+   "500": "suitable under office-laser: min stroke 0.130 mm, min gap – mm, min feature 0.208 mm",
+   "200": "suitable under office-laser: min stroke 0.180 mm, min gap – mm, min feature 0.276 mm",
+   "100": "suitable under office-laser: min stroke 0.100 mm, min gap – mm, min feature 0.251 mm",
+   "50": "suitable under office-laser: min stroke 0.100 mm, min gap – mm, min feature 0.246 mm"
+  },
+  "gate": "bounding box within one feature at every scale; IoU at least 0.981 (all 12 views at or above 0.92); largest boundary distance above two features in 2 of 12 views; checkVolumes 0 findings. Side/front/top per scale: 1:500 IoU 0.983/0.992/0.995, distance 11/10/9 mm; 1:200 IoU 0.982/0.986/0.996, distance 45/41/9 mm; 1:100 IoU 0.981/0.989/0.992, distance 45/42/8 mm; 1:50 IoU 0.986/0.993/0.996, distance 11/8/9 mm",
+  "numbers": {
+   "bbox": 0,
+   "lowIou": 0,
+   "worstIou": 0.981,
+   "hausdorff": 2,
+   "volumeFindings": 0,
+   "rules": {}
+  }
+ },
+ "mobility-scooter-user": {
+  "at": "2026-11-22 20:36",
+  "validate": 0,
+  "check": "✓ mobility-scooter-user (1/1)",
+  "scales": {
+   "500": "suitable under office-laser: min stroke 0.130 mm, min gap – mm, min feature 0.218 mm",
+   "200": "suitable under office-laser: min stroke 0.180 mm, min gap – mm, min feature 0.228 mm",
+   "100": "suitable under office-laser: min stroke 0.100 mm, min gap – mm, min feature 0.264 mm",
+   "50": "suitable under office-laser: min stroke 0.130 mm, min gap – mm, min feature 0.254 mm"
+  },
+  "gate": "bounding box within one feature at every scale; IoU at least 0.986 (all 12 views at or above 0.92); largest boundary distance above two features in 2 of 12 views; checkVolumes 0 findings. Side/front/top per scale: 1:500 IoU 0.992/0.986/0.995, distance 13/29/11 mm; 1:200 IoU 0.993/0.992/0.996, distance 21/17/12 mm; 1:100 IoU 0.993/0.990/0.992, distance 14/19/14 mm; 1:50 IoU 0.989/0.991/0.992, distance 34/16/13 mm",
+  "numbers": {
+   "bbox": 0,
+   "lowIou": 0,
+   "worstIou": 0.986,
+   "hausdorff": 2,
+   "volumeFindings": 0,
+   "rules": {}
+  }
+ },
+ "tennis-player": {
+  "at": "2026-11-22 21:59",
+  "validate": 0,
+  "check": "✓ tennis-player (1/1)",
+  "scales": {
+   "500": "suitable under office-laser: min stroke 0.150 mm, min gap – mm, min feature 0.217 mm",
+   "200": "suitable under office-laser: min stroke 0.130 mm, min gap – mm, min feature 0.235 mm",
+   "100": "suitable under office-laser: min stroke 0.100 mm, min gap – mm, min feature 0.270 mm",
+   "50": "suitable under office-laser: min stroke 0.100 mm, min gap – mm, min feature 0.316 mm"
+  },
+  "gate": "bounding box within one feature at every scale; IoU at least 0.915 (1 of 12 views below 0.92); largest boundary distance above two features in 3 of 12 views; checkVolumes 0 findings. Side/front/top per scale: 1:500 IoU 0.943/0.948/0.915, distance 20/28/20 mm; 1:200 IoU 0.967/0.955/0.964, distance 19/28/15 mm; 1:100 IoU 0.964/0.955/0.958, distance 21/29/25 mm; 1:50 IoU 0.960/0.946/0.959, distance 27/26/27 mm",
+  "numbers": {
+   "bbox": 0,
+   "lowIou": 1,
+   "worstIou": 0.915,
+   "hausdorff": 3,
+   "volumeFindings": 0,
+   "rules": {}
+  }
+ },
+ "basketball-player": {
+  "at": "2026-11-22 20:38",
+  "validate": 0,
+  "check": "✓ basketball-player (1/1)",
+  "scales": {
+   "500": "suitable under office-laser: min stroke 0.150 mm, min gap – mm, min feature 0.256 mm",
+   "200": "suitable under office-laser: min stroke 0.130 mm, min gap – mm, min feature 0.254 mm",
+   "100": "suitable under office-laser: min stroke 0.130 mm, min gap – mm, min feature 0.300 mm",
+   "50": "suitable under office-laser: min stroke 0.100 mm, min gap – mm, min feature 0.273 mm"
+  },
+  "gate": "bounding box within one feature at every scale; IoU at least 0.923 (all 12 views at or above 0.92); largest boundary distance above two features in 6 of 12 views; checkVolumes 2 findings (2 volumes-silhouette). Side/front/top per scale: 1:500 IoU 0.931/0.945/0.923, distance 31/36/37 mm; 1:200 IoU 0.954/0.949/0.946, distance 31/36/34 mm; 1:100 IoU 0.956/0.944/0.944, distance 32/35/37 mm; 1:50 IoU 0.953/0.946/0.936, distance 47/34/38 mm",
+  "numbers": {
+   "bbox": 0,
+   "lowIou": 0,
+   "worstIou": 0.923,
+   "hausdorff": 6,
+   "volumeFindings": 2,
+   "rules": {
+    "volumes-silhouette": 2
+   }
+  }
+ },
+ "hiker-with-trekking-poles": {
+  "at": "2026-11-22 20:38",
+  "validate": 0,
+  "check": "✓ hiker-with-trekking-poles (1/1)",
+  "scales": {
+   "500": "suitable under office-laser: min stroke 0.130 mm, min gap – mm, min feature 0.260 mm",
+   "200": "suitable under office-laser: min stroke 0.100 mm, min gap – mm, min feature 0.221 mm",
+   "100": "suitable under office-laser: min stroke 0.100 mm, min gap – mm, min feature 0.250 mm",
+   "50": "suitable under office-laser: min stroke 0.100 mm, min gap 0.898 mm, min feature 0.330 mm"
+  },
+  "gate": "bounding box within one feature at every scale; IoU at least 0.932 (all 12 views at or above 0.92); largest boundary distance above two features in 0 of 12 views; checkVolumes 4 findings (4 volumes-connected). Side/front/top per scale: 1:500 IoU 0.978/0.963/0.932, distance 36/37/32 mm; 1:200 IoU 0.985/0.983/0.946, distance 26/14/29 mm; 1:100 IoU 0.986/0.987/0.959, distance 15/14/14 mm; 1:50 IoU 0.992/0.988/0.962, distance 11/13/15 mm",
+  "numbers": {
+   "bbox": 0,
+   "lowIou": 0,
+   "worstIou": 0.932,
+   "hausdorff": 0,
+   "volumeFindings": 4,
+   "rules": {
+    "volumes-connected": 4
+   }
+  }
+ },
+ "person-stretching": {
+  "at": "2026-11-22 20:39",
+  "validate": 0,
+  "check": "✓ person-stretching (1/1)",
+  "scales": {
+   "500": "suitable under office-laser: min stroke 0.130 mm, min gap – mm, min feature 0.232 mm",
+   "200": "suitable under office-laser: min stroke 0.100 mm, min gap – mm, min feature 0.238 mm",
+   "100": "suitable under office-laser: min stroke 0.100 mm, min gap – mm, min feature 0.268 mm",
+   "50": "suitable under office-laser: min stroke 0.100 mm, min gap – mm, min feature 0.222 mm"
+  },
+  "gate": "bounding box within one feature at every scale; IoU at least 0.892 (5 of 12 views below 0.92); largest boundary distance above two features in 4 of 12 views; checkVolumes 1 findings (1 volumes-silhouette). Side/front/top per scale: 1:500 IoU 0.892/0.927/0.892, distance 40/39/24 mm; 1:200 IoU 0.901/0.940/0.908, distance 38/34/24 mm; 1:100 IoU 0.968/0.943/0.922, distance 22/31/22 mm; 1:50 IoU 0.967/0.941/0.918, distance 21/34/21 mm",
+  "numbers": {
+   "bbox": 0,
+   "lowIou": 5,
+   "worstIou": 0.892,
+   "hausdorff": 4,
+   "volumeFindings": 1,
+   "rules": {
+    "volumes-silhouette": 1
+   }
+  }
+ },
+ "e-scooter-rider": {
+  "at": "2026-11-22 20:39",
+  "validate": 0,
+  "check": "✓ e-scooter-rider (1/1)",
+  "scales": {
+   "500": "suitable under office-laser: min stroke 0.130 mm, min gap – mm, min feature 0.209 mm",
+   "200": "suitable under office-laser: min stroke 0.180 mm, min gap – mm, min feature 0.230 mm",
+   "100": "suitable under office-laser: min stroke 0.100 mm, min gap – mm, min feature 0.339 mm",
+   "50": "suitable under office-laser: min stroke 0.100 mm, min gap – mm, min feature 0.310 mm"
+  },
+  "gate": "bounding box within one feature at every scale; IoU at least 0.903 (2 of 12 views below 0.92); largest boundary distance above two features in 5 of 12 views; checkVolumes 0 findings. Side/front/top per scale: 1:500 IoU 0.939/0.962/0.903, distance 92/23/52 mm; 1:200 IoU 0.980/0.977/0.914, distance 21/27/68 mm; 1:100 IoU 0.982/0.979/0.937, distance 19/23/32 mm; 1:50 IoU 0.979/0.979/0.933, distance 19/21/33 mm",
+  "numbers": {
+   "bbox": 0,
+   "lowIou": 2,
+   "worstIou": 0.903,
+   "hausdorff": 5,
+   "volumeFindings": 0,
+   "rules": {}
+  }
+ },
+ "traveller-with-rolling-suitcase": {
+  "at": "2026-11-22 21:43",
+  "validate": 0,
+  "check": "✓ traveller-with-rolling-suitcase (1/1)",
+  "scales": {
+   "500": "suitable under office-laser: min stroke 0.130 mm, min gap – mm, min feature 0.208 mm",
+   "200": "suitable under office-laser: min stroke 0.100 mm, min gap 0.920 mm, min feature 0.233 mm",
+   "100": "suitable under office-laser: min stroke 0.100 mm, min gap – mm, min feature 0.250 mm",
+   "50": "suitable under office-laser: min stroke 0.100 mm, min gap – mm, min feature 0.300 mm"
+  },
+  "gate": "bounding box within one feature at every scale; IoU at least 0.965 (all 12 views at or above 0.92); largest boundary distance above two features in 6 of 12 views; checkVolumes 0 findings. Side/front/top per scale: 1:500 IoU 0.982/0.988/0.981, distance 26/108/37 mm; 1:200 IoU 0.992/0.989/0.972, distance 10/16/70 mm; 1:100 IoU 0.994/0.986/0.965, distance 14/112/70 mm; 1:50 IoU 0.994/0.988/0.968, distance 51/21/70 mm",
+  "numbers": {
+   "bbox": 0,
+   "lowIou": 0,
+   "worstIou": 0.965,
+   "hausdorff": 6,
+   "volumeFindings": 0,
+   "rules": {}
+  }
+ },
+ "person-pushing-bicycle": {
+  "at": "2026-11-22 21:54",
+  "validate": 0,
+  "check": "✓ person-pushing-bicycle (1/1)",
+  "scales": {
+   "500": "suitable under office-laser: min stroke 0.130 mm, min gap – mm, min feature 0.204 mm",
+   "200": "suitable under office-laser: min stroke 0.150 mm, min gap – mm, min feature 0.202 mm",
+   "100": "suitable under office-laser: min stroke 0.130 mm, min gap – mm, min feature 0.213 mm",
+   "50": "suitable under office-laser: min stroke 0.100 mm, min gap – mm, min feature 0.214 mm"
+  },
+  "gate": "bounding box within one feature at every scale; IoU at least 0.900 (1 of 12 views below 0.92); largest boundary distance above two features in 8 of 12 views; checkVolumes 13 findings (13 volumes-connected). Side/front/top per scale: 1:500 IoU 0.937/0.945/0.900, distance 216/175/139 mm; 1:200 IoU 0.958/0.973/0.953, distance 63/20/59 mm; 1:100 IoU 0.978/0.985/0.963, distance 19/35/32 mm; 1:50 IoU 0.977/0.986/0.965, distance 19/35/50 mm",
+  "numbers": {
+   "bbox": 0,
+   "lowIou": 1,
+   "worstIou": 0.9,
+   "hausdorff": 8,
+   "volumeFindings": 13,
+   "rules": {
+    "volumes-connected": 13
+   }
+  }
+ }
+}

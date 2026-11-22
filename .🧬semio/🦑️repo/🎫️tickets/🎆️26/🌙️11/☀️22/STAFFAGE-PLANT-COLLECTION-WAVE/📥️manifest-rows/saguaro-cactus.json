@@ -1,0 +1,56 @@
+{
+  "id": "saguaro-cactus",
+  "category": "vegetation",
+  "title": {
+    "en": "Saguaro Cactus",
+    "de": "Saguaro-Kaktus"
+  },
+  "heightM": 10,
+  "widthM": 1.8982,
+  "powerW": 0,
+  "poses": [
+    "calm",
+    "night-stomata-open",
+    "windy",
+    "storm",
+    "snow"
+  ],
+  "clips": [
+    "wind-sway",
+    "gust",
+    "diurnal-transpiration"
+  ],
+  "representations": {
+    "50": "authored",
+    "100": "authored",
+    "200": "authored",
+    "500": "authored"
+  },
+  "symbols": [
+    "saguaro-symbol"
+  ],
+  "analytics": [
+    "thermal",
+    "transport",
+    "structural"
+  ],
+  "exports": [
+    "svg",
+    "pdf",
+    "dxf",
+    "dwg",
+    "png-sequence",
+    "mp4",
+    "webm",
+    "component",
+    "glb",
+    "fbx",
+    "model",
+    "model-zip"
+  ],
+  "distinction": {
+    "en": "The archive's only columnar cactus: a 10 m fluted saguaro of 18 ribs with five arms bending up through smooth elbows, a corky base and a woody rib skeleton inside; a CAM stem that transpires at night.",
+    "de": "Der einzige Säulenkaktus des Archivs: ein 10 m hoher gerippter Saguaro mit 18 Rippen und fünf Armen, die sich durch weiche Ellbogen aufrichten, mit verkorkter Basis und einem Skelett aus Holzrippen; ein CAM-Stamm, der nachts transpiriert."
+  },
+  "completion": "authored"
+}

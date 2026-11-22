@@ -1,11 +1,12 @@
 /** ⚛️ `ModelFigure`: the React face of the 3D view. It mounts a {@link ModelStage} on a host element, keeps it in step with its props and disposes it with the component; all behaviour, texts and accessibility are the stage's, so the React figure and the custom element are one implementation.
  *
+ * The stage keeps an option until it is told otherwise, so every optional setting the props leave out is handed over as unset: a figure that goes back to the asset's own environment, or to the default conditions of the air flow, shows exactly that.
  * Fill the parent: the host takes the size its parent gives it (the stage's custom property `--staffage-model-min-height` is the floor).
  *
  * @see ../🖥️stage/🟦️.ts — the stage and its customisation properties
  */
 import { useEffect, useRef, type ReactElement } from "react";
-import type { Asset, DisplayRange, Environment, EvaluationQuery, FlowField, FlowLayer, ForceQuantity, Language, ThermalQuantity, View } from "@teaching/staffage";
+import type { Asset, DisplayRange, Environment, EvaluationQuery, FlowConditions, FlowField, FlowLayer, FlowMarkDetail, ForceQuantity, Language, ThermalQuantity, View } from "@teaching/staffage";
 import type { StaffageClock } from "../../⏱️clock/🧱️core/🟦️.ts";
 import { ModelStage, type StageOptions, type StageState } from "../🖥️stage/🟦️.ts";
 import type { CameraPresetName } from "../🟦️.ts";
@@ -25,6 +26,8 @@ export type ModelFigureProps = {
   readonly onState?: (state: StageState) => void;
   readonly onFlow?: (flow: FlowField | null) => void;
   readonly flow?: readonly FlowLayer[];
+  readonly flowConditions?: FlowConditions;
+  readonly flowDetail?: FlowMarkDetail;
   readonly environment?: Environment;
   readonly thermalQuantity?: ThermalQuantity;
   readonly forceQuantity?: ForceQuantity;
@@ -39,9 +42,11 @@ export type ModelFigureProps = {
   readonly className?: string;
 };
 
+const UNSET = { environment: undefined, thermalQuantity: undefined, forceQuantity: undefined, range: undefined, theme: undefined, flow: undefined, flowConditions: undefined, flowDetail: undefined } as unknown as Partial<StageOptions>;
+
 const optionsOf = (props: ModelFigureProps, callbacks: Pick<StageOptions, "onPreset" | "onScale" | "onView" | "onState" | "onFlow">): StageOptions => {
   const { className: _className, onPreset: _onPreset, onScale: _onScale, onView: _onView, onState: _onState, onFlow: _onFlow, ...rest } = props;
-  return { ...rest, framed: rest.framed ?? false, ...callbacks };
+  return { ...UNSET, ...rest, framed: rest.framed ?? false, ...callbacks };
 };
 
 /** 🧊️ The interactive 3D model of an asset. */

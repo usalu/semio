@@ -9,7 +9,9 @@ use super::*;
 
 /// 📐️ React's `PANE_DEFAULT_SIZE` (`🖱️ui/🎯️targets/⚛️react/🟦️.tsx:9912`) — every `Pane` that
 /// declares no `size` opens 300 logical px wide, which both these bodies do.
-pub const WINDOW_PANE_BODY_WIDTH_PX: f32 = 300.0;
+pub fn window_pane_body_width_px() -> f32 {
+    semio_renderer_wgpu_shell_chrome_state::chrome_parity_constants().sizes.window_pane_default_px
+}
 
 /// 🚦️ React's `FRAMEWORK_RESERVED_ACTION_IDS` (`🛠️ShellHelpers/🟦️.tsx:308`) — the framework's OWN
 /// verbs, which an armed utility never gates: their chords keep firing while a brush owns the
@@ -345,8 +347,8 @@ impl<'ctx> WindowActionsCtx<'ctx> {
                 .filter(|action| &action_category_id(action) == category)
                 .map(|action| {
                     let label = action.label.resolve(terminology, locale).to_string();
-                    let native_file = cfg!(not(target_arch = "wasm32")) &&
-                        matches!(action.id.as_str(), semio_framework::SAVE_ARTIFACT_FILE_ACTION_ID | semio_framework::OPEN_ARTIFACT_FILE_ACTION_ID);
+                    let native_file = action.id == semio_framework::OPEN_ARTIFACT_FILE_ACTION_ID ||
+                        (cfg!(not(target_arch = "wasm32")) && action.id == semio_framework::SAVE_ARTIFACT_FILE_ACTION_ID);
                     let staged = !native_file && action_requires_staged_form(action);
                     let disabled = gated && !native_file && !FRAMEWORK_RESERVED_ACTION_IDS.contains(&action.id.as_str());
                     let open = expanded.as_deref() == Some(action.id.as_str());
@@ -503,16 +505,16 @@ pub fn parse_dock_tab_action_id<'a>(control_id: &'a str, action: &str) -> Option
 }
 
 /// 📐️ The Actions pane's box inside a window body — React's `top-left` `anchorPositionStyle` at
-/// the pane inset, [`WINDOW_PANE_BODY_WIDTH_PX`] wide, growing DOWN from under its own chip row.
+/// the pane inset, [`window_pane_body_width_px`] wide, growing DOWN from under its own chip row.
 pub fn window_actions_rect(theme: &Theme, body: Rect, height: f32) -> Rect {
     let top = body.y + theme.panel_inset + theme.control_height + theme.gap_standard;
-    Rect::new(body.x + theme.panel_inset, top, WINDOW_PANE_BODY_WIDTH_PX.min((body.w - theme.panel_inset * 2.0).max(0.0)), height.min((body.y + body.h - theme.panel_inset - top).max(0.0)))
+    Rect::new(body.x + theme.panel_inset, top, window_pane_body_width_px().min((body.w - theme.panel_inset * 2.0).max(0.0)), height.min((body.y + body.h - theme.panel_inset - top).max(0.0)))
 }
 
 /// 📐️ The Search pane's box — React's `top-middle` anchor: centred on the body's own width, the
 /// same 300 px, under its own chip row.
 pub fn window_search_rect(theme: &Theme, body: Rect, height: f32) -> Rect {
-    let width = WINDOW_PANE_BODY_WIDTH_PX.min((body.w - theme.panel_inset * 2.0).max(0.0));
+    let width = window_pane_body_width_px().min((body.w - theme.panel_inset * 2.0).max(0.0));
     let top = body.y + theme.panel_inset + theme.control_height + theme.gap_standard;
     Rect::new(body.x + (body.w - width) * 0.5, top, width, height.min((body.y + body.h - theme.panel_inset - top).max(0.0)))
 }
@@ -530,7 +532,6 @@ pub fn window_activation_is_user_v1(noted: Option<&(u32, String)>, instance_id: 
 
 //#endregion ⌨️WindowScope
 impl<'ctx> WindowActionsCtx<'ctx> {
-    //#region ShellCommandHistory
 
     /// 🪟️ Arms one `shell.windowActivate` history note for a REAL activation — the wgpu twin of
     /// React's `handleActiveWindowChange` (`🏛️ShellHost/🟦️.tsx`: `if (value) noteShellCommand(
@@ -582,7 +583,6 @@ impl<'ctx> WindowActionsCtx<'ctx> {
         }
         true
     }
-    //#endregion ShellCommandHistory
 }
 
 //#endregion ActionPanelAndUtilities

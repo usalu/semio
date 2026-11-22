@@ -10,8 +10,7 @@ use semio_framework_value_testing_allocator as _;
 
 pub use semio_plugin_runtime_ops_wire as ops_wire_limits;
 pub use semio_plugin_runtime_ops_document as ops_document;
-#[path = "🎞️raw-media/🦀️.rs"]
-pub mod ops_raw_media;
+pub use semio_plugin_runtime_ops_raw_media as ops_raw_media;
 #[path = "🎞️media/🦀️.rs"]
 pub mod ops_media;
 pub use semio_plugin_runtime_ops_surface as ops_surface_render;

@@ -1,0 +1,52 @@
+{
+  "id": "presenter-at-flipchart",
+  "category": "humans",
+  "title": {
+    "en": "Presenter at Flipchart",
+    "de": "Vortragende Person am Flipchart"
+  },
+  "heightM": 2.006,
+  "widthM": 1.048,
+  "powerW": 176.2,
+  "poses": [
+    "presenting",
+    "writing",
+    "listening"
+  ],
+  "clips": [
+    "explaining",
+    "writing-stroke",
+    "idle-breathing"
+  ],
+  "representations": {
+    "50": "authored",
+    "100": "authored",
+    "200": "authored",
+    "500": "authored"
+  },
+  "symbols": [],
+  "analytics": [
+    "thermal",
+    "transport",
+    "structural"
+  ],
+  "exports": [
+    "svg",
+    "pdf",
+    "dxf",
+    "dwg",
+    "png-sequence",
+    "mp4",
+    "webm",
+    "component",
+    "glb",
+    "fbx",
+    "model",
+    "model-zip"
+  ],
+  "distinction": {
+    "en": "A workshop presenter in softshell jacket, cap and lanyard badge beside a tripod flipchart, the marker raised to the paper with the arm abducted toward the board and the free hand open to the group; loops for explaining with speech breathing and for writing a line, the easel on its own contact.",
+    "de": "Eine Person leitet in Softshelljacke, Kappe und mit Ausweis am Band einen Workshop neben einem Dreibein-Flipchart, den Marker mit seitlich zur Tafel gehobenem Arm am Papier, die freie Hand offen zur Gruppe; Schleifen für Erklären mit Sprechatmung und für das Schreiben einer Zeile, das Gestell auf eigenem Kontakt."
+  },
+  "completion": "authored"
+}

@@ -356,10 +356,15 @@ pub(super) fn retained_table_cells_step(
 /// 🌲️ How far the paint cursor moves past one row: a table row's whole laid-out height (`mounted_layout::live_tree_item_height`
 /// — a row whose cell hosts a draft or read-only surface is taller), a tree row's own band (its nested rows advance it themselves).
 pub(super) fn retained_tree_row_advance(retained: &UiTree, tree_id: NodeId, tree: &UiTreeNode, item: &UiTreeItemNode, cursor: &RetainedNodePaintCursor, metrics: &TreeRowMetrics, reversed: bool) -> f32 {
-    let band = metrics.for_item(item).row_height;
+    let row = retained_tree_item_node_at(retained, tree_id, tree, cursor, reversed);
     if semio_ui_wgpu_mounted_layout::document_table(retained, tree_id).is_none() {
-        return band;
+        return retained_tree_row_band(retained, row, item, metrics);
     }
-    retained_tree_item_node_at(retained, tree_id, tree, cursor, reversed).map_or(band, |row| semio_ui_wgpu_mounted_layout::live_tree_item_height(retained, row, item, metrics, 0))
+    row.map_or(metrics.for_item(item).row_height, |row| semio_ui_wgpu_mounted_layout::live_tree_item_height(retained, row, item, metrics, 0))
+}
+
+/// 🎞️ The band the row at the cursor owns before its nested rows: its own height and its detail band, as the layout flows them.
+pub(super) fn retained_tree_row_band(retained: &UiTree, row: Option<NodeId>, item: &UiTreeItemNode, metrics: &TreeRowMetrics) -> f32 {
+    row.map_or(metrics.for_item(item).row_height, |row| semio_ui_wgpu_mounted_layout::live_tree_item_band(retained, row, item, metrics))
 }
 // #endregion paint

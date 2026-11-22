@@ -6,7 +6,7 @@ Feature: Every cast names its asset, revision, view, scale, state, clock and sce
   THE REFERENCES are ajv and jsonschema (draft-07 validation of the manifest and of the cast index) and the standard SHA-256 of every runtime.
 
   Scenario: Missing combinations are refused by two implementations
-    Given casts without a scale, with a derived scale, without fps, without ease, without an environment, with transport but no start, and without a view direction
+    Given casts without a scale, with a derived scale, without fps, without ease, without an environment, with flow layers but no time the air has developed, with flow layers outside the thermal view, and without a view direction
     When each is validated by ajv and by the dependency-free twin
     Then every one is refused and the twin names the missing dimension
 

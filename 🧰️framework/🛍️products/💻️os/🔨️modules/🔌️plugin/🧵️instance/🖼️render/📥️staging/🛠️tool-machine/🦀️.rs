@@ -167,7 +167,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
 
     /// 🪢️ Live retirement waits for the foreground caller's retained overlay sources.
     pub fn tool_overlay_waits_for_foreground(&self) -> bool {
-        self.tools.original_tool_follow.as_ref().is_none() && self.shared().tool_overlay_action_source_pending()
+        self.shared().tool_overlay_waits_for_foreground()
     }
 
     /// 🧵️ The same mounted original caller drives native preparation and retires its actual retained source before shell release.
@@ -334,6 +334,11 @@ impl<'v, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X: I
 
     fn tool_overlay_alias_retirement_pending(&self)->bool{
         self.gesture_retirement_pending()||self.tool_machines.pending_overlay_aliases.is_some()||self.tool_machines.overlay_alias_retirement.is_some()||self.tool_machines.pending_config_aliases.is_some()||self.tool_machines.config_alias_retirement.is_some()
+    }
+
+    /// 🪢️ Live retirement waits for the foreground caller's retained overlay sources.
+    pub fn tool_overlay_waits_for_foreground(&self) -> bool {
+        self.tools.original_tool_follow.as_ref().is_none() && self.tool_overlay_action_source_pending()
     }
 
     fn tool_overlay_action_source_pending(&self) -> bool {

@@ -1,6 +1,7 @@
 //! 🎞️ Frame generation and os host: the render frame operation id, the frame generation and scheduler redraw helpers, the host event enqueue, the `OsHost` window delegate and impls, the cursor and ime mapping and `run_native`. See [`super`].
 
 use super::*;
+use semio_renderer_wgpu_frame_job::frame_demand::{frame_build_admitted_line, FrameDemand};
 
 /// ⏱️ P1e: this process has exactly one renderer frame callback (`OsHost::redraw`, below) — one
 /// `OperationId` allocated once, lazily, on first frame, rather than a fresh one per call (an
@@ -144,6 +145,12 @@ impl WindowDelegate for OsHost {
     /// 🚫️async: U1 — the enqueue itself never awaits; the batched dispatch this feeds is the boundary-
     /// async exception U1 itself carves out.
     fn handle_event(&mut self, event: DispatchEvent) {
+        #[cfg(not(target_arch = "wasm32"))]
+        {
+            if self.route_media_input(&event) {
+                return;
+            }
+        }
         let hold = self.frame_generation_hold();
         if enqueue_host_event(&mut self.events, &mut self.scheduler, self.ui_token, &mut self.frame_generation, hold, event) == ui_host::EnqueueOutcome::Overflow {
             semio_renderer_wgpu_host_base::log_debug("os_host: discrete input queue overflow — a redraw has not drained in a while");
@@ -175,9 +182,60 @@ impl WindowDelegate for OsHost {
         self.present_snapshot(self.clock.now_seconds())
     }
 
+    /// 🔴️ Whether the document holds edits the store never acknowledged; the browser page asks before it unloads.
+    pub fn host_unsaved(&self) -> bool {
+        semio_renderer_wgpu_shell_window_actions::host_unsaved()
+    }
+
     /// 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn close_requested(&mut self) -> bool {
-        true
+        semio_renderer_wgpu_shell_window_actions::request_host_close()
+    }
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+impl OsHost {
+    /// 🎞️ Offers one input event to the transport controls of the native media slots first: a press on a control, the drag of a range, its release, the keys of the focused slot and the assistive-technology actions on a media window are theirs and never reach the app. A cut goes to the shell as a media action through the runtime mailbox, the same `dispatch_action` route the UI intents take; whatever a control changed asks its windows to repaint.
+    fn route_media_input(&mut self, event: &DispatchEvent) -> bool {
+        use semio_renderer_wgpu_media_presenter::{MediaAccessibility, MediaPointer};
+        let route = match event {
+            DispatchEvent::PointerDown { x, y, button: PointerButton::Primary, .. } => self.native_media.pointer(MediaPointer::Down, *x, *y),
+            DispatchEvent::PointerMove { x, y, .. } => self.native_media.pointer(MediaPointer::Move, *x, *y),
+            DispatchEvent::PointerUp { x, y, button: PointerButton::Primary, .. } => self.native_media.pointer(MediaPointer::Up, *x, *y),
+            DispatchEvent::KeyDown { key, modifiers, .. } => self.native_media.key(key, modifiers.shift, modifiers.ctrl, modifiers.alt, modifiers.meta),
+            DispatchEvent::Accessibility { target, event } => {
+                let event = match event {
+                    ui_render::AccessibilityEvent::Focus => MediaAccessibility::Focus,
+                    ui_render::AccessibilityEvent::Blur => MediaAccessibility::Blur,
+                    ui_render::AccessibilityEvent::Activate => MediaAccessibility::Activate,
+                    ui_render::AccessibilityEvent::Value(text) => MediaAccessibility::Value(text.clone()),
+                };
+                self.native_media.accessibility(&target.window_id, &target.node_key, event)
+            }
+            _ => return false,
+        };
+        if !route.taken {
+            return false;
+        }
+        if let Some(action) = route.action {
+            let _ = self.runtime.enqueue_apply(None, true, semio_renderer_wgpu_runtime_mailbox::RuntimeApply::MediaAction(Some(action)));
+        }
+        self.request_media_paint(self.native_media.windows());
+        !route.pass_through
+    }
+
+    /// 🎞️ Asks the retained UI engine to repaint `windows` on its next frame; the drawing of a media slot lives in the node's paint, which only runs for a dirty window.
+    fn request_media_paint(&mut self, windows: Vec<String>) {
+        if windows.is_empty() {
+            return;
+        }
+        semio_renderer_wgpu_contracts::UI_ENGINE.with(|cell| {
+            let mut engine = cell.borrow_mut();
+            for window in &windows {
+                engine.request_paint(window);
+            }
+        });
+        self.scheduler.invalidate(InvalidationReason::PAINT | InvalidationReason::ANIMATION);
     }
 }
 
@@ -196,12 +254,17 @@ impl OsHost {
         }
     }
 
+    /// 🧭️ Reads every owner that can owe the next tick a frame build.
+    #[cfg(target_arch = "wasm32")]
+    fn frame_demand(&self,invalidated:bool)->FrameDemand{let r=&self.runtime;FrameDemand{invalidated,first_frame:self.frame_generation==0,input_queued:!self.events.is_empty(),frame_ready:self.frame_ready,live_build:self.frame_build.has_live_session(),presentation_pending:self.presenter.has_pending_presentation(),surface_resize:self.surface_resize.has_work(),snapshot_retained:self.original_snapshot.is_some(),component_close:crate::os_host::component_surface_close_pending(),cursor_wake:self.cursor_wake_requested.is_some(),runtime_pending:r.has_pending_icon_svg_preview()||r.has_pending_text_work()||r.has_pending_world3d_work()||r.has_pending_raster_selection_work()||r.has_pending_settle()||r.has_pending_applies()}}
+
     #[cfg(target_arch = "wasm32")]
     pub fn redraw_offscreen_worker(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<crate::os_host::BrowserRedrawOutcome>,semio_framework_job::OriginalTurnFailure>{
-        let _=self.scheduler.should_render(self.clock.now_seconds());
-        self.prepare_redraw(cx)?;
+        let invalidated=self.scheduler.should_render(self.clock.now_seconds()).is_some();
+        let demand=self.frame_demand(invalidated);
+        if demand.is_demanded(){self.prepare_redraw(cx)?;}
         if !self.snapshot_sink.publish_on_original_caller(cx)?{return Ok(None)}
-        self.build_and_publish_snapshot_on_original_caller(cx)?;
+        if demand.is_demanded(){self.build_and_publish_snapshot_on_original_caller(cx,demand)?;}
         if !self.snapshot_sink.publish_on_original_caller(cx)?{return Ok(None)}
         let _=self.present_snapshot(self.clock.now_seconds());
         let Some(snapshot)=self.snapshot_sink.acquire_output_on_original_caller(cx)?else{return Ok(None)};
@@ -245,7 +308,7 @@ impl OsHost {
         self.prepare_redraw(cx)?;
         let now = self.clock.now_seconds();
         if !self.snapshot_sink.publish_on_original_caller(cx)?{return Ok(RedrawOutcome{cursor:CursorRequest::Default,ime:None})}
-        self.build_and_publish_snapshot_on_original_caller(cx)?;
+        self.build_and_publish_snapshot_on_original_caller(cx,FrameDemand{invalidated:true,..FrameDemand::default()})?;
         Ok(self.present_snapshot(now))
     }
 }
@@ -292,7 +355,7 @@ impl OsHost {
     }
 
     /// 🎟️ Business authority is lent unchanged while presentation generation only selects freshness.
-    fn build_and_publish_snapshot_on_original_caller(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<(),semio_framework_job::OriginalTurnFailure>{
+    fn build_and_publish_snapshot_on_original_caller(&mut self,cx:&mut semio_framework_job::StepContext<'_>,demand:FrameDemand)->Result<(),semio_framework_job::OriginalTurnFailure>{
         if cx.should_yield(){return Ok(())}
         self.pump_frame_inputs(cx)?;
         if !crate::os_host::component_surface_close_pending(){
@@ -300,8 +363,9 @@ impl OsHost {
             let generation=semio_framework_trace::Generation(self.frame_generation);
             self.runtime.observe_presentation_input_generation(generation.0);
             let runtime=self.runtime.clone();
-            let mut failure=None;let frame_build=&mut self.frame_build;
-            let _=self.presenter.admit_next_frame(||match frame_build.poll_runtime_on_original_caller(runtime,inputs,generation,cx){Ok(frame)=>frame,Err(original)=>{failure=Some(original);None}});
+            let mut failure=None;let mut produced=false;let live_before=self.frame_build.has_live_session();let frame_build=&mut self.frame_build;
+            let _=self.presenter.admit_next_frame(||match frame_build.poll_runtime_on_original_caller(runtime,inputs,generation,cx){Ok(frame)=>{produced=frame.is_some();frame},Err(original)=>{failure=Some(original);None}});
+            if !live_before&&(produced||self.frame_build.has_live_session()){semio_renderer_wgpu_host_base::log_debug(&frame_build_admitted_line(generation.0,demand));}
             if let Some(original)=failure{return Err(original)}
         }
         self.publish_presented_snapshot_on_original_caller(cx)?;
@@ -345,6 +409,12 @@ impl OsHost {
     /// 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn present_snapshot(&mut self, now: f64) -> RedrawOutcome {
         let (cursor, ime) = self.snapshot_sink.with_current(|snapshot| (snapshot.cursor, snapshot.ime)).unwrap_or((CursorRequest::Default, None));
+        #[cfg(not(target_arch = "wasm32"))]
+        {
+            let slots = self.snapshot_sink.with_current(|snapshot| snapshot.media_slots.clone()).unwrap_or_default();
+            let windows = self.native_media.present(&slots, now);
+            self.request_media_paint(windows);
+        }
         semio_renderer_wgpu_host_plumbing::deadlines::sync_presented_deadlines(&mut self.scheduler, &mut self.animation_clock, self.runtime.retained_control_deadline(now), now, self.presenter.awaiting_runtime());
 
         #[cfg(not(target_os = "wasi"))]

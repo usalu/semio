@@ -126,8 +126,8 @@ fn close_jack_candidate(mut candidate: store::ArtifactStore<JackSnapshot, Trinit
 
     let mut disposer = semio_plugin::ArtifactDocumentStoreDisposer::<JackSnapshot, TrinityGraphMutation>::new();
     for _ in 0..100_000 {
-        let demand = disposer.retirement_demands(&candidate, crate::standards::v1::subsets::any::schema::content::JACK_SELF_FUNDED_BODY_BYTES).expect("Jack candidate close quote");
-        let grant = crate::standards::v1::subsets::any::schema::content::jack_self_funded_grant(demand);
+        let demand = disposer.retirement_demands(&candidate, semio_plugin::PLUGIN_SELF_FUNDED_BODY_BYTES).expect("Jack candidate close quote");
+        let grant = semio_plugin::plugin_self_funded_grant(demand, semio_plugin::PLUGIN_SELF_FUNDED_BODY_BYTES);
         match disposer.close_step_cold(&mut candidate, grant).expect("Jack candidate close step") {
             semio_plugin::PluginLifecycleStep::Progress(progress) => assert!(progress.fits(grant)),
             semio_plugin::PluginLifecycleStep::Blocked { reason } => panic!("fresh Jack candidate close unexpectedly blocked: {reason}"),
@@ -186,10 +186,9 @@ fn jack_store_initializer_cancel_and_stale_generation_return_every_owner_termina
 
 /// ♻️ Drives one admitted owned value turn by turn under exactly its own published quote and counts the turns.
 fn drive_owned_retirement<T: semio_framework_value::retirement::RetireOwned>(value: T) -> usize {
-    use crate::standards::v1::subsets::any::schema::content::{jack_self_funded_grant, JACK_SELF_FUNDED_BODY_BYTES};
     use semio_framework_value::retirement::{admit_owned_retirement, controlled::controlled_retirement_birth_demand};
     let pump = OriginalRetirementPump::new();
-    let birth = jack_self_funded_grant(controlled_retirement_birth_demand(&value).expect("owned retirement birth quote"));
+    let birth = semio_plugin::plugin_self_funded_grant(controlled_retirement_birth_demand(&value).expect("owned retirement birth quote"), semio_plugin::PLUGIN_SELF_FUNDED_BODY_BYTES);
     let mut original = Some(value);
     let (turn, _) = pump.turn(8, u64::MAX, || Some(0), birth).expect("owned retirement birth turn")
         .with_effect(|effect| admit_owned_retirement(&mut original, effect)).expect("owned retirement birth effect")
@@ -200,8 +199,8 @@ fn drive_owned_retirement<T: semio_framework_value::retirement::RetireOwned>(val
         if retirement.terminal_is_empty() {
             return steps;
         }
-        let body = JACK_SELF_FUNDED_BODY_BYTES;
-        let grant = jack_self_funded_grant(retirement.next_demand(body).expect("owned retirement quote"));
+        let body = semio_plugin::PLUGIN_SELF_FUNDED_BODY_BYTES;
+        let grant = semio_plugin::plugin_self_funded_grant(retirement.next_demand(body).expect("owned retirement quote"), semio_plugin::PLUGIN_SELF_FUNDED_BODY_BYTES);
         let work = retirement.next_computational_work(body).expect("owned retirement work quote");
         let (poll, _) = pump.turn(work.max(1), u64::MAX, || Some(0), grant).expect("owned retirement turn")
             .with_effect(|effect| retirement.close_step(body, effect)).expect("owned retirement effect")
@@ -322,8 +321,8 @@ fn close_jack_initializer(authority: &mut JackStoreInitializationAuthority, call
             return;
         }
         semio_plugin::ArtifactStoreInitializationAuthority::begin_close(authority);
-        let demand = semio_plugin::ArtifactStoreInitializationAuthority::retirement_demands(authority, crate::standards::v1::subsets::any::schema::content::JACK_SELF_FUNDED_BODY_BYTES).expect("Jack initializer close quote");
-        let grant = crate::standards::v1::subsets::any::schema::content::jack_self_funded_grant(demand);
+        let demand = semio_plugin::ArtifactStoreInitializationAuthority::retirement_demands(authority, semio_plugin::PLUGIN_SELF_FUNDED_BODY_BYTES).expect("Jack initializer close quote");
+        let grant = semio_plugin::plugin_self_funded_grant(demand, semio_plugin::PLUGIN_SELF_FUNDED_BODY_BYTES);
         let step = caller.caller.refreshed_turn_with_decoder(grant, &mut caller.decoder, |cx| cx.with_original_retirement(|cx| semio_plugin::ArtifactStoreInitializationAuthority::close_step(authority, cx))).expect("Jack initializer close");
         assert!(step.progress().fits(grant));
     }

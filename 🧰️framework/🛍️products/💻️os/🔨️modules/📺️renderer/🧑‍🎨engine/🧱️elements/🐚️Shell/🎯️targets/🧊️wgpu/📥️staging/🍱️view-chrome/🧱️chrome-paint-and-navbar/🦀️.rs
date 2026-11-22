@@ -9,6 +9,24 @@ mod shared_borders;
 pub use shared_borders::{chrome_border_plan, ChromeBorderFrame, ChromeBorderPaint};
 use semio_renderer_wgpu_dock::shared_borders::BorderState;
 
+/// ⌨️ Where one chrome item painted its label this frame: `(x, baseline, width, size, color, active)`.
+pub type ChromeLabelSpan = (f32, f32, f32, f32, Rgba, bool);
+
+thread_local! {
+    static CHROME_LABEL_SPANS: std::cell::RefCell<std::collections::HashMap<String, ChromeLabelSpan>> = std::cell::RefCell::new(std::collections::HashMap::new());
+}
+
+/// ⌨️ The label span the control `control_id` painted last — what React's `text-decoration: underline` on a selected, keyboard-focused control underlines. `None` for an icon-only control, which has no text to underline.
+pub fn chrome_label_span(control_id: &str) -> Option<ChromeLabelSpan> {
+    CHROME_LABEL_SPANS.with(|spans| spans.borrow().get(control_id).copied())
+}
+
+/// ⌨️ Records where a painter other than the retained item painter drew a control's label, so the keyboard focus underline finds it.
+pub fn note_chrome_label_span(control_id: &str, atlas: &mut FontAtlas, label: &str, x: f32, baseline: f32, max_width: f32, size: f32, color: Rgba, active: bool) {
+    let width = atlas.measure_text(label, size).0.min(max_width);
+    CHROME_LABEL_SPANS.with(|spans| spans.borrow_mut().insert(control_id.to_string(), (x, baseline, width, size, color, active)));
+}
+
 pub fn chrome_text_complete_step(target: &mut DrawList, atlas: &mut FontAtlas, text: &str, x: f32, y: f32, width: f32, size: f32, color: Rgba, cursor: &mut RetainedGlyphCursor) -> Result<bool, ()> {
     match chrome_text_step(target, atlas, text, x, y, width, size, color, cursor) {
         RetainedGlyphStep::Pending => Ok(false),
@@ -100,13 +118,18 @@ fn render_retained_chrome_group_item_step_with_trailing(
                 let width = (rect.x + rect.w - theme.padding_standard - trailing - x).max(1.0);
                 match chrome_text_complete_step(draw, atlas, label, x, rect.y + (rect.h + theme.font_size_small) * 0.5 - 1.0, width, theme.font_size_small, color, glyph) {
                     Ok(false) => return RetainedChromeGroupStep::Pending,
-                    Ok(true) => {}
+                    Ok(true) => {
+                        let text_w = atlas.measure_text(label, theme.font_size_small).0.min(width);
+                        CHROME_LABEL_SPANS.with(|spans| spans.borrow_mut().insert(item.control_id.to_string(), (x, rect.y + (rect.h + theme.font_size_small) * 0.5 - 1.0, text_w, theme.font_size_small, color, item.active)));
+                    }
                     Err(()) => {
                         *group_phase = 0;
                         glyph.reset();
                         return RetainedChromeGroupStep::Fault;
                     }
                 }
+            } else {
+                CHROME_LABEL_SPANS.with(|spans| spans.borrow_mut().remove(item.control_id));
             }
             *group_phase = 3;
         }
@@ -759,7 +782,7 @@ impl<'ctx> ChromeViewCtx<'ctx> {
 
 /// 📐️ The Projection pane's 300px bottom-right body, ending above its own chip and growing up.
 pub fn window_projection_rect(window_id: &str, body: Rect, theme: &Theme) -> Rect {
-    let width = WINDOW_PANE_BODY_WIDTH_PX.min((body.w - theme.panel_inset * 2.0).max(0.0));
+    let width = window_pane_body_width_px().min((body.w - theme.panel_inset * 2.0).max(0.0));
     let bottom = body.y + body.h - theme.panel_inset - theme.control_height - theme.gap_standard;
     let available = (bottom - body.y - theme.panel_inset).max(0.0);
     let height = semio_renderer_wgpu_ui_engine::retained_ui_engine::retained_content_height(&window_projection_surface_id(window_id)).unwrap_or(available).min(available).max(0.0);

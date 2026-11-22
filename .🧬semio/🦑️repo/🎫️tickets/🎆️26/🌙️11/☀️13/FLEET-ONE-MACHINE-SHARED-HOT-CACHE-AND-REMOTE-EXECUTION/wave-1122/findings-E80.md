@@ -1,0 +1,4 @@
+# E80 findings (16:50)
+1. Observability: stale fleet-fetched owner records carry no moved-row evidence (`stale (-)` in the adoption line; `staleRowLine` only on lookQueue/farm-verdict paths in project-nodes). Fix: carry the verifier's `staleRow` through `BUILD_TAKE_MISS` (project-nodes lines ~767-776 and `recordTakeLookFailureV1` in 📥️take) into `adopt.staleRow(kind)` and one bilingual line per stale owner. Without it "13 of 53 re-inferred" cannot be attributed.
+2. Misleading parked text: `STAGE_INFER_V1` ("inferring in this process (one thread...)") is the default stage and is printed for owners that wait in the pool/farm or for the governor; the lean owner showed it for 1700 s.
+3. Candidate key bug to test (unproven): rows/derived walk facts of output-neutral scheduling-domain sources (leases, process-supervision `routing/📥️invocation`, texts, native-build) invalidating owner records after every peer landing although the closure list drops them.

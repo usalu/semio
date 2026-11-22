@@ -29,6 +29,8 @@ pub(super) fn ui_common_label(locale: Option<semio_ui_locale::Locale>, pick: imp
 pub struct RetainedPaintPresentation {
     pub driver: UiDriverChrome,
     pub locale: Option<semio_ui_locale::Locale>,
+    /// 🔑️ The handle of the window being painted ([`semio_ui_wgpu_paint_overlay::media_window_handle`]), so a host overlay is found by (window, node).
+    pub window: u64,
 }
 
 #[allow(clippy::too_many_arguments, reason = "one retained paint context plus the canonical presentation")]
@@ -109,10 +111,10 @@ pub fn paint_node_step_with_driver(
             UiNode::OverviewCard(_) | UiNode::Table(_) => retained_presence_step(draw, bounds, theme, presence),
             UiNode::Group(_) if semio_ui_wgpu_mounted_layout::owning_tree_spec(tree, id).is_some() => retained_presence_step(draw, bounds, theme, presence),
             UiNode::Group(group) => paint_group_node_step(group, atlas, icons, draw, cursor, theme, bounds, presence),
-            UiNode::Tree(tree_node) => retained_tree_node_step(tree, id, tree_node, bounds, theme, presentation.driver.drag, block_reversed, inline, atlas, icons, draw, cursor),
+            UiNode::Tree(tree_node) => retained_tree_node_step(tree, id, tree_node, bounds, theme, presentation.driver.drag, block_reversed, inline, presentation.locale, atlas, icons, draw, cursor),
             UiNode::Image(image) => paint_image_node_step(image, atlas, has_scene_host, draw, cursor, theme, bounds, presence),
             UiNode::ComponentScene(scene) => paint_component_scene_node_step(scene, atlas, has_scene_host, draw, cursor, theme, bounds, presence),
-            UiNode::ExternalSlot(slot) => paint_external_slot_node_step(slot, atlas, draw, cursor, theme, bounds, presence, presentation.locale),
+            UiNode::ExternalSlot(slot) => paint_external_slot_node_step(slot, atlas, draw, cursor, theme, bounds, presence, presentation.locale, presentation.window, tree.document_id(id).map_or(0, |document| document.0)),
         };
     match step {
         RetainedNodePaintStep::Complete => cursor.finish(),

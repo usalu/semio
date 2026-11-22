@@ -57,3 +57,6 @@ fn a_thousand_receiving_turns_on_one_owner_never_exhaust_the_escrow_table(){
 
 #[path="retained-charge.rs"]
 mod retained_charge;
+
+#[path="receiving-floor.rs"]
+mod receiving_floor;

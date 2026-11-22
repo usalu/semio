@@ -1,4 +1,5 @@
-import {writeEntryV1,type UnitEntryV1} from "../../💾️store/🟦️.ts";
+import {writeBuildRunV1,writeEntryV1,type UnitEntryV1} from "../../💾️store/🟦️.ts";
+import {unpackRunV1} from "../../🏗️buildscript/📦️run-wire/🟦️.ts";
 import {casRootV1} from "../../../../../🏗️build/🗄️cas/🗃️store/🟦️.ts";
 import {putCasObjectSyncV1} from "../../../../../🏗️build/🗄️cas/🗃️store/🔁️sync/🟦️.ts";
 import type {FleetClientV1} from "../📡️client/🟦️.ts";
@@ -10,7 +11,7 @@ import {uncoveredOutputsV1} from "../../✅️complete/🟦️.ts";
 const fleet=FLEET_POLICY_V1,decoder=new TextDecoder("utf-8",{fatal:true}),encoder=new TextEncoder();
 
 /** 📥️ What installing a fleet unit into the local store needs of a unit. */
-export type InstallTargetV1=Readonly<{client:FleetClientV1;root:string;localKey:string;key:string;slot:string;platform:PlatformV1;roots:readonly PortableRootV1[];expected?:readonly string[]}>;
+export type InstallTargetV1=Readonly<{client:FleetClientV1;root:string;localKey:string;key:string;slot:string;platform:PlatformV1;roots:readonly PortableRootV1[];expected?:readonly string[];run?:boolean}>;
 
 /** ⚡️ Downloads every blob at once, the largest first so the longest transfer overlaps the others, `fleet.limits.maximumDownloadConcurrency` at a time; `undefined` as soon as one is missing, short or corrupt. The digests come from the action result, so the manifest travels with the outputs and a unit costs one round trip for its result and one for its blobs. */
 export async function downloadBlobsV1(client:FleetClientV1,wanted:ReadonlyMap<string,number>):Promise<Map<string,Uint8Array>|undefined>{
@@ -36,16 +37,20 @@ export async function installFleetUnitV1(unit:InstallTargetV1):Promise<"hit"|"mi
   const bytes=await downloadBlobsV1(unit.client,wanted);if(bytes===undefined)return "miss";
   const manifest=parseRemoteUnitV1(bytes.get(manifestFile.digest.hash)!,{key:unit.key});
   if(JSON.stringify(manifest.platform)!==JSON.stringify(unit.platform)||manifest.slot!==unit.slot)return "miss";
-  if(unit.expected&&uncoveredOutputsV1(manifest.outputs.map(output=>output.name),unit.expected).length>0)return "miss";
+  if(unit.run!==true&&unit.expected&&uncoveredOutputsV1(manifest.outputs.map(output=>output.name),unit.expected).length>0)return "miss";
   for(const output of manifest.outputs){const file=declared.get("out/"+output.name);if(file?.hash!==output.sha256||file.size!==output.bytes)return "miss";}
   for(const [sha,stream] of [[manifest.stdout,result.stdout],[manifest.stderr,result.stderr]] as const){if(sha!==null&&stream?.hash!==sha)return "miss";}
+  if(unit.run===true){
+   writeBuildRunV1(unit.root,unpackRunV1({localKey:unit.localKey,roots:unit.roots,manifest,blobs:bytes,put:blob=>putCasObjectSyncV1(casRootV1(),blob)}));
+   return "hit";
+  }
   const root=unit.root,cas=casRootV1(),local=(sha:string,text:boolean):Readonly<{sha:string;bytes:number}>=>{
    const blob=bytes.get(sha)!,stored=text?encoder.encode(localTextV1(decoder.decode(blob),unit.roots)):blob;
    return {sha:putCasObjectSyncV1(cas,stored),bytes:stored.length};
   };
   const outputs=manifest.outputs.map(output=>{const stored=local(output.sha256,output.template===true);return {name:output.name,sha256:stored.sha,bytes:stored.bytes,executable:output.executable,...(output.template?{template:true}:{})};});
   const stream=(sha:string|null):string|null=>sha===null?null:local(sha,true).sha;
-  const entry:UnitEntryV1={version:1,key:unit.localKey,slot:unit.slot,crate:manifest.crate,dependencies:manifest.dependencies.map(row=>({path:localTextV1(row.path,unit.roots),sha256:row.sha256})),environment:manifest.environment.map(row=>({name:row.name,value:row.value===null?null:localTextV1(row.value,unit.roots)})),outputs,stderr:stream(manifest.stderr),stdout:stream(manifest.stdout),createdMs:Date.now(),provenance:null};
+  const entry:UnitEntryV1={version:1,key:unit.localKey,slot:unit.slot,...(manifest.retention===undefined?{}:{retention:manifest.retention}),crate:manifest.crate,dependencies:manifest.dependencies.map(row=>({path:localTextV1(row.path,unit.roots),sha256:row.sha256})),environment:manifest.environment.map(row=>({name:row.name,value:row.value===null?null:localTextV1(row.value,unit.roots)})),outputs,stderr:stream(manifest.stderr),stdout:stream(manifest.stdout),createdMs:Date.now(),provenance:null};
   writeEntryV1(root,entry);
   return "hit";
  }catch{return "fault";}
@@ -53,5 +58,5 @@ export async function installFleetUnitV1(unit:InstallTargetV1):Promise<"hit"|"mi
 
 /** 🤝️ The fleet and this machine disagree about the bytes of one key (a second upload was refused): the fleet's copy is authoritative, because every other machine already keys its dependants on it. Installs it as the newest local variant of the unit, so a later local hit restores the fleet's bytes and no dependant here is keyed on a copy nobody else has. `true` when the fleet's copy is now the local one. */
 export async function adoptFleetUnitV1(client:FleetClientV1,root:string,job:SpoolJobV1):Promise<boolean>{
- try{return await installFleetUnitV1({client,root,localKey:job.localKey,key:job.key,slot:job.slot,platform:job.platform,roots:portableRootsV1({cwd:job.cwd,workspace:job.workspace??undefined})})==="hit";}catch{return false;}
+ try{return await installFleetUnitV1({client,root,localKey:job.localKey,key:job.key,slot:job.slot,platform:job.platform,roots:portableRootsV1({cwd:job.cwd,workspace:job.workspace??undefined,...job.tools}),run:job.run===true})==="hit";}catch{return false;}
 }

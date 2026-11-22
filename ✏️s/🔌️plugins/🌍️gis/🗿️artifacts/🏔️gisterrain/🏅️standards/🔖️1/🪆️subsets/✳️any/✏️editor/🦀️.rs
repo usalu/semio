@@ -1,11 +1,4 @@
-//! ⛰️ GIS 3D play app — the `ArtifactEditor` impl (dispatch-only), the aggregated command enum and
-//! the manifest stitch.
-//!
-//! Everything substantive lives in a taxonomy node: command bodies in `🎮️commands/*`, the World3d
-//! viewport and its exact config in `🎭️modes/👁️view/🪟️windows/🏔️terrain`, fixture-scenery
-//! compute in `crate::schema::inferences` (`parse_descriptor`), and this app's
-//! typed media I/O surface (`map:in` overlay, ports, scene media) below in `🔖️Io` — relocated from
-//! the artifact's `⚙️engine` (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES).
+//! ⛰️ GIS 3D terrain editor: `ArtifactEditor` implementation, typed command dispatch, media I/O, and app manifest.
 
 use crate::editor::gis3d::commands::{contours, edit_elevation, elevation_source, example, exaggeration, grade_region, view};
 use crate::editor::gis3d::modes::view as view_mode;
@@ -522,15 +515,12 @@ impl ArtifactEditor for Gis3dPlayApp {
         Ok(default_terrain_document())
     })}
 
-    /// 🗺️ `map:in`/`scene:out` (WORKFLOWS-END-TO-END-TYPED-PORTS Wave 2 port recipe) plus the implicit
-    /// document ports.
+    /// 🗺️ Declares workflow ports and document media contract.
     fn io() -> Option<AppIo> {
         Some(gis3d_io())
     }
 
-    /// 🌀️ `scene:out` (see `gis3d_scene_media` in `🔖️Io` above) plus the inherited
-    /// `document:out` default (the pack of `doc.snapshot`, replicated inline — overriding
-    /// `export_media` shadows the trait's provided body for every port on this app, not just the new one).
+    /// 🌀️ Exports `scene:out`, `elevation:out`, and `artifact:out` media.
     fn export_media(port: &str, doc: &ArtifactView<'_, GisTerrainSnapshot>) -> Result<Media, MediaError> {
         match port {
             "scene:out" => gis3d_scene_media(doc.snapshot),
@@ -544,12 +534,7 @@ impl ArtifactEditor for Gis3dPlayApp {
         }
     }
 
-    /// ✔️ `map:in` validates and owns the incoming first-party `2d.map` values in
-    /// `GisTerrainSnapshot::imported_map` (rendered as terrain overlays, see the
-    /// 🏔️terrain window) via `change-imported-features`. `document:in` (whole-document replace) is
-    /// deliberately unimplemented — per the semantic-mutations taxonomy, whole-document replace has
-    /// no in-history mutation; it goes through `ArtifactStore::reset` (file-open/import/load-example),
-    /// entirely outside this method.
+    /// ✔️ Admits `elevation:in` and `map:in` workflow media into document mutations.
     fn import_media(port: &str, media: &Media, _doc: &ArtifactView<'_, GisTerrainSnapshot>) -> Result<Emit<GisTerrainMutation, NoConfigMutation, Self::DraftMutation>, MediaError> {
         media_import_emit(port, media)
     }
@@ -562,10 +547,7 @@ impl ArtifactEditor for Gis3dPlayApp {
         Some(&semio_plugin::OriginalActionCommandBridge(Self::command_from_action, local_file::command_wire_maximum))
     }
 
-    /// 🏠️ Maps host action id + JSON args onto `Gis3dCommand` — React/wgpu still speak the stringly
-    /// `{action,args}` wire; this is the typed-command bridge until those call sites send `OpBinary`
-    /// bytes directly. Mirrors `crate::editor::gis2d`'s arg-key tolerance (camelCase + snake_case + the
-    /// nested `camera` object form).
+    /// 🏠️ Bridges host action identifiers and JSON arguments onto `Gis3dCommand`.
     fn command_from_action(action: &str, args: &mut Option<semio_framework_value::DslValue>, original_fault: &mut Option<Fault>) -> Result<Self::Command, Fault> {
         use semio_framework_value::DslValue;
 
@@ -672,122 +654,105 @@ impl ArtifactEditor for Gis3dPlayApp {
 
 //#region 🔖️Manifest
 pub fn create_gis3d_app() -> semio_plugin::AppDefinition {
+    use semio_plugin::{ActionArgDef, ActionDefinition, ActionKind, CapabilityAudience, UtilityDefinition};
+    use InteractiveJobClassification::Migrated;
+    let label = LocalizedLabel::native;
     let mut editor = Editor::builder(crate::GISTERRAIN_DIALECT)
-            .document(["semio", "gis", "3d"])
-            .artifact_kind(semio_s_artifact_gis_gismap::artifact_kind())
-            .media_input(gis3d_map_in_port())
-            .media_output(gis3d_scene_out_port())
-            .icon_id("gis3d")
-            .mode_def(view_mode::definition())
-            .default_mode_id(view_mode::GIS3D_PLAY_MODE_VIEW)
-            .window_kind_def(terrain::definition());
+        .document(["semio", "gis", "3d"])
+        .artifact_kind(semio_s_artifact_gis_gismap::artifact_kind())
+        .media_input(gis3d_map_in_port())
+        .media_output(gis3d_scene_out_port())
+        .icon_id("gis3d")
+        .mode_def(view_mode::definition())
+        .default_mode_id(view_mode::GIS3D_PLAY_MODE_VIEW)
+        .window_kind_def(terrain::definition());
     for (id, en, de, icon) in terrain::UTILITIES {
-        let mut utility = semio_plugin::UtilityDefinition::new(id, LocalizedLabel::native(en, de), icon);
+        let mut utility = UtilityDefinition::new(id, label(en, de), icon);
         utility.allows_actions_while_active = true;
         utility.cursor = (id != "select").then(|| "crosshair".into());
         editor = editor.utility(utility);
     }
-    editor.window_kind_utilities(terrain::GIS3D_PLAY_WINDOW_MAIN, terrain::UTILITIES.iter().map(|utility| utility.0.into()).collect())
-            .panel_tab_def(terrain_data::definition())
-            .default_layout(view_mode::layout())
-            .interaction(InteractionDefinition {
-                id: "features".into(),
-                label: LocalizedLabel::native("Features", "Objekte"),
-                granularities: vec![GranularityDefinition { id: "pin".into(), label: LocalizedLabel::native("Pin", "Stift"), icon_id: "map-pin".into() }],
-                hierarchy: HierarchyProvider::Flat,
-                hover: HoverSpec::default(),
-                selection: SelectionSpec {
-                    modes: vec![SelectionMode::Multiple, SelectionMode::Single],
-                    methods: vec![SelectionMethod::Pick, SelectionMethod::Rectangle],
-                    merges: vec![MergeMode::Replace, MergeMode::Additive, MergeMode::Subtractive, MergeMode::Invertive],
-                    transitive: false,
-                    broadcast: true,
-                },
-            })
-            .window_kind_interactions(terrain::GIS3D_PLAY_WINDOW_MAIN, vec![InteractionRef::new("features")])
-            .action_with(semio_plugin::ActionDefinition::new("setCamera", LocalizedLabel::native("Set Camera", "Kamera festlegen"), semio_plugin::ActionKind::View, "camera"))
-            .action_with(semio_plugin::ActionDefinition::new("configureTerrainBrush", LocalizedLabel::native("Configure Terrain Brush", "Geländepinsel einstellen"), semio_plugin::ActionKind::View, "configure-terrain-brush"))
-            .action_args("configureTerrainBrush", configure_terrain_brush::action_arguments())
-            .mutation("setExaggeration", LocalizedLabel::native("Set Exaggeration", "Überhöhung festlegen"))
-            .mutation("clearElevationSource", LocalizedLabel::native("Clear Elevation Source", "Höhenquelle entfernen"))
-            .mutation("createElevationGrid", LocalizedLabel::native("Create Flat Grid", "Flaches Höhenraster erstellen"))
-            .action_args("createElevationGrid", create_elevation_grid::action_arguments())
-            .mutation("gradeTerrainRegion", LocalizedLabel::native("Grade Region", "Region nivellieren"))
-            .action_args("gradeTerrainRegion", grade_region::action_arguments())
-            .mutation("generateTerrainContours", LocalizedLabel::native("Generate Terrain Contours", "Geländehöhenlinien erzeugen"))
-            .action_args("generateTerrainContours", contours::action_arguments())
-            .mutation("addOverlayPosition", LocalizedLabel::native("Add Position", "Position hinzufügen"))
-            .mutation("removeOverlayFeature", LocalizedLabel::native("Remove Map Feature", "Kartenobjekt entfernen"))
-            .mutation("clearOverlays", LocalizedLabel::native("Clear Map Features", "Kartenobjekte entfernen"))
-            .mutation("editOverlayShape", LocalizedLabel::native("Edit Route or Region", "Route oder Fläche bearbeiten"))
-            .mutation("moveOverlayPosition", LocalizedLabel::native("Move Position", "Position verschieben"))
-            .mutation("editElevation", LocalizedLabel::native("Edit Elevation", "Höhe bearbeiten"))
-            .shell_action(import_elevation::REQUEST_ACTION, LocalizedLabel::native("Import Elevation Grid…", "Höhenraster importieren…"))
-            .shell_action(export_elevation_grid::ACTION, LocalizedLabel::native("Export Elevation Grid…", "Höhenraster exportieren…"))
-            .shell_action(geojson::REQUEST_ACTION, LocalizedLabel::native("Import GeoJSON Overlays…", "GeoJSON-Overlays importieren…"))
-            .shell_action(export_geojson::ACTION, LocalizedLabel::native("Export GeoJSON Overlays…", "GeoJSON-Overlays exportieren…"))
-            .action_with(semio_plugin::ActionDefinition {
-                in_palette: false,
-                ..semio_plugin::ActionDefinition::bounded_catalog(geojson::FILE_ACTION, LocalizedLabel::native("Load GeoJSON Overlays", "GeoJSON-Overlays laden"), semio_plugin::ActionKind::Mutation)
-            })
-            .action_with(semio_plugin::ActionDefinition {
-                in_palette: false,
-                ..semio_plugin::ActionDefinition::bounded_catalog(import_elevation::FILE_ACTION, LocalizedLabel::native("Load Elevation Grid", "Höhenraster laden"), semio_plugin::ActionKind::Mutation)
-            })
-            .action_args("editElevation", edit_elevation::action_arguments())
-            .action_with(semio_plugin::ActionDefinition::new("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"), semio_plugin::ActionKind::Mutation, "panel-left"))
-            .action_destructive("setActiveExample")
-            .action_args("setActiveExample", vec![
-                semio_plugin::ActionArgDef::select("exampleId", LocalizedLabel::native("Example", "Beispiel"), example::example_arg_options()).default_value(&example::DEFAULT_EXAMPLE_ID),
-            ])
-            .action_args("setExaggeration", vec![
-                semio_plugin::ActionArgDef::slider("value", LocalizedLabel::native("Exaggeration", "Überhöhung"), GIS3D_EXAGGERATION_MINIMUM, GIS3D_EXAGGERATION_MAXIMUM).default_value(&GIS3D_EXAGGERATION_STAGED_DEFAULT),
-            ])
-            .action_args("addOverlayPosition", overlays::add_args())
-            .action_args("removeOverlayFeature", vec![overlays::id_arg()])
-            .action_args("editOverlayShape", overlays::shape_args())
-            .action_args("moveOverlayPosition", overlays::move_args())
-            .action_interactive_job("setCamera", InteractiveJobClassification::Migrated)
-            .action_interactive_job("configureTerrainBrush", InteractiveJobClassification::Migrated)
-            .action_interactive_job("setExaggeration", InteractiveJobClassification::Migrated)
-            .action_interactive_job("setActiveExample", InteractiveJobClassification::Migrated)
-            .action_interactive_job("clearElevationSource", InteractiveJobClassification::Migrated)
-            .action_interactive_job("createElevationGrid", InteractiveJobClassification::Migrated)
-            .action_interactive_job("gradeTerrainRegion", InteractiveJobClassification::Migrated)
-            .action_interactive_job("generateTerrainContours", InteractiveJobClassification::Migrated)
-            .action_interactive_job("addOverlayPosition", InteractiveJobClassification::Migrated)
-            .action_interactive_job("removeOverlayFeature", InteractiveJobClassification::Migrated)
-            .action_interactive_job("clearOverlays", InteractiveJobClassification::Migrated)
-            .action_interactive_job("editOverlayShape", InteractiveJobClassification::Migrated)
-            .action_interactive_job("moveOverlayPosition", InteractiveJobClassification::Migrated)
-            .action_interactive_job("editElevation", InteractiveJobClassification::Migrated)
-            .action_interactive_job(import_elevation::REQUEST_ACTION, InteractiveJobClassification::Migrated)
-            .action_interactive_job(import_elevation::FILE_ACTION, InteractiveJobClassification::Migrated)
-            .action_interactive_job(export_elevation_grid::ACTION, InteractiveJobClassification::Migrated)
-            .action_interactive_job(geojson::REQUEST_ACTION, InteractiveJobClassification::Migrated)
-            .action_interactive_job(geojson::FILE_ACTION, InteractiveJobClassification::Migrated)
-            .action_interactive_job(export_geojson::ACTION, InteractiveJobClassification::Migrated)
-            .keybinding("mod+z", "undo")
-            .keybinding("mod+shift+z", "redo")
-            .config(Gis3dPlayApp::config_spec())
-            .io(gis3d_io())
-            .interactive_jobs(InteractiveJobClassification::Migrated)
-            .action_describe("setActiveExample", LocalizedLabel::native("Replaces the whole terrain with one of the plugin's bundled terrain examples, by example id.", "Ersetzt das gesamte Gelände durch eines der mitgelieferten Geländebeispiele, anhand der Beispiel-Id."))
-            .action_describe("setExaggeration", LocalizedLabel::native("Sets the vertical exaggeration factor the terrain surface is drawn with.", "Legt den Überhöhungsfaktor fest, mit dem die Geländeoberfläche gezeichnet wird."))
-            .action_describe("clearElevationSource", LocalizedLabel::native("Clears the saved elevation grid.", "Entfernt das gespeicherte Höhenraster."))
-            .action_describe("addOverlayPosition", LocalizedLabel::native("Adds a position using WGS84 coordinates.", "Fügt eine Position mit WGS84-Koordinaten hinzu."))
-            .action_describe("removeOverlayFeature", LocalizedLabel::native("Removes a position, route or region by its feature ID.", "Entfernt eine Position, Route oder Fläche anhand ihrer Objekt-ID."))
-            .action_describe("clearOverlays", LocalizedLabel::native("Clears the map's positions, routes and regions.", "Entfernt die Positionen, Routen und Flächen der Karte."))
-            .action_describe("editElevation", LocalizedLabel::native("Edits stored heights in meters. Use a negative value to lower terrain or enter 0–100 to smooth.", "Bearbeitet gespeicherte Höhen in Metern. Negative Werte senken das Gelände ab. Zum Glätten 0–100 eingeben."))
-            .action_describe("gradeTerrainRegion", LocalizedLabel::native("Sets terrain samples inside an existing GIS region to one height and preserves the holes.", "Setzt Rasterpunkte in einer vorhandenen GIS-Region auf eine Höhe und erhält die Aussparungen."))
-            .action_describe("generateTerrainContours", LocalizedLabel::native("Replaces generated contours with lines at multiples of the interval in metres, using the saved elevation grid.", "Ersetzt erzeugte Höhenlinien durch Linien in Vielfachen des Höhenabstands in Metern, anhand des gespeicherten Höhenrasters."))
-            .action_describe("configureTerrainBrush", LocalizedLabel::native("Sets the radius, elevation step and smoothing strength for this terrain window.", "Legt Radius, Höhenänderung und Glättungsstärke für dieses Geländefenster fest."))
-            .action_describe(import_elevation::REQUEST_ACTION, LocalizedLabel::native("Imports a WGS84 Esri ASCII Grid (.asc, up to 64 KiB) with elevations in metres. Replaces the current elevation grid.", "Importiert ein WGS84-Esri-ASCII-Raster (.asc, bis zu 64 KiB) mit Höhen in Metern. Ersetzt das aktuelle Höhenraster."))
-            .action_describe(export_elevation_grid::ACTION, LocalizedLabel::native("Downloads the saved heights as a WGS84 Esri ASCII Grid (.asc). Requires equal latitude and longitude spacing.", "Lädt die gespeicherten Höhen als WGS84-Esri-ASCII-Raster (.asc) herunter. Die Abstände in Längen- und Breitengraden müssen gleich sein."))
-            .action_describe(geojson::REQUEST_ACTION, LocalizedLabel::native("Replaces the current overlays with points, lines, and polygons from a GeoJSON FeatureCollection (up to 24 KiB).", "Ersetzt die aktuellen Overlays durch Punkte, Linien und Polygone aus einer GeoJSON-FeatureCollection mit höchstens 24 KiB."))
-            .action_describe(export_geojson::ACTION, LocalizedLabel::native("Downloads the current overlay features and their properties as GeoJSON.", "Lädt die aktuellen Overlay-Objekte und ihre Eigenschaften als GeoJSON herunter."))
-            .action_audience("setCamera", semio_plugin::CapabilityAudience::Chrome)
-            .build_definition()
+    editor = editor.window_kind_utilities(terrain::GIS3D_PLAY_WINDOW_MAIN, terrain::UTILITIES.iter().map(|utility| utility.0.into()).collect())
+        .panel_tab_def(terrain_data::definition())
+        .default_layout(view_mode::layout())
+        .interaction(InteractionDefinition {
+            id: "features".into(),
+            label: label("Features", "Objekte"),
+            granularities: vec![GranularityDefinition { id: "pin".into(), label: label("Pin", "Stift"), icon_id: "map-pin".into() }],
+            hierarchy: HierarchyProvider::Flat,
+            hover: HoverSpec::default(),
+            selection: SelectionSpec {
+                modes: vec![SelectionMode::Multiple, SelectionMode::Single],
+                methods: vec![SelectionMethod::Pick, SelectionMethod::Rectangle],
+                merges: vec![MergeMode::Replace, MergeMode::Additive, MergeMode::Subtractive, MergeMode::Invertive],
+                transitive: false,
+                broadcast: true,
+            },
+        })
+        .window_kind_interactions(terrain::GIS3D_PLAY_WINDOW_MAIN, vec![InteractionRef::new("features")])
+        .action_with(ActionDefinition::new("setCamera", label("Set Camera", "Kamera festlegen"), ActionKind::View, "camera"))
+        .action_with(ActionDefinition::new("configureTerrainBrush", label("Configure Terrain Brush", "Geländepinsel einstellen"), ActionKind::View, "configure-terrain-brush"))
+        .action_args("configureTerrainBrush", configure_terrain_brush::action_arguments())
+        .mutation("setExaggeration", label("Set Exaggeration", "Überhöhung festlegen"))
+        .mutation("clearElevationSource", label("Clear Elevation Source", "Höhenquelle entfernen"))
+        .mutation("createElevationGrid", label("Create Flat Grid", "Flaches Höhenraster erstellen"))
+        .action_args("createElevationGrid", create_elevation_grid::action_arguments())
+        .mutation("gradeTerrainRegion", label("Grade Region", "Region nivellieren"))
+        .action_args("gradeTerrainRegion", grade_region::action_arguments())
+        .mutation("generateTerrainContours", label("Generate Terrain Contours", "Geländehöhenlinien erzeugen"))
+        .action_args("generateTerrainContours", contours::action_arguments())
+        .mutation("addOverlayPosition", label("Add Position", "Position hinzufügen"))
+        .mutation("removeOverlayFeature", label("Remove Map Feature", "Kartenobjekt entfernen"))
+        .mutation("clearOverlays", label("Clear Map Features", "Kartenobjekte entfernen"))
+        .mutation("editOverlayShape", label("Edit Route or Region", "Route oder Fläche bearbeiten"))
+        .mutation("moveOverlayPosition", label("Move Position", "Position verschieben"))
+        .mutation("editElevation", label("Edit Elevation", "Höhe bearbeiten"))
+        .shell_action(import_elevation::REQUEST_ACTION, label("Import Elevation Grid…", "Höhenraster importieren…"))
+        .shell_action(export_elevation_grid::ACTION, label("Export Elevation Grid…", "Höhenraster exportieren…"))
+        .shell_action(geojson::REQUEST_ACTION, label("Import GeoJSON Overlays…", "GeoJSON-Overlays importieren…"))
+        .shell_action(export_geojson::ACTION, label("Export GeoJSON Overlays…", "GeoJSON-Overlays exportieren…"))
+        .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::bounded_catalog(geojson::FILE_ACTION, label("Load GeoJSON Overlays", "GeoJSON-Overlays laden"), ActionKind::Mutation) })
+        .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::bounded_catalog(import_elevation::FILE_ACTION, label("Load Elevation Grid", "Höhenraster laden"), ActionKind::Mutation) })
+        .action_args("editElevation", edit_elevation::action_arguments())
+        .action_with(ActionDefinition::new("setActiveExample", label("Set Active Example", "Aktives Beispiel festlegen"), ActionKind::Mutation, "panel-left"))
+        .action_destructive("setActiveExample")
+        .action_args("setActiveExample", vec![ActionArgDef::select("exampleId", label("Example", "Beispiel"), example::example_arg_options()).default_value(&example::DEFAULT_EXAMPLE_ID)])
+        .action_args("setExaggeration", vec![ActionArgDef::slider("value", label("Exaggeration", "Überhöhung"), GIS3D_EXAGGERATION_MINIMUM, GIS3D_EXAGGERATION_MAXIMUM).default_value(&GIS3D_EXAGGERATION_STAGED_DEFAULT)])
+        .action_args("addOverlayPosition", overlays::add_args())
+        .action_args("removeOverlayFeature", vec![overlays::id_arg()])
+        .action_args("editOverlayShape", overlays::shape_args())
+        .action_args("moveOverlayPosition", overlays::move_args());
+    for action_id in [
+        "setCamera", "configureTerrainBrush", "setExaggeration", "setActiveExample", "clearElevationSource",
+        "createElevationGrid", "gradeTerrainRegion", "generateTerrainContours", "addOverlayPosition",
+        "removeOverlayFeature", "clearOverlays", "editOverlayShape", "moveOverlayPosition", "editElevation",
+        import_elevation::REQUEST_ACTION, import_elevation::FILE_ACTION, export_elevation_grid::ACTION,
+        geojson::REQUEST_ACTION, geojson::FILE_ACTION, export_geojson::ACTION,
+    ] {
+        editor = editor.action_interactive_job(action_id, Migrated);
+    }
+    editor
+        .keybinding("mod+z", "undo")
+        .keybinding("mod+shift+z", "redo")
+        .config(Gis3dPlayApp::config_spec())
+        .io(gis3d_io())
+        .interactive_jobs(Migrated)
+        .action_describe("setActiveExample", label("Replaces the whole terrain with one of the plugin's bundled terrain examples, by example id.", "Ersetzt das gesamte Gelände durch eines der mitgelieferten Geländebeispiele, anhand der Beispiel-Id."))
+        .action_describe("setExaggeration", label("Sets the vertical exaggeration factor the terrain surface is drawn with.", "Legt den Überhöhungsfaktor fest, mit dem die Geländeoberfläche gezeichnet wird."))
+        .action_describe("clearElevationSource", label("Clears the saved elevation grid.", "Entfernt das gespeicherte Höhenraster."))
+        .action_describe("addOverlayPosition", label("Adds a position using WGS84 coordinates.", "Fügt eine Position mit WGS84-Koordinaten hinzu."))
+        .action_describe("removeOverlayFeature", label("Removes a position, route or region by its feature ID.", "Entfernt eine Position, Route oder Fläche anhand ihrer Objekt-ID."))
+        .action_describe("clearOverlays", label("Clears the map's positions, routes and regions.", "Entfernt die Positionen, Routen und Flächen der Karte."))
+        .action_describe("editElevation", label("Edits stored heights in meters. Use a negative value to lower terrain or enter 0–100 to smooth.", "Bearbeitet gespeicherte Höhen in Metern. Negative Werte senken das Gelände ab. Zum Glätten 0–100 eingeben."))
+        .action_describe("gradeTerrainRegion", label("Sets terrain samples inside an existing GIS region to one height and preserves the holes.", "Setzt Rasterpunkte in einer vorhandenen GIS-Region auf eine Höhe und erhält die Aussparungen."))
+        .action_describe("generateTerrainContours", label("Replaces generated contours with lines at multiples of the interval in metres, using the saved elevation grid.", "Ersetzt erzeugte Höhenlinien durch Linien in Vielfachen des Höhenabstands in Metern, anhand des gespeicherten Höhenrasters."))
+        .action_describe("configureTerrainBrush", label("Sets the radius, elevation step and smoothing strength for this terrain window.", "Legt Radius, Höhenänderung und Glättungsstärke für dieses Geländefenster fest."))
+        .action_describe(import_elevation::REQUEST_ACTION, label("Imports a WGS84 Esri ASCII Grid (.asc, up to 64 KiB) with elevations in metres. Replaces the current elevation grid.", "Importiert ein WGS84-Esri-ASCII-Raster (.asc, bis zu 64 KiB) mit Höhen in Metern. Ersetzt das aktuelle Höhenraster."))
+        .action_describe(export_elevation_grid::ACTION, label("Downloads the saved heights as a WGS84 Esri ASCII Grid (.asc). Requires equal latitude and longitude spacing.", "Lädt die gespeicherten Höhen als WGS84-Esri-ASCII-Raster (.asc) herunter. Die Abstände in Längen- und Breitengraden müssen gleich sein."))
+        .action_describe(geojson::REQUEST_ACTION, label("Replaces the current overlays with points, lines, and polygons from a GeoJSON FeatureCollection (up to 24 KiB).", "Ersetzt die aktuellen Overlays durch Punkte, Linien und Polygone aus einer GeoJSON-FeatureCollection mit höchstens 24 KiB."))
+        .action_describe(export_geojson::ACTION, label("Downloads the current overlay features and their properties as GeoJSON.", "Lädt die aktuellen Overlay-Objekte und ihre Eigenschaften als GeoJSON herunter."))
+        .action_audience("setCamera", CapabilityAudience::Chrome)
+        .build_definition()
 }
 //#endregion 🔖️Manifest
 

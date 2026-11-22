@@ -22,7 +22,7 @@ for(const row of corpus.cases)test("watchdog adoption preserves "+row.id,async()
  const file=join(directory,P.inflightName),log=join(directory,"tools.log"),end=join(directory,"tools.exit"),semantics=join(root,"semantics.json"),stop=join(root,"stop"),startedMs=Date.now();
  writeFileSync(semantics,JSON.stringify({revision:1}));
  const stage={...STAGES.find(stage=>stage.name==="tools")!,timeoutMilliseconds:60000};
- const tree={...TREE,stallStopMilliseconds:2500,staleStageMilliseconds:row.mode==="semantics"?4500:TREE.staleStageMilliseconds,semanticsSources:[{file:"semantics.json",pointer:"/revision"}]};
+ const tree={...TREE,stallStopMilliseconds:2500,staleStageMilliseconds:row.mode==="semantics"?4500:TREE.staleStageMilliseconds,codeQuietMilliseconds:row.mode==="semantics"?900:TREE.codeQuietMilliseconds,semanticsSources:[{file:"semantics.json",pointer:"/revision"}]};
  const child=spawn(process.execPath,["-e",CHILD,log,end,row.mode,stop],{cwd:root,stdio:"ignore",windowsHide:true});
  const exited=new Promise<void>(done=>child.once("exit",()=>done()));
  const db=new Database(":memory:");

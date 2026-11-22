@@ -20,3 +20,6 @@ mod table_row_grid_tests;
 
 #[path = "../../../../../🧪️tests/📊️table-column-model/🦀️.rs"]
 mod table_column_model_tests;
+
+#[path = "../../../../../🧪️tests/📅️picker-models/🦀️.rs"]
+mod picker_model_tests;

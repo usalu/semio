@@ -6,7 +6,7 @@ use semio_plugin_decl_app::ArtifactApp;
 use semio_framework_artifact_reference::{ArtifactDialect, ArtifactRef};
 use semio_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
 use pack::snapshot::ArtifactPack;
-#[cfg(test)]
+#[cfg(any(test, feature = "artifact-app-testing"))]
 use semio_plugin_child::ChildAdmissionTestState;
 use crate::children_components::ChildComposition;
 use semio_plugin_child::{ChildContentRetirement, ChildMemberEntry, ChildMemberRegistrationError, ChildMemberRetirement, ChildStoreAdmission, DocumentClosureSourceView, MemberPath};
@@ -266,7 +266,7 @@ impl<M: ReferenceSpaceMember + MemberFactory + 'static> ChildComposition<M> {
         }
     }
 
-    #[cfg(test)]
+    #[cfg(any(test, feature = "artifact-app-testing"))]
     pub fn test_child_admission_state(&self, abort_generation: u64) -> ChildAdmissionTestState {
         ChildAdmissionTestState {
             children_empty: self.children.is_empty(),

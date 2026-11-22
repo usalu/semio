@@ -32,13 +32,16 @@ export type StageEntryV1 = Readonly<{ version: 1; key: StageKeyV1; digest: strin
 /** 🎯️ How one stage request was served. */
 export type StageResultV1 = Readonly<{ hit: boolean; digest: string; files: readonly StageFileV1[] }>;
 
-/** 📊️ Hits, misses and bytes of one cache instance. */
-export type StageCacheStatsV1 = Readonly<{ hits: number; misses: number; restoredBytes: number; storedBytes: number }>;
+/** 📊️ Local hits, fleet hits (served by the fleet cache), misses and bytes of one cache instance. */
+export type StageCacheStatsV1 = Readonly<{ hits: number; fleetHits: number; misses: number; restoredBytes: number; storedBytes: number }>;
 
-/** 🗃️ A content-addressed store of stage outputs. `slot` names the unit a request belongs to without its content inputs (the module a stage builds): a newer key of one slot supersedes the older ones, which a sharing cache reclaims; the local store itself ignores it. */
+/** ☁️ A producer of a stage on another machine: it fills `directory` with exactly the files `produce` would write and answers `true`, or answers `false` when the step ran nowhere else (no idle machine, a refusal, a fault, a cancel) and the caller produces it here. It never fails a stage: its faults are `false`. */
+export type StageRemoteV1 = (directory: string, signal: AbortSignal) => Promise<boolean>;
+
+/** 🗃️ A content-addressed store of stage outputs. `slot` names the unit a request belongs to without its content inputs (the module a stage builds): a newer key of one slot supersedes the older ones, which a sharing cache reclaims; the local store itself ignores it. `remote` is how a sharing cache may produce a missing entry on another machine of the fleet instead of here (the local store itself ignores it). */
 export interface StageCacheV1 {
   readonly root: string;
-  run(key: StageKeyV1, output: string, produce: (directory: string) => Promise<void>, signal?: AbortSignal, slot?: string): Promise<StageResultV1>;
+  run(key: StageKeyV1, output: string, produce: (directory: string) => Promise<void>, signal?: AbortSignal, slot?: string, remote?: StageRemoteV1): Promise<StageResultV1>;
   stats(): StageCacheStatsV1;
 }
 
@@ -155,6 +158,6 @@ export function stageCacheV1(root: string): StageCacheV1 {
         await rm(temporary, { recursive: true, force: true });
       }
     },
-    stats: () => Object.freeze({ hits, misses, restoredBytes, storedBytes }),
+    stats: () => Object.freeze({ hits, fleetHits: 0, misses, restoredBytes, storedBytes }),
   };
 }

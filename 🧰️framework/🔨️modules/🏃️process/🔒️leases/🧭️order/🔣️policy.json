@@ -27,7 +27,7 @@
       "backlogMilliseconds": 20000,
       "maximumFolders": 256,
       "budgetMilliseconds": 20,
-      "idleMilliseconds": 86400000
+      "idleMilliseconds": 900000
     }
   },
   "fairness": {
@@ -641,6 +641,24 @@
       "reason": {
         "en": "A private artifact scratch claim is named after the random scratch directory of ONE invocation (`artifact-scratch-private:<sha256 of that directory>`), so no other process ever requests it and a wait on the toolchain (the rustup bootstrap, a configuration view) cannot close a cycle through it. Only the private prefix is exempt: a scratch claim shared between invocations keeps the plain `artifact-scratch:` prefix and still refuses, because there another holder could wait for it while this one waits for the toolchain.",
         "de": "Ein privater Artefakt-Arbeitsflächen-Anspruch ist nach dem zufälligen Arbeitsverzeichnis GENAU einer Ausführung benannt (`artifact-scratch-private:<sha256 dieses Verzeichnisses>`); kein anderer Prozess fordert ihn je an, daher kann ein Warten auf die Toolchain (der rustup-Bootstrap, eine Konfigurationssicht) keinen Zyklus über ihn schließen. Nur das private Präfix ist ausgenommen: ein zwischen Ausführungen geteilter Arbeitsflächen-Anspruch behält das einfache Präfix `artifact-scratch:` und wird weiterhin abgelehnt, weil dort ein anderer Halter auf ihn warten könnte, während dieser auf die Toolchain wartet."
+      }
+    },
+    {
+      "from": "artifact",
+      "to": "artifact",
+      "binding": { "kind": "held-prefix", "fromPrefix": "artifact-scratch-private:" },
+      "reason": {
+        "en": "A private artifact scratch claim is named after the random scratch directory of ONE invocation (`artifact-scratch-private:<sha256 of that directory>`), so no other process ever requests it and a wait for a shared artifact lease (the destination another publisher of the same artifact replaces, or its source capture) cannot close a cycle through it: the publisher that holds the destination waits for nothing this invocation holds. The wait stays under the cycle detector. Only the private prefix is exempt: a scratch claim shared between invocations keeps the plain `artifact-scratch:` prefix and still refuses.",
+        "de": "Ein privater Artefakt-Arbeitsflächen-Anspruch ist nach dem zufälligen Arbeitsverzeichnis GENAU einer Ausführung benannt (`artifact-scratch-private:<sha256 dieses Verzeichnisses>`); kein anderer Prozess fordert ihn je an, daher kann ein Warten auf eine geteilte Artefakt-Lease (das Ziel, das ein anderer Veröffentlicher desselben Artefakts ersetzt, oder dessen Quellaufnahme) keinen Zyklus über ihn schließen: der Veröffentlicher, der das Ziel hält, wartet auf nichts, was diese Ausführung hält. Das Warten bleibt unter dem Zyklusdetektor. Nur das private Präfix ist ausgenommen: ein zwischen Ausführungen geteilter Arbeitsflächen-Anspruch behält das einfache Präfix `artifact-scratch:` und wird weiterhin abgelehnt."
+      }
+    },
+    {
+      "from": "artifact",
+      "to": "artifact",
+      "binding": { "kind": "same-directory-suffix", "fromPrefix": "artifact-capture:", "toPrefix": "artifact:" },
+      "reason": {
+        "en": "Every publication of one destination takes the exclusive source capture of that destination first and the exclusive destination lease second (the fresh writers acquire them in this order and hand both to the stage; general publication captures, then publishes). Nobody holding the destination lease requests the capture of the same destination, so a publisher that holds the capture and waits for a concurrent publisher of the same destination to release it cannot close a cycle (the cycle detector still enforces that). Only the capture and destination of the SAME path are paired.",
+        "de": "Jede Veröffentlichung eines Ziels nimmt zuerst die exklusive Quellaufnahme dieses Ziels und danach die exklusive Ziel-Lease (die frischen Schreiber erwerben sie in dieser Reihenfolge und übergeben beide der Bereitstellung; die allgemeine Veröffentlichung nimmt auf, dann veröffentlicht sie). Wer die Ziel-Lease hält, fordert nie die Quellaufnahme desselben Ziels an; ein Veröffentlicher, der die Quellaufnahme hält und auf einen gleichzeitigen Veröffentlicher desselben Ziels wartet, kann daher keinen Zyklus schließen (der Zyklusdetektor erzwingt das weiterhin). Nur Quellaufnahme und Ziel desselben Pfads sind gepaart."
       }
     },
     {

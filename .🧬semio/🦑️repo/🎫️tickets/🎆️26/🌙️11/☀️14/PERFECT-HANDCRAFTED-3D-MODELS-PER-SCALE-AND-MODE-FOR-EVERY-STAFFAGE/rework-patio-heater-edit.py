@@ -340,14 +340,12 @@ def drawings(asset):
         rest = [shape for shape in elevation if shape["id"] not in ids]
         at = next(i for i, shape in enumerate(rest) if shape["bone"] == "pole")
         representation["geometry"]["elevation"] = rest[:at] + new + rest[at:]
-        outer = -0.225 if scale == "500" else -0.21
-        role = "body" if scale == "500" else "detail"
+        leaf = next(shape for shape in new if shape["id"] == "door")
         front = [shape for shape in representation["geometry"]["front"] if shape["id"] != "door"]
-        front.insert(1, poly("door", "door", "body", 3.05, tone, [[outer, 0.1], [round(HINGE[2], 4), 0.1], [round(HINGE[2], 4), 0.66], [outer, 0.66]], True, region="base-housing"))
+        front.insert(1, dict(leaf, z=3.05))
         representation["geometry"]["front"] = front
-        arc = [[round(HINGE_R * math.sin(k * 0.25), 4), round(-HINGE_R * math.cos(k * 0.25), 4)] for k in range(-3, 4)]
         plan = [shape for shape in representation["geometry"]["plan"] if shape["id"] != "door"]
-        plan.insert(0, poly("door", "door", role, 3.0, 0.3, arc, False, closed=False, region="base-housing"))
+        plan.insert(0, dict(leaf, z=3.0))
         representation["geometry"]["plan"] = plan
         text = representation["decisions"]["silhouette"]
         if "bottle change" not in text["en"]:

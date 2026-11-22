@@ -1,0 +1,53 @@
+{
+  "id": "nurse-walking",
+  "category": "humans",
+  "title": {
+    "en": "Nurse Walking",
+    "de": "Gehende Pflegekraft"
+  },
+  "heightM": 1.759,
+  "widthM": 0.852,
+  "powerW": 394.4,
+  "poses": [
+    "standing",
+    "contact-left",
+    "passing-right"
+  ],
+  "clips": [
+    "brisk-walk",
+    "idle-breathing"
+  ],
+  "representations": {
+    "50": "authored",
+    "100": "authored",
+    "200": "authored",
+    "500": "authored"
+  },
+  "symbols": [
+    "brisk-walker-marker"
+  ],
+  "analytics": [
+    "thermal",
+    "transport",
+    "structural"
+  ],
+  "exports": [
+    "svg",
+    "pdf",
+    "dxf",
+    "dwg",
+    "png-sequence",
+    "mp4",
+    "webm",
+    "component",
+    "glb",
+    "fbx",
+    "model",
+    "model-zip"
+  ],
+  "distinction": {
+    "en": "A nurse in a hip-length scrub tunic with short sleeves over bare forearms, scrub trousers and closed clogs, walking briskly along the ward with both arms swinging in a one-second gait cycle; the only walking figure in clinical scrubs, bare below the elbows.",
+    "de": "Eine Pflegekraft in hüftlangem Kasack mit kurzen Ärmeln über nackten Unterarmen, Bereichshose und geschlossenen Clogs geht zügig über die Station, beide Arme schwingen in einem Gangzyklus von einer Sekunde; die einzige gehende Figur in Bereichskleidung, unterhalb der Ellbogen unbekleidet."
+  },
+  "completion": "authored"
+}

@@ -233,6 +233,19 @@ impl<V: ArtifactViewer> ArtifactApp for ViewerApp<V> {
     async fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>, view_state: &ViewModel) -> UiAssemblyResult<ComponentTree> {
         V::render(body_key, doc, cfg, view_state)
     }
+    async fn render_with_peers(
+        owner: &ArtifactInstanceOperationOwnerHandle,
+        body_key: &str,
+        doc: &ArtifactView<'_, Self::Snapshot>,
+        cfg: &ConfigView<'_, Self::Config>,
+        view_state: &ViewModel,
+        transient: &TransientView<'_, Self::Transient>,
+        interaction: &InteractionView<'_>,
+        peers: &PresencePeersView<'_, Self::Presence>,
+        cx:&mut semio_framework_job::StepContext<'_>,
+    ) -> semio_plugin_ownership::sdk_fault::OriginalRenderResult<ComponentTree> {
+        V::render_with_peers(owner, body_key, doc, cfg, view_state, transient, interaction, peers, cx)
+    }
     async fn render_with_request_context(
         owner: &ArtifactInstanceOperationOwnerHandle,
         body_key: &str,

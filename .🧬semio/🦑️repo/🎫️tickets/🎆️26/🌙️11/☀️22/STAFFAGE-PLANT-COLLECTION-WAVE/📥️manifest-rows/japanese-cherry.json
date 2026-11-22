@@ -1,0 +1,56 @@
+{
+ "id": "japanese-cherry",
+ "category": "vegetation",
+ "title": {
+  "en": "Japanese Cherry 'Kanzan', in Bloom",
+  "de": "Japanische Blütenkirsche 'Kanzan', in Blüte"
+ },
+ "heightM": 8.072,
+ "widthM": 8.052,
+ "powerW": 0,
+ "poses": [
+  "full-bloom",
+  "bloom-breeze",
+  "spring-gale",
+  "april-snow"
+ ],
+ "clips": [
+  "wind-sway",
+  "gust",
+  "diurnal-transpiration"
+ ],
+ "representations": {
+  "50": "authored",
+  "100": "authored",
+  "200": "authored",
+  "500": "authored"
+ },
+ "symbols": [
+  "japanese-cherry-symbol",
+  "tree-sign"
+ ],
+ "analytics": [
+  "thermal",
+  "transport",
+  "structural"
+ ],
+ "exports": [
+  "svg",
+  "pdf",
+  "dxf",
+  "dwg",
+  "png-sequence",
+  "mp4",
+  "webm",
+  "component",
+  "glb",
+  "fbx",
+  "model",
+  "model-zip"
+ ],
+ "distinction": {
+  "en": "A mature ornamental Japanese cherry (Prunus serrulata 'Kanzan') in full bloom: a top-grafted standard with a clear stem of 1.9 m and the graft swelling below the fork, five scaffolds rising steeply in a funnel and arching out into a broad, flat-topped vase crown hung with clusters of double pink flowers among the young bronze leaves.",
+  "de": "Eine ausgewachsene Japanische Blütenkirsche (Prunus serrulata 'Kanzan') in voller Blüte: ein kopfveredelter Hochstamm mit 1,9 m Stammhöhe und der Veredelungswulst unter der Verzweigung, fünf Leitäste, die steil trichterförmig aufsteigen und in eine breite, flach gewölbte Vasenkrone überbiegen, behängt mit Büscheln gefüllter rosa Blüten zwischen dem jungen bronzefarbenen Laub."
+ },
+ "completion": "authored"
+}

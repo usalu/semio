@@ -46,6 +46,7 @@ semio-os-flow-host-core = { path = "../../🧱️flow-host-model/📦️packages
 semio-os-kernel = { path = "../../../../../📦️packages/🦀️rust", features = ["mutation-testing"] }
 semio-framework-artifact-flow-flow = { workspace = true, features = ["protocol-laws"] }
 semio-framework-replication = { workspace = true }
+semio-framework-trace = { workspace = true }
 semio-framework-async-macros = { path = "../../../../../../../🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }
 ui_contract = { path = "../../../../../../../🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust", package = "semio-ui-contract" }
 semio-framework-pack = { path = "../../../../../../../🔨️modules/🎒️pack/📦️packages/🦀️rust" }

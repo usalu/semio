@@ -9,6 +9,7 @@ pub struct BrowserTickOutput {
     pub media_slots:BrowserMediaOutput,
     pub cursor: &'static str,
     pub fullscreen: Option<bool>,
+    pub unsaved: bool,
     pub request_frame: bool,
     pub next_deadline_delay_ms: Option<f64>,
     pub continue_frame: bool,

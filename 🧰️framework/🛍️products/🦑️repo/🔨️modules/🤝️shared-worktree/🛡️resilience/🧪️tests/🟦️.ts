@@ -11,6 +11,7 @@ import replicaSchema from "../../🔁️replica/🧬️schema/🔣️.json" with
 import fixture from "./🧫️fixtures/🔣️.json" with {type:"json"};
 import {codeDigestV1} from "../../🩺️attest/🟦️.ts";
 import {codeDirectoryV1,createFailuresV1,noteRefusedPathV1,NO_REFUSED_PATHS_V1,readRefusedPathsV1,refusedPathsPathV1,REFUSED_PATH_LIMIT_V1,writeRefusedPathsV1,createStoreGuardV1,healthPathV1,importClosureV1,listCodeSnapshotsV1,moduleSourcesV1,pruneCodeSnapshotsV1,pruneLostV1,readHealthV1,requireResilienceShapeV1,restartJitterMillisecondsV1,rotateLogV1,runSelfCheckV1,sealCodeV1,selfCheckV1,StoreStalledV1,textsProblemV1,verifyCodeSnapshotV1,writeHealthV1,type StoreStateV1,type TargetSharingCodeV1} from "../🟦️.ts";
+import {stretchedBudgetMillisecondsV1} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
 
 import {activityNamesV1,activityV1,blockedFailuresV1,installBootStageV1,listStoreCodeV1,publishCodeSnapshotV1,pruneStoreCodeV1,readBeatV1,readFallbackV1,storeCodeDirectoryV1,verifyCodeSnapshotV1,yieldingV1} from "../🟦️.ts";
 import {createHash} from "node:crypto";
@@ -237,7 +238,7 @@ test("a turn blocked in an uncancellable call is abandoned and aborted, issues n
  let ticks=0;
  const timer=setInterval(()=>{ticks++;},10);
  await Bun.sleep(100);clearInterval(timer);
- expect(ticks).toBeGreaterThan(5);
+ expect(ticks).toBeGreaterThan(Math.floor(5/(stretchedBudgetMillisecondsV1(1000)/1000)));
  heal();unblock();
  for(const probe of probes)probe.release(true);
  await until(()=>guard.state()==="ok");
@@ -409,7 +410,7 @@ test("a cooperative yield hands the event loop back within its budget while a lo
  let sum=0;
  while(performance.now()<end){for(let index=0;index<2000;index++)sum+=Math.sqrt(index);await turn();}
  clearInterval(timer);
- expect(sum).toBeGreaterThan(0);expect(ticks).toBeGreaterThan(20);expect(worst).toBeLessThan(120);
+ expect(sum).toBeGreaterThan(0);expect(ticks).toBeGreaterThan(Math.floor(20/(stretchedBudgetMillisecondsV1(1000)/1000)));expect(worst).toBeLessThan(stretchedBudgetMillisecondsV1(120));
  const quick=yieldingV1(1000);let paused=0;
  for(let index=0;index<100_000;index++)if(quick()!==undefined)paused++;
  expect(paused).toBe(0);

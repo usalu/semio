@@ -1,8 +1,7 @@
 import{test,expect}from"bun:test";
 import Ajv from"ajv";
 import{Database}from"bun:sqlite";
-import ts from"typescript";
-import{readFileSync}from"node:fs";
+import{loadProductFunctionsSyncV1}from"../../../../../../🧪️testing/🧩️extracted-function/🟦️.ts";
 import{join,resolve,dirname}from"node:path";
 import{readNativeFixedPublicationMappingV1}from"../🟦️.ts";
 import{withBuildTestInvocationV1}from"../../../../../../🧪️testing/📥️invocation/🟦️.ts";
@@ -15,7 +14,7 @@ import{nativeDirectoryProtocolV1}from"../../../📁️directory/🟦️.ts";
 import schema from"../🧬️schema/🔣️.json";
 import corpus from"./🔣️.json";
 const protocol=nativeDirectoryProtocolV1();
-function actual(name:string,ports:Record<string,unknown>,path=resolve(import.meta.dir,"../🟦️.ts")):Function{const source=ts.createSourceFile(path,readFileSync(path,"utf8"),ts.ScriptTarget.Latest,true),fn=source.statements.find((node):node is ts.FunctionDeclaration=>ts.isFunctionDeclaration(node)&&node.name?.text===name);if(!fn)throw Error("Actual function required");return new Function(...Object.keys(ports),ts.transpileModule(fn.getText(source).replace(/^export\s+/u,"")+";return "+name+";",{compilerOptions:{target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.None}}).outputText)(...Object.values(ports));}
+function actual(name:string,ports:Record<string,unknown>,path=resolve(import.meta.dir,"../🟦️.ts")):Function{return loadProductFunctionsSyncV1(path,[name],ports)[name];}
 const mapping=()=>({kind:"directory-partition",anchor:[1,3,159],volume:{dev:"1",ino:"4",mode:16877}});
 
 test("Fixed publication complete mapping DATA matches independent Ajv and SQLite on both directory hosts",()=>{

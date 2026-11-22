@@ -21,6 +21,10 @@ workspace = true
 [lib]
 path = "../../🦀️.rs"
 
+[[test]]
+name = "job_ledger"
+path = "../../🧪️tests/💼️job-ledger/🦀️.rs"
+
 [features]
 testkit = []
 
@@ -43,6 +47,7 @@ semio-ui-theme = { path = "../../../../../../../../../../🔨️modules/🖱️u
 semio-framework-async = { workspace = true, features = ["entrypoint"] }
 semio-os-services-native-io = { workspace = true }
 semio-plugin-host = { path = "../../../../../../../🔌️plugin/🖥️host/📦️packages/🦀️rust" }
+semio-plugin-host-shard = { path = "../../../../../../../🔌️plugin/🖥️host/🧵️shard/📦️packages/🦀️rust" }
 
 [target.'cfg(all(target_arch = "wasm32", target_os = "unknown"))'.dependencies]
 js-sys = "0.3.83"

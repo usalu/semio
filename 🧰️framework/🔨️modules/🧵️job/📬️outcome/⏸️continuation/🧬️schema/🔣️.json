@@ -153,6 +153,7 @@
     "nativeConstruction": {
       "sourcePosts": "accepted-physical-span-on-success-and-error-once",
       "semanticSettlement": "only-additional-parent-effects",
+      "quantumItems": 32,
       "text": "Actual native source 🌱"
     },
     "finalQualification": {

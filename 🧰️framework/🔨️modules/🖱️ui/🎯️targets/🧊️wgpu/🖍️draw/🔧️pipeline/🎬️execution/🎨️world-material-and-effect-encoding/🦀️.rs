@@ -356,13 +356,14 @@ impl UiPipelines {
         Ok(())
     }
 
-    /// 🎭️ Replays one completed World viewport through its image remap and physical viewport mask.
+    /// 🎭️ Replays one completed World viewport through its image remap and physical viewport mask, inside the open group's target when `group` names one.
     pub fn encode_prepared_world_postprocess(
         &self,
         device: &gpu_device::Device,
         queue: &gpu_device::Queue,
         encoder: &mut gpu_device::CommandEncoder,
         composite: &PreparedCompositeTarget,
+        group: Option<&PreparedGroupTarget>,
         pass_owner: &ScenePass3d,
         scene_scissor: ScissorRect,
     ) -> Result<(), &'static str> {
@@ -380,7 +381,7 @@ impl UiPipelines {
             0,
             bytemuck::bytes_of(&WorldPostprocessGlobals { viewport, surface_size: [composite.width as f32, composite.height as f32], fov_strength, modes: [u32::from(curvilinear.is_some()), u32::from(ellipse), 0, 0], clear_color: [0.0; 4] }),
         );
-        composite.copy_to_postprocess_scene_scratch(encoder);
+        composite.copy_to_postprocess_scene_scratch(encoder, group.map(|group| &group.texture));
         let bind_group = device.create_bind_group(&gpu_device::BindGroupDescriptor {
             label: Some("prepared_world_postprocess_bind_group"),
             layout: &self.resources.postprocess_bind_group_layout,
@@ -393,7 +394,7 @@ impl UiPipelines {
         });
         let mut render = encoder.begin_render_pass(&gpu_device::RenderPassDescriptor {
             label: Some("prepared_world_postprocess"),
-            color_attachments: &[Some(gpu_device::RenderPassColorAttachment { view: composite.world_encoded_view(), resolve_target: None, ops: gpu_device::Operations { load: gpu_device::LoadOp::Load, store: gpu_device::StoreOp::Store }, depth_slice: None })],
+            color_attachments: &[Some(gpu_device::RenderPassColorAttachment { view: group.map_or_else(|| composite.world_encoded_view(), |group| &group.world_encoded_view), resolve_target: None, ops: gpu_device::Operations { load: gpu_device::LoadOp::Load, store: gpu_device::StoreOp::Store }, depth_slice: None })],
             depth_stencil_attachment: None,
             timestamp_writes: None,
             occlusion_query_set: None,
@@ -415,10 +416,12 @@ impl UiPipelines {
         queue: &gpu_device::Queue,
         encoder: &mut gpu_device::CommandEncoder,
         composite: &PreparedCompositeTarget,
+        group: Option<&PreparedGroupTarget>,
         pass_owner: &ScenePass3d,
         scene_scissor: ScissorRect,
     ) -> Result<(), &'static str> {
         let clear_color = pass_owner.clear_color.ok_or("prepared world scene clear had no color")?;
+        let clear_color = if group.is_some() { [clear_color[0] * clear_color[3], clear_color[1] * clear_color[3], clear_color[2] * clear_color[3], clear_color[3]] } else { clear_color };
         let background = composite.postprocess_background_view().ok_or("prepared world scene clear had no background snapshot")?;
         let scale = self.resources.surface_scale;
         let viewport = [pass_owner.viewport[0] * scale, pass_owner.viewport[1] * scale, pass_owner.viewport[2] * scale, pass_owner.viewport[3] * scale];
@@ -439,7 +442,7 @@ impl UiPipelines {
         });
         let mut render = encoder.begin_render_pass(&gpu_device::RenderPassDescriptor {
             label: Some("prepared_world_scene_clear"),
-            color_attachments: &[Some(gpu_device::RenderPassColorAttachment { view: composite.world_encoded_view(), resolve_target: None, ops: gpu_device::Operations { load: gpu_device::LoadOp::Load, store: gpu_device::StoreOp::Store }, depth_slice: None })],
+            color_attachments: &[Some(gpu_device::RenderPassColorAttachment { view: group.map_or_else(|| composite.world_encoded_view(), |group| &group.world_encoded_view), resolve_target: None, ops: gpu_device::Operations { load: gpu_device::LoadOp::Load, store: gpu_device::StoreOp::Store }, depth_slice: None })],
             depth_stencil_attachment: None,
             timestamp_writes: None,
             occlusion_query_set: None,

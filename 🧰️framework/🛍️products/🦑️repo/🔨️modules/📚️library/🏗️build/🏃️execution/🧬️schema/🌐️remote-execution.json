@@ -235,6 +235,7 @@
         "directory",
         "materialize",
         "maximumBlobBytes",
+        "ownerlessWorkSeconds",
         "sandbox",
         "inlineOutputBytes",
         "loadIntervalSeconds",
@@ -249,6 +250,7 @@
           "additionalProperties": false,
           "required": [
             "reserveGigabytes",
+            "hostReserveGigabytes",
             "perActionGigabytes"
           ],
           "properties": {
@@ -256,7 +258,13 @@
               "type": "number",
               "minimum": 0,
               "maximum": 100000,
-              "description": "Free space of the volume of the work directory that stays untouched for the machine itself: the worker's blob cache (256 MiB), swap, the replica and the owner's own builds. A worker takes no action below this plus one action."
+              "description": "Free space of the volume of the work directory (its partition image) that stays untouched: a margin for the worker's own blob cache (256 MiB) and the file system. A worker takes no action below this plus one action."
+            },
+            "hostReserveGigabytes": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 100000,
+              "description": "Free space of the volume of the checkout (the host volume, into which a partition image grows) that stays untouched for the machine itself: swap, the replica and the owner's own builds. A worker takes no action below this plus one action."
             },
             "perActionGigabytes": {
               "type": "number",
@@ -265,6 +273,12 @@
               "description": "The worst case one action adds to the volume: the largest compiler outputs measured are 140 MB, written beside a temporary copy and the dependency file. The worker runs one action at once for every such share of free space above the reserve, at most its concurrency."
             }
           }
+        },
+        "ownerlessWorkSeconds": {
+          "type": "integer",
+          "minimum": 60,
+          "maximum": 2592000,
+          "description": "How long the work folder of a worker that left no owner record (it ended before it wrote one) must have been untouched before the collection removes it. A folder with an owner record is removed as soon as that process is gone."
         },
         "concurrency": {
           "type": "integer",
@@ -736,7 +750,15 @@
         "retried",
         "deduplicated",
         "refused",
-        "offloadRejected"
+        "offloadRejected",
+        "cancelledQueued",
+        "cancelledExecuting",
+        "workersReused",
+        "sweepStalls",
+        "queueWaitSamples",
+        "queueWaitP50Milliseconds",
+        "queueWaitP90Milliseconds",
+        "queueWaitMaxMilliseconds"
       ],
       "properties": {
         "queued": {
@@ -776,6 +798,38 @@
           "minimum": 0
         },
         "offloadRejected": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "cancelledQueued": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "cancelledExecuting": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "workersReused": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "sweepStalls": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "queueWaitSamples": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "queueWaitP50Milliseconds": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "queueWaitP90Milliseconds": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "queueWaitMaxMilliseconds": {
           "type": "integer",
           "minimum": 0
         }

@@ -146,3 +146,121 @@ thread_local! {
     pub static TEST_LOCAL_FOLDERS_LOG: std::cell::RefCell<Option<String>> = const { std::cell::RefCell::new(None) };
 }
 //#endregion 🔖️Store
+
+//#region 🔖️LocalCatalog
+/// 🗂️ The device's local document catalog (`os.config.local-catalog`, React's `recordLocalCatalogRef`): every document this device keeps, folded from `admitLocalDocument` and `retireLocalDocument` mutations and stored local-only as its snapshot.
+#[cfg(any(test, feature = "testkit"))]
+thread_local! {
+    static TEST_LOCAL_CATALOG: std::cell::RefCell<Option<String>> = const { std::cell::RefCell::new(None) };
+}
+
+fn local_catalog_read() -> semio_os_config::opening_config::mutations::admit_local_document::LocalCatalog {
+    #[cfg(any(test, feature = "testkit"))]
+    let raw = TEST_LOCAL_CATALOG.with(|slot| slot.borrow().clone());
+    #[cfg(not(any(test, feature = "testkit")))]
+    let raw = prefs_get(semio_os_config::opening_config::mutations::admit_local_document::LOCAL_CATALOG_CONFIG_SCHEMA);
+    raw.and_then(|raw| semio_os_config::io::text::snapshot::decode_local_catalog_json(&raw).ok()).unwrap_or_default()
+}
+
+fn local_catalog_commit(mutation: &semio_os_config::opening_config::mutations::LocalCatalogConfigMutation) -> bool {
+    let mut catalog = local_catalog_read();
+    if semio_os_config::opening_config::apply_local_catalog_config_mutation(&mut catalog, mutation).is_err() {
+        return false;
+    }
+    let raw = semio_os_config::io::text::snapshot::encode_local_catalog_json(&catalog);
+    #[cfg(any(test, feature = "testkit"))]
+    TEST_LOCAL_CATALOG.with(|slot| *slot.borrow_mut() = Some(raw));
+    #[cfg(not(any(test, feature = "testkit")))]
+    prefs_set(semio_os_config::opening_config::mutations::admit_local_document::LOCAL_CATALOG_CONFIG_SCHEMA, &raw);
+    true
+}
+
+impl HistoryState {
+    /// 🗂️ Admits one kept document (its folder, selected surface and admission time) to the local catalog; `false` when the catalog refuses it (already kept, or invalid).
+    pub fn record_local_document(&mut self, document_id: &str, schema: &str, name: &str, target: &str, plugin_id: &str, app_id: &str, admitted_at_ms: u64) -> bool {
+        use semio_os_config::opening_config::mutations::admit_local_document::{admit_local_document, LocalDocument, LocalDocumentStorage, LocalDocumentSurface};
+        let admitted = local_catalog_commit(&admit_local_document(LocalDocument {
+            document_id: document_id.into(), schema: schema.into(), name: name.into(), storage: LocalDocumentStorage::Folder, target: target.into(), admitted_at_ms,
+            surface: Some(LocalDocumentSurface { plugin_id: plugin_id.into(), app_id: app_id.into() }),
+        }));
+        self.refresh_local_files_from_catalog();
+        admitted
+    }
+
+    /// 🗂️ Retires a kept document from the local catalog (React's `unlist`); `false` when it was not listed.
+    pub fn unlist_local_document(&mut self, document_id: &str) -> bool {
+        let retired = local_catalog_commit(&semio_os_config::opening_config::mutations::retire_local_document::retire_local_document(document_id));
+        self.refresh_local_files_from_catalog();
+        retired
+    }
+
+    /// 📖️ Whether the local catalog lists `document_id`.
+    pub fn local_document_listed(&self, document_id: &str) -> bool {
+        local_catalog_read().documents.iter().any(|document| document.document_id == document_id)
+    }
+}
+//#endregion 🔖️LocalCatalog
+
+//#region 🔖️LocalFiles
+/// 🗂️ One kept document the shell lists and reopens: its identity, the name a person knows it by, the folder holding its archive and the surface (program and app) it opens on.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct LocalFileRow {
+    pub document_id: String,
+    pub schema: String,
+    pub name: String,
+    pub target: String,
+    pub plugin_id: String,
+    pub app_id: String,
+    pub admitted_at_ms: u64,
+}
+
+/// 🗂️ React's `LocalFilesV1` ordering: newest admitted first, the document id breaking a tie.
+fn sorted_local_file_rows(mut rows: Vec<LocalFileRow>) -> Vec<LocalFileRow> {
+    rows.sort_by(|left, right| right.admitted_at_ms.cmp(&left.admitted_at_ms).then_with(|| left.document_id.cmp(&right.document_id)));
+    rows
+}
+
+/// 🗂️ The rows of a catalog snapshot JSON (`{documents: [...]}`, React's `LocalCatalog`) that name a surface, newest first and by document id within one instant — React's `LocalFilesV1` ordering.
+pub fn local_file_rows_of_json(json: &str) -> Vec<LocalFileRow> {
+    let Ok(value) = serde_json::from_str::<Value>(json) else { return Vec::new() };
+    let text = |row: &Value, key: &str| row.get(key).and_then(Value::as_str).map(str::to_string);
+    sorted_local_file_rows(value.get("documents").and_then(Value::as_array).into_iter().flatten().filter_map(|row| {
+        let surface = row.get("surface")?;
+        Some(LocalFileRow {
+            document_id: text(row, "documentId")?, schema: text(row, "schema")?, name: text(row, "name")?, target: text(row, "target")?,
+            plugin_id: text(surface, "pluginId")?, app_id: text(surface, "appId")?, admitted_at_ms: row.get("admittedAtMs").and_then(Value::as_u64).unwrap_or(0),
+        })
+    }).collect())
+}
+
+/// 🗂️ The same rows of the native local catalog (`os.config.local-catalog` folded from its mutations): every document that names a surface, in React's order.
+pub fn local_file_rows_of_catalog(catalog: &semio_os_config::opening_config::mutations::admit_local_document::LocalCatalog) -> Vec<LocalFileRow> {
+    sorted_local_file_rows(catalog.documents.iter().filter_map(|document| {
+        let surface = document.surface.as_ref()?;
+        Some(LocalFileRow {
+            document_id: document.document_id.clone(), schema: document.schema.clone(), name: document.name.clone(), target: document.target.clone(),
+            plugin_id: surface.plugin_id.clone(), app_id: surface.app_id.clone(), admitted_at_ms: document.admitted_at_ms,
+        })
+    }).collect())
+}
+
+/// 🗂️ The listing a fresh shell starts with: the native local catalog's documents; the browser's comes from the page's facet client.
+pub fn initial_local_files() -> Vec<LocalFileRow> {
+    #[cfg(target_arch = "wasm32")]
+    return Vec::new();
+    #[cfg(not(target_arch = "wasm32"))]
+    local_file_rows_of_catalog(&local_catalog_read())
+}
+
+impl HistoryState {
+    /// 🗂️ Replaces the listed local files with a catalog snapshot the page's facet client published.
+    pub fn set_local_files_from_json(&mut self, json: &str) {
+        self.local_files = local_file_rows_of_json(json);
+    }
+
+    /// 🗂️ Lists the native local catalog's documents: read at boot and after every admission or retirement, so the listing is the catalog's own state.
+    pub fn refresh_local_files_from_catalog(&mut self) {
+        self.local_files = local_file_rows_of_catalog(&local_catalog_read());
+    }
+}
+//#endregion 🔖️LocalFiles

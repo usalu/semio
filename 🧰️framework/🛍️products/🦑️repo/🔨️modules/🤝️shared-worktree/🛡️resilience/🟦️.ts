@@ -5,6 +5,7 @@ import {dirname,join,relative,resolve,sep} from "node:path";
 import {pathToFileURL} from "node:url";
 import {compileJsonSchemaSubset,type CompiledJsonSchemaSubset} from "../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import schema from "./🧬️schema/🔣️.json" with {type:"json"};
+import {importClosureV1,moduleSourcesV1,walkSourcesV1,StoreStalledV1,type FailureSummaryV1} from "./🧱️attestation-support/🟦️.ts";
 import type {SidecarStateV1} from "../🔁️replica/🧷️sidecars/🟦️.ts";
 import type {TrustV1} from "../🔏️trust/🟦️.ts";
 
@@ -29,14 +30,10 @@ export type TargetSharingOperationV1=keyof typeof targetSharingOperationKindsV1;
 /** 🪪️ The last sampled target metadata for an EPERM from a staged rename. */
 export type RenameEpermTargetV1=keyof typeof renameEpermTargetKindsV1;
 
-/** 🔁️ A recurring failure: its kind, lifetime count and latest timestamp. */
-export type FailureSummaryV1=Readonly<{kind:string;count:number;lastMs:number}>;
-
 /** 🧪️ A pure verdict on a deadline-bounded store state. */
 export type StoreStateV1="ok"|"stalled"|"unreachable";
 
-const validators=new Map<string,CompiledJsonSchemaSubset>(),sourceNames=new Set(["🟦️.ts","📜️script.ts"]),testsDirectory="🧪️tests",tokenOf=():string=>randomBytes(8).toString("hex");
-const specifier=/\bfrom\s*["']([^"']+)["']|\bimport\s*\(\s*["']([^"']+)["']|\bimport\s*["']([^"']+)["']/gu;
+const validators=new Map<string,CompiledJsonSchemaSubset>(),tokenOf=():string=>randomBytes(8).toString("hex");
 const bytewise=(left:string,right:string):number=>Buffer.compare(Buffer.from(left),Buffer.from(right));
 const posix=(path:string):string=>path.split(sep).join("/");
 const gone=(error:unknown):boolean=>(error as {code?:string}).code==="ENOENT";
@@ -50,15 +47,6 @@ export function requireResilienceShapeV1(definition:"SealedCode"|"SelfCheck"|"He
  if(errors.length)throw Error(`${message}: ${errors[0]}`);
 }
 
-async function walk(directory:string,prefix:string,into:string[],keep:(name:string,isDirectory:boolean)=>boolean):Promise<void>{
- for(const entry of await readdir(directory,{withFileTypes:true})){
-  if(entry.name===testsDirectory||entry.name==="node_modules")continue;
-  const path=prefix===""?entry.name:`${prefix}/${entry.name}`;
-  if(entry.isDirectory())await walk(join(directory,entry.name),path,into,keep);
-  else if(entry.isFile()&&keep(entry.name,false))into.push(path);
- }
-}
-
 /** 🧰️ The companions of the code: files that no module imports but that provisioning runs from a checkout (the two provision scripts and the three files of the boot program), as `/` paths relative to the module directory. A seal carries them next to the imported code (they are part of the seal and its hashes, not of the code digest), so the kit and a machine with an old checkout get them from the same sealed files. */
 export const sealCompanionsV1:readonly string[]=Object.freeze(["🗺️topology/🥾️provision/🐚️.sh","🗺️topology/🥾️provision/🔵️.ps1","🔁️replica/🥾️entry/🟨️.mjs","🔁️replica/🥾️entry/🐚️.sh","🔁️replica/🥾️entry/🔵️.ps1"]);
 
@@ -67,35 +55,6 @@ export async function existingCompanionsV1(moduleRoot:string):Promise<string[]>{
  const found:string[]=[];
  for(const path of sealCompanionsV1)if((await stat(resolve(moduleRoot,...path.split("/"))).catch(()=>undefined))?.isFile()===true)found.push(path);
  return found.sort(bytewise);
-}
-
-/** 🧬️ The source files of the module that make up its code: every `🟦️.ts` and `📜️script.ts` below `root`, tests excluded, as sorted `/` paths relative to `root`. */
-export async function moduleSourcesV1(root:string):Promise<string[]>{
- const found:string[]=[];
- await walk(root,"",found,name=>sourceNames.has(name));
- return found.sort(bytewise);
-}
-
-/** 🕸️ The files the module sources import beyond themselves, directly or through each other, as sorted `/` paths relative to `root` (outside the module they start with `..`): TypeScript sources, JSON schemas and catalogues. Only relative specifiers are followed, because the module has no other kind of runtime import. */
-export async function importClosureV1(root:string,sources:readonly string[]):Promise<string[]>{
- const own=new Set(sources),extra:string[]=[],scheduled=new Set(sources.map(path=>resolve(root,...path.split("/")))),queue=[...scheduled];
- for(let index=0;index<queue.length;index++){
-  const file=queue[index]!;
-  const path=posix(relative(root,file));
-  if(!own.has(path))extra.push(path);
-  if(!file.endsWith(".ts")&&!file.endsWith(".js")&&!file.endsWith(".mjs"))continue;
-  let text:string;
-  try{text=await readFile(file,"utf8");}catch(error){if(gone(error)){if(!own.has(path))extra.pop();continue;}throw error;}
-  for(const match of text.matchAll(specifier)){
-   const name=match[1]??match[2]??match[3]!;
-   if(!name.startsWith("."))continue;
-   const target=resolve(dirname(file),name);
-   if(scheduled.has(target))continue;
-   const info=await stat(target).catch(()=>undefined);
-   if(info?.isFile()){scheduled.add(target);queue.push(target);}
-  }
- }
- return extra.sort(bytewise);
 }
 
 /** 🕳️ Returns the message of the first problem of a text catalogue (`{languages,messages}` with every message in every language and the same `{name}` placeholders everywhere), or `null`. */
@@ -132,7 +91,7 @@ export async function selfCheckV1(root:string,signal?:AbortSignal):Promise<SelfC
    modules++;
   }
   const documents:string[]=[];
-  await walk(root,"",documents,name=>name==="🔣️.json");
+  await walkSourcesV1(root,"",documents,name=>name==="🔣️.json");
   for(const path of documents.sort(bytewise)){
    signal?.throwIfAborted();
    const parts=path.split("/"),kind=parts[parts.length-2];
@@ -184,12 +143,6 @@ export function runSelfCheckV1(options:Readonly<{command:string;args:readonly st
    finish({ok:false,reason:(`self-check ${code===null?"was killed":`exited with ${code}`}${detail===""?"":`: ${detail}`}`).slice(0,512),digest:report?.digest??null});
   });
  });
-}
-
-/** 🎲️ The deterministic restart delay of one origin for one code digest in `[0, span)` milliseconds: the first four bytes of `sha256(originId \0 digest)` as an unsigned big-endian integer modulo `span`, so that a whole fleet never restarts in the same seconds and a machine always waits the same time for the same change. */
-export function restartJitterMillisecondsV1(originId:string,digest:string,span:number=60_000):number{
- if(span<=0)return 0;
- return createHash("sha256").update(`${originId}\0${digest}`).digest().readUInt32BE(0)%span;
 }
 
 /** 📁️ The directory below the worktree that holds the sealed code snapshots. */
@@ -298,9 +251,6 @@ export async function verifyCodeSnapshotV1(directory:string):Promise<string|null
 
 /** ⏱️ The inputs of the store guard: the reachability probe (a `stat` of the store root), the deadline after which an unanswered store call counts as stalled, the clock and the state-change callback. */
 export type StoreGuardOptionsV1=Readonly<{probe:()=>Promise<boolean>;deadlineMs:number;now:()=>number;changed:(state:StoreStateV1)=>void}>;
-
-/** 🚧️ Raised instead of issuing a store call while an earlier store call is still stuck or has not returned within its deadline. */
-export class StoreStalledV1 extends Error{constructor(){super("Store call refused: an earlier store call did not return within its deadline");this.name="StoreStalledV1";}}
 
 /** 🛑️ A turn of store work: it finished (`done` with its value), it was abandoned because the store stopped answering (`stalled`), or it was not started because an earlier turn is still outstanding (`busy`). */
 export type StoreTurnV1<T>=Readonly<{status:"done";value:T}>|Readonly<{status:"stalled"|"busy"}>;
@@ -728,11 +678,8 @@ export async function installBootStageV1(root:string,script:string):Promise<Read
  return {installed:true};
 }
 
-/** ⏳️ A cooperative yield for long loops over a whole manifest, queue or event batch: `turn()` costs next to nothing per call and, once `budgetMilliseconds` (8) of work have passed since the last yield, returns a promise that settles on the next turn of the event loop, so timers, signals, the store guard and the heartbeats of the daemon are served between the slices. Use it as `await turn()` inside the loop. */
-export function yieldingV1(budgetMilliseconds:number=8):()=>Promise<void>|undefined{
- let calls=0,started=performance.now();
- return ()=>{
-  if((++calls&63)!==0||performance.now()-started<budgetMilliseconds)return undefined;
-  return new Promise<void>(done=>{setImmediate(()=>{started=performance.now();done();});});
- };
-}
+/** 🔁️ Re-exported from its own module so that a consumer of the yield alone does not load this replica self-check module. @see ./⏳️yielding/🟦️.ts */
+export {yieldingV1} from "./⏳️yielding/🟦️.ts";
+
+/** 🧱️ Re-exported from their own module so that a consumer of these alone does not load this replica self-check module. @see ./🧱️attestation-support/🟦️.ts */
+export {importClosureV1,moduleSourcesV1,restartJitterMillisecondsV1,StoreStalledV1,type FailureSummaryV1} from "./🧱️attestation-support/🟦️.ts";

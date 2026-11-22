@@ -1,14 +1,13 @@
 import {expect,test} from "bun:test";
 import {spawnSync} from "node:child_process";
 import {mkdirSync,mkdtempSync,realpathSync,writeFileSync} from "node:fs";
-import {tmpdir} from "node:os";
 import {dirname,join,resolve} from "node:path";
 import scratch from "../🔣️.json" with {type:"json"};
 import {cargoAncestorFileV1,cargoScratchBaseV1} from "../🟦️.ts";
 
 /** 🧱️ Scratch Cargo workspaces of the unit-cache tests sit where no enclosing configuration, workspace manifest or toolchain file reaches them. The language-agnostic table names each file and what it plants; Cargo and rustup themselves are the oracle: a build below a reached directory obeys the planted file, a build below the chosen base does not.
  * @see ../🟦️.ts */
-const root=realpathSync(mkdtempSync(join(tmpdir(),"uc-scratch-"))),cargo=process.env.SEMIO_TEST_CARGO??"cargo",isolated={CARGO_HOME:join(root,"cargo-home")};
+const root=realpathSync(mkdtempSync(join(cargoScratchBaseV1(),"uc-scratch-"))),cargo=process.env.SEMIO_TEST_CARGO??"cargo",isolated={CARGO_HOME:join(root,"cargo-home")};
 const rustup=spawnSync("rustup",["--version"],{encoding:"utf8"}).status===0;
 const plant=(directory:string,row:(typeof scratch.ancestorFiles)[number]):void=>{const path=join(directory,row.path),plan=scratch.plants[row.kind as keyof typeof scratch.plants];mkdirSync(dirname(path),{recursive:true});writeFileSync(path,row.path==="rust-toolchain"&&"legacyText" in plan?plan.legacyText:plan.text);};
 const crate=(base:string):string=>{const directory=mkdtempSync(join(base,"ws-"));mkdirSync(join(directory,"src"));writeFileSync(join(directory,"Cargo.toml"),'[package]\nname = "scratch"\nversion = "0.1.0"\nedition = "2021"\n');writeFileSync(join(directory,"src","lib.rs"),"pub fn f() -> u8 { 1 }\n");return directory;};

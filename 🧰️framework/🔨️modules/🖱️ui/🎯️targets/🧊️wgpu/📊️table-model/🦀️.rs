@@ -188,3 +188,24 @@ pub fn table_empty_label(locale: &str) -> Option<&'static str> {
 pub fn table_avatar_initials(name: &str) -> String {
     name.trim().split(' ').take(2).filter_map(|word| word.chars().next()).collect::<String>().to_uppercase().chars().take(2).collect()
 }
+
+/// 📍️ ⋯ The side of a row's context-menu trigger: React's `ContextMenuTriggerButton` is `size-6` (1.5rem).
+pub const TABLE_ROW_MENU_TRIGGER_PX: f32 = 24.0;
+
+/// 📏️ A surface-table row's height: `h-medium`, grown to hold the trigger button every `TableHost` row carries (`onRowContextMenu` is always bound).
+pub fn table_row_height(size_medium: f32) -> f32 {
+    size_medium.max(TABLE_ROW_MENU_TRIGGER_PX)
+}
+
+/// 🪢️ ⋯ The trigger inside `row`: the last cell's content end (`ml-auto`, `px-single` inset), centred in the row.
+pub fn table_row_menu_trigger(row: (f32, f32, f32, f32), spacing_single: f32, rtl: bool) -> (f32, f32, f32, f32) {
+    let (x, y, w, h) = row;
+    let side = TABLE_ROW_MENU_TRIGGER_PX;
+    (if rtl { x + spacing_single } else { x + w - spacing_single - side }, y + (h - side) / 2.0, side, side)
+}
+
+/// ⚓️ Where the trigger opens the menu: React's `contextMenuAnchorPointV1` over the row (`<tr>`) box, `x = max(left, right - 4)`, `y = min(bottom, top + 24)`.
+pub fn table_row_menu_anchor(row: (f32, f32, f32, f32)) -> (f32, f32) {
+    let (x, y, w, h) = row;
+    ((x + w - 4.0).max(x), (y + h).min(y + 24.0))
+}

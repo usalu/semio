@@ -84,7 +84,6 @@ impl<'ctx> PointerCtx<'ctx> {
     /// 📥️ One extension round trip, with its answer's own effects folded back into this shell —
     /// the wgpu twin of React's `dispatchInvokeExtensionEffect(..., publish)` callback, which ends in
     /// `applyHostEffects(response.requestedEffects, ...)`.
-    #[cfg(target_arch = "wasm32")]
     pub async fn run_extension_invocation(&mut self, invocation: PendingExtensionInvocation) {
         let Some(session) = self.docs.session.clone() else { return };
         let Some(plugin) = self.plugins.plugins.iter().find(|entry| entry.plugin_id == session.plugin_id).cloned() else { return };

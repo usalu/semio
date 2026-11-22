@@ -1,0 +1,59 @@
+{
+ "id": "horse-chestnut",
+ "category": "vegetation",
+ "title": {
+  "en": "Horse Chestnut",
+  "de": "Rosskastanie"
+ },
+ "heightM": 24.168,
+ "widthM": 19.047,
+ "powerW": 0,
+ "poses": [
+  "candle-bloom",
+  "summer-calm",
+  "summer-breeze",
+  "gale",
+  "conker-fruit",
+  "wet-snow"
+ ],
+ "clips": [
+  "wind-sway",
+  "gust",
+  "diurnal-transpiration",
+  "candle-emergence"
+ ],
+ "representations": {
+  "50": "authored",
+  "100": "authored",
+  "200": "authored",
+  "500": "authored"
+ },
+ "symbols": [
+  "horse-chestnut-symbol",
+  "tree-sign"
+ ],
+ "analytics": [
+  "thermal",
+  "transport",
+  "structural"
+ ],
+ "exports": [
+  "svg",
+  "pdf",
+  "dxf",
+  "dwg",
+  "png-sequence",
+  "mp4",
+  "webm",
+  "component",
+  "glb",
+  "fbx",
+  "model",
+  "model-zip"
+ ],
+ "distinction": {
+  "en": "A 24 m horse chestnut (Aesculus hippocastanum) with a short stem of 0.95 m, a broad 16.5 m dome of sweeping lower limbs and palmate leaves, and white flower candles that stand on the crown in May and withdraw into it afterwards.",
+  "de": "Eine 24 m hohe Rosskastanie (Aesculus hippocastanum) mit kurzem Stamm von 0,95 m, einer breiten Kuppel von 16,5 m aus ausschwingenden unteren Ästen und gefingerten Blättern sowie weißen Blütenkerzen, die im Mai auf der Krone stehen und danach in ihr verschwinden."
+ },
+ "completion": "authored"
+}

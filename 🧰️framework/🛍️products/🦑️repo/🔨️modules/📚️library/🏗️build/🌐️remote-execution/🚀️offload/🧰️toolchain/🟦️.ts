@@ -4,6 +4,7 @@ import {join} from "node:path";
 import type {RemoteExecutionPropertyV1} from "../../🟦️.ts";
 import {OFFLOAD_POLICY_V1} from "../📐️policy/🟦️.ts";
 import {parseRustcIdentityV1,type OffloadToolchainV1} from "../📜️action/🟦️.ts";
+import {sdkIdentityV1} from "../../../../⚡️caching/🦀️cargo/🗃️unit-cache/🔏️key/🟦️.ts";
 
 const policy=OFFLOAD_POLICY_V1;
 type Environment=Readonly<Record<string,string|undefined>>;
@@ -11,6 +12,18 @@ type Environment=Readonly<Record<string,string|undefined>>;
 export type OffloadToolV1=Readonly<{path:string;readable:readonly string[]}>;
 /** 🖥️ What a worker offers for rustc offload: the tool table and the platform properties that say which compiler it is. */
 export type OffloadWorkerOfferV1=Readonly<{tools:Readonly<Record<string,OffloadToolV1>>;properties:readonly RemoteExecutionPropertyV1[];toolchain:OffloadToolchainV1}>;
+
+const sdkMemo=new Map<string,string|undefined>();
+/** 🍎️ The identity of the macOS SDK that a link on this machine uses (the name of the SDK directory, as the unit key sees it): `SDKROOT` when set, else the SDK `xcrun` reports; `undefined` off macOS or when none is found. Memoised per `SDKROOT`. */
+export function offloadSdkIdentityV1(environment:Environment=process.env,platform:string=process.platform):string|undefined{
+ if(platform!=="darwin")return undefined;
+ const given=environment.SDKROOT??"";
+ if(sdkMemo.has(given))return sdkMemo.get(given);
+ let path=given;
+ if(path===""){const run=spawnSync("xcrun",["--sdk","macosx","--show-sdk-path"],{encoding:"utf8",timeout:20000});path=run.status===0?run.stdout.trim():"";}
+ const identity=path===""?undefined:sdkIdentityV1(path);
+ sdkMemo.set(given,identity);return identity;
+}
 
 /** 🎯️ The target triples a sysroot carries libraries for. */
 export function sysrootTargetsV1(sysroot:string):readonly string[]{
@@ -32,7 +45,7 @@ export function detectWorkerRustcV1(cwd:string,environment:Environment=process.e
  return Object.freeze({
   tools:Object.freeze({[policy.tool.name]:Object.freeze({path,readable:Object.freeze([root])})}),
   toolchain:Object.freeze({...parsed,targets}),
-  properties:Object.freeze([{name:p.format,value:p.formatValue},...targets.map(target=>({name:p.targetPrefix+target,value:"1"}))]),
+  properties:Object.freeze([{name:p.format,value:p.formatValue},...offloadSdkIdentityV1(environment)===undefined?[]:[{name:p.sdk,value:offloadSdkIdentityV1(environment)!}],...targets.map(target=>({name:p.targetPrefix+target,value:"1"}))]),
  });
 }
 

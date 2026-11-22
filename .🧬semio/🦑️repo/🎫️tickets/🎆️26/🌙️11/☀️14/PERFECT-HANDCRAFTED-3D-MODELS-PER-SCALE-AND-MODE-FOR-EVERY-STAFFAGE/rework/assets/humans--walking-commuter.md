@@ -89,3 +89,57 @@ Read at full size: 1:50 body and 1:50 structure before the work; after the first
 - `🧪️tests/🧊️model-skeleton` ("adultLongBones", already reported in `rework/04.md`) may list this asset: at 1:200 and 1:500 `radius-l|r` is merged into `ulna-l|r` and coarse bones are floored at the feature size, as `volumes-feature` demands; the vitest suite was not run.
 - `volumes-structure-coverage` demands a member per load-bearing bone at 1:500, and `volumes-slender` refuses a slender member under 300 mm unless 20 times as long as thick: lumbar, thoracic and cervical spine and the clavicles can therefore only be 75 mm rods at 1:500. A rule that let consecutive collinear bones share one slender member would give a true 1:500 skeleton.
 - `rework-04-publish.py` hard-codes its candidate folder; a shared `publish <asset> <candidate>` would save every author a copy.
+
+## Pass 2 (second round), 2026-11-22
+
+`rig-lateral-rest.md` exists (read at the start and again before finishing): the girdles of pass 1 (`clavicle-l|r`, `ilium-l|r` on lateral rest placement, arms and thighs hanging from them) are what it describes; nothing had to be re-bound.
+
+### Read at full size this pass (the image reader worked until the last step)
+
+From the catalog as pass 1 left it: 1:50 body (six views with rig, three-quarter and right side without rig), 1:50 structure (six views, three-quarter), 1:50 thermal (six views and the cut sheet), 1:100 / 1:200 / 1:500 body (six views each), 1:100 / 1:200 / 1:500 structure and 1:200 thermal (front, side, three-quarter), all seven non-default poses (front, side, three-quarter), the 2D sheets of 1:50 (candidate), 1:200 and 1:500.
+
+After this pass's skeleton change: 1:50 structure front and right side without rig, 1:100 / 1:200 / 1:500 structure (front, side, back, three-quarter), clips `walk-cycle` 0.3 s and 0.9 s, `glance-at-watch` 1.6 s, `idle-breathing` 1 s, pose `check-watch`.
+
+### Judged
+
+- Rig and 1:50 body: proportions agree with the reference table of pass 1 from all six directions (fingertip of the hanging hand at 0.68 m, coat shoulders 0.52 m, head 0.233 m). The girdle bones sit where the clavicles and hip bones are. The thumb lies on the fist; the fist stands upright round the strap. The elbow of the strap arm is 13 cm behind the trunk axis: with the fist on the chest in front of the shoulder and an elbow that cannot flex beyond 147 degrees this is where the elbow has to be (15 degrees less would need 156 degrees of flexion), kept. The strap stands 4 to 8 cm off the chest between fist and shoulder, as a strap does that a hand pulls forward; kept. Walk poses and clip: natural, the skirt halves follow the thighs and show a stepped hem at the front in the contact poses.
+- 1:50 structure before: the face was a block with two balls (zygomatic ellipsoids and orbit lumps standing proud of the braincase), no eye sockets, no nasal aperture. Coarse scales: spine, clavicle and forearm rods thickened to the feature, radius missing at 1:200 and 1:500.
+- Thermal 1:50: reads as the same object; in the cut the tee, shirt, jacket and overcoat shells nest in the trunk and in the sleeves, briefs inside the trousers, socks inside the shoes. 1:200 thermal reads as the same object.
+- 2D 1:50, 1:200, 1:500: agree with the model (strap through the fist, coat profile, bag at the hip).
+
+### Rebuilt
+
+- **Skull, 1:50** (`rework-walking-commuter-skeleton.ts`): the braincase retreats below the brow (front of the loft at -0.038 / -0.053 m at 8 / 30 mm above the atlanto-occipital joint, forehead from 47 mm up), and the face is built bone by bone in front of it: two maxillae, their frontal processes beside a nasal aperture of 20 x 35 mm, alveolar arch, zygomatic bones with the lateral orbital rim, infraorbital rims, zygomatic arches to the temporal bone, brow ridges, nasal bones, vomer; the mandible body is 32 mm high at the chin. The orbits are now open sockets between brow, zygoma, nasal process and maxilla. 285 solids.
+- **Skull, 1:100**: maxillary block ending under the orbits, zygomatic bars, brow bar and nasal bridge of 15 mm (147 solids).
+- **Long bones, every scale**: humerus, ulna, radius, femur and tibia keep one shaft section from 1:50 to 1:500 (`slender: true` on the coarse scales, validator item 2); radius and ulna are both present at 1:200 and 1:500.
+- **Spine, 1:500**: one rod of true section (21 to 12.5 mm) from L5/S1 to the atlas on `torso` with `members: ["lumbar", "neck"]` (validator item 9) instead of three 75 mm rods; clavicles at 1:200 and 1:500 at their true section (`slender`).
+- **Clip** `idle-breathing`: both clavicles rise 1.5 degrees at the top of the breath (first use of the girdle bones in a clip).
+- Pose `check-watch`: a lower, more level forearm (16 / 98, 19 / 104, 20 / 108 degrees) was tried and read better, but the far hand then prints 0.169 to 0.195 mm at 1:1000 (`range-end-feature`); a turn of the upper arm about its axis is refused by `lateral-ambiguous` (flat 2D shapes on the forearm). The pose stays at 22 / 112 degrees.
+
+### Proof
+
+`r3-validate.ts --file <candidate> --volumes`: `VALID ... schema 0, validateAsset 0, checkVolumes 0`; published; `r3-validate.ts humans/walking-commuter --catalog-only --volumes`: `VALID humans/walking-commuter (catalog file as it is): schema 0, validateAsset 0, checkVolumes 0`.
+
+One publish of this pass went out with two print findings (the 16 / 98 watch pose; the shell chain did not stop on `INVALID`); it was replaced about ten minutes later by the valid state above.
+
+### Not read after the last publish
+
+The image reader stopped answering again at the very end (four attempts). The last sheets (all seven poses, `walk-cycle` 0.3 / 0.9 s, `glance-at-watch` 1.6 / 3.4 s, `idle-breathing` 2 s, rendered from the published catalog) were therefore not read. Against what was read earlier in this pass the published state differs only in the 1.5 degree clavicle lift of `idle-breathing` at 2 s; `check-watch` is back at the values seen in `glance-at-watch` 1.6 s. Also never read: 1:100 and 1:500 thermal, the 1:100 2D sheet, the coarse-scale poses. I do not sign the model yet.
+
+### Remaining (for the next pass)
+
+1. Look: `idle-breathing` at 2 s (clavicle lift), 1:100 and 1:500 thermal sheets and cuts, the 1:100 2D sheet.
+2. 1:50 body, pose `check-watch` / clip `glance-at-watch`: the far forearm rises to chin height (22 / 112 degrees) and reads as a raised hand rather than a wrist held level; a level forearm fails `range-end-feature` at 1:1000 for `hand-l` (0.17 to 0.195 mm) unless the 1:500 front and elevation shapes of the far hand and forearm are redrawn wider.
+3. Rig: shoulder joints at z ±0.19 m (reference ±0.18 to 0.185), clavicle chord 0.175 m (reference up to 0.165); moving them means shifting front and plan shapes of both arm chains.
+4. 1:50 body, coat: ring seam at the waist cut (1.235 m) shows as a line; skirt halves on the thighs give a stepped hem in the contact poses; the strap is a polyline of 16 stations (angular over the shoulder in the side view) and its back run passes through the upper arm between 1.20 and 1.30 m inside the sleeve.
+5. 1:50 body, head, face, sleeves, trousers, shoes, bag: measured and seen, kept, not re-sculpted.
+6. Structure 1:50: iliac blades are bands of eight sections without the fan of the wing; scapula a tapering blade; ribs of 1:100 are six pairs of 15 mm and read as a lattice; rib cage of 1:200 and 1:500 is one shield-shaped form; joints at 1:500 are 75 mm balls.
+7. 2D: outlines are simplified projections, not hand-drawn economical polygons; coat strokes (vent, side seam, front edge) carried, not redrawn.
+8. Clips: finger bones have no keys; `walk-cycle` does not use the clavicle or ilium bones (no counter-rotation of shoulder girdle and pelvis; the rig's poses are sagittal, a transverse rotation would need solids instead of flat 2D shapes on the limbs, see `lateral-ambiguous`).
+
+### Fundamental issues (pass 2)
+
+- The Read tool for images fails intermittently with "PreToolUse hook did not respond before its timeout"; it worked for 25 sheets and then stopped.
+- `r3-sheet.ts` exits with a bare "Bun v1.4.2" line now and then under load (19 authors on one host); a retry succeeds. `r3-2d.ts` hung once at 0 % CPU for 15 minutes on the catalog form (other authors' `r3-2d` processes hung at the same time); the `--file` form ran in seconds.
+- `rework-walking-commuter-publish.py` does not validate before it writes; a publish tool that refuses an `INVALID` candidate would have prevented the ten-minute invalid state of this pass.
+- `lateral-ambiguous` forbids every pose that turns a limb out of the sagittal plane as long as the 2D shapes of that limb are flat: a watch read across the body, a shoulder-girdle counter-rotation in the gait and a pelvic rotation cannot be authored for this asset without redrawing all limb shapes as solids.

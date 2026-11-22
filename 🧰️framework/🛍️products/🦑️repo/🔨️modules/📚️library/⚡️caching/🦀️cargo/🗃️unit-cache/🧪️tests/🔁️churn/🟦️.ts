@@ -88,8 +88,8 @@ test("evictions are counted by kind and shown by stats beside the not-shared rea
  const root=directory("evict");
  expect(readEvictionsV1(root)).toEqual({records:0,totals:{},firstMs:null,lastMs:null});
  recordEvictionV1(root,{lanes:0});expect(readEvictionsV1(root).records,"all-zero counts are not written").toBe(0);
- recordEvictionV1(root,{lanes:2,superseded:5});recordEvictionV1(root,{lanes:1,entries:4});
- const counted=readEvictionsV1(root);expect(counted.totals).toEqual({lanes:3,superseded:5,entries:4});expect(counted.records).toBe(2);
+ recordEvictionV1(root,{lanes:2,retired:5});recordEvictionV1(root,{lanes:1,entries:4});
+ const counted=readEvictionsV1(root);expect(counted.totals).toEqual({lanes:3,retired:5,entries:4});expect(counted.records).toBe(2);
  const lane=enterLaneV1(root,"gone1");lane.release();
  const before=readEvictionsV1(root).totals.lanes??0;
  applyGcV1(root,{removeLanes:listLanesV1(root,Date.now()).map(row=>row.id),removeIncremental:[]} as never,Date.now()+86400000);
@@ -142,9 +142,9 @@ test("members that ask for different features are different units and the report
  build(cache,cas,{lane:"l1",checkout,arguments:["-p","leaf1"]});build(cache,cas,{lane:"l2",checkout,arguments:["-p","leaf2"]});
  const report=await manageV1(["churn","--root",cache]) as ReturnType<typeof churnReportV1>;
  const core=report.perCrate.find(row=>row.crate==="core")!;
- expect(core.keys).toBe(2);expect(core.differs).toEqual(["args.features","args.metadata"]);
+ expect(core.keys).toBe(2);expect(core.differs).toEqual(["args.features"]);
  expect(core.samples["args.features"]!.sort()).toEqual(['--cfg=feature="fa"','--cfg=feature="fb"']);
- expect(report.causes.some(cause=>cause.components.join()==="args.features,args.metadata"&&cause.examples.includes("core"))).toBe(true);
+ expect(report.causes.some(cause=>cause.components.join()==="args.features"&&cause.examples.includes("core"))).toBe(true);
  expect(report.perCrate.find(row=>row.crate==="mac"),"the proc-macro is not split").toBeUndefined();
  const only=await manageV1(["churn","--root",cache,"--crate","core"]) as ReturnType<typeof churnReportV1>;
  expect(only.lookups).toBeLessThan(report.lookups);

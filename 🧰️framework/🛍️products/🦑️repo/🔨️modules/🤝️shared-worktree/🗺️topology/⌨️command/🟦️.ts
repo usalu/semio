@@ -11,14 +11,16 @@ import type {StatusReportV1} from "../../🔁️replica/🟦️.ts";
 import {crlfScriptsV1,gitGuardsV1,resolveGitV1,type GitGuardsV1} from "../../🌿️git/🟦️.ts";
 import {pathBudgetV1} from "../../🚧️boundary/🟦️.ts";
 import {accessDirectoryV1,accessReceiptsLackingV1} from "../../../📚️library/🏗️build/🏡️resident/🔐️consent/🟨️.mjs";
+import {serviceBootstrapScriptV1} from "../🛠️service/🟦️.ts";
 import {applyFleetAddressEnvironmentV1,factsV1,groupV1,mountPartsV1,mountPlanV1,platformV1,readTopologyV1,serverPartsV1,serverPlanV1,workerPartsV1,workerServiceV1,worktreePathV1,type FleetGroupV1,type FleetPlatformV1,type FleetTopologyV1} from "../🟦️.ts";
 
-type Operation="mount-plan"|"server-plan"|"worker-service"|"facts"|"validate"|"preflight";
+type Operation="mount-plan"|"server-plan"|"worker-service"|"service-bootstrap"|"facts"|"validate"|"preflight";
 
 const OPTIONS:Readonly<Record<Operation,Readonly<{valued:readonly string[];plain:readonly string[]}>>>={
  "mount-plan":{valued:["--group","--platform","--part"],plain:[]},
  "server-plan":{valued:["--group","--part"],plain:[]},
  "worker-service":{valued:["--group","--platform","--part","--role"],plain:[]},
+ "service-bootstrap":{valued:["--group","--user","--role"],plain:[]},
  facts:{valued:["--group","--platform","--shell","--home"],plain:[]},
  validate:{valued:["--file","--timeout"],plain:["--reachable"]},
  preflight:{valued:["--group","--worktree","--store","--timeout","--lang","--home"],plain:[]}
@@ -84,6 +86,7 @@ export function runTopologyCommandV1(args:readonly string[],context:Readonly<{pl
  }
  const topology=topologyOf(context.topology,context.environment),group=need(values,"--group"),current=platformV1(context.platform),
   shell=choose(values,"--shell",SHELLS,current==="windows"?"powershell":"sh"),platform=choose(values,"--platform",PLATFORMS,current),selected=values["--part"],role=choose(values,"--role",ROLES,"worker");
+ if(operation==="service-bootstrap")return serviceBootstrapScriptV1(topology,group,{user:need(values,"--user"),server:role==="server"});
  if(operation==="facts")return renderFactsV1(factsV1(topology,group,platform,values["--home"]??context.home??homedir()),shell);
  if(operation==="mount-plan")return selected===undefined?mountPlanV1(topology,group,platform):part(mountPartsV1(topology,group,platform),selected);
  if(operation==="server-plan")return selected===undefined?serverPlanV1(topology,group):part(serverPartsV1(topology,group),selected);

@@ -68,6 +68,7 @@ impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'static> V
             && self.original_typed_tag_close.is_empty()
             && self.tools.original_emission_admission.is_none()
             && self.tools.original_emission_receipt.is_none()
+            && self.tools.original_emission_result.is_none()
             && self.child_composition.private_child_groups_terminal_is_empty()
             && self.tools.latest_wins_commands.is_empty()
             && self.tools.typed_operation_reservations.iter().all(Option::is_none)
@@ -152,6 +153,7 @@ impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'static> V
             self.original_typed_tag_close.is_empty(),
             self.tools.original_emission_admission.is_none(),
             self.tools.original_emission_receipt.is_none(),
+            self.tools.original_emission_result.is_none(),
             self.child_composition.private_child_groups_terminal_is_empty(),
             self.tools.latest_wins_commands.is_empty(),
             self.tools.typed_operation_reservations.iter().all(Option::is_none),

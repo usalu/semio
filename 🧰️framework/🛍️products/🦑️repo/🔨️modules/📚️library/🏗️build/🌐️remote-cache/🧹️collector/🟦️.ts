@@ -2,8 +2,9 @@ import {randomUUID} from "node:crypto";
 import {link,readdir,readFile,rename,stat,unlink,writeFile} from "node:fs/promises";
 import {join} from "node:path";
 import {parseRemoteCacheActionResultV1,type RemoteCacheDigestV1} from "../🔬️action-result/🟦️.ts";
-import {classifySlotsV1,SLOT_GRACE_MILLISECONDS_V1,slotBudgetTierV1,type SlotVerdictV1} from "../../🪢️slots/🟦️.ts";
+import {SLOT_GRACE_MILLISECONDS_V1,type StalenessModeV1} from "../../🪢️slots/🟦️.ts";
 import {readRemoteCacheMetaV1,readRemoteCacheReferencesV1,removeRemoteCacheMetaV1,scanRemoteCacheMetaV1,type RemoteCacheMetaV1} from "../🏷️retention/🟦️.ts";
+import {judgeStalenessV1,stalenessReportV1,type StalenessVerdictV1,type TreeDigestsV1} from "../🏷️retention/🍂️staleness/🟦️.ts";
 
 /** 📇️ One stored value as the collector sees it: its slash-separated key below the store root (`<namespace>/<kind>/<first two characters>/<name>`), its size and when it was last used. */
 export type RemoteCacheRowV1=Readonly<{key:string;size:number;accessed:number}>;
@@ -11,8 +12,8 @@ export type RemoteCacheRowV1=Readonly<{key:string;size:number;accessed:number}>;
 /** 🧱️ The finite bounds of one collection: total bytes, idle age (0 keeps entries until space is needed), the bytes a pending write needs and the bytes writers already reserved. */
 export type RemoteCacheBoundsV1=Readonly<{maximumBytes:number;maximumAgeMilliseconds:number;now:number;need?:number;reserved?:number}>;
 
-/** 🗑️ Why a value goes: it is an action result nobody can use any more, a newer key of its slot superseded it and the grace passed, it was unused longer than allowed (values without a slot), or the store is over its bound and it is among the least valuable. */
-export type RemoteCacheDropReasonV1="dangling"|"superseded"|"age"|"budget";
+/** 🗑️ Why a value goes: it is an action result nobody can use any more, it is stale against the synchronized tree (or unreached) and the grace passed, it was unused longer than allowed (values that declared nothing), or the store is over its bound and it is among the least valuable. */
+export type RemoteCacheDropReasonV1="dangling"|"stale"|"age"|"budget";
 
 /** 🧾️ One planned removal. */
 export type RemoteCacheDropV1=Readonly<{key:string;size:number;reason:RemoteCacheDropReasonV1;storedAt?:number}>;
@@ -21,7 +22,7 @@ export type RemoteCacheDropV1=Readonly<{key:string;size:number;reason:RemoteCach
 export type RemoteCacheFillV1=Readonly<{entries:number;bytes:number}>;
 
 /** 📋️ What one collection did or, for a plan, would do. */
-export type RemoteCacheCollectionReportV1=Readonly<{version:1;dryRun:boolean;scanned:RemoteCacheFillV1;removed:RemoteCacheFillV1&Readonly<Record<RemoteCacheDropReasonV1,number>>;remaining:RemoteCacheFillV1;reclaimed:RemoteCacheFillV1;deferred:boolean}>;
+export type RemoteCacheCollectionReportV1=Readonly<{version:1;dryRun:boolean;scanned:RemoteCacheFillV1;removed:RemoteCacheFillV1&Readonly<Record<RemoteCacheDropReasonV1,number>>;remaining:RemoteCacheFillV1;reclaimed:RemoteCacheFillV1;deferred:boolean;staleness?:ReturnType<typeof stalenessReportV1>}>;
 
 /** 🔌️ Progress and cancellation of one directory walk or collection. */
 export type RemoteCacheWalkHooksV1=Readonly<{concurrency?:number;signal?:AbortSignal;onProgress?:(stage:"scan"|"verify"|"remove",done:number,bytes:number)=>void;onStep?:(point:RemoteCacheStepV1)=>void}>;
@@ -29,24 +30,25 @@ export type RemoteCacheWalkHooksV1=Readonly<{concurrency?:number;signal?:AbortSi
 /** 💥️ The points of one removal at which a crash can be simulated: before the value goes, after it went and after its sidecar went. */
 export type RemoteCacheStepV1="before-unlink"|"after-unlink"|"after-meta";
 
-/** 🪢️ What retention adds to a plan: the sidecar of every slotted value (by key), the grace in milliseconds and the predicate of values an active claim protects. */
-export type RemoteCacheRetentionV1=Readonly<{metas:ReadonlyMap<string,Pick<RemoteCacheMetaV1,"slot"|"storedAt">>;graceMilliseconds:number;claimed?:(key:string)=>boolean}>;
+/** 🪢️ What retention adds to a plan: the sidecar of every value that has one (by key), the grace in milliseconds, the predicate of values an active claim protects and, in enforce mode, the staleness verdict of every value (the slot is a dedupe hint and never judges). */
+export type RemoteCacheRetentionV1=Readonly<{metas:ReadonlyMap<string,Pick<RemoteCacheMetaV1,"slot"|"storedAt">>;graceMilliseconds:number;claimed?:(key:string)=>boolean;verdicts?:ReadonlyMap<string,StalenessVerdictV1>}>;
 
 export const REMOTE_CACHE_COLLECTOR_LOCK_V1=".collector.lock",REMOTE_CACHE_SERVER_LOCK_V1=".server.lock";
 const LOW_WATER_NUMERATOR=9,LOW_WATER_DENOMINATOR=10,CHECK_EVERY=256,STALE_LOCK_MILLISECONDS=6*3600000,MAXIMUM_ACTION_RESULT_BYTES=16*1048576;
 
-/** 🧮️ Decides, as a pure function, what to remove: unusable entries first; with `retention`, entries a newer key of their slot superseded beyond the grace and that no claim protects; then entries without a slot idle longer than the age (slotted entries are the synchronized state and are not aged out); then, until the fill including pending reservations is at most nine tenths of the bound less the bytes a write needs, the least valuable entries (superseded within the grace, then entries without a slot, then current entries; least recently used first, ties by key). Entries stored within the grace and claimed entries are never taken. */
+const tierOf=(verdict:StalenessVerdictV1|undefined):number=>verdict===undefined||verdict.state==="undeclared"?1:verdict.state==="live"||verdict.state==="grace"?2:0;
+
+/** 🧮️ Decides, as a pure function, what to remove: unusable entries first; with `retention.verdicts`, entries that are stale against the synchronized tree or unreached, that no claim protects and that were not stored within the grace; then entries that are not live (undeclared ones) idle longer than the age (live entries are the synchronized state and are not aged out); then, until the fill including pending reservations is at most nine tenths of the bound less the bytes a write needs, the least valuable entries (stale or unreached within the grace, then undeclared, then live; least recently used first, ties by key). Entries stored within the grace and claimed entries are never taken. */
 export function planRemoteCacheCollectionV1(rows:Iterable<RemoteCacheRowV1>,bounds:RemoteCacheBoundsV1,dangling:ReadonlySet<string>=new Set(),retention?:RemoteCacheRetentionV1):readonly RemoteCacheDropV1[]{
  const drops:RemoteCacheDropV1[]=[],kept:RemoteCacheRowV1[]=[],need=bounds.need??0,reserved=bounds.reserved??0,tier=new Map<string,number>(),guarded=new Set<string>();let bytes=0;
- const all=[...rows],verdicts:ReadonlyMap<string,SlotVerdictV1>=retention?classifySlotsV1(all.map(row=>{const meta=retention.metas.get(row.key);return {key:row.key,slot:meta?.slot??null,storedAt:meta?.storedAt??0,accessed:row.accessed,size:row.size};}),{now:bounds.now,graceMilliseconds:retention.graceMilliseconds}):new Map();
- for(const row of all){
-  const verdict=verdicts.get(row.key),state=verdict?.state??"unslotted",stored=retention?.metas.get(row.key)?.storedAt,claimed=retention?.claimed?.(row.key)===true;
+ for(const row of rows){
+  const verdict=retention?.verdicts?.get(row.key),stored=retention?.metas.get(row.key)?.storedAt,claimed=retention?.claimed?.(row.key)===true,young=stored!==undefined&&retention!==undefined&&bounds.now-stored<retention.graceMilliseconds;
   if(dangling.has(row.key))drops.push({key:row.key,size:row.size,reason:"dangling"});
-  else if(state==="expired"&&!claimed)drops.push({key:row.key,size:row.size,reason:"superseded",...(stored===undefined?{}:{storedAt:stored})});
-  else if(state==="unslotted"&&!claimed&&bounds.maximumAgeMilliseconds>0&&bounds.now-row.accessed>bounds.maximumAgeMilliseconds)drops.push({key:row.key,size:row.size,reason:"age"});
+  else if((verdict?.state==="stale"||verdict?.state==="unreached")&&!claimed&&!young)drops.push({key:row.key,size:row.size,reason:"stale",...(stored===undefined?{}:{storedAt:stored})});
+  else if(tierOf(verdict)<2&&!claimed&&bounds.maximumAgeMilliseconds>0&&bounds.now-row.accessed>bounds.maximumAgeMilliseconds)drops.push({key:row.key,size:row.size,reason:"age"});
   else{
-   kept.push(row);bytes+=row.size;tier.set(row.key,slotBudgetTierV1(state));
-   if(claimed||(stored!==undefined&&retention!==undefined&&bounds.now-stored<retention.graceMilliseconds))guarded.add(row.key);
+   kept.push(row);bytes+=row.size;tier.set(row.key,tierOf(verdict));
+   if(claimed||young)guarded.add(row.key);
   }
  }
  if(bytes+reserved>bounds.maximumBytes-need){
@@ -55,6 +57,12 @@ export function planRemoteCacheCollectionV1(rows:Iterable<RemoteCacheRowV1>,boun
   for(const row of kept){if(bytes+reserved<=target)break;if(guarded.has(row.key))continue;const stored=retention?.metas.get(row.key)?.storedAt;drops.push({key:row.key,size:row.size,reason:"budget",...(stored===undefined?{}:{storedAt:stored})});bytes-=row.size;}
  }
  return drops;
+}
+
+/** 🥀️ Judges every entry of a scanned store against the synchronized tree: the entries come from the scan and the sidecars (`declaration` is what an entry declared), the tree from `tree`, the tombstones are the blobs of entries an earlier sweep retired. */
+export async function judgeRemoteCacheStalenessV1(index:ReadonlyMap<string,unknown>,metas:ReadonlyMap<string,RemoteCacheMetaV1>,input:Readonly<{now:number;graceMilliseconds:number;tree:Pick<TreeDigestsV1,"digest">;toolchains?:ReadonlySet<string>|undefined;retired?:ReadonlySet<string>|undefined;signal?:AbortSignal|undefined}>):Promise<Map<string,StalenessVerdictV1>>{
+ const entries=[...index.keys()].filter(key=>key.split("/")[1]!=="cas").map(key=>{const meta=metas.get(key);return {key,storedAt:meta?.storedAt??0,refs:meta?.refs??[],declaration:meta?.declaration};});
+ return judgeStalenessV1(entries,{now:input.now,graceMilliseconds:input.graceMilliseconds,digest:input.tree.digest,toolchains:input.toolchains,retired:input.retired,signal:input.signal});
 }
 
 /** 🚶️ Walks a store root (`<namespace>/<kind>/<first two characters>/<name>`) without following links, skips the partial-write area, publishes progress and stops when cancelled; file times carry the least-recently-used clock. */
@@ -90,7 +98,7 @@ export async function acquireRemoteCacheLockV1(root:string,name:string):Promise<
  await writeFile(mine,content);
  try{
   for(let attempt=0;attempt<3;attempt++){
-   try{await link(mine,lock);return {held:false,release:async()=>{await unlink(lock).catch(()=>{});}};}
+   try{await link(mine,lock);return {held:false,release:async()=>{const seen=await readFile(lock,"utf8").catch(()=>undefined);if(seen!==undefined&&Number(seen.split("\n")[0])===process.pid)await unlink(lock).catch(()=>{});}};}
    catch(error){if((error as NodeJS.ErrnoException).code!=="EEXIST")throw error;}
    const seen=await readFile(lock,"utf8").catch(()=>undefined);
    if(seen===undefined)continue;
@@ -103,6 +111,14 @@ export async function acquireRemoteCacheLockV1(root:string,name:string):Promise<
   }
   return {held:true,lock};
  }finally{await unlink(mine).catch(()=>{});}
+}
+
+/** 💓️ Renews a lock this process owns, or takes it back when it names nobody alive (a handover that wrote another pid, a lock the six-hour rule discarded while this process ran): the file is replaced atomically with this process and the time now, so a server that runs for days is never mistaken for a dead one. Answers `false` when another living process owns the lock. */
+export async function renewRemoteCacheLockV1(root:string,name:string):Promise<boolean>{
+ const lock=join(root,name),seen=await readFile(lock,"utf8").catch(()=>undefined);
+ if(seen!==undefined){const pid=Number(seen.split("\n")[0]);if(pid!==process.pid&&Number.isSafeInteger(pid)&&pid>0&&alive(pid))return false;}
+ const temporary=join(root,`.${name}.${process.pid}.${randomUUID()}`);
+ try{await writeFile(temporary,`${process.pid}\n${Date.now()}\n`);await rename(temporary,lock);return true;}catch{await unlink(temporary).catch(()=>{});return false;}
 }
 
 /** 🔎️ Finds the action results nobody can use any more: results that are malformed, or whose output blobs left the content store of their namespace. A server keeps its blobs in the host store, outside the directory: `hasBlobs` asks it, and without it a blob missing from the directory counts as gone. */
@@ -124,7 +140,7 @@ export async function findDanglingRemoteCacheResultsV1(root:string,index:Readonl
 }
 
 /** 🧹️ Everything one directory collection needs; `claimed` protects entries an active claim holds, `graceMilliseconds` is the supersession grace, `reclaim` receives the blobs no remaining entry references and answers what it freed. */
-export type RemoteCacheCollectionRequestV1=Readonly<{root:string;maximumBytes:number;maximumAgeMilliseconds:number;dryRun:boolean;verifyResults:boolean;now?:number;graceMilliseconds?:number;claimed?:(key:string)=>boolean;reclaim?:(hashes:readonly string[],dryRun:boolean)=>Promise<RemoteCacheFillV1>;hasBlobs?:(hashes:readonly string[])=>Promise<readonly boolean[]>;readTree?:(namespace:string,tree:RemoteCacheDigestV1)=>Promise<Uint8Array|undefined>}>&RemoteCacheWalkHooksV1;
+export type RemoteCacheCollectionRequestV1=Readonly<{root:string;maximumBytes:number;maximumAgeMilliseconds:number;dryRun:boolean;verifyResults:boolean;now?:number;graceMilliseconds?:number;claimed?:(key:string)=>boolean;reclaim?:(hashes:readonly string[],dryRun:boolean)=>Promise<RemoteCacheFillV1>;hasBlobs?:(hashes:readonly string[])=>Promise<readonly boolean[]>;readTree?:(namespace:string,tree:RemoteCacheDigestV1)=>Promise<Uint8Array|undefined>;staleness?:Readonly<{mode:StalenessModeV1;tree:TreeDigestsV1;toolchains?:ReadonlySet<string>|undefined;examples?:number}>}>&RemoteCacheWalkHooksV1;
 
 const fill=(rows:Iterable<{size:number}>):RemoteCacheFillV1=>{let entries=0,bytes=0;for(const row of rows){entries++;bytes+=row.size;}return {entries,bytes};};
 
@@ -136,12 +152,12 @@ export async function remoteCacheServerRunningV1(root:string):Promise<boolean>{
  return pid!==undefined&&started!==undefined&&Number.isSafeInteger(pid)&&pid>0&&alive(pid)&&Date.now()-started<STALE_LOCK_MILLISECONDS;
 }
 
-/** 🗡️ Removes one planned value safely: a superseded or budget value with a sidecar is re-checked right before it goes (its sidecar is unchanged, so no store or claim made it current meanwhile, and no claim holds it); the value goes first and its sidecar after, so a crash between the two leaves an orphan sidecar the next scan removes and never a value that is half gone. Answers `removed`, `kept` (re-check refused) or `gone`. */
+/** 🗡️ Removes one planned value safely: a stale or budget value with a sidecar is re-checked right before it goes (its sidecar is unchanged, so no store or claim made it current meanwhile, and no claim holds it); the value goes first and its sidecar after, so a crash between the two leaves an orphan sidecar the next scan removes and never a value that is half gone. Answers `removed`, `kept` (re-check refused) or `gone`. */
 export async function removeRemoteCacheEntryV1(root:string,drop:RemoteCacheDropV1,hooks:Readonly<{onStep?:(point:RemoteCacheStepV1)=>void;claimed?:(key:string)=>boolean;graceMilliseconds?:number}>={}):Promise<"removed"|"kept"|"gone">{
  if(drop.storedAt!==undefined){
   const meta=await readRemoteCacheMetaV1(root,drop.key);
   if(meta===undefined||meta.storedAt!==drop.storedAt||hooks.claimed?.(drop.key)===true)return "kept";
-  if(drop.reason==="superseded"&&hooks.graceMilliseconds!==undefined&&Date.now()-meta.storedAt<hooks.graceMilliseconds)return "kept";
+  if(drop.reason==="stale"&&hooks.graceMilliseconds!==undefined&&Date.now()-meta.storedAt<hooks.graceMilliseconds)return "kept";
  }
  hooks.onStep?.("before-unlink");
  try{await unlink(join(root,...drop.key.split("/")));}catch(error){if((error as NodeJS.ErrnoException).code!=="ENOENT")throw error;await removeRemoteCacheMetaV1(root,drop.key);return "gone";}
@@ -170,8 +186,9 @@ export async function collectRemoteCacheDirectoryV1(request:RemoteCacheCollectio
   const index=await scanRemoteCacheDirectoryV1(request.root,hooks),scanned=fill(index.values()),dangling=request.verifyResults?await findDanglingRemoteCacheResultsV1(request.root,index,hooks,request.hasBlobs):new Set<string>();
   const deferred=request.claimed===undefined&&await remoteCacheServerRunningV1(request.root),metas=await scanRemoteCacheMetaV1(request.root,index,request.signal);
   const rows=[...index].map(([key,row])=>({key,...row})),now=request.now??Date.now(),grace=request.graceMilliseconds??SLOT_GRACE_MILLISECONDS_V1;
-  const retention:RemoteCacheRetentionV1|undefined=deferred?undefined:{metas,graceMilliseconds:grace,...request.claimed?{claimed:request.claimed}:{}};
-  const plan=planRemoteCacheCollectionV1(rows,{maximumBytes:request.maximumBytes,maximumAgeMilliseconds:request.maximumAgeMilliseconds,now},dangling,retention),counts={dangling:0,superseded:0,age:0,budget:0},dropped=new Set<string>(),sizes=new Map(plan.map(drop=>[drop.key,drop.size]));
+  const judged=deferred||request.staleness===undefined||request.staleness.mode==="off"?undefined:await judgeRemoteCacheStalenessV1(index,metas,{now,graceMilliseconds:grace,tree:request.staleness.tree,toolchains:request.staleness.toolchains,signal:request.signal});
+  const retention:RemoteCacheRetentionV1|undefined=deferred?undefined:{metas,graceMilliseconds:grace,...request.claimed?{claimed:request.claimed}:{},...judged&&request.staleness!.mode==="enforce"?{verdicts:judged}:{}};
+  const plan=planRemoteCacheCollectionV1(rows,{maximumBytes:request.maximumBytes,maximumAgeMilliseconds:request.maximumAgeMilliseconds,now},dangling,retention),counts={dangling:0,stale:0,age:0,budget:0},dropped=new Set<string>(),sizes=new Map(plan.map(drop=>[drop.key,drop.size]));
   let done=0,bytes=0,entries=0;
   for(const drop of plan){
    if(request.dryRun){counts[drop.reason]++;bytes+=drop.size;entries++;dropped.add(drop.key);continue;}
@@ -189,7 +206,8 @@ export async function collectRemoteCacheDirectoryV1(request:RemoteCacheCollectio
     reclaimed=await request.reclaim([...candidates].filter(hash=>!live.has(hash)),request.dryRun);
    }
   }
-  return {version:1,dryRun:request.dryRun,scanned,removed:{entries,bytes,...counts},remaining:{entries:scanned.entries-entries,bytes:scanned.bytes-bytes},reclaimed,deferred};
+  const staleness=judged===undefined?undefined:stalenessReportV1({mode:request.staleness!.mode,now,verdicts:judged,retired:counts.stale,refused:{},examples:request.staleness!.examples??5});
+  return {version:1,dryRun:request.dryRun,scanned,removed:{entries,bytes,...counts},remaining:{entries:scanned.entries-entries,bytes:scanned.bytes-bytes},reclaimed,deferred,...staleness===undefined?{}:{staleness}};
  };
  if(request.dryRun)return {locked:false,value:await run()};
  const lock=await acquireRemoteCacheLockV1(request.root,REMOTE_CACHE_COLLECTOR_LOCK_V1);

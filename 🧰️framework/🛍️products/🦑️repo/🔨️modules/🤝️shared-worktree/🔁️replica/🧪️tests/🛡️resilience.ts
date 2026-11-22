@@ -1,4 +1,5 @@
 import {afterAll,expect,setDefaultTimeout,test} from "bun:test";
+import {stretchedBudgetMillisecondsV1} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
 import {Database} from "bun:sqlite";
 import {appendFileSync,realpathSync,existsSync,mkdirSync,mkdtempSync,readdirSync,readFileSync,rmSync,symlinkSync,truncateSync,utimesSync,writeFileSync,copyFileSync,cpSync} from "node:fs";
 import {tmpdir} from "node:os";
@@ -150,7 +151,7 @@ test("a stalled store is reported within the deadline, local work and the loop c
  const before=gateCalls;
  await Bun.sleep(700);
  clearInterval(timer);
- expect(ticks).toBeGreaterThan(20);
+ expect(ticks).toBeGreaterThan(Math.floor(20/(stretchedBudgetMillisecondsV1(1000)/1000)));
  expect(gateCalls-before).toBeLessThanOrEqual(1);
  await until(async()=>(await readHealthV1(who.options.worktree))?.store==="stalled");
  expect(readFileSync(join(store,"v1","origins","a1","segments","000000000000.jsonl"),"utf8")).not.toContain("stalled.txt");

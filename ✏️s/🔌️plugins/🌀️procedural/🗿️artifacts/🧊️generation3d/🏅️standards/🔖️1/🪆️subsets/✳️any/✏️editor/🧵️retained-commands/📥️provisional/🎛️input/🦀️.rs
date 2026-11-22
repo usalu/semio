@@ -21,7 +21,6 @@ fn fixed(copy_bytes:usize)->RetirementDemand{RetirementDemand{copy_bytes,depth:1
 fn pair_window(a:&str,b:&str,offset:usize)->usize{if a.len()==b.len(){a.len().saturating_sub(offset).min(64)}else{0}}
 fn equal_window(a:&str,b:&str,offset:usize,bytes:usize)->bool{a.as_bytes()[offset..offset+bytes].iter().zip(&b.as_bytes()[offset..offset+bytes]).fold(true,|equal,(a,b)|equal&(*a==*b))}
 impl ProvisionalTypedInputWork{
- pub(crate) fn new(payload:ChangeWidgetInput,cx:&StepContext<'_>)->Self{Self::new_original(payload,OriginalSourceBinding::borrow(cx))}
  pub(crate) fn new_original(payload:ChangeWidgetInput,original:OriginalSourceBinding)->Self{Self{fields:ManuallyDrop::new(Fields{payload:Some(payload),lookup:None,comparison:None,literal:None,value:None,patch:None}),original,binding:None,admission:TypedInputAdmission::new(),scan:ScratchRowScan::new(),target:None,wire:0,field:0,offset:0,phase:Phase::Bind,ready:false,applied:false,closing:false,retirement:Default::default(),progress:Default::default()}}
  pub(crate) fn ready(&self)->bool{!self.closing&&self.ready}
  pub(crate) fn applied(&self)->bool{self.ready&&self.applied}

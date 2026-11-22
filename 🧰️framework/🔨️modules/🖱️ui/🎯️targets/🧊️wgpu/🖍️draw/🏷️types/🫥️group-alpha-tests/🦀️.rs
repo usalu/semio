@@ -30,15 +30,28 @@ fn group_layers_span_from_begin_to_end_across_scissors_and_glass() {
 }
 
 #[test]
-fn full_alpha_nested_and_unmatched_groups_are_no_ops() {
+fn full_alpha_and_unmatched_groups_are_no_ops_and_nested_groups_return_to_their_parent() {
     let mut draw = DrawList::default();
     let none = draw.begin_group_alpha(Rect::new(0.0, 0.0, 4.0, 4.0), 1.0);
     draw.end_group_alpha(none);
     assert_eq!(draw.layers.len(), 1);
     let outer = draw.begin_group_alpha(Rect::new(0.0, 0.0, 4.0, 4.0), 0.5);
     let inner = draw.begin_group_alpha(Rect::new(0.0, 0.0, 2.0, 2.0), 0.25);
+    solid(&mut draw);
+    let begin = draw.layers.iter().filter_map(|layer| layer.group).filter(|group| group.begin).collect::<Vec<_>>();
+    assert_eq!(begin.iter().map(|group| (group.depth, group.alpha)).collect::<Vec<_>>(), [(1, 0.5), (2, 0.25)]);
     draw.end_group_alpha(inner);
-    assert!(draw.layers.last().unwrap().group.is_some());
+    let parent = draw.layers.last().unwrap().group.expect("the layer after an inner group is back in the outer group");
+    assert!(!parent.begin && parent.depth == 1 && parent.alpha == 0.5);
     draw.end_group_alpha(outer);
+    assert!(draw.layers.last().unwrap().group.is_none());
+}
+
+#[test]
+fn groups_deeper_than_the_depth_cap_are_refused() {
+    let mut draw = DrawList::default();
+    let marks: Vec<_> = (0..GROUP_ALPHA_DEPTH + 1).map(|_| draw.begin_group_alpha(Rect::new(0.0, 0.0, 4.0, 4.0), 0.5)).collect();
+    assert_eq!(draw.layers.iter().filter(|layer| layer.group.is_some_and(|group| group.begin)).count(), GROUP_ALPHA_DEPTH);
+    marks.into_iter().rev().for_each(|mark| draw.end_group_alpha(mark));
     assert!(draw.layers.last().unwrap().group.is_none());
 }

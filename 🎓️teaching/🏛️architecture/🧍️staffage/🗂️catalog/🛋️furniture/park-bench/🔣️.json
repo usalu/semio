@@ -5655,7 +5655,7 @@
             "material": "steel-painted",
             "role": "detail",
             "tone": 0.25,
-            "profile": [[-0.00576, 0.00576], [-0.00432, 0.0096], [0.0, 0.0096], [0.0, 0.004], [0.052, 0.004], [0.052, 0.0064], [0.0584, 0.0064]],
+            "profile": [[-0.00576, 0.02], [0.0584, 0.02]],
             "axis": [0, -0.13917, 0.99027],
             "origin": [0.12, -0.1433, 0.18704],
             "repeat": {
@@ -5672,7 +5672,7 @@
             "material": "steel-painted",
             "role": "detail",
             "tone": 0.25,
-            "profile": [[-0.00576, 0.00576], [-0.00432, 0.0096], [0.0, 0.0096], [0.0, 0.004], [0.052, 0.004], [0.052, 0.0064], [0.0584, 0.0064]],
+            "profile": [[-0.00576, 0.02], [0.0584, 0.02]],
             "axis": [0, -0.13917, 0.99027],
             "origin": [0.12, 0.0201, 0.21],
             "repeat": {
@@ -5689,7 +5689,7 @@
             "material": "steel-painted",
             "role": "detail",
             "tone": 0.25,
-            "profile": [[-0.00576, 0.00576], [-0.00432, 0.0096], [0.0, 0.0096], [0.0, 0.004], [0.052, 0.004], [0.052, 0.0064], [0.0584, 0.0064]],
+            "profile": [[-0.00576, 0.02], [0.0584, 0.02]],
             "axis": [0, -0.13917, 0.99027],
             "origin": [0.12, 0.13101, 0.22559],
             "repeat": {
@@ -5708,6 +5708,10 @@
           {
             "en": "Each slat carries its own timber temperature surface and bears on the cast posts through two bolts. The iron frames retain the open arm and leg bracing.",
             "de": "Jede Latte besitzt eine eigene thermische Holzoberfläche und liegt mit zwei Bolzen an den Gusspfosten. Die Eisengestelle behalten die offenen Arm- und Beinstreben."
+          },
+          {
+            "en": "The six bolts of the slats are plain 40 mm joint pins through slat and post, as wide as the thinnest drawn part of the backrest; head and nut are below this scale.",
+            "de": "Die sechs Schrauben der Latten sind glatte 40-mm-Gelenkstifte durch Latte und Pfosten, so breit wie das dünnste gezeichnete Teil der Rückenlehne; Kopf und Mutter liegen unter diesem Maßstab."
           }
         ]
       }

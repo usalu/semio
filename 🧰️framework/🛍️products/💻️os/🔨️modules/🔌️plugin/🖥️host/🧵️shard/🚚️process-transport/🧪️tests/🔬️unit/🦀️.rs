@@ -70,6 +70,22 @@ fn nonblocking_decoder_rejects_oversized_prefix_before_payload_allocation() {
     let error = decoder.poll(&mut cursor, prefix.len()).expect_err("oversized prefix must fail");
     assert_eq!(error.kind(), io::ErrorKind::InvalidData);
 }
+#[test]
+fn job_side_channel_frames_never_reach_the_data_queue() {
+    use semio_plugin_host_process_transport::{Decoder, Frame, PipeState, TAG_DATA, TAG_JOBS, TAG_JOB_CANCEL, write_frame};
+    let mut encoded = Vec::new();
+    write_frame(&mut encoded, TAG_JOBS, b"rows").expect("jobs");
+    write_frame(&mut encoded, TAG_DATA, b"data").expect("data");
+    write_frame(&mut encoded, TAG_JOB_CANCEL, &[7; 16]).expect("cancel");
+    let mut decoder = Decoder::default();
+    let mut cursor = io::Cursor::new(encoded.clone());
+    assert!(matches!(decoder.poll(&mut cursor, encoded.len()).expect("decode"), PipeState::Open));
+    assert_eq!(decoder.pop(), Some(Frame::Data(b"data".to_vec())));
+    assert_eq!(decoder.pop(), None);
+    assert_eq!(decoder.pop_side(), Some((TAG_JOBS, b"rows".to_vec())));
+    assert_eq!(decoder.pop_side(), Some((TAG_JOB_CANCEL, vec![7; 16])));
+    assert_eq!(decoder.pop_side(), None);
+}
 //#endregion 🧪️FramingTests
 
 //#region 🧪️SelectionTests

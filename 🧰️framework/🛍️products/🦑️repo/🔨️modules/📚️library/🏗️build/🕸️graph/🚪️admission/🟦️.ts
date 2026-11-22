@@ -106,9 +106,10 @@ export function buildSourceContractGroupsV1(project:{name:string;targets?:Record
  for(const target of Object.values(project.targets??{}))visit(target.inputs??policy.defaultInputs);visit(requested);return[...selected].sort();
 }
 
-/** 🔑️ Names the complete immutable selection and registry declaration independently of whole graph state. */
-export function buildGraphScopeKeyV1(selection:BuildGraphSelectionV1,registry:BuildOwnerRegistryV1):string{
- return createHash("sha256").update(JSON.stringify([readBuildGraphSelectionV1(selection),readBuildOwnerRegistryV1(registry)])).digest("hex");
+/** 🔑️ Names the complete immutable selection independently of whole graph state and of the owner registry: what a read asked of the registry travels in the records it derived, so an edit of one registry row never gives a scope a new identity.
+ * @see ../🧾️registry-reads/🟨️.mjs */
+export function buildGraphScopeKeyV1(selection:BuildGraphSelectionV1):string{
+ return createHash("sha256").update(JSON.stringify(readBuildGraphSelectionV1(selection))).digest("hex");
 }
 
 /** 🚪️ Admits only a closed owner admission. */

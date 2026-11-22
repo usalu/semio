@@ -132,6 +132,7 @@ use semio_plugin_decl_views::InteractionView;
 use semio_plugin_decl_views::NoDraft;
 use semio_plugin_decl_views::NoDraftMutation;
 use semio_plugin_decl_views::PresenceView;
+use semio_plugin_decl_views::PresencePeersView;
 use semio_plugin_window_transient::window_transient::TransientView;
 use semio_plugin_abi::ArtifactBuilder;
 use semio_plugin_ownership::bounded_ownership::PluginLifecycleStep;

@@ -9,6 +9,35 @@ description = "Component crate of semio-s-artifact-stdio-pdf: schema"
 [package.metadata.semio]
 role = "library"
 
+[package.metadata.semio.carve]
+owned = [
+  "editor::pdf14",
+  "editor::pdf14a",
+  "editor::pdf14x",
+  "editor::pdf17",
+  "editor::pdf17::image_import",
+  "editor::pdf17a",
+  "editor::pdf17a::modes",
+  "editor::pdf17a::modes::edit",
+  "editor::pdf17e",
+  "editor::pdf17h",
+  "editor::pdf17ua",
+  "editor::pdf17x",
+  "standards::v1_7::subsets::base",
+  "standards::v1_7::subsets::base::derived_analysis",
+  "standards::v1_7::subsets::base::derived_composition",
+  "standards::v1_7::subsets::h::schema",
+  "standards::v1_7::subsets::vt::io",
+  "standards::v1_7::subsets::vt::io::binary",
+  "standards::v1_7::subsets::vt::io::derived_analysis",
+  "standards::v1_7::subsets::vt::io::derived_composition",
+  "standards::v1_7::subsets::vt::io::derived_construction",
+  "standards::v1_7::subsets::vt::io::mutation_bridge",
+  "standards::v1_7::subsets::vt::schema",
+  "viewer::pdf14",
+  "viewer::pdf14a",
+]
+
 [lints]
 workspace = true
 
@@ -18,6 +47,11 @@ path = "🦀️.rs"
 [dependencies]
 semio-s-artifact-stdio-pdf-native-save = { path = "../../../../🧱️base/✏️editor/💾️native-save/📦️packages/🦀️rust" }
 semio-s-artifact-stdio-pdf-editor-document = { path = "../../../../🧱️base/✏️editor/📄️document/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-pdf14-canvas = { path = "../../../../../../4️⃣1.4/🪆️subsets/🧱️base/✏️editor/🖼️page/🔭️canvas/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-pdf-view-lane = { path = "../../../../🧱️base/✏️editor/🫧️transient/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-pdf-editor-kit = { path = "../../../../🧱️base/✏️editor/🧰️kit/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-pdf-presence-lane = { path = "../../../../🧱️base/✏️editor/👥️presence/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-pdf-page-editor-authoring = { path = "../../../../🧱️base/✏️editor/🖼️page/✍️authoring/📦️packages/🦀️rust" }
 pack = { workspace = true }
 semio-framework-2d-compute = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/◻️2d/🧮️compute/📦️packages/🦀️rust" }
 semio-framework-artifact-reference = { workspace = true }

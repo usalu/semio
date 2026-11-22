@@ -1,0 +1,53 @@
+{
+  "id": "photographer-with-camera",
+  "category": "humans",
+  "title": {
+    "en": "Photographer with Camera",
+    "de": "Fotografierende Person mit Kamera"
+  },
+  "heightM": 1.785,
+  "widthM": 0.527,
+  "powerW": 173.3,
+  "poses": [
+    "shooting-standing",
+    "shooting-crouched",
+    "checking-screen",
+    "standing-ready"
+  ],
+  "clips": [
+    "shutter-burst",
+    "crouch-and-shoot",
+    "idle-breathing"
+  ],
+  "representations": {
+    "50": "authored",
+    "100": "authored",
+    "200": "authored",
+    "500": "authored"
+  },
+  "symbols": [],
+  "analytics": [
+    "thermal",
+    "transport",
+    "structural"
+  ],
+  "exports": [
+    "svg",
+    "pdf",
+    "dxf",
+    "dwg",
+    "png-sequence",
+    "mp4",
+    "webm",
+    "component",
+    "glb",
+    "fbx",
+    "model",
+    "model-zip"
+  ],
+  "distinction": {
+    "en": "A 1.75 m press photographer in a softshell jacket, cotton trousers, a cap turned backwards and a press pass, with a 1.25 kg digital SLR at the right eye: standing, in a deep crouch on flat feet, checking the screen and standing ready, both hands placed on the camera by inverse kinematics; a burst loop, a crouch-and-shoot sequence and idle breathing; 4.5 W of camera input.",
+    "de": "Eine 1,75 m große Pressefotografin bzw. ein Pressefotograf in Softshelljacke, Baumwollhose, verkehrt herum getragener Mütze und mit Presseausweis, eine 1,25 kg schwere digitale Spiegelreflexkamera am rechten Auge: stehend, in tiefer Hocke auf flachen Füßen, beim Prüfen des Displays und bereit stehend, beide Hände durch inverse Kinematik an die Kamera gesetzt; eine Serienaufnahme als Schleife, eine Abfolge aus Hocke und Aufnahme und ruhiges Atmen; 4,5 W Leistungsaufnahme der Kamera."
+  },
+  "completion": "authored"
+}

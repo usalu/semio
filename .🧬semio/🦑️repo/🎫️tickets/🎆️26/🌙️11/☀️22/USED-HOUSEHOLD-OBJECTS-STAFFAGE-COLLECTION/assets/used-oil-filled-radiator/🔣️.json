@@ -1,0 +1,8059 @@
+{
+ "$schema": "../../../🧬️schema/🔣️.json#/$defs/AssetDocument",
+ "version": "semio.staffage/v2",
+ "asset": {
+  "id": "used-oil-filled-radiator",
+  "category": "appliances",
+  "title": {
+   "en": "Used Oil-Filled Radiator",
+   "de": "Gebrauchter Ölradiator"
+  },
+  "summary": {
+   "en": "A second-hand 2 kW oil-filled electric radiator with nine pressed-steel fins on castor feet, 0.64 x 0.45 x 0.25 m and 12.0 kg, with yellowed enamel, rust spots at the lower fin rims, a replacement thermostat knob, one mismatched castor and a taped cord on its winder, stored on a folded furniture pad in a reuse depot, carried by one person at the top of the housing and the far end fin and heating a living room at full power.",
+   "de": "Ein gebrauchter elektrischer Ölradiator mit 2 kW und neun gepressten Stahlrippen auf Rollenfüßen, 0,64 x 0,45 x 0,25 m und 12,0 kg, mit vergilbtem Lack, Rostpunkten an den unteren Rippenrändern, einem Ersatz-Thermostatknopf, einer nicht passenden Rolle und einem abgeklebten Kabel auf seinem Wickel, im Gebrauchtwarenkaufhaus auf einem gefalteten Möbelpolster gelagert, von einer Person am Kopf des Gehäuses und der äußeren Endrippe getragen und mit voller Leistung im Wohnzimmer heizend."
+  },
+  "tags": [
+   "used",
+   "household",
+   "second-hand",
+   "living",
+   "bedroom",
+   "heater",
+   "oil-filled-radiator",
+   "electric-heating",
+   "steel",
+   "enamel",
+   "castors",
+   "reuse-depot"
+  ],
+  "provenance": {
+   "author": "Semio staffage content (used household objects wave)",
+   "method": "handcrafted",
+   "created": "2026-11-22",
+   "references": [
+    {
+     "id": "iec-60335-2-30",
+     "citation": "IEC 60335-2-30:2009+A1:2016 Household and similar electrical appliances - Safety - Part 2-30: Particular requirements for room heaters (liquid-filled radiators, surface temperature limits, marking 'do not cover', stability and tip-over switch requirements)."
+    },
+    {
+     "id": "en-60335-1",
+     "citation": "EN 60335-1:2012 Household and similar electrical appliances - Safety - Part 1: General requirements (supply cords, cord storage, stability of appliances on castors)."
+    },
+    {
+     "id": "din-vde-0701-0702",
+     "citation": "DIN VDE 0701-0702:2008 Prüfung nach Instandsetzung, Änderung elektrischer Geräte - Wiederholungsprüfung elektrischer Geräte (the electrical safety test of second-hand appliances before resale, with its test sticker)."
+    },
+    {
+     "id": "dguv-v3",
+     "citation": "DGUV Vorschrift 3 Elektrische Anlagen und Betriebsmittel (2005): periodic testing of portable electrical equipment, the test label with its next due date."
+    },
+    {
+     "id": "en-10130-2006",
+     "citation": "EN 10130:2006 Cold rolled low carbon steel flat products for cold forming (DC01, the deep-drawing sheet of pressed radiator fins, yield strength up to 280 MPa)."
+    },
+    {
+     "id": "iso-10456-2007",
+     "citation": "ISO 10456:2007 Building materials and products - Hygrothermal properties - Tabulated design values (steel 50 W/mK and 450 J/kgK, plastics 0.17-0.25 W/mK, nonwoven felts about 0.04-0.05 W/mK)."
+    },
+    {
+     "id": "incropera-2018",
+     "citation": "Incropera, F. P., DeWitt, D. P., Bergman, T. L., Lavine, A. S. (2018). Fundamentals of Heat and Mass Transfer, 8th ed., Wiley (emissivity of enamel and paints 0.85-0.95, solar absorptance of white and yellowed paints, free convection of vertical plates and plumes)."
+    },
+    {
+     "id": "vdi-waermeatlas-2013",
+     "citation": "VDI-Wärmeatlas, 11th ed. (2013), Springer Vieweg (specific heat and density of mineral heat-transfer oils, about 1.9 kJ/kgK and 870 kg/m3 at 20 degC)."
+    },
+    {
+     "id": "din-en-50525-2-11",
+     "citation": "DIN EN 50525-2-11:2012 Electric cables - Low voltage energy cables - Cables for general applications - Flexible cables with thermoplastic PVC insulation (H05VV-F 3G0.75: about 6.4 mm diameter, about 60-70 g/m)."
+    },
+    {
+     "id": "oil-radiator-catalogue",
+     "citation": "Catalogue-typical data of oil-filled electric radiators as German DIY stores and department stores sold them from the 1990s to the 2010s, 9 fins, 2000 W in three stages (800 / 1200 / 2000 W), mechanical thermostat: about 64 x 43 x 25 cm over the castor feet, fins 15 cm deep, 9.5-12.5 kg, 1.5-1.9 m cord with a cord winder (authored-estimate from listings of the type, no brand)."
+    },
+    {
+     "id": "castor-catalogue",
+     "citation": "Catalogue-typical data of the swivel castors of radiator feet: polyamide twin or single wheels of 35-45 mm on a pressed fork with a push-in stem, about 40-50 g each (authored-estimate)."
+    },
+    {
+     "id": "moving-blanket-catalogue",
+     "citation": "Catalogue-typical data of quilted furniture pads (Möbeldecken, Umzugsdecken) of nonwoven felt, 120 x 90 cm, 3 mm, about 0.4 kg/m2 (authored-estimate)."
+    },
+    {
+     "id": "reuse-depot-practice",
+     "citation": "Practice of municipal second-hand department stores and reuse depots in Germany (Gebrauchtwarenkaufhaus, Haushaltsauflösung): small electrical appliances are cleaned, tested to DIN VDE 0701-0702, labelled with test sticker and price, the cord wound up, and stood on a pad or cardboard in the electrical department (authored-estimate from the practice described in reuse programmes, no single source)."
+    },
+    {
+     "id": "dguv-208-033",
+     "citation": "DGUV Information 208-033 (2014) Muskel-Skelett-Belastungen - erkennen und beurteilen (manual handling: loads up to about 15 kg carried with both hands close to the body by one adult without restriction)."
+    },
+    {
+     "id": "din-18011-1992",
+     "citation": "DIN 18011:1992-11 Stellflächen, Abstände und Bewegungsflächen im Wohnungsbau (placing areas in living rooms; a mobile heater stands in front of a wall or beside the seating group)."
+    }
+   ],
+   "notes": {
+    "en": "Oil-filled radiator of the common type sold in German DIY and department stores from the 1990s to the 2010s: nine fins of two pressed 0.7 mm DC01 shells, 150 x 568 x 22 mm at a pitch of 42 mm, joined by an upper and a lower hub, about 1.6 kg of mineral oil with the 2000 W element in the lower hub (800 / 1200 / 2000 W), a polypropylene control housing 120 x 525 x 65 mm on the right end with two rocker switches, a mechanical thermostat and a cord winder, two pressed steel foot bars with four swivel castors; 0.64 m high, 0.445 m long, 0.25 m deep over the feet, 12.0 kg. Traces of use: enamel yellowed by years of heating, rust spots at the lower fin rims, scratches and dust lines, a dark grey replacement thermostat knob, the front right castor a black replacement, the cord repaired with insulating tape, a test sticker of the DIN VDE 0701-0702 check and a price label of the depot. Storage aid: a furniture pad folded to 0.45 x 0.60 m and 12 mm (0.4 kg). Every parameter is literature or authored-estimate; nothing is measured.",
+    "de": "Ölradiator der gängigen Bauart, wie ihn deutsche Bau- und Kaufhäuser von den 1990er- bis in die 2010er-Jahre verkauften: neun Rippen aus je zwei gepressten 0,7-mm-Schalen DC01, 150 x 568 x 22 mm im Abstand von 42 mm, über eine obere und eine untere Nabe verbunden, etwa 1,6 kg Mineralöl mit dem 2000-W-Heizstab in der unteren Nabe (800 / 1200 / 2000 W), ein Bediengehäuse aus Polypropylen 120 x 525 x 65 mm am rechten Ende mit zwei Wippschaltern, mechanischem Thermostat und Kabelwickel, zwei Fußbügel aus gepresstem Stahl mit vier Lenkrollen; 0,64 m hoch, 0,445 m lang, über den Füßen 0,25 m tief, 12,0 kg. Gebrauchsspuren: durch Jahre des Heizens vergilbter Lack, Rostpunkte an den unteren Rippenrändern, Kratzer und Staubstreifen, ein dunkelgrauer Ersatz-Thermostatknopf, die vordere rechte Rolle ein schwarzer Ersatz, das Kabel mit Isolierband repariert, eine Prüfplakette der Prüfung nach DIN VDE 0701-0702 und ein Preisschild des Lagers. Lagerhilfe: ein auf 0,45 x 0,60 m und 12 mm gefaltetes Möbelpolster (0,4 kg). Jeder Parameter ist Literatur oder Schätzwert; nichts ist gemessen."
+   }
+  },
+  "dimensions": {
+   "heightM": 0.652,
+   "widthM": 0.45,
+   "depthM": 0.6,
+   "massKg": 12.387162
+  },
+  "materials": [
+   {
+    "id": "enamelled-steel",
+    "title": {
+     "en": "Pressed DC01 sheet steel with cream-white stove enamel, yellowed",
+     "de": "Gepresstes Stahlblech DC01 mit cremeweißer Einbrennlackierung, vergilbt"
+    },
+    "emissivity": 0.92,
+    "solarAbsorptivity": 0.36,
+    "densityKgM3": 7850.0,
+    "conductivityWmK": 50,
+    "specificHeatJKgK": 460,
+    "elasticModulusPa": 210000000000.0,
+    "strengthPa": 210000000.0,
+    "source": "literature",
+    "reference": "en-10130-2006"
+   },
+   {
+    "id": "housing-plastic",
+    "title": {
+     "en": "White polypropylene housing, yellowed by heat",
+     "de": "Weißes Polypropylen-Gehäuse, durch Wärme vergilbt"
+    },
+    "emissivity": 0.92,
+    "solarAbsorptivity": 0.4,
+    "densityKgM3": 1050.0,
+    "conductivityWmK": 0.2,
+    "specificHeatJKgK": 1700,
+    "elasticModulusPa": 1500000000.0,
+    "strengthPa": 30000000.0,
+    "source": "literature",
+    "reference": "iso-10456-2007"
+   },
+   {
+    "id": "knob-plastic",
+    "title": {
+     "en": "Dark grey ABS of the replacement thermostat knob",
+     "de": "Dunkelgraues ABS des Ersatz-Thermostatknopfs"
+    },
+    "emissivity": 0.92,
+    "solarAbsorptivity": 0.85,
+    "densityKgM3": 1050.0,
+    "conductivityWmK": 0.17,
+    "specificHeatJKgK": 1400,
+    "source": "literature",
+    "reference": "iso-10456-2007"
+   },
+   {
+    "id": "pvc-cord",
+    "title": {
+     "en": "White PVC-sheathed cord H05VV-F 3G0.75, wound",
+     "de": "Weiße PVC-Leitung H05VV-F 3G0,75, aufgewickelt"
+    },
+    "emissivity": 0.92,
+    "solarAbsorptivity": 0.4,
+    "densityKgM3": 1380.0,
+    "conductivityWmK": 0.16,
+    "specificHeatJKgK": 1000,
+    "source": "literature",
+    "reference": "din-en-50525-2-11"
+   },
+   {
+    "id": "painted-steel",
+    "title": {
+     "en": "Grey painted pressed steel of the foot bars",
+     "de": "Grau lackierter gepresster Stahl der Fußbügel"
+    },
+    "emissivity": 0.9,
+    "solarAbsorptivity": 0.6,
+    "densityKgM3": 7850.0,
+    "conductivityWmK": 50,
+    "specificHeatJKgK": 460,
+    "elasticModulusPa": 210000000000.0,
+    "strengthPa": 235000000.0,
+    "source": "literature",
+    "reference": "en-10130-2006"
+   },
+   {
+    "id": "castor-polyamide",
+    "title": {
+     "en": "Grey polyamide castors",
+     "de": "Graue Polyamid-Lenkrollen"
+    },
+    "emissivity": 0.9,
+    "solarAbsorptivity": 0.6,
+    "densityKgM3": 1140.0,
+    "conductivityWmK": 0.25,
+    "specificHeatJKgK": 1600,
+    "source": "authored-estimate",
+    "reference": "castor-catalogue"
+   },
+   {
+    "id": "castor-rubber",
+    "title": {
+     "en": "Black rubber-tyred replacement castor",
+     "de": "Schwarze gummibereifte Ersatzrolle"
+    },
+    "emissivity": 0.94,
+    "solarAbsorptivity": 0.9,
+    "densityKgM3": 1200.0,
+    "conductivityWmK": 0.2,
+    "specificHeatJKgK": 1500,
+    "source": "authored-estimate",
+    "reference": "castor-catalogue"
+   },
+   {
+    "id": "felt-pad",
+    "title": {
+     "en": "Quilted nonwoven felt of a furniture pad, dark blue",
+     "de": "Gesteppter Vliesfilz eines Möbelpolsters, dunkelblau"
+    },
+    "emissivity": 0.9,
+    "solarAbsorptivity": 0.8,
+    "densityKgM3": 134.0,
+    "conductivityWmK": 0.045,
+    "specificHeatJKgK": 1300,
+    "source": "authored-estimate",
+    "reference": "moving-blanket-catalogue"
+   }
+  ],
+  "rig": {
+   "kind": "mechanical",
+   "root": "ground",
+   "bones": [
+    {
+     "id": "ground",
+     "parent": null,
+     "title": {
+      "en": "Floor reference",
+      "de": "Bodenbezug"
+     },
+     "x": 0,
+     "y": 0,
+     "angleDeg": 0,
+     "lengthM": 0,
+     "joint": {
+      "type": "fixed"
+     }
+    },
+    {
+     "id": "blanket",
+     "parent": "ground",
+     "title": {
+      "en": "Folded furniture pad (storage aid, stays behind)",
+      "de": "Gefaltetes Möbelpolster (Lagerhilfe, bleibt liegen)"
+     },
+     "x": -0.225,
+     "y": 0.006,
+     "angleDeg": 0.0,
+     "lengthM": 0.45,
+     "joint": {
+      "type": "fixed"
+     },
+     "mass": {
+      "kg": 0.432,
+      "comX": 0.225,
+      "comY": 0.0,
+      "distribution": "point",
+      "source": "authored-estimate",
+      "reference": "moving-blanket-catalogue"
+     }
+    },
+    {
+     "id": "carry-lift",
+     "parent": "ground",
+     "title": {
+      "en": "Carrier's hands: lift",
+      "de": "Hände des Trägers: Heben"
+     },
+     "x": 0,
+     "y": 0,
+     "angleDeg": 0,
+     "lengthM": 0,
+     "joint": {
+      "type": "prismatic",
+      "axisDeg": 90,
+      "minM": -0.05,
+      "maxM": 0.3
+     }
+    },
+    {
+     "id": "carry-travel",
+     "parent": "carry-lift",
+     "title": {
+      "en": "Carrier's hands: walking away",
+      "de": "Hände des Trägers: Weggehen"
+     },
+     "x": 0,
+     "y": 0,
+     "angleDeg": 0,
+     "lengthM": 0,
+     "joint": {
+      "type": "prismatic",
+      "axisDeg": 0,
+      "minM": 0,
+      "maxM": 1.0
+     }
+    },
+    {
+     "id": "fins",
+     "parent": "carry-travel",
+     "title": {
+      "en": "Oil-filled fin block with hubs and heating element",
+      "de": "Ölgefüllter Rippenblock mit Naben und Heizstab"
+     },
+     "x": 0.0,
+     "y": 0.084,
+     "z": 0.0435,
+     "angleDeg": 90.0,
+     "lengthM": 0.568,
+     "joint": {
+      "type": "fixed"
+     },
+     "mass": {
+      "kg": 10.489104,
+      "comX": 0.26936,
+      "comY": 0.0,
+      "distribution": "point",
+      "source": "authored-estimate",
+      "reference": "oil-radiator-catalogue"
+     },
+     "section": {
+      "areaM2": 0.0021672,
+      "secondMomentM4": 3.54375e-06,
+      "extremeFibreM": 0.075,
+      "material": "enamelled-steel",
+      "title": {
+       "en": "Nine fins, two 0.7 mm shells 150 mm deep",
+       "de": "Neun Rippen, zwei Schalen 0,7 mm, 150 mm tief"
+      }
+     }
+    },
+    {
+     "id": "housing",
+     "parent": "fins",
+     "title": {
+      "en": "Control housing with switches, thermostat and wound cord",
+      "de": "Bediengehäuse mit Schaltern, Thermostat und aufgewickeltem Kabel"
+     },
+     "x": 0.023,
+     "y": 1.40834e-18,
+     "z": -0.2115,
+     "angleDeg": 0.0,
+     "lengthM": 0.525,
+     "joint": {
+      "type": "fixed"
+     },
+     "mass": {
+      "kg": 0.872661,
+      "comX": 0.267596,
+      "comY": 0.0,
+      "distribution": "point",
+      "source": "authored-estimate",
+      "reference": "oil-radiator-catalogue"
+     },
+     "section": {
+      "areaM2": 0.000925,
+      "secondMomentM4": 1.75562e-06,
+      "extremeFibreM": 0.06,
+      "material": "housing-plastic",
+      "title": {
+       "en": "Housing shell 120 x 65 x 2.5 mm",
+       "de": "Gehäuseschale 120 x 65 x 2,5 mm"
+      }
+     }
+    },
+    {
+     "id": "knob",
+     "parent": "housing",
+     "title": {
+      "en": "Replacement thermostat knob",
+      "de": "Ersatz-Thermostatknopf"
+     },
+     "x": 0.445,
+     "y": 2.72484e-17,
+     "z": -0.0425,
+     "angleDeg": -90.0,
+     "lengthM": 0.022,
+     "joint": {
+      "type": "revolute",
+      "minDeg": -270,
+      "maxDeg": 0
+     },
+     "mass": {
+      "kg": 0.015,
+      "comX": 0.0,
+      "comY": 0.0,
+      "distribution": "point",
+      "source": "authored-estimate",
+      "reference": "oil-radiator-catalogue"
+     }
+    },
+    {
+     "id": "feet",
+     "parent": "fins",
+     "title": {
+      "en": "Two pressed steel foot bars",
+      "de": "Zwei Fußbügel aus gepresstem Stahl"
+     },
+     "x": -0.01,
+     "y": 0.125,
+     "angleDeg": -90.0,
+     "lengthM": 0.25,
+     "joint": {
+      "type": "fixed"
+     },
+     "mass": {
+      "kg": 0.398396,
+      "comX": 0.125,
+      "comY": 0.0,
+      "distribution": "point",
+      "source": "authored-estimate",
+      "reference": "oil-radiator-catalogue"
+     },
+     "section": {
+      "areaM2": 8.112e-05,
+      "secondMomentM4": 3.34e-09,
+      "extremeFibreM": 0.0138,
+      "material": "painted-steel",
+      "title": {
+       "en": "U channel 30 x 20 x 1.2 mm",
+       "de": "U-Profil 30 x 20 x 1,2 mm"
+      }
+     }
+    },
+    {
+     "id": "castors",
+     "parent": "feet",
+     "title": {
+      "en": "Four swivel castors",
+      "de": "Vier Lenkrollen"
+     },
+     "x": 0.025,
+     "y": -0.042,
+     "angleDeg": 0.0,
+     "lengthM": 0.2,
+     "joint": {
+      "type": "fixed"
+     },
+     "mass": {
+      "kg": 0.18,
+      "comX": 0.1,
+      "comY": 0.0,
+      "distribution": "point",
+      "source": "authored-estimate",
+      "reference": "castor-catalogue"
+     }
+    }
+   ]
+  },
+  "anchors": [
+   {
+    "id": "pad-floor-fl",
+    "bone": "blanket",
+    "x": 0.405,
+    "y": -0.006,
+    "z": 0.25,
+    "kind": "contact",
+    "title": {
+     "en": "Corner of the folded pad on the floor, front left",
+     "de": "Ecke des gefalteten Polsters auf dem Boden, vorne links"
+    },
+    "support": "contact",
+    "normalDeg": 90,
+    "footprintLengthM": 0.09,
+    "footprintWidthM": 0.12,
+    "frictionCoefficient": 0.5
+   },
+   {
+    "id": "pad-floor-fr",
+    "bone": "blanket",
+    "x": 0.405,
+    "y": -0.006,
+    "z": -0.25,
+    "kind": "contact",
+    "title": {
+     "en": "Corner of the folded pad on the floor, front right",
+     "de": "Ecke des gefalteten Polsters auf dem Boden, vorne rechts"
+    },
+    "support": "contact",
+    "normalDeg": 90,
+    "footprintLengthM": 0.09,
+    "footprintWidthM": 0.12,
+    "frictionCoefficient": 0.5
+   },
+   {
+    "id": "pad-floor-rl",
+    "bone": "blanket",
+    "x": 0.045,
+    "y": -0.006,
+    "z": 0.25,
+    "kind": "contact",
+    "title": {
+     "en": "Corner of the folded pad on the floor, rear left",
+     "de": "Ecke des gefalteten Polsters auf dem Boden, hinten links"
+    },
+    "support": "contact",
+    "normalDeg": 90,
+    "footprintLengthM": 0.09,
+    "footprintWidthM": 0.12,
+    "frictionCoefficient": 0.5
+   },
+   {
+    "id": "pad-floor-rr",
+    "bone": "blanket",
+    "x": 0.045,
+    "y": -0.006,
+    "z": -0.25,
+    "kind": "contact",
+    "title": {
+     "en": "Corner of the folded pad on the floor, rear right",
+     "de": "Ecke des gefalteten Polsters auf dem Boden, hinten rechts"
+    },
+    "support": "contact",
+    "normalDeg": 90,
+    "footprintLengthM": 0.09,
+    "footprintWidthM": 0.12,
+    "frictionCoefficient": 0.5
+   },
+   {
+    "id": "castor-fl",
+    "bone": "castors",
+    "x": 0.2,
+    "y": -0.02,
+    "z": 0.126,
+    "kind": "contact",
+    "title": {
+     "en": "Castor tread, front left",
+     "de": "Lauffläche der Rolle, vorne links"
+    },
+    "support": "contact",
+    "normalDeg": 90,
+    "footprintLengthM": 0.008,
+    "footprintWidthM": 0.018,
+    "frictionCoefficient": 0.05
+   },
+   {
+    "id": "castor-fr",
+    "bone": "castors",
+    "x": 0.2,
+    "y": -0.02,
+    "z": -0.126,
+    "kind": "contact",
+    "title": {
+     "en": "Castor tread, front right",
+     "de": "Lauffläche der Rolle, vorne rechts"
+    },
+    "support": "contact",
+    "normalDeg": 90,
+    "footprintLengthM": 0.008,
+    "footprintWidthM": 0.018,
+    "frictionCoefficient": 0.05
+   },
+   {
+    "id": "castor-rl",
+    "bone": "castors",
+    "x": 0.0,
+    "y": -0.02,
+    "z": 0.126,
+    "kind": "contact",
+    "title": {
+     "en": "Castor tread, rear left",
+     "de": "Lauffläche der Rolle, hinten links"
+    },
+    "support": "contact",
+    "normalDeg": 90,
+    "footprintLengthM": 0.008,
+    "footprintWidthM": 0.018,
+    "frictionCoefficient": 0.05
+   },
+   {
+    "id": "castor-rr",
+    "bone": "castors",
+    "x": 0.0,
+    "y": -0.02,
+    "z": -0.126,
+    "kind": "contact",
+    "title": {
+     "en": "Castor tread, rear right",
+     "de": "Lauffläche der Rolle, hinten rechts"
+    },
+    "support": "contact",
+    "normalDeg": 90,
+    "footprintLengthM": 0.008,
+    "footprintWidthM": 0.018,
+    "frictionCoefficient": 0.05
+   },
+   {
+    "id": "grip-housing",
+    "bone": "housing",
+    "x": 0.525,
+    "y": 3.2147e-17,
+    "z": 0.0,
+    "kind": "contact",
+    "title": {
+     "en": "Carrier's right hand under the top lip of the control housing",
+     "de": "Rechte Hand des Trägers unter der oberen Kante des Bediengehäuses"
+    },
+    "support": "contact",
+    "normalDeg": 90,
+    "footprintLengthM": 0.09,
+    "footprintWidthM": 0.03,
+    "frictionCoefficient": 0.6
+   },
+   {
+    "id": "grip-end-fin",
+    "bone": "fins",
+    "x": 0.568,
+    "y": 3.478e-17,
+    "z": 0.168,
+    "kind": "contact",
+    "title": {
+     "en": "Carrier's left hand round the top of the far end fin",
+     "de": "Linke Hand des Trägers um den Kopf der äußeren Endrippe"
+    },
+    "support": "contact",
+    "normalDeg": 90,
+    "footprintLengthM": 0.09,
+    "footprintWidthM": 0.03,
+    "frictionCoefficient": 0.6
+   },
+   {
+    "id": "plume-top",
+    "bone": "fins",
+    "x": 0.568,
+    "y": 3.478e-17,
+    "z": 0.0,
+    "kind": "emitter",
+    "title": {
+     "en": "Warm air rising from the top of the fin stack",
+     "de": "Warme Luft steigt über dem Rippenpaket auf"
+    }
+   }
+  ],
+  "representations": {
+   "50": {
+    "status": "authored",
+    "denominator": 50,
+    "validRange": {
+     "minDenominator": 20,
+     "maxDenominator": 75
+    },
+    "pens": {
+     "body": 0.5,
+     "detail": 0.25,
+     "texture": 0.13,
+     "glazing": 0.18,
+     "ground": 0.7
+    },
+    "hatches": [
+     {
+      "id": "quilt",
+      "title": {
+       "en": "Quilting of the furniture pad",
+       "de": "Steppung des Möbelpolsters"
+      },
+      "pattern": "cross",
+      "angleDeg": 45,
+      "spacingMm": 1.2,
+      "penMm": 0.13
+     }
+    ],
+    "geometry": {
+     "elevation": [
+      {
+       "id": "pad",
+       "bone": "blanket",
+       "role": "body",
+       "z": 1,
+       "filled": true,
+       "tone": 0.3,
+       "kind": "poly",
+       "points": [
+        [
+         0.0,
+         -0.006
+        ],
+        [
+         0.444,
+         -0.006
+        ],
+        [
+         0.447,
+         -0.00519615
+        ],
+        [
+         0.449196,
+         -0.003
+        ],
+        [
+         0.45,
+         0.0
+        ],
+        [
+         0.449196,
+         0.003
+        ],
+        [
+         0.447,
+         0.00519615
+        ],
+        [
+         0.444,
+         0.006
+        ],
+        [
+         0.0,
+         0.006
+        ]
+       ],
+       "closed": true,
+       "region": "pad",
+       "material": "felt-pad"
+      },
+      {
+       "id": "pad-layers",
+       "bone": "blanket",
+       "role": "texture",
+       "z": 1.1,
+       "filled": false,
+       "tone": 0.2,
+       "kind": "path",
+       "d": "M 0.00000 -0.00300 L 0.06000 -0.00300 M 0.00000 0.00000 L 0.06000 0.00000 M 0.00000 0.00300 L 0.06000 0.00300",
+       "region": "pad"
+      },
+      {
+       "id": "fin",
+       "bone": "fins",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.82,
+       "kind": "poly",
+       "points": [
+        [
+         3.36778e-18,
+         -0.055
+        ],
+        [
+         0.00152241,
+         -0.062654
+        ],
+        [
+         0.00585786,
+         -0.069142
+        ],
+        [
+         0.012346,
+         -0.073478
+        ],
+        [
+         0.02,
+         -0.075
+        ],
+        [
+         0.528,
+         -0.075
+        ],
+        [
+         0.543307,
+         -0.071955
+        ],
+        [
+         0.556284,
+         -0.063284
+        ],
+        [
+         0.564955,
+         -0.050307
+        ],
+        [
+         0.568,
+         -0.035
+        ],
+        [
+         0.568,
+         0.035
+        ],
+        [
+         0.564955,
+         0.050307
+        ],
+        [
+         0.556284,
+         0.063284
+        ],
+        [
+         0.543307,
+         0.071955
+        ],
+        [
+         0.528,
+         0.075
+        ],
+        [
+         0.02,
+         0.075
+        ],
+        [
+         0.012346,
+         0.073478
+        ],
+        [
+         0.00585786,
+         0.069142
+        ],
+        [
+         0.00152241,
+         0.062654
+        ],
+        [
+         -3.36778e-18,
+         0.055
+        ]
+       ],
+       "closed": true,
+       "region": "fins",
+       "material": "enamelled-steel"
+      },
+      {
+       "id": "fin-rim",
+       "bone": "fins",
+       "role": "detail",
+       "z": 2.1,
+       "filled": false,
+       "tone": 0.6,
+       "kind": "path",
+       "d": "M 0.00600 -0.05200 L 0.00828 -0.06050 L 0.01450 -0.06672 L 0.02300 -0.06900 L 0.52800 -0.06900 L 0.54500 -0.06444 L 0.55744 -0.05200 L 0.56200 -0.03500 L 0.56200 0.03500 L 0.55744 0.05200 L 0.54500 0.06444 L 0.52800 0.06900 L 0.02300 0.06900 L 0.01450 0.06672 L 0.00828 0.06050 L 0.00600 0.05200 Z",
+       "region": "fins"
+      },
+      {
+       "id": "fin-rust",
+       "bone": "fins",
+       "role": "texture",
+       "z": 2.2,
+       "filled": false,
+       "tone": 0.4,
+       "kind": "path",
+       "d": "M 0.00800 0.07200 L 0.01400 0.06600 M 0.02000 0.07100 L 0.01800 0.06600 M 0.00700 -0.06600 L 0.01200 -0.07200 M 0.54000 -0.06400 L 0.53400 -0.07000",
+       "region": "fins"
+      },
+      {
+       "id": "foot",
+       "bone": "feet",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.45,
+       "kind": "poly",
+       "points": [
+        [
+         0.0,
+         -0.01
+        ],
+        [
+         0.25,
+         -0.01
+        ],
+        [
+         0.25,
+         0.01
+        ],
+        [
+         0.0,
+         0.01
+        ]
+       ],
+       "closed": true,
+       "region": "feet",
+       "material": "painted-steel"
+      },
+      {
+       "id": "castor-fork-front",
+       "bone": "castors",
+       "role": "body",
+       "z": 3.5,
+       "filled": true,
+       "tone": 0.5,
+       "kind": "poly",
+       "points": [
+        [
+         0.184,
+         0.01
+        ],
+        [
+         0.216,
+         0.01
+        ],
+        [
+         0.216,
+         0.032
+        ],
+        [
+         0.184,
+         0.032
+        ]
+       ],
+       "closed": true,
+       "region": "castors",
+       "material": "castor-polyamide"
+      },
+      {
+       "id": "castor-wheel-front",
+       "bone": "castors",
+       "role": "body",
+       "z": 3.6,
+       "filled": true,
+       "tone": 0.15,
+       "kind": "ellipse",
+       "cx": 0.2,
+       "cy": 0.0,
+       "rx": 0.02,
+       "ry": 0.02,
+       "region": "castors",
+       "material": "castor-rubber"
+      },
+      {
+       "id": "castor-fork-rear",
+       "bone": "castors",
+       "role": "body",
+       "z": 3.5,
+       "filled": true,
+       "tone": 0.5,
+       "kind": "poly",
+       "points": [
+        [
+         -0.016,
+         0.01
+        ],
+        [
+         0.016,
+         0.01
+        ],
+        [
+         0.016,
+         0.032
+        ],
+        [
+         -0.016,
+         0.032
+        ]
+       ],
+       "closed": true,
+       "region": "castors",
+       "material": "castor-polyamide"
+      },
+      {
+       "id": "castor-wheel-rear",
+       "bone": "castors",
+       "role": "body",
+       "z": 3.6,
+       "filled": true,
+       "tone": 0.55,
+       "kind": "ellipse",
+       "cx": 0.0,
+       "cy": 0.0,
+       "rx": 0.02,
+       "ry": 0.02,
+       "region": "castors",
+       "material": "castor-polyamide"
+      },
+      {
+       "id": "castor-axles",
+       "bone": "castors",
+       "role": "detail",
+       "z": 3.7,
+       "filled": false,
+       "tone": 0.3,
+       "kind": "path",
+       "d": "M 0.20400 0.00000 A 0.00400 0.00400 0 1 0 0.19600 0.00000 A 0.00400 0.00400 0 1 0 0.20400 0.00000 M 0.00400 0.00000 A 0.00400 0.00400 0 1 0 -0.00400 0.00000 A 0.00400 0.00400 0 1 0 0.00400 0.00000",
+       "region": "castors"
+      },
+      {
+       "id": "housing",
+       "bone": "housing",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.88,
+       "kind": "poly",
+       "points": [
+        [
+         -1.06937e-17,
+         -0.052
+        ],
+        [
+         0.0010718,
+         -0.056
+        ],
+        [
+         0.004,
+         -0.058928
+        ],
+        [
+         0.008,
+         -0.06
+        ],
+        [
+         0.505,
+         -0.06
+        ],
+        [
+         0.515,
+         -0.057321
+        ],
+        [
+         0.522321,
+         -0.05
+        ],
+        [
+         0.525,
+         -0.04
+        ],
+        [
+         0.525,
+         0.04
+        ],
+        [
+         0.522321,
+         0.05
+        ],
+        [
+         0.515,
+         0.057321
+        ],
+        [
+         0.505,
+         0.06
+        ],
+        [
+         0.008,
+         0.06
+        ],
+        [
+         0.004,
+         0.058928
+        ],
+        [
+         0.0010718,
+         0.056
+        ],
+        [
+         -1.70619e-17,
+         0.052
+        ]
+       ],
+       "closed": true,
+       "region": "housing",
+       "material": "housing-plastic"
+      },
+      {
+       "id": "housing-lip",
+       "bone": "housing",
+       "role": "detail",
+       "z": 4.1,
+       "filled": false,
+       "tone": 0.6,
+       "kind": "path",
+       "d": "M 0.50500 0.04500 L 0.50500 -0.04500 M 0.01500 0.06000 L 0.01500 -0.06000",
+       "region": "housing"
+      },
+      {
+       "id": "switch-panel",
+       "bone": "housing",
+       "role": "body",
+       "z": 4.2,
+       "filled": true,
+       "tone": 0.65,
+       "kind": "poly",
+       "points": [
+        [
+         0.36,
+         0.025
+        ],
+        [
+         0.36,
+         -0.025
+        ],
+        [
+         0.39,
+         -0.025
+        ],
+        [
+         0.39,
+         0.025
+        ]
+       ],
+       "closed": true,
+       "region": "housing",
+       "material": "housing-plastic"
+      },
+      {
+       "id": "switch-rockers",
+       "bone": "housing",
+       "role": "detail",
+       "z": 4.3,
+       "filled": false,
+       "tone": 0.4,
+       "kind": "path",
+       "d": "M 0.36000 0.00200 L 0.39000 0.00200 M 0.37500 0.01800 L 0.37500 0.00800 M 0.37500 -0.00800 L 0.37500 -0.01800",
+       "region": "housing"
+      },
+      {
+       "id": "labels",
+       "bone": "housing",
+       "role": "texture",
+       "z": 4.4,
+       "filled": false,
+       "tone": 0.5,
+       "kind": "path",
+       "d": "M 0.28500 0.04500 L 0.28500 0.01500 M 0.28500 0.01500 L 0.31500 0.01500 M 0.31500 0.01500 L 0.31500 0.04500 M 0.31500 0.04500 L 0.28500 0.04500 M 0.29000 -0.01000 L 0.29000 -0.04800 M 0.29000 -0.04800 L 0.31500 -0.04800 M 0.31500 -0.04800 L 0.31500 -0.01000 M 0.31500 -0.01000 L 0.29000 -0.01000 M 0.30200 -0.01600 L 0.30200 -0.04200",
+       "region": "housing"
+      },
+      {
+       "id": "knob-scale",
+       "bone": "housing",
+       "role": "texture",
+       "z": 4.5,
+       "filled": false,
+       "tone": 0.4,
+       "kind": "path",
+       "d": "M 0.42591 0.01909 L 0.42237 0.02263 M 0.44500 0.02700 L 0.44500 0.03200 M 0.46409 0.01909 L 0.46763 0.02263 M 0.47200 0.00000 L 0.47700 0.00000 M 0.46409 -0.01909 L 0.46763 -0.02263 M 0.44500 -0.02700 L 0.44500 -0.03200 M 0.42591 -0.01909 L 0.42237 -0.02263",
+       "region": "housing"
+      },
+      {
+       "id": "hook-low",
+       "bone": "housing",
+       "role": "body",
+       "z": 4.6,
+       "filled": true,
+       "tone": 0.7,
+       "kind": "poly",
+       "points": [
+        [
+         0.076,
+         0.012
+        ],
+        [
+         0.076,
+         -0.012
+        ],
+        [
+         0.1,
+         -0.012
+        ],
+        [
+         0.1,
+         0.012
+        ]
+       ],
+       "closed": true,
+       "region": "housing",
+       "material": "housing-plastic"
+      },
+      {
+       "id": "hook-high",
+       "bone": "housing",
+       "role": "body",
+       "z": 4.6,
+       "filled": true,
+       "tone": 0.7,
+       "kind": "poly",
+       "points": [
+        [
+         0.21,
+         0.012
+        ],
+        [
+         0.21,
+         -0.012
+        ],
+        [
+         0.234,
+         -0.012
+        ],
+        [
+         0.234,
+         0.012
+        ]
+       ],
+       "closed": true,
+       "region": "housing",
+       "material": "housing-plastic"
+      },
+      {
+       "id": "cord",
+       "bone": "housing",
+       "role": "body",
+       "z": 5,
+       "filled": true,
+       "tone": 0.25,
+       "kind": "path",
+       "d": "M 0.09200 0.03200 L 0.07975 0.02956 L 0.06937 0.02263 L 0.06244 0.01225 L 0.06000 0.00000 L 0.06244 -0.01225 L 0.06937 -0.02263 L 0.07975 -0.02956 L 0.09200 -0.03200 L 0.21800 -0.03200 L 0.23025 -0.02956 L 0.24063 -0.02263 L 0.24756 -0.01225 L 0.25000 0.00000 L 0.24756 0.01225 L 0.24063 0.02263 L 0.23025 0.02956 L 0.21800 0.03200 Z M 0.21800 0.01600 L 0.22412 0.01478 L 0.22931 0.01131 L 0.23278 0.00612 L 0.23400 0.00000 L 0.23278 -0.00612 L 0.22931 -0.01131 L 0.22412 -0.01478 L 0.21800 -0.01600 L 0.09200 -0.01600 L 0.08588 -0.01478 L 0.08069 -0.01131 L 0.07722 -0.00612 L 0.07600 0.00000 L 0.07722 0.00612 L 0.08069 0.01131 L 0.08588 0.01478 L 0.09200 0.01600 Z",
+       "region": "cord",
+       "material": "pvc-cord"
+      },
+      {
+       "id": "cord-turns",
+       "bone": "housing",
+       "role": "texture",
+       "z": 5.1,
+       "filled": false,
+       "tone": 0.5,
+       "kind": "path",
+       "d": "M 0.09200 0.02400 L 0.08282 0.02217 L 0.07503 0.01697 L 0.06983 0.00918 L 0.06800 0.00000 L 0.06983 -0.00918 L 0.07503 -0.01697 L 0.08282 -0.02217 L 0.09200 -0.02400 L 0.21800 -0.02400 L 0.22718 -0.02217 L 0.23497 -0.01697 L 0.24017 -0.00918 L 0.24200 0.00000 L 0.24017 0.00918 L 0.23497 0.01697 L 0.22718 0.02217 L 0.21800 0.02400 Z",
+       "region": "cord"
+      },
+      {
+       "id": "cord-tape",
+       "bone": "housing",
+       "role": "texture",
+       "z": 5.2,
+       "filled": false,
+       "tone": 0.9,
+       "kind": "path",
+       "d": "M 0.14500 -0.01600 L 0.14500 -0.03200 M 0.15100 -0.01600 L 0.15100 -0.03200 M 0.15700 -0.01600 L 0.15700 -0.03200",
+       "region": "cord"
+      },
+      {
+       "id": "knob",
+       "bone": "knob",
+       "role": "body",
+       "z": 6,
+       "filled": true,
+       "tone": 0.3,
+       "kind": "ellipse",
+       "cx": 0.0,
+       "cy": 0.0,
+       "rx": 0.022,
+       "ry": 0.022,
+       "region": "knob",
+       "material": "knob-plastic"
+      },
+      {
+       "id": "knob-pointer",
+       "bone": "knob",
+       "role": "detail",
+       "z": 6.1,
+       "filled": false,
+       "tone": 0.9,
+       "kind": "path",
+       "d": "M 0.00000 0.00000 L 0.00000 0.01800",
+       "region": "knob"
+      }
+     ],
+     "front": [
+      {
+       "id": "pad",
+       "bone": "blanket",
+       "role": "body",
+       "z": 1,
+       "filled": true,
+       "tone": 0.3,
+       "kind": "rect",
+       "x": -0.3,
+       "y": 0.0,
+       "w": 0.6,
+       "h": 0.012,
+       "region": "pad",
+       "material": "felt-pad"
+      },
+      {
+       "id": "hub-low",
+       "bone": "fins",
+       "role": "body",
+       "z": 1.5,
+       "filled": true,
+       "tone": 0.6,
+       "kind": "rect",
+       "x": -0.1355,
+       "y": 0.106,
+       "w": 0.358,
+       "h": 0.036,
+       "region": "fins",
+       "material": "enamelled-steel"
+      },
+      {
+       "id": "hub-high",
+       "bone": "fins",
+       "role": "body",
+       "z": 1.5,
+       "filled": true,
+       "tone": 0.6,
+       "kind": "rect",
+       "x": -0.1355,
+       "y": 0.594,
+       "w": 0.358,
+       "h": 0.036,
+       "region": "fins",
+       "material": "enamelled-steel"
+      },
+      {
+       "id": "fin-row",
+       "bone": "fins",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.82,
+       "kind": "path",
+       "d": "M -0.13550 0.08400 L -0.11350 0.08400 L -0.11350 0.65200 L -0.13550 0.65200 Z M -0.09350 0.08400 L -0.07150 0.08400 L -0.07150 0.65200 L -0.09350 0.65200 Z M -0.05150 0.08400 L -0.02950 0.08400 L -0.02950 0.65200 L -0.05150 0.65200 Z M -0.00950 0.08400 L 0.01250 0.08400 L 0.01250 0.65200 L -0.00950 0.65200 Z M 0.03250 0.08400 L 0.05450 0.08400 L 0.05450 0.65200 L 0.03250 0.65200 Z M 0.07450 0.08400 L 0.09650 0.08400 L 0.09650 0.65200 L 0.07450 0.65200 Z M 0.11650 0.08400 L 0.13850 0.08400 L 0.13850 0.65200 L 0.11650 0.65200 Z M 0.15850 0.08400 L 0.18050 0.08400 L 0.18050 0.65200 L 0.15850 0.65200 Z M 0.20050 0.08400 L 0.22250 0.08400 L 0.22250 0.65200 L 0.20050 0.65200 Z",
+       "region": "fins",
+       "material": "enamelled-steel"
+      },
+      {
+       "id": "fin-seams",
+       "bone": "fins",
+       "role": "detail",
+       "z": 2.1,
+       "filled": false,
+       "tone": 0.6,
+       "kind": "path",
+       "d": "M -0.12450 0.09400 L -0.12450 0.64200 M -0.08250 0.09400 L -0.08250 0.64200 M -0.04050 0.09400 L -0.04050 0.64200 M 0.00150 0.09400 L 0.00150 0.64200 M 0.04350 0.09400 L 0.04350 0.64200 M 0.08550 0.09400 L 0.08550 0.64200 M 0.12750 0.09400 L 0.12750 0.64200 M 0.16950 0.09400 L 0.16950 0.64200 M 0.21150 0.09400 L 0.21150 0.64200",
+       "region": "fins"
+      },
+      {
+       "id": "fin-scratches",
+       "bone": "fins",
+       "role": "texture",
+       "z": 2.2,
+       "filled": false,
+       "tone": 0.4,
+       "kind": "path",
+       "d": "M -0.04750 0.31200 L -0.03350 0.35200 M 0.07750 0.46200 L 0.09050 0.44200 M 0.20450 0.11200 L 0.21850 0.13200",
+       "region": "fins"
+      },
+      {
+       "id": "foot-1",
+       "bone": "feet",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.45,
+       "kind": "rect",
+       "x": -0.0975,
+       "y": 0.064,
+       "w": 0.03,
+       "h": 0.02,
+       "region": "feet",
+       "material": "painted-steel"
+      },
+      {
+       "id": "castor-fork-1",
+       "bone": "castors",
+       "role": "body",
+       "z": 3.5,
+       "filled": true,
+       "tone": 0.5,
+       "kind": "rect",
+       "x": -0.0955,
+       "y": 0.042,
+       "w": 0.026,
+       "h": 0.022,
+       "region": "castors",
+       "material": "castor-polyamide"
+      },
+      {
+       "id": "castor-wheel-1",
+       "bone": "castors",
+       "role": "body",
+       "z": 3.6,
+       "filled": true,
+       "tone": 0.15,
+       "kind": "rect",
+       "x": -0.0915,
+       "y": 0.012,
+       "w": 0.018,
+       "h": 0.04,
+       "region": "castors",
+       "material": "castor-polyamide"
+      },
+      {
+       "id": "foot-2",
+       "bone": "feet",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.45,
+       "kind": "rect",
+       "x": 0.1545,
+       "y": 0.064,
+       "w": 0.03,
+       "h": 0.02,
+       "region": "feet",
+       "material": "painted-steel"
+      },
+      {
+       "id": "castor-fork-2",
+       "bone": "castors",
+       "role": "body",
+       "z": 3.5,
+       "filled": true,
+       "tone": 0.5,
+       "kind": "rect",
+       "x": 0.1565,
+       "y": 0.042,
+       "w": 0.026,
+       "h": 0.022,
+       "region": "castors",
+       "material": "castor-polyamide"
+      },
+      {
+       "id": "castor-wheel-2",
+       "bone": "castors",
+       "role": "body",
+       "z": 3.6,
+       "filled": true,
+       "tone": 0.55,
+       "kind": "rect",
+       "x": 0.1605,
+       "y": 0.012,
+       "w": 0.018,
+       "h": 0.04,
+       "region": "castors",
+       "material": "castor-polyamide"
+      },
+      {
+       "id": "housing",
+       "bone": "housing",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.88,
+       "kind": "rect",
+       "x": -0.2005,
+       "y": 0.107,
+       "w": 0.065,
+       "h": 0.525,
+       "region": "housing",
+       "material": "housing-plastic"
+      },
+      {
+       "id": "switch-panel",
+       "bone": "housing",
+       "role": "body",
+       "z": 4.2,
+       "filled": true,
+       "tone": 0.65,
+       "kind": "rect",
+       "x": -0.2085,
+       "y": 0.467,
+       "w": 0.008,
+       "h": 0.03,
+       "region": "housing",
+       "material": "housing-plastic"
+      },
+      {
+       "id": "hook-low",
+       "bone": "housing",
+       "role": "body",
+       "z": 4.6,
+       "filled": true,
+       "tone": 0.7,
+       "kind": "rect",
+       "x": -0.2225,
+       "y": 0.183,
+       "w": 0.022,
+       "h": 0.024,
+       "region": "housing",
+       "material": "housing-plastic"
+      },
+      {
+       "id": "hook-high",
+       "bone": "housing",
+       "role": "body",
+       "z": 4.6,
+       "filled": true,
+       "tone": 0.7,
+       "kind": "rect",
+       "x": -0.2225,
+       "y": 0.317,
+       "w": 0.022,
+       "h": 0.024,
+       "region": "housing",
+       "material": "housing-plastic"
+      },
+      {
+       "id": "cord",
+       "bone": "housing",
+       "role": "body",
+       "z": 5,
+       "filled": true,
+       "tone": 0.25,
+       "kind": "rect",
+       "x": -0.2225,
+       "y": 0.167,
+       "w": 0.014,
+       "h": 0.19,
+       "region": "cord",
+       "material": "pvc-cord"
+      },
+      {
+       "id": "knob-side",
+       "bone": "housing",
+       "role": "body",
+       "z": 6,
+       "filled": true,
+       "tone": 0.3,
+       "kind": "rect",
+       "x": -0.2205,
+       "y": 0.53,
+       "w": 0.02,
+       "h": 0.044,
+       "region": "knob",
+       "material": "knob-plastic"
+      }
+     ],
+     "plan": [
+      {
+       "id": "pad",
+       "bone": "blanket",
+       "role": "body",
+       "z": 1,
+       "filled": true,
+       "tone": 0.3,
+       "kind": "rect",
+       "x": -0.225,
+       "y": -0.3,
+       "w": 0.45,
+       "h": 0.6,
+       "region": "pad",
+       "material": "felt-pad",
+       "hatch": "quilt"
+      },
+      {
+       "id": "foot-1",
+       "bone": "feet",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.45,
+       "kind": "rect",
+       "x": -0.125,
+       "y": -0.0975,
+       "w": 0.25,
+       "h": 0.03,
+       "region": "feet",
+       "material": "painted-steel"
+      },
+      {
+       "id": "foot-2",
+       "bone": "feet",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.45,
+       "kind": "rect",
+       "x": -0.125,
+       "y": 0.1545,
+       "w": 0.25,
+       "h": 0.03,
+       "region": "feet",
+       "material": "painted-steel"
+      },
+      {
+       "id": "hub-high",
+       "bone": "fins",
+       "role": "body",
+       "z": 2.5,
+       "filled": true,
+       "tone": 0.6,
+       "kind": "rect",
+       "x": -0.018,
+       "y": -0.1355,
+       "w": 0.036,
+       "h": 0.358,
+       "region": "fins",
+       "material": "enamelled-steel"
+      },
+      {
+       "id": "fin-row",
+       "bone": "fins",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.82,
+       "kind": "path",
+       "d": "M -0.07500 -0.13550 L 0.07500 -0.13550 L 0.07500 -0.11350 L -0.07500 -0.11350 Z M -0.07500 -0.09350 L 0.07500 -0.09350 L 0.07500 -0.07150 L -0.07500 -0.07150 Z M -0.07500 -0.05150 L 0.07500 -0.05150 L 0.07500 -0.02950 L -0.07500 -0.02950 Z M -0.07500 -0.00950 L 0.07500 -0.00950 L 0.07500 0.01250 L -0.07500 0.01250 Z M -0.07500 0.03250 L 0.07500 0.03250 L 0.07500 0.05450 L -0.07500 0.05450 Z M -0.07500 0.07450 L 0.07500 0.07450 L 0.07500 0.09650 L -0.07500 0.09650 Z M -0.07500 0.11650 L 0.07500 0.11650 L 0.07500 0.13850 L -0.07500 0.13850 Z M -0.07500 0.15850 L 0.07500 0.15850 L 0.07500 0.18050 L -0.07500 0.18050 Z M -0.07500 0.20050 L 0.07500 0.20050 L 0.07500 0.22250 L -0.07500 0.22250 Z",
+       "region": "fins",
+       "material": "enamelled-steel"
+      },
+      {
+       "id": "fin-seams",
+       "bone": "fins",
+       "role": "detail",
+       "z": 3.1,
+       "filled": false,
+       "tone": 0.6,
+       "kind": "path",
+       "d": "M -0.07100 -0.12450 L 0.07100 -0.12450 M -0.07100 -0.08250 L 0.07100 -0.08250 M -0.07100 -0.04050 L 0.07100 -0.04050 M -0.07100 0.00150 L 0.07100 0.00150 M -0.07100 0.04350 L 0.07100 0.04350 M -0.07100 0.08550 L 0.07100 0.08550 M -0.07100 0.12750 L 0.07100 0.12750 M -0.07100 0.16950 L 0.07100 0.16950 M -0.07100 0.21150 L 0.07100 0.21150",
+       "region": "fins"
+      },
+      {
+       "id": "fin-dust",
+       "bone": "fins",
+       "role": "texture",
+       "z": 3.2,
+       "filled": false,
+       "tone": 0.5,
+       "kind": "path",
+       "d": "M -0.05000 0.01850 L 0.03000 0.01850 M -0.02000 0.14650 L 0.05000 0.14650",
+       "region": "fins"
+      },
+      {
+       "id": "housing",
+       "bone": "housing",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.88,
+       "kind": "rect",
+       "x": -0.06,
+       "y": -0.2005,
+       "w": 0.12,
+       "h": 0.065,
+       "region": "housing",
+       "material": "housing-plastic"
+      },
+      {
+       "id": "housing-grip",
+       "bone": "housing",
+       "role": "detail",
+       "z": 4.1,
+       "filled": false,
+       "tone": 0.6,
+       "kind": "path",
+       "d": "M -0.04500 -0.18850 L 0.04500 -0.18850",
+       "region": "housing"
+      },
+      {
+       "id": "switch-panel",
+       "bone": "housing",
+       "role": "body",
+       "z": 4.2,
+       "filled": true,
+       "tone": 0.65,
+       "kind": "rect",
+       "x": -0.025,
+       "y": -0.2085,
+       "w": 0.05,
+       "h": 0.008,
+       "region": "housing",
+       "material": "housing-plastic"
+      },
+      {
+       "id": "hook-high",
+       "bone": "housing",
+       "role": "body",
+       "z": 4.6,
+       "filled": true,
+       "tone": 0.7,
+       "kind": "rect",
+       "x": -0.012,
+       "y": -0.2225,
+       "w": 0.024,
+       "h": 0.022,
+       "region": "housing",
+       "material": "housing-plastic"
+      },
+      {
+       "id": "cord",
+       "bone": "housing",
+       "role": "body",
+       "z": 5,
+       "filled": true,
+       "tone": 0.25,
+       "kind": "rect",
+       "x": -0.032,
+       "y": -0.2225,
+       "w": 0.064,
+       "h": 0.014,
+       "region": "cord",
+       "material": "pvc-cord"
+      },
+      {
+       "id": "knob-side",
+       "bone": "housing",
+       "role": "body",
+       "z": 6,
+       "filled": true,
+       "tone": 0.3,
+       "kind": "rect",
+       "x": -0.022,
+       "y": -0.2205,
+       "w": 0.044,
+       "h": 0.02,
+       "region": "knob",
+       "material": "knob-plastic"
+      }
+     ]
+    },
+    "decisions": {
+     "silhouette": {
+      "en": "Radiator 13 x 9 mm on paper on its 0.24 mm pad. Side elevation from the right end: the control housing with the replacement knob, the switch panel and the cord wound on two hooks stands in front of the rounded end fin, which shows its rim seam and the rust spots at the lower edge; below it the foot bar with two castors, the front one a black replacement. Front elevation: nine fins with their weld seams and the two hubs in the gaps, the housing at the right end with knob, switch panel, hooks and cord bundle, the two foot bars end-on with their castors. Plan: the pad, the foot bars showing beyond the fins, nine fins over the upper hub, the housing with the cord bundle and the knob.",
+      "de": "Radiator 13 x 9 mm auf dem Papier auf seinem 0,24-mm-Polster. Seitenansicht vom rechten Ende: das Bediengehäuse mit dem Ersatzknopf, dem Schalterfeld und dem auf zwei Haken gewickelten Kabel steht vor der gerundeten Endrippe, die ihre Randnaht und die Rostpunkte an der Unterkante zeigt; darunter der Fußbügel mit zwei Rollen, die vordere ein schwarzer Ersatz. Vorderansicht: neun Rippen mit ihren Schweißnähten und die zwei Naben in den Zwischenräumen, das Gehäuse am rechten Ende mit Knopf, Schalterfeld, Haken und Kabelbündel, die beiden Fußbügel stirnseitig mit ihren Rollen. Draufsicht: das Polster, die über die Rippen hinausragenden Fußbügel, neun Rippen über der oberen Nabe, das Gehäuse mit Kabelbündel und Knopf."
+     },
+     "retained": {
+      "en": "Every fin and gap, the fin rim seams, the hubs, the rust spots, scratches and dust lines, the pressed foot bars, forks, wheels and axles, the mismatched castor, the switch rockers, the knob pointer and scale, the test sticker and price label, the turns of the cord and its tape repair, the folded layers and the quilting of the pad.",
+      "de": "Jede Rippe und jeder Zwischenraum, die Randnähte, die Naben, Rostpunkte, Kratzer und Staubstreifen, die gepressten Fußbügel, Gabeln, Räder und Achsen, die nicht passende Rolle, die Wippen der Schalter, Zeiger und Skala des Knopfs, Prüfplakette und Preisschild, die Windungen des Kabels und seine Klebebandreparatur, die gefalteten Lagen und die Steppung des Polsters."
+     },
+     "merged": {
+      "en": "All fins coincide in the side elevation, the far foot bar and its castors lie behind the near one; the lower hub lies behind the fins in plan.",
+      "de": "Alle Rippen decken sich in der Seitenansicht, der hintere Fußbügel und seine Rollen liegen hinter dem vorderen; die untere Nabe liegt in der Draufsicht unter den Rippen."
+     },
+     "omitted": {
+      "en": "The 3 mm weld flange as a body (it is drawn as the rim line), the U-bolts and wing nuts of the feet, the neon pilot lamp, the screws of the housing, the plug tucked into the cord bundle, all under the 7.5 mm feature or hidden.",
+      "de": "Der 3-mm-Schweißflansch als Körper (er ist als Randlinie gezeichnet), Bügelschrauben und Flügelmuttern der Füße, die Glimmlampe, die Schrauben des Gehäuses, der in das Kabelbündel gesteckte Stecker, alle unter dem 7,5-mm-Merkmal oder verdeckt."
+     },
+     "thinElements": {
+      "en": "Fins of 22 mm print 0.44 mm and their 20 mm gaps join with the 0.5 mm body pen into ribs from 1:40 on; the 12 mm pad is a filled strip of 0.24 mm.",
+      "de": "Rippen von 22 mm drucken 0,44 mm, ihre 20-mm-Zwischenräume schließen sich ab 1:40 mit dem 0,5-mm-Körperstrich zu Rippen; das 12-mm-Polster ist ein gefüllter Streifen von 0,24 mm."
+     },
+     "hatching": {
+      "en": "Cross quilting on the pad in plan.",
+      "de": "Kreuzsteppung auf dem Polster in der Draufsicht."
+     },
+     "styles": {
+      "en": "Housing 0.88, fins 0.82, switch panel 0.65, hooks 0.70, hubs 0.60, castors 0.55 (replacement 0.15), foot bars 0.45, knob 0.30, pad 0.30, cord 0.25.",
+      "de": "Gehäuse 0,88, Rippen 0,82, Schalterfeld 0,65, Haken 0,70, Naben 0,60, Rollen 0,55 (Ersatz 0,15), Fußbügel 0,45, Knopf 0,30, Polster 0,30, Kabel 0,25."
+     },
+     "overlays": {
+      "en": "Every part carries its thermal region: fins (with hubs), housing (with switch panel and hooks), knob, cord, feet, castors and pad.",
+      "de": "Jedes Teil trägt seine Thermikregion: Rippen (mit Naben), Gehäuse (mit Schalterfeld und Haken), Knopf, Kabel, Füße, Rollen und Polster."
+     }
+    }
+   },
+   "100": {
+    "status": "authored",
+    "denominator": 100,
+    "validRange": {
+     "minDenominator": 75,
+     "maxDenominator": 150
+    },
+    "pens": {
+     "body": 0.35,
+     "detail": 0.18,
+     "texture": 0.13,
+     "glazing": 0.13,
+     "ground": 0.5
+    },
+    "hatches": [],
+    "geometry": {
+     "elevation": [
+      {
+       "id": "pad",
+       "bone": "blanket",
+       "role": "body",
+       "z": 1,
+       "filled": true,
+       "tone": 0.3,
+       "kind": "poly",
+       "points": [
+        [
+         0.0,
+         -0.006
+        ],
+        [
+         0.45,
+         -0.006
+        ],
+        [
+         0.45,
+         0.006
+        ],
+        [
+         0.0,
+         0.006
+        ]
+       ],
+       "closed": true,
+       "region": "pad",
+       "material": "felt-pad"
+      },
+      {
+       "id": "fin",
+       "bone": "fins",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.82,
+       "kind": "poly",
+       "points": [
+        [
+         3.36778e-18,
+         -0.055
+        ],
+        [
+         0.00267949,
+         -0.065
+        ],
+        [
+         0.01,
+         -0.072321
+        ],
+        [
+         0.02,
+         -0.075
+        ],
+        [
+         0.528,
+         -0.075
+        ],
+        [
+         0.548,
+         -0.069641
+        ],
+        [
+         0.562641,
+         -0.055
+        ],
+        [
+         0.568,
+         -0.035
+        ],
+        [
+         0.568,
+         0.035
+        ],
+        [
+         0.562641,
+         0.055
+        ],
+        [
+         0.548,
+         0.069641
+        ],
+        [
+         0.528,
+         0.075
+        ],
+        [
+         0.02,
+         0.075
+        ],
+        [
+         0.01,
+         0.072321
+        ],
+        [
+         0.00267949,
+         0.065
+        ],
+        [
+         -3.36778e-18,
+         0.055
+        ]
+       ],
+       "closed": true,
+       "region": "fins",
+       "material": "enamelled-steel"
+      },
+      {
+       "id": "fin-rim",
+       "bone": "fins",
+       "role": "detail",
+       "z": 2.1,
+       "filled": false,
+       "tone": 0.6,
+       "kind": "path",
+       "d": "M 0.00600 -0.05200 L 0.00828 -0.06050 L 0.01450 -0.06672 L 0.02300 -0.06900 L 0.52800 -0.06900 L 0.54500 -0.06444 L 0.55744 -0.05200 L 0.56200 -0.03500 L 0.56200 0.03500 L 0.55744 0.05200 L 0.54500 0.06444 L 0.52800 0.06900 L 0.02300 0.06900 L 0.01450 0.06672 L 0.00828 0.06050 L 0.00600 0.05200 Z",
+       "region": "fins"
+      },
+      {
+       "id": "foot",
+       "bone": "feet",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.45,
+       "kind": "poly",
+       "points": [
+        [
+         0.0,
+         -0.01
+        ],
+        [
+         0.25,
+         -0.01
+        ],
+        [
+         0.25,
+         0.01
+        ],
+        [
+         0.0,
+         0.01
+        ]
+       ],
+       "closed": true,
+       "region": "feet",
+       "material": "painted-steel"
+      },
+      {
+       "id": "castor-fork-front",
+       "bone": "castors",
+       "role": "body",
+       "z": 3.5,
+       "filled": true,
+       "tone": 0.5,
+       "kind": "poly",
+       "points": [
+        [
+         0.184,
+         0.01
+        ],
+        [
+         0.216,
+         0.01
+        ],
+        [
+         0.216,
+         0.032
+        ],
+        [
+         0.184,
+         0.032
+        ]
+       ],
+       "closed": true,
+       "region": "castors",
+       "material": "castor-polyamide"
+      },
+      {
+       "id": "castor-wheel-front",
+       "bone": "castors",
+       "role": "body",
+       "z": 3.6,
+       "filled": true,
+       "tone": 0.15,
+       "kind": "ellipse",
+       "cx": 0.2,
+       "cy": 0.0,
+       "rx": 0.02,
+       "ry": 0.02,
+       "region": "castors",
+       "material": "castor-rubber"
+      },
+      {
+       "id": "castor-fork-rear",
+       "bone": "castors",
+       "role": "body",
+       "z": 3.5,
+       "filled": true,
+       "tone": 0.5,
+       "kind": "poly",
+       "points": [
+        [
+         -0.016,
+         0.01
+        ],
+        [
+         0.016,
+         0.01
+        ],
+        [
+         0.016,
+         0.032
+        ],
+        [
+         -0.016,
+         0.032
+        ]
+       ],
+       "closed": true,
+       "region": "castors",
+       "material": "castor-polyamide"
+      },
+      {
+       "id": "castor-wheel-rear",
+       "bone": "castors",
+       "role": "body",
+       "z": 3.6,
+       "filled": true,
+       "tone": 0.55,
+       "kind": "ellipse",
+       "cx": 0.0,
+       "cy": 0.0,
+       "rx": 0.02,
+       "ry": 0.02,
+       "region": "castors",
+       "material": "castor-polyamide"
+      },
+      {
+       "id": "housing",
+       "bone": "housing",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.88,
+       "kind": "poly",
+       "points": [
+        [
+         -1.06937e-17,
+         -0.052
+        ],
+        [
+         0.00234315,
+         -0.057657
+        ],
+        [
+         0.008,
+         -0.06
+        ],
+        [
+         0.505,
+         -0.06
+        ],
+        [
+         0.519142,
+         -0.054142
+        ],
+        [
+         0.525,
+         -0.04
+        ],
+        [
+         0.525,
+         0.04
+        ],
+        [
+         0.519142,
+         0.054142
+        ],
+        [
+         0.505,
+         0.06
+        ],
+        [
+         0.008,
+         0.06
+        ],
+        [
+         0.00234315,
+         0.057657
+        ],
+        [
+         -1.70619e-17,
+         0.052
+        ]
+       ],
+       "closed": true,
+       "region": "housing",
+       "material": "housing-plastic"
+      },
+      {
+       "id": "housing-lip",
+       "bone": "housing",
+       "role": "detail",
+       "z": 4.1,
+       "filled": false,
+       "tone": 0.6,
+       "kind": "path",
+       "d": "M 0.50500 0.04500 L 0.50500 -0.04500 M 0.01500 0.06000 L 0.01500 -0.06000",
+       "region": "housing"
+      },
+      {
+       "id": "switch-outline",
+       "bone": "housing",
+       "role": "detail",
+       "z": 4.25,
+       "filled": false,
+       "tone": 0.5,
+       "kind": "path",
+       "d": "M 0.36000 0.02500 L 0.36000 -0.02500 L 0.39000 -0.02500 L 0.39000 0.02500 Z",
+       "region": "housing"
+      },
+      {
+       "id": "cord",
+       "bone": "housing",
+       "role": "body",
+       "z": 5,
+       "filled": true,
+       "tone": 0.25,
+       "kind": "path",
+       "d": "M 0.09200 0.03200 L 0.06937 0.02263 L 0.06000 0.00000 L 0.06937 -0.02263 L 0.09200 -0.03200 L 0.21800 -0.03200 L 0.24063 -0.02263 L 0.25000 0.00000 L 0.24063 0.02263 L 0.21800 0.03200 Z M 0.21800 0.01600 L 0.22931 0.01131 L 0.23400 0.00000 L 0.22931 -0.01131 L 0.21800 -0.01600 L 0.09200 -0.01600 L 0.08069 -0.01131 L 0.07600 0.00000 L 0.08069 0.01131 L 0.09200 0.01600 Z",
+       "region": "cord",
+       "material": "pvc-cord"
+      },
+      {
+       "id": "knob",
+       "bone": "knob",
+       "role": "body",
+       "z": 6,
+       "filled": true,
+       "tone": 0.3,
+       "kind": "ellipse",
+       "cx": 0.0,
+       "cy": 0.0,
+       "rx": 0.022,
+       "ry": 0.022,
+       "region": "knob",
+       "material": "knob-plastic"
+      },
+      {
+       "id": "knob-pointer",
+       "bone": "knob",
+       "role": "detail",
+       "z": 6.1,
+       "filled": false,
+       "tone": 0.9,
+       "kind": "path",
+       "d": "M 0.00000 0.00000 L 0.00000 0.01800",
+       "region": "knob"
+      }
+     ],
+     "front": [
+      {
+       "id": "pad",
+       "bone": "blanket",
+       "role": "body",
+       "z": 1,
+       "filled": true,
+       "tone": 0.3,
+       "kind": "rect",
+       "x": -0.3,
+       "y": 0.0,
+       "w": 0.6,
+       "h": 0.012,
+       "region": "pad",
+       "material": "felt-pad"
+      },
+      {
+       "id": "hub-low",
+       "bone": "fins",
+       "role": "body",
+       "z": 1.5,
+       "filled": true,
+       "tone": 0.6,
+       "kind": "rect",
+       "x": -0.1355,
+       "y": 0.106,
+       "w": 0.358,
+       "h": 0.036,
+       "region": "fins",
+       "material": "enamelled-steel"
+      },
+      {
+       "id": "hub-high",
+       "bone": "fins",
+       "role": "body",
+       "z": 1.5,
+       "filled": true,
+       "tone": 0.6,
+       "kind": "rect",
+       "x": -0.1355,
+       "y": 0.594,
+       "w": 0.358,
+       "h": 0.036,
+       "region": "fins",
+       "material": "enamelled-steel"
+      },
+      {
+       "id": "fin-row",
+       "bone": "fins",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.82,
+       "kind": "path",
+       "d": "M -0.13550 0.08400 L -0.11350 0.08400 L -0.11350 0.65200 L -0.13550 0.65200 Z M -0.09350 0.08400 L -0.07150 0.08400 L -0.07150 0.65200 L -0.09350 0.65200 Z M -0.05150 0.08400 L -0.02950 0.08400 L -0.02950 0.65200 L -0.05150 0.65200 Z M -0.00950 0.08400 L 0.01250 0.08400 L 0.01250 0.65200 L -0.00950 0.65200 Z M 0.03250 0.08400 L 0.05450 0.08400 L 0.05450 0.65200 L 0.03250 0.65200 Z M 0.07450 0.08400 L 0.09650 0.08400 L 0.09650 0.65200 L 0.07450 0.65200 Z M 0.11650 0.08400 L 0.13850 0.08400 L 0.13850 0.65200 L 0.11650 0.65200 Z M 0.15850 0.08400 L 0.18050 0.08400 L 0.18050 0.65200 L 0.15850 0.65200 Z M 0.20050 0.08400 L 0.22250 0.08400 L 0.22250 0.65200 L 0.20050 0.65200 Z",
+       "region": "fins",
+       "material": "enamelled-steel"
+      },
+      {
+       "id": "foot-1",
+       "bone": "feet",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.45,
+       "kind": "rect",
+       "x": -0.0975,
+       "y": 0.064,
+       "w": 0.03,
+       "h": 0.02,
+       "region": "feet",
+       "material": "painted-steel"
+      },
+      {
+       "id": "castor-fork-1",
+       "bone": "castors",
+       "role": "body",
+       "z": 3.5,
+       "filled": true,
+       "tone": 0.5,
+       "kind": "rect",
+       "x": -0.0955,
+       "y": 0.042,
+       "w": 0.026,
+       "h": 0.022,
+       "region": "castors",
+       "material": "castor-polyamide"
+      },
+      {
+       "id": "castor-wheel-1",
+       "bone": "castors",
+       "role": "body",
+       "z": 3.6,
+       "filled": true,
+       "tone": 0.15,
+       "kind": "rect",
+       "x": -0.0915,
+       "y": 0.012,
+       "w": 0.018,
+       "h": 0.04,
+       "region": "castors",
+       "material": "castor-polyamide"
+      },
+      {
+       "id": "foot-2",
+       "bone": "feet",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.45,
+       "kind": "rect",
+       "x": 0.1545,
+       "y": 0.064,
+       "w": 0.03,
+       "h": 0.02,
+       "region": "feet",
+       "material": "painted-steel"
+      },
+      {
+       "id": "castor-fork-2",
+       "bone": "castors",
+       "role": "body",
+       "z": 3.5,
+       "filled": true,
+       "tone": 0.5,
+       "kind": "rect",
+       "x": 0.1565,
+       "y": 0.042,
+       "w": 0.026,
+       "h": 0.022,
+       "region": "castors",
+       "material": "castor-polyamide"
+      },
+      {
+       "id": "castor-wheel-2",
+       "bone": "castors",
+       "role": "body",
+       "z": 3.6,
+       "filled": true,
+       "tone": 0.55,
+       "kind": "rect",
+       "x": 0.1605,
+       "y": 0.012,
+       "w": 0.018,
+       "h": 0.04,
+       "region": "castors",
+       "material": "castor-polyamide"
+      },
+      {
+       "id": "housing",
+       "bone": "housing",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.88,
+       "kind": "rect",
+       "x": -0.2005,
+       "y": 0.107,
+       "w": 0.065,
+       "h": 0.525,
+       "region": "housing",
+       "material": "housing-plastic"
+      },
+      {
+       "id": "cord",
+       "bone": "housing",
+       "role": "body",
+       "z": 5,
+       "filled": true,
+       "tone": 0.25,
+       "kind": "rect",
+       "x": -0.2165,
+       "y": 0.167,
+       "w": 0.016,
+       "h": 0.19,
+       "region": "cord",
+       "material": "pvc-cord"
+      },
+      {
+       "id": "knob-side",
+       "bone": "housing",
+       "role": "body",
+       "z": 6,
+       "filled": true,
+       "tone": 0.3,
+       "kind": "rect",
+       "x": -0.2205,
+       "y": 0.53,
+       "w": 0.02,
+       "h": 0.044,
+       "region": "knob",
+       "material": "knob-plastic"
+      }
+     ],
+     "plan": [
+      {
+       "id": "pad",
+       "bone": "blanket",
+       "role": "body",
+       "z": 1,
+       "filled": true,
+       "tone": 0.3,
+       "kind": "rect",
+       "x": -0.225,
+       "y": -0.3,
+       "w": 0.45,
+       "h": 0.6,
+       "region": "pad",
+       "material": "felt-pad"
+      },
+      {
+       "id": "foot-1",
+       "bone": "feet",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.45,
+       "kind": "rect",
+       "x": -0.125,
+       "y": -0.0975,
+       "w": 0.25,
+       "h": 0.03,
+       "region": "feet",
+       "material": "painted-steel"
+      },
+      {
+       "id": "foot-2",
+       "bone": "feet",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.45,
+       "kind": "rect",
+       "x": -0.125,
+       "y": 0.1545,
+       "w": 0.25,
+       "h": 0.03,
+       "region": "feet",
+       "material": "painted-steel"
+      },
+      {
+       "id": "hub-high",
+       "bone": "fins",
+       "role": "body",
+       "z": 2.5,
+       "filled": true,
+       "tone": 0.6,
+       "kind": "rect",
+       "x": -0.018,
+       "y": -0.1355,
+       "w": 0.036,
+       "h": 0.358,
+       "region": "fins",
+       "material": "enamelled-steel"
+      },
+      {
+       "id": "fin-row",
+       "bone": "fins",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.82,
+       "kind": "path",
+       "d": "M -0.07500 -0.13550 L 0.07500 -0.13550 L 0.07500 -0.11350 L -0.07500 -0.11350 Z M -0.07500 -0.09350 L 0.07500 -0.09350 L 0.07500 -0.07150 L -0.07500 -0.07150 Z M -0.07500 -0.05150 L 0.07500 -0.05150 L 0.07500 -0.02950 L -0.07500 -0.02950 Z M -0.07500 -0.00950 L 0.07500 -0.00950 L 0.07500 0.01250 L -0.07500 0.01250 Z M -0.07500 0.03250 L 0.07500 0.03250 L 0.07500 0.05450 L -0.07500 0.05450 Z M -0.07500 0.07450 L 0.07500 0.07450 L 0.07500 0.09650 L -0.07500 0.09650 Z M -0.07500 0.11650 L 0.07500 0.11650 L 0.07500 0.13850 L -0.07500 0.13850 Z M -0.07500 0.15850 L 0.07500 0.15850 L 0.07500 0.18050 L -0.07500 0.18050 Z M -0.07500 0.20050 L 0.07500 0.20050 L 0.07500 0.22250 L -0.07500 0.22250 Z",
+       "region": "fins",
+       "material": "enamelled-steel"
+      },
+      {
+       "id": "housing",
+       "bone": "housing",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.88,
+       "kind": "rect",
+       "x": -0.06,
+       "y": -0.2005,
+       "w": 0.12,
+       "h": 0.065,
+       "region": "housing",
+       "material": "housing-plastic"
+      },
+      {
+       "id": "housing-grip",
+       "bone": "housing",
+       "role": "detail",
+       "z": 4.1,
+       "filled": false,
+       "tone": 0.6,
+       "kind": "path",
+       "d": "M -0.04500 -0.18850 L 0.04500 -0.18850",
+       "region": "housing"
+      },
+      {
+       "id": "cord",
+       "bone": "housing",
+       "role": "body",
+       "z": 5,
+       "filled": true,
+       "tone": 0.25,
+       "kind": "rect",
+       "x": -0.032,
+       "y": -0.2165,
+       "w": 0.064,
+       "h": 0.016,
+       "region": "cord",
+       "material": "pvc-cord"
+      },
+      {
+       "id": "knob-side",
+       "bone": "housing",
+       "role": "body",
+       "z": 6,
+       "filled": true,
+       "tone": 0.3,
+       "kind": "rect",
+       "x": -0.022,
+       "y": -0.2205,
+       "w": 0.044,
+       "h": 0.02,
+       "region": "knob",
+       "material": "knob-plastic"
+      }
+     ]
+    },
+    "decisions": {
+     "silhouette": {
+      "en": "Radiator 6.5 x 4.5 mm: the same parts without texture: rounded end fin with its rim line, housing with knob, switch outline and the cord ring, foot bar and castors; nine fins and hubs in front and plan.",
+      "de": "Radiator 6,5 x 4,5 mm: dieselben Teile ohne Textur: gerundete Endrippe mit Randlinie, Gehäuse mit Knopf, Schalterumriss und Kabelring, Fußbügel und Rollen; neun Rippen und Naben in Vorderansicht und Draufsicht."
+     },
+     "retained": {
+      "en": "Nine fins and their gaps, hubs, rim line, castors with forks and wheels, the knob pointer, the cord ring.",
+      "de": "Neun Rippen und ihre Zwischenräume, Naben, Randlinie, Rollen mit Gabeln und Rädern, der Knopfzeiger, der Kabelring."
+     },
+     "merged": {
+      "en": "The switch panel into the housing face, the hooks into the cord ring lying flush on the end face.",
+      "de": "Das Schalterfeld in die Gehäusestirn, die Haken in den bündig auf der Stirnseite liegenden Kabelring."
+     },
+     "omitted": {
+      "en": "Seams of the fins in front and plan, rust, scratches, dust, stickers, knob scale, cord turns and tape, pad layers and quilting.",
+      "de": "Rippennähte in Vorderansicht und Draufsicht, Rost, Kratzer, Staub, Aufkleber, Knopfskala, Kabelwindungen und Klebeband, Polsterlagen und Steppung."
+     },
+     "thinElements": {
+      "en": "The 22 mm fins print 0.22 mm and join over their gaps with the 0.35 mm pen; the 12 mm pad is a 0.12 mm strip carried by its outline pen and a declared sheet in 3D.",
+      "de": "Die 22-mm-Rippen drucken 0,22 mm und schließen sich mit dem 0,35-mm-Strich über ihre Zwischenräume; das 12-mm-Polster ist ein Streifen von 0,12 mm, den sein Umrissstrich trägt, in 3D ein deklariertes Blatt."
+     },
+     "hatching": {
+      "en": "None.",
+      "de": "Keine."
+     },
+     "styles": {
+      "en": "As 1:50.",
+      "de": "Wie 1:50."
+     },
+     "overlays": {
+      "en": "All seven regions.",
+      "de": "Alle sieben Regionen."
+     }
+    }
+   },
+   "200": {
+    "status": "authored",
+    "denominator": 200,
+    "validRange": {
+     "minDenominator": 150,
+     "maxDenominator": 350
+    },
+    "pens": {
+     "body": 0.25,
+     "detail": 0.13,
+     "texture": null,
+     "glazing": 0.13,
+     "ground": 0.35
+    },
+    "hatches": [],
+    "geometry": {
+     "elevation": [
+      {
+       "id": "pad",
+       "bone": "blanket",
+       "role": "body",
+       "z": 1,
+       "filled": true,
+       "tone": 0.3,
+       "kind": "poly",
+       "points": [
+        [
+         0.0,
+         -0.006
+        ],
+        [
+         0.45,
+         -0.006
+        ],
+        [
+         0.45,
+         0.006
+        ],
+        [
+         0.0,
+         0.006
+        ]
+       ],
+       "closed": true,
+       "region": "pad",
+       "material": "felt-pad"
+      },
+      {
+       "id": "fin",
+       "bone": "fins",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.82,
+       "kind": "poly",
+       "points": [
+        [
+         3.36778e-18,
+         -0.055
+        ],
+        [
+         0.00585786,
+         -0.069142
+        ],
+        [
+         0.02,
+         -0.075
+        ],
+        [
+         0.528,
+         -0.075
+        ],
+        [
+         0.556284,
+         -0.063284
+        ],
+        [
+         0.568,
+         -0.035
+        ],
+        [
+         0.568,
+         0.035
+        ],
+        [
+         0.556284,
+         0.063284
+        ],
+        [
+         0.528,
+         0.075
+        ],
+        [
+         0.02,
+         0.075
+        ],
+        [
+         0.00585786,
+         0.069142
+        ],
+        [
+         -3.36778e-18,
+         0.055
+        ]
+       ],
+       "closed": true,
+       "region": "fins",
+       "material": "enamelled-steel"
+      },
+      {
+       "id": "foot",
+       "bone": "feet",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.45,
+       "kind": "poly",
+       "points": [
+        [
+         0.0,
+         -0.02
+        ],
+        [
+         0.25,
+         -0.02
+        ],
+        [
+         0.25,
+         0.01
+        ],
+        [
+         0.0,
+         0.01
+        ]
+       ],
+       "closed": true,
+       "region": "feet",
+       "material": "painted-steel"
+      },
+      {
+       "id": "castor-front",
+       "bone": "castors",
+       "role": "body",
+       "z": 3.5,
+       "filled": true,
+       "tone": 0.15,
+       "kind": "poly",
+       "points": [
+        [
+         0.185,
+         -0.02
+        ],
+        [
+         0.215,
+         -0.02
+        ],
+        [
+         0.215,
+         0.022
+        ],
+        [
+         0.185,
+         0.022
+        ]
+       ],
+       "closed": true,
+       "region": "castors",
+       "material": "castor-polyamide"
+      },
+      {
+       "id": "castor-rear",
+       "bone": "castors",
+       "role": "body",
+       "z": 3.5,
+       "filled": true,
+       "tone": 0.55,
+       "kind": "poly",
+       "points": [
+        [
+         -0.015,
+         -0.02
+        ],
+        [
+         0.015,
+         -0.02
+        ],
+        [
+         0.015,
+         0.022
+        ],
+        [
+         -0.015,
+         0.022
+        ]
+       ],
+       "closed": true,
+       "region": "castors",
+       "material": "castor-polyamide"
+      },
+      {
+       "id": "housing",
+       "bone": "housing",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.88,
+       "kind": "poly",
+       "points": [
+        [
+         -1.06937e-17,
+         -0.052
+        ],
+        [
+         0.008,
+         -0.06
+        ],
+        [
+         0.505,
+         -0.06
+        ],
+        [
+         0.525,
+         -0.04
+        ],
+        [
+         0.525,
+         0.04
+        ],
+        [
+         0.505,
+         0.06
+        ],
+        [
+         0.008,
+         0.06
+        ],
+        [
+         -1.70619e-17,
+         0.052
+        ]
+       ],
+       "closed": true,
+       "region": "housing",
+       "material": "housing-plastic"
+      },
+      {
+       "id": "cord",
+       "bone": "housing",
+       "role": "body",
+       "z": 5,
+       "filled": true,
+       "tone": 0.25,
+       "kind": "poly",
+       "points": [
+        [
+         0.092,
+         0.032
+        ],
+        [
+         0.069373,
+         0.022627
+        ],
+        [
+         0.06,
+         1.71451e-18
+        ],
+        [
+         0.069373,
+         -0.022627
+        ],
+        [
+         0.092,
+         -0.032
+        ],
+        [
+         0.218,
+         -0.032
+        ],
+        [
+         0.240627,
+         -0.022627
+        ],
+        [
+         0.25,
+         1.33487e-17
+        ],
+        [
+         0.240627,
+         0.022627
+        ],
+        [
+         0.218,
+         0.032
+        ]
+       ],
+       "closed": true,
+       "region": "cord",
+       "material": "pvc-cord"
+      },
+      {
+       "id": "knob",
+       "bone": "knob",
+       "role": "body",
+       "z": 6,
+       "filled": true,
+       "tone": 0.3,
+       "kind": "ellipse",
+       "cx": 0.0,
+       "cy": 0.0,
+       "rx": 0.022,
+       "ry": 0.022,
+       "region": "knob",
+       "material": "knob-plastic"
+      }
+     ],
+     "front": [
+      {
+       "id": "pad",
+       "bone": "blanket",
+       "role": "body",
+       "z": 1,
+       "filled": true,
+       "tone": 0.3,
+       "kind": "rect",
+       "x": -0.3,
+       "y": 0.0,
+       "w": 0.6,
+       "h": 0.012,
+       "region": "pad",
+       "material": "felt-pad"
+      },
+      {
+       "id": "hub-low",
+       "bone": "fins",
+       "role": "body",
+       "z": 1.5,
+       "filled": true,
+       "tone": 0.6,
+       "kind": "rect",
+       "x": -0.1355,
+       "y": 0.106,
+       "w": 0.358,
+       "h": 0.036,
+       "region": "fins",
+       "material": "enamelled-steel"
+      },
+      {
+       "id": "hub-high",
+       "bone": "fins",
+       "role": "body",
+       "z": 1.5,
+       "filled": true,
+       "tone": 0.6,
+       "kind": "rect",
+       "x": -0.1355,
+       "y": 0.594,
+       "w": 0.358,
+       "h": 0.036,
+       "region": "fins",
+       "material": "enamelled-steel"
+      },
+      {
+       "id": "fin-row",
+       "bone": "fins",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.82,
+       "kind": "path",
+       "d": "M -0.13550 0.08400 L -0.10550 0.08400 L -0.10550 0.65200 L -0.13550 0.65200 Z M -0.08083 0.08400 L -0.05083 0.08400 L -0.05083 0.65200 L -0.08083 0.65200 Z M -0.02617 0.08400 L 0.00383 0.08400 L 0.00383 0.65200 L -0.02617 0.65200 Z M 0.02850 0.08400 L 0.05850 0.08400 L 0.05850 0.65200 L 0.02850 0.65200 Z M 0.08317 0.08400 L 0.11317 0.08400 L 0.11317 0.65200 L 0.08317 0.65200 Z M 0.13783 0.08400 L 0.16783 0.08400 L 0.16783 0.65200 L 0.13783 0.65200 Z M 0.19250 0.08400 L 0.22250 0.08400 L 0.22250 0.65200 L 0.19250 0.65200 Z",
+       "region": "fins",
+       "material": "enamelled-steel"
+      },
+      {
+       "id": "foot-1",
+       "bone": "feet",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.45,
+       "kind": "rect",
+       "x": -0.0975,
+       "y": 0.054,
+       "w": 0.03,
+       "h": 0.03,
+       "region": "feet",
+       "material": "painted-steel"
+      },
+      {
+       "id": "castor-1",
+       "bone": "castors",
+       "role": "body",
+       "z": 3.5,
+       "filled": true,
+       "tone": 0.15,
+       "kind": "rect",
+       "x": -0.0975,
+       "y": 0.012,
+       "w": 0.03,
+       "h": 0.042,
+       "region": "castors",
+       "material": "castor-polyamide"
+      },
+      {
+       "id": "foot-2",
+       "bone": "feet",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.45,
+       "kind": "rect",
+       "x": 0.1545,
+       "y": 0.054,
+       "w": 0.03,
+       "h": 0.03,
+       "region": "feet",
+       "material": "painted-steel"
+      },
+      {
+       "id": "castor-2",
+       "bone": "castors",
+       "role": "body",
+       "z": 3.5,
+       "filled": true,
+       "tone": 0.55,
+       "kind": "rect",
+       "x": 0.1545,
+       "y": 0.012,
+       "w": 0.03,
+       "h": 0.042,
+       "region": "castors",
+       "material": "castor-polyamide"
+      },
+      {
+       "id": "housing",
+       "bone": "housing",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.88,
+       "kind": "rect",
+       "x": -0.2005,
+       "y": 0.107,
+       "w": 0.065,
+       "h": 0.525,
+       "region": "housing",
+       "material": "housing-plastic"
+      },
+      {
+       "id": "cord",
+       "bone": "housing",
+       "role": "body",
+       "z": 5,
+       "filled": true,
+       "tone": 0.25,
+       "kind": "rect",
+       "x": -0.2305,
+       "y": 0.167,
+       "w": 0.03,
+       "h": 0.19,
+       "region": "cord",
+       "material": "pvc-cord"
+      },
+      {
+       "id": "knob-side",
+       "bone": "housing",
+       "role": "body",
+       "z": 6,
+       "filled": true,
+       "tone": 0.3,
+       "kind": "rect",
+       "x": -0.2305,
+       "y": 0.53,
+       "w": 0.03,
+       "h": 0.044,
+       "region": "knob",
+       "material": "knob-plastic"
+      }
+     ],
+     "plan": [
+      {
+       "id": "pad",
+       "bone": "blanket",
+       "role": "body",
+       "z": 1,
+       "filled": true,
+       "tone": 0.3,
+       "kind": "rect",
+       "x": -0.225,
+       "y": -0.3,
+       "w": 0.45,
+       "h": 0.6,
+       "region": "pad",
+       "material": "felt-pad"
+      },
+      {
+       "id": "foot-1",
+       "bone": "feet",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.45,
+       "kind": "rect",
+       "x": -0.125,
+       "y": -0.0975,
+       "w": 0.25,
+       "h": 0.03,
+       "region": "feet",
+       "material": "painted-steel"
+      },
+      {
+       "id": "foot-2",
+       "bone": "feet",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.45,
+       "kind": "rect",
+       "x": -0.125,
+       "y": 0.1545,
+       "w": 0.25,
+       "h": 0.03,
+       "region": "feet",
+       "material": "painted-steel"
+      },
+      {
+       "id": "hub-high",
+       "bone": "fins",
+       "role": "body",
+       "z": 2.5,
+       "filled": true,
+       "tone": 0.6,
+       "kind": "rect",
+       "x": -0.018,
+       "y": -0.1355,
+       "w": 0.036,
+       "h": 0.358,
+       "region": "fins",
+       "material": "enamelled-steel"
+      },
+      {
+       "id": "fin-row",
+       "bone": "fins",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.82,
+       "kind": "path",
+       "d": "M -0.07500 -0.13550 L 0.07500 -0.13550 L 0.07500 -0.10550 L -0.07500 -0.10550 Z M -0.07500 -0.08083 L 0.07500 -0.08083 L 0.07500 -0.05083 L -0.07500 -0.05083 Z M -0.07500 -0.02617 L 0.07500 -0.02617 L 0.07500 0.00383 L -0.07500 0.00383 Z M -0.07500 0.02850 L 0.07500 0.02850 L 0.07500 0.05850 L -0.07500 0.05850 Z M -0.07500 0.08317 L 0.07500 0.08317 L 0.07500 0.11317 L -0.07500 0.11317 Z M -0.07500 0.13783 L 0.07500 0.13783 L 0.07500 0.16783 L -0.07500 0.16783 Z M -0.07500 0.19250 L 0.07500 0.19250 L 0.07500 0.22250 L -0.07500 0.22250 Z",
+       "region": "fins",
+       "material": "enamelled-steel"
+      },
+      {
+       "id": "housing",
+       "bone": "housing",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.88,
+       "kind": "rect",
+       "x": -0.06,
+       "y": -0.2005,
+       "w": 0.12,
+       "h": 0.065,
+       "region": "housing",
+       "material": "housing-plastic"
+      },
+      {
+       "id": "cord",
+       "bone": "housing",
+       "role": "body",
+       "z": 5,
+       "filled": true,
+       "tone": 0.25,
+       "kind": "rect",
+       "x": -0.032,
+       "y": -0.2305,
+       "w": 0.064,
+       "h": 0.03,
+       "region": "cord",
+       "material": "pvc-cord"
+      },
+      {
+       "id": "knob-side",
+       "bone": "housing",
+       "role": "body",
+       "z": 6,
+       "filled": true,
+       "tone": 0.3,
+       "kind": "rect",
+       "x": -0.022,
+       "y": -0.2305,
+       "w": 0.044,
+       "h": 0.03,
+       "region": "knob",
+       "material": "knob-plastic"
+      }
+     ]
+    },
+    "decisions": {
+     "silhouette": {
+      "en": "Radiator 3.3 x 2.2 mm: the rounded end fin with housing, knob disc and cord plate, foot bar and castor blocks in elevation; seven typified fins with the hubs, the housing, cord and knob in front and plan; the pad strip.",
+      "de": "Radiator 3,3 x 2,2 mm: die gerundete Endrippe mit Gehäuse, Knopfscheibe und Kabelplatte, Fußbügel und Rollenblöcke in der Seitenansicht; sieben typisierte Rippen mit den Naben, das Gehäuse, Kabel und Knopf in Vorderansicht und Draufsicht; der Polsterstreifen."
+     },
+     "retained": {
+      "en": "The fin row as a row, the hubs, the housing at the right end, the castor feet, the pad.",
+      "de": "Die Rippenreihe als Reihe, die Naben, das Gehäuse am rechten Ende, die Rollenfüße, das Polster."
+     },
+     "merged": {
+      "en": "Nine 22 mm fins typified as seven 30 mm fins over the true stack length; fork and wheel of each castor into one 30 mm block; cord, hooks and winder into one plate.",
+      "de": "Neun 22-mm-Rippen typisiert als sieben 30-mm-Rippen über die wahre Paketlänge; Gabel und Rad jeder Rolle zu einem 30-mm-Block; Kabel, Haken und Wickel zu einer Platte."
+     },
+     "omitted": {
+      "en": "Rim lines, switch panel, knob pointer, every detail under 30 mm.",
+      "de": "Randlinien, Schalterfeld, Knopfzeiger, jedes Detail unter 30 mm."
+     },
+     "thinElements": {
+      "en": "The typified fins print 0.15 mm and join over their 25 mm gaps with the 0.25 mm pen into one ribbed block at 1:150 to 1:350; the pad stays a 12 mm strip carried by the body pen (0.28 mm at 1:350).",
+      "de": "Die typisierten Rippen drucken 0,15 mm und schließen sich mit dem 0,25-mm-Strich von 1:150 bis 1:350 über ihre 25-mm-Zwischenräume zu einem gerippten Block; das Polster bleibt ein 12-mm-Streifen, den der Körperstrich trägt (0,28 mm bei 1:350)."
+     },
+     "hatching": {
+      "en": "None.",
+      "de": "Keine."
+     },
+     "styles": {
+      "en": "As 1:50.",
+      "de": "Wie 1:50."
+     },
+     "overlays": {
+      "en": "All seven regions.",
+      "de": "Alle sieben Regionen."
+     }
+    }
+   },
+   "500": {
+    "status": "unavailable",
+    "denominator": 500,
+    "cause": "below-printable-feature",
+    "reason": {
+     "en": "At 1:500 the radiator is 1.3 by 0.9 mm on paper, under the 3 mm a recognisable drawing needs; its 22 mm fins would be 0.04 mm and their 20 mm gaps closed by any pen, a fifth of the 0.2 mm office-laser minimum feature; draw it at 1:200.",
+     "de": "Bei 1:500 misst der Radiator 1,3 mal 0,9 mm auf dem Papier, unter den 3 mm, die eine erkennbare Zeichnung braucht; seine 22-mm-Rippen wären 0,04 mm und ihre 20-mm-Zwischenräume von jedem Strich geschlossen, ein Fünftel des Mindestmerkmals von 0,2 mm des Büro-Laserdrucks; bei 1:200 zeichnen."
+    },
+    "limitingFeature": {
+     "en": "Fins of 22 mm pressed steel",
+     "de": "Rippen aus 22 mm gepresstem Stahl"
+    },
+    "limitingSizeM": 0.022,
+    "alternatives": [
+     {
+      "kind": "scale",
+      "denominator": 200
+     }
+    ]
+   }
+  },
+  "symbols": [],
+  "poses": [
+   {
+    "id": "stored",
+    "title": {
+     "en": "Stored on a folded pad",
+     "de": "Auf einem gefalteten Polster gelagert"
+    },
+    "description": {
+     "en": "In the electrical department of the reuse depot the radiator stands cold on its four castors on a folded furniture pad, its cord wound on the hooks and taped, a test sticker and a price label on the control housing.",
+     "de": "In der Elektroabteilung des Gebrauchtwarenkaufhauses steht der Radiator kalt auf seinen vier Rollen auf einem gefalteten Möbelpolster, das Kabel auf die Haken gewickelt und abgeklebt, Prüfplakette und Preisschild am Bediengehäuse."
+    },
+    "bones": {},
+    "ground": "auto",
+    "contacts": [
+     "pad-floor-fl",
+     "pad-floor-fr",
+     "pad-floor-rl",
+     "pad-floor-rr"
+    ],
+    "thermal": {
+     "operating": {
+      "power": 0
+     },
+     "regions": {
+      "fins": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0
+      },
+      "housing": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0
+      },
+      "knob": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0
+      },
+      "cord": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0
+      },
+      "feet": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0
+      },
+      "castors": {
+       "exposedFraction": 0.95,
+       "sunlitFraction": 0,
+       "contact": {
+        "fraction": 0.05,
+        "tempC": 20
+       }
+      },
+      "pad": {
+       "exposedFraction": 0.5,
+       "sunlitFraction": 0,
+       "contact": {
+        "fraction": 0.5,
+        "tempC": 20
+       }
+      }
+     },
+     "emitters": {
+      "plume": 0
+     }
+    },
+    "loads": []
+   },
+   {
+    "id": "carried",
+    "title": {
+     "en": "Carried by one person",
+     "de": "Von einer Person getragen"
+    },
+    "description": {
+     "en": "Lifted 0.15 m off the pad and carried 0.70 m away by one person who holds it in front of the body by the top lip of the control housing and the top of the far end fin; it hangs plumb from the two hands, the pad stays behind.",
+     "de": "0,15 m vom Polster gehoben und von einer Person 0,70 m weggetragen, die ihn vor dem Körper an der oberen Kante des Bediengehäuses und am Kopf der äußeren Endrippe hält; er hängt lotrecht an beiden Händen, das Polster bleibt liegen."
+    },
+    "bones": {
+     "carry-lift": {
+      "dy": 0.15
+     },
+     "carry-travel": {
+      "dx": 0.7
+     }
+    },
+    "ground": "auto",
+    "contacts": [
+     "pad-floor-fl",
+     "pad-floor-fr",
+     "pad-floor-rl",
+     "pad-floor-rr",
+     "grip-housing",
+     "grip-end-fin"
+    ],
+    "thermal": {
+     "operating": {
+      "power": 0
+     },
+     "regions": {
+      "fins": {
+       "exposedFraction": 0.99,
+       "sunlitFraction": 0,
+       "contact": {
+        "fraction": 0.01,
+        "tempC": 32
+       }
+      },
+      "housing": {
+       "exposedFraction": 0.96,
+       "sunlitFraction": 0,
+       "contact": {
+        "fraction": 0.04,
+        "tempC": 32
+       }
+      },
+      "knob": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0
+      },
+      "cord": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0
+      },
+      "feet": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0
+      },
+      "castors": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0
+      },
+      "pad": {
+       "exposedFraction": 0.5,
+       "sunlitFraction": 0,
+       "contact": {
+        "fraction": 0.5,
+        "tempC": 20
+       }
+      }
+     },
+     "emitters": {
+      "plume": 0
+     }
+    },
+    "loads": []
+   },
+   {
+    "id": "in-use",
+    "title": {
+     "en": "Heating at full power in a living room",
+     "de": "Heizt mit voller Leistung im Wohnzimmer"
+    },
+    "description": {
+     "en": "Standing on its castors on the living room floor, both stages on (2000 W), the thermostat turned almost to the end; the fins are hot and the warm air rises over the stack.",
+     "de": "Auf seinen Rollen auf dem Wohnzimmerboden, beide Stufen eingeschaltet (2000 W), der Thermostat fast bis zum Anschlag gedreht; die Rippen sind heiß, die warme Luft steigt über dem Paket auf."
+    },
+    "bones": {
+     "carry-lift": {
+      "dy": -0.012
+     },
+     "carry-travel": {
+      "dx": 0.7
+     },
+     "knob": {
+      "angleDeg": -240
+     }
+    },
+    "ground": "auto",
+    "contacts": [
+     "pad-floor-fl",
+     "pad-floor-fr",
+     "pad-floor-rl",
+     "pad-floor-rr",
+     "castor-fl",
+     "castor-fr",
+     "castor-rl",
+     "castor-rr"
+    ],
+    "thermal": {
+     "operating": {
+      "power": 1
+     },
+     "regions": {
+      "fins": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0
+      },
+      "housing": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0
+      },
+      "knob": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0
+      },
+      "cord": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0
+      },
+      "feet": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0
+      },
+      "castors": {
+       "exposedFraction": 0.95,
+       "sunlitFraction": 0,
+       "contact": {
+        "fraction": 0.05,
+        "tempC": 20
+       }
+      },
+      "pad": {
+       "exposedFraction": 0.5,
+       "sunlitFraction": 0,
+       "contact": {
+        "fraction": 0.5,
+        "tempC": 20
+       }
+      }
+     },
+     "emitters": {
+      "plume": 1
+     }
+    },
+    "loads": []
+   },
+   {
+    "id": "low-setting",
+    "title": {
+     "en": "Heating on stage I",
+     "de": "Heizt auf Stufe I"
+    },
+    "description": {
+     "en": "In use with only the first stage on (800 W) and the thermostat at the middle, the background heating of a bedroom or a cold evening.",
+     "de": "In Gebrauch mit nur der ersten Stufe (800 W) und dem Thermostat in der Mitte, die Grundheizung eines Schlafzimmers oder eines kühlen Abends."
+    },
+    "bones": {
+     "carry-lift": {
+      "dy": -0.012
+     },
+     "carry-travel": {
+      "dx": 0.7
+     },
+     "knob": {
+      "angleDeg": -135
+     }
+    },
+    "ground": "auto",
+    "contacts": [
+     "pad-floor-fl",
+     "pad-floor-fr",
+     "pad-floor-rl",
+     "pad-floor-rr",
+     "castor-fl",
+     "castor-fr",
+     "castor-rl",
+     "castor-rr"
+    ],
+    "thermal": {
+     "operating": {
+      "power": 0.4
+     },
+     "regions": {
+      "fins": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0
+      },
+      "housing": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0
+      },
+      "knob": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0
+      },
+      "cord": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0
+      },
+      "feet": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0
+      },
+      "castors": {
+       "exposedFraction": 0.95,
+       "sunlitFraction": 0,
+       "contact": {
+        "fraction": 0.05,
+        "tempC": 20
+       }
+      },
+      "pad": {
+       "exposedFraction": 0.5,
+       "sunlitFraction": 0,
+       "contact": {
+        "fraction": 0.5,
+        "tempC": 20
+       }
+      }
+     },
+     "emitters": {
+      "plume": 0.4
+     }
+    },
+    "loads": []
+   },
+   {
+    "id": "lifted-key",
+    "title": {
+     "en": "Lifted off the pad (key)",
+     "de": "Vom Polster gehoben (Schlüssel)"
+    },
+    "description": {
+     "en": "Held 0.15 m above the pad by the two hands, castors free.",
+     "de": "Mit beiden Händen 0,15 m über dem Polster gehalten, Rollen frei."
+    },
+    "key": true,
+    "bones": {
+     "carry-lift": {
+      "dy": 0.15
+     }
+    },
+    "ground": "auto",
+    "contacts": [
+     "pad-floor-fl",
+     "pad-floor-fr",
+     "pad-floor-rl",
+     "pad-floor-rr",
+     "grip-housing",
+     "grip-end-fin"
+    ],
+    "thermal": {
+     "operating": {
+      "power": 0
+     },
+     "regions": {
+      "fins": {
+       "exposedFraction": 0.99,
+       "sunlitFraction": 0,
+       "contact": {
+        "fraction": 0.01,
+        "tempC": 32
+       }
+      },
+      "housing": {
+       "exposedFraction": 0.96,
+       "sunlitFraction": 0,
+       "contact": {
+        "fraction": 0.04,
+        "tempC": 32
+       }
+      },
+      "knob": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0
+      },
+      "cord": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0
+      },
+      "feet": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0
+      },
+      "castors": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0
+      },
+      "pad": {
+       "exposedFraction": 0.5,
+       "sunlitFraction": 0,
+       "contact": {
+        "fraction": 0.5,
+        "tempC": 20
+       }
+      }
+     },
+     "emitters": {
+      "plume": 0
+     }
+    },
+    "loads": []
+   },
+   {
+    "id": "off-key",
+    "title": {
+     "en": "Set up, still cold (key)",
+     "de": "Aufgestellt, noch kalt (Schlüssel)"
+    },
+    "description": {
+     "en": "Standing on its castors in the living room, plugged in, switches off and the thermostat at zero.",
+     "de": "Auf seinen Rollen im Wohnzimmer, eingesteckt, Schalter aus und Thermostat auf null."
+    },
+    "key": true,
+    "bones": {
+     "carry-lift": {
+      "dy": -0.012
+     },
+     "carry-travel": {
+      "dx": 0.7
+     }
+    },
+    "ground": "auto",
+    "contacts": [
+     "pad-floor-fl",
+     "pad-floor-fr",
+     "pad-floor-rl",
+     "pad-floor-rr",
+     "castor-fl",
+     "castor-fr",
+     "castor-rl",
+     "castor-rr"
+    ],
+    "thermal": {
+     "operating": {
+      "power": 0
+     },
+     "regions": {
+      "fins": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0
+      },
+      "housing": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0
+      },
+      "knob": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0
+      },
+      "cord": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0
+      },
+      "feet": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0
+      },
+      "castors": {
+       "exposedFraction": 0.95,
+       "sunlitFraction": 0,
+       "contact": {
+        "fraction": 0.05,
+        "tempC": 20
+       }
+      },
+      "pad": {
+       "exposedFraction": 0.5,
+       "sunlitFraction": 0,
+       "contact": {
+        "fraction": 0.5,
+        "tempC": 20
+       }
+      }
+     },
+     "emitters": {
+      "plume": 0
+     }
+    },
+    "loads": []
+   }
+  ],
+  "clips": [
+   {
+    "id": "carry",
+    "title": {
+     "en": "Carry out of the depot",
+     "de": "Aus dem Lager tragen"
+    },
+    "description": {
+     "en": "One person takes the radiator by the top of the control housing and of the far end fin, lifts it off the pad and carries it away hanging plumb in front of the body.",
+     "de": "Eine Person fasst den Radiator am Kopf des Bediengehäuses und der äußeren Endrippe, hebt ihn vom Polster und trägt ihn lotrecht hängend vor dem Körper davon."
+    },
+    "durationS": 5,
+    "fps": 30,
+    "loop": false,
+    "rootMotion": "none",
+    "keys": [
+     {
+      "t": 0,
+      "pose": "stored",
+      "ease": "smooth"
+     },
+     {
+      "t": 1.2,
+      "pose": "lifted-key",
+      "ease": "smooth"
+     },
+     {
+      "t": 4.0,
+      "pose": "carried",
+      "ease": "smooth"
+     },
+     {
+      "t": 5,
+      "pose": "carried",
+      "ease": "smooth"
+     }
+    ],
+    "contacts": [
+     {
+      "anchor": "pad-floor-fl",
+      "fromS": 0,
+      "toS": 5
+     },
+     {
+      "anchor": "pad-floor-fr",
+      "fromS": 0,
+      "toS": 5
+     },
+     {
+      "anchor": "pad-floor-rl",
+      "fromS": 0,
+      "toS": 5
+     },
+     {
+      "anchor": "pad-floor-rr",
+      "fromS": 0,
+      "toS": 5
+     },
+     {
+      "anchor": "grip-housing",
+      "fromS": 0,
+      "toS": 5
+     },
+     {
+      "anchor": "grip-end-fin",
+      "fromS": 0,
+      "toS": 5
+     }
+    ],
+    "phases": [
+     {
+      "id": "lift",
+      "fromS": 0,
+      "toS": 1.2,
+      "title": {
+       "en": "Lift off",
+       "de": "Abheben"
+      }
+     },
+     {
+      "id": "walk",
+      "fromS": 1.2,
+      "toS": 4.0,
+      "title": {
+       "en": "Walk away",
+       "de": "Weggehen"
+      }
+     },
+     {
+      "id": "hold",
+      "fromS": 4.0,
+      "toS": 5,
+      "title": {
+       "en": "Hold",
+       "de": "Halten"
+      }
+     }
+    ],
+    "events": [
+     {
+      "t": 0.2,
+      "kind": "motion",
+      "title": {
+       "en": "Castors leave the pad",
+       "de": "Rollen lösen sich vom Polster"
+      }
+     }
+    ],
+    "tracks": [
+     {
+      "target": "region:castors:exposedFraction",
+      "ease": "smooth",
+      "keys": [
+       {
+        "t": 0,
+        "v": 0.95
+       },
+       {
+        "t": 0.3,
+        "v": 1
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "heat-up",
+    "title": {
+     "en": "Switching on and heating up",
+     "de": "Einschalten und Aufheizen"
+    },
+    "description": {
+     "en": "In the living room the thermostat is turned up and both stages switched on; over twenty minutes the oil and the fins warm up from room temperature and the plume of warm air over the stack grows.",
+     "de": "Im Wohnzimmer wird der Thermostat aufgedreht und beide Stufen eingeschaltet; über zwanzig Minuten erwärmen sich Öl und Rippen von Raumtemperatur, und die Fahne warmer Luft über dem Paket wächst."
+    },
+    "durationS": 1200,
+    "fps": 1,
+    "loop": false,
+    "rootMotion": "none",
+    "keys": [
+     {
+      "t": 0,
+      "pose": "off-key",
+      "ease": "smooth"
+     },
+     {
+      "t": 2,
+      "pose": "off-key",
+      "ease": "smooth"
+     },
+     {
+      "t": 5,
+      "pose": "in-use",
+      "ease": "step"
+     },
+     {
+      "t": 1200,
+      "pose": "in-use",
+      "ease": "step"
+     }
+    ],
+    "contacts": [
+     {
+      "anchor": "pad-floor-fl",
+      "fromS": 0,
+      "toS": 1200
+     },
+     {
+      "anchor": "pad-floor-fr",
+      "fromS": 0,
+      "toS": 1200
+     },
+     {
+      "anchor": "pad-floor-rl",
+      "fromS": 0,
+      "toS": 1200
+     },
+     {
+      "anchor": "pad-floor-rr",
+      "fromS": 0,
+      "toS": 1200
+     },
+     {
+      "anchor": "castor-fl",
+      "fromS": 0,
+      "toS": 1200
+     },
+     {
+      "anchor": "castor-fr",
+      "fromS": 0,
+      "toS": 1200
+     },
+     {
+      "anchor": "castor-rl",
+      "fromS": 0,
+      "toS": 1200
+     },
+     {
+      "anchor": "castor-rr",
+      "fromS": 0,
+      "toS": 1200
+     }
+    ],
+    "phases": [
+     {
+      "id": "switch-on",
+      "fromS": 0,
+      "toS": 5,
+      "title": {
+       "en": "Turn up and switch on",
+       "de": "Aufdrehen und einschalten"
+      }
+     },
+     {
+      "id": "warm-up",
+      "fromS": 5,
+      "toS": 1200,
+      "title": {
+       "en": "Warm up",
+       "de": "Aufheizen"
+      }
+     }
+    ],
+    "events": [
+     {
+      "t": 5,
+      "kind": "operating",
+      "title": {
+       "en": "Both stages on",
+       "de": "Beide Stufen ein"
+      },
+      "target": "power"
+     }
+    ],
+    "tracks": [
+     {
+      "target": "operating:power",
+      "ease": "step",
+      "keys": [
+       {
+        "t": 0,
+        "v": 0
+       },
+       {
+        "t": 5,
+        "v": 1
+       }
+      ]
+     },
+     {
+      "target": "emitter:plume",
+      "ease": "step",
+      "keys": [
+       {
+        "t": 0,
+        "v": 0
+       },
+       {
+        "t": 5,
+        "v": 1
+       }
+      ]
+     }
+    ]
+   }
+  ],
+  "thermal": {
+   "environment": {
+    "airTempC": 20,
+    "meanRadiantTempC": 20,
+    "relativeHumidity": 0.4,
+    "windMS": 0.05,
+    "windDirectionDeg": 0,
+    "solarWM2": 0,
+    "diffuseFraction": 0,
+    "pressurePa": 101325,
+    "skyTempC": 20,
+    "groundTempC": 20
+   },
+   "operating": [
+    {
+     "id": "power",
+     "title": {
+      "en": "Heating stages under the thermostat",
+      "de": "Heizstufen unter dem Thermostat"
+     },
+     "levels": [
+      {
+       "v": 0,
+       "title": {
+        "en": "Off",
+        "de": "Aus"
+       }
+      },
+      {
+       "v": 0.4,
+       "title": {
+        "en": "Stage I (800 W)",
+        "de": "Stufe I (800 W)"
+       }
+      },
+      {
+       "v": 0.6,
+       "title": {
+        "en": "Stage II (1200 W)",
+        "de": "Stufe II (1200 W)"
+       }
+      },
+      {
+       "v": 1,
+       "title": {
+        "en": "Stages I and II (2000 W)",
+        "de": "Stufen I und II (2000 W)"
+       }
+      }
+     ]
+    }
+   ],
+   "regions": [
+    {
+     "id": "fins",
+     "title": {
+      "en": "Oil-filled fins and hubs, yellowed enamel with rust spots at the lower rims",
+      "de": "Ölgefüllte Rippen und Naben, vergilbter Lack mit Rostpunkten an den unteren Rändern"
+     },
+     "kind": "heater",
+     "model": "operating",
+     "material": "enamelled-steel",
+     "areaM2": 1.795475,
+     "characteristicLengthM": 0.568,
+     "geometry": "vertical-plate",
+     "skyViewFactor": 0.5,
+     "layers": [
+      {
+       "id": "shell",
+       "title": {
+        "en": "Pressed steel shell 0.7 mm with enamel",
+        "de": "Gepresste Stahlschale 0,7 mm mit Lack"
+       },
+       "kind": "metal",
+       "material": "enamelled-steel",
+       "thicknessM": 0.0007,
+       "resistanceM2KW": 1.4e-05,
+       "heatCapacityJM2K": 2527.7,
+       "source": "literature",
+       "reference": "en-10130-2006"
+      }
+     ],
+     "heatCapacityJM2K": 4310.514811,
+     "source": "authored-estimate",
+     "reference": "iec-60335-2-30",
+     "operating": {
+      "key": "power",
+      "heatW": 1940.0
+     },
+     "ratedPowerW": 2000,
+     "ratedPowerBasis": "electrical-input"
+    },
+    {
+     "id": "housing",
+     "title": {
+      "en": "Control housing, yellowed white plastic with test sticker and price label",
+      "de": "Bediengehäuse, vergilbter weißer Kunststoff mit Prüfplakette und Preisschild"
+     },
+     "kind": "surface",
+     "model": "operating",
+     "material": "housing-plastic",
+     "areaM2": 0.214527,
+     "characteristicLengthM": 0.525,
+     "geometry": "vertical-plate",
+     "skyViewFactor": 0.5,
+     "layers": [
+      {
+       "id": "housing-wall",
+       "title": {
+        "en": "Polypropylene wall 2.5 mm",
+        "de": "Polypropylenwand 2,5 mm"
+       },
+       "kind": "polymer",
+       "material": "housing-plastic",
+       "thicknessM": 0.0025,
+       "resistanceM2KW": 0.0125,
+       "heatCapacityJM2K": 4462.5,
+       "source": "literature",
+       "reference": "iso-10456-2007"
+      }
+     ],
+     "heatCapacityJM2K": 4462.5,
+     "source": "authored-estimate",
+     "reference": "iec-60335-2-30",
+     "operating": {
+      "key": "power",
+      "heatW": 60.0
+     }
+    },
+    {
+     "id": "knob",
+     "title": {
+      "en": "Replacement thermostat knob, dark grey",
+      "de": "Ersatz-Thermostatknopf, dunkelgrau"
+     },
+     "kind": "surface",
+     "model": "passive",
+     "material": "knob-plastic",
+     "areaM2": 0.00580566,
+     "characteristicLengthM": 0.044,
+     "geometry": "vertical-plate",
+     "skyViewFactor": 0.5,
+     "layers": [
+      {
+       "id": "knob-wall",
+       "title": {
+        "en": "ABS 3 mm",
+        "de": "ABS 3 mm"
+       },
+       "kind": "polymer",
+       "material": "knob-plastic",
+       "thicknessM": 0.003,
+       "resistanceM2KW": 0.017647,
+       "heatCapacityJM2K": 4410.0,
+       "source": "literature",
+       "reference": "iso-10456-2007"
+      }
+     ],
+     "heatCapacityJM2K": 4410.0,
+     "source": "authored-estimate",
+     "reference": "iso-10456-2007"
+    },
+    {
+     "id": "cord",
+     "title": {
+      "en": "Wound supply cord with a repair of insulating tape",
+      "de": "Aufgewickeltes Netzkabel mit einer Reparatur aus Isolierband"
+     },
+     "kind": "surface",
+     "model": "passive",
+     "material": "pvc-cord",
+     "areaM2": 0.024158,
+     "characteristicLengthM": 0.064,
+     "geometry": "vertical-plate",
+     "skyViewFactor": 0.5,
+     "layers": [
+      {
+       "id": "cord-sheath",
+       "title": {
+        "en": "PVC sheath and insulation, 3 mm to the conductors",
+        "de": "PVC-Mantel und Isolierung, 3 mm bis zu den Leitern"
+       },
+       "kind": "polymer",
+       "material": "pvc-cord",
+       "thicknessM": 0.003,
+       "resistanceM2KW": 0.01875,
+       "heatCapacityJM2K": 4140.0,
+       "source": "literature",
+       "reference": "din-en-50525-2-11"
+      }
+     ],
+     "heatCapacityJM2K": 4140.0,
+     "source": "authored-estimate",
+     "reference": "iso-10456-2007"
+    },
+    {
+     "id": "feet",
+     "title": {
+      "en": "Grey painted foot bars, scuffed",
+      "de": "Grau lackierte Fußbügel, abgestoßen"
+     },
+     "kind": "surface",
+     "model": "passive",
+     "material": "painted-steel",
+     "areaM2": 0.0524,
+     "characteristicLengthM": 0.03,
+     "geometry": "horizontal-plate-up",
+     "skyViewFactor": 0.4,
+     "layers": [
+      {
+       "id": "foot-steel",
+       "title": {
+        "en": "Steel channel 1.2 mm",
+        "de": "Stahlprofil 1,2 mm"
+       },
+       "kind": "metal",
+       "material": "painted-steel",
+       "thicknessM": 0.0012,
+       "resistanceM2KW": 2.4e-05,
+       "heatCapacityJM2K": 4333.2,
+       "source": "literature",
+       "reference": "iso-10456-2007"
+      }
+     ],
+     "heatCapacityJM2K": 4333.2,
+     "source": "authored-estimate",
+     "reference": "iso-10456-2007"
+    },
+    {
+     "id": "castors",
+     "title": {
+      "en": "Swivel castors, one black replacement",
+      "de": "Lenkrollen, eine schwarzer Ersatz"
+     },
+     "kind": "surface",
+     "model": "passive",
+     "material": "castor-polyamide",
+     "areaM2": 0.033661,
+     "characteristicLengthM": 0.04,
+     "geometry": "cylinder",
+     "skyViewFactor": 0.2,
+     "layers": [
+      {
+       "id": "castor-wall",
+       "title": {
+        "en": "Polyamide 5 mm",
+        "de": "Polyamid 5 mm"
+       },
+       "kind": "polymer",
+       "material": "castor-polyamide",
+       "thicknessM": 0.005,
+       "resistanceM2KW": 0.02,
+       "heatCapacityJM2K": 9120.0,
+       "source": "authored-estimate",
+       "reference": "castor-catalogue"
+      }
+     ],
+     "heatCapacityJM2K": 9120.0,
+     "source": "authored-estimate",
+     "reference": "iso-10456-2007"
+    },
+    {
+     "id": "pad",
+     "title": {
+      "en": "Folded furniture pad",
+      "de": "Gefaltetes Möbelpolster"
+     },
+     "kind": "surface",
+     "model": "passive",
+     "material": "felt-pad",
+     "areaM2": 0.561945,
+     "characteristicLengthM": 0.45,
+     "geometry": "horizontal-plate-up",
+     "skyViewFactor": 0.5,
+     "layers": [
+      {
+       "id": "felt",
+       "title": {
+        "en": "Four layers of felt, 12 mm",
+        "de": "Vier Lagen Filz, 12 mm"
+       },
+       "kind": "polymer",
+       "material": "felt-pad",
+       "thicknessM": 0.012,
+       "resistanceM2KW": 0.266667,
+       "heatCapacityJM2K": 2090.4,
+       "source": "authored-estimate",
+       "reference": "iso-10456-2007"
+      }
+     ],
+     "heatCapacityJM2K": 2090.4,
+     "source": "authored-estimate",
+     "reference": "iso-10456-2007"
+    }
+   ],
+   "emitters": [
+    {
+     "id": "plume",
+     "kind": "plume",
+     "title": {
+      "en": "Free convection plume over the warm fins",
+      "de": "Freie Konvektionsfahne über den warmen Rippen"
+     },
+     "anchor": "plume-top",
+     "directionDeg": 90,
+     "diameterM": 0.26,
+     "region": "fins",
+     "source": "authored-estimate",
+     "reference": "incropera-2018"
+    }
+   ],
+   "passengers": [],
+   "assumptions": [
+    {
+     "en": "The 2000 W tubular element lies in the lower hub inside the oil and is not a region: at full power 1940 W leave through the fins and hubs and 60 W through the control housing, which the end fin and the thermostat warm; the asset's nameplate of 2000 W (electrical input) is stated once on the fin region. The three stages are 800, 1200 and 2000 W; the thermostat cycling is not modelled.",
+     "de": "Der 2000-W-Rohrheizkörper liegt in der unteren Nabe im Öl und ist keine Region: bei voller Leistung verlassen 1940 W das Gerät über Rippen und Naben und 60 W über das Bediengehäuse, das die Endrippe und der Thermostat erwärmen; die Nennleistung von 2000 W (elektrische Aufnahme) steht einmal an der Rippenregion. Die drei Stufen sind 800, 1200 und 2000 W; das Takten des Thermostats ist nicht modelliert."
+    },
+    {
+     "en": "Heat capacity of the fins: the 0.7 mm steel shells (about 2.5 kJ/m2K) plus 1.6 kg of mineral heat-transfer oil at 1.9 kJ/kgK and the 0.35 kg element spread over the outer fin area, about 4.3 kJ/m2K in all, so the fins take about a quarter of an hour to warm up (VDI-Wärmeatlas, authored-estimate).",
+     "de": "Wärmekapazität der Rippen: die 0,7-mm-Stahlschalen (etwa 2,5 kJ/m2K) und 1,6 kg mineralisches Wärmeträgeröl mit 1,9 kJ/kgK und der 0,35-kg-Heizstab auf die äußere Rippenfläche verteilt, zusammen etwa 4,3 kJ/m2K, sodass die Rippen etwa eine Viertelstunde zum Aufwärmen brauchen (VDI-Wärmeatlas, Schätzwert)."
+    },
+    {
+     "en": "Aged surfaces: the cream-white stove enamel has yellowed over years of heating, its solar absorptance is taken as 0.36 instead of about 0.25 for new white enamel, the emissivity of paint (0.92) is unchanged; the polypropylene housing yellowed likewise (0.40 instead of about 0.30); the rust spots at the lower fin rims are too small to change the region values (Incropera, authored-estimate).",
+     "de": "Gealterte Oberflächen: die cremeweiße Einbrennlackierung ist über Jahre des Heizens vergilbt, ihr solarer Absorptionsgrad wird mit 0,36 statt etwa 0,25 für neuen weißen Lack angesetzt, der Emissionsgrad des Lacks (0,92) bleibt; das Polypropylen-Gehäuse ist ebenso vergilbt (0,40 statt etwa 0,30); die Rostpunkte an den unteren Rippenrändern sind zu klein, um die Regionswerte zu ändern (Incropera, Schätzwert)."
+    },
+    {
+     "en": "Reference case: indoors at 20 degC with still air (0.05 m/s) and no sun, in the depot as in the living room. The fins face each other across 20 mm gaps, so a good part of their radiation stays in the stack; the warm air rises between the fins and leaves the top as the plume.",
+     "de": "Referenzfall: innen bei 20 degC mit ruhiger Luft (0,05 m/s) und ohne Sonne, im Lager wie im Wohnzimmer. Die Rippen sehen einander über 20-mm-Spalte, ein guter Teil ihrer Strahlung bleibt im Paket; die warme Luft steigt zwischen den Rippen auf und verlässt den Kopf als Konvektionsfahne."
+    }
+   ]
+  },
+  "structure": {
+   "gravityMS2": 9.80665,
+   "dynamics": "quasi-static",
+   "supports": [
+    "pad-floor-fl",
+    "pad-floor-fr",
+    "pad-floor-rl",
+    "pad-floor-rr"
+   ],
+   "clinical": false,
+   "assumptions": [
+    {
+     "en": "Stored: one rigid stack. The radiator (12.0 kg) stands on its four castors on the folded pad, which lies on the depot floor; the pad corners are the permanent supports (friction 0.5).",
+     "de": "Gelagert: ein starrer Stapel. Der Radiator (12,0 kg) steht auf seinen vier Rollen auf dem gefalteten Polster, das auf dem Lagerboden liegt; die Polsterecken sind die ständigen Auflager (Reibung 0,5)."
+    },
+    {
+     "en": "Carried: one adult holds the radiator in front of the body with the right hand under the top lip of the control housing and the left hand round the top of the far end fin, 0.38 m apart; its centre of mass lies in the plane of the two hands, so it hangs plumb and each hand carries about half (about 6 kg, within the 15 kg one person carries with both hands close to the body per DGUV 208-033). The hands are compression contacts pushing up.",
+     "de": "Getragen: ein Erwachsener hält den Radiator vor dem Körper mit der rechten Hand unter der oberen Kante des Bediengehäuses und der linken Hand um den Kopf der äußeren Endrippe, 0,38 m auseinander; sein Schwerpunkt liegt in der Ebene der beiden Hände, er hängt also lotrecht und jede Hand trägt etwa die Hälfte (etwa 6 kg, innerhalb der 15 kg, die eine Person nach DGUV 208-033 beidhändig körpernah trägt). Die Hände sind nach oben drückende Kontakte."
+    },
+    {
+     "en": "In use: the four castors stand on the floor under the two foot bars (wheel base 0.20 x 0.25 m around the centre of mass, which lies 27 mm towards the fin side of the stack centre because of the housing); self weight only, nothing hangs on the fins (IEC 60335-2-30 marks the radiator 'do not cover').",
+     "de": "In Gebrauch: die vier Rollen stehen unter den beiden Fußbügeln auf dem Boden (Radstand 0,20 x 0,25 m um den Schwerpunkt, der wegen des Gehäuses 27 mm zur Rippenseite der Paketmitte liegt); nur Eigengewicht, nichts hängt an den Rippen (IEC 60335-2-30 kennzeichnet den Radiator mit 'nicht abdecken')."
+    },
+    {
+     "en": "Limitation of the solver: the whole asset is one instantaneously rigid body on springs of equal stiffness, so while carried or in use the pad, which then lies apart, shares the reactions linearly with the hands or castors instead of carrying only its own 0.4 kg; the stored pose, a resting stack, is exact (requests.md, used-coffee-table).",
+     "de": "Grenze des Lösers: das ganze Objekt ist ein momentan starrer Körper auf gleich steifen Federn, getragen oder in Gebrauch teilt das dann getrennt liegende Polster die Reaktionen deshalb linear mit den Händen oder Rollen, statt nur seine eigenen 0,4 kg zu tragen; die Lagerpose, ein ruhender Stapel, ist exakt (requests.md, used-coffee-table)."
+    },
+    {
+     "en": "Members: the fin block of nine fins of two 0.7 mm DC01 shells (EN 10130, E 210 GPa) welded at the rims and joined by two hubs, the polypropylene housing screwed to the first fin, two pressed U channels 30 x 20 x 1.2 mm clamped under fins 2 and 8 with U-bolts and wing nuts, four push-in castors; masses from the modelled sections x density and the oil fill sum to dimensions.massKg.",
+     "de": "Stäbe: der Rippenblock aus neun Rippen aus je zwei 0,7-mm-Schalen DC01 (EN 10130, E 210 GPa), an den Rändern verschweißt und über zwei Naben verbunden, das an die erste Rippe geschraubte Polypropylen-Gehäuse, zwei gepresste U-Profile 30 x 20 x 1,2 mm, mit Bügelschrauben und Flügelmuttern unter Rippe 2 und 8 geklemmt, vier eingesteckte Rollen; die Massen aus modellierten Querschnitten x Dichte und der Ölfüllung ergeben dimensions.massKg."
+    }
+   ]
+  },
+  "volumes": {
+   "50": {
+    "status": "authored",
+    "denominator": 50,
+    "body": [
+     {
+      "id": "pad",
+      "kind": "extrude",
+      "bone": "blanket",
+      "material": "felt-pad",
+      "role": "body",
+      "tone": 0.3,
+      "plane": "xy",
+      "profile": [
+       [
+        0.0,
+        -0.006
+       ],
+       [
+        0.444,
+        -0.006
+       ],
+       [
+        0.447,
+        -0.00519615
+       ],
+       [
+        0.449196,
+        -0.003
+       ],
+       [
+        0.45,
+        0.0
+       ],
+       [
+        0.449196,
+        0.003
+       ],
+       [
+        0.447,
+        0.00519615
+       ],
+       [
+        0.444,
+        0.006
+       ],
+       [
+        0.0,
+        0.006
+       ]
+      ],
+      "from": -0.3,
+      "to": 0.3
+     },
+     {
+      "id": "fins",
+      "kind": "extrude",
+      "bone": "fins",
+      "material": "enamelled-steel",
+      "role": "body",
+      "tone": 0.82,
+      "plane": "xy",
+      "profile": [
+       [
+        3.36778e-18,
+        -0.055
+       ],
+       [
+        0.00152241,
+        -0.062654
+       ],
+       [
+        0.00585786,
+        -0.069142
+       ],
+       [
+        0.012346,
+        -0.073478
+       ],
+       [
+        0.02,
+        -0.075
+       ],
+       [
+        0.528,
+        -0.075
+       ],
+       [
+        0.543307,
+        -0.071955
+       ],
+       [
+        0.556284,
+        -0.063284
+       ],
+       [
+        0.564955,
+        -0.050307
+       ],
+       [
+        0.568,
+        -0.035
+       ],
+       [
+        0.568,
+        0.035
+       ],
+       [
+        0.564955,
+        0.050307
+       ],
+       [
+        0.556284,
+        0.063284
+       ],
+       [
+        0.543307,
+        0.071955
+       ],
+       [
+        0.528,
+        0.075
+       ],
+       [
+        0.02,
+        0.075
+       ],
+       [
+        0.012346,
+        0.073478
+       ],
+       [
+        0.00585786,
+        0.069142
+       ],
+       [
+        0.00152241,
+        0.062654
+       ],
+       [
+        -3.36778e-18,
+        0.055
+       ]
+      ],
+      "from": -0.179,
+      "to": -0.157,
+      "repeat": {
+       "count": 9,
+       "translation": [
+        0,
+        0,
+        0.042
+       ]
+      }
+     },
+     {
+      "id": "hub-low",
+      "kind": "revolve",
+      "bone": "fins",
+      "material": "enamelled-steel",
+      "role": "body",
+      "tone": 0.6,
+      "profile": [
+       [
+        -0.179,
+        0.0
+       ],
+       [
+        -0.179,
+        0.018
+       ],
+       [
+        0.179,
+        0.018
+       ],
+       [
+        0.179,
+        0.0
+       ]
+      ],
+      "axis": [
+       0,
+       0,
+       1
+      ],
+      "origin": [
+       0.04,
+       2.44929e-18,
+       0.0
+      ]
+     },
+     {
+      "id": "hub-high",
+      "kind": "revolve",
+      "bone": "fins",
+      "material": "enamelled-steel",
+      "role": "body",
+      "tone": 0.6,
+      "profile": [
+       [
+        -0.179,
+        0.0
+       ],
+       [
+        -0.179,
+        0.018
+       ],
+       [
+        0.179,
+        0.018
+       ],
+       [
+        0.179,
+        0.0
+       ]
+      ],
+      "axis": [
+       0,
+       0,
+       1
+      ],
+      "origin": [
+       0.528,
+       3.23307e-17,
+       0.0
+      ]
+     },
+     {
+      "id": "foot-1",
+      "kind": "box",
+      "bone": "feet",
+      "material": "painted-steel",
+      "role": "body",
+      "tone": 0.45,
+      "size": [
+       0.25,
+       0.02,
+       0.03
+      ],
+      "transform": {
+       "translation": [
+        0.125,
+        0.0,
+        -0.126
+       ]
+      }
+     },
+     {
+      "id": "foot-2",
+      "kind": "box",
+      "bone": "feet",
+      "material": "painted-steel",
+      "role": "body",
+      "tone": 0.45,
+      "size": [
+       0.25,
+       0.02,
+       0.03
+      ],
+      "transform": {
+       "translation": [
+        0.125,
+        0.0,
+        0.126
+       ]
+      }
+     },
+     {
+      "id": "castor-fork-f1",
+      "kind": "box",
+      "bone": "castors",
+      "material": "castor-polyamide",
+      "role": "body",
+      "tone": 0.5,
+      "size": [
+       0.032,
+       0.022,
+       0.026
+      ],
+      "transform": {
+       "translation": [
+        0.2,
+        0.021,
+        -0.126
+       ]
+      }
+     },
+     {
+      "id": "castor-wheel-f1",
+      "kind": "revolve",
+      "bone": "castors",
+      "material": "castor-rubber",
+      "role": "body",
+      "tone": 0.15,
+      "profile": [
+       [
+        -0.135,
+        0.0
+       ],
+       [
+        -0.135,
+        0.02
+       ],
+       [
+        -0.117,
+        0.02
+       ],
+       [
+        -0.117,
+        0.0
+       ]
+      ],
+      "axis": [
+       0,
+       0,
+       1
+      ],
+      "origin": [
+       0.2,
+       0.0,
+       0.0
+      ]
+     },
+     {
+      "id": "castor-fork-r1",
+      "kind": "box",
+      "bone": "castors",
+      "material": "castor-polyamide",
+      "role": "body",
+      "tone": 0.5,
+      "size": [
+       0.032,
+       0.022,
+       0.026
+      ],
+      "transform": {
+       "translation": [
+        0.0,
+        0.021,
+        -0.126
+       ]
+      }
+     },
+     {
+      "id": "castor-wheel-r1",
+      "kind": "revolve",
+      "bone": "castors",
+      "material": "castor-polyamide",
+      "role": "body",
+      "tone": 0.55,
+      "profile": [
+       [
+        -0.135,
+        0.0
+       ],
+       [
+        -0.135,
+        0.02
+       ],
+       [
+        -0.117,
+        0.02
+       ],
+       [
+        -0.117,
+        0.0
+       ]
+      ],
+      "axis": [
+       0,
+       0,
+       1
+      ],
+      "origin": [
+       0.0,
+       0.0,
+       0.0
+      ]
+     },
+     {
+      "id": "castor-fork-f2",
+      "kind": "box",
+      "bone": "castors",
+      "material": "castor-polyamide",
+      "role": "body",
+      "tone": 0.5,
+      "size": [
+       0.032,
+       0.022,
+       0.026
+      ],
+      "transform": {
+       "translation": [
+        0.2,
+        0.021,
+        0.126
+       ]
+      }
+     },
+     {
+      "id": "castor-wheel-f2",
+      "kind": "revolve",
+      "bone": "castors",
+      "material": "castor-polyamide",
+      "role": "body",
+      "tone": 0.55,
+      "profile": [
+       [
+        0.117,
+        0.0
+       ],
+       [
+        0.117,
+        0.02
+       ],
+       [
+        0.135,
+        0.02
+       ],
+       [
+        0.135,
+        0.0
+       ]
+      ],
+      "axis": [
+       0,
+       0,
+       1
+      ],
+      "origin": [
+       0.2,
+       0.0,
+       0.0
+      ]
+     },
+     {
+      "id": "castor-fork-r2",
+      "kind": "box",
+      "bone": "castors",
+      "material": "castor-polyamide",
+      "role": "body",
+      "tone": 0.5,
+      "size": [
+       0.032,
+       0.022,
+       0.026
+      ],
+      "transform": {
+       "translation": [
+        0.0,
+        0.021,
+        0.126
+       ]
+      }
+     },
+     {
+      "id": "castor-wheel-r2",
+      "kind": "revolve",
+      "bone": "castors",
+      "material": "castor-polyamide",
+      "role": "body",
+      "tone": 0.55,
+      "profile": [
+       [
+        0.117,
+        0.0
+       ],
+       [
+        0.117,
+        0.02
+       ],
+       [
+        0.135,
+        0.02
+       ],
+       [
+        0.135,
+        0.0
+       ]
+      ],
+      "axis": [
+       0,
+       0,
+       1
+      ],
+      "origin": [
+       0.0,
+       0.0,
+       0.0
+      ]
+     },
+     {
+      "id": "housing",
+      "kind": "extrude",
+      "bone": "housing",
+      "material": "housing-plastic",
+      "role": "body",
+      "tone": 0.88,
+      "plane": "xy",
+      "profile": [
+       [
+        -1.06937e-17,
+        -0.052
+       ],
+       [
+        0.0010718,
+        -0.056
+       ],
+       [
+        0.004,
+        -0.058928
+       ],
+       [
+        0.008,
+        -0.06
+       ],
+       [
+        0.505,
+        -0.06
+       ],
+       [
+        0.515,
+        -0.057321
+       ],
+       [
+        0.522321,
+        -0.05
+       ],
+       [
+        0.525,
+        -0.04
+       ],
+       [
+        0.525,
+        0.04
+       ],
+       [
+        0.522321,
+        0.05
+       ],
+       [
+        0.515,
+        0.057321
+       ],
+       [
+        0.505,
+        0.06
+       ],
+       [
+        0.008,
+        0.06
+       ],
+       [
+        0.004,
+        0.058928
+       ],
+       [
+        0.0010718,
+        0.056
+       ],
+       [
+        -1.70619e-17,
+        0.052
+       ]
+      ],
+      "from": -0.0325,
+      "to": 0.0325
+     },
+     {
+      "id": "switch-panel",
+      "kind": "box",
+      "bone": "housing",
+      "material": "housing-plastic",
+      "role": "body",
+      "tone": 0.65,
+      "size": [
+       0.03,
+       0.05,
+       0.008
+      ],
+      "transform": {
+       "translation": [
+        0.375,
+        2.25514e-17,
+        -0.0365
+       ]
+      }
+     },
+     {
+      "id": "hook-low",
+      "kind": "box",
+      "bone": "housing",
+      "material": "housing-plastic",
+      "role": "body",
+      "tone": 0.7,
+      "size": [
+       0.024,
+       0.024,
+       0.022
+      ],
+      "transform": {
+       "translation": [
+        0.088,
+        6.07153e-18,
+        -0.0435
+       ]
+      }
+     },
+     {
+      "id": "hook-high",
+      "kind": "box",
+      "bone": "housing",
+      "material": "housing-plastic",
+      "role": "body",
+      "tone": 0.7,
+      "size": [
+       0.024,
+       0.024,
+       0.022
+      ],
+      "transform": {
+       "translation": [
+        0.222,
+        1.30104e-17,
+        -0.0435
+       ]
+      }
+     },
+     {
+      "id": "cord",
+      "kind": "extrude",
+      "bone": "housing",
+      "material": "pvc-cord",
+      "role": "body",
+      "tone": 0.25,
+      "plane": "xy",
+      "profile": [
+       [
+        0.092,
+        0.032
+       ],
+       [
+        0.079754,
+        0.029564
+       ],
+       [
+        0.069373,
+        0.022627
+       ],
+       [
+        0.062436,
+        0.012246
+       ],
+       [
+        0.06,
+        1.71451e-18
+       ],
+       [
+        0.062436,
+        -0.012246
+       ],
+       [
+        0.069373,
+        -0.022627
+       ],
+       [
+        0.079754,
+        -0.029564
+       ],
+       [
+        0.092,
+        -0.032
+       ],
+       [
+        0.218,
+        -0.032
+       ],
+       [
+        0.230246,
+        -0.029564
+       ],
+       [
+        0.240627,
+        -0.022627
+       ],
+       [
+        0.247564,
+        -0.012246
+       ],
+       [
+        0.25,
+        1.33487e-17
+       ],
+       [
+        0.247564,
+        0.012246
+       ],
+       [
+        0.240627,
+        0.022627
+       ],
+       [
+        0.230246,
+        0.029564
+       ],
+       [
+        0.218,
+        0.032
+       ]
+      ],
+      "from": -0.0545,
+      "to": -0.0405,
+      "holes": [
+       [
+        [
+         0.092,
+         0.016
+        ],
+        [
+         0.085877,
+         0.014782
+        ],
+        [
+         0.080686,
+         0.011314
+        ],
+        [
+         0.077218,
+         0.00612293
+        ],
+        [
+         0.076,
+         3.67394e-18
+        ],
+        [
+         0.077218,
+         -0.00612293
+        ],
+        [
+         0.080686,
+         -0.011314
+        ],
+        [
+         0.085877,
+         -0.014782
+        ],
+        [
+         0.092,
+         -0.016
+        ],
+        [
+         0.218,
+         -0.016
+        ],
+        [
+         0.224123,
+         -0.014782
+        ],
+        [
+         0.229314,
+         -0.011314
+        ],
+        [
+         0.232782,
+         -0.00612293
+        ],
+        [
+         0.234,
+         1.33487e-17
+        ],
+        [
+         0.232782,
+         0.00612293
+        ],
+        [
+         0.229314,
+         0.011314
+        ],
+        [
+         0.224123,
+         0.014782
+        ],
+        [
+         0.218,
+         0.016
+        ]
+       ]
+      ]
+     },
+     {
+      "id": "knob",
+      "kind": "revolve",
+      "bone": "knob",
+      "material": "knob-plastic",
+      "role": "body",
+      "tone": 0.3,
+      "profile": [
+       [
+        -0.01,
+        0.0
+       ],
+       [
+        -0.01,
+        0.022
+       ],
+       [
+        0.01,
+        0.022
+       ],
+       [
+        0.01,
+        0.0
+       ]
+      ],
+      "axis": [
+       0,
+       0,
+       1
+      ],
+      "origin": [
+       0.0,
+       0.0,
+       0.0
+      ]
+     }
+    ],
+    "thermal": [
+     {
+      "id": "th-pad",
+      "of": "pad",
+      "region": "pad"
+     },
+     {
+      "id": "th-fins",
+      "of": "fins",
+      "region": "fins"
+     },
+     {
+      "id": "th-hub-low",
+      "of": "hub-low",
+      "region": "fins"
+     },
+     {
+      "id": "th-hub-high",
+      "of": "hub-high",
+      "region": "fins"
+     },
+     {
+      "id": "th-foot-1",
+      "of": "foot-1",
+      "region": "feet"
+     },
+     {
+      "id": "th-foot-2",
+      "of": "foot-2",
+      "region": "feet"
+     },
+     {
+      "id": "th-castor-fork-f1",
+      "of": "castor-fork-f1",
+      "region": "castors"
+     },
+     {
+      "id": "th-castor-wheel-f1",
+      "of": "castor-wheel-f1",
+      "region": "castors"
+     },
+     {
+      "id": "th-castor-fork-r1",
+      "of": "castor-fork-r1",
+      "region": "castors"
+     },
+     {
+      "id": "th-castor-wheel-r1",
+      "of": "castor-wheel-r1",
+      "region": "castors"
+     },
+     {
+      "id": "th-castor-fork-f2",
+      "of": "castor-fork-f2",
+      "region": "castors"
+     },
+     {
+      "id": "th-castor-wheel-f2",
+      "of": "castor-wheel-f2",
+      "region": "castors"
+     },
+     {
+      "id": "th-castor-fork-r2",
+      "of": "castor-fork-r2",
+      "region": "castors"
+     },
+     {
+      "id": "th-castor-wheel-r2",
+      "of": "castor-wheel-r2",
+      "region": "castors"
+     },
+     {
+      "id": "th-housing",
+      "of": "housing",
+      "region": "housing"
+     },
+     {
+      "id": "th-switch-panel",
+      "of": "switch-panel",
+      "region": "housing"
+     },
+     {
+      "id": "th-hook-low",
+      "of": "hook-low",
+      "region": "housing"
+     },
+     {
+      "id": "th-hook-high",
+      "of": "hook-high",
+      "region": "housing"
+     },
+     {
+      "id": "th-cord",
+      "of": "cord",
+      "region": "cord"
+     },
+     {
+      "id": "th-knob",
+      "of": "knob",
+      "region": "knob"
+     },
+     {
+      "id": "th-plume",
+      "kind": "revolve",
+      "bone": "fins",
+      "material": "enamelled-steel",
+      "role": "body",
+      "tone": 0.6,
+      "profile": [
+       [
+        -0.174,
+        0.0
+       ],
+       [
+        -0.174,
+        0.012
+       ],
+       [
+        0.174,
+        0.012
+       ],
+       [
+        0.174,
+        0.0
+       ]
+      ],
+      "axis": [
+       0,
+       0,
+       1
+      ],
+      "origin": [
+       0.528,
+       3.23307e-17,
+       0.0
+      ],
+      "region": "fins",
+      "tags": [
+       "plume"
+      ]
+     }
+    ],
+    "structure": [
+     {
+      "id": "m-pad",
+      "of": "pad",
+      "member": "blanket",
+      "part": "member"
+     },
+     {
+      "id": "m-fins",
+      "of": "fins",
+      "member": "fins",
+      "part": "member"
+     },
+     {
+      "id": "m-hub-low",
+      "of": "hub-low",
+      "member": "fins",
+      "part": "member"
+     },
+     {
+      "id": "m-hub-high",
+      "of": "hub-high",
+      "member": "fins",
+      "part": "member"
+     },
+     {
+      "id": "m-foot-1",
+      "of": "foot-1",
+      "member": "feet",
+      "part": "member"
+     },
+     {
+      "id": "m-foot-2",
+      "of": "foot-2",
+      "member": "feet",
+      "part": "member"
+     },
+     {
+      "id": "m-castor-fork-f1",
+      "of": "castor-fork-f1",
+      "member": "castors",
+      "part": "member"
+     },
+     {
+      "id": "m-castor-wheel-f1",
+      "of": "castor-wheel-f1",
+      "member": "castors",
+      "part": "member"
+     },
+     {
+      "id": "m-castor-fork-r1",
+      "of": "castor-fork-r1",
+      "member": "castors",
+      "part": "member"
+     },
+     {
+      "id": "m-castor-wheel-r1",
+      "of": "castor-wheel-r1",
+      "member": "castors",
+      "part": "member"
+     },
+     {
+      "id": "m-castor-fork-f2",
+      "of": "castor-fork-f2",
+      "member": "castors",
+      "part": "member"
+     },
+     {
+      "id": "m-castor-wheel-f2",
+      "of": "castor-wheel-f2",
+      "member": "castors",
+      "part": "member"
+     },
+     {
+      "id": "m-castor-fork-r2",
+      "of": "castor-fork-r2",
+      "member": "castors",
+      "part": "member"
+     },
+     {
+      "id": "m-castor-wheel-r2",
+      "of": "castor-wheel-r2",
+      "member": "castors",
+      "part": "member"
+     },
+     {
+      "id": "m-housing",
+      "of": "housing",
+      "member": "housing",
+      "part": "member"
+     },
+     {
+      "id": "m-switch-panel",
+      "of": "switch-panel",
+      "member": "housing",
+      "part": "member"
+     },
+     {
+      "id": "m-hook-low",
+      "of": "hook-low",
+      "member": "housing",
+      "part": "member"
+     },
+     {
+      "id": "m-hook-high",
+      "of": "hook-high",
+      "member": "housing",
+      "part": "member"
+     },
+     {
+      "id": "m-cord",
+      "of": "cord",
+      "member": "housing",
+      "part": "member"
+     },
+     {
+      "id": "m-knob",
+      "of": "knob",
+      "member": "knob",
+      "part": "member"
+     },
+     {
+      "id": "j-clamp-1",
+      "kind": "box",
+      "bone": "feet",
+      "material": "painted-steel",
+      "role": "detail",
+      "tone": 0.3,
+      "size": [
+       0.03,
+       0.02,
+       0.03
+      ],
+      "transform": {
+       "translation": [
+        0.125,
+        0.016,
+        -0.126
+       ]
+      },
+      "member": "feet",
+      "part": "joint"
+     },
+     {
+      "id": "j-stem-f1",
+      "kind": "box",
+      "bone": "castors",
+      "material": "painted-steel",
+      "role": "detail",
+      "tone": 0.3,
+      "size": [
+       0.02,
+       0.02,
+       0.02
+      ],
+      "transform": {
+       "translation": [
+        0.2,
+        0.026,
+        -0.126
+       ]
+      },
+      "member": "castors",
+      "part": "joint"
+     },
+     {
+      "id": "j-stem-r1",
+      "kind": "box",
+      "bone": "castors",
+      "material": "painted-steel",
+      "role": "detail",
+      "tone": 0.3,
+      "size": [
+       0.02,
+       0.02,
+       0.02
+      ],
+      "transform": {
+       "translation": [
+        0.0,
+        0.026,
+        -0.126
+       ]
+      },
+      "member": "castors",
+      "part": "joint"
+     },
+     {
+      "id": "j-clamp-2",
+      "kind": "box",
+      "bone": "feet",
+      "material": "painted-steel",
+      "role": "detail",
+      "tone": 0.3,
+      "size": [
+       0.03,
+       0.02,
+       0.03
+      ],
+      "transform": {
+       "translation": [
+        0.125,
+        0.016,
+        0.126
+       ]
+      },
+      "member": "feet",
+      "part": "joint"
+     },
+     {
+      "id": "j-stem-f2",
+      "kind": "box",
+      "bone": "castors",
+      "material": "painted-steel",
+      "role": "detail",
+      "tone": 0.3,
+      "size": [
+       0.02,
+       0.02,
+       0.02
+      ],
+      "transform": {
+       "translation": [
+        0.2,
+        0.026,
+        0.126
+       ]
+      },
+      "member": "castors",
+      "part": "joint"
+     },
+     {
+      "id": "j-stem-r2",
+      "kind": "box",
+      "bone": "castors",
+      "material": "painted-steel",
+      "role": "detail",
+      "tone": 0.3,
+      "size": [
+       0.02,
+       0.02,
+       0.02
+      ],
+      "transform": {
+       "translation": [
+        0.0,
+        0.026,
+        0.126
+       ]
+      },
+      "member": "castors",
+      "part": "joint"
+     },
+     {
+      "id": "j-housing-screws",
+      "kind": "box",
+      "bone": "housing",
+      "material": "painted-steel",
+      "role": "detail",
+      "tone": 0.3,
+      "size": [
+       0.03,
+       0.03,
+       0.02
+      ],
+      "transform": {
+       "translation": [
+        0.25,
+        1.47451e-17,
+        0.0325
+       ]
+      },
+      "member": "housing",
+      "part": "joint"
+     },
+     {
+      "id": "j-knob-spindle",
+      "kind": "box",
+      "bone": "knob",
+      "material": "painted-steel",
+      "role": "detail",
+      "tone": 0.3,
+      "size": [
+       0.015,
+       0.015,
+       0.015
+      ],
+      "transform": {
+       "translation": [
+        0.0,
+        0.0,
+        0.01
+       ]
+      },
+      "member": "knob",
+      "part": "joint"
+     },
+     {
+      "id": "support-pad-floor-fl",
+      "kind": "revolve",
+      "bone": "blanket",
+      "material": "felt-pad",
+      "role": "ground",
+      "tone": 0.2,
+      "profile": [
+       [
+        0.0,
+        0.0
+       ],
+       [
+        0.0,
+        0.0075
+       ],
+       [
+        0.0075,
+        0.0075
+       ],
+       [
+        0.0075,
+        0.0
+       ]
+      ],
+      "axis": [
+       0,
+       1,
+       0
+      ],
+      "origin": [
+       0.405,
+       -0.006,
+       0.25
+      ],
+      "member": "blanket",
+      "part": "support",
+      "anchor": "pad-floor-fl"
+     },
+     {
+      "id": "support-pad-floor-fr",
+      "kind": "revolve",
+      "bone": "blanket",
+      "material": "felt-pad",
+      "role": "ground",
+      "tone": 0.2,
+      "profile": [
+       [
+        0.0,
+        0.0
+       ],
+       [
+        0.0,
+        0.0075
+       ],
+       [
+        0.0075,
+        0.0075
+       ],
+       [
+        0.0075,
+        0.0
+       ]
+      ],
+      "axis": [
+       0,
+       1,
+       0
+      ],
+      "origin": [
+       0.405,
+       -0.006,
+       -0.25
+      ],
+      "member": "blanket",
+      "part": "support",
+      "anchor": "pad-floor-fr"
+     },
+     {
+      "id": "support-pad-floor-rl",
+      "kind": "revolve",
+      "bone": "blanket",
+      "material": "felt-pad",
+      "role": "ground",
+      "tone": 0.2,
+      "profile": [
+       [
+        0.0,
+        0.0
+       ],
+       [
+        0.0,
+        0.0075
+       ],
+       [
+        0.0075,
+        0.0075
+       ],
+       [
+        0.0075,
+        0.0
+       ]
+      ],
+      "axis": [
+       0,
+       1,
+       0
+      ],
+      "origin": [
+       0.045,
+       -0.006,
+       0.25
+      ],
+      "member": "blanket",
+      "part": "support",
+      "anchor": "pad-floor-rl"
+     },
+     {
+      "id": "support-pad-floor-rr",
+      "kind": "revolve",
+      "bone": "blanket",
+      "material": "felt-pad",
+      "role": "ground",
+      "tone": 0.2,
+      "profile": [
+       [
+        0.0,
+        0.0
+       ],
+       [
+        0.0,
+        0.0075
+       ],
+       [
+        0.0075,
+        0.0075
+       ],
+       [
+        0.0075,
+        0.0
+       ]
+      ],
+      "axis": [
+       0,
+       1,
+       0
+      ],
+      "origin": [
+       0.045,
+       -0.006,
+       -0.25
+      ],
+      "member": "blanket",
+      "part": "support",
+      "anchor": "pad-floor-rr"
+     },
+     {
+      "id": "mass-fins",
+      "kind": "ellipsoid",
+      "bone": "fins",
+      "material": "enamelled-steel",
+      "role": "detail",
+      "tone": 0.3,
+      "radii": [
+       0.0075,
+       0.0075,
+       0.0075
+      ],
+      "transform": {
+       "translation": [
+        0.26936,
+        0.0,
+        0.0
+       ]
+      },
+      "member": "fins",
+      "part": "mass"
+     },
+     {
+      "id": "mass-housing",
+      "kind": "ellipsoid",
+      "bone": "housing",
+      "material": "housing-plastic",
+      "role": "detail",
+      "tone": 0.3,
+      "radii": [
+       0.0075,
+       0.0075,
+       0.0075
+      ],
+      "transform": {
+       "translation": [
+        0.267596,
+        0.0,
+        0.0
+       ]
+      },
+      "member": "housing",
+      "part": "mass"
+     },
+     {
+      "id": "mass-feet",
+      "kind": "ellipsoid",
+      "bone": "feet",
+      "material": "enamelled-steel",
+      "role": "detail",
+      "tone": 0.3,
+      "radii": [
+       0.0075,
+       0.0075,
+       0.0075
+      ],
+      "transform": {
+       "translation": [
+        0.125,
+        0.0195,
+        0.0
+       ]
+      },
+      "member": "feet",
+      "part": "mass"
+     }
+    ],
+    "decisions": [
+     {
+      "en": "Body, authored for 7.5 mm: nine pressed fins 150 x 568 mm and 22 mm thick at a pitch of 42 mm (one extrusion of the true rounded fin profile, repeated), the upper and lower oil hubs of 36 mm running through the stack, the control housing 120 x 525 x 65 mm with its rounded top, the switch panel 8 mm proud, the replacement thermostat knob 44 mm across and 20 mm proud, the cord wound into a 16 x 14 mm bundle on two moulded hooks 8 mm off the end face, two pressed steel foot bars 250 x 30 x 20 mm under fins 2 and 8 with four swivel castors (forks and 40 mm wheels, the front right one a black replacement), and the furniture pad folded in four with its rounded fold.",
+      "de": "Körper für 7,5 mm: neun gepresste Rippen 150 x 568 mm, 22 mm dick, im Abstand von 42 mm (eine Extrusion des wahren gerundeten Rippenprofils, wiederholt), die obere und untere Ölnabe von 36 mm durch das Paket, das Bediengehäuse 120 x 525 x 65 mm mit gerundetem Kopf, das Schalterfeld 8 mm vorstehend, der Ersatz-Thermostatknopf mit 44 mm Durchmesser und 20 mm Überstand, das zu einem 16 x 14 mm starken Bündel auf zwei angeformte Haken 8 mm vor der Stirnseite aufgewickelte Kabel, zwei Fußbügel aus gepresstem Stahl 250 x 30 x 20 mm unter Rippe 2 und 8 mit vier Lenkrollen (Gabeln und 40-mm-Räder, die vordere rechte ein schwarzer Ersatz) und das viermal gefaltete Möbelpolster mit gerundetem Falz."
+     },
+     {
+      "en": "Thermal: every body solid by reference in its region (hubs to the fins, hooks and switch panel to the housing). Structure: every body solid as a member of its bone; the U-bolt clamps of the feet, the castor stems, the housing screws and the knob spindle as joints; one pad per permanent support (the four corners of the furniture pad on the floor; castor treads and hands are switched contacts of the poses and clips and carry no pad); masses at the centres of fins and housing and, for the two foot bars whose common centre lies in the open space between them, in the bottom of the middle fin above it.",
+      "de": "Thermik: jeder Körper als Verweis in seiner Region (Naben zu den Rippen, Haken und Schalterfeld zum Gehäuse). Tragwerk: jeder Körper als Stab seines Knochens; die Bügelschrauben der Füße, die Rollenzapfen, die Gehäuseschrauben und die Knopfachse als Knoten; je ständigem Auflager eine Scheibe (die vier Ecken des Polsters auf dem Boden; Laufflächen der Rollen und Hände sind geschaltete Kontakte der Posen und Clips ohne Scheibe); Massen in den Schwerpunkten von Rippen und Gehäuse und, für die beiden Fußbügel, deren gemeinsamer Schwerpunkt im freien Raum zwischen ihnen liegt, im Fuß der mittleren Rippe darüber."
+     }
+    ]
+   },
+   "100": {
+    "status": "authored",
+    "denominator": 100,
+    "body": [
+     {
+      "id": "pad",
+      "kind": "extrude",
+      "bone": "blanket",
+      "material": "felt-pad",
+      "role": "body",
+      "tone": 0.3,
+      "plane": "xy",
+      "profile": [
+       [
+        0.0,
+        -0.006
+       ],
+       [
+        0.45,
+        -0.006
+       ],
+       [
+        0.45,
+        0.006
+       ],
+       [
+        0.0,
+        0.006
+       ]
+      ],
+      "from": -0.3,
+      "to": 0.3,
+      "sheet": true
+     },
+     {
+      "id": "fins",
+      "kind": "extrude",
+      "bone": "fins",
+      "material": "enamelled-steel",
+      "role": "body",
+      "tone": 0.82,
+      "plane": "xy",
+      "profile": [
+       [
+        3.36778e-18,
+        -0.055
+       ],
+       [
+        0.00267949,
+        -0.065
+       ],
+       [
+        0.01,
+        -0.072321
+       ],
+       [
+        0.02,
+        -0.075
+       ],
+       [
+        0.528,
+        -0.075
+       ],
+       [
+        0.548,
+        -0.069641
+       ],
+       [
+        0.562641,
+        -0.055
+       ],
+       [
+        0.568,
+        -0.035
+       ],
+       [
+        0.568,
+        0.035
+       ],
+       [
+        0.562641,
+        0.055
+       ],
+       [
+        0.548,
+        0.069641
+       ],
+       [
+        0.528,
+        0.075
+       ],
+       [
+        0.02,
+        0.075
+       ],
+       [
+        0.01,
+        0.072321
+       ],
+       [
+        0.00267949,
+        0.065
+       ],
+       [
+        -3.36778e-18,
+        0.055
+       ]
+      ],
+      "from": -0.179,
+      "to": -0.157,
+      "repeat": {
+       "count": 9,
+       "translation": [
+        0,
+        0,
+        0.042
+       ]
+      }
+     },
+     {
+      "id": "hub-low",
+      "kind": "revolve",
+      "bone": "fins",
+      "material": "enamelled-steel",
+      "role": "body",
+      "tone": 0.6,
+      "profile": [
+       [
+        -0.179,
+        0.0
+       ],
+       [
+        -0.179,
+        0.018
+       ],
+       [
+        0.179,
+        0.018
+       ],
+       [
+        0.179,
+        0.0
+       ]
+      ],
+      "axis": [
+       0,
+       0,
+       1
+      ],
+      "origin": [
+       0.04,
+       2.44929e-18,
+       0.0
+      ]
+     },
+     {
+      "id": "hub-high",
+      "kind": "revolve",
+      "bone": "fins",
+      "material": "enamelled-steel",
+      "role": "body",
+      "tone": 0.6,
+      "profile": [
+       [
+        -0.179,
+        0.0
+       ],
+       [
+        -0.179,
+        0.018
+       ],
+       [
+        0.179,
+        0.018
+       ],
+       [
+        0.179,
+        0.0
+       ]
+      ],
+      "axis": [
+       0,
+       0,
+       1
+      ],
+      "origin": [
+       0.528,
+       3.23307e-17,
+       0.0
+      ]
+     },
+     {
+      "id": "foot-1",
+      "kind": "box",
+      "bone": "feet",
+      "material": "painted-steel",
+      "role": "body",
+      "tone": 0.45,
+      "size": [
+       0.25,
+       0.02,
+       0.03
+      ],
+      "transform": {
+       "translation": [
+        0.125,
+        0.0,
+        -0.126
+       ]
+      }
+     },
+     {
+      "id": "foot-2",
+      "kind": "box",
+      "bone": "feet",
+      "material": "painted-steel",
+      "role": "body",
+      "tone": 0.45,
+      "size": [
+       0.25,
+       0.02,
+       0.03
+      ],
+      "transform": {
+       "translation": [
+        0.125,
+        0.0,
+        0.126
+       ]
+      }
+     },
+     {
+      "id": "castor-fork-f1",
+      "kind": "box",
+      "bone": "castors",
+      "material": "castor-polyamide",
+      "role": "body",
+      "tone": 0.5,
+      "size": [
+       0.032,
+       0.022,
+       0.026
+      ],
+      "transform": {
+       "translation": [
+        0.2,
+        0.021,
+        -0.126
+       ]
+      }
+     },
+     {
+      "id": "castor-wheel-f1",
+      "kind": "revolve",
+      "bone": "castors",
+      "material": "castor-rubber",
+      "role": "body",
+      "tone": 0.15,
+      "profile": [
+       [
+        -0.135,
+        0.0
+       ],
+       [
+        -0.135,
+        0.02
+       ],
+       [
+        -0.117,
+        0.02
+       ],
+       [
+        -0.117,
+        0.0
+       ]
+      ],
+      "axis": [
+       0,
+       0,
+       1
+      ],
+      "origin": [
+       0.2,
+       0.0,
+       0.0
+      ]
+     },
+     {
+      "id": "castor-fork-r1",
+      "kind": "box",
+      "bone": "castors",
+      "material": "castor-polyamide",
+      "role": "body",
+      "tone": 0.5,
+      "size": [
+       0.032,
+       0.022,
+       0.026
+      ],
+      "transform": {
+       "translation": [
+        0.0,
+        0.021,
+        -0.126
+       ]
+      }
+     },
+     {
+      "id": "castor-wheel-r1",
+      "kind": "revolve",
+      "bone": "castors",
+      "material": "castor-polyamide",
+      "role": "body",
+      "tone": 0.55,
+      "profile": [
+       [
+        -0.135,
+        0.0
+       ],
+       [
+        -0.135,
+        0.02
+       ],
+       [
+        -0.117,
+        0.02
+       ],
+       [
+        -0.117,
+        0.0
+       ]
+      ],
+      "axis": [
+       0,
+       0,
+       1
+      ],
+      "origin": [
+       0.0,
+       0.0,
+       0.0
+      ]
+     },
+     {
+      "id": "castor-fork-f2",
+      "kind": "box",
+      "bone": "castors",
+      "material": "castor-polyamide",
+      "role": "body",
+      "tone": 0.5,
+      "size": [
+       0.032,
+       0.022,
+       0.026
+      ],
+      "transform": {
+       "translation": [
+        0.2,
+        0.021,
+        0.126
+       ]
+      }
+     },
+     {
+      "id": "castor-wheel-f2",
+      "kind": "revolve",
+      "bone": "castors",
+      "material": "castor-polyamide",
+      "role": "body",
+      "tone": 0.55,
+      "profile": [
+       [
+        0.117,
+        0.0
+       ],
+       [
+        0.117,
+        0.02
+       ],
+       [
+        0.135,
+        0.02
+       ],
+       [
+        0.135,
+        0.0
+       ]
+      ],
+      "axis": [
+       0,
+       0,
+       1
+      ],
+      "origin": [
+       0.2,
+       0.0,
+       0.0
+      ]
+     },
+     {
+      "id": "castor-fork-r2",
+      "kind": "box",
+      "bone": "castors",
+      "material": "castor-polyamide",
+      "role": "body",
+      "tone": 0.5,
+      "size": [
+       0.032,
+       0.022,
+       0.026
+      ],
+      "transform": {
+       "translation": [
+        0.0,
+        0.021,
+        0.126
+       ]
+      }
+     },
+     {
+      "id": "castor-wheel-r2",
+      "kind": "revolve",
+      "bone": "castors",
+      "material": "castor-polyamide",
+      "role": "body",
+      "tone": 0.55,
+      "profile": [
+       [
+        0.117,
+        0.0
+       ],
+       [
+        0.117,
+        0.02
+       ],
+       [
+        0.135,
+        0.02
+       ],
+       [
+        0.135,
+        0.0
+       ]
+      ],
+      "axis": [
+       0,
+       0,
+       1
+      ],
+      "origin": [
+       0.0,
+       0.0,
+       0.0
+      ]
+     },
+     {
+      "id": "housing",
+      "kind": "extrude",
+      "bone": "housing",
+      "material": "housing-plastic",
+      "role": "body",
+      "tone": 0.88,
+      "plane": "xy",
+      "profile": [
+       [
+        -1.06937e-17,
+        -0.052
+       ],
+       [
+        0.00234315,
+        -0.057657
+       ],
+       [
+        0.008,
+        -0.06
+       ],
+       [
+        0.505,
+        -0.06
+       ],
+       [
+        0.519142,
+        -0.054142
+       ],
+       [
+        0.525,
+        -0.04
+       ],
+       [
+        0.525,
+        0.04
+       ],
+       [
+        0.519142,
+        0.054142
+       ],
+       [
+        0.505,
+        0.06
+       ],
+       [
+        0.008,
+        0.06
+       ],
+       [
+        0.00234315,
+        0.057657
+       ],
+       [
+        -1.70619e-17,
+        0.052
+       ]
+      ],
+      "from": -0.0325,
+      "to": 0.0325
+     },
+     {
+      "id": "cord",
+      "kind": "extrude",
+      "bone": "housing",
+      "material": "pvc-cord",
+      "role": "body",
+      "tone": 0.25,
+      "plane": "xy",
+      "profile": [
+       [
+        0.092,
+        0.032
+       ],
+       [
+        0.069373,
+        0.022627
+       ],
+       [
+        0.06,
+        1.71451e-18
+       ],
+       [
+        0.069373,
+        -0.022627
+       ],
+       [
+        0.092,
+        -0.032
+       ],
+       [
+        0.218,
+        -0.032
+       ],
+       [
+        0.240627,
+        -0.022627
+       ],
+       [
+        0.25,
+        1.33487e-17
+       ],
+       [
+        0.240627,
+        0.022627
+       ],
+       [
+        0.218,
+        0.032
+       ]
+      ],
+      "from": -0.0485,
+      "to": -0.0325,
+      "holes": [
+       [
+        [
+         0.092,
+         0.016
+        ],
+        [
+         0.080686,
+         0.011314
+        ],
+        [
+         0.076,
+         3.67394e-18
+        ],
+        [
+         0.080686,
+         -0.011314
+        ],
+        [
+         0.092,
+         -0.016
+        ],
+        [
+         0.218,
+         -0.016
+        ],
+        [
+         0.229314,
+         -0.011314
+        ],
+        [
+         0.234,
+         1.33487e-17
+        ],
+        [
+         0.229314,
+         0.011314
+        ],
+        [
+         0.218,
+         0.016
+        ]
+       ]
+      ]
+     },
+     {
+      "id": "knob",
+      "kind": "revolve",
+      "bone": "knob",
+      "material": "knob-plastic",
+      "role": "body",
+      "tone": 0.3,
+      "profile": [
+       [
+        -0.01,
+        0.0
+       ],
+       [
+        -0.01,
+        0.022
+       ],
+       [
+        0.01,
+        0.022
+       ],
+       [
+        0.01,
+        0.0
+       ]
+      ],
+      "axis": [
+       0,
+       0,
+       1
+      ],
+      "origin": [
+       0.0,
+       0.0,
+       0.0
+      ]
+     }
+    ],
+    "thermal": [
+     {
+      "id": "th-pad",
+      "of": "pad",
+      "region": "pad"
+     },
+     {
+      "id": "th-fins",
+      "of": "fins",
+      "region": "fins"
+     },
+     {
+      "id": "th-hub-low",
+      "of": "hub-low",
+      "region": "fins"
+     },
+     {
+      "id": "th-hub-high",
+      "of": "hub-high",
+      "region": "fins"
+     },
+     {
+      "id": "th-foot-1",
+      "of": "foot-1",
+      "region": "feet"
+     },
+     {
+      "id": "th-foot-2",
+      "of": "foot-2",
+      "region": "feet"
+     },
+     {
+      "id": "th-castor-fork-f1",
+      "of": "castor-fork-f1",
+      "region": "castors"
+     },
+     {
+      "id": "th-castor-wheel-f1",
+      "of": "castor-wheel-f1",
+      "region": "castors"
+     },
+     {
+      "id": "th-castor-fork-r1",
+      "of": "castor-fork-r1",
+      "region": "castors"
+     },
+     {
+      "id": "th-castor-wheel-r1",
+      "of": "castor-wheel-r1",
+      "region": "castors"
+     },
+     {
+      "id": "th-castor-fork-f2",
+      "of": "castor-fork-f2",
+      "region": "castors"
+     },
+     {
+      "id": "th-castor-wheel-f2",
+      "of": "castor-wheel-f2",
+      "region": "castors"
+     },
+     {
+      "id": "th-castor-fork-r2",
+      "of": "castor-fork-r2",
+      "region": "castors"
+     },
+     {
+      "id": "th-castor-wheel-r2",
+      "of": "castor-wheel-r2",
+      "region": "castors"
+     },
+     {
+      "id": "th-housing",
+      "of": "housing",
+      "region": "housing"
+     },
+     {
+      "id": "th-cord",
+      "of": "cord",
+      "region": "cord"
+     },
+     {
+      "id": "th-knob",
+      "of": "knob",
+      "region": "knob"
+     },
+     {
+      "id": "th-plume",
+      "kind": "revolve",
+      "bone": "fins",
+      "material": "enamelled-steel",
+      "role": "body",
+      "tone": 0.6,
+      "profile": [
+       [
+        -0.174,
+        0.0
+       ],
+       [
+        -0.174,
+        0.014
+       ],
+       [
+        0.174,
+        0.014
+       ],
+       [
+        0.174,
+        0.0
+       ]
+      ],
+      "axis": [
+       0,
+       0,
+       1
+      ],
+      "origin": [
+       0.528,
+       3.23307e-17,
+       0.0
+      ],
+      "region": "fins",
+      "tags": [
+       "plume"
+      ]
+     }
+    ],
+    "structure": [
+     {
+      "id": "m-pad",
+      "of": "pad",
+      "member": "blanket",
+      "part": "member"
+     },
+     {
+      "id": "m-fins",
+      "of": "fins",
+      "member": "fins",
+      "part": "member"
+     },
+     {
+      "id": "m-hub-low",
+      "of": "hub-low",
+      "member": "fins",
+      "part": "member"
+     },
+     {
+      "id": "m-hub-high",
+      "of": "hub-high",
+      "member": "fins",
+      "part": "member"
+     },
+     {
+      "id": "m-foot-1",
+      "of": "foot-1",
+      "member": "feet",
+      "part": "member"
+     },
+     {
+      "id": "m-foot-2",
+      "of": "foot-2",
+      "member": "feet",
+      "part": "member"
+     },
+     {
+      "id": "m-castor-fork-f1",
+      "of": "castor-fork-f1",
+      "member": "castors",
+      "part": "member"
+     },
+     {
+      "id": "m-castor-wheel-f1",
+      "of": "castor-wheel-f1",
+      "member": "castors",
+      "part": "member"
+     },
+     {
+      "id": "m-castor-fork-r1",
+      "of": "castor-fork-r1",
+      "member": "castors",
+      "part": "member"
+     },
+     {
+      "id": "m-castor-wheel-r1",
+      "of": "castor-wheel-r1",
+      "member": "castors",
+      "part": "member"
+     },
+     {
+      "id": "m-castor-fork-f2",
+      "of": "castor-fork-f2",
+      "member": "castors",
+      "part": "member"
+     },
+     {
+      "id": "m-castor-wheel-f2",
+      "of": "castor-wheel-f2",
+      "member": "castors",
+      "part": "member"
+     },
+     {
+      "id": "m-castor-fork-r2",
+      "of": "castor-fork-r2",
+      "member": "castors",
+      "part": "member"
+     },
+     {
+      "id": "m-castor-wheel-r2",
+      "of": "castor-wheel-r2",
+      "member": "castors",
+      "part": "member"
+     },
+     {
+      "id": "m-housing",
+      "of": "housing",
+      "member": "housing",
+      "part": "member"
+     },
+     {
+      "id": "m-cord",
+      "of": "cord",
+      "member": "housing",
+      "part": "member"
+     },
+     {
+      "id": "m-knob",
+      "of": "knob",
+      "member": "knob",
+      "part": "member"
+     },
+     {
+      "id": "j-clamp-1",
+      "kind": "box",
+      "bone": "feet",
+      "material": "painted-steel",
+      "role": "detail",
+      "tone": 0.3,
+      "size": [
+       0.03,
+       0.02,
+       0.03
+      ],
+      "transform": {
+       "translation": [
+        0.125,
+        0.016,
+        -0.126
+       ]
+      },
+      "member": "feet",
+      "part": "joint"
+     },
+     {
+      "id": "j-stem-f1",
+      "kind": "box",
+      "bone": "castors",
+      "material": "painted-steel",
+      "role": "detail",
+      "tone": 0.3,
+      "size": [
+       0.02,
+       0.02,
+       0.02
+      ],
+      "transform": {
+       "translation": [
+        0.2,
+        0.026,
+        -0.126
+       ]
+      },
+      "member": "castors",
+      "part": "joint"
+     },
+     {
+      "id": "j-stem-r1",
+      "kind": "box",
+      "bone": "castors",
+      "material": "painted-steel",
+      "role": "detail",
+      "tone": 0.3,
+      "size": [
+       0.02,
+       0.02,
+       0.02
+      ],
+      "transform": {
+       "translation": [
+        0.0,
+        0.026,
+        -0.126
+       ]
+      },
+      "member": "castors",
+      "part": "joint"
+     },
+     {
+      "id": "j-clamp-2",
+      "kind": "box",
+      "bone": "feet",
+      "material": "painted-steel",
+      "role": "detail",
+      "tone": 0.3,
+      "size": [
+       0.03,
+       0.02,
+       0.03
+      ],
+      "transform": {
+       "translation": [
+        0.125,
+        0.016,
+        0.126
+       ]
+      },
+      "member": "feet",
+      "part": "joint"
+     },
+     {
+      "id": "j-stem-f2",
+      "kind": "box",
+      "bone": "castors",
+      "material": "painted-steel",
+      "role": "detail",
+      "tone": 0.3,
+      "size": [
+       0.02,
+       0.02,
+       0.02
+      ],
+      "transform": {
+       "translation": [
+        0.2,
+        0.026,
+        0.126
+       ]
+      },
+      "member": "castors",
+      "part": "joint"
+     },
+     {
+      "id": "j-stem-r2",
+      "kind": "box",
+      "bone": "castors",
+      "material": "painted-steel",
+      "role": "detail",
+      "tone": 0.3,
+      "size": [
+       0.02,
+       0.02,
+       0.02
+      ],
+      "transform": {
+       "translation": [
+        0.0,
+        0.026,
+        0.126
+       ]
+      },
+      "member": "castors",
+      "part": "joint"
+     },
+     {
+      "id": "j-housing-screws",
+      "kind": "box",
+      "bone": "housing",
+      "material": "painted-steel",
+      "role": "detail",
+      "tone": 0.3,
+      "size": [
+       0.03,
+       0.03,
+       0.02
+      ],
+      "transform": {
+       "translation": [
+        0.25,
+        1.47451e-17,
+        0.0325
+       ]
+      },
+      "member": "housing",
+      "part": "joint"
+     },
+     {
+      "id": "j-knob-spindle",
+      "kind": "box",
+      "bone": "knob",
+      "material": "painted-steel",
+      "role": "detail",
+      "tone": 0.3,
+      "size": [
+       0.015,
+       0.015,
+       0.015
+      ],
+      "transform": {
+       "translation": [
+        0.0,
+        0.0,
+        0.01
+       ]
+      },
+      "member": "knob",
+      "part": "joint"
+     },
+     {
+      "id": "support-pad-floor-fl",
+      "kind": "revolve",
+      "bone": "blanket",
+      "material": "felt-pad",
+      "role": "ground",
+      "tone": 0.2,
+      "profile": [
+       [
+        0.0,
+        0.0
+       ],
+       [
+        0.0,
+        0.015
+       ],
+       [
+        0.012,
+        0.015
+       ],
+       [
+        0.012,
+        0.0
+       ]
+      ],
+      "axis": [
+       0,
+       1,
+       0
+      ],
+      "origin": [
+       0.405,
+       -0.006,
+       0.25
+      ],
+      "member": "blanket",
+      "part": "support",
+      "anchor": "pad-floor-fl"
+     },
+     {
+      "id": "support-pad-floor-fr",
+      "kind": "revolve",
+      "bone": "blanket",
+      "material": "felt-pad",
+      "role": "ground",
+      "tone": 0.2,
+      "profile": [
+       [
+        0.0,
+        0.0
+       ],
+       [
+        0.0,
+        0.015
+       ],
+       [
+        0.012,
+        0.015
+       ],
+       [
+        0.012,
+        0.0
+       ]
+      ],
+      "axis": [
+       0,
+       1,
+       0
+      ],
+      "origin": [
+       0.405,
+       -0.006,
+       -0.25
+      ],
+      "member": "blanket",
+      "part": "support",
+      "anchor": "pad-floor-fr"
+     },
+     {
+      "id": "support-pad-floor-rl",
+      "kind": "revolve",
+      "bone": "blanket",
+      "material": "felt-pad",
+      "role": "ground",
+      "tone": 0.2,
+      "profile": [
+       [
+        0.0,
+        0.0
+       ],
+       [
+        0.0,
+        0.015
+       ],
+       [
+        0.012,
+        0.015
+       ],
+       [
+        0.012,
+        0.0
+       ]
+      ],
+      "axis": [
+       0,
+       1,
+       0
+      ],
+      "origin": [
+       0.045,
+       -0.006,
+       0.25
+      ],
+      "member": "blanket",
+      "part": "support",
+      "anchor": "pad-floor-rl"
+     },
+     {
+      "id": "support-pad-floor-rr",
+      "kind": "revolve",
+      "bone": "blanket",
+      "material": "felt-pad",
+      "role": "ground",
+      "tone": 0.2,
+      "profile": [
+       [
+        0.0,
+        0.0
+       ],
+       [
+        0.0,
+        0.015
+       ],
+       [
+        0.012,
+        0.015
+       ],
+       [
+        0.012,
+        0.0
+       ]
+      ],
+      "axis": [
+       0,
+       1,
+       0
+      ],
+      "origin": [
+       0.045,
+       -0.006,
+       -0.25
+      ],
+      "member": "blanket",
+      "part": "support",
+      "anchor": "pad-floor-rr"
+     },
+     {
+      "id": "mass-fins",
+      "kind": "ellipsoid",
+      "bone": "fins",
+      "material": "enamelled-steel",
+      "role": "detail",
+      "tone": 0.3,
+      "radii": [
+       0.015,
+       0.015,
+       0.015
+      ],
+      "transform": {
+       "translation": [
+        0.26936,
+        0.0,
+        0.0
+       ]
+      },
+      "member": "fins",
+      "part": "mass"
+     },
+     {
+      "id": "mass-housing",
+      "kind": "ellipsoid",
+      "bone": "housing",
+      "material": "housing-plastic",
+      "role": "detail",
+      "tone": 0.3,
+      "radii": [
+       0.015,
+       0.015,
+       0.015
+      ],
+      "transform": {
+       "translation": [
+        0.267596,
+        0.0,
+        0.0
+       ]
+      },
+      "member": "housing",
+      "part": "mass"
+     },
+     {
+      "id": "mass-feet",
+      "kind": "ellipsoid",
+      "bone": "feet",
+      "material": "enamelled-steel",
+      "role": "detail",
+      "tone": 0.3,
+      "radii": [
+       0.015,
+       0.015,
+       0.015
+      ],
+      "transform": {
+       "translation": [
+        0.125,
+        0.027,
+        0.0
+       ]
+      },
+      "member": "feet",
+      "part": "mass"
+     }
+    ],
+    "decisions": [
+     {
+      "en": "Body, authored anew for 15 mm: the nine fins keep their true 22 mm and the 20 mm gaps, hubs, housing, foot bars and castors keep their sections; the 8 mm switch panel goes into the housing face, the cord bundle lies flush on the end face as a 16 mm ring with the hooks merged into it, the knob stays 20 mm proud, the pad is one flat 12 mm sheet (declared sheet), the fin corners are traced with fewer points.",
+      "de": "Körper für 15 mm neu gebaut: die neun Rippen behalten ihre wahren 22 mm und die 20-mm-Zwischenräume, Naben, Gehäuse, Fußbügel und Rollen behalten ihre Querschnitte; das 8-mm-Schalterfeld geht in der Gehäusestirn auf, das Kabelbündel liegt als 16-mm-Ring bündig auf der Stirnseite, die Haken gehen darin auf, der Knopf bleibt 20 mm vorstehend, das Polster ist eine ebene 12-mm-Lage (deklariertes Blatt), die Rippenecken sind mit weniger Punkten gezogen."
+     },
+     {
+      "en": "Thermal: one surface per region by reference. Structure: the same members, clamps, stems, screws and spindle at 15 mm, one pad per pad corner, the masses.",
+      "de": "Thermik: eine Oberfläche je Region als Verweis. Tragwerk: dieselben Stäbe, Bügel, Zapfen, Schrauben und Achse bei 15 mm, je Polsterecke eine Auflagerscheibe, die Massen."
+     }
+    ]
+   },
+   "200": {
+    "status": "authored",
+    "denominator": 200,
+    "body": [
+     {
+      "id": "pad",
+      "kind": "extrude",
+      "bone": "blanket",
+      "material": "felt-pad",
+      "role": "body",
+      "tone": 0.3,
+      "plane": "xy",
+      "profile": [
+       [
+        0.0,
+        -0.006
+       ],
+       [
+        0.45,
+        -0.006
+       ],
+       [
+        0.45,
+        0.006
+       ],
+       [
+        0.0,
+        0.006
+       ]
+      ],
+      "from": -0.3,
+      "to": 0.3,
+      "sheet": true
+     },
+     {
+      "id": "fins",
+      "kind": "extrude",
+      "bone": "fins",
+      "material": "enamelled-steel",
+      "role": "body",
+      "tone": 0.82,
+      "plane": "xy",
+      "profile": [
+       [
+        3.36778e-18,
+        -0.055
+       ],
+       [
+        0.00585786,
+        -0.069142
+       ],
+       [
+        0.02,
+        -0.075
+       ],
+       [
+        0.528,
+        -0.075
+       ],
+       [
+        0.556284,
+        -0.063284
+       ],
+       [
+        0.568,
+        -0.035
+       ],
+       [
+        0.568,
+        0.035
+       ],
+       [
+        0.556284,
+        0.063284
+       ],
+       [
+        0.528,
+        0.075
+       ],
+       [
+        0.02,
+        0.075
+       ],
+       [
+        0.00585786,
+        0.069142
+       ],
+       [
+        -3.36778e-18,
+        0.055
+       ]
+      ],
+      "from": -0.179,
+      "to": -0.149,
+      "repeat": {
+       "count": 7,
+       "translation": [
+        0,
+        0,
+        0.054667
+       ]
+      }
+     },
+     {
+      "id": "hub-low",
+      "kind": "revolve",
+      "bone": "fins",
+      "material": "enamelled-steel",
+      "role": "body",
+      "tone": 0.6,
+      "profile": [
+       [
+        -0.179,
+        0.0
+       ],
+       [
+        -0.179,
+        0.018
+       ],
+       [
+        0.179,
+        0.018
+       ],
+       [
+        0.179,
+        0.0
+       ]
+      ],
+      "axis": [
+       0,
+       0,
+       1
+      ],
+      "origin": [
+       0.04,
+       2.44929e-18,
+       0.0
+      ]
+     },
+     {
+      "id": "hub-high",
+      "kind": "revolve",
+      "bone": "fins",
+      "material": "enamelled-steel",
+      "role": "body",
+      "tone": 0.6,
+      "profile": [
+       [
+        -0.179,
+        0.0
+       ],
+       [
+        -0.179,
+        0.018
+       ],
+       [
+        0.179,
+        0.018
+       ],
+       [
+        0.179,
+        0.0
+       ]
+      ],
+      "axis": [
+       0,
+       0,
+       1
+      ],
+      "origin": [
+       0.528,
+       3.23307e-17,
+       0.0
+      ]
+     },
+     {
+      "id": "foot-1",
+      "kind": "box",
+      "bone": "feet",
+      "material": "painted-steel",
+      "role": "body",
+      "tone": 0.45,
+      "size": [
+       0.25,
+       0.03,
+       0.03
+      ],
+      "transform": {
+       "translation": [
+        0.125,
+        -0.005,
+        -0.126
+       ]
+      }
+     },
+     {
+      "id": "foot-2",
+      "kind": "box",
+      "bone": "feet",
+      "material": "painted-steel",
+      "role": "body",
+      "tone": 0.45,
+      "size": [
+       0.25,
+       0.03,
+       0.03
+      ],
+      "transform": {
+       "translation": [
+        0.125,
+        -0.005,
+        0.126
+       ]
+      }
+     },
+     {
+      "id": "castor-f1",
+      "kind": "box",
+      "bone": "castors",
+      "material": "castor-rubber",
+      "role": "body",
+      "tone": 0.15,
+      "size": [
+       0.03,
+       0.042,
+       0.03
+      ],
+      "transform": {
+       "translation": [
+        0.2,
+        0.001,
+        -0.126
+       ]
+      }
+     },
+     {
+      "id": "castor-r1",
+      "kind": "box",
+      "bone": "castors",
+      "material": "castor-polyamide",
+      "role": "body",
+      "tone": 0.55,
+      "size": [
+       0.03,
+       0.042,
+       0.03
+      ],
+      "transform": {
+       "translation": [
+        0.0,
+        0.001,
+        -0.126
+       ]
+      }
+     },
+     {
+      "id": "castor-f2",
+      "kind": "box",
+      "bone": "castors",
+      "material": "castor-polyamide",
+      "role": "body",
+      "tone": 0.55,
+      "size": [
+       0.03,
+       0.042,
+       0.03
+      ],
+      "transform": {
+       "translation": [
+        0.2,
+        0.001,
+        0.126
+       ]
+      }
+     },
+     {
+      "id": "castor-r2",
+      "kind": "box",
+      "bone": "castors",
+      "material": "castor-polyamide",
+      "role": "body",
+      "tone": 0.55,
+      "size": [
+       0.03,
+       0.042,
+       0.03
+      ],
+      "transform": {
+       "translation": [
+        0.0,
+        0.001,
+        0.126
+       ]
+      }
+     },
+     {
+      "id": "housing",
+      "kind": "extrude",
+      "bone": "housing",
+      "material": "housing-plastic",
+      "role": "body",
+      "tone": 0.88,
+      "plane": "xy",
+      "profile": [
+       [
+        -1.06937e-17,
+        -0.052
+       ],
+       [
+        0.008,
+        -0.06
+       ],
+       [
+        0.505,
+        -0.06
+       ],
+       [
+        0.525,
+        -0.04
+       ],
+       [
+        0.525,
+        0.04
+       ],
+       [
+        0.505,
+        0.06
+       ],
+       [
+        0.008,
+        0.06
+       ],
+       [
+        -1.70619e-17,
+        0.052
+       ]
+      ],
+      "from": -0.0325,
+      "to": 0.0325
+     },
+     {
+      "id": "cord",
+      "kind": "extrude",
+      "bone": "housing",
+      "material": "pvc-cord",
+      "role": "body",
+      "tone": 0.25,
+      "plane": "xy",
+      "profile": [
+       [
+        0.092,
+        0.032
+       ],
+       [
+        0.069373,
+        0.022627
+       ],
+       [
+        0.06,
+        1.71451e-18
+       ],
+       [
+        0.069373,
+        -0.022627
+       ],
+       [
+        0.092,
+        -0.032
+       ],
+       [
+        0.218,
+        -0.032
+       ],
+       [
+        0.240627,
+        -0.022627
+       ],
+       [
+        0.25,
+        1.33487e-17
+       ],
+       [
+        0.240627,
+        0.022627
+       ],
+       [
+        0.218,
+        0.032
+       ]
+      ],
+      "from": -0.0625,
+      "to": -0.0325
+     },
+     {
+      "id": "knob",
+      "kind": "revolve",
+      "bone": "knob",
+      "material": "knob-plastic",
+      "role": "body",
+      "tone": 0.3,
+      "profile": [
+       [
+        -0.02,
+        0.0
+       ],
+       [
+        -0.02,
+        0.022
+       ],
+       [
+        0.01,
+        0.022
+       ],
+       [
+        0.01,
+        0.0
+       ]
+      ],
+      "axis": [
+       0,
+       0,
+       1
+      ],
+      "origin": [
+       0.0,
+       0.0,
+       0.0
+      ]
+     }
+    ],
+    "thermal": [
+     {
+      "id": "th-pad",
+      "of": "pad",
+      "region": "pad"
+     },
+     {
+      "id": "th-fins",
+      "of": "fins",
+      "region": "fins"
+     },
+     {
+      "id": "th-hub-low",
+      "of": "hub-low",
+      "region": "fins"
+     },
+     {
+      "id": "th-hub-high",
+      "of": "hub-high",
+      "region": "fins"
+     },
+     {
+      "id": "th-foot-1",
+      "of": "foot-1",
+      "region": "feet"
+     },
+     {
+      "id": "th-foot-2",
+      "of": "foot-2",
+      "region": "feet"
+     },
+     {
+      "id": "th-castor-f1",
+      "of": "castor-f1",
+      "region": "castors"
+     },
+     {
+      "id": "th-castor-r1",
+      "of": "castor-r1",
+      "region": "castors"
+     },
+     {
+      "id": "th-castor-f2",
+      "of": "castor-f2",
+      "region": "castors"
+     },
+     {
+      "id": "th-castor-r2",
+      "of": "castor-r2",
+      "region": "castors"
+     },
+     {
+      "id": "th-housing",
+      "of": "housing",
+      "region": "housing"
+     },
+     {
+      "id": "th-cord",
+      "of": "cord",
+      "region": "cord"
+     },
+     {
+      "id": "th-knob",
+      "of": "knob",
+      "region": "knob"
+     },
+     {
+      "id": "th-plume",
+      "kind": "revolve",
+      "bone": "fins",
+      "material": "enamelled-steel",
+      "role": "body",
+      "tone": 0.6,
+      "profile": [
+       [
+        -0.174,
+        0.0
+       ],
+       [
+        -0.174,
+        0.016
+       ],
+       [
+        0.174,
+        0.016
+       ],
+       [
+        0.174,
+        0.0
+       ]
+      ],
+      "axis": [
+       0,
+       0,
+       1
+      ],
+      "origin": [
+       0.528,
+       3.23307e-17,
+       0.0
+      ],
+      "region": "fins",
+      "tags": [
+       "plume"
+      ]
+     }
+    ],
+    "structure": [
+     {
+      "id": "m-pad",
+      "of": "pad",
+      "member": "blanket",
+      "part": "member"
+     },
+     {
+      "id": "m-fins",
+      "of": "fins",
+      "member": "fins",
+      "part": "member"
+     },
+     {
+      "id": "m-hub-low",
+      "of": "hub-low",
+      "member": "fins",
+      "part": "member"
+     },
+     {
+      "id": "m-hub-high",
+      "of": "hub-high",
+      "member": "fins",
+      "part": "member"
+     },
+     {
+      "id": "m-foot-1",
+      "of": "foot-1",
+      "member": "feet",
+      "part": "member"
+     },
+     {
+      "id": "m-foot-2",
+      "of": "foot-2",
+      "member": "feet",
+      "part": "member"
+     },
+     {
+      "id": "m-castor-f1",
+      "of": "castor-f1",
+      "member": "castors",
+      "part": "member"
+     },
+     {
+      "id": "m-castor-r1",
+      "of": "castor-r1",
+      "member": "castors",
+      "part": "member"
+     },
+     {
+      "id": "m-castor-f2",
+      "of": "castor-f2",
+      "member": "castors",
+      "part": "member"
+     },
+     {
+      "id": "m-castor-r2",
+      "of": "castor-r2",
+      "member": "castors",
+      "part": "member"
+     },
+     {
+      "id": "m-housing",
+      "of": "housing",
+      "member": "housing",
+      "part": "member"
+     },
+     {
+      "id": "m-cord",
+      "of": "cord",
+      "member": "housing",
+      "part": "member"
+     },
+     {
+      "id": "m-knob",
+      "of": "knob",
+      "member": "knob",
+      "part": "member"
+     },
+     {
+      "id": "j-clamp-1",
+      "kind": "box",
+      "bone": "feet",
+      "material": "painted-steel",
+      "role": "detail",
+      "tone": 0.3,
+      "size": [
+       0.03,
+       0.03,
+       0.03
+      ],
+      "transform": {
+       "translation": [
+        0.125,
+        0.021,
+        -0.126
+       ]
+      },
+      "member": "feet",
+      "part": "joint"
+     },
+     {
+      "id": "j-stem-f1",
+      "kind": "box",
+      "bone": "castors",
+      "material": "painted-steel",
+      "role": "detail",
+      "tone": 0.3,
+      "size": [
+       0.03,
+       0.03,
+       0.03
+      ],
+      "transform": {
+       "translation": [
+        0.2,
+        0.011,
+        -0.126
+       ]
+      },
+      "member": "castors",
+      "part": "joint"
+     },
+     {
+      "id": "j-stem-r1",
+      "kind": "box",
+      "bone": "castors",
+      "material": "painted-steel",
+      "role": "detail",
+      "tone": 0.3,
+      "size": [
+       0.03,
+       0.03,
+       0.03
+      ],
+      "transform": {
+       "translation": [
+        0.0,
+        0.011,
+        -0.126
+       ]
+      },
+      "member": "castors",
+      "part": "joint"
+     },
+     {
+      "id": "j-clamp-2",
+      "kind": "box",
+      "bone": "feet",
+      "material": "painted-steel",
+      "role": "detail",
+      "tone": 0.3,
+      "size": [
+       0.03,
+       0.03,
+       0.03
+      ],
+      "transform": {
+       "translation": [
+        0.125,
+        0.021,
+        0.126
+       ]
+      },
+      "member": "feet",
+      "part": "joint"
+     },
+     {
+      "id": "j-stem-f2",
+      "kind": "box",
+      "bone": "castors",
+      "material": "painted-steel",
+      "role": "detail",
+      "tone": 0.3,
+      "size": [
+       0.03,
+       0.03,
+       0.03
+      ],
+      "transform": {
+       "translation": [
+        0.2,
+        0.011,
+        0.126
+       ]
+      },
+      "member": "castors",
+      "part": "joint"
+     },
+     {
+      "id": "j-stem-r2",
+      "kind": "box",
+      "bone": "castors",
+      "material": "painted-steel",
+      "role": "detail",
+      "tone": 0.3,
+      "size": [
+       0.03,
+       0.03,
+       0.03
+      ],
+      "transform": {
+       "translation": [
+        0.0,
+        0.011,
+        0.126
+       ]
+      },
+      "member": "castors",
+      "part": "joint"
+     },
+     {
+      "id": "j-housing-screws",
+      "kind": "box",
+      "bone": "housing",
+      "material": "painted-steel",
+      "role": "detail",
+      "tone": 0.3,
+      "size": [
+       0.03,
+       0.03,
+       0.03
+      ],
+      "transform": {
+       "translation": [
+        0.25,
+        1.47451e-17,
+        0.0325
+       ]
+      },
+      "member": "housing",
+      "part": "joint"
+     },
+     {
+      "id": "j-knob-spindle",
+      "kind": "box",
+      "bone": "knob",
+      "material": "painted-steel",
+      "role": "detail",
+      "tone": 0.3,
+      "size": [
+       0.03,
+       0.03,
+       0.03
+      ],
+      "transform": {
+       "translation": [
+        0.0,
+        0.0,
+        0.01
+       ]
+      },
+      "member": "knob",
+      "part": "joint"
+     },
+     {
+      "id": "support-pad-floor-fl",
+      "kind": "revolve",
+      "bone": "blanket",
+      "material": "felt-pad",
+      "role": "ground",
+      "tone": 0.2,
+      "profile": [
+       [
+        0.0,
+        0.0
+       ],
+       [
+        0.0,
+        0.03
+       ],
+       [
+        0.012,
+        0.03
+       ],
+       [
+        0.012,
+        0.0
+       ]
+      ],
+      "axis": [
+       0,
+       1,
+       0
+      ],
+      "origin": [
+       0.405,
+       -0.006,
+       0.25
+      ],
+      "member": "blanket",
+      "part": "support",
+      "anchor": "pad-floor-fl"
+     },
+     {
+      "id": "support-pad-floor-fr",
+      "kind": "revolve",
+      "bone": "blanket",
+      "material": "felt-pad",
+      "role": "ground",
+      "tone": 0.2,
+      "profile": [
+       [
+        0.0,
+        0.0
+       ],
+       [
+        0.0,
+        0.03
+       ],
+       [
+        0.012,
+        0.03
+       ],
+       [
+        0.012,
+        0.0
+       ]
+      ],
+      "axis": [
+       0,
+       1,
+       0
+      ],
+      "origin": [
+       0.405,
+       -0.006,
+       -0.25
+      ],
+      "member": "blanket",
+      "part": "support",
+      "anchor": "pad-floor-fr"
+     },
+     {
+      "id": "support-pad-floor-rl",
+      "kind": "revolve",
+      "bone": "blanket",
+      "material": "felt-pad",
+      "role": "ground",
+      "tone": 0.2,
+      "profile": [
+       [
+        0.0,
+        0.0
+       ],
+       [
+        0.0,
+        0.03
+       ],
+       [
+        0.012,
+        0.03
+       ],
+       [
+        0.012,
+        0.0
+       ]
+      ],
+      "axis": [
+       0,
+       1,
+       0
+      ],
+      "origin": [
+       0.045,
+       -0.006,
+       0.25
+      ],
+      "member": "blanket",
+      "part": "support",
+      "anchor": "pad-floor-rl"
+     },
+     {
+      "id": "support-pad-floor-rr",
+      "kind": "revolve",
+      "bone": "blanket",
+      "material": "felt-pad",
+      "role": "ground",
+      "tone": 0.2,
+      "profile": [
+       [
+        0.0,
+        0.0
+       ],
+       [
+        0.0,
+        0.03
+       ],
+       [
+        0.012,
+        0.03
+       ],
+       [
+        0.012,
+        0.0
+       ]
+      ],
+      "axis": [
+       0,
+       1,
+       0
+      ],
+      "origin": [
+       0.045,
+       -0.006,
+       -0.25
+      ],
+      "member": "blanket",
+      "part": "support",
+      "anchor": "pad-floor-rr"
+     },
+     {
+      "id": "mass-fins",
+      "kind": "ellipsoid",
+      "bone": "fins",
+      "material": "enamelled-steel",
+      "role": "detail",
+      "tone": 0.3,
+      "radii": [
+       0.03,
+       0.03,
+       0.03
+      ],
+      "transform": {
+       "translation": [
+        0.26936,
+        0.0,
+        0.0
+       ]
+      },
+      "member": "fins",
+      "part": "mass"
+     },
+     {
+      "id": "mass-housing",
+      "kind": "ellipsoid",
+      "bone": "housing",
+      "material": "housing-plastic",
+      "role": "detail",
+      "tone": 0.3,
+      "radii": [
+       0.03,
+       0.03,
+       0.03
+      ],
+      "transform": {
+       "translation": [
+        0.267596,
+        0.0,
+        0.0
+       ]
+      },
+      "member": "housing",
+      "part": "mass"
+     },
+     {
+      "id": "mass-feet",
+      "kind": "ellipsoid",
+      "bone": "feet",
+      "material": "enamelled-steel",
+      "role": "detail",
+      "tone": 0.3,
+      "radii": [
+       0.03,
+       0.03,
+       0.03
+      ],
+      "transform": {
+       "translation": [
+        0.125,
+        0.042,
+        0.0
+       ]
+      },
+      "member": "feet",
+      "part": "mass"
+     }
+    ],
+    "decisions": [
+     {
+      "en": "Body, authored anew for 30 mm: the row of nine 22 mm fins is typified as seven fins of 30 mm over the true stack length (fewer, thicker fins on the fins bone; the gaps stay open at 25 mm, so the row keeps its outer area and its volume within the cross-scale band without an envelope declaration), the hubs keep their 36 mm, each foot bar is 30 mm high and each castor one 30 mm block under it, the knob a 44 mm disc 30 mm proud, the cord a solid 64 x 190 mm plate 30 mm proud, the pad a 12 mm sheet.",
+      "de": "Körper für 30 mm neu gebaut: die Reihe der neun 22-mm-Rippen ist als sieben Rippen zu 30 mm über die wahre Paketlänge typisiert (weniger, dickere Rippen am Rippenknochen; die Zwischenräume bleiben mit 25 mm offen, sodass die Reihe ihre Außenfläche und ihr Volumen ohne Hüllendeklaration im Band zwischen den Maßstäben hält), die Naben behalten 36 mm, jeder Fußbügel ist 30 mm hoch und jede Rolle ein 30-mm-Block darunter, der Knopf eine 44-mm-Scheibe mit 30 mm Überstand, das Kabel eine volle Platte 64 x 190 mm mit 30 mm Überstand, das Polster eine 12-mm-Lage."
+     },
+     {
+      "en": "Thermal: one surface per region by reference; the seven typified fins carry the fin region (about 18 % less outer area than the nine true fins, inside the 30 % of a coarse scale). Structure: members by reference, joints at 30 mm, one pad per pad corner, masses.",
+      "de": "Thermik: eine Oberfläche je Region als Verweis; die sieben typisierten Rippen tragen die Rippenregion (etwa 18 % weniger Außenfläche als die neun wahren Rippen, innerhalb der 30 % eines groben Maßstabs). Tragwerk: Stäbe als Verweis, Knoten bei 30 mm, je Polsterecke eine Auflagerscheibe, Massen."
+     }
+    ]
+   },
+   "500": {
+    "status": "unavailable",
+    "denominator": 500
+   }
+  },
+  "presentation": {
+   "defaultPose": "stored",
+   "defaultClip": "carry",
+   "defaultScale": 50
+  },
+  "exports": [
+   "svg",
+   "pdf",
+   "dxf",
+   "dwg",
+   "png-sequence",
+   "mp4",
+   "webm",
+   "component",
+   "glb",
+   "fbx",
+   "model",
+   "model-zip"
+  ],
+  "completion": "authored"
+ }
+}

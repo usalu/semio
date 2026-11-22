@@ -331,7 +331,7 @@ fn query_ownership_cancelled_preparation_closes_while_source_scene_remains_live(
             break;
         }
         let demand = preparation.close_demands(maximum_bytes).expect("preparation close quote");
-        let grant = RetainedCloneGrant { maximum_items: policy["retirementItemsPerStep"].as_u64().expect("retirement items") as usize, ..crate::standards::v1::subsets::any::schema::content::jack_self_funded_grant(demand) };
+        let grant = RetainedCloneGrant { maximum_items: policy["retirementItemsPerStep"].as_u64().expect("retirement items") as usize, ..semio_plugin::plugin_self_funded_grant(demand, semio_plugin::PLUGIN_SELF_FUNDED_BODY_BYTES) };
         assert!(close_query_step(grant, |effect| preparation.close_step(effect)).fits(grant));
     }
     assert!(preparation.terminal_is_empty());
@@ -355,7 +355,7 @@ fn query_ownership_preparation_rejection(source: &JackSnapshot) -> semio_framewo
             break;
         }
         let demand = preparation.close_demands(4_096).expect("rejected preparation close quote");
-        let grant = crate::standards::v1::subsets::any::schema::content::jack_self_funded_grant(demand);
+        let grant = semio_plugin::plugin_self_funded_grant(demand, semio_plugin::PLUGIN_SELF_FUNDED_BODY_BYTES);
         assert!(close_query_step(grant, |effect| preparation.close_step(effect)).fits(grant));
     }
     assert!(preparation.terminal_is_empty());
@@ -423,7 +423,7 @@ fn query_ownership_output_admission_rejects_oversized_table_before_publication()
             break;
         }
         let demand = execution.close_demands(4_096).expect("rejected execution close quote");
-        let grant = crate::standards::v1::subsets::any::schema::content::jack_self_funded_grant(demand);
+        let grant = semio_plugin::plugin_self_funded_grant(demand, semio_plugin::PLUGIN_SELF_FUNDED_BODY_BYTES);
         assert!(close_query_step(grant, |effect| execution.close_step(effect)).fits(grant));
     }
     assert!(execution.terminal_is_empty());

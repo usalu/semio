@@ -117,7 +117,16 @@ impl ShardLoop {
     /// 🔀️ Same E0502 reason as the turn-execution loop above — computed before `get_mut`.
     ///
     /// 🐕️ P1c: same watchdog treatment as `Self::execute_turn_for` — see that call site's doc.
+    /// 💼️ One pump with the spawned-job ledger around it: the Task Manager's queued job cancels are applied first and the ledger is reconciled with the jobs this shard drives afterwards.
     pub async fn pump_primed(&mut self, primed: Option<Vec<u8>>) -> Result<usize, PluginHostError> {
+        self.apply_ledger_cancels().await?;
+        let pumped = self.pump_primed_inner(primed).await;
+        self.reconcile_job_ledger();
+        self.exchange_job_side_channel();
+        pumped
+    }
+
+    async fn pump_primed_inner(&mut self, primed: Option<Vec<u8>>) -> Result<usize, PluginHostError> {
         let has_deferred = !self.pending_interactive.is_empty()
             || !self.pending_background.is_empty()
             || self.replay_seed_refusals.iter().any(Option::is_some)

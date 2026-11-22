@@ -318,3 +318,12 @@ fn ours_inflates_miniz_oxide_output_and_vice_versa() {
     }
 }
 //#endregion 🧪️Oracle
+
+#[test]
+fn head_inflate_returns_a_bounded_prefix_and_flags_the_remainder() {
+    let sample = lcg_bytes(7, 5000);
+    let theirs = miniz_oxide::deflate::compress_to_vec(&sample, 6);
+    assert_eq!(inflate_head(&theirs, 100).expect("head"), (sample[..100].to_vec(), true));
+    assert_eq!(inflate_head(&theirs, sample.len()).expect("whole"), (sample.clone(), false));
+    assert_eq!(inflate_head(&theirs, sample.len() + 9).expect("over"), (sample, false));
+}

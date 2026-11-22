@@ -149,4 +149,19 @@ fn the_icons_driver_lays_buttons_and_segments_out_as_icon_cells_not_label_width(
     assert_eq!(width(&button("x"), true), width(&long, true), "icon cells do not depend on the caption");
     assert_eq!(width(&segmented_select("a"), true), theme.control_height * 3.0, "an icons-only segmented group is one cell per option");
 }
+
+#[test]
+fn a_button_label_takes_the_emphasized_ink_on_hover_like_its_chrome_cell() {
+    let glyph_colors = |draw: &DrawList| draw.layers.iter().flat_map(|layer| layer.ui_instances.iter()).filter(|instance| (instance.params[2] - KIND_GLYPH).abs() < 0.01).map(|instance| instance.color).collect::<Vec<_>>();
+    let button = UiNode::Button(UiButtonNode { id: Some("save".into()), icon_id: IconName::CircleDot, label: Label::data("Save"), action: action(), style: None, presence: UiPresence::default(), menu: None });
+    let (mut tree, root, theme, mut atlas) = setup(&button);
+    let bounds = tree.absolute_rect(root).expect("bounds");
+    let rest = paint_with_presentation(&tree, root, &theme, &mut atlas, RetainedPaintPresentation::default(), None);
+    assert!(!glyph_colors(&rest).is_empty(), "the label paints");
+    assert!(glyph_colors(&rest).iter().all(|color| *color == token_color(item_text(&theme, false, false))), "a resting label keeps the element ink");
+    tree.node_mut(root).expect("node").flags.set(NodeFlags::HOVER_OWNER, true);
+    let hovered = paint_with_presentation(&tree, root, &theme, &mut atlas, RetainedPaintPresentation::default(), Some((bounds.x + bounds.w * 0.5, bounds.y + bounds.h * 0.5)));
+    assert!(!glyph_colors(&hovered).is_empty(), "the hovered label paints");
+    assert!(glyph_colors(&hovered).iter().all(|color| *color == token_color(item_text(&theme, false, true))), "a hovered label takes the emphasized ink");
+}
 //#endregion 🔘️SegmentedSelectLaws

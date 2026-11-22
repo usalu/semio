@@ -67,8 +67,9 @@ export async function proveTrustedGisRetainedBrowserFixture(repoRoot: string): P
     selected.replace("verifyRetained();", ""),
   ];
   for (const hostile of hostiles) assert(hostile !== selected && !conforms(hostile), "retained browser hostile must fail");
-  const gateStart = source.indexOf("\nclass TrustedStdioGisBundleCheckScript");
-  const gate = source.slice(gateStart, source.indexOf("\nclass TrustedCatalogBootstrapScript", gateStart));
+  const gateSource = readHubScriptModule(repoRoot, "🧪️tests/🎁️trusted-stdio-gis-bundle-check");
+  const gateStart = gateSource.indexOf("\nclass TrustedStdioGisBundleCheckScript");
+  const gate = gateSource.slice(gateStart, gateSource.indexOf("\n}\n", gateStart) + 3);
   const mode = gate.lastIndexOf('if (segments[0] === "--browser" || segments[0] === "--two-author-shell")');
   assert(mode >= 0 && gate.indexOf("const initialPlan = await validateAndPublishTrustedStdioGisCandidate") < mode);
   assert(gate.slice(mode).includes("await proveTrustedGisClosedActorV1(this.repoRoot, dataRoot, receipt, artifactPath)"));
@@ -224,9 +225,15 @@ export async function proveTrustedGisPublicationFixture(repoRoot: string, fixtur
     candidate.replace(proof, proof.slice(0, -1) + ".catch(() => undefined);"),
   ];
   for (const hostile of hostiles) assert(hostile !== candidate && !conforms(hostile), "publication source admitted missing, late, substituted, detached or swallowed proof");
-  const development = body("\nclass DevScript", "\nclass SecureLocalSmokeScript");
-  const bootstrap = body("\nclass TrustedCatalogBootstrapScript", "\nclass AdminBackendCheckScript");
-  const native = body("\nclass TrustedStdioGisBundleCheckScript", "\nclass TrustedCatalogBootstrapScript");
+  const moduleClassBody = (modulePath: string, header: string): string => {
+    const text = readHubScriptModule(repoRoot, modulePath);
+    const first = text.indexOf(header), last = text.indexOf("\n}\n", first);
+    assert(first >= 0 && last > first, header);
+    return text.slice(first, last + 3);
+  };
+  const development = moduleClassBody("🎛️commands/🏗️build-and-dev", "\nclass DevScript");
+  const bootstrap = moduleClassBody("🎛️commands/🏷️trusted-catalog", "\nclass TrustedCatalogBootstrapScript");
+  const native = moduleClassBody("🧪️tests/🎁️trusted-stdio-gis-bundle-check", "\nclass TrustedStdioGisBundleCheckScript");
   for (const [name, caller] of [["development", development], ["bootstrap", bootstrap]] as const) {
     assert(caller.includes("await validateAndPublishTrustedStdioGisCandidate(host,actualPhase,receipt)"), name + " must join mandatory proof");
     assert(!caller.includes("publishTrustedBootstrapCurrent("), name + " cannot publish directly");

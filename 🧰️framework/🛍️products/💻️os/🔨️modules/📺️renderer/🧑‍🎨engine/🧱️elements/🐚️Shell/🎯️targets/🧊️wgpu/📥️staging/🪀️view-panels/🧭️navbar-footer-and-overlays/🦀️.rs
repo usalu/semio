@@ -79,6 +79,12 @@ impl<'ctx> PanelsViewCtx<'ctx> {
                     return false;
                 };
                 let presence = self.footer_presence_rows();
+                let cells = semio_ui_wgpu_light::presence_bar::presence_bar_cells(&presence, None);
+                if !cells.is_empty() {
+                    paint_footer_presence_cells(draw, atlas, icons, input, theme, rect, &cells);
+                    cursor.phase = 4;
+                    return false;
+                }
                 let label = semio_ui_wgpu_light::presence_bar::presence_bar_chip_text(&presence, None, self.prefs.active_locale());
                 match render_footer_status_step(cursor, draw, atlas, icons, input, theme, rect, "s-presence-peers", None, &label, false) {
                     Ok(false) => return false,

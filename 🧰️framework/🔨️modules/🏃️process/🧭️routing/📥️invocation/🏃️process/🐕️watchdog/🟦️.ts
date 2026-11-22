@@ -106,6 +106,27 @@ export function createScriptTerminationGuardV1(options:Readonly<{exit:(code:numb
  };
 }
 
+/** 🪢️ The environment variable through which a spawner hands its own pid to the Script process it starts: the owner whose death ends that process. */
+export const SCRIPT_PROCESS_OWNER_ENV_V1:string=policy.ownerEnvironment;
+/** 🔭️ What the owner rule depends on: the owner pid handed over (`null` when none), whether it lives, and the parent pid at birth and now. */
+export type ScriptProcessOwnerFactsV1=Readonly<{owner:number|null;ownerAlive:boolean;initialParent:number;currentParent:number}>;
+/** 📜️ The single pure rule: an owned process is orphaned once its owner is gone, or once it was the direct child of its owner and has been reparented (a reused pid cannot pose as the owner then); a process nobody handed an owner to (`nohup`, a daemon) is never orphaned. @see ./🧬️schema/🔣️.json */
+export function scriptProcessOwnerLostV1(facts:ScriptProcessOwnerFactsV1):boolean{
+ return facts.owner!==null&&(!facts.ownerAlive||facts.initialParent===facts.owner&&facts.currentParent!==facts.owner);
+}
+/** 📥️ The owner pid a spawner handed over, `null` when it handed none or the value is no pid. */
+export function readScriptProcessOwnerV1(environment:Readonly<Record<string,string|undefined>>):number|null{const value=Number(environment[SCRIPT_PROCESS_OWNER_ENV_V1]);return Number.isSafeInteger(value)&&value>1&&value!==process.pid?value:null;}
+const processExists=(pid:number):boolean=>{try{process.kill(pid,0);return true;}catch(error){return(error as NodeJS.ErrnoException).code==="EPERM";}};
+/** 👻️ Watches the owner of this process (POSIX and Windows alike: a pid probe and the parent pid, no signal): `onLost` runs once with the owner pid when the owner is gone, so work and leases end with their owner instead of outliving it as an orphan. */
+export function startScriptProcessOwnerWatchV1(options:Readonly<{onLost:(owner:number)=>void;environment?:Readonly<Record<string,string|undefined>>;alive?:(pid:number)=>boolean;parent?:()=>number;checkMilliseconds?:number}>):()=>void{
+ const owner=readScriptProcessOwnerV1(options.environment??process.env);if(owner===null)return()=>{};
+ const alive=options.alive??processExists,parent=options.parent??(()=>process.ppid),initialParent=parent(),timer=setInterval(()=>{
+  if(!scriptProcessOwnerLostV1({owner,ownerAlive:alive(owner),initialParent,currentParent:parent()}))return;
+  clearInterval(timer);options.onLost(owner);
+ },options.checkMilliseconds??policy.ownerCheckMilliseconds);
+ timer.unref();return()=>clearInterval(timer);
+}
+
 let admissionWaitDepth=0,admissionWaitStarted=0,admissionWaitCompleted=0;
 /** ⏳️ Opens one wait for machine admission and returns the call that closes it: overlapping waits count once. The time spent here is not part of any deadline, because a deadline starts when the work is admitted. */
 export function beginAdmissionWaitV1():()=>void{

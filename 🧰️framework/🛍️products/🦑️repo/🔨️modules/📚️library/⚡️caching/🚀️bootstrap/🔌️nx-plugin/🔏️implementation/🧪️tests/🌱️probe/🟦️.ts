@@ -5,13 +5,10 @@ import{spawnSync}from"node:child_process";
 import{tmpdir}from"node:os";
 import{join,resolve}from"node:path";
 import{fileURLToPath,pathToFileURL}from"node:url";
-import{readFileSync}from"node:fs";
-import ts from"typescript";
+import{loadProductFunctionsSyncV1}from"../../../../../../../../../../🔨️modules/🏃️process/🧪️testing/🧩️extracted-function/🟦️.ts";
 
-const module_=resolve(import.meta.dirname,"../../🟨️.mjs"),source=readFileSync(module_,"utf8"),tree=ts.createSourceFile(module_,source,ts.ScriptTarget.Latest,true);
-const pick=(name:string)=>tree.statements.find(node=>(ts.isFunctionDeclaration(node)&&node.name?.text===name)||(ts.isVariableStatement(node)&&node.declarationList.declarations.some(declaration=>declaration.name.getText(tree)===name)))!.getText(tree).replace(/^export /u,"");
-const code=ts.transpileModule(pick("probeCode")+"\n"+pick("nxBuildDependencySourceProbeV1"),{compilerOptions:{target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.ESNext}}).outputText;
-const probe=new Function("spawnSync","fileURLToPath","library",code+";return nxBuildDependencySourceProbeV1;")(spawnSync,fileURLToPath,pathToFileURL(resolve(import.meta.dirname,"../../../../../../")+"/"));
+const module_=resolve(import.meta.dirname,"../../🟨️.mjs");
+const probe=loadProductFunctionsSyncV1(module_,["nxBuildDependencySourceProbeV1"],{spawnSync,fileURLToPath,library:pathToFileURL(resolve(import.meta.dirname,"../../../../../../")+"/")}).nxBuildDependencySourceProbeV1;
 const scratch=()=>mkdtempSync(join(realpathSync(tmpdir()),"projection-probe-"));
 const identity="c".repeat(64),revision={path:"/x/a.mjs",sha256:"d".repeat(64)};
 

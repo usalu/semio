@@ -12,9 +12,18 @@ use semio_framework::kernel::InvocationResult;
 use store::{MemberFactory,SpaceMember};
 impl<'ctx,A:ArtifactApp,M:store::ReferenceSpaceMember+MemberFactory+'static,X:InstanceExtension> DispatchCtx<'ctx,A,M,X>{
  /// 📥️ A producer keeps its original input slot until the admitted native owner takes it; pending work never repeats production.
+ /// The receipt stays the in-flight marker after its result is built once into the held result slot; the slot hands the result
+ /// to `output` only after the foreground retired the emission construction it was built under, so a turn that runs out
+ /// between building and retiring never rebuilds it.
  pub async fn dispatch_original_emission(&mut self,input:&mut Option<OriginalEmissionInput<A>>,output:&mut Option<InvocationResult>,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
   if self.tools.original_emission_admission.is_none(){
-   if let Some(source)=self.tools.original_emission_receipt{let operation=source.operation(cx)?;if admit_original_emission_receipt(operation,cx,self.tools.original_emission_construction.get_or_insert_with(Default::default),output)?{self.tools.original_emission_receipt=None;return Ok(true)}return Ok(false)}
+   if let Some(source)=self.tools.original_emission_receipt{
+    if output.is_some(){return Err(invalid("original emission handoff destination is occupied").into())}
+    let operation=source.operation(cx)?;let construction=self.tools.original_emission_construction.get_or_insert_with(Default::default);
+    if self.tools.original_emission_result.is_none()&&!admit_original_emission_receipt(operation,cx,construction,&mut self.tools.original_emission_result)?{return Ok(false)}
+    loop{match construction.retire_step(cx)?{semio_framework_job::InteractiveJobCloseStep::Complete{..}=>break,semio_framework_job::InteractiveJobCloseStep::Pending{progress}if progress!=RetainedCloneProgress::default()=>{},_=>return Ok(false)}}
+    *output=self.tools.original_emission_result.take();self.tools.original_emission_receipt=None;return Ok(true)
+   }
    if input.is_none(){return Err(invalid("original emission ingress requires its retained producer input").into())}
    OriginalEmissionAdmission::<A>::admit(cx,self.tools.original_emission_construction.get_or_insert_with(Default::default),&mut self.tools.original_emission_admission)?;return Ok(false)
   }

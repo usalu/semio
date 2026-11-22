@@ -11,6 +11,8 @@ use std::collections::{BTreeMap, HashMap};
 
 use semio_ui_arena::NodeId;
 use semio_ui_wgpu_layout::chrome::UiDriverDrag;
+use semio_ui_wgpu_light::tree_roving::TreeMerge;
+use semio_ui_wgpu_light::tree_drop::{tree_palette_drag_begins, tree_palette_payload, TREE_CATALOGUE_DRAG_MIME};
 use semio_ui_declaration::ui::{SurfaceKind, UiNode, UiState, UiTreeItemNode};
 use semio_ui_theme::geometry::Rect;
 use semio_ui_wgpu_layout::layout::{ring_t_at, slider_control_presentation, tree_drag_handle_rect, tree_drag_handle_reservation, tree_drag_role, tree_section_header_band, TreeRowMetrics};

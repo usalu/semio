@@ -120,17 +120,9 @@ pub struct JackWorkingScene{pub nodes:Vec<Node>,pub edges:Vec<Edge>}
 pub fn jack_working_scene_from_read(source:&dyn crate::standards::v1::subsets::any::schema::content_read::JackContentProjection)->Result<JackWorkingScene,ValueError>{let(nodes,edges)=source.projection_counts();if nodes>16_384||edges>16_384{return Err(ValueError::new(ValueRefusalKind::WorkLimit,"query scene exceeds its entity admission"))}let mut scene=JackWorkingScene{nodes:Vec::new(),edges:Vec::new()};for index in 0..nodes{scene.nodes.push(source.query_node(index,4_096)?.ok_or_else(||invalid("selected query node is not retained"))?);}for index in 0..edges{scene.edges.push(source.query_edge(index,4_096)?.ok_or_else(||invalid("selected query edge is not retained"))?);}Ok(scene)}
 pub fn jack_working_scene_for_handle(handle:&JackContentChild)->Result<JackWorkingScene,ValueError>{let owner=jack_content_for_handle(handle)?;jack_working_scene_from_read(owner.read())}
 
-/// 🧮️ The copy-byte body every self-funded Jack retirement turn quotes against.
-pub const JACK_SELF_FUNDED_BODY_BYTES: usize = 65_536;
-
 /// 🏇️ The mounted-owner policy every Trinity component declares for its preparation, maintenance and close lanes.
 pub fn trinity_mounted_owner_policy() -> semio_plugin::MountedOwnerPolicyV1 {
     semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT
-}
-
-/// 🎟️ Funds exactly one turn from the owner's own published quote, for callers no scheduler grants (standalone stores, fixtures and local scratch owners).
-pub fn jack_self_funded_grant(demand: semio_framework_value::RetirementDemand) -> semio_framework_value::retained_clone::RetainedCloneGrant {
-    semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes.max(JACK_SELF_FUNDED_BODY_BYTES), maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth.max(1) }
 }
 
 /// ♻️ Drives an admitted retirement cursor through demand-quoted retained turns until its terminal-empty witness.
@@ -140,10 +132,10 @@ pub fn drive_retirement_to_terminal(mut owner: Box<dyn semio_framework_value::Er
     const IDLE_TURNS: usize = 4;
     let mut idle = 0;
     while !owner.terminal_is_empty() {
-        let demand = owner.next_demand(JACK_SELF_FUNDED_BODY_BYTES)?;
-        let work = owner.next_computational_work(JACK_SELF_FUNDED_BODY_BYTES)?;
-        let (poll, _) = pump.turn(work.max(1), u64::MAX, || Some(0), jack_self_funded_grant(demand))?
-            .with_effect(|effect| owner.close_step(JACK_SELF_FUNDED_BODY_BYTES, effect))?
+        let demand = owner.next_demand(semio_plugin::PLUGIN_SELF_FUNDED_BODY_BYTES)?;
+        let work = owner.next_computational_work(semio_plugin::PLUGIN_SELF_FUNDED_BODY_BYTES)?;
+        let (poll, _) = pump.turn(work.max(1), u64::MAX, || Some(0), semio_plugin::plugin_self_funded_grant(demand, semio_plugin::PLUGIN_SELF_FUNDED_BODY_BYTES))?
+            .with_effect(|effect| owner.close_step(semio_plugin::PLUGIN_SELF_FUNDED_BODY_BYTES, effect))?
             .ok_or_else(|| invalid("Jack retirement turn was not admitted"))?;
         let progressed = match poll {
             RetainedWorkPoll::Pending { work } => work > 0,
@@ -163,7 +155,7 @@ pub fn drive_retirement_to_terminal(mut owner: Box<dyn semio_framework_value::Er
 /// ♻️ Admits an owned value's retirement frame under its own quote, then drives it to the terminal-empty witness.
 pub fn retire_owned_to_terminal<T: RetireOwned>(value: T) -> Result<(), ValueError> {
     use semio_framework_value::retirement::{admit_owned_retirement, controlled::controlled_retirement_birth_demand};
-    let birth = jack_self_funded_grant(controlled_retirement_birth_demand(&value)?);
+    let birth = semio_plugin::plugin_self_funded_grant(controlled_retirement_birth_demand(&value)?, semio_plugin::PLUGIN_SELF_FUNDED_BODY_BYTES);
     let mut original = Some(value);
     let (turn, _) = semio_framework_job::OriginalRetirementPump::new().turn(8, u64::MAX, || Some(0), birth)?
         .with_effect(|effect| admit_owned_retirement(&mut original, effect))?

@@ -2,13 +2,10 @@ import{physicalSourceOriginV1}from"../../../🔏️revision/🟨️.mjs";
 /** 🪟️ Atomic optional groups finish inside one genuine owner callback; Native receiver lifetime is never resumed after release. */
 import {expect,test} from "bun:test";
 import {readFile} from "node:fs/promises";
+import {loadProductFunctionsV1} from "../../../../../../../../../🔨️modules/🏃️process/🧪️testing/🧩️extracted-function/🟦️.ts";
 import schema from "../../🧬️schema/🔣️.json";
 
-const load=async()=>{
- const ts=require("typescript"),text=await readFile(new URL("../../🟨️.mjs",physicalSourceOriginV1(import.meta.url,(import.meta as ImportMeta&{semioPhysicalSourceURL?:string}).semioPhysicalSourceURL)),"utf8"),tree=ts.createSourceFile("storage.mjs",text,ts.ScriptTarget.Latest,true,ts.ScriptKind.JS);
- const pick=(name:string)=>tree.statements.find((node:any)=>ts.isFunctionDeclaration(node)&&node.name?.text===name).getText(tree).replace(/^export /u,"");
- return pick("retireOptionalGraphHeadroomV1")+";"+pick("prepareBuildGraphOptionalHeadroomV1")+";return prepareBuildGraphOptionalHeadroomV1;";
-};
+const load=async()=>new URL("../../🟨️.mjs",physicalSourceOriginV1(import.meta.url,(import.meta as ImportMeta&{semioPhysicalSourceURL?:string}).semioPhysicalSourceURL));
 
 const model=async(files:number,partials=0)=>{
  const code=await load(),policy=schema.definitions.OptionalQuota.definitions.DefaultPolicy.const,events:string[]=[];
@@ -17,7 +14,7 @@ const model=async(files:number,partials=0)=>{
  const control={publish:async()=>{events.push("progress");},yieldContinuation:async()=>{events.push(held?"yield-held":"yield-free");}};
  const image={root:"/graph",recheck:async()=>{},withExclusiveMaintenance:async(request:unknown,body:Function)=>{expect(request).toEqual({version:1,wait:false});windows++;held=true;try{return{acquired:true,value:await body(undefined,{kind:"mock"})};}finally{held=false;events.push("release");}}};
  const ports={requireNativePlatformImageWriterV1:(actual:unknown)=>{expect(actual).toBe(image);expect(held).toBe(true);},repositoryCachePartitionNativeImageV1:(actual:unknown)=>actual,retireBuildGraphOptionalGroupsHeadroomV1:async(actual:unknown)=>{expect(actual).toBe(image);expect(held).toBe(true);if(windows<=partials){remaining=Math.max(0,remaining-Math.ceil(files/(partials+1)));return{retiredBytes:1048576,retiredFiles:1,partial:true};}remaining=0;return{retiredBytes:files*1048576,retiredFiles:files};},validateJsonSchemaSubset:()=>[],quotaSchema:{definitions:{DefaultPolicy:{const:policy},Headroom:{}}},schema,checkResourceLeaseControl:()=>{},optionalInventoryV1:async()=>{expect(held).toBe(true);return entries.slice(files-remaining);},nativeStatfsSyncV1:()=>({bsize:1,bavail:(files-remaining)*1048576}),lstat:async(path:string)=>({isFile:()=>true,isSymbolicLink:()=>false,nlink:1,dev:1,ino:Number(path.slice(-8))+1,size:1048576,blocks:2048}),requireNativeStoragePathV1:(_root:string,path:string)=>path,unlink:async()=>{expect(held).toBe(true);remaining--;}};
- const run=new Function(...Object.keys(ports),code)(...Object.values(ports));
+ const run=(await loadProductFunctionsV1(code,["prepareBuildGraphOptionalHeadroomV1"],ports)).prepareBuildGraphOptionalHeadroomV1;
  const result=await run(image,control,{minimumAvailableBytes:policy.minimumAvailableBytes});
  return{result,windows,remaining,events,held};
 };

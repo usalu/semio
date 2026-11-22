@@ -56,7 +56,7 @@
       "productionReachable": false,
       "networkDuringExecution": false,
       "homepage": "https://openpyxl.readthedocs.io",
-      "rationale": "📖️ A READER, registered separately from this file's existing `cross-semio-implementation` entry, which COMPUTES what a mutation should produce from this repository's own reading of the spec and therefore cannot discharge this requirement — both halves would descend from one reading of it. openpyxl 3.1.5 is a from-scratch reader/writer of the SpreadsheetML package (its own OPC walk, its own XML parsing — no dependency on this repository's `zip`/`calamine`/`quick-xml` reimplementation). `load_workbook(path)` exposes `wb.sheetnames`, `ws.dimensions`, per-cell `ws[coord].value`, and cell formatting/formula strings, directly witnessing this subset's document vocabulary. Verified against this subset's own committed `shared://📕️reuse-marketplaces.xlsx`: `wb.sheetnames` reports the real two-sheet workbook (`Marktplätze`, `Länderübersicht`) and `ws['A1'].value` reads the real header cell `ID`.",
+      "rationale": "📖️ A READER, registered separately from this file's existing `cross-semio-implementation` entry, which COMPUTES what a mutation should produce from this repository's own reading of the spec and therefore cannot discharge this requirement — both halves would descend from one reading of it. openpyxl 3.1.5 is a from-scratch reader/writer of the SpreadsheetML package (its own OPC walk, its own XML parsing — no dependency on this repository's `zip`/`calamine`/`quick-xml` reimplementation). `load_workbook(path)` exposes `wb.sheetnames`, `ws.dimensions`, per-cell `ws[coord].value`, and cell formatting/formula strings, directly witnessing this subset's document vocabulary. Verified against this subset's own committed `shared://📕️reuse-marketplaces.xlsx`: `wb.sheetnames` reports the real two-sheet workbook (`Marktplätze`, `Länderübersicht`) and `ws['A1'].value` reads the real header cell `ID`. ✅️ EXECUTION: openpyxl wrote the committed grid before/after pairs (ticket SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION, 🔨️f2-gen-xlsx-base-fixtures.py); its replay lives at `📕️xlsx/🔮️oracles/🔭️third-party-generators/🐍️.py` (`repo tools exec uv -- run --frozen --no-dev --group test --python <3.14> python <script> verify`; openpyxl 3.1.5 is locked in `uv.lock`, group `test`): it rebuilds each grid pair with openpyxl and compares the workbook as openpyxl reads it. The Rust differential that runs on every run is `the_oracle_reproduces_every_third_party_pair`, which holds the oracle's own result to those openpyxl-written `after` packages through `calamine` (table `🧫️fixtures/🔭️third-party-pairs/🔣️.json`).",
       "comparisonProfiles": [
         "semantic-spreadsheet-v1"
       ]
@@ -66,11 +66,11 @@
       "kind": "third-party-library",
       "ecosystem": "javascript",
       "package": "jszip",
-      "version": "3.10.1",
+      "version": "3.10.2",
       "engine": {
         "family": "jszip",
         "implementation": "jszip + fast-xml-parser reader",
-        "version": "jszip@3.10.1 + fast-xml-parser@5.11.1"
+        "version": "jszip@3.10.2 + fast-xml-parser@5.11.2"
       },
       "capabilities": [
         "xlsx-ecma-376-mutate"
@@ -80,7 +80,7 @@
       "productionReachable": false,
       "networkDuringExecution": false,
       "homepage": "https://openpyxl.readthedocs.io",
-      "rationale": "📖️ A third-party implementation of the OPC package layer: jszip opens the container and fast-xml-parser reads and writes `[Content_Types].xml` and every `*.rels` part. The `before`/`after` pairs of the plumbing kinds are authored from the artifact's committed real package by this pairing -- each pair states its effect once as an XML edit and once as a model-level expectation and is refused unless both agree -- so nothing in this repository predicts the answer the pairs are judged against.",
+      "rationale": "📖️ A third-party implementation of the OPC package layer: jszip opens the container and fast-xml-parser reads and writes `[Content_Types].xml` and every `*.rels` part. The `before`/`after` pairs of the plumbing kinds are authored from the artifact's committed real package by this pairing -- each pair states its effect once as an XML edit and once as a model-level expectation and is refused unless both agree -- so nothing in this repository predicts the answer the pairs are judged against. ✅️ EXECUTION: jszip + fast-xml-parser wrote the committed plumbing pairs (ticket DIFF-ONLY-MUTATIONS-WITH-CENTRAL-APPLY-AND-DIFF-SUMMING-INVERSES, 🧰️opc-plumbing-oracle/📜️script.ts); its replay lives at `📕️xlsx/🔮️oracles/🔭️third-party-generators/🟦️.ts` (`repo ./<script> verify`; jszip and fast-xml-parser are declared in `✏️s/package.json` and resolved from `✏️s/node_modules`) and re-derives all 13 recipes byte-identically. The Rust differential that runs on every run is `the_oracle_reproduces_every_third_party_pair`, which holds the oracle's plumbing result to those third-party `after` packages.",
       "comparisonProfiles": [
         "semantic-spreadsheet-v1"
       ]
@@ -823,9 +823,9 @@
       ],
       "generator": {
         "oracle": "jszip-xlsx-ecma-376-opc-plumbing-reader",
-        "packageVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
+        "packageVersion": "jszip@3.10.2 + fast-xml-parser@5.11.2",
         "engineFamily": "zip-xml",
-        "engineVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
+        "engineVersion": "jszip@3.10.2 + fast-xml-parser@5.11.2",
         "command": "repo .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️08/DIFF-ONLY-MUTATIONS-WITH-CENTRAL-APPLY-AND-DIFF-SUMMING-INVERSES/🧰️opc-plumbing-oracle/📜️script.ts generate --artifact xlsx --only set-relationship-inserts-an-external-hyperlink-first",
         "platform": "darwin-arm64"
       },
@@ -873,9 +873,9 @@
       ],
       "generator": {
         "oracle": "jszip-xlsx-ecma-376-opc-plumbing-reader",
-        "packageVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
+        "packageVersion": "jszip@3.10.2 + fast-xml-parser@5.11.2",
         "engineFamily": "zip-xml",
-        "engineVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
+        "engineVersion": "jszip@3.10.2 + fast-xml-parser@5.11.2",
         "command": "repo .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️08/DIFF-ONLY-MUTATIONS-WITH-CENTRAL-APPLY-AND-DIFF-SUMMING-INVERSES/🧰️opc-plumbing-oracle/📜️script.ts generate --artifact xlsx --only set-relationship-appends-an-external-hyperlink",
         "platform": "darwin-arm64"
       },
@@ -923,9 +923,9 @@
       ],
       "generator": {
         "oracle": "jszip-xlsx-ecma-376-opc-plumbing-reader",
-        "packageVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
+        "packageVersion": "jszip@3.10.2 + fast-xml-parser@5.11.2",
         "engineFamily": "zip-xml",
-        "engineVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
+        "engineVersion": "jszip@3.10.2 + fast-xml-parser@5.11.2",
         "command": "repo .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️08/DIFF-ONLY-MUTATIONS-WITH-CENTRAL-APPLY-AND-DIFF-SUMMING-INVERSES/🧰️opc-plumbing-oracle/📜️script.ts generate --artifact xlsx --only set-relationship-retypes-the-last-root-relationship",
         "platform": "darwin-arm64"
       },
@@ -973,9 +973,9 @@
       ],
       "generator": {
         "oracle": "jszip-xlsx-ecma-376-opc-plumbing-reader",
-        "packageVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
+        "packageVersion": "jszip@3.10.2 + fast-xml-parser@5.11.2",
         "engineFamily": "zip-xml",
-        "engineVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
+        "engineVersion": "jszip@3.10.2 + fast-xml-parser@5.11.2",
         "command": "repo .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️08/DIFF-ONLY-MUTATIONS-WITH-CENTRAL-APPLY-AND-DIFF-SUMMING-INVERSES/🧰️opc-plumbing-oracle/📜️script.ts generate --artifact xlsx --only set-relationship-no-op-identical-relationship",
         "platform": "darwin-arm64"
       },
@@ -1023,9 +1023,9 @@
       ],
       "generator": {
         "oracle": "jszip-xlsx-ecma-376-opc-plumbing-reader",
-        "packageVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
+        "packageVersion": "jszip@3.10.2 + fast-xml-parser@5.11.2",
         "engineFamily": "zip-xml",
-        "engineVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
+        "engineVersion": "jszip@3.10.2 + fast-xml-parser@5.11.2",
         "command": "repo .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️08/DIFF-ONLY-MUTATIONS-WITH-CENTRAL-APPLY-AND-DIFF-SUMMING-INVERSES/🧰️opc-plumbing-oracle/📜️script.ts generate --artifact xlsx --only remove-relationship-drops-the-last-root-relationship",
         "platform": "darwin-arm64"
       },
@@ -1073,9 +1073,9 @@
       ],
       "generator": {
         "oracle": "jszip-xlsx-ecma-376-opc-plumbing-reader",
-        "packageVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
+        "packageVersion": "jszip@3.10.2 + fast-xml-parser@5.11.2",
         "engineFamily": "zip-xml",
-        "engineVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
+        "engineVersion": "jszip@3.10.2 + fast-xml-parser@5.11.2",
         "command": "repo .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️08/DIFF-ONLY-MUTATIONS-WITH-CENTRAL-APPLY-AND-DIFF-SUMMING-INVERSES/🧰️opc-plumbing-oracle/📜️script.ts generate --artifact xlsx --only remove-relationship-drops-an-added-hyperlink",
         "platform": "darwin-arm64"
       },
@@ -1116,9 +1116,9 @@
       ],
       "generator": {
         "oracle": "jszip-xlsx-ecma-376-opc-plumbing-reader",
-        "packageVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
+        "packageVersion": "jszip@3.10.2 + fast-xml-parser@5.11.2",
         "engineFamily": "zip-xml",
-        "engineVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
+        "engineVersion": "jszip@3.10.2 + fast-xml-parser@5.11.2",
         "command": "repo .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️08/DIFF-ONLY-MUTATIONS-WITH-CENTRAL-APPLY-AND-DIFF-SUMMING-INVERSES/🧰️opc-plumbing-oracle/📜️script.ts generate --artifact xlsx --only remove-relationship-rejected-missing-id",
         "platform": "darwin-arm64"
       },
@@ -1166,9 +1166,9 @@
       ],
       "generator": {
         "oracle": "jszip-xlsx-ecma-376-opc-plumbing-reader",
-        "packageVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
+        "packageVersion": "jszip@3.10.2 + fast-xml-parser@5.11.2",
         "engineFamily": "zip-xml",
-        "engineVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
+        "engineVersion": "jszip@3.10.2 + fast-xml-parser@5.11.2",
         "command": "repo .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️08/DIFF-ONLY-MUTATIONS-WITH-CENTRAL-APPLY-AND-DIFF-SUMMING-INVERSES/🧰️opc-plumbing-oracle/📜️script.ts generate --artifact xlsx --only set-content-type-inserts-a-default-first",
         "platform": "darwin-arm64"
       },
@@ -1216,9 +1216,9 @@
       ],
       "generator": {
         "oracle": "jszip-xlsx-ecma-376-opc-plumbing-reader",
-        "packageVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
+        "packageVersion": "jszip@3.10.2 + fast-xml-parser@5.11.2",
         "engineFamily": "zip-xml",
-        "engineVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
+        "engineVersion": "jszip@3.10.2 + fast-xml-parser@5.11.2",
         "command": "repo .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️08/DIFF-ONLY-MUTATIONS-WITH-CENTRAL-APPLY-AND-DIFF-SUMMING-INVERSES/🧰️opc-plumbing-oracle/📜️script.ts generate --artifact xlsx --only set-content-type-retypes-an-existing-default",
         "platform": "darwin-arm64"
       },
@@ -1266,9 +1266,9 @@
       ],
       "generator": {
         "oracle": "jszip-xlsx-ecma-376-opc-plumbing-reader",
-        "packageVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
+        "packageVersion": "jszip@3.10.2 + fast-xml-parser@5.11.2",
         "engineFamily": "zip-xml",
-        "engineVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
+        "engineVersion": "jszip@3.10.2 + fast-xml-parser@5.11.2",
         "command": "repo .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️08/DIFF-ONLY-MUTATIONS-WITH-CENTRAL-APPLY-AND-DIFF-SUMMING-INVERSES/🧰️opc-plumbing-oracle/📜️script.ts generate --artifact xlsx --only set-content-type-no-op-identical-entry",
         "platform": "darwin-arm64"
       },
@@ -1309,9 +1309,9 @@
       ],
       "generator": {
         "oracle": "jszip-xlsx-ecma-376-opc-plumbing-reader",
-        "packageVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
+        "packageVersion": "jszip@3.10.2 + fast-xml-parser@5.11.2",
         "engineFamily": "zip-xml",
-        "engineVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
+        "engineVersion": "jszip@3.10.2 + fast-xml-parser@5.11.2",
         "command": "repo .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️08/DIFF-ONLY-MUTATIONS-WITH-CENTRAL-APPLY-AND-DIFF-SUMMING-INVERSES/🧰️opc-plumbing-oracle/📜️script.ts generate --artifact xlsx --only set-content-type-rejected-default-in-another-case",
         "platform": "darwin-arm64"
       },
@@ -1359,9 +1359,9 @@
       ],
       "generator": {
         "oracle": "jszip-xlsx-ecma-376-opc-plumbing-reader",
-        "packageVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
+        "packageVersion": "jszip@3.10.2 + fast-xml-parser@5.11.2",
         "engineFamily": "zip-xml",
-        "engineVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
+        "engineVersion": "jszip@3.10.2 + fast-xml-parser@5.11.2",
         "command": "repo .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️08/DIFF-ONLY-MUTATIONS-WITH-CENTRAL-APPLY-AND-DIFF-SUMMING-INVERSES/🧰️opc-plumbing-oracle/📜️script.ts generate --artifact xlsx --only remove-content-type-drops-an-added-default",
         "platform": "darwin-arm64"
       },
@@ -1402,9 +1402,9 @@
       ],
       "generator": {
         "oracle": "jszip-xlsx-ecma-376-opc-plumbing-reader",
-        "packageVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
+        "packageVersion": "jszip@3.10.2 + fast-xml-parser@5.11.2",
         "engineFamily": "zip-xml",
-        "engineVersion": "jszip@3.10.1 + fast-xml-parser@5.11.1",
+        "engineVersion": "jszip@3.10.2 + fast-xml-parser@5.11.2",
         "command": "repo .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️08/DIFF-ONLY-MUTATIONS-WITH-CENTRAL-APPLY-AND-DIFF-SUMMING-INVERSES/🧰️opc-plumbing-oracle/📜️script.ts generate --artifact xlsx --only remove-content-type-rejected-missing-entry",
         "platform": "darwin-arm64"
       },
@@ -1419,6 +1419,48 @@
       "reproducible": true,
       "family": "structural",
       "notes": "The content types hold no default for the extension nothing. Before-only."
+    },
+    {
+      "id": "insert-cell-applied",
+      "class": "handcrafted",
+      "target": {
+        "artifact": "s.stdio.xlsx",
+        "standard": "ecma-376",
+        "subset": "base"
+      },
+      "mutation": "insert-cell",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before-xlsx",
+          "path": "../🧪️tests/🧫️fixtures/➕️insert-cell-applied/⬅️before.xlsx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+          "sha256": "sha256:a253aee30cf22c633e20dd5c8184f4dd3916635cc092f0f5fab9e9903e780dfe",
+          "bytes": 4835
+        },
+        {
+          "role": "expected-after-xlsx",
+          "path": "../🧪️tests/🧫️fixtures/➕️insert-cell-applied/➡️after.xlsx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+          "sha256": "sha256:6a8a6c068798849cfc4c9daff9b3dccb1931084143a63223a00f9c10bf6604cd",
+          "bytes": 4847
+        }
+      ],
+      "provenance": {
+        "source": "handcrafted",
+        "license": "MIT (openpyxl package bytes of set-cell-applied)",
+        "attribution": "The before package is the committed openpyxl 3.1.5 output of set-cell-applied; the after package adds the row <row r=\"2\"><c r=\"A2\"><v>42</v></c></row> to its sheetData and widens its dimension, by the zip-part patch of claude-gen-xlsx-oracle-evidence.py",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "exact-bytes-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "A vacant A2 of Sheet is filled with the number 42, in a row the sheet did not have."
     }
   ],
   "oracleHostPackages": [],

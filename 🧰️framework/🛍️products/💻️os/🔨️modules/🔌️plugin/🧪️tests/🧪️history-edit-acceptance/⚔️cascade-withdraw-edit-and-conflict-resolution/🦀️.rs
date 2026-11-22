@@ -178,10 +178,6 @@ where
         Err(AcceptanceSeedFault::Original(reason)) => AcceptanceVerdict::Fail(reason),
         Ok(mut app) => {
             let withdrawn = Box::pin(acceptance_cascade_withdraw(&mut app, manifest, case, &seed,cx)).await;
-            if std::env::var_os("SEMIO_XLSX_ARCHIVE_PROGRESS").is_some() {
-                let outcome = match &withdrawn { Ok(summary) => summary.clone(), Err(verdict) => verdict.text() };
-                eprintln!("[DEBUG] Conflict withdrawal {} before original close, stage {:?}, pending {}: {outcome}", case.directory, app.time_travel.status().map(|status| status.stage), app.time_travel.has_pending_work());
-            }
             Box::pin(acceptance_close(&mut app,cx)).await;
             match withdrawn {
                 Err(verdict) => verdict,

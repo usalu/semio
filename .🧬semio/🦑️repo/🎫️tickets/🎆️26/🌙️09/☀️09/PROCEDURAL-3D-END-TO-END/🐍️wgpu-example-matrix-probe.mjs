@@ -36,6 +36,7 @@
 import { chromium } from "playwright";
 import { writeFileSync, mkdirSync, readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
+import { exampleFixtureFor } from "./🐍️example-fixtures.mjs";
 
 const origin = process.env.SEMIO_PROBE_ORIGIN ?? "http://127.0.0.1:6118";
 const outRoot = join(import.meta.dir, "🗑️generated", process.env.SEMIO_PROBE_OUT ?? "wgpu-examples/matrix");
@@ -67,17 +68,8 @@ const LANES = {
  * lane asserts against, read here so a runtime census and a native one are two readings of one
  * statement instead of two independently invented numbers. Directory names carry an emoji prefix, so
  * the slug is matched against the tail of each entry. */
-const EXAMPLES_ROOT = join(import.meta.dir, "..", "..", "..", "..", "..", "..", "..", "✏️s", "🔌️plugins", "🌀️procedural", "🗿️artifacts", "🧊️generation3d", "🏅️standards", "🔖️1", "🪆️subsets", "✳️any", "📚️examples");
 
-const fixtureFor = (example) => {
-  try {
-    const dir = readdirSync(EXAMPLES_ROOT).find((entry) => entry.endsWith(example));
-    if (!dir) return null;
-    return JSON.parse(readFileSync(join(EXAMPLES_ROOT, dir, "🧫️fixtures", "🧩️example", "🔣️.json"), "utf8"));
-  } catch {
-    return null;
-  }
-};
+const fixtureFor = exampleFixtureFor;
 
 /** 📐️ How far a LIVE preview's bounding box may sit from the committed one. The fixture's own
  * `boundingBoxTolerance` is measured at its `tessellationTolerance`; the playground asks the kernel

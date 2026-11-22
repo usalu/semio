@@ -163,9 +163,6 @@ where
     let (change, edited) = match session {
         Ok(done) => done,
         Err(verdict) => {
-            if matches!(verdict, AcceptanceVerdict::Fail(_)) {
-                eprintln!("[DEBUG] primary history acceptance failure in {}\n{}", case.directory, verdict.text());
-            }
             Box::pin(acceptance_close(&mut overwrite,cx)).await;
             return verdict;
         }
@@ -218,9 +215,6 @@ where
                     Err(reason) => AcceptanceVerdict::Fail(reason.context("the alternative instance does not reload".into())),
                     Ok(mut branched) => {
                         let verdict = Box::pin(acceptance_alternative(&mut branched, manifest, &change, &fold, &label, downstream.is_some(), &as_of, trail,cx)).await;
-                        if matches!(verdict, AcceptanceVerdict::Fail(_)) {
-                            eprintln!("[DEBUG] alternative history acceptance failure in {}\n{}", case.directory, verdict.text());
-                        }
                         Box::pin(acceptance_close(&mut branched,cx)).await;
                         verdict
                     }
@@ -228,9 +222,6 @@ where
             }
             Ok(mut branched) => {
                 let verdict = Box::pin(acceptance_alternative(&mut branched, manifest, &change, &fold, &label, downstream.is_some(), &as_of, trail,cx)).await;
-                if matches!(verdict, AcceptanceVerdict::Fail(_)) {
-                    eprintln!("[DEBUG] alternative history acceptance failure in {}\n{}", case.directory, verdict.text());
-                }
                 Box::pin(acceptance_close(&mut branched,cx)).await;
                 verdict
             }

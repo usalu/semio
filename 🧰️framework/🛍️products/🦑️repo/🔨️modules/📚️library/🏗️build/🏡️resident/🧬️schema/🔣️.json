@@ -261,7 +261,6 @@
      "maxItems": 256,
      "items": {
       "type": "string",
-      "minLength": 1,
       "maxLength": 4096
      },
      "description": "The resolved arguments of the invocation (`run`, `run-many`, `exec`, ...): the service loads the graph slice that exactly this selection admits and returns it as `slice`."
@@ -1763,6 +1762,7 @@
     "workspaceIdleMilliseconds": 600000,
     "idleShutdownMilliseconds": 1800000,
     "supersededGraceMilliseconds": 60000,
+    "handoverFlushMilliseconds": 2000,
     "reload": {
      "checkMilliseconds": 30000,
      "quietMilliseconds": 90000,
@@ -1814,7 +1814,9 @@
     "sliceRestartProgressMilliseconds": 60000,
     "sliceRestartTotalMaximum": 120,
     "sliceRestartSameCauseMaximum": 3,
-    "serviceRevisionFiles": ["🏡️resident/🔌️ports/🧭️plan/🟨️.mjs", "🕸️graph/🧮️derived-nodes/🎯️task-state/🟨️.mjs", "🏡️resident/🏗️composition/🌐️host/👷️slice-pool/🟨️.mjs", "🏡️resident/🏗️composition/🌐️host/👷️slice-pool/🧱️limit/🟨️.mjs", "🏡️resident/🏗️composition/🌐️host/👷️slice-pool/🌡️pressure/🟨️.mjs", "🏡️resident/🏗️composition/🌐️host/🟨️.mjs", "🏡️resident/🏗️composition/🌐️host/🍎️launchd/🟨️.mjs", "🏡️resident/🏗️composition/🌐️host/👷️slice-pool/🧵️process/🟨️.mjs", "🏡️resident/🔐️consent/🟨️.mjs", "🏡️resident/🔐️consent/🔎️sample/🟨️.mjs", "🏡️resident/🏛️service/🧯️failure/🟨️.mjs", "🏡️resident/🏛️service/🌐️host/🟨️.mjs", "🏡️resident/🔄️reload/🟨️.mjs", "🌐️remote-execution/🛰️sidecar/🧮️closure/🟦️.ts", "🧭️invocation/🔄️reload/🟦️.ts", "🏡️resident/🧬️schema/🔣️.json", "🧠️memory/🟨️.mjs", "../../../../../../🔨️modules/🏃️process/🏗️build/🌡️host-capacity/📡️sampling/🟦️.ts", "🌡️host-capacity/🟦️.ts", "🧠️memory/🦶️footprint/🟨️.mjs"],
+    "sliceRestartQuietMilliseconds": 60000,
+    "sliceRestartQuietMaximumMilliseconds": 600000,
+    "serviceRevisionFiles": ["🏡️resident/🔌️ports/🧭️plan/🟨️.mjs", "🕸️graph/🧮️derived-nodes/🎯️task-state/🟨️.mjs", "🏡️resident/🏗️composition/🌐️host/👷️slice-pool/🟨️.mjs", "🏡️resident/🏗️composition/🌐️host/👷️slice-pool/🧱️limit/🟨️.mjs", "🏡️resident/🏗️composition/🌐️host/👷️slice-pool/🌡️pressure/🟨️.mjs", "🏡️resident/🏗️composition/🌐️host/👷️slice-pool/🔕️quiet/🟨️.mjs", "🏡️resident/🏗️composition/🌐️host/🟨️.mjs", "🏡️resident/🏗️composition/🌐️host/🍎️launchd/🟨️.mjs", "🏡️resident/🏗️composition/🌐️host/👷️slice-pool/🧵️process/🟨️.mjs", "🏡️resident/🔐️consent/🟨️.mjs", "🏡️resident/🔐️consent/🔎️sample/🟨️.mjs", "🏡️resident/🏛️service/🧯️failure/🟨️.mjs", "🏡️resident/🏛️service/🌐️host/🟨️.mjs", "🏡️resident/🔄️reload/🟨️.mjs", "🌐️remote-execution/🛰️sidecar/🧮️closure/🟦️.ts", "🧭️invocation/🔄️reload/🟦️.ts", "🏡️resident/🧬️schema/🔣️.json", "🧠️memory/🟨️.mjs", "../../../../../../🔨️modules/🏃️process/🏗️build/🌡️host-capacity/📡️sampling/🟦️.ts", "🌡️host-capacity/🟦️.ts", "🧠️memory/🦶️footprint/🟨️.mjs"],
     "sliceHostElasticity": {
      "maximumMegabytes": 8192,
      "hostShareBasisPoints": 7500,
@@ -2097,6 +2099,8 @@
       "host-graph-owner-source": "The project graph could not be read: the source {source} of its owner cannot be loaded ({message}). Only this owner is affected; it is read again as soon as the file changes.",
       "host-graph-owner-failed": "The task you asked for needs the project {owners}, whose configuration cannot be assembled: {message}. Every other project was read and kept; only this one is affected, and it is read again as soon as one of the files it read changes.",
       "host-graph-handover": "The graph read hands over so that it continues on current code; what it finished is kept ({message}).",
+      "host-service-handover": "The repo graph service ends ({reason}) before this graph read finished; the read is asked again of the service that follows it and continues from what was kept.",
+      "host-slice-owners-settling": "Reading the project graph slice ({seconds} s): the slice worker ended because the code of the build tool itself changed ({cause}, exit code {kind}); it is started again once that code has been unchanged for {budget} s (unchanged for {used} s so far, at most {limit} s of waiting), so a burst of edits restarts the read once instead of once per edit.",
       "host-plans": "Plans: {total} asked, {hits} from memory, {computed} computed (last {seconds} s, {budget} over budget); owners re-inferred {reinferred}, cut off {cutoff}; capture {files} files, {probes} probes."
      },
      "de": {
@@ -2226,6 +2230,8 @@
       "host-graph-owner-source": "Der Projektgraph konnte nicht gelesen werden: die Quelle {source} des zugehörigen Projekts lässt sich nicht laden ({message}). Nur dieses Projekt ist betroffen; es wird erneut gelesen, sobald sich die Datei ändert.",
       "host-graph-owner-failed": "Die angeforderte Aufgabe braucht das Projekt {owners}, dessen Konfiguration sich nicht zusammensetzen lässt: {message}. Alle anderen Projekte wurden gelesen und behalten; nur dieses ist betroffen, und es wird erneut gelesen, sobald sich eine der von ihm gelesenen Dateien ändert.",
       "host-graph-handover": "Das Lesen des Graphen wird übergeben und läuft auf aktuellem Code weiter; Fertiges bleibt erhalten ({message}).",
+      "host-service-handover": "Der Repo-Graphdienst endet ({reason}), bevor dieses Lesen des Graphen fertig war; das Lesen wird beim nachfolgenden Dienst erneut angefragt und setzt beim Erhaltenen fort.",
+      "host-slice-owners-settling": "Lese den Projektgraph-Ausschnitt ({seconds} s): der Ausschnitt-Worker endete, weil sich der Code des Build-Werkzeugs selbst geändert hat ({cause}, Exit-Code {kind}); er wird neu gestartet, sobald dieser Code {budget} s unverändert ist (bisher {used} s unverändert, höchstens {limit} s Warten), damit eine Folge von Änderungen das Lesen einmal statt bei jeder Änderung neu startet.",
       "host-plans": "Pläne: {total} angefragt, {hits} aus dem Speicher, {computed} berechnet (zuletzt {seconds} s, {budget} über dem Budget); Eigentümer neu abgeleitet {reinferred}, abgeschnitten {cutoff}; Erfassung {files} Dateien, {probes} Proben."
      }
     }

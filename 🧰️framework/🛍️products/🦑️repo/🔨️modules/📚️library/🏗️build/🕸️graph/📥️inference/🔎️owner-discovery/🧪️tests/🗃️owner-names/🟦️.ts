@@ -1,19 +1,14 @@
 import {Database} from "bun:sqlite";
 import {expect,test} from "bun:test";
-import {readFileSync} from "node:fs";
 import {join} from "node:path";
 import Ajv from "ajv";
-import ts from "typescript";
-import {evaluateExtractedFunctionV1} from "../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧩️extracted-function/🟦️.ts";
+import {loadProductFunctionsV1} from "../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧩️extracted-function/🟦️.ts";
 import {buildInputSourceRoleV1,buildNativeSourceObservationV1,registryOwnerIndexesV1,type BuildOwnerRegistryV1} from "../../../../🚪️admission/🟦️.ts";
 import ownerAdmissionSchema from "../../../../../🧬️schema/🚪️admission.json";
 import fixture from "./🔣️.json";
 import schema from "./🧬️schema/🔣️.json";
 
 test("actual named input discovery preserves exact owners without scanning the registry per reference",async()=>{
- const source=ts.createSourceFile("owner.mjs",readFileSync(new URL("../../🟨️.mjs",import.meta.url),"utf8"),ts.ScriptTarget.Latest,true,ts.ScriptKind.JS);
- const declaration=source.statements.find(node=>ts.isFunctionDeclaration(node)&&node.name?.text==="discoverBuildOwnerAdmissionFactsV1");
- if(!declaration)throw Error("Actual owner discovery required");
  expect(new Ajv({strict:true}).validate(schema,fixture)).toBe(true);
  const ownerName=(index:number)=>"p"+String(index).padStart(5,"0");
  let visited=0;
@@ -28,10 +23,10 @@ test("actual named input discovery preserves exact owners without scanning the r
  for(const row of fixture.cases){
   const expected=query.all(fixture.owners,JSON.stringify(row.projects),row.input) as {name:string;valid:number}[];
   expect(expected.every(ref=>ref.valid===1),row.name).toBe(row.accepted);
-  const execute=evaluateExtractedFunctionV1(declaration.getText(source).replace(/^export\s+/,""),"discoverBuildOwnerAdmissionFactsV1",{
-   libraryBootstrap:Promise.resolve(),join,readPhysicalSource:()=>Buffer.from(JSON.stringify({name:owner.name})),createScriptInputCache:()=>({}),cargoTargets:async()=>({}),componentBuildTargets:()=>({}),existsSync:()=>false,yieldInferenceV1:async()=>{},buildInputSourceRoleV1,buildNativeSourceObservationV1,ownerAdmissionSchema,registryOwnerIndexesV1,parserTypescriptV1:()=>({sys:{}}),observedTypeScriptHost:()=>({}),
+  const execute=(await loadProductFunctionsV1(new URL("../../🟨️.mjs",import.meta.url),["discoverBuildOwnerAdmissionFactsV1"],{
+   libraryBootstrap:Promise.resolve(),join,readPhysicalSource:()=>Buffer.from(JSON.stringify({name:owner.name})),createScriptInputCache:()=>({}),cargoTargets:async()=>({}),componentBuildTargets:()=>({}),existsSync:()=>false,yieldInferenceV1:async()=>{},buildInputSourceRoleV1,buildNativeSourceObservationV1,ownerAdmissionSchema,askOwnerRegistryV1:()=>null,observedOwnerRegistryViewV1:(_root:string,registry:BuildOwnerRegistryV1)=>registryOwnerIndexesV1(registry),parserTypescriptV1:()=>({sys:{}}),observedTypeScriptHost:()=>({}),
    projectWithDefaults:async()=>({namedInputs:{selected:[{input:row.input,projects:row.projects.map(ownerName)}]}}),WORKSPACE_POLICY:{},readBuildSourceInputMatchesV1:async()=>({matched:[],compileByTarget:new Map()}),
-  });
+  })).discoverBuildOwnerAdmissionFactsV1;
   visited=0;
   const result=execute(owner,[],registry,{workspaceRoot:process.cwd()},["selected"]);
   if(row.accepted)expect((await result).dependencyInputs,row.name).toEqual(Object.fromEntries(expected.map(ref=>[ref.name,[row.input]])));

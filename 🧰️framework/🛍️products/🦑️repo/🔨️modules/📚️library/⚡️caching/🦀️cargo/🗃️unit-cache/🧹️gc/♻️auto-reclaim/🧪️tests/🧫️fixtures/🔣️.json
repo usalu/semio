@@ -1,0 +1,15 @@
+{
+  "vectors": [
+    {"name": "far above soft", "availableBytes": 40000, "rule": {"softAvailableBytes": 12000, "targetAvailableBytes": 20000}, "due": false, "demandBytes": 0},
+    {"name": "exactly soft is not yet due", "availableBytes": 12000, "rule": {"softAvailableBytes": 12000, "targetAvailableBytes": 20000}, "due": false, "demandBytes": 0},
+    {"name": "one byte below soft", "availableBytes": 11999, "rule": {"softAvailableBytes": 12000, "targetAvailableBytes": 20000}, "due": true, "demandBytes": 8001},
+    {"name": "nothing available", "availableBytes": 0, "rule": {"softAvailableBytes": 12000, "targetAvailableBytes": 20000}, "due": true, "demandBytes": 20000},
+    {"name": "between soft and target is not due", "availableBytes": 15000, "rule": {"softAvailableBytes": 12000, "targetAvailableBytes": 20000}, "due": false, "demandBytes": 0}
+  ],
+  "shares": [
+    {"name": "30 GiB partition", "volumeBytes": 32212254720, "share": {"softBasisPoints": 1500, "targetBasisPoints": 2500, "softFloorBytes": 2147483648, "targetFloorBytes": 4294967296}, "softAvailableBytes": 4831838208, "targetAvailableBytes": 8053063680},
+    {"name": "64 GiB partition", "volumeBytes": 68719476736, "share": {"softBasisPoints": 1500, "targetBasisPoints": 2500, "softFloorBytes": 2147483648, "targetFloorBytes": 4294967296}, "softAvailableBytes": 10307921510, "targetAvailableBytes": 17179869184},
+    {"name": "96 GiB partition", "volumeBytes": 103079215104, "share": {"softBasisPoints": 1500, "targetBasisPoints": 2500, "softFloorBytes": 2147483648, "targetFloorBytes": 4294967296}, "softAvailableBytes": 15461882265, "targetAvailableBytes": 25769803776},
+    {"name": "1 GiB partition lifts both to the floor share", "volumeBytes": 1073741824, "share": {"softBasisPoints": 1500, "targetBasisPoints": 2500, "softFloorBytes": 2147483648, "targetFloorBytes": 4294967296}, "softAvailableBytes": 241591909, "targetAvailableBytes": 402653184}
+  ]
+}

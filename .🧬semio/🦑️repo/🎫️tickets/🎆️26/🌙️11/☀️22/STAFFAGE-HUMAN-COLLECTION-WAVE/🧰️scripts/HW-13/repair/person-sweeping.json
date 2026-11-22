@@ -1,0 +1,8 @@
+[
+{"op":"region-set","id":"broom-bristles","set":{"areaM2":0.1003}},
+{"op":"set","path":["poses",{"id":"push-start"},"thermal","regions","broom-bristles","exposedFraction"],"value":0.5608},
+{"op":"set","path":["poses",{"id":"pushing"},"thermal","regions","broom-bristles","exposedFraction"],"value":0.5608},
+{"op":"set","path":["poses",{"id":"push-end"},"thermal","regions","broom-bristles","exposedFraction"],"value":0.5608},
+{"op":"set","path":["poses",{"id":"broom-lifted"},"thermal","regions","broom-bristles","exposedFraction"],"value":0.5608},
+{"op":"set","path":["poses",{"id":"resting-on-broom"},"thermal","regions","broom-bristles","exposedFraction"],"value":0.5608}
+]

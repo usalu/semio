@@ -10,6 +10,10 @@ use ui_render::{CursorRequest, FrameScheduler};
 
 //#region 🔖️OsHost
 
+#[cfg(not(target_arch = "wasm32"))]
+#[path = "🎞️native-media/🦀️.rs"]
+mod native_media;
+
 //#region 🕰️OsClock
 
 /// 🕰️ `os_host`'s own wall-time source, mirroring `ui_host::window::native::MonotonicClock`/
@@ -108,6 +112,9 @@ pub struct OsHost {
     pub surface_resize: semio_renderer_wgpu_host_plumbing::surface_lane::SurfaceResizeAuthority,
     component_surface_close: Option<ComponentSurfaceCloseOwner>,
     asset_decode_owner: Option<AssetDecodeOwner>,
+    /// 🎞️ Native playback of the presented media slots, their transport controls and their byte transfers.
+    #[cfg(not(target_arch = "wasm32"))]
+    pub native_media: native_media::NativeMedia,
 }
 
 /// 🪙️ The declared per-turn authority of the asset decode owner: one bounded decoder step and its paid receipts.
@@ -603,6 +610,8 @@ impl OsHost {
             surface_resize: semio_renderer_wgpu_host_plumbing::surface_lane::SurfaceResizeAuthority::new(semio_framework_trace::allocate_operation_id()),
             component_surface_close: None,
             asset_decode_owner: None,
+            #[cfg(not(target_arch = "wasm32"))]
+            native_media: native_media::NativeMedia::new(),
         }
     }
 
@@ -740,6 +749,8 @@ impl OsHost {
             surface_resize,
             component_surface_close: _,
             asset_decode_owner: _,
+            #[cfg(not(target_arch = "wasm32"))]
+            native_media: _,
         } = owner.take().expect("original retirement host admitted");
         let state = OsHostRetirementState {
             retained,

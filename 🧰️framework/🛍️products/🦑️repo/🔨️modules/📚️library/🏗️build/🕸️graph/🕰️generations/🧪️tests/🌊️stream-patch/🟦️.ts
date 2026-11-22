@@ -8,6 +8,7 @@ import{testPythonV1}from"../../../../../../../../../🔨️modules/🏃️proces
 import{createFactIndexV1,factConsumersV1,patchFactIndexV1}from"../../🟨️.mjs";
 import{decodeFactIndexV1,encodeFactIndexV1,openFactIndexV1}from"../../🧮️fact-codec/🟨️.mjs";
 import{emptyFactIndexViewV1,patchFactIndexBytesV1}from"../../🌊️stream-patch/🟨️.mjs";
+import{createRowLogV1}from"../../🗃️row-log/🟨️.mjs";
 
 type Row={kind:string;path:string;fact:unknown};
 type Patch={drop:string[];upserts:Map<string,Row[]>;append:Map<string,Row[]>};
@@ -105,3 +106,14 @@ test("patching owners whose rows arrive in batches holds a few bytes per owner-r
  expect(result.exitCode).toBe(0);
  expect(found.growth*1024/found.incidences).toBeLessThan(2);
 },120000);
+
+test("appended rows that live in a row log give the bytes of appended row arrays without reading their rows into the patch",async()=>{
+ const directory=mkdtempSync(join(tmpdir(),"append-log-")),rows=pool(200),random=lcg(9),table=new Map<string,Row[]>();
+ for(let owner=0;owner<12;owner++)table.set("o"+String(owner).padStart(2,"0"),rows.slice(0,120).filter(()=>random()<0.3));
+ const base=encodeFactIndexV1(createFactIndexV1(table),{maximumBytes:LIMIT}),log=createRowLogV1<Row>({path:join(directory,"a.rows"),policy:{flushBytes:4096,batchRows:17,gapBytes:512,spanBytes:8192,staleSeconds:3600}});
+ try{
+  const extra=new Map([...table.keys()].map((name,at)=>[name,rows.slice(100+at*5,130+at*5)] as [string,Row[]])),lists=new Map([...extra].map(([name,list])=>[name,log.append(list).concat(list.slice(0,2))] as [string,unknown]));
+  const viaArrays=await viaStream(base,{drop:[],upserts:new Map(),append:extra}),viaLog=await viaStream(base,{drop:[],upserts:new Map(),append:lists as never});
+  expect(Buffer.compare(viaLog,viaArrays)).toBe(0);
+ }finally{log.close();rmSync(directory,{recursive:true,force:true});}
+},60000);

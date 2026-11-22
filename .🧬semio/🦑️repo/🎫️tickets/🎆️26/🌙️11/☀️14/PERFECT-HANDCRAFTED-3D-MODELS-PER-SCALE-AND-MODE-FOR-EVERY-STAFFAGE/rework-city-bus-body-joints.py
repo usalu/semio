@@ -86,16 +86,17 @@ def main():
         [[0.215, 0], [0.212, 0.045], [0.195, 0.072], [0.165, 0.08], [0.16, 0.08], [0.16, 0.105], [0.148, 0.105], [0.148, 0.2], [0.118, 0.2], [0.118, 0.11], [-0.07, 0.11], [-0.07, 0]],
         [[0.105, 0], [0.105, 0.06], [0.085, 0.088], [0.012, 0.088], [0.012, 0.105], [-0.012, 0.105], [-0.012, 0.2], [-0.042, 0.2], [-0.042, 0.11], [-0.23, 0.11], [-0.23, 0]],
     )
-    parts["mirror-arm-r"]["p0"] = [11.42, 2.58, -1.225]
+    parts["mirror-arm-r"]["p0"] = [11.47, 2.58, -1.245]
+    put(body, box(parts["mirror-arm-r"], "mirror-base-r", "body", [0.06, 0.06, 0.04], [11.445, 2.58, -1.222]), "mirror-arm-r")
     put(body, box(parts["dashboard"], "dashboard-plinth", "body", [0.3, 0.38, 1.9], [11.62, 0.52, 0], cornerRadius=0.02), "dashboard")
     put(body, box(parts["driver-seat"], "driver-seat-pedestal", "body", [0.3, 0.48, 0.36], [11.02, 0.57, 0.72], cornerRadius=0.02), "driver-seat-back")
     put(body, like(parts["steering-wheel"], id="steering-wheel-hub", profile=[[-0.02, 0], [-0.02, 0.06], [-0.006, 0.21], [0.006, 0.21], [0.02, 0.06], [0.02, 0]], axis=[-0.5, 0.866, 0], origin=[11.36, 1.2, 0.72]), "steering-wheel")
-    tracks(body, parts["rub-rail-r-1"], "charge-flap", 2.385, 2.445, 1.30, 1.2425)
+    tracks(body, parts["rub-rail-r-1"], "charge-flap", 2.385, 2.445, 1.278, 1.2425)
     say(
         volumes["50"],
         0,
-        "Every part is carried: each hub has a pilot through the wheel disc, a bolting flange behind it and a barrel that runs on the stub axle or spindle and carries the brake disc; the door leaves hang under a guide rail on the wall over each doorway that spans their travel; the console stands on a plinth, the driver's seat on its pedestal, the steering wheel on a dished hub, the kerb-side mirror arm is fixed in the cant rail.",
-        "Jedes Teil ist getragen: jede Nabe hat einen Zentrierbund durch die Radscheibe, dahinter einen Anschraubflansch und einen Nabenkörper, der auf dem Achsschenkel oder Achsstummel läuft und die Bremsscheibe trägt; die Türflügel hängen unter einer Führungsschiene an der Wand über jeder Türöffnung, die ihren Laufweg überspannt; die Konsole steht auf einem Sockel, der Fahrersitz auf seinem Fuß, das Lenkrad auf einer geschüsselten Nabe, der bordsteinseitige Spiegelarm sitzt im Dachlängsträger.",
+        "Every part is carried: each hub has a pilot through the wheel disc, a bolting flange behind it and a barrel that runs on the stub axle or spindle and carries the brake disc; the door leaves hang under a guide rail on the wall over each doorway that spans their travel; the console stands on a plinth, the driver's seat on its pedestal, the steering wheel on a dished hub, the kerb-side mirror arm is fixed on a base block in the window frame.",
+        "Jedes Teil ist getragen: jede Nabe hat einen Zentrierbund durch die Radscheibe, dahinter einen Anschraubflansch und einen Nabenkörper, der auf dem Achsschenkel oder Achsstummel läuft und die Bremsscheibe trägt; die Türflügel hängen unter einer Führungsschiene an der Wand über jeder Türöffnung, die ihren Laufweg überspannt; die Konsole steht auf einem Sockel, der Fahrersitz auf seinem Fuß, das Lenkrad auf einer geschüsselten Nabe, der bordsteinseitige Spiegelarm sitzt auf einem Sockel im Fensterrahmen.",
     )
 
     body = volumes["100"]["body"]

@@ -3,6 +3,7 @@ import {Database} from "bun:sqlite";
 import Ajv from "ajv";
 import {readFileSync} from "node:fs";
 import {fileURLToPath} from "node:url";
+import{loadProductFunctionsSyncV1}from"../../../../../../../../../🔨️modules/🏃️process/🧪️testing/🧩️extracted-function/🟦️.ts";
 import ts from "typescript";
 import {concurrentEditV1,retryOnConcurrentEditV1} from "../../../../../../../../../🔨️modules/📁️filesystem/🧾️observation/🔁️churn/🟦️.ts";
 import cases from "./🔣️.json" with {type:"json"};
@@ -26,7 +27,7 @@ test("the exclusive registry fetch lease is held without any native storage rech
 
 /** 🪪️ Revalidates changed source before the single input handoff and preserves churn observed by or after the consumer. */
 test("Cargo registry input is consumed once even when readiness moves afterward",async()=>{
- const ready=source("../../🟢️ready/💾️storage/🟦️.ts"),wrapper=fn(ready,"withRepositoryCargoRegistryReadyV1").getText(ready).replace(/^export /u,""),compiled=new Bun.Transpiler({loader:"ts"}).transformSync(wrapper),db=new Database(":memory:");
+ const db=new Database(":memory:");
  expect(new Ajv().validate(caseSchema,cases)).toBe(true);
  const oracle=db.query<{attempts:number;consumptions:number;settles:number},[string]>("SELECT 1 + (?1 = 'before') attempts, 1 consumptions, (?1 IN ('before', 'none')) settles");
  try{
@@ -41,7 +42,7 @@ test("Cargo registry input is consumed once even when readiness moves afterward"
     return result;
    };
    const retry:typeof retryOnConcurrentEditV1=(profile,body,options)=>retryOnConcurrentEditV1(profile,body,{...options,sleep:async()=>{},onRetry:()=>{}});
-   const own=new Function("retryOnConcurrentEditV1","withRepositoryCargoRegistryReadyOnceV1",compiled+";return withRepositoryCargoRegistryReadyV1;")(retry,once);
+   const own=loadProductFunctionsSyncV1(new URL("../../🟢️ready/💾️storage/🟦️.ts",import.meta.url),["withRepositoryCargoRegistryReadyV1"],{retryOnConcurrentEditV1:retry,withRepositoryCargoRegistryReadyOnceV1:once}).withRepositoryCargoRegistryReadyV1;
    const effect=own({control:{signal:new AbortController().signal}},()=>{},()=>{},async()=>{
     consumptions++;
     if(row.change==="during")throw churn;

@@ -128,7 +128,7 @@ describe("🫕️ electric kettle at a constant 2 kW", () => {
   });
 
   it("lets the steam vent follow the evaporation rate", () => {
-    const steam = (timeS: number) => solveTransport(asset, clip(timeS), room, { pathlines: false, streamlines: false, maxAgeS: 1 }).emitters.find((e) => e.emitter === "steam")!;
+    const steam = (timeS: number) => solveTransport(asset, clip(timeS), room, { pathlines: false, maxAgeS: 1 }).emitters.find((e) => e.emitter === "steam")!;
     const before = steam(100);
     const after = steam(195);
     expect(after.volumeFlowM3S).toBeGreaterThan(0);

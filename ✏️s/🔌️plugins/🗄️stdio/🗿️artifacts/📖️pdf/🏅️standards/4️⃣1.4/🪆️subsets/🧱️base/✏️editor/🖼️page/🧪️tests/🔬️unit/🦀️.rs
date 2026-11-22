@@ -1,12 +1,11 @@
-//! 🧪️ Own PDF 1.4 page drafts, mutation inverses and address admission.
+//! 🧪️ Own PDF 1.4 page text drafts, mutation inverses and address admission; page structure is tested with the canvas.
 use crate::standards::v1_4::subsets::base::schema::snapshot::{PageDoc, PdfSnapshot};
-use crate::standards::v1_4::subsets::base::schema::mutations::{PdfMutation, ResizePage};
+use crate::standards::v1_4::subsets::base::schema::mutations::PdfMutation;
 use semio_plugin::TreeWindows;
 use semio_plugin::app::DocumentWindowKit;
 use semio_framework_test_fixtures::fixture_text;
 use semio_ui_contract::UiPublicationRevision;
 use semio_ui_locale::Locale;
-use semio_framework_value::DslValue;
 #[allow(unused_imports)]
 use crate::standards::v1_4::subsets::base::schema::mutations::{InsertPage, RemovePage, MovePage, ReplacePageText};
 #[allow(unused_imports)]
@@ -74,30 +73,4 @@ fn own14_page_text_admission_keeps_geometry_and_inverse() {
         assert!(text_edit_mutation(&original, page, item, token, "edited").is_err());
     }
     assert_eq!(original, fixture());
-}
-
-#[test]
-fn own14_page_structure_actions_only_emit_their_actual_mutation_kind() {
-    let base = fixture();
-    let args = DslValue::Object(vec![("page".into(), DslValue::float(1.0)), ("width".into(), DslValue::float(8.0)), ("height".into(), DslValue::float(9.0))]);
-    let payload = edit_from_action("set-page-size", Some(&args)).unwrap();
-    let emit = emit_page_edit(&base, "set-page-size", &payload).unwrap();
-    assert_eq!(emit.artifact_mutations.len(), 1);
-    let op = &emit.artifact_mutations[0];
-    assert!(matches!(op, PdfMutation::ResizePage(ResizePage { index: 1, width: 8.0, height: 9.0 })));
-    let next = protocol::apply_diff_cold(op.diff(&base).diff(), &base).unwrap();
-    assert_eq!(next.pages[0], base.pages[0]);
-    assert_eq!(next.pages[1].text, base.pages[1].text);
-    assert_eq!(next.pages[1].width.to_bits(), 8.0f64.to_bits());
-    assert_eq!(next.pages[1].height.to_bits(), 9.0f64.to_bits());
-    let mut restored = next;
-    for inverse in op.inverse(&base).unwrap() { restored = protocol::apply_diff_cold(inverse.diff(&restored).diff(), &restored).unwrap(); }
-    assert_eq!(restored, base);
-    assert!(emit_page_edit(&base, "remove-page", &payload).is_err());
-    assert!(edit_from_action("insert-image", Some(&args)).is_err());
-    assert!(edit_from_action("set-page-size", None).is_err());
-    let wrong = DslValue::Object(vec![("page".into(), DslValue::float(1.0)), ("width".into(), DslValue::float(f64::NAN)), ("height".into(), DslValue::float(9.0))]);
-    assert!(edit_from_action("set-page-size", Some(&wrong)).is_err());
-    let out = PdfMutation::ResizePage(ResizePage { index: 2, width: 8.0, height: 9.0 }).print_op();
-    assert!(emit_page_edit(&base, "set-page-size", &out).is_err());
 }

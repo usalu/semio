@@ -25,6 +25,7 @@ import cancellationWorkflow from "./🧫️fixtures/📋️forms/🌐️cancella
 import cancellationWorkflowSchema from "./🧫️fixtures/📋️forms/🌐️cancellation.schema.json" with { type: "json" };
 
 import { expect, test, type Page } from "../../🔨️modules/🧪️e2e/📦️release/🎭️fixture/🟦️.ts";
+import { awaitNonUniformCanvas, CODE_ASSET_PATH, distinctInteriorColors, MEDIA_ASSET_PATH, readEmptyDomWindows, readFrameworkFaults, spaFallbackAnswer } from "./🖼️visible-content/🟦️.ts";
 // #endregion 🔌️Adapters
 
 const validateFormsWorkflow = new Ajv2020({ strict: true }).compile(formsWorkflowSchema);
@@ -125,6 +126,9 @@ const MINIMUM_IMAGE_ASSET_EDGE = 8;
 const PAINT_WITNESS_DEADLINE_MS = 4_000;
 const PAINT_WITNESS_POLL_MS = 250;
 
+/** 🎨️ "Non-uniform" is literal: a canvas of one flat colour has exactly one distinct interior colour. */
+const RELEASE_MINIMUM_CANVAS_COLORS = 2;
+
 /** 👂️ Collects page errors, console errors and refused inputs — a refused input is the shell's
  * "The input could not be delivered" notice, logged only as a warning. */
 function collectErrors(page: Page): { readonly pageErrors: string[]; readonly consoleErrors: string[]; readonly refusedInputs: string[]; readonly resourceErrors: string[]; readonly stop: () => void } {
@@ -148,23 +152,18 @@ function collectErrors(page: Page): { readonly pageErrors: string[]; readonly co
 }
 
 //#region 🖼️VisibleContent
-/** 📦️ Request paths that must be answered by a FILE. A dev server's SPA fallback happily answers
- * `GET /🖼️assets/🖼️bauteilbörse.png` with `index.html` and HTTP 200, so a missing figure looks like a
- * loaded one to everything except the eye — exactly how `animate`'s missing deck figure survived audit #1
- * and a whole strict acceptance run (ticket 26/09/19 `📓️status.md`, 2026-09-22 04:10). */
-const ASSET_PATH = /\.(png|jpe?g|gif|webp|avif|svg|ico|bmp|glb|gltf|obj|stl|ply|3dm|mp3|mp4|webm|wav|ogg|woff2?|ttf|otf|pdf)$/i;
+/** 🚀️ True only for the published-release run (`TestReleaseScript` always exports the origin map). The release
+ * gate additionally requires a non-uniform canvas for every pane with a canvas, healthy window bodies and
+ * the SPA-fallback check for code and data assets; the dev run keeps its established assertions. */
+const RELEASE_RUN = process.env.PLAY_E2E_RELEASE_ORIGINS !== undefined;
+const FALLBACK_ASSET_PATHS: readonly RegExp[] = RELEASE_RUN ? [MEDIA_ASSET_PATH, CODE_ASSET_PATH] : [MEDIA_ASSET_PATH];
 
 /** 🏚️ Collects every asset request the server answered with a document instead of the asset. */
 function collectSpaFallbackAssets(page: Page): string[] {
   const answered: string[] = [];
   page.on("response", response => {
-    const url = response.url();
-    if (!/^https?:/i.test(url)) return;
-    let pathname: string;
-    try { pathname = new URL(url).pathname; } catch { return; }
-    if (!ASSET_PATH.test(decodeURIComponent(pathname))) return;
-    const type = response.headers()["content-type"] ?? "";
-    if (type.toLowerCase().startsWith("text/html")) answered.push(`${pathname} → ${response.status()} ${type}`);
+    const finding = spaFallbackAnswer(response.url(), response.headers()["content-type"] ?? "", response.status(), FALLBACK_ASSET_PATHS);
+    if (finding !== undefined) answered.push(finding);
   });
   return answered;
 }
@@ -257,17 +256,19 @@ async function paintWitness(page: Page, variant: string): Promise<PaintWitness> 
   for (const witness of witnesses) {
     if (variant !== "generation3d" || witness.kind !== "world3d" || !witness.painted) continue;
     const canvas = page.locator(`[data-layered-pane="${variant}"] [data-surface-id="${witness.surface}"] canvas`).first();
-    const image = PNG.sync.read(await canvas.screenshot());
-    const colors = new Set<number>();
-    const inset = Math.max(1, Math.floor(Math.min(image.width, image.height) / 4));
-    for (let y = inset; y < image.height - inset; y += 2) for (let x = inset; x < image.width - inset; x += 2) {
-      const index = (y * image.width + x) * 4;
-      colors.add((image.data[index]! << 16) | (image.data[index + 1]! << 8) | image.data[index + 2]!);
-    }
-    expect(colors.size, `${variant}: actual GPU geometry draw must produce varying interior canvas pixels`).toBeGreaterThanOrEqual(generation3dWorkflow.gpu.minimumInteriorColors);
+    expect(distinctInteriorColors(await canvas.screenshot()), `${variant}: actual GPU geometry draw must produce varying interior canvas pixels`).toBeGreaterThanOrEqual(generation3dWorkflow.gpu.minimumInteriorColors);
   }
   const detail = witnesses.length === 0 ? "the pane mounted no window at all" : witnesses.map((witness) => `${witness.surface} [${witness.kind}] ${witness.painted ? "paints" : "EMPTY"} — ${witness.detail}`).join("; ");
   return { painted: witnesses.some(qualifies), detail };
+}
+
+/** 🚀️ Release gate on top of {@link paintWitness}: no framework fault surface anywhere in the pane, no empty
+ * DOM window body, and — when the pane mounts a canvas — a non-uniform canvas after the settle deadline. */
+async function expectReleaseVisibleContent(page: Page, variant: string): Promise<void> {
+  expect(await readFrameworkFaults(page, variant), `${variant} shows a framework error, fault or refusal surface`).toEqual([]);
+  expect(await readEmptyDomWindows(page, variant, MINIMUM_MAIN_REGION_ELEMENTS), `${variant} has empty DOM window bodies`).toEqual([]);
+  const canvas = await awaitNonUniformCanvas(page, variant, RELEASE_MINIMUM_CANVAS_COLORS, PAINT_WITNESS_DEADLINE_MS, PAINT_WITNESS_POLL_MS);
+  if (canvas !== undefined) expect(canvas.painted, `${variant} canvas is uniform — distinct interior colours per canvas: ${canvas.census.map(row => `#${row.index}=${row.colors}`).join(", ")}`).toBe(true);
 }
 //#endregion 🖼️VisibleContent
 
@@ -941,6 +942,7 @@ test.describe("semio-tech play", () => {
 
       const witness = await paintWitness(page, pane.variant);
       expect(witness.painted, `${pane.variant} paints nothing — ${witness.detail}`).toBe(true);
+      if (RELEASE_RUN) await expectReleaseVisibleContent(page, pane.variant);
       await dismissPaneIntroduction(page, pane);
       await exerciseCuratedExample(page, pane);
       await exerciseSurfaceRoundTrip(page, pane);

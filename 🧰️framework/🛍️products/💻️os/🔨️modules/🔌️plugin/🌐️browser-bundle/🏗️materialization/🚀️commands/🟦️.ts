@@ -12,8 +12,8 @@ import { readBuildMode } from "../../../../../../../🔨️modules/🏃️proces
 
 import { fileURLToPath } from "node:url";
 import { createHash } from "node:crypto";
-import { copyFileSync, existsSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, renameSync, rmSync, writeFileSync } from "node:fs";
-import { dirname, join, relative } from "node:path";
+import { copyFileSync, existsSync, lstatSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, renameSync, rmSync, writeFileSync } from "node:fs";
+import { basename, dirname, join, posix, relative, sep } from "node:path";
 import { BundleScript } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { componentModuleOwnerV1, MODULE_BRIDGE_FILE, MODULE_SHARD_DIRECTORY, moduleDirectoryName } from "../../../📇️registry/📦️deployment/🟦️.ts";
 import type { ComponentSourceOwnerV1 } from "@semio-tech/plugin-registry/discovery";
@@ -30,10 +30,11 @@ import { PLUGIN_HOST_SHIM_FILE, SHARD_WORKER_FILE } from "../🧾️contract/�
 import { pluginComponentBridgeSource } from "../🌉️component-bridge-source/🟦️.ts";
 import { PREVIEW2_VENDOR_RELATIVE } from "../../🕸️imports/🟦️.ts";
 import { rewritePreview2ShimImports, transpilePluginComponentModulesAsync } from "../🟦️.ts";
-import { nativeTranspileBinaryV1 } from "../🦀️native-transpile/🟦️.ts";
+import { nativeTranspileArgsV1, nativeTranspileBinaryV1, PLUGIN_COMPONENT_IMPORT_MAPS_V1 } from "../🦀️native-transpile/🟦️.ts";
+import { rewriteJcoAsyncResultLiftingAt, rewriteJcoComponentAssetUrlsAt } from "../🧬️jco-module-rewrites/🟦️.ts";
 import { shardWorkerSource } from "../🧵️shard-worker-source/🟦️.ts";
 import { captureOwnedCommandV1 } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
-import { STAGE_CACHE_POLICY_V1, stageCacheV1, type StageCacheV1 } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🗃️stage-cache/🟦️.ts";
+import { STAGE_CACHE_POLICY_V1, stageCacheV1, type StageCacheV1, type StageRemoteV1 } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🗃️stage-cache/🟦️.ts";
 import { startToolV1 } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧰️tools/🟦️.ts";
 
 /** ⏱️ Upper bound of one guest `describe()` probe over a transpiled module. */
@@ -101,14 +102,15 @@ async function materializationIdentityV1(): Promise<string> {
   return createHash("sha256").update(digests.join("\n")).digest("hex");
 }
 
-/** 🧬️ Keys native transpilation by component bytes, native executable, materializer and module name. */
-export function transpileStageRequestV1(component: string, materialization: string, base: string, native: string) {
-  return { stage: "transpile", schemaVersion: 2, inputs: { component }, tools: { materialization, base, "native-transpile": native } };
+/** 🧬️ Keys native transpilation by the stripped component bytes, the content digest of the native executable (which embeds jco and its mode), the materializer
+ * sources, the import maps and the module name; no checkout path, vendor tree or build profile enters the key because the closure reads none of them. */
+export function transpileStageRequestV1(component: string, materialization: string, base: string, native: string, maps: readonly string[] = PLUGIN_COMPONENT_IMPORT_MAPS_V1) {
+  return { stage: "transpile", schemaVersion: 3, inputs: { component }, tools: { materialization, base, "native-transpile": native, maps: createHash("sha256").update(maps.join("\n")).digest("hex") } };
 }
 
-/** 🪶️ The optimize stage cache request of one extracted core: its digest, the optimizer's version and its arguments. */
-export function optimizeStageRequestV1(core: string, version: string, args: readonly string[]) {
-  return { stage: "optimize", schemaVersion: 1, inputs: { core }, tools: { "wasm-opt": version, args: args.join(" ") } };
+/** 🪶️ The optimize stage cache request of one extracted core: its digest, the optimizer's version and content digest, and its arguments (never the thread count). */
+export function optimizeStageRequestV1(core: string, version: string, args: readonly string[], binary: string) {
+  return { stage: "optimize", schemaVersion: 2, inputs: { core }, tools: { "wasm-opt": version, binary, args: args.join(" ") } };
 }
 
 /** 🧬️ Transpiles the debug-stripped component through the staged native executable and caches the location-independent module files. */
@@ -121,9 +123,56 @@ export async function transpileComponentModulesV1(work: ComponentModuleWorkV1): 
     toolIdentityV1("materialization", materializationIdentityV1),
     fileDigest(nativeBinary, work.control.signal),
   ]);
-  await work.cache.run(transpileStageRequestV1(component, materialization, base, native), output, (directory) => transpilePluginComponentModulesAsync(work.deliverable.wasm, directory, base, { repoRoot: work.repoRoot, mode: work.deliverable.profile, preview2VendorDir: join(builtPluginModulesRootIn(work.repoRoot, work.deliverable.profile), PREVIEW2_VENDOR_RELATIVE), environment: work.environment, control: work.control }), work.control.signal, base);
+  await work.cache.run(transpileStageRequestV1(component, materialization, base, native), output, (directory) => transpilePluginComponentModulesAsync(work.deliverable.wasm, directory, base, { repoRoot: work.repoRoot, mode: work.deliverable.profile, preview2VendorDir: join(builtPluginModulesRootIn(work.repoRoot, work.deliverable.profile), PREVIEW2_VENDOR_RELATIVE), environment: work.environment, control: work.control }), work.control.signal, base, transpileStageRemoteV1(work, nativeBinary, native));
   checkResourceLeaseControl(work.control);
   return output;
+}
+
+const SHA256_V1 = /^[0-9a-f]{64}$/u;
+
+/** 🔌️ The command offload of this checkout, `undefined` when offloading is switched off (`SEMIO_OFFLOAD=never`) so the stage runs here.
+ * @see ../../../../../../🦑️repo/🔨️modules/📚️library/🏗️build/🌐️remote-execution/🚀️offload/🟦️.ts */
+async function stageOffloadV1(work: ComponentModuleWorkV1) {
+  const environment = work.environment ?? process.env, offload = await import("../../../../../../🦑️repo/🔨️modules/📚️library/🏗️build/🌐️remote-execution/🚀️offload/🟦️.ts");
+  return offload.offloadModeV1(environment) === "never" ? undefined : { offload, environment, root: environment.SEMIO_UNIT_CACHE_ROOT ?? join(work.cache.root, ".offload") };
+}
+
+/** 🛟️ Runs one remote producer so that it never fails a stage: a fault, a refusal or a local answer empties the stage directory and answers `false` (the stage runs here). */
+async function remoteStageV1(directory: string, body: () => Promise<boolean>): Promise<boolean> {
+  const emptied = (): void => { for (const entry of readdirSync(directory)) rmSync(join(directory, entry), { recursive: true, force: true }); };
+  try { if (await body()) return true; } catch {}
+  try { emptied(); } catch {}
+  return false;
+}
+
+/** ☁️ The remote producer of one optimize stage: on a fleet miss, `wasm-opt` over the extracted core runs on an idle machine of the fleet through the command offload (the tool pinned by the content digest of its binary, the core as the only input, `core.wasm` as the only output; the arguments are the shipped ones, never the thread count) and the optimized bytes land in the stage directory exactly as a local run writes them. It answers `false` (the stage runs here) when offloading is switched off (`SEMIO_OFFLOAD=never`), the binary digest is no SHA-256, or the fleet cannot take it.
+ * @see ../../../../../../🦑️repo/🔨️modules/📚️library/🏗️build/🌐️remote-execution/🚀️offload/🟦️.ts */
+export function optimizeStageRemoteV1(work: ComponentModuleWorkV1, core: string, binary: string, args: readonly string[]): StageRemoteV1 {
+  return async (directory, signal) => remoteStageV1(directory, async () => {
+    const port = await stageOffloadV1(work);
+    if (port === undefined || !SHA256_V1.test(binary)) return false;
+    const outcome = await port.offload.offloadCommandV1({ tool: { name: "wasm-opt", digest: binary }, arguments: ["@root/in/core.wasm", ...args, "-o", "@root/out/core.wasm"], inputs: new Map([["in/core.wasm", core]]), outputs: new Map([["out/core.wasm", join(directory, "core.wasm")]]), root: port.root, environment: port.environment, label: `wasm-opt ${componentBaseV1(work.target)}/${basename(core)}`, key: null, signal });
+    return outcome.kind === "done";
+  });
+}
+
+/** ☁️ The remote producer of one transpile stage: the native executable is shipped as an input pinned by the digest in the key (the worker checks it after placing the inputs), the debug-stripped component is the only other input and every file the executable writes below `out/transpiled` lands in the stage directory; then the same two module rewrites a local run applies are applied here, so the stage holds exactly the files a local run leaves. It answers `false` (the stage runs here) when offloading is switched off, the digest is no SHA-256 or the fleet cannot take it.
+ * @see ../../../../../../🦑️repo/🔨️modules/📚️library/🏗️build/🌐️remote-execution/🚀️offload/🟦️.ts */
+export function transpileStageRemoteV1(work: ComponentModuleWorkV1, binary: string, native: string): StageRemoteV1 {
+  return async (directory, signal) => remoteStageV1(directory, async () => {
+    const port = await stageOffloadV1(work), base = componentBaseV1(work.target);
+    if (port === undefined || !SHA256_V1.test(native)) return false;
+    mkdirSync(work.work, { recursive: true });
+    const scratch = mkdtempSync(join(work.work, ".transpile-remote-")), component = join(scratch, `${base}.nodebug.wasm`);
+    try {
+      writeFileSync(component, stripWasmDebugSectionsV1(readFileSync(work.deliverable.wasm)));
+      const outcome = await port.offload.offloadCommandV1({ tool: { name: "native-transpile", digest: native, file: binary }, arguments: nativeTranspileArgsV1(`@root/in/${base}.nodebug.wasm`, "@root/out/transpiled", base, PLUGIN_COMPONENT_IMPORT_MAPS_V1), inputs: new Map([[`in/${base}.nodebug.wasm`, component]]), outputs: new Map(), directories: new Map([["out/transpiled", directory]]), root: port.root, environment: port.environment, label: `transpile ${base}`, key: null, signal });
+      if (outcome.kind !== "done") return false;
+    } finally { rmSync(scratch, { recursive: true, force: true }); }
+    rewriteJcoAsyncResultLiftingAt(join(directory, `${base}.js`));
+    rewriteJcoComponentAssetUrlsAt(join(directory, `${base}.js`));
+    return true;
+  });
 }
 
 /** 🪶️ The optimize stage: `wasm-opt -Oz` of every extracted core of a shipped component on `cores` threads, each cached by the core's digest, the optimizer's
@@ -132,11 +181,11 @@ export async function transpileComponentModulesV1(work: ComponentModuleWorkV1): 
 export async function optimizeComponentCoresV1(work: ComponentModuleWorkV1, transpiled: string, cores?: number): Promise<string | null> {
   checkResourceLeaseControl(work.control);
   if (!COMPONENT_PROFILE_POLICIES[work.deliverable.profile].shipped) return null;
-  const output = join(work.work, "optimized"), tool = pluginWasmOptToolV1({ repoRoot: work.repoRoot }), version = await toolIdentityV1(`wasm-opt:${tool.command}`, () => captureOwnedCommandV1(tool.command, ["--version"], work.repoRoot, { control: work.control }).then((text) => text.trim()));
+  const output = join(work.work, "optimized"), tool = pluginWasmOptToolV1({ repoRoot: work.repoRoot }), version = await toolIdentityV1(`wasm-opt:${tool.command}`, () => captureOwnedCommandV1(tool.command, ["--version"], work.repoRoot, { control: work.control }).then((text) => text.trim())), binary = await toolIdentityV1(`wasm-opt-binary:${tool.command}`, () => fileDigest(tool.command, work.control.signal));
   mkdirSync(output, { recursive: true });
   for (const file of pluginCoreModuleFilesV1(transpiled, componentBaseV1(work.target))) {
     const core = join(transpiled, file), stage = join(work.work, `optimize-${file}`);
-    await work.cache.run(optimizeStageRequestV1(await fileDigest(core, work.control.signal), version, tool.args), stage, (directory) => optimizePluginCoreModuleAsync(core, join(directory, "core.wasm"), { repoRoot: work.repoRoot, preview2VendorDir: "", environment: work.environment, ...(cores === undefined ? {} : { cores }), control: work.control }), work.control.signal, `${componentBaseV1(work.target)}/${file}`);
+    await work.cache.run(optimizeStageRequestV1(await fileDigest(core, work.control.signal), version, tool.args, binary), stage, (directory) => optimizePluginCoreModuleAsync(core, join(directory, "core.wasm"), { repoRoot: work.repoRoot, preview2VendorDir: "", environment: work.environment, ...(cores === undefined ? {} : { cores }), control: work.control }), work.control.signal, `${componentBaseV1(work.target)}/${file}`, optimizeStageRemoteV1(work, core, binary, tool.args));
     renameSync(join(stage, "core.wasm"), join(output, file));
     rmSync(stage, { recursive: true, force: true });
   }
@@ -156,13 +205,51 @@ export function probeStageRequestV1(inputs: Record<string, string>, node: string
   return { stage: "probe", schemaVersion: 2, inputs, tools: { node, probe: createHash("sha256").update(source).digest("hex") } };
 }
 
+/** 🪄️ The two files a remote probe runs from `in/`: the unchanged probe source and a fixed entry that points `process.argv[1]` at the module and writes what the probe prints to the declared output file (a command declares output files, never a stream). */
+const PROBE_ENTRY_SOURCE_V1 = `import { writeFileSync } from "node:fs";
+const [, , out, module] = process.argv;
+process.argv.splice(1, 2, module);
+process.stdout.write = (chunk) => { writeFileSync(out, chunk); return true; };
+await import("./probe.mjs");
+`;
+
+/** ☁️ The remote producer of one probe stage: the module's `describe()` runs under the `node` of the fleet that has exactly this machine's `node` file (the worker offers it by digest; nothing is shipped), over the module files and the preview2 vendor files placed at the relative layout the module's imports expect; the base64 answer is decoded into `semantic.bin` as a local run does. It answers `false` (the stage runs here) when offloading is switched off, the layout does not fit below the input root or the fleet cannot take it.
+ * @see ../../../../../../🦑️repo/🔨️modules/📚️library/🏗️build/🌐️remote-execution/🚀️offload/🟦️.ts */
+export function probeStageRemoteV1(work: ComponentModuleWorkV1, module: string, vendor: string, source: string = PLUGIN_DESCRIPTOR_PROBE_SOURCE): StageRemoteV1 {
+  return async (directory, signal) => remoteStageV1(directory, async () => {
+    const port = await stageOffloadV1(work), base = componentBaseV1(work.target);
+    if (port === undefined) return false;
+    const { commandToolDigestV1, defaultCommandToolFindersV1 } = await import("../../../../../../🦑️repo/🔨️modules/📚️library/🏗️build/🌐️remote-execution/🚀️offload/🧰️command/🛠️worker-tools/🟦️.ts"), path = await defaultCommandToolFindersV1(work.repoRoot, port.environment).node?.();
+    if (path === undefined) return false;
+    const node = await toolIdentityV1(`node-binary:${path}`, async () => commandToolDigestV1(path));
+    const vendorAt = posix.normalize(posix.join("in/m", relative(module, vendor).split(sep).join("/")));
+    if (!SHA256_V1.test(node) || !vendorAt.startsWith("in/")) return false;
+    const inputs = new Map<string, string>();
+    for (const [name, file] of artifactFiles(module)) inputs.set(`in/m/${name}`, file);
+    for (const [name, file] of artifactFiles(vendor)) if (inputs.has(`${vendorAt}/${name}`)) return false; else inputs.set(`${vendorAt}/${name}`, file);
+    mkdirSync(work.work, { recursive: true });
+    const scratch = mkdtempSync(join(work.work, ".probe-remote-")), answer = join(scratch, "semantic.b64");
+    try {
+      writeFileSync(join(scratch, "probe.mjs"), source);
+      writeFileSync(join(scratch, "run.mjs"), PROBE_ENTRY_SOURCE_V1);
+      inputs.set("in/probe.mjs", join(scratch, "probe.mjs")).set("in/run.mjs", join(scratch, "run.mjs"));
+      const outcome = await port.offload.offloadCommandV1({ tool: { name: "node", digest: node }, arguments: ["--experimental-wasm-jspi", "@root/in/run.mjs", "@root/out/semantic.b64", `@root/in/m/${base}.js`], inputs, outputs: new Map([["out/semantic.b64", answer]]), root: port.root, environment: port.environment, label: `probe ${base}`, key: null, signal });
+      if (outcome.kind !== "done") return false;
+      const text = readFileSync(answer, "utf8").trim();
+      if (!/^[A-Za-z0-9+/]+={0,2}$/u.test(text)) return false;
+      writeFileSync(join(directory, "semantic.bin"), Buffer.from(text, "base64"));
+      return true;
+    } finally { rmSync(scratch, { recursive: true, force: true }); }
+  });
+}
+
 async function probeComponentModuleV1(work: ComponentModuleWorkV1, module: string,vendor:string): Promise<Uint8Array> {
   checkResourceLeaseControl(work.control);
   const inputs: Record<string, string> = {};
   for (const [name, path] of artifactFiles(module)) inputs[name] = await fileDigest(path, work.control.signal);
   for (const [name, path] of artifactFiles(vendor)) inputs[`vendor/${name}`] = await fileDigest(path, work.control.signal);
   const node = await toolIdentityV1("node", () => captureOwnedCommandV1("node", ["--version"], work.repoRoot, { control: work.control }).then((text) => text.trim())), output = join(work.work, "probe");
-  await work.cache.run(probeStageRequestV1(inputs, node), output, async (directory) => { writeFileSync(join(directory, "semantic.bin"), await probeModuleDescriptor(join(module, `${componentBaseV1(work.target)}.js`), work.repoRoot, work.control, work.environment)); }, work.control.signal, componentBaseV1(work.target));
+  await work.cache.run(probeStageRequestV1(inputs, node), output, async (directory) => { writeFileSync(join(directory, "semantic.bin"), await probeModuleDescriptor(join(module, `${componentBaseV1(work.target)}.js`), work.repoRoot, work.control, work.environment)); }, work.control.signal, componentBaseV1(work.target), probeStageRemoteV1(work, module, vendor));
   checkResourceLeaseControl(work.control);
   return readArtifactBytesV1(join(output,"semantic.bin"),CATALOG_DESCRIPTOR_MAX_BYTES,work.control.signal);
 }

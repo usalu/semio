@@ -3,7 +3,22 @@
   "sharedRoot": "🧰️framework/🔨️modules",
   "privateDirectory": "🛍️products",
   "testDirectory": "/🧪️tests/",
-  "codeExtensions": [".ts", ".tsx", ".mts", ".mjs", ".js"],
+  "codeExtensions": [
+    ".ts",
+    ".tsx",
+    ".mts",
+    ".mjs",
+    ".js"
+  ],
   "followedRust": "#\\[path|include_str!|include_bytes!|include!",
-  "exceptions": []
+  "exceptions": [
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🧩️component-pass/🔁️job-attempts/🟦️.ts",
+      "reason": "reads the maximum re-execution count of the format-stamp protocol from the build library; both imports go through the TypeScript source closure of the native component pass, which keys the file; the protocol belongs below the framework (design debt, E50)"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🧩️component-pass/🟦️.ts",
+      "reason": "reads the maximum re-execution count of the format-stamp protocol from the build library; both imports go through the TypeScript source closure of the native component pass, which keys the file; the protocol belongs below the framework (design debt, E50)"
+    }
+  ]
 }

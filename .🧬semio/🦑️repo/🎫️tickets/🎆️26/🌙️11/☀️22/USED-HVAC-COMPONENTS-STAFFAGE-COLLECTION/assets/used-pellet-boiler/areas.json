@@ -1,0 +1,13 @@
+{
+ "casing": 4.292,
+ "hopper": 2.875,
+ "combustion-door": 0.458,
+ "flue-spigot": 0.145,
+ "flue-fan": 0.188,
+ "connections": 0.029,
+ "suction-unit": 0.261,
+ "suction-hose": 0.082,
+ "pallet": 3.111,
+ "straps": 0.625,
+ "sling": 0.076
+}

@@ -1,4 +1,4 @@
-/** 🧊️ Cast levels of detail: which frames of a cast are sampled and which shapes, patterns and transport particles are drawn, resolved from data before any asset is loaded or drawn.
+/** 🧊️ Cast levels of detail: which frames of a cast are sampled and which shapes and patterns are drawn and how far apart the flow marks stay, resolved from data before any asset is loaded or drawn.
  *
  * A level never changes units, origin, anchors, scenario or the clock of a cast. It samples the same analytical state at canonical times (a thermal history is a pure function of asset, query and environment, so a skipped frame costs nothing and a sampled frame equals the full-detail frame at that time) and draws a subset of the same authored shapes.
  * Non-looping samples include both endpoints, looping samples wrap in whole periods, so `playbackFrame` keeps mapping canonical time to a frame.
@@ -22,7 +22,7 @@ export type LodLevel = {
   readonly frames: { readonly outputFpsFraction: number | null; readonly maxFrames: number; readonly phase: number };
   readonly roles: readonly ShapeRole[];
   readonly patterns: boolean;
-  readonly transportDensity: number;
+  readonly flowSpacingFactor: number;
   readonly strokeMin: number;
 };
 

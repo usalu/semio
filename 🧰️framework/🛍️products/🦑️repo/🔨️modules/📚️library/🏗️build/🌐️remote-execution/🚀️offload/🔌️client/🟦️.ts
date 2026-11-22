@@ -16,14 +16,14 @@ export type OffloadStageV1=typeof STAGES[number];
 export type OffloadExecutionV1=Readonly<{kind:"done";actionResult:ProtobufMessageV1;cached:boolean;origin:string}>|Readonly<{kind:"declined";reason:OffloadReasonV1;detail:string;transient?:true}>;
 
 /** ⏳️ How long the client waits for one action overall, from submitting to the answer: the time the action itself may run (`actionSeconds`) plus a small margin (`executeMarginMilliseconds`); the wait is derived from the action timeout and can never outlast it by more than the margin. */
-export function offloadExecuteBudgetMillisecondsV1():number{return timeouts.actionSeconds*1000+timeouts.executeMarginMilliseconds;}
+export function offloadExecuteBudgetMillisecondsV1(actionSeconds:number=timeouts.actionSeconds):number{return actionSeconds*1000+timeouts.executeMarginMilliseconds;}
 
 const declined=(reason:OffloadReasonV1,detail:string,transient=false):OffloadExecutionV1=>({kind:"declined",reason,detail,...(transient?{transient:true as const}:{})});
 /** 🔌️ Submits an action once with `semio-offload=if-idle` semantics and waits for it under per-phase timeouts: connecting, being taken by an idle machine, running. A refusal for lack of an idle machine, a timeout or any fault is a decline the caller answers by compiling here; a cancelled `signal` closes the call, which cancels the remote action. */
 export async function executeOffloadV1(input:Readonly<{endpoint:string;token:string|undefined;sign?:(method:string,content:string)=>Record<string,string>;instance:string;action:OffloadDigestV1;signal?:AbortSignal;onStage?:(stage:OffloadStageV1)=>void;queueMilliseconds?:number;executeMilliseconds?:number;connectMilliseconds?:number}>):Promise<OffloadExecutionV1>{
  const controller=new AbortController(),client=connectGrpcV1(input.endpoint,input.sign===undefined?{}:{sign:input.sign}),cancel=()=>controller.abort();
  input.signal?.addEventListener("abort",cancel,{once:true});
- let phase:"connect"|"queue"|"execute"="connect",expired=false;
+ let phase="connect" as "connect"|"queue"|"execute",expired=false;
  const limits={connect:input.connectMilliseconds??timeouts.connectMilliseconds,queue:input.queueMilliseconds??timeouts.queueMilliseconds,execute:input.executeMilliseconds??offloadExecuteBudgetMillisecondsV1()},submitted=Date.now();
  let timer:ReturnType<typeof setTimeout>|undefined;
  const arm=(next:typeof phase):void=>{phase=next;if(timer)clearTimeout(timer);timer=setTimeout(()=>{expired=true;controller.abort();},Math.max(1,Math.min(limits[next],submitted+limits.execute-Date.now())));};
@@ -102,7 +102,7 @@ export async function executeOffloadRidingThroughV1(input:Parameters<typeof exec
  for(let attempt=0;execution.kind==="declined"&&execution.transient===true&&input.signal?.aborted!==true&&Date.now()<until;attempt++){
   await pause(Math.min(2000,250*2**attempt)*(0.5+Math.random()));
   const left=began+overall-Date.now();
-  if(left<=0||input.signal?.aborted===true)break;
+  if(left<=0||Boolean(input.signal?.aborted))break;
   execution=await executeOffloadV1({...input,executeMilliseconds:left});
  }
  return execution;

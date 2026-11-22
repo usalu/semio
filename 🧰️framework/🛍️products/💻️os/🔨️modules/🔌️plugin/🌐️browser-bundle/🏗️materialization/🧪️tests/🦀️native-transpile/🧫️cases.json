@@ -6,14 +6,15 @@
     "native": "native-binary-digest",
     "expected": {
       "stage": "transpile",
-      "schemaVersion": 2,
+      "schemaVersion": 3,
       "inputs": {
         "component": "component-digest"
       },
       "tools": {
         "materialization": "implementation-digest",
         "base": "owned_component",
-        "native-transpile": "native-binary-digest"
+        "native-transpile": "native-binary-digest",
+        "maps": "13dfaff77ad2cbff2902cca60e68750723eca8c2743895ce7dbc556cdf4abd87"
       }
     }
   },

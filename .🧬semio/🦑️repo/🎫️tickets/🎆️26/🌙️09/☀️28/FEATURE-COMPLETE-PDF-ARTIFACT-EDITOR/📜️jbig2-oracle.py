@@ -240,7 +240,22 @@ def refinement_stream(base, refined, template, typical):
     return first + segment(2, 42, [], body)
 
 
-def halftone_stream(template):
+def mmr_bits(rows):
+    h, w = len(rows), len(rows[0])
+    image = Image.new("1", (w, h), 1)
+    px = image.load()
+    for y in range(h):
+        for x in range(w):
+            px[x, y] = 0 if rows[y][x] else 1
+    buffer = io.BytesIO()
+    image.save(buffer, format="TIFF", compression="group4")
+    buffer.seek(0)
+    tags = Image.open(buffer).tag_v2
+    raw = buffer.getvalue()
+    return b"".join(raw[o:o + c] for o, c in zip(tags[273], tags[279]))
+
+
+def halftone_stream(template, mmr=False):
     pw, ph, patterns_n = 4, 4, 8
     patterns = []
     for index in range(patterns_n):
@@ -251,21 +266,248 @@ def halftone_stream(template):
     at = [(-pw, 0), (-3, -1), (2, -2), (-2, -2)] if template == 0 else [(-pw, 0)]
     encode_generic(enc, ctxs, collective, template, False, at)
     dictionary = bytes([template << 1, pw, ph]) + (patterns_n - 1).to_bytes(4, "big") + enc.flush()
+    if mmr:
+        dictionary = bytes([1, pw, ph]) + (patterns_n - 1).to_bytes(4, "big") + mmr_bits(collective)
     grid_w, grid_h = 12, 9
     gray = [[(m * 3 + n * 5) % patterns_n for n in range(grid_w)] for m in range(grid_h)]
     planes = 3
     enc2, ctxs2 = MqEncoder(), [Ctx() for _ in range(1 << 16)]
     at2 = [(3, -1), (-3, -1), (2, -2), (-2, -2)] if template == 0 else [(3 if template <= 1 else 2, -1)]
     previous = None
+    mmr_planes = []
     for j in range(planes - 1, -1, -1):
         bit = [[(g >> j) & 1 for g in row] for row in gray]
         coded = [[bit[m][n] ^ (previous[m][n] if previous else 0) for n in range(grid_w)] for m in range(grid_h)]
-        encode_generic(enc2, ctxs2, coded, template, False, at2)
+        if mmr:
+            mmr_planes.append(mmr_bits(coded))
+        else:
+            encode_generic(enc2, ctxs2, coded, template, False, at2)
         previous = bit
     width, height = grid_w * pw, grid_h * ph
-    flags = template << 1
-    body = region_info(width, height, 0, 0, 0) + bytes([flags]) + grid_w.to_bytes(4, "big") + grid_h.to_bytes(4, "big") + (0).to_bytes(4, "big") + (0).to_bytes(4, "big") + (pw * 256).to_bytes(2, "big") + (0).to_bytes(2, "big") + enc2.flush()
+    flags = 1 if mmr else template << 1
+    body = region_info(width, height, 0, 0, 0) + bytes([flags]) + grid_w.to_bytes(4, "big") + grid_h.to_bytes(4, "big") + (0).to_bytes(4, "big") + (0).to_bytes(4, "big") + (pw * 256).to_bytes(2, "big") + (0).to_bytes(2, "big") + (b"".join(mmr_planes) if mmr else enc2.flush())
     return page_info(width, height) + segment(1, 16, [], dictionary) + segment(2, 22, [1], body), width, height
+
+
+class Bits:
+    def __init__(self):
+        self.bits = []
+
+    def put(self, value, count):
+        self.bits += [(value >> i) & 1 for i in range(count - 1, -1, -1)]
+
+    def align(self):
+        while len(self.bits) % 8:
+            self.bits.append(0)
+
+    def bytes(self):
+        self.align()
+        return bytes(int("".join(map(str, self.bits[i:i + 8])), 2) for i in range(0, len(self.bits), 8))
+
+
+class HuffTable:
+    """Canonical prefix codes of ITU-T T.88 Annex B built from the jbig2dec table values."""
+
+    def __init__(self, lines):
+        self.lines = lines
+        longest = max(l[0] for l in lines)
+        counts = [0] * (longest + 2)
+        for l in lines:
+            counts[l[0]] += 1
+        counts[0] = 0
+        first = [0] * (longest + 2)
+        nxt = [0] * (longest + 2)
+        for n in range(1, longest + 1):
+            first[n] = (first[n - 1] + counts[n - 1]) << 1
+            nxt[n] = first[n]
+        self.codes = []
+        for l in lines:
+            if l[0]:
+                self.codes.append((nxt[l[0]], l[0]))
+                nxt[l[0]] += 1
+            else:
+                self.codes.append(None)
+
+    def encode(self, bits, value):
+        for (plen, rlen, low, kind), code in zip(self.lines, self.codes):
+            if code is None:
+                continue
+            if value is None and kind == 3:
+                bits.put(code[0], code[1])
+                return
+            if value is not None and kind == 0 and low <= value < low + (1 << rlen):
+                bits.put(code[0], code[1])
+                bits.put(value - low, rlen)
+                return
+        for (plen, rlen, low, kind), code in zip(self.lines, self.codes):
+            if code is None:
+                continue
+            if value is not None and kind == 1 and value <= low:
+                bits.put(code[0], code[1])
+                bits.put(low - value, 32)
+                return
+            if value is not None and kind == 2 and value >= low:
+                bits.put(code[0], code[1])
+                bits.put(value - low, 32)
+                return
+        raise ValueError(f"value {value} not encodable")
+
+
+import json as _json
+import os as _os
+STANDARD = [HuffTable([tuple(l) for l in table]) for table in _json.load(open(_os.path.join(_os.path.dirname(_os.path.abspath(__file__)), "🔣️jbig2-huffman-tables.json")))]
+
+
+def huffman_stream(width, height, placements, custom=False, refine=False):
+    symbols = [[[int(c) for c in row] for row in glyph] for glyph in GLYPHS]
+    b = Bits()
+    sym_h, sym_w = len(symbols[0]), len(symbols[0][0])
+    STANDARD[3].encode(b, sym_h)
+    previous = 0
+    for symbol in symbols:
+        STANDARD[1].encode(b, sym_w - previous)
+        previous = sym_w
+    STANDARD[1].encode(b, None)
+    STANDARD[0].encode(b, 0)
+    b.align()
+    for y in range(sym_h):
+        for symbol in symbols:
+            for x in range(sym_w):
+                b.put(symbol[y][x], 1)
+        b.align()
+    STANDARD[0].encode(b, 0)
+    STANDARD[0].encode(b, len(symbols))
+    dictionary = (1).to_bytes(2, "big") + len(symbols).to_bytes(4, "big") + len(symbols).to_bytes(4, "big") + b.bytes()
+    t = Bits()
+    run_lengths = [0] * 35
+    run_lengths[1] = run_lengths[2] = 1
+    for length in run_lengths:
+        t.put(length, 4)
+    t.put(0, 1); t.put(1, 1); t.put(1, 1)
+    t.align()
+    STANDARD[10].encode(t, 1)
+    rows = {}
+    for sym, x, y in placements:
+        rows.setdefault(y, []).append((x, sym))
+    stripe_t, first_s = -1, 0
+    id_codes = {0: (0, 1), 1: (2, 2), 2: (3, 2)}
+    for y in sorted(rows):
+        STANDARD[10].encode(t, y - stripe_t)
+        stripe_t = y
+        cur = None
+        for n, (x, sym) in enumerate(sorted(rows[y])):
+            if n == 0:
+                (CUSTOM if custom else STANDARD[5]).encode(t, x - first_s)
+                first_s = x
+            else:
+                STANDARD[7].encode(t, x - cur)
+            t.put(*id_codes[sym])
+            if refine:
+                modified = n == 1 and sym == 1
+                t.put(int(modified), 1)
+                if modified:
+                    target = [row[:] for row in symbols[sym]]
+                    target[2][1] ^= 1
+                    target[4][2] ^= 1
+                    encoder, contexts = MqEncoder(), [Ctx() for _ in range(1 << 13)]
+                    encode_refinement(encoder, contexts, target, symbols[sym], 0, False, [(-1, -1), (-1, -1)])
+                    payload = encoder.flush()
+                    for _ in range(4):
+                        STANDARD[13].encode(t, 0)
+                    STANDARD[0].encode(t, len(payload))
+                    t.align()
+                    for byte in payload:
+                        t.put(byte, 8)
+            cur = x + sym_w - 1
+        STANDARD[7].encode(t, None)
+    flags = 1 | (1 << 4) | (2 if refine else 0)
+    selectors = 3 if custom else 0
+    text = region_info(width, height, 0, 0) + flags.to_bytes(2, "big") + selectors.to_bytes(2, "big") + (bytes([0xFF] * 4) if refine else b"") + len(placements).to_bytes(4, "big") + t.bytes()
+    if custom:
+        return page_info(width, height) + segment(1, 0, [], dictionary) + segment(3, 53, [], CUSTOM_SEGMENT) + segment(4, 6, [1, 3], text)
+    return page_info(width, height) + segment(1, 0, [], dictionary) + segment(2, 6, [1], text)
+
+
+CUSTOM = HuffTable([(2, 6, -64, 0), (2, 6, 0, 0), (3, 32, -65, 1), (3, 32, 64, 2)])
+_c = Bits()
+for _length, _range in [(2, 6), (2, 6)]:
+    _c.put(_length, 2)
+    _c.put(_range, 3)
+_c.put(3, 2)
+_c.put(3, 2)
+CUSTOM_SEGMENT = bytes([0x22]) + (-64 & 0xFFFFFFFF).to_bytes(4, "big") + (64).to_bytes(4, "big") + _c.bytes()
+
+
+def aggregate_stream():
+    glyphs = [[[int(c) for c in row] for row in glyph] for glyph in GLYPHS]
+    gw, gh = 4, 7
+    at = AT_DEFAULT[0]
+    at_bytes = b"".join((dx & 0xFF).to_bytes(1, "big") + (dy & 0xFF).to_bytes(1, "big") for dx, dy in at)
+    ctx = {name: [Ctx() for _ in range(512)] for name in ["dh", "dw", "ex", "ai", "dt", "fs", "ds", "ri", "rdx", "rdy"]}
+    enc, generic = MqEncoder(), [Ctx() for _ in range(1 << 16)]
+    encode_int(enc, ctx["dh"], gh)
+    for n, glyph in enumerate(glyphs):
+        encode_int(enc, ctx["dw"], gw if n == 0 else 0)
+        encode_generic(enc, generic, glyph, 0, False, at)
+    encode_int(enc, ctx["dw"], None)
+    encode_int(enc, ctx["ex"], 0)
+    encode_int(enc, ctx["ex"], 3)
+    first = (0).to_bytes(2, "big") + at_bytes + (3).to_bytes(4, "big") + (3).to_bytes(4, "big") + enc.flush()
+
+    ctx = {name: [Ctx() for _ in range(512)] for name in ctx}
+    enc, generic, refinement = MqEncoder(), [Ctx() for _ in range(1 << 16)], [Ctx() for _ in range(1 << 13)]
+    code_len = 3
+    ids = [Ctx() for _ in range(1 << (code_len + 1))]
+    aggregate_width = 9
+    encode_int(enc, ctx["dh"], gh)
+    encode_int(enc, ctx["dw"], aggregate_width)
+    encode_int(enc, ctx["ai"], 2)
+    encode_int(enc, ctx["dt"], 0)
+    encode_int(enc, ctx["dt"], 0)
+    encode_int(enc, ctx["fs"], 0)
+    encode_id(enc, ids, 0, code_len)
+    encode_int(enc, ctx["ri"], 0)
+    encode_int(enc, ctx["ds"], 5 - (0 + gw - 1))
+    encode_id(enc, ids, 1, code_len)
+    encode_int(enc, ctx["ri"], 0)
+    encode_int(enc, ctx["ds"], None)
+    refined = [row[:] for row in glyphs[2]]
+    refined[3][1] ^= 1
+    refined[5][2] ^= 1
+    encode_int(enc, ctx["dw"], gw - aggregate_width)
+    encode_int(enc, ctx["ai"], 1)
+    encode_id(enc, ids, 2, code_len)
+    encode_int(enc, ctx["rdx"], 0)
+    encode_int(enc, ctx["rdy"], 0)
+    encode_refinement(enc, refinement, refined, glyphs[2], 0, False, [(-1, -1), (-1, -1)])
+    encode_int(enc, ctx["dw"], None)
+    encode_int(enc, ctx["ex"], 3)
+    encode_int(enc, ctx["ex"], 2)
+    second = (0x0002).to_bytes(2, "big") + at_bytes + bytes([0xFF, 0xFF, 0xFF, 0xFF]) + (2).to_bytes(4, "big") + (2).to_bytes(4, "big") + enc.flush()
+
+    placements = [(0, 2, 2), (1, 16, 2), (0, 5, 14), (1, 20, 20)]
+    widths = [aggregate_width, gw]
+    enc, tctx, ids = MqEncoder(), {name: [Ctx() for _ in range(512)] for name in ["dt", "fs", "ds"]}, [Ctx() for _ in range(4)]
+    rows = {}
+    for sym, x, y in placements:
+        rows.setdefault(y, []).append((x, sym))
+    stripe_t, first_s = 0, 0
+    encode_int(enc, tctx["dt"], 0)
+    for y in sorted(rows):
+        encode_int(enc, tctx["dt"], y - stripe_t)
+        stripe_t = y
+        cur = None
+        for n, (x, sym) in enumerate(sorted(rows[y])):
+            if n == 0:
+                encode_int(enc, tctx["fs"], x - first_s)
+                first_s = x
+            else:
+                encode_int(enc, tctx["ds"], x - cur)
+            encode_id(enc, ids, sym, 1)
+            cur = x + widths[sym] - 1
+        encode_int(enc, tctx["ds"], None)
+    text = region_info(40, 34, 0, 0) + (1 << 4).to_bytes(2, "big") + len(placements).to_bytes(4, "big") + enc.flush()
+    return page_info(40, 34) + segment(1, 0, [], first) + segment(2, 0, [1], second) + segment(3, 6, [2], text)
 
 
 def mmr_stream(rows):
@@ -386,6 +628,12 @@ def main(path):
         cases.append((f"generic-t{template}-tpgd", generic_stream(base, template, True), 61, 40))
     cases.append(("generic-custom-at", generic_stream(base, 0, False, [(2, -1), (-2, -1), (3, -2), (-3, -2)]), 61, 40))
     cases.append(("mmr", mmr_stream(base), 61, 40))
+    cases.append(("huffman-symbols-and-text", huffman_stream(40, 34, [(0, 2, 2), (1, 8, 2), (2, 14, 2), (0, 3, 14), (2, 10, 14), (1, 20, 14), (1, 30, 25)]), 40, 34))
+    cases.append(("huffman-custom-table", huffman_stream(40, 34, [(0, 2, 2), (1, 8, 2), (2, 14, 2), (0, 3, 14), (2, 10, 14), (1, 20, 14), (1, 30, 25)], True), 40, 34))
+    stream, hw, hh = halftone_stream(0, True)
+    cases.append(("halftone-mmr", stream, hw, hh))
+    cases.append(("aggregate-symbols", aggregate_stream(), 40, 34))
+    # jbig2dec rejects Huffman text regions with refinement, so no MuPDF oracle exists for them
     for template in (0, 1, 2, 3):
         stream, hw, hh = halftone_stream(template)
         cases.append((f"halftone-t{template}", stream, hw, hh))

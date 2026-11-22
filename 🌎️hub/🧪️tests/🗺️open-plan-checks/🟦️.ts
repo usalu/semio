@@ -392,7 +392,8 @@ export async function proveDocumentOpenPlanFixture(repoRoot: string): Promise<vo
   const fixture = JSON.parse(readFileSync(fixturePath, "utf8")) as Record<string, any>;
   const hubSource = readHubBinSource(repoRoot);
   const routePaths = [...hubSource.matchAll(/\.route\(\s*"([^"]+)"/g)].map((match) => match[1]!);
-  const productionSource = hubSource.slice(0, hubSource.indexOf("\nmod tests {"));
+  const testStart = hubSource.indexOf("\nmod tests {");
+  const productionSource = testStart < 0 ? hubSource : hubSource.slice(0, testStart);
   const catalogSource = readTrustedCatalogSource(repoRoot);
   if (
     !catalogSource.includes("pub parent_dialect: semio_framework::ArtifactDialect") ||

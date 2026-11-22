@@ -1,0 +1,619 @@
+{
+ "version": 1,
+ "recipe": {
+  "cwd": "/w",
+  "manifest": "/w/app/Cargo.toml",
+  "command": "cargo",
+  "args": [
+   "build",
+   "--locked",
+   "--manifest-path",
+   "/w/app/Cargo.toml",
+   "--profile",
+   "release",
+   "--target",
+   "wasm32-unknown-unknown",
+   "-p",
+   "app",
+   "--features",
+   "a"
+  ],
+  "buildDirectory": "/w/lane",
+  "compilerIdentity": "cargo 1.99.0-nightly",
+  "toolchainIdentity": "rustc 1.99.0-nightly",
+  "environment": [
+   {
+    "name": "RUSTFLAGS",
+    "value": "-Z threads=0"
+   }
+  ]
+ },
+ "cases": [
+  {
+   "id": "base",
+   "observed": [
+    {
+     "path": "/w/Cargo.toml",
+     "sha256": "1111111111111111111111111111111111111111111111111111111111111111"
+    },
+    {
+     "path": "/w/Cargo.lock",
+     "sha256": "2222222222222222222222222222222222222222222222222222222222222222"
+    },
+    {
+     "path": "/w/app/Cargo.toml",
+     "sha256": "3333333333333333333333333333333333333333333333333333333333333333"
+    },
+    {
+     "path": "/w/.cargo/config.toml",
+     "sha256": "4444444444444444444444444444444444444444444444444444444444444444"
+    },
+    {
+     "path": "/w/rust-toolchain.toml",
+     "sha256": "5555555555555555555555555555555555555555555555555555555555555555"
+    }
+   ]
+  },
+  {
+   "id": "lock-edited",
+   "observed": [
+    {
+     "path": "/w/Cargo.toml",
+     "sha256": "1111111111111111111111111111111111111111111111111111111111111111"
+    },
+    {
+     "path": "/w/Cargo.lock",
+     "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+    },
+    {
+     "path": "/w/app/Cargo.toml",
+     "sha256": "3333333333333333333333333333333333333333333333333333333333333333"
+    },
+    {
+     "path": "/w/.cargo/config.toml",
+     "sha256": "4444444444444444444444444444444444444444444444444444444444444444"
+    },
+    {
+     "path": "/w/rust-toolchain.toml",
+     "sha256": "5555555555555555555555555555555555555555555555555555555555555555"
+    }
+   ]
+  },
+  {
+   "id": "manifests-edited",
+   "observed": [
+    {
+     "path": "/w/Cargo.toml",
+     "sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+    },
+    {
+     "path": "/w/Cargo.lock",
+     "sha256": "2222222222222222222222222222222222222222222222222222222222222222"
+    },
+    {
+     "path": "/w/app/Cargo.toml",
+     "sha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+    },
+    {
+     "path": "/w/.cargo/config.toml",
+     "sha256": "4444444444444444444444444444444444444444444444444444444444444444"
+    },
+    {
+     "path": "/w/rust-toolchain.toml",
+     "sha256": "5555555555555555555555555555555555555555555555555555555555555555"
+    }
+   ]
+  },
+  {
+   "id": "lock-and-manifest-absent",
+   "observed": [
+    {
+     "path": "/w/.cargo/config.toml",
+     "sha256": "4444444444444444444444444444444444444444444444444444444444444444"
+    },
+    {
+     "path": "/w/rust-toolchain.toml",
+     "sha256": "5555555555555555555555555555555555555555555555555555555555555555"
+    }
+   ]
+  },
+  {
+   "id": "cargo-config-edited",
+   "observed": [
+    {
+     "path": "/w/Cargo.toml",
+     "sha256": "1111111111111111111111111111111111111111111111111111111111111111"
+    },
+    {
+     "path": "/w/Cargo.lock",
+     "sha256": "2222222222222222222222222222222222222222222222222222222222222222"
+    },
+    {
+     "path": "/w/app/Cargo.toml",
+     "sha256": "3333333333333333333333333333333333333333333333333333333333333333"
+    },
+    {
+     "path": "/w/.cargo/config.toml",
+     "sha256": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd"
+    },
+    {
+     "path": "/w/rust-toolchain.toml",
+     "sha256": "5555555555555555555555555555555555555555555555555555555555555555"
+    }
+   ]
+  },
+  {
+   "id": "toolchain-file-edited",
+   "observed": [
+    {
+     "path": "/w/Cargo.toml",
+     "sha256": "1111111111111111111111111111111111111111111111111111111111111111"
+    },
+    {
+     "path": "/w/Cargo.lock",
+     "sha256": "2222222222222222222222222222222222222222222222222222222222222222"
+    },
+    {
+     "path": "/w/app/Cargo.toml",
+     "sha256": "3333333333333333333333333333333333333333333333333333333333333333"
+    },
+    {
+     "path": "/w/.cargo/config.toml",
+     "sha256": "4444444444444444444444444444444444444444444444444444444444444444"
+    },
+    {
+     "path": "/w/rust-toolchain.toml",
+     "sha256": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+    }
+   ]
+  },
+  {
+   "id": "rustc-changed",
+   "observed": [
+    {
+     "path": "/w/Cargo.toml",
+     "sha256": "1111111111111111111111111111111111111111111111111111111111111111"
+    },
+    {
+     "path": "/w/Cargo.lock",
+     "sha256": "2222222222222222222222222222222222222222222222222222222222222222"
+    },
+    {
+     "path": "/w/app/Cargo.toml",
+     "sha256": "3333333333333333333333333333333333333333333333333333333333333333"
+    },
+    {
+     "path": "/w/.cargo/config.toml",
+     "sha256": "4444444444444444444444444444444444444444444444444444444444444444"
+    },
+    {
+     "path": "/w/rust-toolchain.toml",
+     "sha256": "5555555555555555555555555555555555555555555555555555555555555555"
+    }
+   ],
+   "recipe": {
+    "toolchainIdentity": "rustc 1.99.0-nightly-2"
+   }
+  },
+  {
+   "id": "cargo-changed",
+   "observed": [
+    {
+     "path": "/w/Cargo.toml",
+     "sha256": "1111111111111111111111111111111111111111111111111111111111111111"
+    },
+    {
+     "path": "/w/Cargo.lock",
+     "sha256": "2222222222222222222222222222222222222222222222222222222222222222"
+    },
+    {
+     "path": "/w/app/Cargo.toml",
+     "sha256": "3333333333333333333333333333333333333333333333333333333333333333"
+    },
+    {
+     "path": "/w/.cargo/config.toml",
+     "sha256": "4444444444444444444444444444444444444444444444444444444444444444"
+    },
+    {
+     "path": "/w/rust-toolchain.toml",
+     "sha256": "5555555555555555555555555555555555555555555555555555555555555555"
+    }
+   ],
+   "recipe": {
+    "compilerIdentity": "cargo 1.99.0-nightly-2"
+   }
+  },
+  {
+   "id": "rustflags-changed",
+   "observed": [
+    {
+     "path": "/w/Cargo.toml",
+     "sha256": "1111111111111111111111111111111111111111111111111111111111111111"
+    },
+    {
+     "path": "/w/Cargo.lock",
+     "sha256": "2222222222222222222222222222222222222222222222222222222222222222"
+    },
+    {
+     "path": "/w/app/Cargo.toml",
+     "sha256": "3333333333333333333333333333333333333333333333333333333333333333"
+    },
+    {
+     "path": "/w/.cargo/config.toml",
+     "sha256": "4444444444444444444444444444444444444444444444444444444444444444"
+    },
+    {
+     "path": "/w/rust-toolchain.toml",
+     "sha256": "5555555555555555555555555555555555555555555555555555555555555555"
+    }
+   ],
+   "recipe": {
+    "environment": [
+     {
+      "name": "RUSTFLAGS",
+      "value": "-C opt-level=2"
+     }
+    ]
+   }
+  },
+  {
+   "id": "target-changed",
+   "observed": [
+    {
+     "path": "/w/Cargo.toml",
+     "sha256": "1111111111111111111111111111111111111111111111111111111111111111"
+    },
+    {
+     "path": "/w/Cargo.lock",
+     "sha256": "2222222222222222222222222222222222222222222222222222222222222222"
+    },
+    {
+     "path": "/w/app/Cargo.toml",
+     "sha256": "3333333333333333333333333333333333333333333333333333333333333333"
+    },
+    {
+     "path": "/w/.cargo/config.toml",
+     "sha256": "4444444444444444444444444444444444444444444444444444444444444444"
+    },
+    {
+     "path": "/w/rust-toolchain.toml",
+     "sha256": "5555555555555555555555555555555555555555555555555555555555555555"
+    }
+   ],
+   "recipe": {
+    "args": [
+     "build",
+     "--locked",
+     "--manifest-path",
+     "/w/app/Cargo.toml",
+     "--profile",
+     "release",
+     "--target",
+     "wasm32-wasip1",
+     "-p",
+     "app",
+     "--features",
+     "a"
+    ]
+   }
+  },
+  {
+   "id": "profile-changed",
+   "observed": [
+    {
+     "path": "/w/Cargo.toml",
+     "sha256": "1111111111111111111111111111111111111111111111111111111111111111"
+    },
+    {
+     "path": "/w/Cargo.lock",
+     "sha256": "2222222222222222222222222222222222222222222222222222222222222222"
+    },
+    {
+     "path": "/w/app/Cargo.toml",
+     "sha256": "3333333333333333333333333333333333333333333333333333333333333333"
+    },
+    {
+     "path": "/w/.cargo/config.toml",
+     "sha256": "4444444444444444444444444444444444444444444444444444444444444444"
+    },
+    {
+     "path": "/w/rust-toolchain.toml",
+     "sha256": "5555555555555555555555555555555555555555555555555555555555555555"
+    }
+   ],
+   "recipe": {
+    "args": [
+     "build",
+     "--locked",
+     "--manifest-path",
+     "/w/app/Cargo.toml",
+     "--profile",
+     "dev",
+     "--target",
+     "wasm32-unknown-unknown",
+     "-p",
+     "app",
+     "--features",
+     "a"
+    ]
+   }
+  },
+  {
+   "id": "features-changed",
+   "observed": [
+    {
+     "path": "/w/Cargo.toml",
+     "sha256": "1111111111111111111111111111111111111111111111111111111111111111"
+    },
+    {
+     "path": "/w/Cargo.lock",
+     "sha256": "2222222222222222222222222222222222222222222222222222222222222222"
+    },
+    {
+     "path": "/w/app/Cargo.toml",
+     "sha256": "3333333333333333333333333333333333333333333333333333333333333333"
+    },
+    {
+     "path": "/w/.cargo/config.toml",
+     "sha256": "4444444444444444444444444444444444444444444444444444444444444444"
+    },
+    {
+     "path": "/w/rust-toolchain.toml",
+     "sha256": "5555555555555555555555555555555555555555555555555555555555555555"
+    }
+   ],
+   "recipe": {
+    "args": [
+     "build",
+     "--locked",
+     "--manifest-path",
+     "/w/app/Cargo.toml",
+     "--profile",
+     "release",
+     "--target",
+     "wasm32-unknown-unknown",
+     "-p",
+     "app",
+     "--features",
+     "a,b"
+    ]
+   }
+  },
+  {
+   "id": "package-set-changed",
+   "observed": [
+    {
+     "path": "/w/Cargo.toml",
+     "sha256": "1111111111111111111111111111111111111111111111111111111111111111"
+    },
+    {
+     "path": "/w/Cargo.lock",
+     "sha256": "2222222222222222222222222222222222222222222222222222222222222222"
+    },
+    {
+     "path": "/w/app/Cargo.toml",
+     "sha256": "3333333333333333333333333333333333333333333333333333333333333333"
+    },
+    {
+     "path": "/w/.cargo/config.toml",
+     "sha256": "4444444444444444444444444444444444444444444444444444444444444444"
+    },
+    {
+     "path": "/w/rust-toolchain.toml",
+     "sha256": "5555555555555555555555555555555555555555555555555555555555555555"
+    }
+   ],
+   "recipe": {
+    "args": [
+     "build",
+     "--locked",
+     "--manifest-path",
+     "/w/app/Cargo.toml",
+     "--profile",
+     "release",
+     "--target",
+     "wasm32-unknown-unknown",
+     "-p",
+     "other",
+     "--features",
+     "a"
+    ]
+   }
+  },
+  {
+   "id": "lane-changed",
+   "observed": [
+    {
+     "path": "/w/Cargo.toml",
+     "sha256": "1111111111111111111111111111111111111111111111111111111111111111"
+    },
+    {
+     "path": "/w/Cargo.lock",
+     "sha256": "2222222222222222222222222222222222222222222222222222222222222222"
+    },
+    {
+     "path": "/w/app/Cargo.toml",
+     "sha256": "3333333333333333333333333333333333333333333333333333333333333333"
+    },
+    {
+     "path": "/w/.cargo/config.toml",
+     "sha256": "4444444444444444444444444444444444444444444444444444444444444444"
+    },
+    {
+     "path": "/w/rust-toolchain.toml",
+     "sha256": "5555555555555555555555555555555555555555555555555555555555555555"
+    }
+   ],
+   "recipe": {
+    "buildDirectory": "/w/other-lane"
+   }
+  }
+ ],
+ "pairs": [
+  {
+   "a": "base",
+   "b": "lock-edited",
+   "sameKey": true
+  },
+  {
+   "a": "base",
+   "b": "manifests-edited",
+   "sameKey": true
+  },
+  {
+   "a": "base",
+   "b": "lock-and-manifest-absent",
+   "sameKey": true
+  },
+  {
+   "a": "base",
+   "b": "cargo-config-edited",
+   "sameKey": false
+  },
+  {
+   "a": "base",
+   "b": "toolchain-file-edited",
+   "sameKey": false
+  },
+  {
+   "a": "base",
+   "b": "rustc-changed",
+   "sameKey": false
+  },
+  {
+   "a": "base",
+   "b": "cargo-changed",
+   "sameKey": false
+  },
+  {
+   "a": "base",
+   "b": "rustflags-changed",
+   "sameKey": false
+  },
+  {
+   "a": "base",
+   "b": "target-changed",
+   "sameKey": false
+  },
+  {
+   "a": "base",
+   "b": "profile-changed",
+   "sameKey": false
+  },
+  {
+   "a": "base",
+   "b": "features-changed",
+   "sameKey": false
+  },
+  {
+   "a": "base",
+   "b": "package-set-changed",
+   "sameKey": false
+  },
+  {
+   "a": "base",
+   "b": "lane-changed",
+   "sameKey": false
+  }
+ ],
+ "expect": {
+  "base": {
+   "keyed": [
+    "/w/.cargo/config.toml",
+    "/w/rust-toolchain.toml"
+   ],
+   "sha256": "e0122edc5561083629d2b27372a5cd4630e0a4ad0a17027b462de81d23f834ae"
+  },
+  "lock-edited": {
+   "keyed": [
+    "/w/.cargo/config.toml",
+    "/w/rust-toolchain.toml"
+   ],
+   "sha256": "e0122edc5561083629d2b27372a5cd4630e0a4ad0a17027b462de81d23f834ae"
+  },
+  "manifests-edited": {
+   "keyed": [
+    "/w/.cargo/config.toml",
+    "/w/rust-toolchain.toml"
+   ],
+   "sha256": "e0122edc5561083629d2b27372a5cd4630e0a4ad0a17027b462de81d23f834ae"
+  },
+  "lock-and-manifest-absent": {
+   "keyed": [
+    "/w/.cargo/config.toml",
+    "/w/rust-toolchain.toml"
+   ],
+   "sha256": "e0122edc5561083629d2b27372a5cd4630e0a4ad0a17027b462de81d23f834ae"
+  },
+  "cargo-config-edited": {
+   "keyed": [
+    "/w/.cargo/config.toml",
+    "/w/rust-toolchain.toml"
+   ],
+   "sha256": "6aa78958f604ab4f3c42f021d657367801d4e5c11b7092eaff8d18737e77b49d"
+  },
+  "toolchain-file-edited": {
+   "keyed": [
+    "/w/.cargo/config.toml",
+    "/w/rust-toolchain.toml"
+   ],
+   "sha256": "e9f75a59c662589e9172e7ee225e64f219d310585e31d36b8187e6f8572f5fae"
+  },
+  "rustc-changed": {
+   "keyed": [
+    "/w/.cargo/config.toml",
+    "/w/rust-toolchain.toml"
+   ],
+   "sha256": "61215b6733df377ce6864d9b7a2052aa6edb15aba1715a45e1ec42201e7cccec"
+  },
+  "cargo-changed": {
+   "keyed": [
+    "/w/.cargo/config.toml",
+    "/w/rust-toolchain.toml"
+   ],
+   "sha256": "7d882ed013de7880aa48cc8308cd43f6373252331430c2d0b2c6583f34d75dec"
+  },
+  "rustflags-changed": {
+   "keyed": [
+    "/w/.cargo/config.toml",
+    "/w/rust-toolchain.toml"
+   ],
+   "sha256": "eaf6c33d98a8d7fea04de5fefa2a0242b745adff62bd853c6d18c6275b87f8f4"
+  },
+  "target-changed": {
+   "keyed": [
+    "/w/.cargo/config.toml",
+    "/w/rust-toolchain.toml"
+   ],
+   "sha256": "736fa295941d3b9a1d5c0df0b6d26dd5508ff8bde8014f672ccc68c392f2a902"
+  },
+  "profile-changed": {
+   "keyed": [
+    "/w/.cargo/config.toml",
+    "/w/rust-toolchain.toml"
+   ],
+   "sha256": "2d298ac0ea61bbfde69ad7a9f32686a8baa97f1b0a973b730a62d2b2a9d70529"
+  },
+  "features-changed": {
+   "keyed": [
+    "/w/.cargo/config.toml",
+    "/w/rust-toolchain.toml"
+   ],
+   "sha256": "336fcbf16a5a89cb0a0c1cfa3851839473c15b0d5a8993b0f96f954ad088c4a4"
+  },
+  "package-set-changed": {
+   "keyed": [
+    "/w/.cargo/config.toml",
+    "/w/rust-toolchain.toml"
+   ],
+   "sha256": "259c56c7131a98a7489d8cffcea7a7a9545e7730d5045e1000e2f096a677e5b9"
+  },
+  "lane-changed": {
+   "keyed": [
+    "/w/.cargo/config.toml",
+    "/w/rust-toolchain.toml"
+   ],
+   "sha256": "49bda287c08dd5237e9318950c5d82ee2088a7384d1be05ed8cf66c6503d2d44"
+  }
+ }
+}

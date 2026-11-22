@@ -30,7 +30,7 @@ const world=async(seed:number,pinned:boolean)=>{
   requireIssuedResourceControlInvocationV1:()=>{},checkResourceLeaseControl:()=>{},checkScriptInvocation:()=>{},
   readBuildGraphSelectionV1:(value:unknown)=>value,readBuildOwnerRegistryV1:(value:unknown)=>value,
   importModuleV1:async()=>({readBuildOwnerRegistrySourceV1:()=>JSON.stringify(readRegistry())}),
-  readSealedBuildGraphV1:async()=>undefined,buildGraphScopeKeyV1:(_selection:unknown,registry:{owners:number[]})=>String(registry.owners[0]),
+  readSealedBuildGraphV1:async()=>undefined,buildGraphScopeKeyV1:()=>"scope",ownerRegistryDigestV1:(registry:{owners:number[]})=>String(registry.owners[0]),askOwnerRegistryV1:()=>"registry",
   isOwnerRegistryInvalidationV1:(value:unknown)=>value===invalidated,ownerRegistryInvalidationV1:invalidated,
   clearPinnedAuthorityV1:()=>{clears++;snapshot=undefined;},
   process:{stderr:{write:()=>true}},
@@ -38,7 +38,7 @@ const world=async(seed:number,pinned:boolean)=>{
   selectedThroughFleetV1:({attempt}:{attempt():unknown})=>attempt(),
   withBuildGraphStateV1:async(_root:string,_invocation:unknown,actual:unknown,body:(store:unknown,phase:unknown,critical:(work:()=>Promise<unknown>)=>Promise<unknown>)=>Promise<unknown>)=>body({root:"/owned/cache",recheck:async()=>{}},actual,work=>work()),
   loadBuildGraphAttemptV1:async(_root:string,_invocation:unknown,_actual:unknown,_options:unknown,registry:{owners:number[]},scope?:string)=>{
-   attempts++;expect(registry.owners[0]).toBe(Number(scope));advance(work);
+   attempts++;expect(scope).toBe("scope");advance(work);
    return JSON.stringify(readRegistry())===JSON.stringify(registry)?{...graph,version:registry.owners[0]!}:invalidated;
   },
   advanceScriptInvocation:async()=>{advance(1);},

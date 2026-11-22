@@ -62,7 +62,7 @@ const claimsActive=async():Promise<number>=>((await (await fetch(cluster.cache.u
 const diskFull=(():boolean=>{try{const row=statfsSync(tmpdir());return 1-Number(row.bavail)/Number(row.blocks)>=CAS_POLICY_V1.partition.criticalUsedFraction-0.005;}catch{return false;}})();
 test.skipIf(diskFull)("a unit a worker compiled is stored once in the fleet cache under the requester's key with its slot, a third checkout takes it without any compiler, and no claim stays held",async()=>{
  const requester=checkoutOf("req"),rootA=join(scratch,"unit-req"),slottedBefore=cluster.cache.store.usage().slotted;
- const environmentA=environmentOf(requester,rootA,{SEMIO_OFFLOAD:"always"});
+ const environmentA=environmentOf(requester,rootA,{SEMIO_OFFLOAD:"distribute"});
  const status=await run(requester,environmentA,{admission:{probe:testHostProbeV1("critical-pressure-gigabyte-swap")}});
  expect(status).toBe(0);
  const trace=(root:string):string=>existsSync(join(root,"x"))?readdirSync(join(root,"x")).map(name=>name+": "+readFileSync(join(root,"x",name),"utf8")).join("\n"):"";

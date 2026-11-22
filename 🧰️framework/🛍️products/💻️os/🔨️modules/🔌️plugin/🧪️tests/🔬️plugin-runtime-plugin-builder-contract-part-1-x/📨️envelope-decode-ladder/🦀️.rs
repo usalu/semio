@@ -61,8 +61,8 @@ impl store::os_store::owned_schema_decode::ArtifactEnvelopeFieldDecoder<Composed
         self.inner.next_close_depth_demand()
     }
 
-    fn close_step(&mut self, grant: store::RetainedCloneGrant) -> Result<store::RetainedCloneStep, store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic> {
-        self.inner.close_step(grant)
+    fn close_step(&mut self, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> store::os_store::owned_schema_decode::ArtifactEnvelopeClosePoll {
+        self.inner.close_step(effect)
     }
 
     fn terminal_is_empty(&self) -> bool {

@@ -77,7 +77,7 @@ async function twinBuild(directory:string):Promise<FleetValuesV1>{
 }
 
 type UnitRunV1=Readonly<{status:number|null;milliseconds:number;localCalls:number;kinds:readonly string[];root:string;events:readonly Readonly<Record<string,unknown>>[]}>;
-async function wrappedUnit(directory:string,environment:Readonly<Record<string,string>>,label:string,timeoutMilliseconds:number,options:Readonly<{pressed:boolean;nonce?:string;offload:"auto"|"never";drain?:boolean}>):Promise<UnitRunV1>{
+async function wrappedUnit(directory:string,environment:Readonly<Record<string,string>>,label:string,timeoutMilliseconds:number,options:Readonly<{pressed:boolean;nonce?:string;offload:"distribute"|"never";drain?:boolean}>):Promise<UnitRunV1>{
  const {wrapRustcV1}=await import("../../../../../⚡️caching/🦀️cargo/🗃️unit-cache/📜️script.ts");
  const checkout=createFleetCheckoutV1(label,directory);checkout.compile("a","pub fn a()->u32{1}\n");checkout.compile("b","pub fn b()->u32{a::a()+1}\n",["a"]);checkout.crate("c","pub fn c()->u32{b::b()+"+(options.nonce??String(Date.now()%1000))+"}\n");
  const root=join(directory,"unit-"+label),counter=(mkdirSync(root,{recursive:true}),countingRustcV1(root));
@@ -104,7 +104,7 @@ async function offloadPressure(directory:string):Promise<FleetValuesV1>{
   }
   await eventuallyV1(async()=>{const status=await (await fetch(services.server.workerUrl+"/status")).json() as {workers?:unknown[]};return (status.workers?.length??0)>=policy.offload.workers;},120000,"the worker to join");
   await eventuallyV1(async()=>{const response=await fetch(services.server.workerUrl+"/v1/fleet/load");if(!response.ok)return false;const table=await response.json() as {machines?:{headroom?:boolean}[]};return table.machines?.some(row=>row.headroom===true)===true;},120000,"the worker to report its load");
-  const run=await wrappedUnit(directory,{SEMIO_REMOTE_EXECUTION_ENDPOINT:services.server.grpcUrl,SEMIO_REMOTE_CACHE_ENDPOINT:services.cache.url.replace("//0.0.0.0","//127.0.0.1"),SEMIO_REMOTE_CACHE_INSTANCE:"main"},"offload",policy.offload.wallTimeoutMilliseconds,{pressed:true,offload:"auto"}),moved=run.status===0&&run.localCalls===0&&run.kinds.includes("offload-run");
+  const run=await wrappedUnit(directory,{SEMIO_REMOTE_EXECUTION_ENDPOINT:services.server.grpcUrl,SEMIO_REMOTE_CACHE_ENDPOINT:services.cache.url.replace("//0.0.0.0","//127.0.0.1"),SEMIO_REMOTE_CACHE_INSTANCE:"main"},"offload",policy.offload.wallTimeoutMilliseconds,{pressed:true,offload:"distribute"}),moved=run.status===0&&run.localCalls===0&&run.kinds.includes("offload-run");
   return moved?{offloadedUnits:1,offloadMs:run.milliseconds}:{offloadedUnits:0};
  }finally{
   for(const child of children)terminateOwnedChildTree(child);
@@ -113,7 +113,7 @@ async function offloadPressure(directory:string):Promise<FleetValuesV1>{
 }
 
 async function offloadFallback(directory:string):Promise<FleetValuesV1>{
- const run=await wrappedUnit(directory,{SEMIO_REMOTE_EXECUTION_ENDPOINT:policy.fallback.deadEndpoint,SEMIO_REMOTE_CACHE_ENDPOINT:"http://127.0.0.1:1",SEMIO_REMOTE_CACHE_INSTANCE:"main"},"fallback",policy.fallback.wallTimeoutMilliseconds,{pressed:true,offload:"auto"});
+ const run=await wrappedUnit(directory,{SEMIO_REMOTE_EXECUTION_ENDPOINT:policy.fallback.deadEndpoint,SEMIO_REMOTE_CACHE_ENDPOINT:"http://127.0.0.1:1",SEMIO_REMOTE_CACHE_INSTANCE:"main"},"fallback",policy.fallback.wallTimeoutMilliseconds,{pressed:true,offload:"distribute"});
  return run.status===0&&run.localCalls===1?{executedActions:1,fallbackMs:run.milliseconds}:{executedActions:run.status===0?run.localCalls:0};
 }
 
@@ -190,7 +190,7 @@ async function liveBazelCache(directory:string,root:string):Promise<FleetValuesV
 async function liveOffload(directory:string,root:string):Promise<FleetValuesV1>{
  const live=await liveFleet(root),{resolveRemoteExecutionEndpointV1}=await import("../../../../🌐️remote-execution/🧭️endpoint/🟦️.ts"),endpoint=resolveRemoteExecutionEndpointV1({environment:{...process.env,...live.environment},root});
  if(endpoint===undefined)throw Error(both("No remote execution endpoint is configured on this machine","Auf diesem Rechner ist kein Endpunkt für Remote-Ausführung eingerichtet"));
- const run=await wrappedUnit(directory,{...live.environment,SEMIO_REMOTE_EXECUTION_ENDPOINT:endpoint.endpoint},"live-offload",policy.live.offloadTimeoutMilliseconds,{pressed:true,offload:"auto"}),moved=run.status===0&&run.localCalls===0&&run.kinds.includes("offload-run");
+ const run=await wrappedUnit(directory,{...live.environment,SEMIO_REMOTE_EXECUTION_ENDPOINT:endpoint.endpoint},"live-offload",policy.live.offloadTimeoutMilliseconds,{pressed:true,offload:"distribute"}),moved=run.status===0&&run.localCalls===0&&run.kinds.includes("offload-run");
  if(!moved)process.stderr.write(`[fleet] live offload stayed local: status=${run.status} local=${run.localCalls} events=${JSON.stringify(run.events)}\n`);
  return moved?{offloadedUnits:1,offloadMs:run.milliseconds}:{offloadedUnits:0};
 }

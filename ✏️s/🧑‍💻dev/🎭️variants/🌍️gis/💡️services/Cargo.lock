@@ -2238,12 +2238,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "json"
-version = "0.12.4"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "078e285eafdfb6c4b434e0d31e8cfcb5115b651496faca5749b88fafd4f23bfd"
-
-[[package]]
 name = "khronos-egl"
 version = "6.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -5537,6 +5531,15 @@ name = "semio-framework-process-routing-workspace"
 version = "0.1.0"
 
 [[package]]
+name = "semio-framework-raster"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-geometry",
+ "vello",
+ "wgpu",
+]
+
+[[package]]
 name = "semio-framework-replication"
 version = "0.1.0"
 dependencies = [
@@ -6938,14 +6941,39 @@ name = "semio-os-channel"
 version = "0.1.0"
 dependencies = [
  "semio-framework-diagnostic",
+ "semio-framework-hash",
  "semio-framework-io-control",
  "semio-framework-io-sqlite-snapshot",
  "semio-framework-job",
  "semio-framework-replication",
  "semio-framework-value",
  "semio-framework-value-native-owned",
+ "semio-framework-value-persistent",
+ "semio-os-channel-archive",
+ "semio-os-channel-archive-ingress",
  "serde",
  "serde_json",
+]
+
+[[package]]
+name = "semio-os-channel-archive"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-hash",
+ "semio-framework-io-control",
+ "semio-framework-value",
+ "semio-framework-value-native-owned",
+ "semio-framework-value-persistent",
+]
+
+[[package]]
+name = "semio-os-channel-archive-ingress"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-hash",
+ "semio-framework-value",
+ "semio-framework-value-persistent",
+ "semio-os-channel-archive",
 ]
 
 [[package]]
@@ -7855,6 +7883,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "semio-os-infinite-world-handle-drag"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-value",
+ "semio-ui-action",
+ "semio-ui-declaration",
+ "semio-ui-wgpu-input",
+]
+
+[[package]]
 name = "semio-os-infinite-world-host"
 version = "0.1.0"
 dependencies = [
@@ -7866,6 +7904,7 @@ dependencies = [
  "semio-os-infinite-world-bridge",
  "semio-os-infinite-world-components",
  "semio-os-infinite-world-cursors",
+ "semio-os-infinite-world-handle-drag",
  "semio-os-infinite-world-interaction",
  "semio-os-infinite-world-model",
  "semio-os-infinite-world-scene",
@@ -7896,6 +7935,7 @@ dependencies = [
  "semio-os-infinite-world-bridge",
  "semio-os-infinite-world-components",
  "semio-os-infinite-world-cursors",
+ "semio-os-infinite-world-handle-drag",
  "semio-os-infinite-world-model",
  "semio-os-infinite-world-scene",
  "semio-ui-action",
@@ -7968,6 +8008,7 @@ version = "0.1.0"
 dependencies = [
  "semio-framework-artifact-reference",
  "semio-framework-async",
+ "semio-framework-deflate",
  "semio-framework-diagnostic",
  "semio-framework-io-control",
  "semio-framework-io-schema",
@@ -9109,7 +9150,6 @@ dependencies = [
  "semio-framework-value",
  "semio-framework-value-native-owned",
  "semio-framework-value-persistent",
- "semio-framework-value-snapshot-read",
  "semio-os-directory",
  "semio-os-spr",
  "semio-os-store-backbone",
@@ -9118,6 +9158,7 @@ dependencies = [
  "semio-os-store-engine-bundle",
  "semio-os-store-engine-close",
  "semio-os-store-engine-core",
+ "semio-os-store-engine-derived",
  "semio-os-store-engine-live",
  "semio-os-store-engine-owners",
  "semio-os-store-engine-stage",
@@ -9272,6 +9313,25 @@ dependencies = [
  "semio-os-store-text-io",
  "semio-os-vcs",
  "serde",
+]
+
+[[package]]
+name = "semio-os-store-engine-derived"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-value",
+ "semio-framework-value-native-owned",
+ "semio-framework-value-snapshot-read",
+ "semio-os-spr",
+ "semio-os-store-engine-core",
+ "semio-os-store-engine-live",
+ "semio-os-store-ledger",
+ "semio-os-store-operation-wire",
+ "semio-os-store-read",
+ "semio-os-store-replay",
+ "semio-os-store-replay-operation",
+ "semio-os-store-space-schema",
+ "semio-os-vcs",
 ]
 
 [[package]]
@@ -10836,6 +10896,7 @@ dependencies = [
  "semio-framework-async",
  "semio-framework-diagnostic",
  "semio-framework-dsl-record",
+ "semio-framework-hash",
  "semio-framework-job",
  "semio-framework-job-worker",
  "semio-framework-job-worker-authority",
@@ -11231,6 +11292,8 @@ dependencies = [
  "semio-plugin-instance-initialization",
  "semio-plugin-instance-jobs",
  "semio-plugin-instance-ladders",
+ "semio-plugin-instance-members",
+ "semio-plugin-instance-natural-publication",
  "semio-plugin-instance-render",
  "semio-plugin-instance-stores",
  "semio-plugin-instance-typed-ops",
@@ -11426,6 +11489,7 @@ dependencies = [
  "semio-plugin-document-media",
  "semio-plugin-instance-children",
  "semio-plugin-instance-jobs",
+ "semio-plugin-instance-natural-publication",
  "semio-plugin-instance-stores",
  "semio-plugin-interaction",
  "semio-plugin-job",
@@ -11623,6 +11687,83 @@ dependencies = [
  "semio-plugin-window-config",
  "semio-plugin-window-transient",
  "semio-ui-contract",
+]
+
+[[package]]
+name = "semio-plugin-instance-members"
+version = "0.1.0"
+dependencies = [
+ "semio-framework",
+ "semio-framework-artifact-reference",
+ "semio-framework-async",
+ "semio-framework-job",
+ "semio-framework-pack-json",
+ "semio-framework-schema-registry",
+ "semio-framework-tool-run",
+ "semio-framework-value",
+ "semio-framework-value-factory",
+ "semio-framework-value-native-owned",
+ "semio-framework-value-snapshot-read",
+ "semio-os-kernel",
+ "semio-plugin-child",
+ "semio-plugin-command",
+ "semio-plugin-composition-publication",
+ "semio-plugin-decl-app",
+ "semio-plugin-decl-emission",
+ "semio-plugin-decl-media",
+ "semio-plugin-decl-registry",
+ "semio-plugin-decl-surface",
+ "semio-plugin-decl-tool-contract",
+ "semio-plugin-decl-views",
+ "semio-plugin-document-media",
+ "semio-plugin-instance-children",
+ "semio-plugin-instance-commands",
+ "semio-plugin-instance-dispatch",
+ "semio-plugin-instance-docs",
+ "semio-plugin-instance-extension",
+ "semio-plugin-instance-history",
+ "semio-plugin-instance-initialization",
+ "semio-plugin-instance-jobs",
+ "semio-plugin-instance-ladders",
+ "semio-plugin-instance-natural-publication",
+ "semio-plugin-instance-render",
+ "semio-plugin-instance-stores",
+ "semio-plugin-instance-typed-ops",
+ "semio-plugin-interaction",
+ "semio-plugin-job",
+ "semio-plugin-mounted-owner",
+ "semio-plugin-operation",
+ "semio-plugin-ownership",
+ "semio-plugin-peer",
+ "semio-plugin-publication-mounted",
+ "semio-plugin-reactor-app",
+ "semio-plugin-reactor-jobs",
+ "semio-plugin-retained-command",
+ "semio-plugin-time-travel",
+ "semio-plugin-time-travel-panel",
+ "semio-plugin-time-travel-turns",
+ "semio-plugin-tool-machine",
+ "semio-plugin-tool-run",
+ "semio-plugin-tool-run-turns",
+ "semio-plugin-window-config",
+ "semio-plugin-window-kits",
+ "semio-plugin-window-transient",
+ "semio-ui-contract",
+ "semio-ui-layout",
+ "semio-ui-runtime",
+]
+
+[[package]]
+name = "semio-plugin-instance-natural-publication"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-async",
+ "semio-framework-job",
+ "semio-framework-value",
+ "semio-plugin-decl-app",
+ "semio-plugin-decl-emission",
+ "semio-plugin-decl-media",
+ "semio-plugin-ownership",
 ]
 
 [[package]]
@@ -12489,6 +12630,7 @@ dependencies = [
  "semio-plugin-reactor-lifecycle",
  "semio-plugin-runtime-instances",
  "semio-plugin-runtime-ops-document",
+ "semio-plugin-runtime-ops-raw-media",
  "semio-plugin-runtime-ops-surface",
  "semio-plugin-runtime-ops-wire",
  "semio-plugin-window-config",
@@ -12523,6 +12665,19 @@ dependencies = [
  "semio-plugin-reactor-lifecycle",
  "semio-plugin-runtime-instances",
  "semio-plugin-runtime-ops-wire",
+]
+
+[[package]]
+name = "semio-plugin-runtime-ops-raw-media"
+version = "0.1.0"
+dependencies = [
+ "semio-framework",
+ "semio-framework-job",
+ "semio-framework-value",
+ "semio-os-kernel",
+ "semio-plugin-decl-media",
+ "semio-plugin-reactor-app",
+ "semio-plugin-reactor-lifecycle",
 ]
 
 [[package]]
@@ -12990,6 +13145,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "semio-renderer-media-native"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-raster",
+ "semio-framework-value",
+]
+
+[[package]]
 name = "semio-renderer-projected-linework"
 version = "0.1.0"
 
@@ -13334,6 +13497,7 @@ dependencies = [
  "semio-ui-wgpu-engine",
  "semio-ui-wgpu-events",
  "semio-ui-wgpu-input",
+ "semio-ui-wgpu-layout",
  "semio-ui-wgpu-widget-kit",
  "serde",
  "serde_json",
@@ -13640,6 +13804,7 @@ dependencies = [
  "semio-os-kernel",
  "semio-os-services-native-io",
  "semio-plugin-host",
+ "semio-plugin-host-shard",
  "semio-ui-declaration",
  "semio-ui-locale",
  "semio-ui-theme",
@@ -13700,8 +13865,10 @@ dependencies = [
  "semio-renderer-wgpu-kernel-pool",
  "semio-renderer-wgpu-kernel-protocol",
  "semio-renderer-wgpu-kernel-runtime",
+ "semio-renderer-wgpu-media-presenter",
  "semio-renderer-wgpu-media-slots",
  "semio-renderer-wgpu-native-platform",
+ "semio-renderer-wgpu-program-bridge",
  "semio-renderer-wgpu-runtime-mailbox",
  "semio-renderer-wgpu-scene-state",
  "semio-renderer-wgpu-shell-state",
@@ -13732,6 +13899,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "semio-renderer-wgpu-hub-first-run"
+version = "0.1.0"
+dependencies = [
+ "semio-framework",
+ "semio-ui-locale",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
 name = "semio-renderer-wgpu-hub-workspace"
 version = "0.1.0"
 dependencies = [
@@ -13742,6 +13919,7 @@ dependencies = [
  "semio-os-kernel",
  "semio-renderer-wgpu-contracts",
  "semio-renderer-wgpu-hub-contracts",
+ "semio-renderer-wgpu-hub-first-run",
  "semio-renderer-wgpu-media-slots",
  "semio-ui-declaration",
  "semio-ui-locale",
@@ -13879,6 +14057,17 @@ name = "semio-renderer-wgpu-mailbox-core"
 version = "0.1.0"
 
 [[package]]
+name = "semio-renderer-wgpu-media-presenter"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-value",
+ "semio-renderer-media-native",
+ "semio-renderer-wgpu-media-slots",
+ "semio-ui-contract",
+ "semio-ui-wgpu-paint-overlay",
+]
+
+[[package]]
 name = "semio-renderer-wgpu-media-slots"
 version = "0.1.0"
 dependencies = [
@@ -13920,13 +14109,20 @@ dependencies = [
  "semio-framework-actor",
  "semio-framework-artifact-reference",
  "semio-framework-async",
+ "semio-framework-diagnostic",
  "semio-framework-dsl-record",
+ "semio-framework-dsl-record-derive",
  "semio-framework-job",
  "semio-framework-pack",
+ "semio-framework-pack-json",
+ "semio-framework-schema-state",
  "semio-framework-value",
+ "semio-framework-value-derive",
  "semio-framework-value-native-owned",
+ "semio-os-command",
  "semio-os-kernel",
  "semio-os-services",
+ "semio-os-store-one-item",
  "semio-os-store-testing-doubles",
  "semio-renderer-wgpu-app-runtime",
  "semio-renderer-wgpu-canvas2d-host",
@@ -13964,7 +14160,10 @@ dependencies = [
  "semio-framework-hash",
  "semio-framework-job",
  "semio-framework-pack-json",
+ "semio-framework-replication",
+ "semio-framework-trace",
  "semio-framework-value",
+ "semio-os-extension",
  "semio-os-flow",
  "semio-os-kernel",
  "semio-os-services",
@@ -13990,6 +14189,7 @@ dependencies = [
  "semio-framework-actor",
  "semio-framework-async",
  "semio-framework-job",
+ "semio-framework-job-payload",
  "semio-framework-trace",
  "semio-framework-value",
  "semio-os-infinite",
@@ -14009,6 +14209,7 @@ dependencies = [
  "semio-renderer-wgpu-program-bridge",
  "semio-renderer-wgpu-scene-canvas2d",
  "semio-renderer-wgpu-shell-actions",
+ "semio-renderer-wgpu-shell-dock",
  "semio-renderer-wgpu-shell-pointer",
  "semio-renderer-wgpu-shell-view-chrome",
  "semio-renderer-wgpu-ui-engine-focus",
@@ -14191,7 +14392,6 @@ dependencies = [
  "semio-ui-wgpu-input",
  "semio-ui-wgpu-layout",
  "semio-ui-wgpu-widget-kit",
- "semio-ui-wgpu-widgets",
  "serde",
  "serde_json",
 ]
@@ -14243,6 +14443,7 @@ dependencies = [
  "semio-os-services",
  "semio-plugin-host",
  "semio-renderer-wgpu-contracts",
+ "semio-renderer-wgpu-engine-graph",
  "semio-renderer-wgpu-host-base",
  "semio-renderer-wgpu-hub-contracts",
  "semio-renderer-wgpu-hub-workspace",
@@ -14490,6 +14691,7 @@ dependencies = [
  "semio-framework-value",
  "semio-os-config",
  "semio-os-infinite",
+ "semio-os-io",
  "semio-os-kernel",
  "semio-os-services",
  "semio-plugin-host",
@@ -14506,6 +14708,7 @@ dependencies = [
  "semio-renderer-wgpu-shell-surfaces",
  "semio-renderer-wgpu-shell-sync",
  "semio-renderer-wgpu-shell-vocab",
+ "semio-renderer-wgpu-video-render-host",
  "semio-ui-contract",
  "semio-ui-declaration",
  "semio-ui-host",
@@ -14634,6 +14837,34 @@ dependencies = [
  "tokio",
  "wasm-bindgen",
  "web-sys",
+]
+
+[[package]]
+name = "semio-renderer-wgpu-shell-frame-pumps"
+version = "0.1.0"
+dependencies = [
+ "semio-framework",
+ "semio-os-kernel",
+ "semio-renderer-wgpu-host-base",
+ "semio-renderer-wgpu-shell-actions",
+ "semio-renderer-wgpu-shell-async",
+ "semio-renderer-wgpu-shell-chrome-state",
+ "semio-renderer-wgpu-shell-commands",
+ "semio-renderer-wgpu-shell-directory",
+ "semio-renderer-wgpu-shell-doc-open",
+ "semio-renderer-wgpu-shell-dock",
+ "semio-renderer-wgpu-shell-docs",
+ "semio-renderer-wgpu-shell-history",
+ "semio-renderer-wgpu-shell-input",
+ "semio-renderer-wgpu-shell-plugins",
+ "semio-renderer-wgpu-shell-prefs",
+ "semio-renderer-wgpu-shell-session",
+ "semio-renderer-wgpu-shell-state",
+ "semio-renderer-wgpu-shell-surfaces",
+ "semio-renderer-wgpu-shell-sync",
+ "semio-renderer-wgpu-shell-window-actions",
+ "semio-renderer-wgpu-shell-windows",
+ "semio-ui-wgpu-layout",
 ]
 
 [[package]]
@@ -14817,6 +15048,7 @@ dependencies = [
  "semio-renderer-wgpu-shell-doc-open",
  "semio-renderer-wgpu-shell-dock",
  "semio-renderer-wgpu-shell-docs",
+ "semio-renderer-wgpu-shell-frame-pumps",
  "semio-renderer-wgpu-shell-history",
  "semio-renderer-wgpu-shell-input",
  "semio-renderer-wgpu-shell-plugins",
@@ -15196,6 +15428,39 @@ dependencies = [
 ]
 
 [[package]]
+name = "semio-renderer-wgpu-shell-view-chrome-overlays"
+version = "0.1.0"
+dependencies = [
+ "semio-renderer-wgpu-agent-elements",
+ "semio-renderer-wgpu-hub-workspace",
+ "semio-renderer-wgpu-shell-async",
+ "semio-renderer-wgpu-shell-chrome-state",
+ "semio-renderer-wgpu-shell-commands",
+ "semio-renderer-wgpu-shell-directory",
+ "semio-renderer-wgpu-shell-doc-open",
+ "semio-renderer-wgpu-shell-dock",
+ "semio-renderer-wgpu-shell-docs",
+ "semio-renderer-wgpu-shell-history",
+ "semio-renderer-wgpu-shell-input",
+ "semio-renderer-wgpu-shell-plugins",
+ "semio-renderer-wgpu-shell-prefs",
+ "semio-renderer-wgpu-shell-state",
+ "semio-renderer-wgpu-shell-surfaces",
+ "semio-renderer-wgpu-shell-sync",
+ "semio-renderer-wgpu-shell-view-chrome",
+ "semio-renderer-wgpu-shell-view-paint",
+ "semio-renderer-wgpu-shell-vocab",
+ "semio-renderer-wgpu-shell-window-actions",
+ "semio-renderer-wgpu-shell-windows",
+ "semio-ui-contract",
+ "semio-ui-declaration",
+ "semio-ui-draw-contract",
+ "semio-ui-text",
+ "semio-ui-theme",
+ "semio-ui-wgpu-input",
+]
+
+[[package]]
 name = "semio-renderer-wgpu-shell-view-overlays"
 version = "0.1.0"
 dependencies = [
@@ -15240,6 +15505,7 @@ dependencies = [
  "semio-renderer-wgpu-shell-surfaces",
  "semio-renderer-wgpu-shell-sync",
  "semio-renderer-wgpu-shell-view-chrome",
+ "semio-renderer-wgpu-shell-view-chrome-overlays",
  "semio-renderer-wgpu-shell-view-paint",
  "semio-renderer-wgpu-shell-vocab",
  "semio-renderer-wgpu-shell-windows",
@@ -15351,6 +15617,7 @@ dependencies = [
  "semio-plugin-host",
  "semio-renderer-wgpu-contracts",
  "semio-renderer-wgpu-dock",
+ "semio-renderer-wgpu-engine-board",
  "semio-renderer-wgpu-host-base",
  "semio-renderer-wgpu-hub-workspace",
  "semio-renderer-wgpu-icon-host",
@@ -15375,6 +15642,7 @@ dependencies = [
  "semio-renderer-wgpu-shell-surfaces",
  "semio-renderer-wgpu-shell-sync",
  "semio-renderer-wgpu-shell-view-chrome",
+ "semio-renderer-wgpu-shell-view-chrome-overlays",
  "semio-renderer-wgpu-shell-view-overlays",
  "semio-renderer-wgpu-shell-view-paint",
  "semio-renderer-wgpu-shell-vocab",
@@ -15592,6 +15860,7 @@ dependencies = [
  "semio-renderer-wgpu-native-platform",
  "semio-renderer-wgpu-scene-feeds",
  "semio-renderer-wgpu-scene-state",
+ "semio-renderer-wgpu-scene-tables",
  "semio-renderer-wgpu-ui-engine-focus",
  "semio-ui-arena",
  "semio-ui-contract",
@@ -15643,6 +15912,17 @@ dependencies = [
  "semio-ui-wgpu-hosting",
  "semio-ui-wgpu-input",
  "semio-ui-wgpu-layout",
+]
+
+[[package]]
+name = "semio-renderer-wgpu-video-render-host"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-geometry",
+ "semio-framework-io-base64",
+ "semio-framework-kernel-media-jobs",
+ "semio-framework-pixels",
+ "semio-framework-raster",
 ]
 
 [[package]]
@@ -17860,10 +18140,16 @@ dependencies = [
  "semio-os-kernel",
  "semio-plugin",
  "semio-s-artifact-stdio-contract",
+ "semio-s-artifact-stdio-jpg-inferences",
+ "semio-s-artifact-stdio-pdf-image-route",
  "semio-s-artifact-stdio-pdf-inferences",
  "semio-s-artifact-stdio-pdf-mut-family-8",
  "semio-s-artifact-stdio-pdf-snapshot-2",
 ]
+
+[[package]]
+name = "semio-s-artifact-stdio-pdf-editor-kit"
+version = "0.1.0"
 
 [[package]]
 name = "semio-s-artifact-stdio-pdf-filters"
@@ -17934,6 +18220,7 @@ dependencies = [
  "semio-framework-schema-composition",
  "semio-framework-schema-registry",
  "semio-framework-schema-state",
+ "semio-framework-value",
  "semio-os-kernel",
  "semio-plugin",
  "semio-s-artifact-stdio-binary",
@@ -17955,6 +18242,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "semio-s-artifact-stdio-pdf-image-route"
+version = "0.1.0"
+dependencies = [
+ "semio-plugin",
+ "semio-s-artifact-stdio-pdf-inferences",
+]
+
+[[package]]
 name = "semio-s-artifact-stdio-pdf-inferences"
 version = "0.1.0"
 dependencies = [
@@ -17968,6 +18263,7 @@ dependencies = [
  "semio-framework-hash",
  "semio-framework-pack",
  "semio-framework-pack-json",
+ "semio-framework-pack-source",
  "semio-framework-pixels",
  "semio-framework-schema",
  "semio-framework-schema-composition",
@@ -17987,6 +18283,53 @@ dependencies = [
  "semio-s-artifact-stdio-pdf-schema-2",
  "semio-s-artifact-stdio-pdf-snapshot-2",
  "semio-s-artifact-stdio-pdf-tests",
+ "semio-ui-contract",
+ "semio-ui-locale",
+ "serde_json",
+]
+
+[[package]]
+name = "semio-s-artifact-stdio-pdf-io-export"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-2d",
+ "semio-framework-artifact-reference",
+ "semio-framework-async",
+ "semio-framework-diagnostic",
+ "semio-framework-dsl",
+ "semio-framework-dsl-record",
+ "semio-framework-dsl-record-derive",
+ "semio-framework-hash",
+ "semio-framework-pack",
+ "semio-framework-pack-json",
+ "semio-framework-schema",
+ "semio-framework-schema-composition",
+ "semio-framework-schema-registry",
+ "semio-framework-schema-state",
+ "semio-framework-test-fixtures",
+ "semio-framework-value",
+ "semio-os-kernel",
+ "semio-plugin",
+ "semio-s-artifact-stdio-binary",
+ "semio-s-artifact-stdio-contract",
+ "semio-s-artifact-stdio-deflate",
+ "semio-s-artifact-stdio-pdf-conformance-support",
+ "semio-s-artifact-stdio-pdf-diff",
+ "semio-s-artifact-stdio-pdf-fonts",
+ "semio-s-artifact-stdio-pdf-graph-projection",
+ "semio-s-artifact-stdio-pdf-inferences",
+ "semio-s-artifact-stdio-pdf-lift",
+ "semio-s-artifact-stdio-pdf-lower",
+ "semio-s-artifact-stdio-pdf-model",
+ "semio-s-artifact-stdio-pdf-mut-base-2",
+ "semio-s-artifact-stdio-pdf-mut-base-3",
+ "semio-s-artifact-stdio-pdf-mut-base-4",
+ "semio-s-artifact-stdio-pdf-mut-family-10",
+ "semio-s-artifact-stdio-pdf-mut-family-11",
+ "semio-s-artifact-stdio-pdf-mut-family-5",
+ "semio-s-artifact-stdio-pdf-mut-family-8",
+ "semio-s-artifact-stdio-pdf-mut-family-9",
+ "semio-s-artifact-stdio-pdf-snapshot-2",
  "semio-ui-contract",
  "semio-ui-locale",
  "serde_json",
@@ -19207,7 +19550,61 @@ dependencies = [
  "semio-s-artifact-stdio-pdf-mut-base-4",
  "semio-s-artifact-stdio-pdf-mut-family-8",
  "semio-s-artifact-stdio-pdf-page-coordinates",
+ "semio-s-artifact-stdio-pdf-page-editor-authoring",
+ "semio-s-artifact-stdio-pdf-page-editor-base",
+ "semio-s-artifact-stdio-pdf-page-editor-view",
+ "semio-s-artifact-stdio-pdf-presence-lane",
+ "semio-s-artifact-stdio-pdf-snapshot-2",
+ "semio-ui-contract",
+ "semio-ui-locale",
+ "serde_json",
+]
+
+[[package]]
+name = "semio-s-artifact-stdio-pdf-page-editor-authoring"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-io-base64",
+ "semio-framework-value",
+ "semio-plugin",
+ "semio-s-artifact-stdio-pdf-editor-document",
+ "semio-s-artifact-stdio-pdf-io-export",
+ "semio-s-artifact-stdio-pdf-mut-family-8",
+ "semio-s-artifact-stdio-pdf-snapshot-2",
+ "serde_json",
+]
+
+[[package]]
+name = "semio-s-artifact-stdio-pdf-page-editor-base"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-artifact-reference",
+ "semio-framework-io-base64",
+ "semio-framework-pixels",
+ "semio-framework-value",
+ "semio-plugin",
+ "semio-s-artifact-stdio-contract",
+ "semio-s-artifact-stdio-jpg-inferences",
+ "semio-s-artifact-stdio-pdf-editor-document",
+ "semio-s-artifact-stdio-pdf-fonts",
+ "semio-s-artifact-stdio-pdf-inferences",
+ "semio-s-artifact-stdio-pdf-mut-base-4",
+ "semio-s-artifact-stdio-pdf-mut-family-8",
+ "semio-s-artifact-stdio-pdf-page-coordinates",
+ "semio-s-artifact-stdio-pdf-page-editor-view",
  "semio-s-artifact-stdio-pdf-paint-codecs",
+ "semio-s-artifact-stdio-pdf-snapshot-2",
+ "semio-ui-contract",
+ "semio-ui-locale",
+ "serde_json",
+]
+
+[[package]]
+name = "semio-s-artifact-stdio-pdf-page-editor-view"
+version = "0.1.0"
+dependencies = [
+ "semio-plugin",
+ "semio-s-artifact-stdio-pdf-page-coordinates",
  "semio-s-artifact-stdio-pdf-snapshot-2",
  "semio-ui-contract",
  "semio-ui-locale",
@@ -19217,9 +19614,6 @@ dependencies = [
 [[package]]
 name = "semio-s-artifact-stdio-pdf-paint-codecs"
 version = "0.1.0"
-dependencies = [
- "serde_json",
-]
 
 [[package]]
 name = "semio-s-artifact-stdio-pdf-pdf-snapshot-value-tests"
@@ -19250,6 +19644,7 @@ dependencies = [
  "semio-s-artifact-stdio-deflate",
  "semio-s-artifact-stdio-pdf-conformance-support",
  "semio-s-artifact-stdio-pdf-diff",
+ "semio-s-artifact-stdio-pdf-editor-kit",
  "semio-s-artifact-stdio-pdf-graph-projection",
  "semio-s-artifact-stdio-pdf-inferences",
  "semio-s-artifact-stdio-pdf-mut-base",
@@ -19263,6 +19658,7 @@ dependencies = [
  "semio-s-artifact-stdio-pdf-mut-family-14",
  "semio-s-artifact-stdio-pdf-mut-family-15",
  "semio-s-artifact-stdio-pdf-mut-family-8",
+ "semio-s-artifact-stdio-pdf-presence-lane",
  "semio-s-artifact-stdio-pdf-schema-2",
  "semio-s-artifact-stdio-pdf-schema-3",
  "semio-s-artifact-stdio-pdf-schema-4",
@@ -19272,6 +19668,41 @@ dependencies = [
  "semio-s-artifact-stdio-pdf-testkit",
  "semio-s-artifact-stdio-pdf-tests",
  "semio-s-artifact-stdio-pdf-tests-2",
+ "semio-s-artifact-stdio-pdf-view-lane",
+ "semio-ui-contract",
+ "semio-ui-locale",
+ "serde_json",
+]
+
+[[package]]
+name = "semio-s-artifact-stdio-pdf-presence-lane"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-2d",
+ "semio-framework-action-bus",
+ "semio-framework-artifact-reference",
+ "semio-framework-async",
+ "semio-framework-diagnostic",
+ "semio-framework-dsl",
+ "semio-framework-dsl-record",
+ "semio-framework-dsl-record-derive",
+ "semio-framework-machine",
+ "semio-framework-pack",
+ "semio-framework-pack-json",
+ "semio-framework-schema",
+ "semio-framework-schema-composition",
+ "semio-framework-schema-registry",
+ "semio-framework-schema-state",
+ "semio-framework-value",
+ "semio-framework-value-derive",
+ "semio-framework-value-snapshot-projection",
+ "semio-os-command",
+ "semio-os-kernel",
+ "semio-os-store-one-item",
+ "semio-plugin",
+ "semio-s-artifact-stdio-contract",
+ "semio-s-artifact-stdio-pdf-page-editor-view",
+ "semio-s-artifact-stdio-pdf-snapshot-2",
  "semio-ui-contract",
  "semio-ui-locale",
  "serde_json",
@@ -19450,6 +19881,7 @@ dependencies = [
  "semio-s-artifact-stdio-deflate",
  "semio-s-artifact-stdio-pdf-diff",
  "semio-s-artifact-stdio-pdf-editor-document",
+ "semio-s-artifact-stdio-pdf-editor-kit",
  "semio-s-artifact-stdio-pdf-graph-projection",
  "semio-s-artifact-stdio-pdf-inferences",
  "semio-s-artifact-stdio-pdf-mut-base",
@@ -19460,12 +19892,16 @@ dependencies = [
  "semio-s-artifact-stdio-pdf-mut-family-14",
  "semio-s-artifact-stdio-pdf-mut-family-8",
  "semio-s-artifact-stdio-pdf-native-save",
+ "semio-s-artifact-stdio-pdf-page-editor-authoring",
+ "semio-s-artifact-stdio-pdf-presence-lane",
  "semio-s-artifact-stdio-pdf-schema-3",
  "semio-s-artifact-stdio-pdf-schema-4",
  "semio-s-artifact-stdio-pdf-snapshot",
  "semio-s-artifact-stdio-pdf-snapshot-2",
  "semio-s-artifact-stdio-pdf-tests",
  "semio-s-artifact-stdio-pdf-tests-2",
+ "semio-s-artifact-stdio-pdf-view-lane",
+ "semio-s-artifact-stdio-pdf14-canvas",
  "semio-ui-contract",
  "semio-ui-locale",
  "serde_json",
@@ -19699,6 +20135,41 @@ dependencies = [
 ]
 
 [[package]]
+name = "semio-s-artifact-stdio-pdf-view-lane"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-2d",
+ "semio-framework-action-bus",
+ "semio-framework-artifact-reference",
+ "semio-framework-async",
+ "semio-framework-diagnostic",
+ "semio-framework-dsl",
+ "semio-framework-dsl-record",
+ "semio-framework-dsl-record-derive",
+ "semio-framework-machine",
+ "semio-framework-pack",
+ "semio-framework-pack-json",
+ "semio-framework-schema",
+ "semio-framework-schema-composition",
+ "semio-framework-schema-registry",
+ "semio-framework-schema-state",
+ "semio-framework-value",
+ "semio-framework-value-derive",
+ "semio-framework-value-snapshot-projection",
+ "semio-os-command",
+ "semio-os-kernel",
+ "semio-os-store-one-item",
+ "semio-plugin",
+ "semio-s-artifact-stdio-contract",
+ "semio-s-artifact-stdio-pdf-page-editor",
+ "semio-s-artifact-stdio-pdf-presence-lane",
+ "semio-s-artifact-stdio-pdf-snapshot-2",
+ "semio-ui-contract",
+ "semio-ui-locale",
+ "serde_json",
+]
+
+[[package]]
 name = "semio-s-artifact-stdio-pdf-viewer"
 version = "0.1.0"
 dependencies = [
@@ -19745,6 +20216,27 @@ dependencies = [
  "semio-s-artifact-stdio-pdf-lexer",
  "semio-s-artifact-stdio-pdf-model",
  "semio-s-artifact-stdio-pdf-snapshot-2",
+]
+
+[[package]]
+name = "semio-s-artifact-stdio-pdf14-canvas"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-value",
+ "semio-os-kernel",
+ "semio-plugin",
+ "semio-s-artifact-stdio-contract",
+ "semio-s-artifact-stdio-pdf-graph-projection",
+ "semio-s-artifact-stdio-pdf-mut-base",
+ "semio-s-artifact-stdio-pdf-mut-family-11",
+ "semio-s-artifact-stdio-pdf-page-editor",
+ "semio-s-artifact-stdio-pdf-presence-lane",
+ "semio-s-artifact-stdio-pdf-snapshot",
+ "semio-s-artifact-stdio-pdf-snapshot-2",
+ "semio-s-artifact-stdio-pdf-view-lane",
+ "semio-ui-contract",
+ "semio-ui-locale",
+ "serde_json",
 ]
 
 [[package]]
@@ -21881,7 +22373,6 @@ dependencies = [
 name = "semio-s-dev-gis-services"
 version = "0.1.0"
 dependencies = [
- "json",
  "semio-framework-pack",
  "semio-framework-pack-json",
  "semio-hub-auth-client",
@@ -21979,6 +22470,7 @@ dependencies = [
  "semio-ui-contract-text",
  "semio-ui-contract-text-edit",
  "semio-ui-contract-values",
+ "semio-ui-contract-window-resource",
  "semio-ui-styling",
  "serde",
 ]
@@ -22091,6 +22583,10 @@ dependencies = [
  "semio-ui-contract-text",
  "serde",
 ]
+
+[[package]]
+name = "semio-ui-contract-window-resource"
+version = "0.1.0"
 
 [[package]]
 name = "semio-ui-declaration"
@@ -22670,6 +23166,7 @@ dependencies = [
 name = "semio-ui-wgpu-events"
 version = "0.1.0"
 dependencies = [
+ "semio-framework-pack-json",
  "semio-framework-value",
  "semio-ui-action",
  "semio-ui-arena",
@@ -22679,9 +23176,45 @@ dependencies = [
  "semio-ui-retained-tree",
  "semio-ui-theme",
  "semio-ui-wgpu-controls",
+ "semio-ui-wgpu-events-commit",
+ "semio-ui-wgpu-events-focus",
  "semio-ui-wgpu-layout",
+ "semio-ui-wgpu-light",
  "semio-ui-wgpu-mounted-layout",
  "semio-ui-wgpu-widget-kit",
+]
+
+[[package]]
+name = "semio-ui-wgpu-events-commit"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-value",
+ "semio-ui-action",
+ "semio-ui-arena",
+ "semio-ui-contract",
+ "semio-ui-declaration",
+ "semio-ui-retained-tree",
+ "semio-ui-theme",
+ "semio-ui-wgpu-controls",
+ "semio-ui-wgpu-layout",
+ "semio-ui-wgpu-widget-kit",
+]
+
+[[package]]
+name = "semio-ui-wgpu-events-focus"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-value",
+ "semio-ui-arena",
+ "semio-ui-border-presentation",
+ "semio-ui-contract",
+ "semio-ui-declaration",
+ "semio-ui-retained-tree",
+ "semio-ui-theme",
+ "semio-ui-wgpu-events-commit",
+ "semio-ui-wgpu-layout",
+ "semio-ui-wgpu-light",
+ "semio-ui-wgpu-mounted-layout",
 ]
 
 [[package]]
@@ -22698,7 +23231,6 @@ dependencies = [
  "semio-ui-contract",
  "semio-ui-declaration",
  "semio-ui-draw-contract",
- "semio-ui-locale",
  "semio-ui-retained-tree",
  "semio-ui-text",
  "semio-ui-theme",
@@ -22809,6 +23341,68 @@ dependencies = [
  "semio-ui-wgpu-layout",
  "semio-ui-wgpu-light",
  "semio-ui-wgpu-mounted-layout",
+ "semio-ui-wgpu-paint-overlay",
+ "semio-ui-wgpu-paint-sync",
+ "semio-ui-wgpu-paint-widgets",
+ "semio-ui-wgpu-widget-kit",
+]
+
+[[package]]
+name = "semio-ui-wgpu-paint-overlay"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-pixels",
+ "semio-ui-declaration",
+ "semio-ui-draw-contract",
+ "semio-ui-text",
+ "semio-ui-theme",
+ "semio-ui-wgpu-layout",
+ "semio-ui-wgpu-widget-kit",
+]
+
+[[package]]
+name = "semio-ui-wgpu-paint-sync"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-pixels",
+ "semio-framework-value",
+ "semio-ui-arena",
+ "semio-ui-contract",
+ "semio-ui-declaration",
+ "semio-ui-draw-contract",
+ "semio-ui-locale",
+ "semio-ui-retained-tree",
+ "semio-ui-select-behavior",
+ "semio-ui-styling",
+ "semio-ui-text",
+ "semio-ui-theme",
+ "semio-ui-wgpu-controls",
+ "semio-ui-wgpu-events-focus",
+ "semio-ui-wgpu-layout",
+ "semio-ui-wgpu-light",
+ "semio-ui-wgpu-mounted-layout",
+ "semio-ui-wgpu-widget-kit",
+]
+
+[[package]]
+name = "semio-ui-wgpu-paint-widgets"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-pixels",
+ "semio-ui-arena",
+ "semio-ui-contract",
+ "semio-ui-declaration",
+ "semio-ui-draw-contract",
+ "semio-ui-locale",
+ "semio-ui-retained-tree",
+ "semio-ui-select-behavior",
+ "semio-ui-styling",
+ "semio-ui-text",
+ "semio-ui-theme",
+ "semio-ui-wgpu-controls",
+ "semio-ui-wgpu-layout",
+ "semio-ui-wgpu-light",
+ "semio-ui-wgpu-mounted-layout",
  "semio-ui-wgpu-widget-kit",
 ]
 
@@ -22888,22 +23482,6 @@ dependencies = [
  "semio-ui-theme",
  "semio-ui-wgpu-input",
  "semio-ui-wgpu-mounted-layout",
-]
-
-[[package]]
-name = "semio-ui-wgpu-widgets"
-version = "0.1.0"
-dependencies = [
- "semio-ui-declaration",
- "semio-ui-draw-contract",
- "semio-ui-styling",
- "semio-ui-text",
- "semio-ui-theme",
- "semio-ui-wgpu-controls",
- "semio-ui-wgpu-input",
- "semio-ui-wgpu-layout",
- "semio-ui-wgpu-paint",
- "semio-ui-wgpu-widget-kit",
 ]
 
 [[package]]

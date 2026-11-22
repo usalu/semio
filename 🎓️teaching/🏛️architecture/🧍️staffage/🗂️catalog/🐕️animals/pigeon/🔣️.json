@@ -18299,49 +18299,6 @@
             "part": "member"
           },
           {
-            "id": "near-primary-shaft",
-            "kind": "loft",
-            "bone": "hand-n",
-            "material": "plumage",
-            "role": "body",
-            "tone": 0.7,
-            "sections": [
-              {
-                "at": [0.05, 0, -0.019],
-                "rx": 0.0009,
-                "ry": 0.0009,
-                "exponent": 2,
-                "rotation": [0.61169, 0, 0.7911, 0]
-              },
-              {
-                "at": [0.1, 0, -0.006],
-                "rx": 0.0009,
-                "ry": 0.0009,
-                "exponent": 2,
-                "rotation": [0.62283, 0, 0.78236, 0]
-              },
-              {
-                "at": [0.15, 0, 0.004],
-                "rx": 0.0009,
-                "ry": 0.0009,
-                "exponent": 2,
-                "rotation": [0.63935, 0, 0.76891, 0]
-              },
-              {
-                "at": [0.197, 0, 0.012],
-                "rx": 0.00063,
-                "ry": 0.00063,
-                "exponent": 2,
-                "rotation": [0.64506, 0, 0.76413, 0]
-              }
-            ],
-            "capStart": true,
-            "capEnd": true,
-            "slender": true,
-            "member": "hand-n",
-            "part": "member"
-          },
-          {
             "id": "near-femur",
             "kind": "loft",
             "bone": "thigh-n",
@@ -18828,49 +18785,6 @@
             ],
             "capStart": true,
             "capEnd": true,
-            "member": "hand-f",
-            "part": "member"
-          },
-          {
-            "id": "far-primary-shaft",
-            "kind": "loft",
-            "bone": "hand-f",
-            "material": "plumage",
-            "role": "body",
-            "tone": 0.7,
-            "sections": [
-              {
-                "at": [0.05, 0, 0.019],
-                "rx": 0.0009,
-                "ry": 0.0009,
-                "exponent": 2,
-                "rotation": [0.7911, 0, 0.61169, 0]
-              },
-              {
-                "at": [0.1, 0, 0.006],
-                "rx": 0.0009,
-                "ry": 0.0009,
-                "exponent": 2,
-                "rotation": [0.78236, 0, 0.62283, 0]
-              },
-              {
-                "at": [0.15, 0, -0.004],
-                "rx": 0.0009,
-                "ry": 0.0009,
-                "exponent": 2,
-                "rotation": [0.76891, 0, 0.63935, 0]
-              },
-              {
-                "at": [0.197, 0, -0.012],
-                "rx": 0.00063,
-                "ry": 0.00063,
-                "exponent": 2,
-                "rotation": [0.76413, 0, 0.64506, 0]
-              }
-            ],
-            "capStart": true,
-            "capEnd": true,
-            "slender": true,
             "member": "hand-f",
             "part": "member"
           },
@@ -26023,49 +25937,6 @@
             "part": "member"
           },
           {
-            "id": "near-primary-shaft",
-            "kind": "loft",
-            "bone": "hand-n",
-            "material": "plumage",
-            "role": "body",
-            "tone": 0.7,
-            "sections": [
-              {
-                "at": [0.05, 0, -0.01893],
-                "rx": 0.0009,
-                "ry": 0.0009,
-                "exponent": 2,
-                "rotation": [0.61223, 0, 0.79068, 0]
-              },
-              {
-                "at": [0.1, 0, -0.006],
-                "rx": 0.0009,
-                "ry": 0.0009,
-                "exponent": 2,
-                "rotation": [0.6231, 0, 0.78214, 0]
-              },
-              {
-                "at": [0.15, 0, 0.004],
-                "rx": 0.0009,
-                "ry": 0.0009,
-                "exponent": 2,
-                "rotation": [0.63935, 0, 0.76891, 0]
-              },
-              {
-                "at": [0.197, 0, 0.012],
-                "rx": 0.00063,
-                "ry": 0.00063,
-                "exponent": 2,
-                "rotation": [0.64506, 0, 0.76413, 0]
-              }
-            ],
-            "capStart": true,
-            "capEnd": true,
-            "slender": true,
-            "member": "hand-n",
-            "part": "member"
-          },
-          {
             "id": "near-femur",
             "kind": "loft",
             "bone": "thigh-n",
@@ -26343,49 +26214,6 @@
                 "ry": 0.00099,
                 "exponent": 2,
                 "rotation": [0.71943, 0, 0.69457, 0]
-              }
-            ],
-            "capStart": true,
-            "capEnd": true,
-            "slender": true,
-            "member": "hand-f",
-            "part": "member"
-          },
-          {
-            "id": "far-primary-shaft",
-            "kind": "loft",
-            "bone": "hand-f",
-            "material": "plumage",
-            "role": "body",
-            "tone": 0.7,
-            "sections": [
-              {
-                "at": [0.05, 0, 0.01893],
-                "rx": 0.0009,
-                "ry": 0.0009,
-                "exponent": 2,
-                "rotation": [0.79068, 0, 0.61223, 0]
-              },
-              {
-                "at": [0.1, 0, 0.006],
-                "rx": 0.0009,
-                "ry": 0.0009,
-                "exponent": 2,
-                "rotation": [0.78214, 0, 0.6231, 0]
-              },
-              {
-                "at": [0.15, 0, -0.004],
-                "rx": 0.0009,
-                "ry": 0.0009,
-                "exponent": 2,
-                "rotation": [0.76891, 0, 0.63935, 0]
-              },
-              {
-                "at": [0.197, 0, -0.012],
-                "rx": 0.00063,
-                "ry": 0.00063,
-                "exponent": 2,
-                "rotation": [0.76413, 0, 0.64506, 0]
               }
             ],
             "capStart": true,
@@ -30389,49 +30217,6 @@
             "part": "member"
           },
           {
-            "id": "near-primary-shaft",
-            "kind": "loft",
-            "bone": "hand-n",
-            "material": "plumage",
-            "role": "body",
-            "tone": 0.7,
-            "sections": [
-              {
-                "at": [0.05, 0, -0.019],
-                "rx": 0.0009,
-                "ry": 0.0009,
-                "exponent": 2,
-                "rotation": [0.61168, 0, 0.7911, 0]
-              },
-              {
-                "at": [0.1, 0, -0.006],
-                "rx": 0.0009,
-                "ry": 0.0009,
-                "exponent": 2,
-                "rotation": [0.62283, 0, 0.78236, 0]
-              },
-              {
-                "at": [0.15, 0, 0.004],
-                "rx": 0.0009,
-                "ry": 0.0009,
-                "exponent": 2,
-                "rotation": [0.63935, 0, 0.76891, 0]
-              },
-              {
-                "at": [0.197, 0, 0.012],
-                "rx": 0.00063,
-                "ry": 0.00063,
-                "exponent": 2,
-                "rotation": [0.64506, 0, 0.76413, 0]
-              }
-            ],
-            "capStart": true,
-            "capEnd": true,
-            "slender": true,
-            "member": "hand-n",
-            "part": "member"
-          },
-          {
             "id": "near-femur",
             "kind": "loft",
             "bone": "thigh-n",
@@ -30647,49 +30432,6 @@
                 "ry": 0.00099,
                 "exponent": 2,
                 "rotation": [0.71872, 0, 0.6953, 0]
-              }
-            ],
-            "capStart": true,
-            "capEnd": true,
-            "slender": true,
-            "member": "hand-f",
-            "part": "member"
-          },
-          {
-            "id": "far-primary-shaft",
-            "kind": "loft",
-            "bone": "hand-f",
-            "material": "plumage",
-            "role": "body",
-            "tone": 0.7,
-            "sections": [
-              {
-                "at": [0.05, 0, 0.019],
-                "rx": 0.0009,
-                "ry": 0.0009,
-                "exponent": 2,
-                "rotation": [0.7911, 0, 0.61168, 0]
-              },
-              {
-                "at": [0.1, 0, 0.006],
-                "rx": 0.0009,
-                "ry": 0.0009,
-                "exponent": 2,
-                "rotation": [0.78236, 0, 0.62283, 0]
-              },
-              {
-                "at": [0.15, 0, -0.004],
-                "rx": 0.0009,
-                "ry": 0.0009,
-                "exponent": 2,
-                "rotation": [0.76891, 0, 0.63935, 0]
-              },
-              {
-                "at": [0.197, 0, -0.012],
-                "rx": 0.00063,
-                "ry": 0.00063,
-                "exponent": 2,
-                "rotation": [0.76413, 0, 0.64506, 0]
               }
             ],
             "capStart": true,
@@ -33320,43 +33062,8 @@
             "capStart": true,
             "capEnd": true,
             "member": "head",
-            "part": "member"
-          },
-          {
-            "id": "mandible",
-            "kind": "loft",
-            "bone": "jaw",
-            "material": "bone",
-            "role": "body",
-            "tone": 0.88,
-            "sections": [
-              {
-                "at": [0.0001, 0.00079, 0],
-                "rx": 0.00097,
-                "ry": 0.00097,
-                "exponent": 2,
-                "rotation": [0.7071, 0.00164, 0.7071, -0.00164]
-              },
-              {
-                "at": [0.02231, 0.0009, 0],
-                "rx": 0.00097,
-                "ry": 0.00097,
-                "exponent": 2,
-                "rotation": [0.70705, -0.00908, 0.70705, 0.00908]
-              },
-              {
-                "at": [0.04484, -0.00036, 0],
-                "rx": 0.00068,
-                "ry": 0.00068,
-                "exponent": 2,
-                "rotation": [0.70683, -0.01962, 0.70683, 0.01962]
-              }
-            ],
-            "capStart": true,
-            "capEnd": true,
-            "slender": true,
-            "member": "jaw",
-            "part": "member"
+            "part": "member",
+            "members": ["jaw"]
           },
           {
             "id": "cervical-1",
@@ -33525,41 +33232,6 @@
             "members": ["ilium-n", "ilium-f"]
           },
           {
-            "id": "pygostyle",
-            "kind": "loft",
-            "bone": "tail",
-            "material": "bone",
-            "role": "body",
-            "tone": 0.88,
-            "sections": [
-              {
-                "at": [-0.006, 0, 0],
-                "rx": 0.00477,
-                "ry": 0.00477,
-                "exponent": 2,
-                "rotation": [0.70711, 0, 0.70711, 0]
-              },
-              {
-                "at": [0.01, 0, 0],
-                "rx": 0.0053,
-                "ry": 0.0053,
-                "exponent": 2,
-                "rotation": [0.70711, 0, 0.70711, 0]
-              },
-              {
-                "at": [0.025, 0, 0],
-                "rx": 0.00265,
-                "ry": 0.0053,
-                "exponent": 2,
-                "rotation": [0.70711, 0, 0.70711, 0]
-              }
-            ],
-            "capStart": true,
-            "capEnd": true,
-            "member": "tail",
-            "part": "member"
-          },
-          {
             "id": "rectrix-shaft",
             "kind": "loft",
             "bone": "tail",
@@ -33568,7 +33240,7 @@
             "tone": 0.7,
             "sections": [
               {
-                "at": [0.02, 0, 0],
+                "at": [-0.006, 0, 0],
                 "rx": 0.0008,
                 "ry": 0.0008,
                 "exponent": 2,

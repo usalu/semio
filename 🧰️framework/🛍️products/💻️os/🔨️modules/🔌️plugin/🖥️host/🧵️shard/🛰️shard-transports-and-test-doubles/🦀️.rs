@@ -57,7 +57,11 @@ impl ShardTransport for ShardTransports {
     async fn recv(&self) -> Option<Vec<u8>> {
         match self {
             Self::SharedThread(t) => t.recv().await,
-            Self::Process(t) => t.recv().await,
+            Self::Process(t) => {
+                let received = t.recv().await;
+                mirror_child_jobs(t).await;
+                received
+            }
             Self::Stdio(t) => t.recv().await,
             #[cfg(any(test, feature = "testkit"))]
             Self::Loopback(t) => t.recv().await,
@@ -77,7 +81,10 @@ impl ShardTransport for ShardTransports {
     async fn kill(&self) {
         match self {
             Self::SharedThread(t) => t.kill().await,
-            Self::Process(t) => t.kill().await,
+            Self::Process(t) => {
+                t.kill().await;
+                mirror_child_jobs(t).await;
+            }
             Self::Stdio(t) => t.kill().await,
             #[cfg(any(test, feature = "testkit"))]
             Self::Loopback(t) => t.kill().await,

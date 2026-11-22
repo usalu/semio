@@ -3,7 +3,7 @@ import {constants,createReadStream} from "node:fs";
 import {chmod,copyFile,lstat,mkdir,open,readFile,readdir,rename,stat,unlink,utimes} from "node:fs/promises";
 import {dirname,join,sep} from "node:path";
 import {compileJsonSchemaSubset,type CompiledJsonSchemaSubset} from "../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
-import {yieldingV1} from "../🛡️resilience/🟦️.ts";
+import {yieldingV1} from "../🛡️resilience/⏳️yielding/🟦️.ts";
 import schema from "./🧬️schema/🔣️.json" with {type:"json"};
 
 /** 🧾️ One journal line: a put, delete or link of one shared path, ordered by its hybrid logical clock. */

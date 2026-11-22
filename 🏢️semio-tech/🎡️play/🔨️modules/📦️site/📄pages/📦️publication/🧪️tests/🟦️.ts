@@ -39,3 +39,9 @@ test("neutral Pages holds its full actual79 input group through immutable assemb
  for(const name of["withRepositoryArtifactGroupV1","withRepositoryArtifactGroupTaskV1","playRuntimeAssetSources"])expect(calls.has(name)).toBe(true);
  expect(source).not.toContain("withViteArtifactInputsV1(");
 });
+
+test("every Play artifact reader grant stays inside the closed reader request schema",async()=>{
+ const{playPagesArtifactRequestV1}=await import("../🟦️.ts"),{artifactsStorageSchema}=await import("@semio-tech/repo-lib/artifacts"),reader=JSON.parse(readFileSync(resolve(workspace,"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/👓️reading/🧬️schema/🔣️.json"),"utf8")),oracle=new Ajv({strict:false}).compile({...reader,definitions:undefined}),limits=artifactsStorageSchema.definitions.Protocol.const;
+ for(const row of[playPagesArtifactRequestV1("/a/site","play:site"),playPagesArtifactRequestV1("/a/cohort","play:pages:cohort",1)])expect(oracle(row),JSON.stringify(oracle.errors)).toBe(true);
+ expect(playPagesArtifactRequestV1("/a","x").maximumBytes).toBe(limits.maximumOutputBytes);
+});

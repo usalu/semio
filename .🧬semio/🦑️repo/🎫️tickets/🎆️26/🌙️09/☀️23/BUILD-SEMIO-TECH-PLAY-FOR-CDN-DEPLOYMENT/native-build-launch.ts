@@ -12,7 +12,8 @@ const env: NodeJS.ProcessEnv = { ...process.env, SEMIO_TASK_PROJECT: task!.slice
 issueRepositoryScriptProvidersV1(env);
 const envelope = createScriptProcessEnvelope(readScriptPolicy({ version: 1, owner: "repository:build", maximumElapsedMilliseconds: 0 }), await createBuildBootstrapCapabilitiesV1(root, ["run", task!], env), Date.now());
 Object.assign(env, scriptProcessEnvironment(envelope, env));
-const marker = join(dirname(import.meta.path), "🗑️generated/native/unit-cache-demoted");
+const marker = join(process.env.NATIVE_PLAY_OUT ?? join(dirname(import.meta.path), "🗑️generated/native"), "unit-cache-demoted");
+delete env.NATIVE_PLAY_OUT;
 const run = (mode: "on" | "off") => { const started = Date.now(), result = spawnSync(command[0]!, command.slice(1), { cwd: join(root, cwd!), env: { ...env, SEMIO_UNIT_CACHE: mode }, stdio: "inherit" }); return { status: result.status ?? 1, elapsedMs: Date.now() - started }; };
 const mode = releaseUnitCacheModeV1({ optOut: process.env.SEMIO_RELEASE_UNIT_CACHE, demoted: existsSync(marker) });
 let outcome = run(mode);

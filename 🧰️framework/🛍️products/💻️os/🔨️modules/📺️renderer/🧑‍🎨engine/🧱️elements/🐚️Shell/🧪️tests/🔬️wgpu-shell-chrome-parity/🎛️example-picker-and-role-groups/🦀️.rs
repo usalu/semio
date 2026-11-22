@@ -196,3 +196,20 @@ fn stepping_the_mode_wraps_the_way_the_shared_fixture_declares() {
 }
 
 //#endregion 🎛️ModeAndRoleGroups
+
+//#region 🏷️ExampleLabelOverlay
+
+#[test]
+fn the_example_picker_paints_the_overlay_label_and_keeps_the_manifest_label_for_ids_it_omits() {
+    let fixture: Value = serde_json::from_str(include_str!("../../../../../../../../../../🔨️modules/🛂️manifest/🧪️tests/🧫️fixtures/🏷️app-labels-overlay.json")).expect("🏷️ the shared app-labels-overlay fixture parses");
+    let overlay: semio_framework::manifest::AppLabelsOverlay = serde_json::from_value(fixture["overlay"].clone()).expect("fixture overlay");
+    let rows = ["hexagonal-mushroom-column", "two-room-corridor"].map(|id| ShellExampleRow { control_id: format!("shell.example.{id}"), label: format!("manifest {id}"), selected: id == "hexagonal-mushroom-column" });
+    let painted = shell_overlay_example_rows(rows.to_vec(), &overlay);
+    assert_eq!(painted[0].label, "Pilz-Säule", "an example the overlay names takes its label");
+    assert_eq!(painted[1].label, "manifest two-room-corridor", "an example it omits keeps the manifest label");
+    assert!(painted[0].selected && !painted[1].selected && painted[0].control_id == rows[0].control_id, "selection and control ids are untouched");
+    assert_eq!(shell_example_control(&painted, false, false).map(|control| control.label), Some("Pilz-Säule".to_string()), "the trigger shows the selected row's overlay label");
+    assert_eq!(shell_overlay_example_rows(rows.to_vec(), &Default::default()), rows.to_vec(), "the empty overlay leaves every manifest label");
+}
+
+//#endregion 🏷️ExampleLabelOverlay

@@ -23,7 +23,11 @@ impl<'ctx> ActionsCtx<'ctx> {
             self.run_theme_import_request().await;
         }
         if let Some(import) = self.prefs.pending_icon_import.take() {
-            self.run_icon_import_request(import).await;
+            if import.action == semio_ui_declaration::ui::UiInputNode::PICK_FILE_ACTION {
+                self.run_input_file_request(import).await;
+            } else {
+                self.run_icon_import_request(import).await;
+            }
         }
         for _ in 0..SHELL_DEFERRED_CHAIN_ROUNDS {
             let file_opens = std::mem::take(&mut self.opening.pending_file_opens);

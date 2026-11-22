@@ -153,7 +153,7 @@ async fn import_snapshot_of_the_live_document_records_whether_identical_content_
 async fn import_snapshot_of_a_distinct_two_object_json_against_a_one_object_live_fixture_emits_operations() {
     let source: &str = &editor_source();
     assert!(
-        source.contains(r#""importSnapshot" => Box::new(Puzzle3dWindowCommandWork::new(tool_id))"#),
+        source.contains(r#""importSnapshot" => bound!(|request, instance| Puzzle3dWindowCommandWork::new(tool_id).bound(instance))"#),
         "importSnapshot must leftover-commit through Puzzle3dWindowCommandWork, not BoundedFirstStep"
     );
     let mut app = app().await;
@@ -369,7 +369,7 @@ fn the_nakagin_export_reimports_byte_for_byte() {
 async fn leftover_export_snapshot_downloads_the_boot_example_json() {
     let source: &str = &editor_source();
     assert!(
-        source.contains(r#""exportSnapshot" => Box::new(Puzzle3dWindowCommandWork::new(tool_id))"#),
+        source.contains(r#""exportSnapshot" => bound!(|request, instance| Puzzle3dWindowCommandWork::new(tool_id).bound(instance))"#),
         "exportSnapshot must leftover-commit through Puzzle3dWindowCommandWork, not BoundedFirstStep"
     );
     let mut app = app().await;
@@ -499,7 +499,7 @@ async fn export_over_the_inline_budget_streams_one_segmented_download_carrying_t
 async fn leftover_open_import_snapshot_requests_file_open() {
     let source: &str = &editor_source();
     assert!(
-        source.contains(r#""openImportSnapshot" => Box::new(Puzzle3dWindowCommandWork::new(tool_id))"#),
+        source.contains(r#""openImportSnapshot" => bound!(|request, instance| Puzzle3dWindowCommandWork::new(tool_id).bound(instance))"#),
         "openImportSnapshot must leftover-commit through Puzzle3dWindowCommandWork, not BoundedFirstStep"
     );
     let mut app = app().await;

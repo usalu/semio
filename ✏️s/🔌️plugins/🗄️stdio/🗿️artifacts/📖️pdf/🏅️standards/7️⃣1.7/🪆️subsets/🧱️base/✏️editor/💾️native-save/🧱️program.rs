@@ -23,6 +23,7 @@ pub struct ClassicPdfSaveProgram {
     control_birth: MediaConstruction,
     control_ready: bool,
     proof: ExactGraphProof,
+    proof_grant: Option<(ControlledLiftEvent, usize)>,
     proof_ready: bool,
     scratch: Option<Vec<u8>>,
     scratch_birth: MediaConstruction,
@@ -33,7 +34,8 @@ impl ClassicPdfSaveProgram {
     /// 🗃️ Takes the exact current source after the caller has funded the reconciliation owner.
     pub fn new(graph: PinnedPdfGraph, maximum: usize) -> Self {
         Self { graph, maximum, graft: Default::default(), graft_grant: None, revision: None, quote: None, scratch: None,
-            control_trailer: None, control_birth: Default::default(), control_ready: false, proof: ExactGraphProof::new(), proof_ready: false,
+            control_trailer: None, control_birth: Default::default(), control_ready: false,
+            proof: ExactGraphProof::new(), proof_grant: None, proof_ready: false,
             scratch_birth: Default::default(), writer: None }
     }
 
@@ -166,10 +168,24 @@ impl PdfNativeSaveProgram<PdfSnapshot> for ClassicPdfSaveProgram {
                     })?;
                     cx.consume_fuel(turn.work as u64);
                     if matches!(turn.event, Ok(ControlledLiftEvent::Deferred(_))) { return Ok(PlanDecision::ReferenceRequired); }
-                    if !matches!(turn.event, Ok(ControlledLiftEvent::More | ControlledLiftEvent::Complete
-                        | ControlledLiftEvent::NeedsAllocation { .. } | ControlledLiftEvent::NeedsRelease { .. }))
-                    {
-                        return Err(invalid("current PDF graph requires a different semantic receiver").into());
+                    match &turn.event {
+                        Ok(event @ ControlledLiftEvent::NeedsAllocation { .. }) if turn.work == 0 => {
+                            let blocked = (event.clone(), grant.allocation_bytes);
+                            if self.proof_grant.replace(blocked) == Some((event.clone(), grant.allocation_bytes)) {
+                                return Ok(PlanDecision::ReferenceRequired);
+                            }
+                        }
+                        Ok(event @ ControlledLiftEvent::NeedsRelease { .. }) if turn.work == 0 => {
+                            let blocked = (event.clone(), grant.release_bytes);
+                            if self.proof_grant.replace(blocked) == Some((event.clone(), grant.release_bytes)) {
+                                return Ok(PlanDecision::ReferenceRequired);
+                            }
+                        }
+                        Ok(ControlledLiftEvent::More | ControlledLiftEvent::Complete
+                            | ControlledLiftEvent::NeedsAllocation { .. } | ControlledLiftEvent::NeedsRelease { .. }) => {
+                            self.proof_grant = None;
+                        }
+                        _ => return Err(invalid("current PDF graph requires a different semantic receiver").into()),
                     }
                 }
                 Err(ExactGraphRefusal::Shape | ExactGraphRefusal::Semantic) => return Ok(PlanDecision::ReferenceRequired),

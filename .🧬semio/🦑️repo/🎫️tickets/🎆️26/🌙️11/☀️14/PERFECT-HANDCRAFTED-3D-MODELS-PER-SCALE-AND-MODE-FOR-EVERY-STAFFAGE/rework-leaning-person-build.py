@@ -456,7 +456,7 @@ def spine_solids(scale):
     for i in range(12):
         x = LUMBAR + 0.0127 + 0.0255 * i
         grow = 1 - i / 11
-        out.append(local_ball(f"vertebra-t{12 - i}", "torso", [round(x - LUMBAR, 4), round(spine_back(x), 4), 0], [0.0135, round(0.0115 + 0.004 * grow, 4), 0.02]))
+        out.append(local_ball(f"vertebra-t{12 - i}", "torso", [round(x - LUMBAR, 4), round(spine_back(x), 4), 0], [0.0135, round(0.0115 + 0.004 * grow, 4), round(0.02 + 0.007 * grow, 4)]))
     out.append(local_rod("vertebral-arch-lumbar", "lumbar", [(round(x, 4), round(spine_back(x) + 0.018, 4), 0, 0.01) for x in (0.0, 0.045, 0.09, 0.135, 0.172)]))
     out.append(local_rod("vertebral-arch-thoracic", "torso", [(round(x - LUMBAR, 4), round(spine_back(x) + 0.015, 4), 0, 0.009) for x in (0.168, 0.23, 0.3, 0.37, 0.43, 0.4755)]))
     out.append(local_ball("joint-thoracolumbar", "torso", [0, round(spine_back(LUMBAR), 4), 0], [0.012, 0.022, 0.022], part="joint", tone=0.6))
@@ -533,6 +533,16 @@ def structure(a, base, chains):
         print(f"[DEBUG] 1:{scale} structure dropped {len(dropped)}: {' '.join(sorted(set(d.rstrip('lr').rstrip('-') for d in dropped)))}; now {len(a['volumes'][scale]['structure'])}")
 
 
+def nowall(doc, path):
+    twin = copy.deepcopy(doc)
+    for vol in twin["asset"]["volumes"].values():
+        for name in ("body", "thermal", "structure"):
+            vol[name] = [s for s in vol[name] if "wall" not in s["id"] and s.get("bone") != "wall"]
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    with open(path, "w") as f:
+        json.dump(twin, f, ensure_ascii=False)
+
+
 def main():
     os.makedirs(os.path.dirname(CAND), exist_ok=True)
     if not os.path.exists(BASE):
@@ -553,12 +563,14 @@ def main():
         with open(os.path.join(T, name)) as f:
             exec(compile(f.read(), name, "exec"), scope)
         scope["apply"](a, sys.modules[__name__])
+        if "reach" in scope:
+            scope["reach"](a, sys.modules[__name__])
     new = frames(a["rig"]["bones"])
     worst = max(max(abs(new[b][0][i] - old[b][0][i]) for i in range(3)) for b in old if b not in ("torso",))
     print(f"[DEBUG] bones {len(a['rig']['bones'])}; largest rest move of a pre-existing bone origin {worst * 1000:.4f} mm")
     with open(CAND, "w") as f:
         json.dump(doc, f, ensure_ascii=False, indent=2)
-    scope["nowall"](doc, os.path.join(OUT, "nowall/🔣️.json"))
+    nowall(doc, os.path.join(OUT, "nowall/🔣️.json"))
     if "--publish" in sys.argv:
         with open(SOURCE, "w") as f:
             json.dump({"volumes": a["volumes"]}, f, ensure_ascii=False, indent=1)

@@ -9,8 +9,22 @@ impl<'ctx> ActionsCtx<'ctx> {
             if action.action == "reloadPlugin" {
                 self.docs.uninstall_plugin(&plugin_id, &mut self.plugins, &mut self.directory);
             }
-            let _ = self.plugins.install_plugin(&plugin_id).await;
+            let installed = self.plugins.install_plugin(&plugin_id).await;
+            if action.action == "reloadPlugin" {
+                self.opening.plugin_recovery = installed.is_err().then(|| (plugin_id.clone(), false));
+                self.settle.owe_settle();
+            }
             self.note_shell_setting_command(if action.action == "reloadPlugin" { "os.reloadPlugin" } else { "os.installPlugin" }, Some(&plugin_id)).await?;
+        }
+        Ok(())
+    }
+
+    /// 🩺️ React's `recovery.disablePlugin`: the plugin is quarantined, and dropped unless it is the session's own program.
+    pub(super) async fn framework_quarantine_plugin(&mut self, action: &ActionDescriptor) -> Result<(), String> {
+        if let Some(plugin_id) = action.args.as_ref().and_then(|args| args.get("pluginId")).and_then(|v| v.as_str()).map(ToOwned::to_owned) {
+            self.docs.uninstall_plugin(&plugin_id, &mut self.plugins, &mut self.directory);
+            self.opening.plugin_recovery = Some((plugin_id, true));
+            self.settle.owe_settle();
         }
         Ok(())
     }
@@ -42,8 +56,12 @@ impl<'ctx> ActionsCtx<'ctx> {
     }
 
     /// 📦 Installs an extension from a file.
-    pub(super) async fn framework_install_extension_file(&mut self) -> Result<(), String> {
-        if self.install_extension_from_store(serde_json::json!({ "op": "extension-store-install-file" })).await? {
+    pub(super) async fn framework_install_extension_file(&mut self, action: &ActionDescriptor) -> Result<(), String> {
+        let mut request = serde_json::json!({ "op": "extension-store-install-file" });
+        if let Some(path) = action.args.as_ref().and_then(|args| args.get("path")).and_then(|value| value.as_str()).filter(|path| !path.is_empty()) {
+            request["path"] = serde_json::Value::String(path.to_string());
+        }
+        if self.install_extension_from_store(request).await? {
             self.note_shell_setting_command("os.installExtensionFile", None).await?;
         }
         Ok(())

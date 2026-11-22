@@ -1,0 +1,30 @@
+[package]
+workspace = "../../../../../../.."
+name = "semio-ui-contract-laws"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "Companion laws of ui-contract: document compare, resident permits, assembly, typed retirement and worker retirement"
+publish = false
+
+[package.metadata.semio]
+role = "framework"
+id = "ui-contract-laws"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-ui-contract = { path = "../../../../📦️packages/🦀️rust", features = ["testkit"] }
+semio-ui-contract-values = { path = "../../../../🌱️values/📦️packages/🦀️rust", features = ["testkit"] }
+semio-framework-test-fixtures = { path = "../../../../../../🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
+semio-framework-value = { path = "../../../../../../🌱️value/📦️packages/🦀️rust", features = ["testkit"] }
+serde_json = { workspace = true }

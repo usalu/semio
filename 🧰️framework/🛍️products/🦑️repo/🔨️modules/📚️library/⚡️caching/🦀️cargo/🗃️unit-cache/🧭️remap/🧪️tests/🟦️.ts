@@ -50,7 +50,9 @@ test("Apple's linker options are given to Mach-O links only: never to a wasm com
  expect([appleLinkV1(wasm),appleLinkV1(host),appleLinkV1(native),appleLinkV1(other),appleLinkV1(["--target=wasm32-unknown-unknown"])]).toEqual([false,true,true,false,false]);
  expect(linkRootArgumentsV1(wasm,"/out","darwin")).toEqual([]);expect(linkRootArgumentsV1(other,"/out","darwin")).toEqual([]);
  expect(objectRootArgumentsV1(native,"/out/","darwin")).toEqual(["-Clink-arg=-Wl,-oso_prefix,/out/"]);expect(objectRootArgumentsV1(["--crate-type","cdylib"],"/out","darwin")).toEqual(["-Clink-arg=-Wl,-oso_prefix,/out/"]);
- expect(installNameArgumentsV1(host,"darwin")).toEqual(["-Clink-arg=-Wl,-install_name,@rpath/libplug.dylib"]);expect(installNameArgumentsV1([...host,"--target","wasm32-wasip2"],"darwin")).toEqual([]);
+ expect(installNameArgumentsV1(host,"darwin")).toEqual(["-Clink-arg=-Wl,-install_name,@rpath/libplug.dylib"]);
+ for(const type of ["cdylib","dylib"])expect(installNameArgumentsV1(["--crate-name","plug","--crate-type",type,"-C","extra-filename=-ab12"],"darwin"),type).toEqual(["-Clink-arg=-Wl,-install_name,@rpath/libplug-ab12.dylib"]);
+ for(const type of ["bin","staticlib","lib"])expect(installNameArgumentsV1(["--crate-name","plug","--crate-type",type],"darwin"),type).toEqual([]);expect(installNameArgumentsV1([...host,"--target","wasm32-wasip2"],"darwin")).toEqual([]);
  expect(linkRootArgumentsV1(native,"/out","linux")).toEqual([]);
 });
 

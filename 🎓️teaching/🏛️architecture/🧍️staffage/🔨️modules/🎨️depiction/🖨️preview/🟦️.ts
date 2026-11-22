@@ -1,9 +1,11 @@
 /** 🖨️ Preview CLI v2 for content authors (Node-only): renders one asset pose or clip time at an authored scale in any of the seven representations to SVG and PNG, a contact sheet of all poses × representations,
  * or a print-size proof at 1:1 paper millimetres with a 10 mm calibration bar.
  *
- * `repo tools exec bun -- <this file> --asset <id> [--catalog <root> | --file <asset json>] [--scale 100] [--pose id | --clip id --time s | --symbol id] [--view v] (--viewpoint elevation|front|plan|axonometric [--camera isometric|dimetric|<azimuth>,<elevation>] | --views[ elevation,front,plan,axonometric] --projection first|third) [--sheet] [--print-size] [--profile id] [--language en|de] [--dpi 300] [--no-png] [--transport parcels,pathlines,streamlines,condensation] --out <dir>`
+ * `repo tools exec bun -- <this file> --asset <id> [--catalog <root> | --file <asset json>] [--scale 100] [--pose id | --clip id --time s | --symbol id] [--view v] (--viewpoint elevation|front|plan|axonometric [--camera isometric|dimetric|<azimuth>,<elevation>] | --views[ elevation,front,plan,axonometric] --projection first|third) [--sheet] [--print-size] [--profile id] [--language en|de] [--dpi 300] [--no-png] [--flow all|none|streams,tracers,moisture,fog,pathlines] [--flow-develop <seconds>] --out <dir>`
  *
  * `--viewpoint` draws the side elevation (`elevation`), the front elevation (`front`), the plan (top view, `plan`) or the axonometric view of the 3D volume (`axonometric`, `--camera isometric|dimetric|<azimuth>,<elevation>`); `--views --projection first|third` writes one sheet per representation in the D7 arrangement of `📤️export/📑️sheet` (plan above or below the side elevation, front beside it) with the three views (side elevation, front elevation, plan) of the same pose or clip instant at the same scale.
+ *
+ * Air flow: the thermal view of a single drawing and of a `--views` sheet carries every layer of the thermodynamic air flow by default, as everywhere in the product; `--flow none` leaves it out, `--flow <layers>` draws those layers over every view that is drawn, `--flow-develop <seconds>` sets its history (default 14, developed with cancellation before the drawing). The contact sheet `--sheet` (all poses × representations) draws no flow.
  *
  * `--print-size` renders at `--dpi` (default 600) with the scene at its true paper size, so a printout at 100 % measures as drawn; the calibration bar is exactly 10 mm. An unavailable or unsuitable
  * scale writes an explanation card instead of a drawing and exits with code 1. `rsvg-convert` is not a registered repo tool, so the system binary is used behind the {@link Rasterizer} and the owned `ToolPort`; its absence is a named, bilingual `ToolMissingError`.
@@ -15,7 +17,7 @@
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { PLANAR_VIEWPOINTS, VIEWPOINTS, type Asset, type AssetDocument, type Language, type Viewpoint } from "../../../🧬️schema/🟦️.ts";
-import { VIEWS, type AxonometricSpec, type DepictionOptions, type DrawingScene, type EvaluationQuery, type RepresentationSelector, type View } from "../../🔗️contracts/🟦️.ts";
+import { FLOW_LAYERS, VIEWS, type AxonometricSpec, type DepictionOptions, type DrawingScene, type EvaluationQuery, type RepresentationSelector, type View } from "../../🔗️contracts/🟦️.ts";
 import { evaluate } from "../../🧮️evaluation/🟦️.ts";
 import { DEFAULT_PRINT_PROFILE, PRINT_PROFILES, RepresentationError, resolveRepresentation } from "../../🖨️representation/🟦️.ts";
 import { PROJECTIONS, resolveSheet, type Projection } from "../../📤️export/📑️sheet/🟦️.ts";
@@ -24,7 +26,7 @@ import { solveThermalAt } from "../../🌡️thermal/🟦️.ts";
 import { DEFAULT_CATALOG_ROOT, loadCatalogFromFiles, loadEnvironments } from "../../🗂️catalog/📥️files/🟦️.ts";
 import { resolveThermalEnvironment } from "../../🗂️catalog/🟦️.ts";
 import { svgMarkup, writeSvg } from "../../📤️export/🖼️svg/🟦️.ts";
-import { defaultDepictionOptions, depict, loadAxonometric } from "../🟦️.ts";
+import { defaultDepictionOptions, depict, developFlow, loadAxonometric } from "../🟦️.ts";
 import { textWidthMm } from "../../📐️units/🟦️.ts";
 import { ModelRequestError } from "../../🧊️volume/🚫️refusal/🟦️.ts";
 import { explanationBox } from "../🪧️explanation/🟦️.ts";
@@ -44,7 +46,10 @@ export const rsvgRasterizer = (tools: ToolPort = repoToolPort): Rasterizer => ({
 
 const PLANAR_NAMES = ["elevation", "front", "plan"] as const;
 const FONT = "Helvetica, Arial, sans-serif";
-const USAGE = "usage: --asset <id> [--catalog <root> | --file <asset json>] [--scale 100] [--pose id | --clip id --time s | --symbol id] [--view v] (--viewpoint elevation|front|plan|axonometric [--camera isometric|dimetric|<azimuth>,<elevation>] | --views[ elevation,front,plan,axonometric] --projection first|third) [--sheet] [--print-size] [--profile id] [--language en|de] [--dpi 300] [--no-png] [--transport parcels,pathlines,streamlines,condensation] --out <dir>";
+/** ⏳️ Seconds of history the air of a preview has unless `--flow-develop` names another. */
+const FLOW_DEVELOP_S = 14;
+
+const USAGE = "usage: --asset <id> [--catalog <root> | --file <asset json>] [--scale 100] [--pose id | --clip id --time s | --symbol id] [--view v] (--viewpoint elevation|front|plan|axonometric [--camera isometric|dimetric|<azimuth>,<elevation>] | --views[ elevation,front,plan,axonometric] --projection first|third) [--sheet] [--print-size] [--profile id] [--language en|de] [--dpi 300] [--no-png] [--flow all|none|streams,tracers,moisture,fog,pathlines] [--flow-develop <seconds>] --out <dir>";
 
 type Args = { readonly flags: ReadonlyMap<string, string> };
 
@@ -141,7 +146,13 @@ export async function runPreview(argv: readonly string[], rasterizer: Rasterizer
       written.push(pngPath);
     }
   };
-  const transport = (flags.get("transport") ?? "").split(",").filter((layer) => layer !== "") as DepictionOptions["transport"];
+  const flowFlag = flags.get("flow");
+  const asked = flowFlag === undefined || flowFlag === "all" ? [...FLOW_LAYERS] : flowFlag === "none" ? [] : flowFlag.split(",").filter((layer) => layer !== "");
+  const strange = asked.find((layer) => !(FLOW_LAYERS as readonly string[]).includes(layer));
+  if (strange !== undefined) throw new Error(`unknown flow layer "${strange}"; all, none or a comma list of ${FLOW_LAYERS.join(", ")}`);
+  const developS = Number(flags.get("flow-develop") ?? FLOW_DEVELOP_S);
+  if (!(Number.isFinite(developS) && developS > 0)) throw new Error(`--flow-develop must be a number of seconds above 0, got "${flags.get("flow-develop")}"`);
+  const air = asked.length === 0 ? {} : { flow: asked as NonNullable<DepictionOptions["flow"]>, flowDevelopS: developS };
   const chosen = flags.get("viewpoint");
   if (chosen === undefined && !flags.has("views")) throw new Error(`--viewpoint elevation|front|plan is required (or --views for all three)
 ${USAGE}`);
@@ -151,14 +162,14 @@ ${USAGE}`);
   const viewpoint = (chosen ?? "elevation") as Viewpoint;
   const presets = new Map(((await loadEnvironments(flags.get("catalog") ? resolve(flags.get("catalog")!) : DEFAULT_CATALOG_ROOT))?.presets ?? []).map((preset) => [preset.id, preset]));
   const environment = resolveThermalEnvironment(asset, presets);
-  const options = (view: View, legend: boolean, at: Viewpoint = viewpoint): DepictionOptions => {
+  const options = (view: View, legend: boolean, at: Viewpoint = viewpoint, airy = true): DepictionOptions => {
     const o = defaultDepictionOptions(view, language, denominator, at);
-    return { ...o, ...(camera ? { axonometric: camera } : {}), transport, profile, representation: selector, ...(environment === undefined ? {} : { environment }), annotations: { ...o.annotations, legend } };
+    return { ...o, ...(camera ? { axonometric: camera } : {}), ...(airy && (flowFlag !== undefined || view === "thermal") ? air : {}), profile, representation: selector, ...(environment === undefined ? {} : { environment }), annotations: { ...o.annotations, legend } };
   };
-  const scenesFor = (query: EvaluationQuery, which: readonly View[], legend: boolean): DrawingScene[] => {
+  const scenesFor = (query: EvaluationQuery, which: readonly View[], legend: boolean, airy = true): DrawingScene[] => {
     const state = evaluate(asset, query, selector);
     const analysis = { thermal: solveThermalAt(state.asset, query, environment), structure: solveStructure(state) };
-    return which.map((view) => depict(state, options(view, legend), analysis));
+    return which.map((view) => depict(state, options(view, legend, viewpoint, airy), analysis));
   };
   const viewpointScenes = (query: EvaluationQuery, view: View): DrawingScene[] => {
     const state = evaluate(asset, query, selector);
@@ -172,22 +183,23 @@ ${USAGE}`);
       if (resolution.kind === "unavailable" || resolution.kind === "unsuitable") throw new RepresentationError(resolution, asset.id);
     }
     if (flags.has("sheet")) {
-      const rows = asset.poses.filter((pose) => !pose.key).map((pose) => ({ label: pose.id, scenes: scenesFor({ kind: "pose", pose: pose.id }, VIEWS, false) }));
+      const rows = asset.poses.filter((pose) => !pose.key).map((pose) => ({ label: pose.id, scenes: scenesFor({ kind: "pose", pose: pose.id }, VIEWS, false, false) }));
       await emit(`${asset.id}--sheet-${viewpoint}-${tag}`, sheet(rows));
       return written;
     }
     const query: EvaluationQuery = flags.has("clip") ? { kind: "clip", clip: flags.get("clip")!, timeS: Number(flags.get("time") ?? 0) } : { kind: "pose", pose: flags.get("pose") ?? asset.presentation.defaultPose };
+    for (const view of flags.has("views") && !flags.has("view") ? (["dark-line"] as const) : views) if ((options(view, true).flow?.length ?? 0) > 0) await developFlow({ asset, query }, options(view, true), signal === undefined ? {} : { signal });
     const when = query.kind === "clip" ? `${query.clip}@${query.timeS}` : query.kind === "pose" ? query.pose : "transition";
     if (flags.has("views")) {
       const projection = flags.get("projection") as Projection | undefined;
       if (projection === undefined || !(PROJECTIONS as readonly string[]).includes(projection)) throw new Error(`--views needs --projection ${PROJECTIONS.join("|")}\n${USAGE}`);
-      const { view: _view, viewpoint: _viewpoint, scale: _scale, representation: _representation, ...drawOptions } = options("dark-line", true, "elevation");
+      const drawOptionsOf = (view: View) => { const { view: _view, viewpoint: _viewpoint, scale: _scale, representation: _representation, ...rest } = options(view, true, "elevation"); return rest; };
       const source = selector.kind === "symbol" ? ({ kind: "symbol", symbol: selector.symbol, denominator } as const) : ({ kind: "scale", denominator } as const);
       const listed = flags.get("views")!;
       const names = listed === "true" ? [...PLANAR_NAMES] : listed.split(",");
       if (names.some((name) => !(VIEWPOINTS as readonly string[]).includes(name)) || !PLANAR_NAMES.every((name) => names.includes(name))) throw new ModelRequestError("views-bad", listed);
       const axonometric = names.includes("axonometric") ? (camera ?? ({ kind: "isometric" } as const)) : false;
-      for (const view of flags.has("view") ? views : (["dark-line"] as const)) await emit(`${asset.id}--${when}--views${axonometric === false ? "" : "-axonometric"}-${view}-${projection}-${tag}`, writeSvg(resolveSheet(asset, query, source, view, drawOptions as never, projection, language, axonometric).sheet));
+      for (const view of flags.has("view") ? views : (["dark-line"] as const)) await emit(`${asset.id}--${when}--views${axonometric === false ? "" : "-axonometric"}-${view}-${projection}-${tag}`, writeSvg(resolveSheet(asset, query, source, view, drawOptionsOf(view) as never, projection, language, axonometric).sheet));
       return written;
     }
     for (const [i, scene] of scenesFor(query, views, true).entries()) await emit(`${asset.id}--${when}--${views[i]}-${viewpoint}-${tag}${printSize ? "-print" : ""}`, printSize ? printSized(scene) : writeSvg(scene));

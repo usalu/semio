@@ -9,6 +9,12 @@ description = "Component crate of semio-s-artifact-stdio-pdf: mutations"
 [package.metadata.semio]
 role = "library"
 
+[package.metadata.semio.carve]
+owned = [
+  "standards::v1_4::subsets::x::schema::mutations",
+  "standards::v1_4::subsets::x::schema::mutations::collapse_page_size",
+]
+
 [lints]
 workspace = true
 

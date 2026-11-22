@@ -6,6 +6,7 @@ import type{ScriptInvocation}from"../../../🧭️routing/📥️invocation/🟦
 import{resolveTypescriptCompilerV1}from"../../../📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 import{runtimeTypeEnvironmentV1}from"../../../../../📦️packages/🟦️typescript/⚙️runtime/🏷️identity/🟦️.ts";
 import{PROCESS_TEXTS_V1,refuseProcessV1}from"../../../📖️texts/🟦️.ts";
+import{stretchedBudgetMillisecondsV1}from"../../🎚️budget/⏲️contention/🟦️.ts";
 import{requireArtifactOutsideManagedParentV1,safeTemporaryDirectoryV1,testSandboxEnvironmentV1}from"../../🏖️sandbox/🟦️.ts";
 import{runOwnedBunFilesV1}from"../../🟨️bun/📁️files/🟦️.ts";
 import{pinnedRustToolchainV1,pinnedTestToolsV1}from"../../🧰️toolchain/📌️pinned/🟦️.ts";
@@ -43,7 +44,7 @@ export async function withProcessTestOutputV1(checkout:string,route:string,work:
 export async function runProcessTestSuiteV1(run:ProcessTestSuiteRunV1):Promise<void>{
  const{invocation,root,checkout,table,owner,output,environment}=run,suite=table.suites.find(row=>row.id===run.suite);
  if(!suite)throw refuseProcessV1("invalid","script.suite-unknown",{suite:run.suite,known:table.suites.map(row=>row.id).join(", ")});
- const budget=()=>scriptInvocationBudget(invocation,suite.budgetMs);
+ const stretched=stretchedBudgetMillisecondsV1(suite.budgetMs),budget=()=>scriptInvocationBudget(invocation,stretched);
  if(!processTestSuiteRunsOnV1(suite)){
   (run.report??(line=>{process.stdout.write(line+"\n");}))(textV1(PROCESS_TEXTS_V1.catalog,"script.suite-platform-skipped",toolLanguageV1(environment),{suite:suite.id,platforms:suite.platforms!.join(", "),host:process.platform,count:suite.function?1:expandProcessTestSuiteV1(suite,discoverProcessTestFilesV1(root),table).length}));
   return;
@@ -65,7 +66,7 @@ export async function runProcessTestSuiteV1(run:ProcessTestSuiteRunV1):Promise<v
  const plan=announceTestWorkersV1(testWorkersV1("bun-test",environment,{request:suite.parallel??1,ratioBasisPoints:raised>10000?Math.max(learned,raised):learned},run.workers?.policy),environment,run.workers?.write);
  if(bunSources.length)await withTestWorkerLearningV1(run.workers?.learning,plan,suite.id,()=>runOwnedBunFilesV1({
   invocation,control:createIssuedResourceControlV1(invocation,owner+":"+suite.id,0),cwd:checkout,files:bunSources,
-  arguments:suite.testNamePattern?["--test-name-pattern="+suite.testNamePattern]:[],timeoutMilliseconds:suite.budgetMs,...(authored?{capabilities:authored}:{}),
+  arguments:suite.testNamePattern?["--test-name-pattern="+suite.testNamePattern]:[],timeoutMilliseconds:stretched,...(authored?{capabilities:authored}:{}),
   environment:{...environment,...pinnedRustToolchainV1(undefined,environment).environment,...tools,SEMIO_WORKSPACE_ROOT:checkout,SEMIO_TEST_ARTIFACT_DIR:output,BUN_RUNTIME_TRANSPILER_CACHE_PATH:"0",NODE_DISABLE_COMPILE_CACHE:"1"},
   policy:{version:1,maximumParallelFiles:plan.workers,...processTestProtocolV1.output},memory:createTestFileMemoryV1({budgets,checkout,defaultMegabytes,shareMegabytes:plan.memoryMegabytes,environment,...(run.workers?.rows?{rows:run.workers.rows}:{}),...(run.workers?.intervalMilliseconds?{intervalMilliseconds:run.workers.intervalMilliseconds}:{})}),
   onFileResult:async row=>{process.stdout.write(row.capture.stdout);process.stderr.write(row.capture.stderr);if(row.capture.status!==0||row.capture.signal!==null)failed.push(relative(root,row.file).split(sep).join("/"));},

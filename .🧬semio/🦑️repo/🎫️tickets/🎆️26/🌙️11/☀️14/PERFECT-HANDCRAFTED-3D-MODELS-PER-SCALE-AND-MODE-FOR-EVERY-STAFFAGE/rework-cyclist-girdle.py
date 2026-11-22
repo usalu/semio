@@ -232,6 +232,41 @@ def drop(lists, names):
         lists[name] = [solid for solid in lists[name] if solid["id"] not in names and solid.get("of") not in names]
 
 
+def rod(identifier, like, start, end, radius):
+    return {"id": identifier, "kind": "loft", "bone": "frame", "material": like["material"], "role": like.get("role", "body"), "tone": like.get("tone", 0.5), "sections": [{"at": list(start), "rx": radius, "ry": radius}, {"at": list(end), "rx": radius, "ry": radius}], "capStart": True, "capEnd": True}
+
+
+def hardware(lists, scale):
+    """🔩 The bicycle hardware that hung in the air: seat post in the seat tube, brake hanger, chain-guard straps, fender stays on the fender."""
+    body = lists["body"]
+    ids = {solid["id"]: solid for solid in body}
+    r = max(0.004, FEATURE[scale] / 2)
+    for solid in body:
+        if solid["id"] == "seatpost" and solid["profile"][0][0] == 0:
+            solid["profile"][0][0] = solid["profile"][1][0] = -0.06
+        if "-fender-stay-" in solid["id"]:
+            hub, half = ((0.0, 0.34), 0.029) if solid["id"].startswith("rear") else ((1.05, 0.34), 0.027)
+            for section in solid["sections"]:
+                if math.hypot(section["at"][0] - hub[0], section["at"][1] - hub[1]) > 0.3:
+                    section["at"][2] = math.copysign(half, section["at"][2])
+    if "brake-rear-l" in ids and "brake-rear-hanger" not in ids:
+        like = ids["brake-rear-l"]
+        body.append(rod("brake-rear-yoke", like, (0.2, 0.672, -0.044), (0.2, 0.672, 0.044), max(0.005, FEATURE[scale] / 2)))
+        body.append(rod("brake-rear-hanger", like, (0.2, 0.672, 0), (0.277, 0.675, 0), max(0.005, FEATURE[scale] / 2)))
+        body.append(rod("brake-rear-bolt", like, (0.277, 0.675, -0.04), (0.277, 0.675, 0.04), max(0.005, FEATURE[scale] / 2)))
+    if "chain-guard" in ids and scale in ("50", "100") and "chain-guard-strap-front" not in ids:
+        like = ids["chain-guard"]
+        body.append(rod("chain-guard-strap-front", like, (0.2, 0.324, -0.06), (0.2, 0.396, -0.066), r))
+        body.append(rod("chain-guard-strap-rear", like, (0.062, 0.4, -0.066), (0.062, 0.43, -0.062), r))
+    structure = {solid["id"] for solid in lists["structure"]}
+    if scale == "200":
+        for s in ("l", "r"):
+            if "shoe-sole-" + s in ids and "st-shoe-sole-" + s not in structure:
+                lists["structure"].append({"id": "st-shoe-sole-" + s, "of": "shoe-sole-" + s, "member": "foot-" + s, "part": "member"})
+    if "seat-collar" in ids and "st-seatpost" in structure and "st-seat-collar" not in structure:
+        lists["structure"].append({"id": "st-seat-collar", "of": "seat-collar", "member": "frame", "part": "member"})
+
+
 def coarse(lists, scale):
     """🔍 Parts of rider and bicycle modelled for the smallest feature of 1:100, 1:200 and 1:500 (15, 30, 75 mm)."""
     if scale == "50":
@@ -241,17 +276,16 @@ def coarse(lists, scale):
     if scale in ("200", "500"):
         gone |= {f"fingers-{s}-{k}" for s in "lr" for k in range(4)} | {"glove-thumb-l", "glove-thumb-r", "pedal-spindle-l", "pedal-spindle-r"}
     if scale == "500":
-        gone |= {"shoe-sole-l", "shoe-sole-r", "shoe-toe-sole-l", "shoe-toe-sole-r", "rear-rim", "front-rim", "tail-lamp"} | {f"carrier-bar-{k}" for k in range(5)}
-    bars = [section["at"][0] for solid in lists["body"] if solid["id"].startswith("carrier-bar-") for section in solid["sections"]]
+        gone |= {"shoe-sole-l", "shoe-sole-r", "shoe-toe-sole-l", "shoe-toe-sole-r", "tail-lamp", "carrier-stay-l", "carrier-stay-r"} | {f"carrier-bar-{k}" for k in range(5)}
     drop(lists, gone)
     for solid in lists["body"]:
         name = solid["id"]
         stem, _, s = name.rpartition("-")
         sign = -1 if s == "r" else 1
         if stem in ("carrier-stay", "handlebar") or name.startswith("carrier-bar-"):
-            fat(solid, r)
+            fat(solid, 0.0356 if scale == "500" else r)
         if stem == "pedal-spindle":
-            solid["profile"] = [[a, 0.0075 if b else 0] for a, b in solid["profile"]]
+            solid["profile"] = [[math.copysign(0.079, a) if abs(a) < 0.09 else a, 0.0075 if b else 0] for a, b in solid["profile"]]
         if stem == "glove" and scale in ("200", "500"):
             for section in solid["sections"]:
                 fist = section["at"][0] >= 0.06
@@ -269,25 +303,20 @@ def coarse(lists, scale):
             solid[near] = math.copysign(0.085, solid[near])
         if name == "tail-lamp" and scale == "200":
             solid["size"] = [0.03, 0.04, 0.07]
-        if name in ("rear-rim", "front-rim") and scale == "200":
-            solid["profile"] = [[round(a * 1.25, 4), b] for a, b in solid["profile"]]
+        if name in ("rear-rim", "front-rim") and scale in ("200", "500"):
+            solid["profile"] = [[round(a * (3 if scale == "500" else 1.25), 4), b] for a, b in solid["profile"]]
         if scale == "500":
             if stem == "crank-arm":
                 solid["profile"] = [[a, math.copysign(0.0375, b) if b else 0] for a, b in solid["profile"]]
-                inner, outer = sorted((solid["from"], solid["to"]), key=abs)
-                solid["from"], solid["to"] = math.copysign(0.04, inner), math.copysign(0.115, outer)
+                solid["from"], solid["to"] = (0.04, 0.115) if solid["to"] > 0 else (-0.115, -0.04)
             if name == "bar-clamp":
-                solid["profile"] = [[-0.0375, 0], [-0.0375, 0.0375], [0.0375, 0.0375], [0.0375, 0]]
+                solid["profile"] = [[-0.036, 0], [-0.036, 0.036], [0.036, 0.036], [0.036, 0]]
             if stem == "grip":
-                solid["profile"] = [[a, round(b * 2, 4)] for a, b in solid["profile"]]
+                solid["profile"] = [[a, 0.036 if b else 0] for a, b in solid["profile"]]
             if name in ("rear-tyre", "front-tyre"):
-                solid["profile"] = [[round(0.0365 * math.sin(k * math.pi / 12), 4), round(0.3035 + 0.0365 * math.cos(k * math.pi / 12), 4)] for k in range(24)] + [[0, 0.34]]
+                solid["profile"] = [[round(0.0375 * math.sin(k * math.pi / 12), 4), round(0.322 + 0.018 * math.cos(k * math.pi / 12), 4)] for k in range(24)] + [[0, 0.34]]
             if name in ("rear-hub", "front-hub"):
                 solid["profile"] = [[a, round(b * 1.25, 4)] for a, b in solid["profile"]]
-    if scale == "500" and bars:
-        stay = next(solid for solid in lists["body"] if solid["id"] == "carrier-stay-l")
-        deck = {"id": "carrier-deck", "kind": "box", "bone": "frame", "material": stay["material"], "role": stay.get("role", "body"), "tone": stay.get("tone", 0.5), "size": [round(max(bars) - min(bars) + 0.075, 4), 0.075, 0.15], "cornerRadius": 0.01, "transform": {"translation": [round((max(bars) + min(bars)) / 2, 4), 0.735, 0]}}
-        lists["body"].append(deck)
 
 
 def convert_rig(asset):
@@ -335,6 +364,7 @@ def convert_volumes(volumes, frames):
                         if cut and section["rx"] > 0.12:
                             section["rx"] = round(section["rx"] - cut, 4)
         coarse(lists, scale)
+        hardware(lists, scale)
         structure = lists["structure"]
         kept = []
         for solid in structure:
@@ -372,7 +402,8 @@ def convert_volumes(volumes, frames):
                 kept.append(bone_solid("hip-bone-" + s, hip, [{"at": [0.0, 0, 0], "rx": 0.038, "ry": 0.038, "rotation": ALONG}, {"at": [0.0914, 0, 0], "rx": 0.038, "ry": 0.038, "rotation": ALONG}]))
             kept.append(joint_solid(hip, JOINT_RADIUS[scale]))
         r = CRANK_AXLE[scale]
-        kept.append({"id": "st-crank-axle", "kind": "revolve", "bone": "frame", "material": "steel", "role": "body", "tone": 0.9, "profile": [[-0.087, 0], [-0.087, r], [0.087, r], [0.087, 0]], "axis": [0, 0, 1], "origin": [0.45, 0.3, 0], "member": "frame", "part": "member"})
+        if not any(solid["id"] == "st-bb-spindle" for solid in kept):
+            kept.append({"id": "st-crank-axle", "kind": "revolve", "bone": "frame", "material": "steel", "role": "body", "tone": 0.9, "profile": [[-0.087, 0], [-0.087, r], [0.087, r], [0.087, 0]], "axis": [0, 0, 1], "origin": [0.45, 0.3, 0], "member": "frame", "part": "member"})
         lists["structure"] = kept
         lists["decisions"] = lists["decisions"] + [DECISION]
 
@@ -406,6 +437,15 @@ def convert(asset, volume_sets):
     return True
 
 
+def respliced(text, key, value):
+    """🧷 Replaces one member of the asset in the catalog text in the layout of `volumes-insert.py`; every other byte stays."""
+    import re
+    insert = RIG.insert_module()
+    indent = re.search(r'\n( +)"id"\s*:', text).group(1)
+    start, end = insert.member_range(text, indent, key)
+    return text[:start] + indent + json.dumps(key) + ": " + insert.dump(value, len(indent) // 2) + text[end:]
+
+
 def main():
     text = open(CATALOG, encoding="utf8").read()
     document = json.loads(text)
@@ -426,7 +466,7 @@ def main():
     if not convert(document["asset"], [source["volumes"]]):
         raise SystemExit("already converted")
     for key in ("rig", "poses", "clips", "representations"):
-        text = RIG.splice(text, key, before[key], document["asset"][key])
+        text = respliced(text, key, document["asset"][key])
     if json.loads(text) != document:
         raise SystemExit("splice did not round-trip")
     if open(CATALOG, encoding="utf8").read() != json.dumps(None) and json.loads(open(CATALOG, encoding="utf8").read())["asset"] != before:

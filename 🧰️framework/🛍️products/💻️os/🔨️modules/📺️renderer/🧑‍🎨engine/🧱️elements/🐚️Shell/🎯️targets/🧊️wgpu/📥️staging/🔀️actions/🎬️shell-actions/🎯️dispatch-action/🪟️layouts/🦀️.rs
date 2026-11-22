@@ -15,6 +15,11 @@ pub const NODE_GRAPH_FIT_REFUSED_CODE: &str = "shell.node-graph-fit.refused";
 /// 🔊️ Notice code of a refused row control focus (the row holds no cell to type into, or no window presents it).
 pub const ROW_CONTROL_FOCUS_REFUSED_CODE: &str = "shell.row-control-focus.refused";
 
+/// 🪲 Formats `[DEBUG] shell node-graph fit` with the `{x,y,zoom}` object the port probe parses.
+pub(super) fn shell_node_graph_fit_trace(x: f64, y: f64, zoom: f64) -> String {
+    format!("[DEBUG] shell node-graph fit {{\"x\":{x},\"y\":{y},\"zoom\":{zoom}}}")
+}
+
 impl<'ctx> ActionsCtx<'ctx> {
     /// 🎯️ Runs [`semio_framework::FOCUS_WINDOW_ACTION_ID`]: opens the window of the named kind when it is closed, raises it, takes the keyboard focus off any chrome control so the keyboard ring continues inside the window, and announces the result politely (the transient notice is a live status node of the accessibility tree) in the interface language. A kind the app never declared, a missing argument or a full topology queue is announced as a refusal and returned as the error.
     pub(super) fn framework_focus_window(&mut self, action: &ActionDescriptor) -> Result<(), String> {
@@ -106,6 +111,14 @@ impl<'ctx> ActionsCtx<'ctx> {
         }
     }
 
+    /// 🖱️ ⋯ Runs `openRowContextMenu`: a surface table row's menu trigger asks the shell for the row's context menu at `{x, y}` (window-body-local); the pointer context opens it with the press position in hand.
+    pub(super) fn framework_open_row_context_menu(&mut self, action: &ActionDescriptor) -> Result<(), String> {
+        let number = |key: &str| action.args.as_ref().and_then(|args| args.get(key)).and_then(semio_framework_value::DslValue::as_f64).map(|value| value as f32);
+        let (Some(x), Some(y)) = (number("x"), number("y")) else { return Err("openRowContextMenu needs the arguments x and y".into()) };
+        self.input.pending_row_menu = Some((x, y));
+        Ok(())
+    }
+
     /// 🔲️ Runs [`semio_framework::NODE_GRAPH_FIT_ACTION_ID`]: frames the whole graph of the node-graph surface the action's window (else the focused window) owns and persists the fitted camera as the same `nodeGraphViewport` action a wheel zoom publishes, so the next open honours it; a window with no live graph refuses with a polite localized notice.
     pub(super) async fn framework_fit_node_graph(&mut self, action: &ActionDescriptor) -> Result<(), String> {
         let window_id = action.args.as_ref().and_then(|args| args.get("windowId")).and_then(semio_framework_value::DslValue::as_str).map(str::to_string).or_else(|| self.windows.active_window_id.clone());
@@ -118,10 +131,21 @@ impl<'ctx> ActionsCtx<'ctx> {
         self.settle.owe_settle();
         match persist {
             Some(descriptor) => {
-                debug_log(&format!("[DEBUG] shell node-graph fit {}", descriptor.args.as_ref().map(dsl_value_as_json).and_then(|args| args.get("viewport").cloned()).unwrap_or_default()));
+                let viewport = descriptor.args.as_ref().map(dsl_value_as_json).and_then(|args| args.get("viewport").cloned());
+                let (x, y, zoom) = viewport.as_ref().and_then(|value| {
+                    let x = value.get("x")?.as_f64()?;
+                    let y = value.get("y")?.as_f64()?;
+                    let zoom = value.get("zoom")?.as_f64()?;
+                    Some((x, y, zoom))
+                }).unwrap_or((0.0, 0.0, 1.0));
+                debug_log(&shell_node_graph_fit_trace(x, y, zoom));
                 self.dispatch_action(descriptor).await
             }
-            None => Ok(()),
+            None => {
+                let camera = semio_renderer_wgpu_engine_graph::node_graph::node_graph_current_camera(&host_id).unwrap_or([0.0, 0.0, 1.0]);
+                debug_log(&shell_node_graph_fit_trace(camera[0], camera[1], camera[2]));
+                Ok(())
+            }
         }
     }
 

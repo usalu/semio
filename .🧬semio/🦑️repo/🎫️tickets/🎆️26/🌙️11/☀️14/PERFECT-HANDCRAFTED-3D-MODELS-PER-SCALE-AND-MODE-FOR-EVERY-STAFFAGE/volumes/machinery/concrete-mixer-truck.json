@@ -99881,15 +99881,15 @@
      "role": "body",
      "tone": 0.3,
      "size": [
-      0.6,
-      0.76,
-      0.76
+      0.42,
+      0.56,
+      0.6
      ],
      "transform": {
       "translation": [
-       2.18,
-       0.82,
-       -0.75
+       2.09,
+       0.72,
+       -0.83
       ]
      }
     },
@@ -105722,13 +105722,13 @@
      "role": "detail",
      "tone": 0.3,
      "size": [
-      0.16,
-      0.1,
+      0.14,
+      0.14,
       2.36
      ],
      "transform": {
       "translation": [
-       -4.27,
+       -4.4,
        0.8,
        0
       ]
@@ -105762,17 +105762,125 @@
      "role": "detail",
      "tone": 0.35,
      "size": [
-      0.6,
+      0.42,
       0.62,
-      0.72
+      0.5
      ],
      "transform": {
       "translation": [
-       2.18,
+       2.09,
        0.98,
-       0.72
+       0.83
       ]
      }
+    },
+    {
+     "id": "silencer-bracket",
+     "kind": "box",
+     "bone": "chassis",
+     "material": "paint-steel",
+     "role": "detail",
+     "tone": 0.3,
+     "size": [
+      0.3,
+      0.08,
+      0.2
+     ],
+     "transform": {
+      "translation": [
+       2.09,
+       0.9,
+       -0.47
+      ]
+     }
+    },
+    {
+     "id": "air-filter-bracket",
+     "kind": "box",
+     "bone": "chassis",
+     "material": "paint-steel",
+     "role": "detail",
+     "tone": 0.3,
+     "size": [
+      0.3,
+      0.08,
+      0.24
+     ],
+     "transform": {
+      "translation": [
+       2.09,
+       0.95,
+       0.48
+      ]
+     }
+    },
+    {
+     "id": "ladder-foot",
+     "kind": "box",
+     "bone": "chassis",
+     "material": "paint-steel",
+     "role": "detail",
+     "tone": 0.3,
+     "size": [
+      0.3,
+      0.08,
+      0.46
+     ],
+     "transform": {
+      "translation": [
+       -4.32,
+       0.8,
+       1.01
+      ]
+     }
+    },
+    {
+     "id": "exhaust-outlet",
+     "kind": "capsule",
+     "bone": "chassis",
+     "material": "exhaust-steel",
+     "role": "detail",
+     "tone": 0.2,
+     "p0": [
+      2.22,
+      0.93,
+      -0.95
+     ],
+     "p1": [
+      2.42,
+      1.12,
+      -0.95
+     ],
+     "r0": 0.055,
+     "r1": 0.055
+    },
+    {
+     "id": "air-intake-elbow",
+     "kind": "revolve",
+     "bone": "chassis",
+     "material": "paint-steel",
+     "role": "detail",
+     "tone": 0.3,
+     "profile": [
+      [
+       0,
+       0.075
+      ],
+      [
+       0.26,
+       0.075
+      ]
+     ],
+     "axis": [
+      0.77104,
+      0.59969,
+      0.21418
+     ],
+     "origin": [
+      2.28,
+      1.1,
+      0.9
+     ]
     }
    ],
    "thermal": [
@@ -106366,6 +106474,31 @@
     {
      "id": "th-air-filter",
      "of": "air-filter",
+     "region": "chassis"
+    },
+    {
+     "id": "th-silencer-bracket",
+     "of": "silencer-bracket",
+     "region": "chassis"
+    },
+    {
+     "id": "th-air-filter-bracket",
+     "of": "air-filter-bracket",
+     "region": "chassis"
+    },
+    {
+     "id": "th-ladder-foot",
+     "of": "ladder-foot",
+     "region": "superstructure"
+    },
+    {
+     "id": "th-exhaust-outlet",
+     "of": "exhaust-outlet",
+     "region": "exhaust-stack"
+    },
+    {
+     "id": "th-air-intake-elbow",
+     "of": "air-intake-elbow",
      "region": "chassis"
     }
    ],

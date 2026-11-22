@@ -60,8 +60,6 @@ impl PluginState {
         )
     }
 
-    //#region 🔖️DirectoryAndIdentity
-    //#region 💡️InferencePort
     #[cfg(not(target_arch = "wasm32"))]
     pub fn installed_document_http_port(&self, owner:&str, service_id:&str) -> Option<CompiledDocumentHttpPortV1> {
         let mut found=None;
@@ -78,8 +76,6 @@ impl PluginState {
         found
     }
 
-    //#endregion 💡️InferencePort
-    //#endregion 🔖️DirectoryAndIdentity
     pub fn project_extension_record(&mut self, record: ShellExtensionStoreRecord) -> Result<usize, String> {
         validate_extension_record(&record)?;
         if let Some(index) = self.extensions.iter().position(|entry| entry.record.extension_id == record.extension_id) {
@@ -93,11 +89,40 @@ impl PluginState {
         Ok(self.extensions.len() - 1)
     }
 
-    #[cfg(target_arch = "wasm32")]
+    /// 🗂️ Answers one `extension-store-*` request through the host's store door: the page's `semioWgpuHostIo` in the browser, the native store door over the same install-root layout natively. Both answer the same shapes.
+    pub async fn extension_store(&self, request: serde_json::Value) -> Result<serde_json::Value, String> {
+        #[cfg(target_arch = "wasm32")]
+        {
+            extension_store_answer(request).await
+        }
+        #[cfg(not(target_arch = "wasm32"))]
+        {
+            semio_renderer_wgpu_program_bridge::native_extension_store_answer(&request, &self.native_extension_root()?).await
+        }
+    }
+
+    #[cfg(not(target_arch = "wasm32"))]
+    fn native_extension_root(&self) -> Result<std::path::PathBuf, String> {
+        plugin_modules_root_of(&self.plugins).map(|modules| semio_renderer_wgpu_program_bridge::native_extension_install_root(&modules)).ok_or_else(|| "plugin modules root is unavailable".to_string())
+    }
+
+    /// 🔌️ Admits one store record as a program on this host (`install_js_extension` in the browser, `install_native_extension` natively) and registers it as the host of its extension nodes.
+    async fn admit_extension_program(&self, record: &ShellExtensionStoreRecord) -> Result<ProgramBridgeEntry, String> {
+        #[cfg(target_arch = "wasm32")]
+        {
+            let record_json = serde_json::to_string(record).map_err(|error| error.to_string())?;
+            semio_renderer_wgpu_program_bridge::install_js_extension(&record_json, &record.extension_id, &record.version).await
+        }
+        #[cfg(not(target_arch = "wasm32"))]
+        {
+            let native: semio_renderer_wgpu_program_bridge::NativeExtensionRecord = serde_json::from_value(serde_json::to_value(record).map_err(|error| error.to_string())?).map_err(|error| error.to_string())?;
+            semio_renderer_wgpu_program_bridge::install_native_extension(&self.native_extension_root()?, &native)
+        }
+    }
+
     pub async fn load_extension_record(&mut self, record: ShellExtensionStoreRecord) -> Result<(), String> {
         let index = self.project_extension_record(record.clone())?;
-        let record_json = serde_json::to_string(&record).map_err(|error| error.to_string())?;
-        match semio_renderer_wgpu_program_bridge::install_js_extension(&record_json, &record.extension_id, &record.version).await {
+        match self.admit_extension_program(&record).await {
             Ok(program) => {
                 let enabled = self.extensions[index].enabled;
                 self.plugins.retain(|entry| entry.plugin_id != record.extension_id);
@@ -106,24 +131,33 @@ impl PluginState {
                 }
                 self.extensions[index].program = Some(program);
                 self.extensions[index].load_status = ShellExtensionLoadStatus::Loaded;
+                semio_renderer_wgpu_program_bridge::set_extension_program_enabled(&record.extension_id, enabled);
+                if enabled {
+                    semio_ui_retained_tree::reconcile::register_extension_host(&record.extension_id, &record.label, |_| Vec::new());
+                }
                 Ok(())
             }
             Err(error) => {
                 self.extensions[index].program = None;
                 self.extensions[index].load_status = ShellExtensionLoadStatus::Failed(error.clone());
+                semio_ui_retained_tree::reconcile::retire_extension_host(&record.extension_id);
+                semio_renderer_wgpu_program_bridge::unregister_extension_program(&record.extension_id);
                 Err(error)
             }
         }
     }
 
-    #[cfg(target_arch = "wasm32")]
     pub async fn refresh_extension_store(&mut self) -> Result<(), String> {
-        let answer = extension_store_answer(serde_json::json!({ "op": "extension-store-list" })).await?;
+        let answer = self.extension_store(serde_json::json!({ "op": "extension-store-list" })).await?;
         let records: Vec<ShellExtensionStoreRecord> = serde_json::from_value(answer.get("extensions").cloned().ok_or("extension store list missing extensions")?).map_err(|error| error.to_string())?;
         if records.len() > SHELL_EXTENSION_LEDGER_CAPACITY {
             return Err("extension store list exceeds projection capacity".into());
         }
         let retired: Vec<String> = self.extensions.iter().filter(|entry| !records.iter().any(|record| record.extension_id == entry.record.extension_id)).map(|entry| entry.record.extension_id.clone()).collect();
+        retired.iter().for_each(|id| {
+            semio_ui_retained_tree::reconcile::retire_extension_host(id);
+            semio_renderer_wgpu_program_bridge::unregister_extension_program(id);
+        });
         self.plugins.retain(|entry| !retired.contains(&entry.plugin_id));
         self.extensions.retain(|entry| !retired.contains(&entry.record.extension_id));
         for record in records {

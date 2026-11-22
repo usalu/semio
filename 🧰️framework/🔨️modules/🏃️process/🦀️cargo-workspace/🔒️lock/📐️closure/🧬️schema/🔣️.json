@@ -26,6 +26,10 @@
           "name version (source)"
         ],
         "manifestDomain": "semio.cargo-manifest-closure/1",
+        "witnessOnly": [
+          "Cargo.toml",
+          "Cargo.lock"
+        ],
         "manifestElided": [
           "members",
           "exclude",

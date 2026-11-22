@@ -85,7 +85,8 @@
       "set-page-mode"
     ],
     "viewerPreferences": [
-      "set-viewer-preferences"
+      "set-viewer-preferences",
+      "set-entry"
     ],
     "openAction": [
       "set-open-action"
@@ -108,10 +109,12 @@
     "info": [
       "set-info",
       "set-info-field",
-      "set-extra-entry"
+      "set-extra-entry",
+      "set-entry"
     ],
     "catalogExtra": [
-      "set-catalog-entry"
+      "set-catalog-entry",
+      "set-entry"
     ]
   },
   "pageInspectorBindings": {
@@ -134,7 +137,8 @@
     "set-open-action": 1,
     "set-outline": 1,
     "set-named-destination": 1,
-    "set-page-label": 1
+    "set-page-label": 1,
+    "set-entry": 4
   },
   "paletteOnly": [
     "fonts",
@@ -148,8 +152,12 @@
     "embeddedFiles",
     "outputIntents",
     "optionalContent",
-    "viewerPreferences",
-    "encryption",
-    "catalogExtra"
+    "encryption"
+  ],
+  "entryFamilies": [
+    "catalog",
+    "trailer",
+    "info",
+    "viewer"
   ]
 }

@@ -495,7 +495,11 @@ impl ActiveFrameBuild {
                         Err(error)=>ActiveFrameStep::Fault(error),
                     },
                     Ok(semio_renderer_wgpu_app_runtime::FramePreparationStep::Pending)=>ActiveFrameStep::Pending,
-                    Ok(semio_renderer_wgpu_app_runtime::FramePreparationStep::Cancelled|semio_renderer_wgpu_app_runtime::FramePreparationStep::Fault)=>{self.cancel.as_ref().unwrap().cancel_now();ActiveFrameStep::Pending},
+                    Ok(semio_renderer_wgpu_app_runtime::FramePreparationStep::Cancelled)=>{self.cancel.as_ref().unwrap().cancel_now();ActiveFrameStep::Pending},
+                    Ok(semio_renderer_wgpu_app_runtime::FramePreparationStep::Fault)=>{
+                        self.cancel.as_ref().unwrap().cancel_now();
+                        match preparation.fault(){Some(name)=>ActiveFrameStep::Fault(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,name)),None=>ActiveFrameStep::Pending}
+                    }
                     Err(failure)=>ActiveFrameStep::CloseFailure(failure),
                 }
             }

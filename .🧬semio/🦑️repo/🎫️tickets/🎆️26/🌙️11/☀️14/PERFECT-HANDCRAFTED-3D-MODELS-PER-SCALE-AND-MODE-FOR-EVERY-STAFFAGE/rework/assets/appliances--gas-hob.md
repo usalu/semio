@@ -64,3 +64,47 @@ Rendered and read after the change that affected them: 1:50 body six views, righ
 - `volumes-slender` (length at least 20 times the thickness) leaves no way to give a thermal list at 1:200/1:500 the real short legs of a grate: they are neither slender nor a feature of the scale, so the real-area bars either float or stand on oversized body posts.
 - Front-view 2D shapes carry absolute rest heights although they are bound to a bone: moving a bone's rest joint does not move them, which `r3-tools.md` states only indirectly.
 - `rework-gas-hob-pass1.py` needs its pass-0 base; the base was deleted with the generated folder after publishing, and the script now refuses to run on the published state.
+
+## Pass 1 (second round) (2026-11-22)
+
+Chisel: `rework-gas-hob-pass2.py` (absolute hand-chosen numbers, idempotent, edits the live source and catalog; `--publish` writes the catalog root). The source `volumes/appliances/gas-hob.json` and the catalog were identical at the start (the earlier pass had published), so nothing had to be reconciled.
+
+### Reference additions (pan support of a domino gas hob)
+
+| Feature | Reality | Model before | Model after |
+|---|---|---|---|
+| Finger reach | fingers reach over the flame crown to 25–40 mm from the burner axis, so that a 0.10–0.12 m pot or a moka pot stands | **inner ends at 62 mm from the axis: a free hole of 124 mm, nothing under 0.13 m could stand** | tips at 36 mm from the axis (free hole 72 mm) |
+| Finger section | cast, deepest at the frame, thinner at the tip, flat on top | 12 mm at the frame growing to 14 mm at the inner end ("drooping"), which pointed the thick end into the flame | 12 mm at the frame, 8 mm at the rounded tip, top flat in the pan plane (48 mm over the plate) |
+| Finger clearance | 15–25 mm over the cap, clear of the flame cones | not applicable (fingers ended outside the flame) | 20 mm over the cap, 7 mm over the tongue tips at rest |
+| Legs | cast webs with draft and a gusset under the rail, about 9–10 mm at the foot | plain 10 mm square posts | webs 10 mm thick, 9 mm at the foot, widening from 22 mm height into a gusset of 22 mm under the side rail |
+
+### Defects found
+
+1. 1:50 and 1:100 body: the pan support could not carry a small pot (finger ends 62 mm from the axis).
+2. 1:50 body: fingers thickened towards the burner; legs were boxes.
+3. 1:100, 1:200, 1:500 body: legs and posts carried a 1.5 mm corner rounding, invisible under 15 / 30 / 75 mm features and more triangles than the 1:50 legs.
+
+### Rebuilt
+
+- **Body 1:50**: `trivet-fingers` re-cut (profile to 36 mm, taper 12 to 8 mm, rounded tip); `trivet-legs-front` / `trivet-legs-back` are now extruded cast webs with gusset (plane `yz`, mirrored between front and back). Thermal and structure follow through their `of` references (region `trivet`, members of bone `trivet`), so the load path pan, fingers, frame, legs, leg seats, plate stays connected.
+- **Body 1:100**: fingers 90 mm long to 36 mm from the axis; legs without corner rounding. **1:200 / 1:500**: posts without corner rounding; nothing else changed.
+- **Thermal**: `trivet.areaM2` 0.062 to 0.066 (four fingers 26 mm longer, gussets); accepted by `volumes-thermal-coverage`.
+- **2D 1:50**: elevation and front `trivet-rail` are the plain rail band now (the fingers no longer hang below the rail), front legs drawn with their gussets, plan fingers drawn to 36 mm. **2D 1:100**: plan fingers to 36 mm.
+- **Decisions** 1:50 and 1:100 (en, de) describe fingers and legs as modelled.
+- Rig, poses, clips: unchanged; judged right for the subject (fixed burner and trivet, revolute knob ±130°, prismatic flame lift, flame lean and tongue stretch).
+
+### Validation
+
+`r3-validate.ts appliances/gas-hob --catalog-only --volumes`: `VALID appliances/gas-hob (catalog file as it is): schema 0, validateAsset 0, checkVolumes 0`. Catalog `volumes` equal the source. An intermediate `volumes-monotonic` finding (1:100 thermal and structure with more triangles than 1:50) was real and fixed by defect 3.
+
+Rendered and read after the last change of the solids concerned: 1:50 body six views, three-quarter from the back-left, pose `off` (three-quarter), pose `simmer` (right), `flicker` 0.5 s (right) and 1 s (front), `light-and-burn` 2.6 s, 1:50 thermal six views, 1:100 body three-quarter, 2D 1:50. Read before the change only: 1:50 structure and thermal cut, 1:200 and 1:500 body. Rendered but not read: `light-and-burn` 150 s, 1:50 structure cut, 2D 1:100. Not rendered in this pass: thermal and structure of 1:100, 1:200, 1:500; 2D 1:200.
+
+### What remains imperfect
+
+- 1:50 body, flame: `simmer` is the full-size crown lowered 6 mm, not a smaller flame; the tongues then stand in the burner cup. The four tongues under the fingers do not split around them.
+- 1:50 body, legs: no rubber pads; the gusset is a flat web without fillet into the rail.
+- 1:200 body: the flame is a dome with a hole over the burner; 1:500 a cone frustum. Not re-modelled.
+- 1:200 / 1:500 thermal: the grate bars at true section stand on the oversized body posts (see the earlier fundamental note on short legs).
+- Thermal 1:50: `th-housing` is the solid tray, not a shell; `housing.areaM2` 0.211 is a hand value.
+- 2D: gas inlet, igniter and thermocouple not drawn; 1:500 representation stays `unavailable`; other poses of the 2D not looked at.
+- Structure 1:100 and coarser: gas rail merged; 1:500 support slab inside the block.

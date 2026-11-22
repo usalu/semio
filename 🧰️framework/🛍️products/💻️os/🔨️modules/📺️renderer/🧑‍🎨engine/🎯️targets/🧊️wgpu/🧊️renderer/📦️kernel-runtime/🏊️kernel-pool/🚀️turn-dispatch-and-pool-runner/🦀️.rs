@@ -497,7 +497,7 @@ impl KernelPoolState {
     /// ([`Self::yield_slice`]) both serve through here; the returned future is boxed because a request served
     /// in a gap is itself served by a turn this future drives.
     pub(super) fn serve<'a>(&'a mut self, request: KernelRequest, slot: &Arc<ResponseSlot>) -> Pin<Box<dyn Future<Output = Option<KernelOutcome>> + Send + 'a>> {
-        let cancellable = matches!(request, KernelRequest::CreateApp { .. });
+        let cancellable = matches!(request, KernelRequest::CreateApp { .. } | KernelRequest::ActivateExtension { .. });
         self.serving.push((slot.clone(), cancellable));
         Box::pin(async move {
             let outcome = self.serve_request(request).await;
@@ -511,6 +511,7 @@ impl KernelPoolState {
             KernelRequest::CreateApp { owner, purpose } => {
                 KernelOutcome::Created(self.create_app(owner, purpose).await)
             }
+            KernelRequest::ActivateExtension { owner, activation } => KernelOutcome::Created(self.activate_extension_live(owner, activation).await),
             KernelRequest::DestroyApp { owner } => {
                 if self.destroy_app_step(owner.instance).await {
                     owner.finish(KernelCloseStatus::Complete);

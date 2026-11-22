@@ -11,6 +11,7 @@ import { authoredScales } from "@teaching/staffage";
 import { RepresentationError, PLANAR_VIEWPOINTS, VIEWPOINT_CAPTIONS, ViewMissingError, resolutionLabel, resolveDepiction } from "@teaching/staffage";
 import type { Asset, EvaluationQuery, Language, Text, View, PlanarViewpoint, Viewpoint } from "@teaching/staffage";
 import { translator, type Key, type Params } from "../🌐️i18n/🟦️.ts";
+import { flowFrameOf, flowsIn, unionFrame } from "../🌊️flow/🟦️.ts";
 import { depictionOptions, evaluateState, frameOf, sceneOf, type SceneFrame } from "../🧮️pipeline/🟦️.ts";
 
 /** 🧊️ The two viewpoints in space: `axonometric` is a drawing of the 3D model like the planar viewpoints, `model` is the interactive 3D viewer. */
@@ -133,8 +134,8 @@ export type Sheet = { readonly resolutions: Readonly<Record<PlanarViewpoint, Vie
 
 const FAILED: Text = both("viewpoints.failed");
 
-/** 🌟️ The sheet of an asset at the given instants (one or the samples of a clip, so the windows hold the whole motion): each drawable viewpoint is depicted in the dark line view and in `view`, the window is the union around the model origin, and the three windows are aligned. A viewpoint that fails to draw is named as failed and keeps its cell. */
-export function sheetOf(asset: Asset, queries: readonly EvaluationQuery[], options: { readonly view: View; readonly denominator: number; readonly language: Language; readonly theme?: "light" | "dark" }): Sheet {
+/** 🌟️ The sheet of an asset at the given instants (one or the samples of a clip, so the windows hold the whole motion): each drawable viewpoint is depicted in the dark line view and in `view`, the window is the union around the model origin, and the three windows are aligned. A viewpoint that fails to draw is named as failed and keeps its cell. With `flow` the windows of a view that shows air flow also hold the flow domain around the asset, so the three views show the same air. */
+export function sheetOf(asset: Asset, queries: readonly EvaluationQuery[], options: { readonly view: View; readonly denominator: number; readonly language: Language; readonly theme?: "light" | "dark"; readonly flow?: boolean }): Sheet {
   const resolved = resolveViewpoints(asset, options.denominator, options.language);
   const frames: Record<PlanarViewpoint, SceneFrame | null> = { elevation: null, front: null, plan: null };
   const failed: Partial<Record<PlanarViewpoint, ViewResolution>> = {};
@@ -146,7 +147,8 @@ export function sheetOf(asset: Asset, queries: readonly EvaluationQuery[], optio
         const make = (view: View) => sceneOf(state, depictionOptions({ view, viewpoint, scale: { denominator: options.denominator }, language: options.language, ...(options.theme === undefined ? {} : { theme: options.theme }), transparent: true }));
         return options.view === "dark-line" ? [make("dark-line")] : [make("dark-line"), make(options.view)];
       });
-      frames[viewpoint] = frameOf(scenes);
+      const drawn = frameOf(scenes);
+      frames[viewpoint] = options.flow === true && flowsIn(asset, options.view) ? queries.reduce((frame, query) => unionFrame(frame, flowFrameOf(evaluateState(asset, query), viewpoint, scenes[0]!.metadata.mmPerMetre)), drawn) : drawn;
     } catch (error) {
       if (error instanceof ViewMissingError) {
         failed[viewpoint] = { viewpoint, available: false, reason: "view-missing", message: MISSING[viewpoint] };

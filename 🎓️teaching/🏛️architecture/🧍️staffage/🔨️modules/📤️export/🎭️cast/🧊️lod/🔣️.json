@@ -7,7 +7,7 @@
       "frames": { "outputFpsFraction": null, "maxFrames": 600, "phase": 0 },
       "roles": ["body", "detail", "texture", "glazing", "ground"],
       "patterns": true,
-      "transportDensity": 1,
+      "flowSpacingFactor": 1,
       "strokeMin": 1
     },
     "preview": {
@@ -15,7 +15,7 @@
       "frames": { "outputFpsFraction": 0.5, "maxFrames": 90, "phase": 0 },
       "roles": ["body", "glazing", "ground"],
       "patterns": false,
-      "transportDensity": 0.25,
+      "flowSpacingFactor": 2,
       "strokeMin": 1
     },
     "poster": {
@@ -23,7 +23,7 @@
       "frames": { "outputFpsFraction": null, "maxFrames": 1, "phase": 0 },
       "roles": ["body", "glazing", "ground"],
       "patterns": false,
-      "transportDensity": 0.25,
+      "flowSpacingFactor": 2,
       "strokeMin": 1
     }
   }

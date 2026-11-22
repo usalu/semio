@@ -1,0 +1,4 @@
+# E77 findings
+- Ready stage disk gate measures the host volume (`.cache`) for stages whose writes go into images (`dependencies` -> `d`, `tools` -> `t`, workspace -> `g`/`n`): a full image never gates a stage start, the stage fails later as store-full. A per-stage image path in `diskRequirements` (checked with the same need) would make the gate truthful and let `recover` run `repo cache gc --area=dependencies` before the stage starts.
+- A full-image remote-execution worker (`disk-full` on `d/m/remote-execution`) has no trigger to run the dependency collector early; it waits for the hourly idle pass (first 10 min after a sidecar start). If that proves too slow, let the agent's disk-full verdict spawn `repo cache gc --area=dependencies` once.
+- The CPU-time stall test in ready main ("a silent stage that spends processor time is alive") is load-sensitive (fails at load 50).

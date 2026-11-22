@@ -34,8 +34,8 @@ export function readyConfirmProcessReplacementV1(known:ReadyKnownV1,first:ReadyP
  * @see ./🧪️tests/🤝️holder-custody/🐍️.py */
 export function readyForegroundBusyV1(status:unknown,nowMs:number,policy:typeof P=P):boolean{
  if(status===null||typeof status!=="object")return false;
- const row=status as{ready?:unknown;state?:unknown;updatedMs?:unknown};
- return row.ready===false&&(row.state==="running"||row.state==="waiting"||row.state==="backoff")&&typeof row.updatedMs==="number"&&Number.isFinite(row.updatedMs)&&nowMs-row.updatedMs<=policy.foregroundFreshMilliseconds;
+ const row=status as{ready?:unknown;state?:unknown;updatedMs?:unknown;refreshing?:unknown};
+ return(row.ready===false&&(row.state==="running"||row.state==="waiting"||row.state==="backoff")||row.ready===true&&row.state==="ready"&&row.refreshing===true)&&typeof row.updatedMs==="number"&&Number.isFinite(row.updatedMs)&&nowMs-row.updatedMs<=policy.foregroundFreshMilliseconds;
 }
 
 /** 🌲️ The processes to stop, leaf first (`spare` and everything below it never, nor a shared system process of `sharedSystemProcesses` such as `diskimages-helper`, which serves the mounted disk images of every stage and every other agent of the machine: ending it with the first stage that attached an image dropped the writes in flight to the partitions of the worker, nor the launchers between a spared service and the root, which own it: a service that other agents use stays up): the root (if it is still the same process), everything below it in the table, and every process recorded in an earlier sample that is still there with its recorded start time (the orphans whose parent has already exited) with everything below those. A child counts as below its parent only when it did not start before the parent (a reused parent pid is not a parent). Never this process or its ancestors, never the system pids. A pure function.
@@ -292,6 +292,14 @@ export function readyStagePhaseV1(lines:readonly string[],previous:ReadyPhaseV1,
 /** 🛑️ Whether the stale-code rule may stop a stage now: only while what it computes is not sealed, that is never in the `executing` phase (its tasks are planned, their hashes fix their inputs and what finishes is stored, the next stage run uses the new code), and then only after the stale age (`staleStageMilliseconds`, already scaled by the machine speed factor) in the phase; a stage that never reports a phase keeps the old rule. A pure function.
  * @see ./🧪️tests/🕰️stale-stage */
 export function readyStaleStopV1(phase:ReadyPhaseV1,phaseAgeMs:number,policy:typeof P=P):boolean{return phase!=="executing"&&readyStaleRestartV1(phaseAgeMs,true,policy);}
+
+/** 🪢️ What a changed code declaration does to a running stage, decided in one place: `"holder"` when the stage has waited `holderWaitRestartMilliseconds` for a named holder (it makes no progress by definition), `"stale"` when it only reads or plans (never in the `executing` phase), has been in that phase for the stale age AND has shown no progress for `codeQuietMilliseconds`, `null` otherwise: a stage that is making progress is never stopped for new code, the new code applies to its next attempt, so a landing never costs an hour of reading. A pure function.
+ * @see ./🧪️tests/🟦️.ts */
+export function readyCodeStopV1(input:Readonly<{holderWaitMs:number;phase:ReadyPhaseV1;phaseAgeMs:number;quietMs:number;policy?:typeof P}>):"holder"|"stale"|null{
+ const policy=input.policy??P;
+ if(readyHolderRestartV1(input.holderWaitMs,true,policy))return"holder";
+ return readyStaleStopV1(input.phase,input.phaseAgeMs,policy)&&input.quietMs>=policy.codeQuietMilliseconds?"stale":null;
+}
 
 /** 🧬️ The declared semantics of the code a stage loaded: the value of every `semanticsSources` pointer, keyed by file and pointer, `null` for a source that cannot be read now (a landing may be replacing it). A stage that loaded one semantics produces results that another process accepts exactly while the semantics are the same; an edit of any other file changes nothing a result says. Reads two small files, never a tree. A source is bumped when a result changes that another process accepts or reads (the head key a peer accepts from a sealed read, the persisted record format); it is NOT bumped for a change of how a read waits, what it counts as progress or what it says (R184 changed a wait bound and a progress sign: a bump would hand over every healthy read of the fleet and make peers refuse each other's sealed reads for a change that alters no result). A read that does not end itself on old code is ended from outside by the step rule (`readyStepWatchV1`, reason `step-overdue`). */
 export function readySemanticsV1(root:string,policy:typeof P=P,fingerprint=(value:string)=>value):Readonly<Record<string,string|null>>{

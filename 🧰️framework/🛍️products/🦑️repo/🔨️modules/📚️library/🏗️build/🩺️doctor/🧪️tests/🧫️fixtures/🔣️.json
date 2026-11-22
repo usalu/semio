@@ -4264,6 +4264,154 @@
      ]
     ]
    }
+  },
+  {
+   "name": "a detached holder whose process tree still computes is a progressing run, not an orphan",
+   "ordered": false,
+   "facts": {
+    "version": 1,
+    "atMs": 1792545600000,
+    "platform": "darwin",
+    "probes": [],
+    "leases": {
+     "holders": [
+      {
+       "resource": "res-1",
+       "hash": "7d3decde0c1e575f39de6e67f49c425ecb053e7d1645582c686867f23ce1ff31",
+       "mode": "exclusive",
+       "pid": 100,
+       "heldSeconds": 700,
+       "class": "cargo-coordination",
+       "owner": "cargo",
+       "command": "bun /w/script.ts repo run a"
+      },
+      {
+       "resource": "res-2",
+       "hash": "be6e83aeccbd089b4254451349fcd9fcc9749b99de3cc225bdf4c779afe6826b",
+       "mode": "exclusive",
+       "pid": 101,
+       "heldSeconds": 700,
+       "class": "cargo-coordination",
+       "owner": "cargo",
+       "command": "bun /w/script.ts repo run a"
+      }
+     ],
+     "waiters": [],
+     "cycles": [],
+     "violations": [],
+     "registry": {
+      "folders": 0,
+      "orphanFolders": 0,
+      "deadEntries": 0,
+      "liveEntries": 0
+     },
+     "deadTickets": 0,
+     "deadHolders": []
+    },
+    "processes": [
+     {
+      "pid": 100,
+      "parent": 1,
+      "ageSeconds": 700,
+      "rssMegabytes": 10,
+      "cpuPercent": 0.5,
+      "command": "bun /w/script.ts repo cargo test"
+     },
+     {
+      "pid": 102,
+      "parent": 100,
+      "ageSeconds": 650,
+      "rssMegabytes": 10,
+      "cpuPercent": 61.4,
+      "command": "cargo test -p x"
+     },
+     {
+      "pid": 101,
+      "parent": 5000,
+      "ageSeconds": 700,
+      "rssMegabytes": 10,
+      "cpuPercent": 1.0,
+      "command": "bun /w/script.ts repo run a"
+     },
+     {
+      "pid": 103,
+      "parent": 1,
+      "ageSeconds": 700,
+      "rssMegabytes": 10,
+      "cpuPercent": 0.0,
+      "command": "rustc --crate-name x"
+     },
+     {
+      "pid": 104,
+      "parent": 1,
+      "ageSeconds": 100,
+      "rssMegabytes": 10,
+      "cpuPercent": 0.0,
+      "command": "cargo build"
+     },
+     {
+      "pid": 105,
+      "parent": 1,
+      "ageSeconds": 900,
+      "rssMegabytes": 10,
+      "cpuPercent": 0.0,
+      "command": "/bin/zsh -c repo cargo test"
+     },
+     {
+      "pid": 106,
+      "parent": 1,
+      "ageSeconds": 900,
+      "rssMegabytes": 10,
+      "cpuPercent": 0.0,
+      "command": "repo mcp stdio"
+     },
+     {
+      "pid": 107,
+      "parent": 1,
+      "ageSeconds": 900,
+      "rssMegabytes": 10,
+      "cpuPercent": 0.0,
+      "command": "vim notes.txt"
+     }
+    ]
+   },
+   "expect": {
+    "findings": [],
+    "waits": [],
+    "processes": [
+     [
+      100,
+      "holding",
+      null
+     ],
+     [
+      101,
+      "holding",
+      null
+     ],
+     [
+      102,
+      "admitted",
+      100
+     ],
+     [
+      103,
+      "orphan",
+      null
+     ],
+     [
+      104,
+      "running",
+      null
+     ]
+    ],
+    "verdict": "ok",
+    "counts": {
+     "error": 0,
+     "warn": 0,
+     "info": 0
+    }
+   }
   }
  ]
 }

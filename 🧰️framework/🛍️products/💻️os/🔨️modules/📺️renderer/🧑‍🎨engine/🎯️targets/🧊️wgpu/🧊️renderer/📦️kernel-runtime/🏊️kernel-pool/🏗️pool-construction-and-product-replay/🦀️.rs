@@ -26,6 +26,7 @@ impl KernelPoolState {
             plugin_ordinals: HashMap::new(),
             instances: HashMap::new(),
             next_instance_id: 1,
+            live_extensions: HashMap::new(),
             retained: RetainedSurfaceRegistry::new(),
             pending_rejections: PendingSurfaceRejectionRegistry::new(),
             retained_command_closes: semio_framework::kernel::CommandDriverRegistry::new(),

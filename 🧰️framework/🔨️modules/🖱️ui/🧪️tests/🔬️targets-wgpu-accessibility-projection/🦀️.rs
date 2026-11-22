@@ -525,3 +525,57 @@ fn nodes_outside_an_open_modal_are_hidden_from_assistive_tech() {
     hide_outside_modal(&mut untouched, 99);
     assert!(untouched.iter().all(|node| !node.hidden));
 }
+
+/// 🖼️ An icon selector projects its four cells like React's four controls, and while its mode select is open also the listbox and one option
+/// per mode; an option key resolves to its cell and value only while that cell is open.
+#[test]
+fn an_icon_selector_projects_four_cells_and_the_open_mode_listbox() {
+    use semio_ui_retained_tree::tree::{Node, NodeKey, WidgetSpec};
+    let record: UiNodeRecord = serde_json::from_value(serde_json::json!({
+        "id": 0,
+        "key": "icon",
+        "component": { "type": "iconSelect", "value": "text:Hi", "uniform": true, "classifierKind": "shape" },
+        "layout": { "kind": "leaf", "width": "fill", "height": "hug" },
+        "style": {},
+        "activity": "idle",
+        "accessibility": { "label": "Icon" }
+    }))
+    .expect("icon select record");
+    let header = UiDocumentLeaseHeader { generation: FIXTURE_GENERATION, surface: SurfaceId::try_from("icon.select").expect("surface"), revision: UiRevision(0), root: record.id, layout_epoch: 0, node_count: 1 };
+    let mut document = UiDocumentTree::new(header).expect("header");
+    document.try_upsert_record(record).expect("record");
+    let mut tree = UiTree::new();
+    tree.publish_document(document);
+    let mut cursor = UiDocumentReconcileCursor::default();
+    cursor.rearm(FIXTURE_GENERATION);
+    for _ in 0..64 {
+        if matches!(tree.step_document_reconcile(&mut cursor, "procedural-main", "generation3d"), UiDocumentReconcileStep::Complete) {
+            break;
+        }
+    }
+    let mounted = tree.document_node(UiNodeId(0)).expect("mounted icon selector");
+    let cells: Vec<_> = {
+        let semio_ui_declaration::ui::UiNode::IconSelect(select) = &tree.node(mounted).expect("selector").spec.0 else { panic!("an icon selector node") };
+        (0..semio_ui_retained_tree::reconcile::ICON_SELECT_CELLS).map(|index| semio_ui_retained_tree::reconcile::icon_select_cell(select, index, None)).collect()
+    };
+    for (key, spec) in cells {
+        tree.mint_composite_row(mounted, Node::new(NodeKey::Explicit(key), WidgetSpec(spec))).expect("cell minted");
+    }
+    let roles = |tree: &UiTree| accessibility_projection(tree).into_iter().filter(|node| node.key.starts_with("icon.")).map(|node| (node.key, node.role)).collect::<Vec<_>>();
+    assert_eq!(
+        roles(&tree),
+        [("icon.mode".to_string(), "combobox".to_string()), ("icon.field".to_string(), "textbox".to_string()), ("icon.import".to_string(), "button".to_string()), ("icon.clear".to_string(), "button".to_string())],
+        "four controls, no listbox while the mode select is closed"
+    );
+    assert_eq!(accessibility_cell(&tree, mounted, "icon.mode::option::emoji"), None, "a closed select picks nothing");
+    let mode = accessibility_cell(&tree, mounted, "icon.mode").expect("the mode cell").0;
+    tree.node_mut(mode).expect("mode cell").state.open = true;
+    let open = accessibility_projection(&tree);
+    let options: Vec<_> = open.iter().filter(|node| node.role == "option").map(|node| (node.key.as_str(), node.selected)).collect();
+    assert!(open.iter().any(|node| node.key == "icon.mode::listbox" && node.role == "listbox"));
+    assert_eq!(options.len(), semio_ui_declaration::ui::IconSelectorMode::ALL.len(), "one option per mode");
+    assert!(options.contains(&("icon.mode::option::text", Some(true))) && options.contains(&("icon.mode::option::emoji", Some(false))));
+    assert!(open.iter().any(|node| node.key == "icon.mode" && node.expanded == Some(true)));
+    assert_eq!(accessibility_cell(&tree, mounted, "icon.mode::option::emoji"), Some((mode, Some("emoji".to_string()))));
+    assert_eq!(accessibility_cell(&tree, mounted, "icon.mode::option::nope"), None, "only a real mode is an option");
+}

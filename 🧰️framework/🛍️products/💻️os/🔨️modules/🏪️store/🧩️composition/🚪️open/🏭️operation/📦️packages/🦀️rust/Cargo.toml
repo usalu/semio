@@ -50,6 +50,7 @@ semio-os-semio = { path = "../../../../../../🧬️semio/📦️packages/🦀�
 semio-framework-replication = { workspace = true }
 
 [dev-dependencies]
+semio-framework-job = { workspace = true, features = ["testkit"] }
 semio-framework-value = { path = "../../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust", features = ["testkit"] }
 
 semio-s-artifact-draw-drawing-model = { path = "../../../../../../../../../../✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📦️packages/🦀️rust", features = ["testkit"] }

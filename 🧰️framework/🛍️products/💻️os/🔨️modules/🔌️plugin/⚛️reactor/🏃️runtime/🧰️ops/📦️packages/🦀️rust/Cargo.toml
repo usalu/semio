@@ -29,6 +29,7 @@ original-actor-context-testing = ["dep:semio-plugin-testing-caller","semio-frame
 semio-plugin-runtime-ops-wire = { path = "../../🛡️wire-limits/📦️packages/🦀️rust" }
 semio-plugin-runtime-ops-document = { path = "../../📄️document/📦️packages/🦀️rust" }
 semio-plugin-runtime-ops-surface = { path = "../../🖥️surface-render/📦️packages/🦀️rust" }
+semio-plugin-runtime-ops-raw-media = { path = "../../🎞️raw-media/📦️packages/🦀️rust" }
 semio-plugin-testing-caller = { path = "../../../../../🧪️testing/🎟️caller/📦️packages/🦀️rust", optional = true }
 semio-framework-value-native-owned = { path = "../../../../../../../../../🔨️modules/🌱️value/🛬️decode/🧳️owned/📦️packages/🦀️rust" }
 semio-framework-value-native-receiving-original = { path = "../../../../../../../../../🔨️modules/🌱️value/🛬️decode/🧳️owned/🧳️original/📦️packages/🦀️rust" }

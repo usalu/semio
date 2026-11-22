@@ -16,6 +16,7 @@
  * Usage: cd <ticket> && SEMIO_PROBE_OUT=wgpu-frame-loop/run-1 bun 🐍️wgpu-frame-loop-probe.mjs
  *   SEMIO_PROBE_GESTURES=20  how many selection gestures to run after boot
  *   SEMIO_PROBE_ROLE=viewer  boot axis
+ *   SEMIO_PROBE_IDLE_MS=8000 length of the input-free window graded for redraw on demand
  */
 import { chromium } from "playwright";
 import { writeFileSync, mkdirSync } from "node:fs";
@@ -29,6 +30,8 @@ const bootBudget = Number(process.env.SEMIO_PROBE_BOOT ?? 120);
 const settle = Number(process.env.SEMIO_PROBE_SETTLE ?? 12);
 const gestures = Number(process.env.SEMIO_PROBE_GESTURES ?? 6);
 const perGestureSettle = Number(process.env.SEMIO_PROBE_GESTURE_SETTLE ?? 6);
+const idleDrain = Number(process.env.SEMIO_PROBE_IDLE_DRAIN_MS ?? 4000);
+const idleMs = Number(process.env.SEMIO_PROBE_IDLE_MS ?? 8000);
 const outDir = join(import.meta.dir, "🗑️generated", process.env.SEMIO_PROBE_OUT ?? "wgpu-frame-loop/run");
 mkdirSync(outDir, { recursive: true });
 
@@ -202,6 +205,13 @@ for (let index = 0; index < gestures; index += 1) {
   const kind = await gesture(index);
   await record(`g${index + 1}_${kind}`);
 }
+
+/** 💤️ Redraw on demand: no pointer, no key, no nudge. After the last gesture drains, an idle shell must stop
+ * posting batches and building frames; `idle_start` and `idle_end` bracket the window the battery grades. */
+await pause(idleDrain);
+await record("idle_start");
+await pause(idleMs);
+await record("idle_end");
 
 await page.screenshot({ path: join(outDir, "shot-final.png"), type: "png" }).catch(() => {});
 const final = await record("final");

@@ -73,11 +73,12 @@
       "step",
       "linear"
     ],
-    "transport": [
-      "parcels",
-      "pathlines",
-      "streamlines",
-      "condensation"
+    "flow": [
+      "streams",
+      "tracers",
+      "moisture",
+      "fog",
+      "pathlines"
     ],
     "dynamics": [
       "quasi-static",
@@ -97,10 +98,17 @@
     "environment",
     "timeline",
     "thermalSpanK",
-    "transport",
-    "transportAgeS",
-    "transportStrokeMm",
-    "transportTrailS"
+    "flow",
+    "flowDevelopS",
+    "flowTrailS",
+    "flowStrokeMm",
+    "flowSpacingMm"
+  ],
+  "flow_options": [
+    "flowDevelopS",
+    "flowTrailS",
+    "flowStrokeMm",
+    "flowSpacingMm"
   ],
   "codes": [
     "asset-unknown",
@@ -132,8 +140,8 @@
     "timeline-key",
     "thermal-regions",
     "span-range",
-    "transport-layer",
-    "transport-age",
+    "flow-layer",
+    "flow-options",
     "structural-model",
     "analytics",
     "field-unknown",
@@ -359,10 +367,12 @@
           "fps": 15,
           "environment": "summer",
           "thermalSpanK": 25,
-          "transport": [
+          "flow": [
+            "moisture",
             "pathlines"
           ],
-          "transportAgeS": 2
+          "flowDevelopS": 2,
+          "flowTrailS": 1
         },
         "sitter-day": {
           "asset": "probe-sitter",
@@ -686,22 +696,49 @@
         "code": "span-range"
       },
       {
-        "name": "an unknown transport layer",
+        "name": "a flow layer of the retired transport overlay",
         "cast": "sitter-thermal",
         "patch": {
-          "transport": [
+          "flow": [
+            "parcels"
+          ]
+        },
+        "code": "flow-layer"
+      },
+      {
+        "name": "no flow layer",
+        "cast": "sitter-thermal",
+        "patch": {
+          "flow": []
+        },
+        "code": "flow-layer"
+      },
+      {
+        "name": "flow options without flow layers",
+        "cast": "sitter-thermal",
+        "remove": [
+          "flow"
+        ],
+        "code": "flow-options"
+      },
+      {
+        "name": "a trail without the pathlines layer",
+        "cast": "sitter-thermal",
+        "patch": {
+          "flow": [
+            "streams",
             "fog"
           ]
         },
-        "code": "transport-layer"
+        "code": "flow-options"
       },
       {
-        "name": "a transport offset without transport",
+        "name": "a zero flow spacing",
         "cast": "sitter-thermal",
-        "remove": [
-          "transport"
-        ],
-        "code": "transport-age"
+        "patch": {
+          "flowSpacingMm": 0
+        },
+        "code": "flow-options"
       },
       {
         "name": "a structural cast of an asset with an unknown dynamics",
@@ -825,20 +862,20 @@
         "code": "timeline-key"
       },
       {
-        "name": "a zero transport stroke",
+        "name": "a zero flow stroke",
         "cast": "sitter-thermal",
         "patch": {
-          "transportStrokeMm": 0
+          "flowStrokeMm": 0
         },
-        "code": "transport-age"
+        "code": "flow-options"
       },
       {
-        "name": "a negative transport trail",
+        "name": "a negative flow trail",
         "cast": "sitter-thermal",
         "patch": {
-          "transportTrailS": -1
+          "flowTrailS": -1
         },
-        "code": "transport-age"
+        "code": "flow-options"
       },
       {
         "name": "a fractional frame rate",
@@ -910,23 +947,23 @@
         "code": "preset-unknown"
       },
       {
-        "name": "repeated transport layers",
+        "name": "repeated flow layers",
         "cast": "sitter-thermal",
         "patch": {
-          "transport": [
+          "flow": [
             "pathlines",
             "pathlines"
           ]
         },
-        "code": "transport-layer"
+        "code": "flow-layer"
       },
       {
-        "name": "transport without its required age",
+        "name": "flow layers without the time the air has developed",
         "cast": "sitter-thermal",
         "remove": [
-          "transportAgeS"
+          "flowDevelopS"
         ],
-        "code": "transport-age"
+        "code": "flow-options"
       }
     ],
     "invalid_sources": [

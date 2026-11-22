@@ -13,7 +13,7 @@ function parcelAt(caseId: string, ageS: number) {
   const c = fixture.cases.find((x) => x.id === caseId)!;
   const base = scenario("machine", { operating: { engine: [[0, 1]] } });
   const asset = { ...base.asset, thermal: { ...base.asset.thermal, emitters: [{ ...base.asset.thermal.emitters[0]!, ...c.emitter }] } };
-  const field = solveTransport(asset, { kind: "pose", pose: "idle", timeS: BIRTH_S + ageS }, calm, { ...base.options, turbulence: fixture.turbulence, streamlines: false });
+  const field = solveTransport(asset, { kind: "pose", pose: "idle", timeS: BIRTH_S + ageS }, calm, { ...base.options, turbulence: fixture.turbulence });
   const parcel = field.parcels.find((p) => p.id === "exhaust#0");
   if (parcel === undefined) throw new Error(`parcel exhaust#0 not alive at age ${ageS}`);
   return { parcel, asset };

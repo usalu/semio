@@ -269,6 +269,37 @@ impl ChromeDialogRequest {
         }
     }
 
+    /// 🚪️ A fieldless confirmation: `confirm_label` dispatches `confirm_action` on `controller_id`; Cancel, Escape and a veil click only dismiss, and focus starts on the safe Cancel stop (React's `DocumentCloseDialog`).
+    pub fn confirmation(id: &str, controller_id: &str, title: String, body: String, cancel_label: String, confirm_label: String, confirm_action: &str, terminology: Terminology, locale: Locale) -> Self {
+        let native = |en: &str, de: &str| LocalizedLabel::native(en, de).resolve(terminology, locale).to_string();
+        Self {
+            id: id.to_string(),
+            controller_id: controller_id.to_string(),
+            title,
+            body,
+            defs: Vec::new(),
+            fields: Vec::new(),
+            choices: Vec::new(),
+            confirm_label,
+            confirm_action: confirm_action.to_string(),
+            cancel_label,
+            cancel_action: None,
+            seed: None,
+            staged: Vec::new(),
+            focus: 0,
+            labels: ChromeDialogLabels {
+                on: native("On", "Ein"),
+                off: native("Off", "Aus"),
+                choose: native("Choose…", "Auswählen…"),
+                use_selection: native("Use current selection", "Aktuelle Auswahl verwenden"),
+                remove: native("Remove {item}", "{item} entfernen"),
+                empty: native("Nothing selected", "Nichts ausgewählt"),
+                decrease: native("Decrease", "Verringern"),
+                increase: native("Increase", "Erhöhen"),
+            },
+        }
+    }
+
     /// 🧮️ The args every button dispatches this frame: staged values over the seed and the defaults, and a colour
     /// field's edited hex (`ui_contract::parse_ui_color_hex`) over its colour — keeping the alpha when the text carries
     /// none, so a hex passing through a short form while it is typed never loses the opacity. An unedited hex (the
@@ -309,7 +340,9 @@ impl ChromeDialogRequest {
         }
         stops.push(ChromeDialogStop::Cancel);
         stops.extend((0..self.choices.len()).map(ChromeDialogStop::Choice));
-        stops.push(ChromeDialogStop::Confirm);
+        if !self.confirm_action.is_empty() {
+            stops.push(ChromeDialogStop::Confirm);
+        }
         stops
     }
 

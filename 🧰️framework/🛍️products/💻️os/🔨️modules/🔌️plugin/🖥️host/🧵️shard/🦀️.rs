@@ -62,6 +62,10 @@ use shard_frame_and_budget_bridge::{SHARD_TURN_ADMITTED_JOBS_MAXIMUM, to_actor_t
 mod shard_outcome_and_loop_state;
 pub use shard_outcome_and_loop_state::{JobAuthority, ShardLoop, ShardOutcome};
 
+#[path = "💼️spawned-job-ledger/🦀️.rs"]
+mod spawned_job_ledger;
+pub use spawned_job_ledger::*;
+
 #[path = "📄️fixed-replay-seed/🦀️.rs"]
 mod fixed_replay_seed;
 pub use fixed_replay_seed::{FixedReplaySeed, JOB_REPLAY_ABI_BYTES, JOB_REPLAY_KIND_PAGE_CAPACITY, JOB_REPLAY_REFUSAL_SLOT_CAPACITY, JOB_REPLAY_SEED_PAGES, JOB_REPLAY_SEED_PAGE_BYTES, JOB_REPLAY_SEED_SLOT_CAPACITY, MountedReplaySeed, ReplaySeedCloseReason, ReplaySeedPhase, ReplaySpawnRefusal, try_replay_abi_buffer};

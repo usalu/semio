@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "description": "How a selected graph read depends on the owner registry `📋️build-owners.json`. The identity of a selected scope (store directory, published graph, admission memo, fleet head, owner checkpoint) is the digest of the selection alone. The registry is never part of an identity: what an owner's inference ASKED of the registry travels in its record as `global` rows (`path` = JSON [name, workspaceRoot, segments], `fact` = JSON of the answer) and holds while the current registry answers the same. A row of the registry that nobody asked about changes no record. The graph and the closure of a scope, which read the registry as a whole, carry one `digest` row.",
+  "definitions": {
+    "Policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "rowFields", "unit"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "rowFields": { "type": "array", "items": { "type": "string" } },
+        "unit": { "type": "string" }
+      },
+      "const": { "name": "owner-registry", "rowFields": ["name", "root", "manifest", "packages", "nativeRoots"], "unit": "\u0000" }
+    },
+    "Question": {
+      "description": "The questions a read may ask. `row`: the digest of the row of one owner name, or null. `package`: the owner that declares one package name, or null. `root`: the owner of one root or native root, or null. `within`: the owner whose root is a directory or its deepest ancestor, never the workspace root, or null. `providers`: the digest of the catalog providers that serve an owner root, [ownerRoot, hasTargets, inputNames]. `candidates`: the digest of the native manifests the owners declare. `wasm-index`: the digest of the compile output index of the owners (registered by the owner discovery). `digest`: the digest of the whole registry.",
+      "type": "array",
+      "minItems": 1,
+      "prefixItems": [{ "enum": ["row", "package", "root", "within", "providers", "candidates", "wasm-index", "digest"] }]
+    },
+    "RowDigest": {
+      "description": "sha256 hex of the JSON array [name, root, manifest, packages sorted by code point, nativeRoots sorted by code point] with no whitespace and no ASCII escaping.",
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "RegistryDigest": {
+      "description": "sha256 hex of the JSON array [[name, RowDigest] ordered by name code point, [[ownerRoot, sourcePath, consumerRoots sorted] ordered by ownerRoot then sourcePath]].",
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    }
+  }
+}

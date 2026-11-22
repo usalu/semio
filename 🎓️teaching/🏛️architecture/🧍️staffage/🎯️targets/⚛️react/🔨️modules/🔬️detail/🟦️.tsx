@@ -13,6 +13,8 @@ import type { Asset, EvaluationQuery } from "@teaching/staffage";
 import { useClock } from "../⏱️clock/🟦️.ts";
 import { ViewerBoundary } from "../🎛️viewer/🛡️boundary/🟦️.tsx";
 import { Viewer, type ViewerFrame } from "../🎛️viewer/🟦️.tsx";
+import { environmentOf } from "../🌤️environments/🟦️.ts";
+import { flowConditionsOf } from "../🌊️flow/🟦️.ts";
 import { useArchive, useLocal, useRows } from "../🧭️context/🟦️.tsx";
 import { Button, ButtonLink, Cell, Notice, PageFrame, Tag } from "../🪟️chrome/🟦️.tsx";
 import type { PaneView } from "../🥞️levels/🟦️.tsx";
@@ -157,7 +159,7 @@ function OpenedAssetPage({ row, params }: { readonly row: Row; readonly params: 
           <DimensionsSection asset={asset} row={row} />
           <ModelSection asset={asset} state={frame?.state ?? null} thermal={frame?.thermal ?? null} structure={frame?.structure ?? null} environment={frame?.environment ?? asset.thermal.environment} language={language} />
           <ProvenanceSection asset={asset} />
-          <ExportPanel asset={asset} query={query} language={language} options={{ sheet: viewer.sheet, fps: viewer.fps, durationS: viewer.durationS }} onOptions={(settings) => change({ sheet: settings.sheet, fps: settings.fps, durationS: settings.durationS })} viewpoint={viewer.viewpoint} request={{ view: viewer.view, viewpoint: isDrawn(viewer.viewpoint) ? viewer.viewpoint : "elevation", scale: { denominator: viewer.scale }, language, theme: viewer.theme === "auto" ? (document.documentElement.classList.contains("dark") ? "dark" : "light") : viewer.theme, thermalQuantity: viewer.thermalQuantity, forceQuantity: viewer.forceQuantity, range: viewer.range, patterns: viewer.patterns, diagrams: viewer.diagrams, ...(Object.keys(viewer.environment).length > 0 ? { environment: frame?.environment ?? { ...asset.thermal.environment, ...viewer.environment } } : {}) }} />
+          <ExportPanel asset={asset} query={query} language={language} options={{ sheet: viewer.sheet, fps: viewer.fps, durationS: viewer.durationS }} onOptions={(settings) => change({ sheet: settings.sheet, fps: settings.fps, durationS: settings.durationS })} viewpoint={viewer.viewpoint} request={{ view: viewer.view, viewpoint: isDrawn(viewer.viewpoint) ? viewer.viewpoint : "elevation", scale: { denominator: viewer.scale }, language, theme: viewer.theme === "auto" ? (document.documentElement.classList.contains("dark") ? "dark" : "light") : viewer.theme, thermalQuantity: viewer.thermalQuantity, forceQuantity: viewer.forceQuantity, range: viewer.range, patterns: viewer.patterns, diagrams: viewer.diagrams, flow: viewer.flow, flowConditions: flowConditionsOf(viewer.flowSettings), flowDetail: viewer.flowDetail, ...(environmentOf(asset, viewer.preset, viewer.environment).own ? {} : { environment: environmentOf(asset, viewer.preset, viewer.environment).environment }) }} />
         </>
       )}
     </PageFrame>

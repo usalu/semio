@@ -13,7 +13,7 @@ Feature: All seven modes draw the selected representation
     When the outline widths of the line view are read
     Then they are the body pen of the respective representation
 
-  Scenario: Transport overlay
-    Given the transport layers parcels and streamlines
+  Scenario: Flow view of the air
+    Given the flow layers streams, moisture and pathlines after four seconds of developed air
     When the line and thermal views are depicted
-    Then the scene gains transport items and a legend
+    Then the scene gains flow marks and their legends and nothing else

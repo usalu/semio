@@ -2322,28 +2322,36 @@
        0.017
       ],
       [
-       0.00253,
-       0.03825
+       0.0011,
+       0.031
       ],
       [
-       0.01086,
-       0.05965
+       0.0048,
+       0.046
       ],
       [
-       0.02608,
-       0.08028
+       0.0116,
+       0.061
       ],
       [
-       0.04926,
-       0.0992
+       0.0222,
+       0.076
       ],
       [
-       0.08152,
-       0.11545
+       0.0366,
+       0.09
       ],
       [
-       0.12393,
-       0.12812
+       0.0555,
+       0.103
+      ],
+      [
+       0.078,
+       0.114
+      ],
+      [
+       0.1038,
+       0.123
       ],
       [
        0.1385,
@@ -2354,28 +2362,36 @@
        0.13
       ],
       [
-       0.12457,
-       0.12519
+       0.1046,
+       0.1201
       ],
       [
-       0.08262,
-       0.11266
+       0.0791,
+       0.1112
       ],
       [
-       0.05089,
-       0.09667
+       0.057,
+       0.1004
       ],
       [
-       0.02825,
-       0.07821
+       0.0385,
+       0.0877
       ],
       [
-       0.01349,
-       0.05821
+       0.0245,
+       0.074
       ],
       [
-       0.00545,
-       0.03754
+       0.0142,
+       0.0595
+      ],
+      [
+       0.0077,
+       0.045
+      ],
+      [
+       0.0041,
+       0.0305
       ],
       [
        0.003,
@@ -2383,6 +2399,42 @@
       ],
       [
        0.003,
+       0.0
+      ]
+     ],
+     "axis": [
+      1,
+      0,
+      0
+     ],
+     "origin": [
+      0,
+      0,
+      0
+     ]
+    },
+    {
+     "id": "socket",
+     "kind": "revolve",
+     "bone": "holder",
+     "material": "brass-lacquered",
+     "role": "body",
+     "tone": 0.45,
+     "profile": [
+      [
+       0.033,
+       0.0
+      ],
+      [
+       0.033,
+       0.02
+      ],
+      [
+       0.0956,
+       0.02
+      ],
+      [
+       0.0956,
        0.0
       ]
      ],
@@ -2406,16 +2458,8 @@
      "tone": 0.85,
      "profile": [
       [
-       -0.038,
-       0.0
-      ],
-      [
-       -0.038,
-       0.02
-      ],
-      [
        0.0246,
-       0.02
+       0.0
       ],
       [
        0.0246,
@@ -2426,24 +2470,40 @@
        0.0138
       ],
       [
+       0.0345,
+       0.0155
+      ],
+      [
        0.042,
        0.0185
       ],
       [
-       0.06074,
-       0.02802
+       0.051,
+       0.0235
+      ],
+      [
+       0.0607,
+       0.028
       ],
       [
        0.073,
        0.03
       ],
       [
-       0.09104,
+       0.0825,
+       0.0285
+      ],
+      [
+       0.091,
        0.0242
       ],
       [
-       0.10253,
-       0.01059
+       0.098,
+       0.0177
+      ],
+      [
+       0.1025,
+       0.0106
       ],
       [
        0.105,
@@ -2533,59 +2593,7 @@
     },
     {
      "id": "th-bulb",
-     "kind": "revolve",
-     "bone": "bulb",
-     "material": "bulb-glass",
-     "role": "body",
-     "tone": 0.85,
-     "profile": [
-      [
-       0.0246,
-       0.0
-      ],
-      [
-       0.0246,
-       0.0135
-      ],
-      [
-       0.027,
-       0.0138
-      ],
-      [
-       0.042,
-       0.0185
-      ],
-      [
-       0.06074,
-       0.02802
-      ],
-      [
-       0.073,
-       0.03
-      ],
-      [
-       0.09104,
-       0.0242
-      ],
-      [
-       0.10253,
-       0.01059
-      ],
-      [
-       0.105,
-       0.0
-      ]
-     ],
-     "axis": [
-      1,
-      0,
-      0
-     ],
-     "origin": [
-      0,
-      0,
-      0
-     ],
+     "of": "bulb",
      "region": "bulb-glass"
     },
     {
@@ -2863,8 +2871,8 @@
    ],
    "decisions": [
     {
-     "en": "1:200 is four masses, as its drawing: a 30 mm rose disc, the cord at its true 6.6 mm (slender), the shade as one turned bell with the collar as its 31 mm neck and a 3 mm wall, and one bulb body that unites lampholder, cap and a six-point glass pear, so the bulb still hangs from the apex inside the bell.",
-     "de": "1:200 sind wie seine Zeichnung vier Massen: eine 30-mm-Rosettenscheibe, das Kabel mit seinen wahren 6,6 mm (schlank), der Schirm als eine gedrehte Glocke mit der Hülse als 31-mm-Hals und 3 mm Wand, und ein Lampenkörper, der Fassung, Sockel und eine Glasbirne aus sechs Punkten vereint, sodass die Lampe weiter am Scheitel in der Glocke hängt."
+     "en": "Body at 30 mm: the rose is a plain 100 mm disc, the cord stays at its true 6.6 mm (slender). The shade is the dome of the 1:50 curve turned at nine stations, so it reads as a smooth dome and not as a faceted cone, as a 3 mm shell of even thickness to the true rim at 0.266 m without the rolled bead; the 31 mm brass collar is its neck, because 31 mm cannot be printed apart from the dome at this scale. Under the dome the brass E27 lampholder is its own 40 by 63 mm sleeve on the holder bone, and the A60 lamp is the glass pear of eleven stations hanging from its mouth; cap, seam and rolled mouth are below the feature and left out.",
+     "de": "Körper bei 30 mm: die Rosette ist eine schlichte Scheibe von 100 mm, das Kabel bleibt in seinen wahren 6,6 mm (schlank). Der Schirm ist die Kuppel der 1:50-Kurve, an neun Stationen gedreht, damit er als glatte Kuppel und nicht als facettierter Kegel gelesen wird, als gleichmäßig 3 mm starke Schale bis zum wahren Rand bei 0,266 m ohne den gerollten Wulst; die 31-mm-Messinghülse ist sein Hals, weil 31 mm in diesem Maßstab nicht getrennt von der Kuppel druckbar sind. Unter der Kuppel ist die Messing-E27-Fassung eine eigene Hülse von 40 mal 63 mm am Fassungsknochen, und die A60-Lampe ist die Glasbirne mit elf Stationen, die an ihrer Mündung hängt; Sockel, Naht und gerollte Mündung liegen unter der Merkmalsgröße und entfallen."
     },
     {
      "en": "Thermal: rose, cord, shade and bulb reuse the body; the lampholder region is its own turned solid of collar and lampholder inside the neck and the bell; the plume outlet ring is 30 mm. Structure: a 30 mm pin in the rose, the cord, a 31 mm holder rod down to the lampholder mouth, the bell as the shade member, a 31 mm cap rod and the mass of the shade.",

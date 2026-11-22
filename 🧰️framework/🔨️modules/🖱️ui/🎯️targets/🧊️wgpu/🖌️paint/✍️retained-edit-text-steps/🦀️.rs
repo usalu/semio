@@ -75,11 +75,17 @@ pub(super) fn input_refusal_row(node: &Node, theme: &Theme) -> f32 {
     }
 }
 
+/// 📎️ A `file` input's Choose button: the leading box React's native file input draws (`file:inline-flex`, no border) sized to its caption, and the room left for the picked name.
+pub(super) fn file_button_chrome(frame: Rect, label: &str, theme: &Theme) -> (Rect, Rgba, Rect) {
+    let width = (label.chars().count() as f32 * theme.font_size_small * 0.55 + theme.padding_standard * 2.0).min(frame.w);
+    (Rect::new(frame.x + 1.0, frame.y + 1.0, width, (frame.h - 2.0).max(0.0)), theme.panel, Rect::new(frame.x + width, frame.y, (frame.w - width).max(0.0), frame.h))
+}
+
 /// 🧱️ The box of an input without its refusal row, its colour swatch and the text geometry inside it.
-pub(super) fn input_geometry(input_node: &semio_ui_declaration::ui::UiInputNode, text: &str, bounds: Rect, row: f32, theme: &Theme) -> (Rect, Option<(Rect, Rgba, Rect)>, EditGeometry) {
+pub(super) fn input_geometry(input_node: &semio_ui_declaration::ui::UiInputNode, text: &str, file_label: &str, bounds: Rect, row: f32, theme: &Theme) -> (Rect, Option<(Rect, Rgba, Rect)>, EditGeometry) {
     let frame = Rect::new(bounds.x, bounds.y, bounds.w, (bounds.h - row).max(0.0));
     let multi = input_node.input_kind == "longText";
-    let swatch = (input_node.input_kind == "color").then(|| color_input_swatch(frame, text)).flatten();
+    let swatch = matches!(input_node.input_kind.as_str(), "color" | "colorSwatch").then(|| color_input_swatch(frame, text)).flatten().or_else(|| (input_node.input_kind == "file").then(|| file_button_chrome(frame, file_label, theme)));
     let text_area = swatch.map_or(frame, |(_, _, text_bounds)| text_bounds);
     (frame, swatch, EditGeometry { inner: input_text_rect(text_area, multi, theme), size: theme.font_size_body, multi, mono: input_node.uses_mono_face() })
 }
@@ -118,7 +124,7 @@ pub fn refresh_input_text_layout(tree: &mut UiTree, id: NodeId, theme: &Theme, a
     if text.len() > EDIT_LAYOUT_MAX_BYTES {
         return;
     }
-    let (_, _, geometry) = input_geometry(input, text, Rect::new(0.0, 0.0, accepted.width, accepted.height), input_refusal_row(node, theme), theme);
+    let (_, _, geometry) = input_geometry(input, text, node.state.file_chrome.map_or("", |chrome| chrome.0), Rect::new(0.0, 0.0, accepted.width, accepted.height), input_refusal_row(node, theme), theme);
     let inner = [geometry.inner.x, geometry.inner.y, geometry.inner.w, geometry.inner.h];
     let stale = node.state.edit_layout.as_ref().is_none_or(|laid| laid.text != text || laid.inner != inner || laid.multi != geometry.multi || laid.line_height != geometry.line_height());
     let mut laid = if stale {
@@ -254,7 +260,7 @@ pub(super) fn retained_edit_text_step(view: &EditView, geometry: &EditGeometry, 
     }
 }
 
-/// ▏ Draws the caret at the place the probe found, in the text colour like a native input's caret.
+/// 🖊️ ▏ Draws the caret at the place the probe found, in the text colour like a native input's caret.
 pub(super) fn retained_edit_caret_draw(geometry: &EditGeometry, scroll: (f32, f32), color: Rgba, draw: &mut DrawList, cursor: &RetainedNodePaintCursor) -> RetainedNodePaintStep {
     let (line, pen) = cursor.edit_caret;
     let height = if geometry.multi { geometry.line_height() } else { (geometry.size * 1.2).min(geometry.inner.h) };

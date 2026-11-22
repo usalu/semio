@@ -9,7 +9,7 @@
 //! oracle-only run never compiles the local implementation — see §5.3 of the fleet brief.
 
 use semio_repo_test_host::{Adapter, Context, Json, Outcome};
-use semio_s_artifact_stdio_xlsx_test_oracle::standards::v_ecma_376::subsets::base::{oracle_apply_inverse, oracle_apply_mutation, oracle_arrange, oracle_round_trip, project_shared_string_pool, project_xlsx_workbook};
+use semio_s_artifact_stdio_xlsx_test_oracle::standards::v_ecma_376::subsets::base::{calamine_shared_string_law, oracle_apply_inverse, oracle_apply_mutation, oracle_arrange, oracle_round_trip, project_shared_string_pool, project_xlsx_workbook};
 
 
 //#region 🔖️Input
@@ -113,6 +113,9 @@ fn mutate_oracle(ctx: &Context) -> Result<Outcome, String> {
             project_xlsx_workbook(bytes, shared_string_count_after(BASELINE_SHARED_STRING_COUNT, &kind))
         }
     };
+    if is_pool_kind(&kind) {
+        calamine_shared_string_law(&input, &output, &spec)?;
+    }
     let projection = project(&output)?;
     if projection == project(&input)? {
         return Err(format!("mutate-{kind}: the mutation left the projection unchanged — a mutation that is not observable proves nothing"));
@@ -131,6 +134,9 @@ fn inverse_oracle(ctx: &Context) -> Result<Outcome, String> {
     let input = arranged_input(ctx, &spec)?;
     let kind = spec.str("kind");
     let mutated = oracle_apply_mutation(&input, &spec)?;
+    if is_pool_kind(&kind) {
+        calamine_shared_string_law(&input, &mutated, &spec)?;
+    }
     let restored = oracle_apply_inverse(&input, &mutated, &spec)?;
     let (projection, original) = if is_pool_kind(&kind) {
         (project_shared_string_pool(&restored)?, project_shared_string_pool(&input)?)
@@ -167,7 +173,7 @@ fn round_trip_oracle(ctx: &Context) -> Result<Outcome, String> {
 //#region 🔖️Subject
 #[cfg(feature = "sut")]
 mod subject {
-    use super::{arranged_input, is_pool_kind, mutable_input};
+    use super::{arranged_input, calamine_shared_string_law, is_pool_kind, mutable_input};
     use semio_repo_test_host::{Context, Json, Outcome};
     use semio_s_artifact_stdio_xlsx_base::standards::v_ecma_376::subsets::base::io::export::serializers::encode_xlsx;
     use semio_s_artifact_stdio_xlsx_base::standards::v_ecma_376::subsets::base::io::import::deserializers::decode_xlsx;
@@ -216,6 +222,11 @@ mod subject {
         decode_xlsx(bytes).map_err(|error| error.to_string())
     }
 
+    /// 🔁️ The subject's own encoding of an input it decoded and did not mutate — the package the pool law compares the mutated one against.
+    fn before_bytes(input: &[u8]) -> Result<Vec<u8>, String> {
+        encode_xlsx(&decode(input)?).map_err(|error| error.to_string())
+    }
+
     pub fn mutate(ctx: &Context) -> Result<Outcome, String> {
         let spec = ctx.doc_json()?;
         let mut snapshot = decode(&arranged_input(ctx, &spec)?)?;
@@ -224,6 +235,9 @@ mod subject {
         let before = outcome_of(&kind, &snapshot)?;
         apply(&mut snapshot, &mutation)?;
         let after = outcome_of(&kind, &snapshot)?;
+        if is_pool_kind(&kind) {
+            calamine_shared_string_law(&before_bytes(&arranged_input(ctx, &spec)?)?, &encode_xlsx(&snapshot).map_err(|error| error.to_string())?, &spec)?;
+        }
         if before.projection == after.projection {
             return Err(format!("mutate-{kind}: the subject mutation left the projection unchanged"));
         }

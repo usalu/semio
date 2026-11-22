@@ -3,6 +3,7 @@
 import { describe, expect, it } from "vitest";
 import { DEFAULT_VIEWER, compareFromParams, compareToParams, formatAddress, openedChain, parseAddress, parentRoute, playgroundFromParams, playgroundToParams, viewerFromParams, viewerToParams, type ViewerState } from "../../🔨️modules/🗺️routing/🟦️.ts";
 import { NO_FILTERS, filtersFromParams, filtersToParams } from "../../🔨️modules/🔎️search/🟦️.ts";
+import { ENVIRONMENT_PRESETS } from "../../🔨️modules/🌤️environments/🟦️.ts";
 
 const canonical = (hash: string): string => {
   const { route, params } = parseAddress(hash);
@@ -46,6 +47,25 @@ describe("viewer state", () => {
     expect(parsed.timeS).toBeNull();
     expect(parsed.environment).toEqual({ relativeHumidity: 1, windMS: 40 });
     expect(parsed.diagrams).toEqual({ axial: false, shear: false, moment: false, freeBody: false });
+  });
+
+  it("round-trips the whole air: preset, every environment field, the conditions of the flow and the detail of its marks", () => {
+    const air: ViewerState = { ...DEFAULT_VIEWER, view: "thermal", preset: ENVIRONMENT_PRESETS[0]!.id, environment: { airTempC: -5.5, meanRadiantTempC: 12, skyTempC: -20.5, groundTempC: 3, relativeHumidity: 0.57, windMS: 6.5, windDirectionDeg: 270, solarWM2: 640, diffuseFraction: 0.07, pressurePa: 95050 }, flow: ["streams", "pathlines"], flowSettings: { profile: "logarithmic", roughnessM: 0.25, referenceHeightM: 4.5, turbulenceIntensity: 0.33, turbulenceFloorMS: 0.05, lagrangianTimeS: 2.5, lifeS: 20, seed: 42 }, flowDetail: { spacingMm: 4.5, minStreakMm: 1.2, periodS: 0.8, exposureS: 0.25, trailS: 3.5, strokeMm: 0.45 } };
+    const params = viewerToParams(air);
+    expect(viewerFromParams(new URLSearchParams(params.toString()))).toEqual(air);
+    expect(params.toString()).toBe(`view=thermal&fl=s%2Cp&env=${ENVIRONMENT_PRESETS[0]!.id}&air=-5.5&mrt=12&sky=-20.5&gnd=3&rh=57&wind=6.5&wdir=270&sun=640&dif=7&hpa=950.5&wp=log&z0=0.25&zr=4.5&ti=33&tf=0.05&tt=2.5&life=20&seed=42&fsp=4.5&fst=1.2&fpe=0.8&fex=0.25&ftr=3.5&fsw=0.45`);
+    expect(viewerToParams(viewerFromParams(params)).toString()).toBe(params.toString());
+  });
+
+  it("writes no air for the defaults, drops a value that is its default, folds a bearing and holds every value in its range", () => {
+    const parsed = viewerFromParams(new URLSearchParams("env=no-such-place&wdir=-90&sky=-500&dif=250&hpa=10&ti=10&tf=0.03&tt=1&z0=0.03&zr=10&life=14&seed=1&fsp=2.2&fst=0.9&fpe=1.5&fex=0.4&ftr=0&fsw=0.3&wp=flat"));
+    expect(parsed.preset).toBeNull();
+    expect(parsed.environment).toEqual({ windDirectionDeg: 270, skyTempC: -90, diffuseFraction: 1, pressurePa: 30000 });
+    expect(parsed.flowSettings).toEqual({});
+    expect(parsed.flowDetail).toEqual({});
+    expect(viewerFromParams(new URLSearchParams("wdir=450&seed=99999&life=1&ti=abc")).environment).toEqual({ windDirectionDeg: 90 });
+    expect(viewerFromParams(new URLSearchParams("wdir=360&seed=99999&life=1&ti=abc"))).toMatchObject({ environment: { windDirectionDeg: 0 }, flowSettings: { seed: 9999, lifeS: 2 } });
+    expect([...viewerToParams({ ...DEFAULT_VIEWER, preset: null, environment: {}, flowSettings: {}, flowDetail: {} }).keys()]).toEqual([]);
   });
 
   it("keeps the order of parameters stable", () => {

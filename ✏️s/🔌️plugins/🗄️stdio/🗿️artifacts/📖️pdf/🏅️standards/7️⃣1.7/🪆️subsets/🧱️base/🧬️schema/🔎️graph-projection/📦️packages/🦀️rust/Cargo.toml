@@ -9,6 +9,38 @@ description = "Component crate of semio-s-artifact-stdio-pdf: graph-projection"
 [package.metadata.semio]
 role = "library"
 
+[package.metadata.semio.carve]
+owned = [
+  "standards::v1_4::subsets::base::io",
+  "standards::v1_4::subsets::base::io::derived_analysis",
+  "standards::v1_4::subsets::base::io::derived_composition",
+  "standards::v1_4::subsets::base::io::derived_construction",
+  "standards::v1_4::subsets::base::io::mutation_bridge",
+  "standards::v1_4::subsets::base::schema::mutations::insert_page::tests",
+  "standards::v1_4::subsets::base::schema::mutations::remove_page::tests",
+  "standards::v1_7::subsets::base::io::sqlite",
+  "standards::v1_7::subsets::base::modules::encryption::tests",
+  "standards::v1_7::subsets::base::modules::filters::tests",
+  "standards::v1_7::subsets::base::modules::fonts::cmap::tests",
+  "standards::v1_7::subsets::base::modules::xref",
+  "standards::v1_7::subsets::base::modules::xref::file_structure",
+  "standards::v1_7::subsets::base::modules::xref::retained_graph_tests",
+  "standards::v1_7::subsets::base::schema::graph_projection",
+  "standards::v1_7::subsets::base::schema::graph_projection::catalog_and_page_mode",
+  "standards::v1_7::subsets::base::schema::graph_projection::colour",
+  "standards::v1_7::subsets::base::schema::graph_projection::lifter_and_document",
+  "standards::v1_7::subsets::base::schema::graph_projection::navigation_and_annotations",
+  "standards::v1_7::subsets::base::schema::graph_projection::resources_and_fonts",
+  "viewer::pdf17h::modes",
+  "viewer::pdf17h::modes::view",
+  "viewer::pdf17ua::modes",
+  "viewer::pdf17ua::modes::view",
+  "viewer::pdf17vt::modes",
+  "viewer::pdf17vt::modes::view",
+  "viewer::pdf17x::modes",
+  "viewer::pdf17x::modes::view",
+]
+
 [lints]
 workspace = true
 

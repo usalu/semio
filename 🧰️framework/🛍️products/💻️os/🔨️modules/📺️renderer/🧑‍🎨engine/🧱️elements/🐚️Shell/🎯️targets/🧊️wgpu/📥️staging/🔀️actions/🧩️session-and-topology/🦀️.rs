@@ -12,7 +12,6 @@ impl<'ctx> ActionsCtx<'ctx> {
         self.plugins.plugin_faults.clear();
         self.chrome.error = None;
         debug_log("[TRACE] wgpu-shell boot: begin");
-        #[cfg(target_arch = "wasm32")]
         if let Err(error) = self.plugins.refresh_extension_store().await {
             debug_log(&format!("[TRACE] wgpu extension inventory unavailable: {error}"));
         }

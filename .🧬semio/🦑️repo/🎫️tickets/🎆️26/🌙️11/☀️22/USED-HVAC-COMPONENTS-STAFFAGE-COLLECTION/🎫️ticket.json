@@ -1,0 +1,38 @@
+{
+  "title": "Used HVAC Components Staffage Collection",
+  "emoji": "🌀",
+  "status": "closed",
+  "description": "Use a massive wave of Opus 5.5 agents to extend the staffage with a huge collection of used HVAC components. Forty handcrafted dismantled HVAC components (heat generation, heat distribution, ventilation and air handling, cooling and refrigeration, controls and metering) in the staffage archive `🎓️teaching/🏛️architecture/🧍️staffage`, each with rig, poses (stored, lifted, reinstalled), clips, thermal and structural model, 2D representations and 3D volumes at 1:50, 1:100, 1:200, 1:500, manifest rows and the collection `used-hvac-components`, verified by the product's validators and tests.",
+  "summary": "Eighteen handcrafted used HVAC components (boilers, burner, oil tanks, heat pumps, pellet boiler, district heating substation, radiant strip, radiators, convector, UFH manifold, buffer tank, expansion vessels, inline pump, pipe rack, copper coils) were authored by an Opus 5.5 agent wave. Each was independently verified (catalog-only validate VALID, check CLI ✓) and published with manifest rows and the collection used-hvac-components. The scope was reduced by the dev from 40 to the 18 started authors. 33 drifted manifest rows of other assets were re-derived from their asset files; validateManifest reports 0 issues. asset-power, asset-validation and volume-schema pass. Failures in catalog-physics, breathing-catalog, multiview-coverage, catalog-silhouette (runner) and model-catalog (memory) concern other assets or the runner; they are listed in summary.md.",
+  "goal": "animate",
+  "sessions": [
+    "393e6af4-60bc-4ceb-ba7e-58d34f2f34d6"
+  ],
+  "interactions": [
+    {
+      "kind": "ticket.open",
+      "date": "2026-11-22 15:37:43",
+      "author": "",
+      "system": "mac",
+      "client": "claude-code",
+      "checkpoint": "",
+      "prompt": "Use a massive wave of Opus 5.5 agents to extend the staffage with a huge collection of used HVAC components. Forty handcrafted dismantled HVAC components (heat generation, heat distribution, ventilation and air handling, cooling and refrigeration, controls and metering) in the staffage archive `🎓️teaching/🏛️architecture/🧍️staffage`, each with rig, poses (stored, lifted, reinstalled), clips, thermal and structural model, 2D representations and 3D volumes at 1:50, 1:100, 1:200, 1:500, manifest rows and the collection `used-hvac-components`, verified by the product's validators and tests.",
+      "llm": "opus-5-5",
+      "effort": "high"
+    },
+    {
+      "kind": "ticket.close",
+      "date": "2026-11-22 17:09:47",
+      "author": "ueli",
+      "system": "mac",
+      "client": "claude-code",
+      "checkpoint": "01324745f8082082a02880b731dd024f640dc29b",
+      "summary": "Eighteen handcrafted used HVAC components (boilers, burner, oil tanks, heat pumps, pellet boiler, district heating substation, radiant strip, radiators, convector, UFH manifold, buffer tank, expansion vessels, inline pump, pipe rack, copper coils) were authored by an Opus 5.5 agent wave. Each was independently verified (catalog-only validate VALID, check CLI ✓) and published with manifest rows and the collection used-hvac-components. The scope was reduced by the dev from 40 to the 18 started authors. 33 drifted manifest rows of other assets were re-derived from their asset files; validateManifest reports 0 issues. asset-power, asset-validation and volume-schema pass. Failures in catalog-physics, breathing-catalog, multiview-coverage, catalog-silhouette (runner) and model-catalog (memory) concern other assets or the runner; they are listed in summary.md.",
+      "files": [
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️🧍️staffage🗃️🗂️catalog⚙️🔣️"
+        }
+      ]
+    }
+  ]
+}

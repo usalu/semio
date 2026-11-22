@@ -7,8 +7,10 @@ use semio_framework::kernel::{HistoryReprojection, HistoryReprojectionStatus, Hi
 use semio_framework_time_travel::TimeTravelLabel;
 
 //#region ⏪️TimeTravelControls
-/// 📐️ The band's widest extent before its message is clipped.
-const TIME_TRAVEL_BAND_MAX_WIDTH: f32 = 880.0;
+/// 📐️ The band's widest extent before its message is clipped: React's `max-w-[90vw]`, read from the shared parity constants.
+fn time_travel_band_max_width(width: f32) -> f32 {
+    width * semio_renderer_wgpu_shell_chrome_state::chrome_parity_constants().sizes.time_travel_band_max_width_fraction
+}
 
 /// 📐️ Height of the replay progress track along the band's lower edge.
 pub const TIME_TRAVEL_PROGRESS_TRACK: f32 = 3.0;
@@ -245,7 +247,7 @@ pub fn chrome_band_wrap(message: &str, separator: &str, width: f32, glyph_w: imp
 /// edge. Its message wraps at the " · " between its lines on a phone-width viewport.
 pub fn time_travel_band_plan(status: &HistoryTimeTravel, message: String, buttons: Vec<(TimeTravelControl, String)>, width: f32, height: f32, theme: &Theme) -> TimeTravelBandPlan {
     let labels: Vec<&str> = buttons.iter().map(|(_, label)| label.as_str()).collect();
-    let layout = chrome_band_layout(&message, " · ", &labels, height, width, TIME_TRAVEL_BAND_MAX_WIDTH, theme);
+    let layout = chrome_band_layout(&message, " · ", &labels, height, width, time_travel_band_max_width(width), theme);
     let band = layout.band;
     let pad = theme.padding_standard;
     let progress = match (status.stage, status.total) {
@@ -297,7 +299,7 @@ pub struct HistoryReprojectionBandPlan {
 /// replay track along its lower edge while it replays.
 pub fn history_reprojection_band_plan(status: &HistoryReprojectionStatus, control: Option<TimeTravelVerb>, floor: f32, width: f32, tongue: impl Into<BandTongue>, theme: &Theme) -> HistoryReprojectionBandPlan {
     let labels: Vec<&str> = control.map(|verb| verb.label(tongue)).into_iter().collect();
-    let layout = chrome_band_layout(&history_reprojection_message(status), " ", &labels, floor, width, TIME_TRAVEL_BAND_MAX_WIDTH, theme);
+    let layout = chrome_band_layout(&history_reprojection_message(status), " ", &labels, floor, width, time_travel_band_max_width(width), theme);
     let band = layout.band;
     let pad = theme.padding_standard;
     let progress = history_reprojection_running(status).then(|| (Rect::new(band.x + pad, band.y + band.h - TIME_TRAVEL_PROGRESS_TRACK - 1.0, band.w - pad * 2.0, TIME_TRAVEL_PROGRESS_TRACK), (status.done as f32 / status.total as f32).clamp(0.0, 1.0)));

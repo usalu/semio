@@ -403,7 +403,7 @@ class Tree:
         default_sides = {50: {0: 40, 1: 16, 2: 10, 3: 6, 4: 6}, 100: {0: 28, 1: 12, 2: 8, 3: 6, 4: 6}, 200: {0: 18, 1: 8, 2: 6, 3: 6, 4: 6}, 500: {0: 12, 1: 6, 2: 6, 3: 6, 4: 6}}[scale]
         for aid in self.order:
             a = self.axes[aid]
-            if scale not in a["scales"] or (a["stations"][0][3] < min_r * 1.05 and not a.get("keep") and not a["bones"]):
+            if scale not in a["scales"] or (a["stations"][0][3] < min_r * 1.05 and not a.get("keep") and not a.get("slim") and not a["bones"]):
                 continue
             stations = [(s[0], s[1], s[2], max(s[3], min_r)) for s in a["stations"]]
             fine_step = step * (1.0 if a["level"] < 2 else 1.6 if a["level"] == 2 else 2.2)

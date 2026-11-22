@@ -24,7 +24,7 @@ test("questions about every project and non-literal project names stay whole rea
 
 test("the runtime command reads show project over the selection and defaults a whole question to the sealed graph",()=>{
  const source=String(runtimeSource);
- expect(source).toContain("buildInvocationGraphSelectionV1(resolved.args)");
- expect(source).toContain('selected.graphPolicy??(whole?"current":"fresh")');
+ expect(source).toContain("buildInvocationGraphSelectionV1(args)");expect(source).toContain('sealedProject?{kind:"all" as const}:buildInvocationGraphSelectionV1(args)');
+ expect(source).toContain('policy??(whole?"current":"fresh")');
  expect(source).not.toContain('selection:{kind:"all"},reuse:process.env.SEMIO_BUILD_REUSE_GRAPH');
 });

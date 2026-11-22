@@ -23,11 +23,11 @@
     "worker-supervision"
   ],
   "debt": {
-    "capacity": 25,
-    "store-custody": 134,
+    "capacity": 19,
+    "store-custody": 129,
     "unit-cache-lanes": 1,
     "process-launch": 11,
-    "remote-cache": 44
+    "remote-cache": 17
   },
   "members": {
     "⚡️caching/.": "keyed",
@@ -66,11 +66,14 @@
     "🏗️build/🎯️targets": "keyed",
     "🏗️build/🏃️execution": "keyed",
     "🏗️build/🏛️sealed": "keyed",
+    "🏗️build/🏞️task-view": "keyed",
     "🏗️build/🏡️resident": "scheduling",
+    "🏗️build/🐢️speed": "keyed",
     "🏗️build/👁️observation": "keyed",
     "🏗️build/👷️workers": "scheduling",
     "🏗️build/📊️reporting": "keyed",
     "🏗️build/📏️incremental": "scheduling",
+    "🏗️build/📏️workspace-scale": "keyed",
     "🏗️build/📐️conformance": "keyed",
     "🏗️build/📖️storybook": "keyed",
     "🏗️build/📖️texts": "scheduling",
@@ -81,6 +84,7 @@
     "🏗️build/🔌️backends": "keyed",
     "🏗️build/🔒️leases": "keyed",
     "🏗️build/🔧️tools": "keyed",
+    "🏗️build/🔬️test-file": "scheduling",
     "🏗️build/🔭️witness": "keyed",
     "🏗️build/🕸️graph": "mixed",
     "🏗️build/🗂️suites": "keyed",

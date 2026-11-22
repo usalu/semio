@@ -1,0 +1,247 @@
+{
+  "version": 1,
+  "origin": "http://127.0.0.1:8080",
+  "mount": "/sub/",
+  "files": [
+    "/mesh/🧊️capsule_J.glb",
+    "/cad-assets/🏠️house.3dm",
+    "/infinite-assets/🖼️plan.jpg",
+    "/renderer-modules/wgpu/semio-renderer-wgpu-component.js",
+    "/renderer-modules/wgpu/semio-renderer-wgpu-component_bg.wasm",
+    "/renderer-modules/package-assets/🧰️framework/🔨️modules/🖼️assets/🔤️fonts/a.woff2",
+    "/🔌️plugin-modules/🧵️shard/🟨️shard-worker.js",
+    "/🧩️extension-modules/🧱️x/🌉️bridge.js",
+    "/♻️mit-bestand/🧺️demonstrator/🖼️asset/🪧️logos/🎓️luh/☀️logo.png",
+    "/vt/3/4/5.pbf",
+    "/osm/3/4/5.png"
+  ],
+  "cases": [
+    {
+      "id": "mesh",
+      "documentBase": "http://127.0.0.1:8080/sub/index.html",
+      "input": "/mesh/🧊️capsule_J.glb",
+      "output": "/sub/mesh/🧊️capsule_J.glb",
+      "oracle": true,
+      "serve": true
+    },
+    {
+      "id": "vt-template",
+      "documentBase": "http://127.0.0.1:8080/sub/index.html",
+      "input": "/vt/{z}/{x}/{y}.pbf",
+      "output": "/sub/vt/{z}/{x}/{y}.pbf",
+      "oracle": true,
+      "serve": false
+    },
+    {
+      "id": "osm-template",
+      "documentBase": "http://127.0.0.1:8080/sub/index.html",
+      "input": "/osm/{z}/{x}/{y}.png",
+      "output": "/sub/osm/{z}/{x}/{y}.png",
+      "oracle": true,
+      "serve": false
+    },
+    {
+      "id": "cad-assets",
+      "documentBase": "http://127.0.0.1:8080/sub/index.html",
+      "input": "/cad-assets/🏠️house.3dm",
+      "output": "/sub/cad-assets/🏠️house.3dm",
+      "oracle": true,
+      "serve": true
+    },
+    {
+      "id": "infinite-assets",
+      "documentBase": "http://127.0.0.1:8080/sub/index.html",
+      "input": "/infinite-assets/🖼️plan.jpg",
+      "output": "/sub/infinite-assets/🖼️plan.jpg",
+      "oracle": true,
+      "serve": true
+    },
+    {
+      "id": "renderer-modules",
+      "documentBase": "http://127.0.0.1:8080/sub/index.html",
+      "input": "/renderer-modules/wgpu/semio-renderer-wgpu-component.js",
+      "output": "/sub/renderer-modules/wgpu/semio-renderer-wgpu-component.js",
+      "oracle": true,
+      "serve": true
+    },
+    {
+      "id": "renderer-wasm",
+      "documentBase": "http://127.0.0.1:8080/sub/index.html",
+      "input": "/renderer-modules/wgpu/semio-renderer-wgpu-component_bg.wasm",
+      "output": "/sub/renderer-modules/wgpu/semio-renderer-wgpu-component_bg.wasm",
+      "oracle": true,
+      "serve": true
+    },
+    {
+      "id": "package-assets",
+      "documentBase": "http://127.0.0.1:8080/sub/index.html",
+      "input": "/renderer-modules/package-assets/🧰️framework/🔨️modules/🖼️assets/🔤️fonts/a.woff2",
+      "output": "/sub/renderer-modules/package-assets/🧰️framework/🔨️modules/🖼️assets/🔤️fonts/a.woff2",
+      "oracle": true,
+      "serve": true
+    },
+    {
+      "id": "plugin-modules",
+      "documentBase": "http://127.0.0.1:8080/sub/index.html",
+      "input": "/🔌️plugin-modules/🧵️shard/🟨️shard-worker.js",
+      "output": "/sub/🔌️plugin-modules/🧵️shard/🟨️shard-worker.js",
+      "oracle": true,
+      "serve": true
+    },
+    {
+      "id": "extension-modules",
+      "documentBase": "http://127.0.0.1:8080/sub/index.html",
+      "input": "/🧩️extension-modules/🧱️x/🌉️bridge.js",
+      "output": "/sub/🧩️extension-modules/🧱️x/🌉️bridge.js",
+      "oracle": true,
+      "serve": true
+    },
+    {
+      "id": "demonstrator-assets",
+      "documentBase": "http://127.0.0.1:8080/sub/index.html",
+      "input": "/♻️mit-bestand/🧺️demonstrator/🖼️asset/🪧️logos/🎓️luh/☀️logo.png",
+      "output": "/sub/♻️mit-bestand/🧺️demonstrator/🖼️asset/🪧️logos/🎓️luh/☀️logo.png",
+      "oracle": true,
+      "serve": true
+    },
+    {
+      "id": "vt-tile",
+      "documentBase": "http://127.0.0.1:8080/sub/index.html",
+      "input": "/vt/3/4/5.pbf",
+      "output": "/sub/vt/3/4/5.pbf",
+      "oracle": true,
+      "serve": true
+    },
+    {
+      "id": "osm-tile",
+      "documentBase": "http://127.0.0.1:8080/sub/index.html",
+      "input": "/osm/3/4/5.png",
+      "output": "/sub/osm/3/4/5.png",
+      "oracle": true,
+      "serve": true
+    },
+    {
+      "id": "query-kept",
+      "documentBase": "http://127.0.0.1:8080/sub/index.html",
+      "input": "/mesh/a.glb?v=1#x",
+      "output": "/sub/mesh/a.glb?v=1#x",
+      "oracle": true,
+      "serve": false
+    },
+    {
+      "id": "directory-base-without-file",
+      "documentBase": "http://127.0.0.1:8080/sub/",
+      "input": "/mesh/a.glb",
+      "output": "/sub/mesh/a.glb",
+      "oracle": true,
+      "serve": false
+    },
+    {
+      "id": "nested-base",
+      "documentBase": "http://127.0.0.1:8080/a/b/index.html",
+      "input": "/mesh/a.glb",
+      "output": "/a/b/mesh/a.glb",
+      "oracle": true,
+      "serve": false
+    },
+    {
+      "id": "root-deploy-identity",
+      "documentBase": "http://127.0.0.1:8080/index.html",
+      "input": "/mesh/a.glb",
+      "output": "/mesh/a.glb",
+      "oracle": false,
+      "serve": false
+    },
+    {
+      "id": "already-relocated-identity",
+      "documentBase": "http://127.0.0.1:8080/sub/index.html",
+      "input": "/sub/mesh/a.glb",
+      "output": "/sub/mesh/a.glb",
+      "oracle": false,
+      "serve": false
+    },
+    {
+      "id": "base-directory-itself",
+      "documentBase": "http://127.0.0.1:8080/sub/index.html",
+      "input": "/",
+      "output": "/sub/",
+      "oracle": true,
+      "serve": false
+    },
+    {
+      "id": "relative-identity",
+      "documentBase": "http://127.0.0.1:8080/sub/index.html",
+      "input": "./assets/app.js",
+      "output": "./assets/app.js",
+      "oracle": false,
+      "serve": false
+    },
+    {
+      "id": "absolute-url-identity",
+      "documentBase": "http://127.0.0.1:8080/sub/index.html",
+      "input": "https://cdn.example/osm/0/0/0.png",
+      "output": "https://cdn.example/osm/0/0/0.png",
+      "oracle": false,
+      "serve": false
+    },
+    {
+      "id": "protocol-relative-identity",
+      "documentBase": "http://127.0.0.1:8080/sub/index.html",
+      "input": "//cdn.example/mesh/a.glb",
+      "output": "//cdn.example/mesh/a.glb",
+      "oracle": false,
+      "serve": false
+    },
+    {
+      "id": "encoded-slash-refused",
+      "documentBase": "http://127.0.0.1:8080/sub/index.html",
+      "input": "/mesh/a%2Fb.glb",
+      "output": "/mesh/a%2Fb.glb",
+      "oracle": false,
+      "serve": false
+    },
+    {
+      "id": "opaque-document-identity",
+      "documentBase": "about:blank",
+      "input": "/mesh/a.glb",
+      "output": "/mesh/a.glb",
+      "oracle": false,
+      "serve": false
+    }
+  ],
+  "workerBases": [
+    {
+      "id": "production-worker-chunk",
+      "moduleUrl": "http://127.0.0.1:8080/sub/assets/frame-worker-abc123.js",
+      "production": true,
+      "base": "/sub/"
+    },
+    {
+      "id": "production-worker-root",
+      "moduleUrl": "http://127.0.0.1:8080/assets/frame-worker-abc123.js",
+      "production": true,
+      "base": "/"
+    },
+    {
+      "id": "production-worker-nested",
+      "moduleUrl": "http://127.0.0.1:8080/a/b/assets/frame-worker-abc123.js",
+      "production": true,
+      "base": "/a/b/"
+    },
+    {
+      "id": "development-worker",
+      "moduleUrl": "http://127.0.0.1:8080/@fs/workspace/published-page/index.ts",
+      "production": false,
+      "base": "/"
+    }
+  ],
+  "owners": {
+    "documentBase": "http://127.0.0.1:8080/sub/index.html",
+    "shardWorker": "/sub/🔌️plugin-modules/🧵️shard/🟨️shard-worker.js",
+    "packageAsset": {
+      "name": "🧰️framework/🔨️modules/🖼️assets/🔤️fonts/a.woff2",
+      "url": "http://127.0.0.1:8080/sub/renderer-modules/package-assets/%F0%9F%A7%B0%EF%B8%8Fframework/%F0%9F%94%A8%EF%B8%8Fmodules/%F0%9F%96%BC%EF%B8%8Fassets/%F0%9F%94%A4%EF%B8%8Ffonts/a.woff2"
+    },
+    "brandLogo": "/sub/♻️mit-bestand/🧺️demonstrator/🖼️asset/🪧️logos/🎓️luh/☀️logo.png"
+  }
+}

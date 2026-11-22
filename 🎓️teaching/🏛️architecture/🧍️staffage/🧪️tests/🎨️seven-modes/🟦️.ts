@@ -51,14 +51,15 @@ describe("🎨️ seven modes", () => {
     expect(() => depict(stateAt(100), unchecked(defaultDepictionOptions("light-line", "en", 50)))).toThrow(/different representation/u);
   });
 
-  it("adds the transport overlay and its legend to any view", () => {
+  it("adds the flow view of the air and its legends to any view", () => {
     const state = stateAt(100);
     for (const view of ["light-line", "thermal"] as const) {
       const plain = depict(state, unchecked(defaultDepictionOptions(view, "en", 100)));
-      const withTransport = depict(state, { ...unchecked(defaultDepictionOptions(view, "en", 100)), transport: ["parcels", "streamlines"] });
+      const withTransport = depict(state, { ...unchecked(defaultDepictionOptions(view, "en", 100)), flow: ["streams", "moisture", "pathlines"], flowDevelopS: 4 });
       const count = (scene: DrawingScene): number => scene.layers.reduce((n, l) => n + l.items.length, 0);
       expect(count(withTransport)).toBeGreaterThan(count(plain));
       expect(withTransport.legends.length).toBeGreaterThan(plain.legends.length);
+      expect(withTransport.layers.flatMap((l) => l.items).filter((item) => !plain.layers.some((l) => l.items.some((other) => other.id === item.id))).every((item) => item.id.startsWith("flow-") || item.id.startsWith("legend:"))).toBe(true);
     }
   });
 });

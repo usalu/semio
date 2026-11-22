@@ -58,6 +58,11 @@ impl<'ctx> PointerCtx<'ctx> {
         self.as_frame_pumps().poll_auto_checkin().await;
         let directory_changed = self.as_frame_pumps().advance_document_opening().await || directory_changed;
         let directory_changed = self.as_session().advance_sync_reseed().await || directory_changed;
+        if std::mem::take(&mut self.sync.sync_bootstrap_cancel) {
+            let _ = self.as_actions().detach_sync_backbone_internal().await;
+            self.dock.relabel_sync_tab(&self.prefs, &self.sync);
+            return true;
+        }
         if let Some(error) = self.sync.sync_terminal_fault.take() {
             debug_log(&format!("[TRACE] wgpu shell retired document-backbone owner after terminal fault: {error}"));
             let _ = self.as_actions().detach_sync_backbone_internal().await;

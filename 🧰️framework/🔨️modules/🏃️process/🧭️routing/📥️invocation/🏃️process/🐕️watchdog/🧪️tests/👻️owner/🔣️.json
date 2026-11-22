@@ -1,0 +1,12 @@
+{
+  "version": 1,
+  "vectors": [
+    { "name": "no owner handed over", "facts": { "owner": null, "ownerAlive": false, "initialParent": 1, "currentParent": 1 }, "lost": false },
+    { "name": "owner alive and still the parent", "facts": { "owner": 500, "ownerAlive": true, "initialParent": 500, "currentParent": 500 }, "lost": false },
+    { "name": "owner gone", "facts": { "owner": 500, "ownerAlive": false, "initialParent": 500, "currentParent": 1 }, "lost": true },
+    { "name": "owner gone but parent unchanged", "facts": { "owner": 500, "ownerAlive": false, "initialParent": 500, "currentParent": 500 }, "lost": true },
+    { "name": "direct child reparented while a reused pid answers as alive", "facts": { "owner": 500, "ownerAlive": true, "initialParent": 500, "currentParent": 1 }, "lost": true },
+    { "name": "owner alive, never the direct parent (a shim between), parent changed", "facts": { "owner": 500, "ownerAlive": true, "initialParent": 400, "currentParent": 1 }, "lost": false },
+    { "name": "owner alive behind a shim", "facts": { "owner": 500, "ownerAlive": true, "initialParent": 400, "currentParent": 400 }, "lost": false }
+  ]
+}

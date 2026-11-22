@@ -28,7 +28,7 @@ test("actual issued bootstrap parser readiness avoids repeated whole workspace s
  await ensureBuildEnvironmentV1(repository.root,original,phaseControl,installer,publish);const first=installs,started=performance.now();await ensureBuildEnvironmentV1(repository.root,original,phaseControl,installer,publish);
  expect(installs).toBe(first);expect(published).toBe(2);
  const oracle=createRequire(join(realRootV1,"package.json")),typescript=oracle("typescript"),toml=oracle("@iarna/toml");expect(typescript.preProcessFile('import "./actual-source";').importedFiles.map((row:any)=>row.fileName)).toEqual(["./actual-source"]);expect(toml.parse('owned = "parser"')).toEqual({owned:"parser"});
-}),130000);
+},{maximumElapsedMilliseconds:120000}),130000);
 
 
 const nxToolingV1=process.env.SEMIO_NX_TOOLING_ROOT!==undefined;if(!nxToolingV1)console.warn("[parser tests] no pinned Nx tooling root published by the runner (SEMIO_NX_TOOLING_ROOT): the Nx workspace-root law is skipped");

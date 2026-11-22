@@ -1,0 +1,53 @@
+{
+  "id": "waving-person",
+  "category": "humans",
+  "title": {
+    "en": "Waving Person",
+    "de": "Winkende Person"
+  },
+  "heightM": 1.757,
+  "widthM": 0.319,
+  "powerW": 165.6,
+  "poses": [
+    "waving",
+    "hailing",
+    "waving-both-arms",
+    "standing-relaxed"
+  ],
+  "clips": [
+    "wave",
+    "hail-and-wave",
+    "idle-breathing"
+  ],
+  "representations": {
+    "50": "authored",
+    "100": "authored",
+    "200": "authored",
+    "500": "authored"
+  },
+  "symbols": [],
+  "analytics": [
+    "thermal",
+    "transport",
+    "structural"
+  ],
+  "exports": [
+    "svg",
+    "pdf",
+    "dxf",
+    "dwg",
+    "png-sequence",
+    "mp4",
+    "webm",
+    "component",
+    "glb",
+    "fbx",
+    "model",
+    "model-zip"
+  ],
+  "distinction": {
+    "en": "A slim 1.69 m adult in a fleece hooded sweatshirt, jeans, canvas sneakers and a nylon belt bag in front of the hips, greeting with the right forearm upright and the open palm forward at 1.7 met; also hailing with the arm stretched up, waving with both arms and standing relaxed, with a wave loop, a hail-and-wave gesture and idle breathing.",
+    "de": "Eine schlanke erwachsene Person von 1,69 m in Fleece-Kapuzenpullover, Jeans, Stoffsneakern und Nylon-Gürteltasche vor der Hüfte, die mit aufrechtem rechtem Unterarm und nach vorn gedrehter offener Handfläche bei 1,7 met grüßt; außerdem Herbeirufen mit hochgestrecktem Arm, Winken mit beiden Armen und entspanntes Stehen, mit einer Winkschleife, einer Geste aus Herbeirufen und Winken und ruhigem Atmen."
+  },
+  "completion": "authored"
+}

@@ -1,0 +1,51 @@
+{
+  "id": "person-with-guide-dog",
+  "category": "humans",
+  "title": {
+    "en": "Person with Guide Dog",
+    "de": "Person mit Führhund"
+  },
+  "heightM": 1.71,
+  "widthM": 1.284,
+  "powerW": 175.5,
+  "poses": [
+    "standing-with-guide-dog",
+    "walking-with-guide-dog",
+    "waiting-dog-sitting"
+  ],
+  "clips": [
+    "guided-walk",
+    "kerb-stop-and-sit"
+  ],
+  "representations": {
+    "50": "authored",
+    "100": "authored",
+    "200": "authored",
+    "500": "authored"
+  },
+  "symbols": [],
+  "analytics": [
+    "thermal",
+    "transport",
+    "structural"
+  ],
+  "exports": [
+    "svg",
+    "pdf",
+    "dxf",
+    "dwg",
+    "png-sequence",
+    "mp4",
+    "webm",
+    "component",
+    "glb",
+    "fbx",
+    "model",
+    "model-zip"
+  ],
+  "distinction": {
+    "en": "A blind woman of 1.68 m in a denim jacket and sunglasses walking with her guide dog, a 30 kg Labrador Retriever in a harness with a rigid handle held in her left hand: standing, walking and waiting with the dog sitting, with a guided walk and a kerb stop where the dog sits; two living bodies with their own heat, breath and supports in one asset.",
+    "de": "Eine blinde Frau von 1,68 m in Jeansjacke und Sonnenbrille, die mit ihrem Führhund geht, einem 30 kg schweren Labrador Retriever im Führgeschirr, dessen starren Bügel sie in der linken Hand hält: stehend, gehend und wartend mit sitzendem Hund, mit einem geführten Gang und einem Halt an der Bordsteinkante, bei dem der Hund sich setzt; zwei lebende Körper mit eigener Wärme, eigenem Atem und eigenen Auflagern in einem Objekt."
+  },
+  "completion": "authored"
+}

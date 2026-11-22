@@ -220,7 +220,7 @@ export function proveMcpInferenceBridgeFixture(repoRoot: string): InferenceBridg
   const jobVectors = JSON.parse(readFileSync(resolve(import.meta.dir, "../🧫️fixtures/🔣️.json"), "utf8"));
   const eventPage = hubInferenceExport(repoRoot, "InferenceEventPageV1");
   for (const row of jobVectors.cases) must((eventPage(row.response) && row.response.jobId === row.requestedJobId) === (row.expectedError === null), "owner job page schema and requested identity agree");
-  const fixtureRoot = resolve(repoRoot, "🌎️hub/🧫️fixtures/🗳️gis-map-proposal-approval-v1");
+  const fixtureRoot = resolve(repoRoot, "🌎️hub/🧪️tests/🧫️fixtures/🗳️gis-map-proposal-approval-v1");
   const fixture = JSON.parse(readFileSync(resolve(fixtureRoot, "🔣️.json"), "utf8"));
   const hubBinSource = readFileSync(resolve(repoRoot, "🌎️hub/🏗️bootstrap/🛣️routes/🦀️.rs"), "utf8");
 

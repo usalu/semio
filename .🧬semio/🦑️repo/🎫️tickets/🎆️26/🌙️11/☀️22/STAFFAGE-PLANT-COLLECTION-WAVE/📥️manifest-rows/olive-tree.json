@@ -1,0 +1,56 @@
+{
+  "id": "olive-tree",
+  "category": "vegetation",
+  "title": {
+    "en": "Olive Tree, Old and Gnarled",
+    "de": "Ölbaum, alt und knorrig"
+  },
+  "heightM": 6.891,
+  "widthM": 8.163,
+  "powerW": 0,
+  "poses": [
+    "calm",
+    "windy",
+    "fruit-laden",
+    "storm"
+  ],
+  "clips": [
+    "wind-sway",
+    "gust",
+    "diurnal-transpiration"
+  ],
+  "representations": {
+    "50": "authored",
+    "100": "authored",
+    "200": "authored",
+    "500": "authored"
+  },
+  "symbols": [
+    "olive-tree-symbol",
+    "tree-sign"
+  ],
+  "analytics": [
+    "thermal",
+    "transport",
+    "structural"
+  ],
+  "exports": [
+    "svg",
+    "pdf",
+    "dxf",
+    "dwg",
+    "png-sequence",
+    "mp4",
+    "webm",
+    "component",
+    "glb",
+    "fbx",
+    "model",
+    "model-zip"
+  ],
+  "distinction": {
+    "en": "An old, gnarled olive tree with a massive, fissured stem and a broad, silvery evergreen crown; the olive crop is carried as a seasonal pose and load in a hot, dry summer climate.",
+    "de": "Ein alter, knorriger Ölbaum mit mächtigem, rissigem Stamm und breiter, silbriger immergrüner Krone; der Olivenbehang wird als jahreszeitliche Pose und Last in heißem, trockenem Sommerklima geführt."
+  },
+  "completion": "authored"
+}

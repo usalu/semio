@@ -250,6 +250,10 @@ const PROBES = [
       const last = steps_.at(-1) ?? {};
       const gestures = steps_.filter((s) => /^g\d+_/.test(s.name ?? ""));
       const quarantines = steps_.reduce((n, s) => n + (s.wire?.quarantines ?? []).length, 0);
+      const idleStart = steps_.find((s) => s.name === "idle_start");
+      const idleEnd = steps_.find((s) => s.name === "idle_end");
+      const idleBatches = (idleEnd?.wire?.batches ?? 0) - (idleStart?.wire?.batches ?? 0);
+      const idleAdmits = (idleEnd?.admits ?? 0) - (idleStart?.admits ?? 0);
       return {
         steps: [
           { step: `${gestures.length} gestures run`, ok: gestures.length >= 20, detail: { gestures: gestures.length } },
@@ -261,8 +265,13 @@ const PROBES = [
            * happened to be a reply. */
           { step: "the frame wire is still answering", ok: (last.wire?.batches ?? 0) - (last.wire?.frames ?? 0) <= 1 && (last.wire?.faults ?? []).length === 0, detail: { batches: last.wire?.batches, frames: last.wire?.frames, answered: last.wire?.lastBatchAnswered, faults: (last.wire?.faults ?? []).length } },
           { step: "the loop keeps publishing actions", ok: (last.actions ?? 0) > 0, detail: { actions: last.actions, admits: last.admits, sweeps: last.sweeps } },
+          /** 💤️ Redraw on demand: the probe brackets an input-free window (`idle_start`..`idle_end`). One trailing
+           * batch or build may land right at its start; anything more is the idle spin. */
+          { step: "idle window sends no batches", ok: idleStart != null && idleEnd != null && idleBatches <= 1, detail: { batches: idleBatches } },
+          { step: "idle window builds no frames", ok: idleStart != null && idleEnd != null && idleAdmits <= 1, detail: { admits: idleAdmits } },
+          { step: "the last frame after idle requests no further frame", ok: idleEnd != null && idleEnd.wire?.lastFrame?.requestFrame === false, detail: { requestFrame: idleEnd?.wire?.lastFrame?.requestFrame } },
         ],
-        key: { batches: last.wire?.batches, frames: last.wire?.frames, actions: last.actions, admits: last.admits, sweeps: last.sweeps, quarantines },
+        key: { batches: last.wire?.batches, frames: last.wire?.frames, actions: last.actions, admits: last.admits, sweeps: last.sweeps, quarantines, idleBatches, idleAdmits },
         pageerrors: countPageErrors(console_), faults: faultLines(console_),
       };
     },

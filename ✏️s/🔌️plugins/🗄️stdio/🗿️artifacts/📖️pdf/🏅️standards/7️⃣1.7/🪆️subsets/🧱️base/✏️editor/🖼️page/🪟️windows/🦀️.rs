@@ -21,7 +21,7 @@ pub fn window_definition() -> WindowKindDefinition {
         definition.semantics.execution.interactive_job = semio_plugin::InteractiveJobClassification::Migrated;
         definition
     };
-    WindowKindDefinition {
+    let mut definition = WindowKindDefinition {
         initial_utility_id: None,
         id: WINDOW_KIND_ID.into(),
         label: LocalizedLabel::native("Page", "Seite"),
@@ -109,6 +109,7 @@ pub fn window_definition() -> WindowKindDefinition {
             action("set-glyph", "Set Glyph", "Glyphe setzen", vec![object(), text(), x(), y(), width(), height()]),
             action("set-indirect-object", "Set Indirect Object", "Objekt setzen", vec![x(), y(), ActionArgDef::text("text", LocalizedLabel::native("Name", "Name")).min_length(0)]),
             action("set-mesh-reference", "Set Mesh Reference", "Netzreferenz setzen", vec![object(), ActionArgDef::text("text", LocalizedLabel::native("Decode", "Dekodierung")).min_length(0), ActionArgDef::text("extra", LocalizedLabel::native("Artifact Identity", "Artefaktidentität")).min_length(0)]),
+            action("set-entry", "Set Entry", "Eintrag setzen", vec![ActionArgDef::text("object", LocalizedLabel::native("Family (catalog, trailer, info, viewer)", "Familie (catalog, trailer, info, viewer)")).min_length(1).required(), ActionArgDef::text("text", LocalizedLabel::native("Value (key=value to add)", "Wert (key=value zum Hinzufügen)")).min_length(0), ActionArgDef::text("extra", LocalizedLabel::native("Key", "Schlüssel")).min_length(0)]),
             action("create-annotation", "Create Annotation", "Anmerkung erstellen", vec![page(), ActionArgDef::text("object", LocalizedLabel::native("Kind (note, highlight, underline, strikeOut, squiggly, ink, link)", "Art (note, highlight, underline, strikeOut, squiggly, ink, link)")).min_length(1).required(), ActionArgDef::text("text", LocalizedLabel::native("Contents or link", "Inhalt oder Link")).min_length(0), ActionArgDef::text("extra", LocalizedLabel::native("Quad points or ink strokes", "Quadpunkte oder Freihandstriche")).min_length(0), x(), y(), ActionArgDef::number("width", LocalizedLabel::native("Width", "Breite")), ActionArgDef::number("height", LocalizedLabel::native("Height", "Höhe")), ActionArgDef::number("red", LocalizedLabel::native("Red", "Rot")), ActionArgDef::number("green", LocalizedLabel::native("Green", "Grün")), ActionArgDef::number("blue", LocalizedLabel::native("Blue", "Blau"))]),
             action("fill-form-field", "Fill Form Field", "Formularfeld ausfüllen", vec![ActionArgDef::text("object", LocalizedLabel::native("Field name", "Feldname")).min_length(1).required(), ActionArgDef::text("text", LocalizedLabel::native("Value", "Wert")).min_length(0)]),
             action("replace-page", "Replace Page", "Seite ersetzen", vec![page(), ActionArgDef::text("payload", LocalizedLabel::native("PDF Data", "PDF-Daten")).min_length(0), ActionArgDef::text("extra", LocalizedLabel::native("Source Page", "Quellseite")).min_length(0), ActionArgDef::number("width", LocalizedLabel::native("Width", "Breite")), ActionArgDef::number("height", LocalizedLabel::native("Height", "Höhe"))]),
@@ -124,7 +125,10 @@ pub fn window_definition() -> WindowKindDefinition {
         input_event_schema: None,
         output_schema: None,
         capabilities: Vec::new(),
-    }
+    };
+    definition.actions.extend(view_action_definitions());
+    definition.actions.extend(semio_s_artifact_stdio_pdf_presence_lane::presence_action_definitions());
+    definition
 }
 
 /// 🖼️ Paints every page, stacked top to bottom, with one layer per object.
@@ -232,6 +236,9 @@ pub fn render_inspector(
                 .map_err(|_| inspector_error("pdf.object.page-action-binding"))?.try_build().map_err(|_| inspector_error("pdf.object.page-action"))?;
             column = column.try_child(node).map_err(|_| inspector_error("pdf.object.page-action"))?;
         }
+        for node in entry_forms(snapshot, controller_id, publication_revision, locale)? {
+            column = column.try_child(node).map_err(|_| inspector_error("pdf.object.entries"))?;
+        }
         for node in authoring_controls(page_index, size, controller_id, publication_revision, locale)? {
             column = column.try_child(node).map_err(|_| inspector_error("pdf.object.authoring"))?;
         }
@@ -288,5 +295,21 @@ pub fn search(snapshot: &PdfSnapshot, query: &str, match_case: bool, control: &m
 pub fn hit_layers(snapshot: &PdfSnapshot, hits: &[SearchHit], active: Option<usize>) -> Vec<OverlayLayer> {
     let placed = placement(snapshot, &page_viewports(snapshot).collect::<Vec<_>>(), &mut FontMeasurements::new(snapshot));
     highlight_hits(hits, active, &|id| placed.iter().find(|p| p.object.id == id).map(|p| [p.canvas_x, p.canvas_y, p.canvas_w, p.canvas_h]))
+}
+
+/// 👥️ The page every object lives on, by object id.
+pub fn object_page_of(snapshot: &PdfSnapshot) -> impl Fn(&str) -> Option<u32> {
+    let pages: std::collections::BTreeMap<String, u32> = objects(snapshot).into_iter().map(|o| (o.id, o.page as u32)).collect();
+    move |id| pages.get(id).copied().or_else(|| semio_s_artifact_stdio_pdf_presence_lane::page_of_object(id))
+}
+
+/// 👥️ Collaborator layers over the page `overlay` was projected for: selection frames, visible-area frames, carets and pointers.
+pub fn peer_overlay_layers(snapshot: &PdfSnapshot, overlay: &semio_s_artifact_stdio_pdf_presence_lane::PeerOverlay) -> Vec<OverlayLayer> {
+    if overlay.selections.is_empty() && overlay.pointers.is_empty() && overlay.viewports.is_empty() && overlay.carets.is_empty() {
+        return Vec::new();
+    }
+    let Some(page) = page_viewports(snapshot).nth(overlay.page as usize).map(|viewport| viewport.clip_rect()) else { return Vec::new() };
+    let placed = placement(snapshot, &page_viewports(snapshot).collect::<Vec<_>>(), &mut FontMeasurements::new(snapshot));
+    semio_s_artifact_stdio_pdf_presence_lane::peer_layers(overlay, page, &|id| placed.iter().find(|p| p.object.id == id).map(|p| [p.canvas_x, p.canvas_y, p.canvas_w, p.canvas_h]))
 }
 //#endregion 🔭️ViewGlue

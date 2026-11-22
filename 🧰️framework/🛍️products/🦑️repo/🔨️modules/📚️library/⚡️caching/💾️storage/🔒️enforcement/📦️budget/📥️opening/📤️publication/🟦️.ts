@@ -167,8 +167,16 @@ import{withCurrentBunWorkspaceOwnershipV1}from"../../../../../../🗂️workspac
 import bunWorkspaceSchema from"../../../../../../🗂️workspaces/🟦️bun/🧬️schema/🔣️.json"with{type:"json"};
 import{validateJsonSchemaSubset as validateDependencyMaintenanceSchemaV1}from"@semio-tech/schema-validator-ts";
 const dependencySelectedPlanProtocol=Object.freeze({...dependencyInstallSchema.$defs.SelectedPlanProtocol.const});
-import{dependencyGenerationNamesV1,dependencyNameKindV1,settleDependencyForeignNamesV1,type DependencyForeignPolicyV1}from"./🧹️foreign-names/🟦️.ts";
+import{dependencyContainerChangeV1,dependencyGenerationNamesV1,dependencyNameKindV1,settleDependencyForeignNamesV1,type DependencyForeignPolicyV1}from"./🧹️foreign-names/🟦️.ts";
 const dependencyForeignPolicy=dependencySelectedPlanProtocol.foreignNames as DependencyForeignPolicyV1;
+/** 🧭️ Requires the generation folder `j` to hold exactly the generation and capsule names of the plan and to be the same directory (device, inode, mode): tombstones of a retirement in flight, the quarantine folder and OS metadata are legal names that come and go in an hour-long proof and never change which generations exist, so a changed size or time of the folder alone is no change of the roster. The refusal names what was added and what is gone, so the cause of a changed roster is read from the output.
+ * @see ./🧹️foreign-names/🟦️.ts */
+export function requireRepositoryDependencyContainerV1(names:readonly string[],stamp:string,plan:Readonly<{generations:Readonly<{names:readonly string[];stamp:string}>}>,message:string):void{
+ const change=dependencyContainerChangeV1(names,stamp,plan.generations,dependencyForeignPolicy);
+ if(change===undefined)return;
+ if(change.kind==="roster")try{sayCachingV1("dependency-store.container-roster-changed",{added:JSON.stringify(change.added),gone:JSON.stringify(change.gone)},"warn");}catch{}
+ throw Error(change.kind==="roster"?message:message+" (directory identity changed)");
+}
 /** 📬️ Parses current plan DATA without granting storage or payload effect authority. */
 export function readSelectedRepositoryDependencyPlanRequestV1(value:unknown):Readonly<{version:1;purpose:"plan-current-dependency-generations";selectedPrefix:string|null;parent:NativeProtectedMaintenanceRequestV1}>{if(validateDependencyMaintenanceSchemaV1(dependencyInstallSchema.$defs.SelectedPlanRequest,value,{definitions:dependencyNativeSchema.definitions}).length)throw Error("Closed current dependency plan request required");const row=value as{selectedPrefix:string|null;parent:unknown};return Object.freeze({version:1,purpose:"plan-current-dependency-generations",selectedPrefix:row.selectedPrefix,parent:readNativeProtectedMaintenanceRequestV1(row.parent)});}
 /** 🎚️ Captures only a bounded complete current directory level through one real reader. */
@@ -429,7 +437,7 @@ async function retireRepositoryDependencyBootstrapCapsuleV1(workspace:string,lea
    if(!final||JSON.stringify(final)!==JSON.stringify(still))throw Error("Exact owned bootstrap capsule before retirement required");
    await withArtifactRelativeDirectoryV1(root,check,base=>base.withDirectory("j",async container=>{
     const before=container.stat(),names=await container.names();
-    if(stamp(before)!==plan.generations.stamp||JSON.stringify(names)!==JSON.stringify(plan.generations.names))throw Error("Exact bootstrap capsule roster required");
+    requireRepositoryDependencyContainerV1(names,stamp(before),plan,"Exact bootstrap capsule roster required");
     const removed=await container.withDirectory(prefix,selected=>retireRepositoryDependencyRelativePayloadV1(selected,payload,control,check,boundary));
     await boundary();const selected=await container.entry(prefix);
     if(!selected||selected.kind!=="directory"||stamp(selected)!==removed.rootStamp)throw Error("Durably empty bootstrap capsule required");
@@ -489,12 +497,12 @@ export async function maintainSelectedRepositoryDependencyGenerationV1(invocatio
      await verifyCurrent();const bodyFailures:unknown[]=[];let retired=false;
      try{if(request.operation==="retire"){
       await withArtifactRelativeDirectoryV1(root,()=>check(current),rootDirectory=>rootDirectory.withDirectory("j",async container=>{
-       const names=await container.names();if(JSON.stringify(names)!==JSON.stringify(plan.generations.names)||selectedStamp(container.stat())!==plan.generations.stamp)throw Error("Exact selected dependency container roster required");const before=container.stat();let finalStamp:string|undefined;
+       const names=await container.names();requireRepositoryDependencyContainerV1(names,selectedStamp(container.stat()),plan,"Exact selected dependency container roster required");const before=container.stat();let finalStamp:string|undefined;
        await container.withDirectory(request.selection.prefix,async selected=>{if(selectedStamp(selected.stat())!==snapshot.rootStamp)throw Error("Exact privately captured selected dependency root required");const removed=await retireRepositoryDependencyRelativePayloadV1(selected,payload,current,()=>check(current),boundary);finalStamp=removed.rootStamp;});
        await boundary();const selected=await container.entry(request.selection.prefix);if(!selected||selected.kind!=="directory"||selectedStamp(selected)!==finalStamp)throw Error("Exact durably empty selected dependency directory required");await container.remove(request.selection.prefix,selected);await container.sync();check(current);const after=container.stat();if(after.dev!==before.dev||after.ino!==before.ino||after.mode!==before.mode||JSON.stringify(await container.names())!==JSON.stringify(names.filter(name=>name!==request.selection.prefix))||await container.entry(request.selection.prefix)!==null)throw Error("Exact selected dependency postorder roster transition required");
       }));retired=true;
      }
-     await verifyCurrent();const after=await captureRepositoryDependencySelectedPlanV1(workspace,context,current,ownership,bindings,null);if(JSON.stringify(after.roles)!==JSON.stringify(plan.roles)||JSON.stringify(after.generations.names)!==JSON.stringify(plan.generations.names.filter(name=>!retired||name!==request.selection.prefix))||JSON.stringify(after.candidates)!==JSON.stringify(plan.candidates.filter(row=>!retired||row.prefix!==request.selection.prefix)))throw Error("Nonselected Dependencies current roster changed");if(!retired&&after.generations.stamp!==plan.generations.stamp)throw Error("Observed selected Dependencies roster changed");await verifyCurrent();
+     await verifyCurrent();const after=await captureRepositoryDependencySelectedPlanV1(workspace,context,current,ownership,bindings,null);if(JSON.stringify(after.roles)!==JSON.stringify(plan.roles)||JSON.stringify(after.generations.names)!==JSON.stringify(plan.generations.names.filter(name=>!retired||name!==request.selection.prefix))||JSON.stringify(after.candidates)!==JSON.stringify(plan.candidates.filter(row=>!retired||row.prefix!==request.selection.prefix)))throw Error("Nonselected Dependencies current roster changed");if(!retired&&JSON.stringify(JSON.parse(after.generations.stamp).slice(0,3))!==JSON.stringify(JSON.parse(plan.generations.stamp).slice(0,3)))throw Error("Observed selected Dependencies roster changed");await verifyCurrent();
      }catch(error){retainNativeStorageFailureV1(bodyFailures,error);try{await verifyCurrent();}catch(close){retainNativeStorageFailureV1(bodyFailures,close);}}
      if(bodyFailures.length>1)throw new AggregateError(bodyFailures,"Selected Dependencies body and terminal observation failed");if(bodyFailures.length)throw bodyFailures[0];const result=Object.freeze({version:1,purpose:"current-selected-dependency-maintenance",operation:request.operation,selected:snapshot,retired,wholeAllocationRetired:false,publicationRetirementDispatches:0,journalSha256:request.artifact.journalSha256,journalBytes:request.artifact.journalBytes});if(validateDependencyMaintenanceSchemaV1(dependencyInstallSchema.$defs.SelectedRetirementResult,result,dependencyInstallSchema).length)throw Error("Closed settled selected Dependencies result required");return result;
      });

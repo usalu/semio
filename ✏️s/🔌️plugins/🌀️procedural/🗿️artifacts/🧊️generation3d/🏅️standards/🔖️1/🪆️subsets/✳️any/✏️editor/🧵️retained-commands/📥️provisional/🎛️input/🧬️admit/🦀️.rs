@@ -33,7 +33,7 @@ impl TypedInputAdmission{
   self.validate(input)?;if self.result.is_some(){return Ok(Default::default())}
   Ok(fixed(match self.phase{
    1=>input.channel.len().saturating_sub(self.offset).min(copy.max(1).min(64)),
-   3=>if self.item==count(&input.input){0}else if let Some(value)=text(&input.input,self.item){value.len().saturating_sub(self.offset).min(copy.max(1).min(64))}else if self.axis<lanes(&input.input){std::mem::size_of::<f64>()}else{0},
+   3=>if self.item==count(&input.input){0}else if let Some(value)=text(&input.input,self.item){value.len().saturating_sub(self.offset).min(copy.max(1).min(64))}else if self.axis<lanes(&input.input){size_of::<f64>()}else{0},
    _=>0,
   }))
  }

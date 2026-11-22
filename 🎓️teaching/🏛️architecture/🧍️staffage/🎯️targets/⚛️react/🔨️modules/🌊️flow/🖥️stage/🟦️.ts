@@ -1,15 +1,18 @@
 /** 🖥️ `FlowStage`: the air flow of one figure as plain DOM laid over it — the overlay canvas, a progress bar with cancel while the flow develops, and the words that say what is shown, what was cancelled or what failed, with a retry. The drawing figure and the 3D stage both mount this one class, so the flow behaves and reads the same in every view.
  *
- * The stage follows its options: asset, pose or clip and environment decide the solve ({@link FlowSession}); layers, theme, range and scale decide the marks; the shared {@link StaffageClock} is the only time (a paused clock shows a still field, a missing clock the developed field of the first instant). The owner supplies the projection and calls {@link FlowStage.redraw} when it changed (camera, zoom, size).
- * Accessibility: the canvas is decoration (`aria-hidden`); a polite status states the field in words; the progress bar and the buttons are native elements with names. Reduced motion is the clock's concern: a paused clock moves nothing here.
+ * The stage follows its options: asset, pose or clip, environment, the conditions of the air and whether the parcel paths are a layer decide the solve ({@link FlowSession}; changing one of them starts it again); layers, theme, range, scale and the mark detail decide the marks (changing one of them only redraws); the shared {@link StaffageClock} is the only time (a paused clock shows a still field, a missing clock the developed field of the first instant). The owner supplies the projection and calls {@link FlowStage.redraw} when it changed (camera, zoom, size).
+ * The stage lives where it is mounted: inside a shadow root its style goes into that root, and {@link FlowStage.mount} moves it to another parent when the owner rewrote its own markup.
+ * Accessibility: the canvas is decoration (`aria-hidden`); a polite status states the field and its wind in words; the progress bar and the buttons are native elements with names. Reduced motion is the clock's concern: a paused clock moves nothing here.
  *
  * @see ../📡️session/🟦️.ts — the solver client
  * @see ../🖌️overlay/🟦️.ts — the renderer
  */
-import { formatNumber } from "@teaching/staffage";
-import type { Asset, DisplayRange, Environment, EvaluationQuery, FlowField, FlowLayer, Language } from "@teaching/staffage";
+import { CAMERAS, axonometricCamera, evaluate, formatNumber, moveFlow, project } from "@teaching/staffage";
+import type { Asset, DisplayRange, DrawingScene, Environment, EvaluationQuery, FlowConditions, FlowField, FlowLayer, FlowMarkDetail, Language, Viewpoint } from "@teaching/staffage";
 import type { StaffageClock } from "../../⏱️clock/🧱️core/🟦️.ts";
 import { translator } from "../../🌐️i18n/🟦️.ts";
+import type { SceneFrame } from "../../🧮️pipeline/🟦️.ts";
+import { flowPeriodS, windSector } from "../🟦️.ts";
 import { FlowOverlay, type FlowProjection } from "../🖌️overlay/🟦️.ts";
 import { FlowSession, type FlowStatus } from "../📡️session/🟦️.ts";
 
@@ -18,6 +21,8 @@ export type FlowStageOptions = {
   readonly asset: Asset;
   readonly query: EvaluationQuery;
   readonly environment: Environment;
+  readonly conditions?: FlowConditions;
+  readonly detail?: FlowMarkDetail;
   readonly clock: StaffageClock | null;
   readonly layers: readonly FlowLayer[];
   readonly theme: "light" | "dark";
@@ -41,7 +46,29 @@ const CSS = `
 .semio-flow-status{position:absolute;inline-size:1px;block-size:1px;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 `;
 
-const solveKey = (options: FlowStageOptions): string => JSON.stringify([options.asset.id, options.query.kind, options.query.kind === "pose" ? options.query.pose : options.query.kind === "clip" ? options.query.clip : null, options.environment]);
+const solveKey = (options: FlowStageOptions): string => JSON.stringify([options.asset.id, options.query.kind, options.query.kind === "pose" ? options.query.pose : options.query.kind === "clip" ? options.query.clip : null, options.environment, options.conditions ?? {}, options.layers.includes("pathlines")]);
+
+/** 🗺️ How the world lands on a drawing that fills `host`: the paper mapping of `scene` in `viewpoint`, through the paper window the figure shows (the whole scene when none), fitted and centred as the inline SVG is, seen from the eye of the viewpoint (so the marks behind the body are hidden as on paper). `null` while the host has no size. */
+export function paperProjection(host: { readonly clientWidth: number; readonly clientHeight: number } | null, scene: DrawingScene, window: SceneFrame | undefined, viewpoint: Viewpoint): FlowProjection | null {
+  if (host === null || host.clientWidth === 0 || host.clientHeight === 0) return null;
+  const { origin, mmPerMetre: k } = scene.metadata;
+  const view = window === undefined ? { x: 0, y: 0, w: scene.widthMm, h: scene.heightMm } : { x: origin.xMm + window.minX, y: origin.yMm + window.minY, w: window.maxX - window.minX, h: window.maxY - window.minY };
+  const pxPerMm = Math.min(host.clientWidth / view.w, host.clientHeight / view.h);
+  const left = (host.clientWidth - view.w * pxPerMm) / 2;
+  const top = (host.clientHeight - view.h * pxPerMm) / 2;
+  const camera = viewpoint === "axonometric" ? axonometricCamera() : undefined;
+  const looking = camera === undefined ? CAMERAS[viewpoint as Exclude<Viewpoint, "axonometric">].looking : camera.looking;
+  return {
+    pxPerMm,
+    eye: { toward: { x: -looking.x, y: -looking.y, z: -looking.z } },
+    project: (at, out) => {
+      const q = project(viewpoint, at, camera);
+      out[0] = left + (origin.xMm + q.x * k - view.x) * pxPerMm;
+      out[1] = top + (origin.yMm - q.y * k - view.y) * pxPerMm;
+      return true;
+    },
+  };
+}
 
 /** 🌊️ The air flow layer of one figure. */
 export class FlowStage {
@@ -61,15 +88,11 @@ export class FlowStage {
   #startS = 0;
   #shown: FlowField | null = null;
   #disposed = false;
+  #stride: { readonly x: number; readonly y: number; readonly z: number } | null = null;
+  readonly #moved = new WeakMap<FlowField, FlowField>();
 
   constructor(parent: HTMLElement, options: FlowStageOptions) {
     const doc = parent.ownerDocument;
-    if (doc.getElementById(STYLE_ID) === null) {
-      const style = doc.createElement("style");
-      style.id = STYLE_ID;
-      style.textContent = CSS;
-      doc.head.append(style);
-    }
     this.#options = options;
     this.#asset = options.asset;
     this.#root = doc.createElement("div");
@@ -91,7 +114,7 @@ export class FlowStage {
     this.#status.setAttribute("aria-live", "polite");
     this.#bar.append(this.#progress, this.#text, this.#button);
     this.#root.append(canvas, this.#bar, this.#status);
-    parent.append(this.#root);
+    this.mount(parent);
     this.#overlay = new FlowOverlay(canvas);
     this.#session = new FlowSession(() => this.#changed());
     this.#bind(options.clock);
@@ -103,7 +126,27 @@ export class FlowStage {
     return this.#session.status;
   }
 
-  /** 🔄️ Applies changed options: a new solve when asset, pose or clip or environment changed, otherwise only a redraw. */
+  /** 🌊️ The latest field, `null` until the first one arrived. */
+  get flow(): FlowField | null {
+    return this.#session.flow;
+  }
+
+  /** 📌️ Puts the layer into `parent` (again): the owner calls it after it replaced the element the layer stood in. The style sheet of the layer goes where `parent` is styled from, the document or its shadow root. */
+  mount(parent: HTMLElement): void {
+    const doc = parent.ownerDocument;
+    const scope = parent.getRootNode();
+    const sheets: ParentNode = typeof ShadowRoot === "function" && scope instanceof ShadowRoot ? scope : doc.head;
+    if (sheets.querySelector(`#${STYLE_ID}`) === null) {
+      const style = doc.createElement("style");
+      style.id = STYLE_ID;
+      style.textContent = CSS;
+      sheets.append(style);
+    }
+    if (this.#root.parentNode !== parent) parent.append(this.#root);
+    this.redraw();
+  }
+
+  /** 🔄️ Applies changed options: a new solve when asset, pose or clip, environment or conditions changed, otherwise only a redraw. */
   update(patch: Partial<FlowStageOptions>): void {
     if (this.#disposed) return;
     const before = this.#options;
@@ -150,9 +193,10 @@ export class FlowStage {
     this.#key = solveKey(options);
     this.#asset = options.asset;
     this.#shown = null;
+    this.#stride = null;
     this.#startS = this.#clockS();
     options.onFlow?.(null);
-    this.#session.open(options.asset, options.query, options.environment);
+    this.#session.open(options.asset, options.query, options.environment, options.conditions, options.layers.includes("pathlines"));
     this.#tick();
   }
 
@@ -192,7 +236,29 @@ export class FlowStage {
     this.#button.setAttribute("data-action", phase === "developing" ? "cancel" : "retry");
     const flow = this.#session.flow;
     const words = phase !== "ready" || flow === null ? this.#text.textContent ?? "" : flow.streams.length === 0 && flow.puffs.length === 0 ? t("flow.still") : t("flow.ready", { streams: flow.streams.length, air: formatNumber(flow.ambient.airTempC, 1, language), rh: Math.round(flow.ambient.relativeHumidity * 100), dew: formatNumber(flow.ambient.dewPointC, 1, language) });
-    if (this.#status.textContent !== words) this.#status.textContent = words;
+    const wind = phase !== "ready" || flow === null ? "" : flow.ambient.windMS > 0 ? t("flow.windWords", { direction: t(`wind.towards.${windSector(flow.ambient.windDirectionDeg)}`), bearing: formatNumber(flow.ambient.windDirectionDeg, 0, language), speed: formatNumber(flow.ambient.windMS, 1, language) }) : t("flow.windStill");
+    this.#root.setAttribute("data-wind", flow === null ? "" : `${flow.ambient.windMS} ${flow.ambient.windDirectionDeg}`);
+    const spoken = wind === "" ? words : `${words} ${wind}`;
+    if (this.#status.textContent !== spoken) this.#status.textContent = spoken;
+  }
+
+  /** 🚶️ The field around the figure the clock shows: a loop in which the figure travels (a walk cycle) is solved at a later round of the same phase, so the field is moved back by the whole rounds the rig root travelled since (`moveFlow`); the stride of one round is evaluated once per solve. */
+  #around(flow: FlowField | null): FlowField | null {
+    if (flow === null) return null;
+    const { asset, query } = this.#options;
+    const periodS = flowPeriodS(asset, query);
+    if (query.kind !== "clip" || periodS <= 0) return flow;
+    const kept = this.#moved.get(flow);
+    if (kept !== undefined) return kept;
+    if (this.#stride === null) {
+      const from = evaluate(asset, { ...query, timeS: 0 }).bones[asset.rig.root]?.frame.o;
+      const to = evaluate(asset, { ...query, timeS: periodS }).bones[asset.rig.root]?.frame.o;
+      this.#stride = from === undefined || to === undefined ? { x: 0, y: 0, z: 0 } : { x: to.x - from.x, y: to.y - from.y, z: to.z - from.z };
+    }
+    const rounds = Math.floor(flow.timeS / periodS + 1e-9);
+    const moved = moveFlow(flow, { x: -rounds * this.#stride.x, y: -rounds * this.#stride.y, z: -rounds * this.#stride.z });
+    this.#moved.set(flow, moved);
+    return moved;
   }
 
   #draw(): void {
@@ -201,6 +267,6 @@ export class FlowStage {
     const projection = options.projection();
     const visible = this.#session.status.phase === "ready" || (this.#session.status.phase === "developing" && this.#session.flow !== null);
     if (projection === null) return;
-    this.#overlay.draw({ flow: visible ? this.#session.flow : null, timeS: this.#startS + this.#session.elapsedS, layers: options.layers, theme: options.theme, range: options.range, denominator: options.scale, projection });
+    this.#overlay.draw({ flow: visible ? this.#around(this.#session.flow) : null, timeS: this.#startS + this.#session.elapsedS, layers: options.layers, theme: options.theme, range: options.range, denominator: options.scale, ...(options.detail === undefined ? {} : { detail: options.detail }), projection });
   }
 }

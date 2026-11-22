@@ -133,6 +133,9 @@ pub enum RuntimeApply {
     RestoreInteraction(Option<AppInteractionState>),
     #[cfg(not(target_arch = "wasm32"))]
     PluginReload(Option<Result<Vec<program_bridge::ProgramBridgeEntry>, String>>),
+    /// 🎞️ One media-window action (the trim cut) as the page host's `{windowId, controllerId, action, args}` JSON: parsed like the browser's and run through the same `dispatch_action` the UI intents use.
+    #[cfg(not(target_arch = "wasm32"))]
+    MediaAction(Option<String>),
 }
 
 impl RuntimeApply {
@@ -141,6 +144,8 @@ impl RuntimeApply {
             Self::Applied => Ok(true),
             #[cfg(not(target_arch = "wasm32"))]
             Self::FrameExecutionReturned => Ok(true),
+            #[cfg(not(target_arch = "wasm32"))]
+            Self::MediaAction(_) => Ok(true),
             Self::ResumeFrameDeferred { interaction, cursor } => {
                 if interaction.is_some() { if !frame_action_metadata(cx)? { return Ok(false); } runtime.return_interaction(interaction.take().unwrap()); return Ok(false); }
                 if let Some(owner) = cursor.as_mut() { owner.begin_close(); if !owner.close_step(cx)? { return Ok(false); } if !frame_action_metadata(cx)? { return Ok(false); } cursor.take(); return Ok(false); }
@@ -223,8 +228,7 @@ impl RuntimeApply {
         }
         log_debug_once_per_transition("start-dispatch-checkout", false, "[TRACE] start_dispatch: interaction state checked out for one event");
         if !mailbox.reserve_interaction_future() {
-            log_debug("[TRACE] start_dispatch refused: interaction future credits exhausted");
-            interaction.frame_fault = Some("runtime dispatch completion credits exhausted".to_string());
+            log_debug("[TRACE] start_dispatch deferred: interaction future credits exhausted, retrying next frame");
             runtime.return_interaction(interaction);
             return Ok(false);
         }
@@ -256,7 +260,6 @@ impl RuntimeApply {
         let checkout_site = cursor_value.checkout_site();
         let Some(mut interaction) = runtime.check_out_interaction(checkout_site) else { return false };
         if !mailbox.reserve_interaction_future() {
-            interaction.frame_fault = Some("frame deferred completion credits exhausted".to_string());
             runtime.return_interaction(interaction);
             return false;
         }
@@ -400,6 +403,23 @@ impl RuntimeApply {
             Self::ResumeFrameDeferred { .. } => unreachable!(),
             #[cfg(not(target_arch = "wasm32"))]
             Self::RestoreInteraction(_) => unreachable!(),
+            #[cfg(not(target_arch = "wasm32"))]
+            Self::MediaAction(action) => {
+                let parsed = action.take().map(|json| semio_renderer_wgpu_shell_dock::parse_media_action(&json));
+                if let Some(Err(error)) = &parsed {
+                    log_debug(&format!("media action refused: {error}"));
+                }
+                if let Some(Ok(action)) = parsed {
+                    let handle = handle.clone();
+                    RuntimeMailbox::submit_interaction(runtime, &handle, Some("media-action"), move |mut interaction| async move {
+                        let label = format!("{}/{}", action.controller_id, action.action);
+                        if let Err(error) = semio_renderer_wgpu_shell_actions::ActionsCtx::of(&mut interaction.shell).dispatch_action(action).await {
+                            log_debug(&format!("media action {label} refused: {error}"));
+                        }
+                        interaction
+                    });
+                }
+            }
             #[cfg(not(target_arch = "wasm32"))]
             Self::PluginReload(result) => match result.take() {
                 Some(Ok(entries)) => {

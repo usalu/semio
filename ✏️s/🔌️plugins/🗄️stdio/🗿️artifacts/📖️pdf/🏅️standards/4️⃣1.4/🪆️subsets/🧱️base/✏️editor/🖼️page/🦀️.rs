@@ -1,7 +1,6 @@
-//! 📄️ PDF 1.4 page rendering and commands over its resolved page domain.
-use crate::standards::v1_4::subsets::base::schema::snapshot::{PageDoc, PdfSnapshot};
-use crate::standards::v1_4::subsets::base::schema::mutations::{PdfMutation, InsertPage, RemovePage, MovePage, ResizePage, ReplacePageText};
-use protocol::{ColdMutation, Mutation, OpText};
+//! 📄️ PDF 1.4 addressed page text drafts over its resolved page domain; the page canvas and page structure live in `semio-s-artifact-stdio-pdf14-canvas`.
+use crate::standards::v1_4::subsets::base::schema::snapshot::PdfSnapshot;
+use crate::standards::v1_4::subsets::base::schema::mutations::{PdfMutation, ReplacePageText};
 use semio_plugin::{Fault, FaultCode, FaultOrigin, TreeWindows, ActionArgDef, ActionDefinition, ActionKind, WindowKindDefinition, PluginAssemblyError, UiAssemblyResult, Buildable, HasBase, UiText};
 use semio_plugin::app::{DocumentWindowKit, EditableDocumentPage, EditableDocumentView, WindowKit};
 use semio_plugin::plugin_app_close_prelude as ui;
@@ -11,7 +10,6 @@ use semio_framework_value::DslValue;
 
 pub const WINDOW_KIND_ID: &str = DocumentWindowKit::KIND_ID;
 pub const BODY_KEY: &str = DocumentWindowKit::KIND_ID;
-const PAGE_ACTIONS: [&str; 4] = ["insert-page", "remove-page", "move-page", "set-page-size"];
 
 fn refusal(message: impl Into<String>) -> Fault {
     Fault::new(FaultOrigin::App, FaultCode::new("stdio.pdf.1.4.page-edit"), message)
@@ -21,32 +19,17 @@ fn ui_error(code: &'static str) -> PluginAssemblyError {
     PluginAssemblyError::new(code, "PDF 1.4 page rendering admission failed")
 }
 
-/// 🏷️ Resolves the own page command identifier.
-pub fn static_action(action: &str) -> &'static str {
-    PAGE_ACTIONS.into_iter().find(|candidate| *candidate == action).unwrap_or("page-edit")
-}
-
-/// 🧭️ Recognizes actions over the own resolved page domain.
-pub fn is_page_action(action: &str) -> bool { PAGE_ACTIONS.contains(&action) }
-
-/// 🪟️ Declares addressed text drafts and resolved page structure edits.
+/// 🪟️ Declares the addressed text drafts and their revision-guarded replacement.
 pub fn window_definition() -> WindowKindDefinition {
     let mut definition = DocumentWindowKit::editable_window_kind();
-    definition.label = LocalizedLabel::native("Pages", "Seiten");
-    let page = || ActionArgDef::index("page", LocalizedLabel::native("Page", "Seite")).required();
-    let width = || ActionArgDef::number("width", LocalizedLabel::native("Width", "Breite")).required();
-    let height = || ActionArgDef::number("height", LocalizedLabel::native("Height", "Höhe")).required();
+    definition.label = LocalizedLabel::native("Page Text", "Seitentext");
     let action = |id, en, de, args| {
         let mut definition = ActionDefinition::bounded_catalog(id, LocalizedLabel::native(en, de), ActionKind::Mutation).with_args(args);
         definition.semantics.execution.interactive_job = semio_plugin::InteractiveJobClassification::Migrated;
         definition
     };
     definition.actions.extend([
-        action("insert-page", "Insert Page", "Seite einfügen", vec![page(), width(), height(), ActionArgDef::text("text", LocalizedLabel::native("Text", "Text")).required()]),
-        action("remove-page", "Remove Page", "Seite entfernen", vec![page()]),
-        action("move-page", "Move Page", "Seite verschieben", vec![ActionArgDef::index("from", LocalizedLabel::native("From", "Von")).required(), ActionArgDef::index("to", LocalizedLabel::native("To", "Nach")).required()]),
-        action("set-page-size", "Set Page Size", "Seitengröße setzen", vec![page(), width(), height()]),
-        action("replace-page-text", "Replace Page Text", "Seitentext ersetzen", vec![page(), ActionArgDef::target_revision("revision", LocalizedLabel::native("Revision", "Revision")).required(), ActionArgDef::text("text", LocalizedLabel::native("Text", "Text")).required()]),
+        action("replace-page-text", "Replace Page Text", "Seitentext ersetzen", vec![ActionArgDef::index("page", LocalizedLabel::native("Page", "Seite")).required(), ActionArgDef::target_revision("revision", LocalizedLabel::native("Revision", "Revision")).required(), ActionArgDef::text("text", LocalizedLabel::native("Text", "Text")).required()]),
     ]);
     definition
 }
@@ -97,44 +80,3 @@ pub fn text_edit_mutation(document: &PdfSnapshot, page: u32, item: u32, revision
 pub fn index(args: Option<&DslValue>, key: &str) -> Result<usize, Fault> {
     usize::try_from(semio_s_artifact_stdio_contract::window_kit_required_index_argument(args, key)?).map_err(|_| refusal("Page index exceeds this platform"))
 }
-
-fn number(args: Option<&DslValue>, key: &str) -> Result<f64, Fault> {
-    let Some(DslValue::Object(entries)) = args else { return Err(refusal("Page action arguments must be an object")); };
-    let mut values = entries.iter().filter(|(name, _)| name == key).map(|(_, value)| value);
-    let Some(DslValue::Number(number)) = values.next() else { return Err(refusal(format!("Page action requires numeric '{key}'"))); };
-    let value = number.as_f64();
-    if values.next().is_some() || !value.is_finite() { return Err(refusal(format!("Page action requires one finite '{key}'"))); }
-    Ok(value)
-}
-
-/// 🧾️ Encodes the actual own mutation as the replayable page action payload.
-pub fn edit_from_action(action: &str, args: Option<&DslValue>) -> Result<String, Fault> {
-    let mutation = match action {
-        "insert-page" => PdfMutation::InsertPage(InsertPage { index: index(args, "page")?, page: PageDoc { width: number(args, "width")?, height: number(args, "height")?, text: semio_s_artifact_stdio_contract::window_kit_required_text_argument(args, "text")? } }),
-        "remove-page" => PdfMutation::RemovePage(RemovePage { index: index(args, "page")? }),
-        "move-page" => PdfMutation::MovePage(MovePage { from: index(args, "from")?, to: index(args, "to")? }),
-        "set-page-size" => PdfMutation::ResizePage(ResizePage { index: index(args, "page")?, width: number(args, "width")?, height: number(args, "height")? }),
-        _ => return Err(refusal("Unknown PDF 1.4 page action")),
-    };
-    Ok(mutation.print_op())
-}
-
-/// ▶️ Admits the replayed own mutation against its original page domain.
-pub fn emit_page_edit(snapshot: &PdfSnapshot, action: &str, payload: &str) -> Result<semio_plugin::Emit<PdfMutation>, Fault> {
-    let mutation = PdfMutation::parse_op(payload).map_err(|error| refusal(error.to_string()))?;
-    if !matches!((action, &mutation),
-        ("insert-page", PdfMutation::InsertPage(_)) | ("remove-page", PdfMutation::RemovePage(_)) |
-        ("move-page", PdfMutation::MovePage(_)) | ("set-page-size", PdfMutation::ResizePage(_))) { return Err(refusal("Page action payload has a different mutation kind")); }
-    let outcome = mutation.diff(snapshot);
-    if !outcome.messages().is_empty() { return Err(refusal("Page action is outside this document's domain")); }
-    Ok(semio_plugin::Emit { artifact_mutations: vec![mutation], ..Default::default() })
-}
-
-/// 🪟️ Places own page drafts beside complete snapshot details.
-pub fn document_layout(main: &str) -> semio_plugin::WindowLayout {
-    use semio_plugin::{WindowLayout, WindowLayoutNode, Axis};
-    let stack = |size, id: &str| WindowLayoutNode::Stack { size: Some(size), active_window_id: None, children: vec![WindowLayoutNode::Window { window_kind_id: id.into(), title: None, instance_id: None, template_id: None, corner: None }] };
-    WindowLayout { root: WindowLayoutNode::Split { axis: Axis::Horizontal, size: None, children: vec![stack(0.7, main), stack(0.3, semio_s_artifact_stdio_contract::editing::SNAPSHOT_DETAILS_WINDOW_KIND_ID)] } }
-}
-
-

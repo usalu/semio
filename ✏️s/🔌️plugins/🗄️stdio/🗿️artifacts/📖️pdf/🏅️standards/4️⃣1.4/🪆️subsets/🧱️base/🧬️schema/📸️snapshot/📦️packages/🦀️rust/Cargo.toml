@@ -9,6 +9,20 @@ description = "Component crate of semio-s-artifact-stdio-pdf: snapshot"
 [package.metadata.semio]
 role = "library"
 
+[package.metadata.semio.carve]
+owned = [
+  "standards::v1_4::subsets::base::io::binary::inferences",
+  "standards::v1_4::subsets::base::io::binary::mutations::wire",
+  "standards::v1_4::subsets::base::io::binary::snapshot",
+  "standards::v1_4::subsets::base::io::binary::snapshot::snapshot_codec",
+  "standards::v1_4::subsets::base::io::sqlite::snapshot",
+  "standards::v1_4::subsets::base::io::text::inferences",
+  "standards::v1_4::subsets::base::io::text::mutations::wire",
+  "standards::v1_4::subsets::base::io::text::snapshot",
+  "standards::v1_4::subsets::base::io::text::snapshot::snapshot_codec",
+  "standards::v1_4::subsets::base::schema::snapshot",
+]
+
 [lints]
 workspace = true
 

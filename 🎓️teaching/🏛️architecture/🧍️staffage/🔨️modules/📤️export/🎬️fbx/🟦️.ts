@@ -1,6 +1,6 @@
 /** 🎬️ One clip of an asset at one scale as an FBX (binary 7.4): the solids of the list that the view's mode draws from (tone views from `body`, `thermal` from `thermal`, `forces` and `moments` from `structure`), tessellated by the neutral kernel at the quality of the scale, skinned to the rig, the clip sampled at its own fps (root motion, looping, events) as node curves and, for the analytic views, material colour curves, in one view (default `light-solid`, any of the seven selectable).
  *
- * An FBX is one clip, one scale and one view, one scene: a static pose is a GLB, all scales and modes in one file are a GLB or the model JSON. Lines (feature edges) are not part of an FBX; glyphs of the chosen analytic view are. The encoder reports what FBX cannot express as notices, returned with the bytes by {@link writeFbxDetailed}.
+ * An FBX is one clip, one scale and one view, one scene: a static pose is a GLB, all scales and modes in one file are a GLB or the model JSON. Lines (feature edges) are not part of an FBX; glyphs of the chosen analytic view are, and with the `thermal` view the developed air flow of the clip's first instant as static stream tubes, arrow heads and puffs (it does not follow the figure while the clip plays). The encoder reports what FBX cannot express as notices, returned with the bytes by {@link writeFbxDetailed}.
  * The root motion of the clip is kept: the file plays the clip the way the viewer does (see the React stage, which follows the figure instead of cutting its travel).
  *
  * @see ../🗿️model/🟦️.ts — naming and options

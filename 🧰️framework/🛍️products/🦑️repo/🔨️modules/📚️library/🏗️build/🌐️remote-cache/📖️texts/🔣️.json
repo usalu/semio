@@ -73,6 +73,10 @@
       "en": "Opening the cache store {directory}",
       "de": "Öffne den Cache-Speicher {directory}"
     },
+    "serve.staleness": {
+      "en": "Staleness {mode}: judging entries against the synchronized tree {workspace} (dry-run only records what it would retire).",
+      "de": "Veraltung {mode}: Einträge werden gegen den synchronisierten Baum {workspace} geprüft (dry-run protokolliert nur, was entfernt würde)."
+    },
     "serve.ready": {
       "en": "Store ready: {entries} entries, {bytes}",
       "de": "Speicher bereit: {entries} Einträge, {bytes}"
@@ -150,16 +154,16 @@
       "de": "Ein anderer Sammler hält {lock}; nichts wurde entfernt."
     },
     "gc.summary.plan": {
-      "en": "Would remove {entries} of {total} entries ({bytes}): {superseded} superseded, {age} idle too long, {budget} over the bound, {dangling} dangling, plus {blobs} unreferenced blobs ({freed}); {remaining} entries ({left}) would remain.",
-      "de": "Würde {entries} von {total} Einträgen entfernen ({bytes}): {superseded} verdrängt, {age} zu lange ungenutzt, {budget} über der Grenze, {dangling} verwaist, dazu {blobs} unreferenzierte Blobs ({freed}); {remaining} Einträge ({left}) blieben."
+      "en": "Would remove {entries} of {total} entries ({bytes}): {stale} stale, {age} idle too long, {budget} over the bound, {dangling} dangling, plus {blobs} unreferenced blobs ({freed}); {remaining} entries ({left}) would remain.",
+      "de": "Würde {entries} von {total} Einträgen entfernen ({bytes}): {stale} veraltet, {age} zu lange ungenutzt, {budget} über der Grenze, {dangling} verwaist, dazu {blobs} unreferenzierte Blobs ({freed}); {remaining} Einträge ({left}) blieben."
     },
     "gc.summary.apply": {
-      "en": "Removed {entries} of {total} entries ({bytes}): {superseded} superseded, {age} idle too long, {budget} over the bound, {dangling} dangling, plus {blobs} unreferenced blobs ({freed}); {remaining} entries ({left}) remain.",
-      "de": "{entries} von {total} Einträgen entfernt ({bytes}): {superseded} verdrängt, {age} zu lange ungenutzt, {budget} über der Grenze, {dangling} verwaist, dazu {blobs} unreferenzierte Blobs ({freed}); {remaining} Einträge ({left}) bleiben."
+      "en": "Removed {entries} of {total} entries ({bytes}): {stale} stale, {age} idle too long, {budget} over the bound, {dangling} dangling, plus {blobs} unreferenced blobs ({freed}); {remaining} entries ({left}) remain.",
+      "de": "{entries} von {total} Einträgen entfernt ({bytes}): {stale} veraltet, {age} zu lange ungenutzt, {budget} über der Grenze, {dangling} verwaist, dazu {blobs} unreferenzierte Blobs ({freed}); {remaining} Einträge ({left}) bleiben."
     },
     "gc.deferred": {
-      "en": "A server is running here: it holds the claims, so superseded entries were left to its own collector.",
-      "de": "Hier läuft ein Server: er hält die Claims, deshalb überlässt dieser Lauf die verdrängten Einträge seinem eigenen Sammler."
+      "en": "A server is running here: it holds the claims, so stale entries were left to its own collector.",
+      "de": "Hier läuft ein Server: er hält die Claims, deshalb überlässt dieser Lauf die veralteten Einträge seinem eigenen Sammler."
     },
     "gc.cancelled": {
       "en": "Cancelled; entries removed so far stay removed.",

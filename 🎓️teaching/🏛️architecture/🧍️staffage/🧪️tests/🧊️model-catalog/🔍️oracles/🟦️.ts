@@ -403,7 +403,7 @@ export function zipNames(bytes: Uint8Array): string[] {
 /** 📁️ One file of a set as the manifest lists it. */
 export type SetFile = { readonly asset: string; readonly subject: "pose" | "clip" | "asset"; readonly item: string; readonly scale: number | null; readonly view: string; readonly kind: "glb" | "fbx" | "model" | "zip"; readonly file: string; readonly bytes: number; readonly sha256: string; readonly triangles: number | null };
 
-/** 📂️ The audit of the files of one asset in an output directory: manifest bytes and hashes, every pose GLB, every clip FBX, every model JSON, the ZIP and the budgets. */
+/** 📂️ The audit of the files of one asset in an output directory: manifest bytes and hashes, every pose GLB, every clip FBX, every model JSON, the ZIP and the budgets. An FBX of a body view holds exactly the triangles of the GLB scene of its scale; the structure and thermal scenes do not compare, because their glyphs and their air flow are those of the instant (a clip's first instant, not the default pose). */
 export type FilesAudit = {
   readonly poses: readonly { readonly id: string; readonly bytes: number; readonly triangles: number; readonly segments: number; readonly extent: Extent }[];
   readonly clips: readonly { readonly id: string; readonly bytes: number; readonly triangles: number; readonly tracks: number; readonly durationS: number; readonly bonesFound: number; readonly meshBones: number; readonly assimpChannels: number }[];
@@ -475,7 +475,7 @@ export async function auditFiles(asset: Asset, files: readonly SetFile[], read: 
       const clip = asset.clips.find((c) => c.id === planned.item)!;
       const report = await checkFbx(bytes, item, { clip: clip.id, durationS: clip.durationS, fps: clip.fps, bones });
       findings.push(...report.findings);
-      const glbScene = planned.scale === null || planned.scale === undefined || modeOf(planned.view as View) === "structure" ? undefined : sceneTriangles.get(sceneIdOf(planned.scale, modeOf(planned.view as View)));
+      const glbScene = planned.scale === null || planned.scale === undefined || modeOf(planned.view as View) !== "body" ? undefined : sceneTriangles.get(sceneIdOf(planned.scale, modeOf(planned.view as View)));
       if (glbScene !== undefined && Math.round(report.facts.triangles) !== Math.round(glbScene)) findings.push({ check: "set", item, message: `FBX at 1:${planned.scale} ${planned.view} has ${report.facts.triangles} triangles, the GLB scene ${glbScene}` });
       clips.push({ id: clip.id, bytes: bytes.length, triangles: report.facts.triangles, tracks: report.facts.tracks, durationS: report.facts.durationS, bonesFound: report.facts.bonesFound, meshBones: report.facts.meshBones, assimpChannels: report.facts.assimpChannels });
       if (report.facts.triangles !== entry.triangles) findings.push({ check: "set", item, message: `manifest says ${entry.triangles} triangles, file ${report.facts.triangles}` });

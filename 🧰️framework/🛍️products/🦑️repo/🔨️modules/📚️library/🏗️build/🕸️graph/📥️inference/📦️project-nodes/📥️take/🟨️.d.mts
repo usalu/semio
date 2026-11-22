@@ -8,7 +8,8 @@ export function joinTakeLookV1<Outcome>(running: Promise<Outcome>, signal: Abort
 /** ⏱️ The pause before look number `round` at the cache. */
 export function takePollWaitV1(round: number, policy?: TakePolicyV1): number;
 /** 📒️ What a reader knows about its owners while it resolves them. */
-export function createTakeLedgerV1(total: number): Readonly<{ mark(name: string, outcome: TakeOutcomeV1 | "inferred"): void; want(names: Iterable<string>): void; run(delta: number): void; state(name: string): string | undefined; counts(): TakeCountsV1; line(language: string): string; waveLine(language: string): string; staleLine(language: string, name: string): string; staleRowLine(language: string, name: string, row: Readonly<{ kind: string; path: string; fact: string }>): string }>;
+export function createTakeLedgerV1(total: number): Readonly<{ mark(name: string, outcome: TakeOutcomeV1 | "inferred"): void; want(names: Iterable<string>): void; run(delta: number): void; state(name: string): string | undefined; counts(): TakeCountsV1; line(language: string): string; waveLine(language: string): string; staleLine(language: string, name: string): string; staleRowLine(language: string, name: string, row: Readonly<{ kind: string; path: string; fact: string; recorded?: string; current?: string; why?: string }>): string }>;
+export function staleRowEventV1(name: string, source: "take" | "infer", row: Readonly<{ kind: string; path: string; fact?: string; recorded?: string; current?: string; why?: string }>, ledger: Readonly<{ staleRowLine(language: string, name: string, row: never): string }>): Readonly<Record<string, unknown>>;
 /** 💪️ Whether a machine is large enough never to wait for another. */
 export function takeStrongMachineV1(input: Readonly<{ memoryMegabytes: number; cores: number }>, policy?: TakePolicyV1): boolean;
 /** 🚦️ A watch over the progress of a read. */

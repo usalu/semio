@@ -9,6 +9,17 @@ description = "Component crate of semio-s-artifact-stdio-pdf: fonts"
 [package.metadata.semio]
 role = "library"
 
+[package.metadata.semio.carve]
+owned = [
+  "standards::v1_7::subsets::base::modules::fonts",
+  "standards::v1_7::subsets::base::modules::fonts::cff",
+  "standards::v1_7::subsets::base::modules::fonts::cff::tests",
+  "standards::v1_7::subsets::base::modules::fonts::cmap",
+  "standards::v1_7::subsets::base::modules::fonts::cmap::controlled",
+  "standards::v1_7::subsets::base::modules::fonts::controlled_opentype",
+  "standards::v1_7::subsets::base::modules::fonts::tests",
+]
+
 [lints]
 workspace = true
 

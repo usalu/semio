@@ -530,6 +530,16 @@ pub fn icon_select_rows(bounds: Rect, rows: u8) -> IconSelectRows {
     IconSelectRows { mode, editor, preview, import: Rect::new(buttons.x, buttons.y, half, buttons.h), clear: Rect::new(buttons.x + half, buttons.y, buttons.w - half, buttons.h) }
 }
 
+/// 🧱️ Row `index` of an extension host's controls inside the slot at `bounds`: full width, `row_height` tall, `gap` apart, top to bottom.
+pub fn extension_row_rect(bounds: Rect, index: usize, row_height: f32, gap: f32) -> Rect {
+    Rect::new(bounds.x, bounds.y + index as f32 * (row_height + gap), bounds.w, row_height)
+}
+
+/// 📏️ The height `rows` extension rows reserve (`0` for none).
+pub fn extension_rows_height(rows: usize, row_height: f32, gap: f32) -> f32 {
+    if rows == 0 { 0.0 } else { rows as f32 * row_height + (rows - 1) as f32 * gap }
+}
+
 /// 💍️ React's `Ring` default `size` (`⭕️Ring/🟦️.tsx`): the square, in px, whose 100-unit viewBox every ring length is written in.
 pub const RING_SIZE: f32 = 100.0;
 

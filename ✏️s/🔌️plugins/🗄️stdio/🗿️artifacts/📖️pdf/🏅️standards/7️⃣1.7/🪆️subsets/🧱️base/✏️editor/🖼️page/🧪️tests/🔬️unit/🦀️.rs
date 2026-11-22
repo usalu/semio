@@ -1664,3 +1664,18 @@ fn view_intents_reduce_to_the_fixture_script() {
         assert_eq!((view.page as u64, view.revision as u64, view.query.as_str(), view.match_case, view.active.map(|at| at as u64)), (expect["page"].as_u64().unwrap(), expect["revision"].as_u64().unwrap(), expect["query"].as_str().unwrap(), expect["match_case"].as_bool().unwrap(), expect["active"].as_u64()), "{step}");
     }
 }
+
+#[test]
+fn view_actions_are_page_actions_that_carry_their_arguments() {
+    for id in VIEW_ACTION_IDS {
+        assert!(is_page_action(id), "{id}");
+        assert_eq!(static_action(id), id);
+    }
+    let query = edit_from_action("set-query", Some(&args(vec![("text", semio_framework_value::DslValue::String("Hello".into()))]))).unwrap();
+    assert_eq!(query.action, "set-query");
+    assert_eq!(serde_json::from_str::<Value>(&query.payload).unwrap()["text"], "Hello");
+    let page = edit_from_action("go-to-page", Some(&args(vec![("page", semio_framework_value::DslValue::String("2".into()))]))).unwrap();
+    assert_eq!(serde_json::from_str::<Value>(&page.payload).unwrap()["page"], 2);
+    assert_eq!(view_action_definitions().len(), VIEW_ACTION_IDS.len());
+    assert!(matches!(view_intent("go-to-page", "", 2), Some(ViewIntent::GoToPage(2))));
+}

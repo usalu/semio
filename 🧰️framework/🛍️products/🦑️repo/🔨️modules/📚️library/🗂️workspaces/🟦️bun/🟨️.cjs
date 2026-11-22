@@ -273,13 +273,19 @@ function* scopesPlan(owner, selection) {
     for (const pattern of admitted.members) bounded(owner.root, join(directory, sourcePrefix(pattern.replace(/^!/u, ""))));
     scopes.push({ directory, manifest: path, lock: directory === "." ? "bun.lock" : directory + "/bun.lock", declaration: admitted });
   }
+  owner.scopeDirectories = scopes.map(scope => scope.directory);
   return selection.kind === "closure" ? yield* closurePlan(owner, scopes, selection.roots) : scopes;
+}
+/** 🧭️ Names the deepest declared scope directory that contains the path (the path itself or a descendant), the root scope when none does; the one ownership rule of closures and of the manifests a walk retained. */
+function deepestScopeDirectory(directories, path) {
+  const depth = directory => directory === "." ? 0 : directory.split("/").length;
+  return directories.reduce((best, directory) => (directory === "." || path === directory || path.startsWith(directory + "/")) && depth(directory) > depth(best) ? directory : best, ".");
 }
 /** 🧬️ Narrows the declared scopes to the root scope, the requested roots and, breadth first, the deepest declaring scope of every member of a reached scope; no scope outside that closure has its members walked. */
 function* closurePlan(owner, scopes, roots) {
-  const byDirectory = new Map(scopes.map(scope => [scope.directory, scope])), depth = directory => directory === "." ? 0 : directory.split("/").length;
+  const byDirectory = new Map(scopes.map(scope => [scope.directory, scope]));
   if (!byDirectory.has(".") || roots.some(root => !byDirectory.has(root))) throw Error("Current authored Bun installation scope required");
-  const ownerOf = path => scopes.reduce((best, scope) => (scope.directory === "." || path === scope.directory || path.startsWith(scope.directory + "/")) && depth(scope.directory) > depth(best) ? scope.directory : best, ".");
+  const ownerOf = path => deepestScopeDirectory(scopes.map(scope => scope.directory), path);
   const reached = new Set([".", ...roots]), queue = [...reached];
   for (let index = 0; index < queue.length; index++) {
     const scope = byDirectory.get(queue[index]);
@@ -434,10 +440,11 @@ function* publicationPlan(owner, selection, verifyPublished) {
   for (const [path, text] of owner.texts) if ((yield { operation: "readText", path: bounded(owner.root, path) }) !== text) throw edited("Bun current manifest changed during verification: " + path);
   return { version: 1, scopes, packages: membership.packages };
 }
-/** 🔭️ Exposes the exact path states, directory listing projections and manifest digests one ownership computation retained, so a later process can prove the same topology by stamps. */
+/** 🔭️ Exposes the exact path states, directory listing projections and manifest digests one ownership computation retained, so a later process can prove the same topology by stamps; `textOwners` names, per retained manifest, the declared installation scope that owns it. */
 function observedOwnership(owner) {
   const paths = owner.observations.rows(), texts = [...owner.texts].map(([path, text]) => Object.freeze({ path, sha256: createHash("sha256").update(text).digest("hex") }));
-  return Object.freeze({ root: owner.root, paths, texts: Object.freeze(texts) });
+  const directories = owner.scopeDirectories ?? [], textOwners = Object.freeze(Object.fromEntries(texts.map(({ path }) => [path, deepestScopeDirectory(directories, path.includes("/") ? path.slice(0, path.lastIndexOf("/")) : ".")])));
+  return Object.freeze({ root: owner.root, paths, texts: Object.freeze(texts), textOwners });
 }
 /** 🧭️ Remembers the first path a replay saw move and the fact that moved there (existence, identity, listing or content digest), so a refusal can name it; always answers false. */
 function ownershipMoved(owner, path, fact, reason) { owner.moved ??= { path, fact, reason }; return false; }

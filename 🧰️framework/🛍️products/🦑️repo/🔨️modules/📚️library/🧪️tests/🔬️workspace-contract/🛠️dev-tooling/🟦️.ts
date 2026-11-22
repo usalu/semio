@@ -9,7 +9,7 @@ import { getWorkspaceRoot } from "../../../🗂️workspaces/🟦️.ts";
 import { defineLint, type FileLinter } from "../../../🚨️policy/🧩️linters/🟦️.ts";
 import { dependencyBoundaryBreachesForBundleDir, dependencyBoundaryBreachesForFile, isAdapterBoundaryFile, parseTsImportSpecs } from "../../../🚨️policy/🛡️dependency-boundary/🟦️.ts";
 import { devToolingEnv } from "../../../🏃️process/🌿️environment/🟦️.ts";
-import { dispatchSubcommand } from "../../../🚨️policy/🧭️entrypoints/🟦️.ts";
+import { dispatchSubcommand } from "../../../🚨️policy/🔀️subcommand/🟦️.ts";
 import { wgpuDevPlayUrl } from "../../../🎮️playground/🧊️wgpu-dev/🟦️.ts";
 import { BundleScript, ScriptRouter, findWorkspaceRoot } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { contractRoot, contractUrl } from "../🏗️shared-fixtures/🟦️.ts";

@@ -100,3 +100,16 @@ async fn gis3d_terrain_document_text_round_trips_through_store() {
     drop(disposer);
     drop(store);
 }
+
+/// 🏷️ Archived History bytes are tagged frames, never complete Pack containers, so the writer and the original receiver agree.
+#[test]
+fn operation_frames_carry_format_and_variant_tag_before_the_record_body() {
+    let imported = GisTerrainMutation::ChangeImportedFeatures(ChangeImportedFeatures { new_imported_map: Some(crate::schema::imported_map::ImportedMap::from_json(r#"{"positions":[]}"#).unwrap()) });
+    let replaced = GisTerrainMutation::ReplaceElevationSource(crate::mutations::ReplaceElevationSource { new_elevation_source: None });
+    let exaggeration = GisTerrainMutation::ChangeExaggeration(ChangeExaggeration { new_exaggeration: 2.0 });
+    for (operation, tag) in [(&exaggeration, 0_u8), (&imported, 1), (&replaced, 2)] {
+        let bytes = encode_op(operation).expect("encode");
+        assert_eq!(bytes[..2], [1, tag], "format and variant tag lead the frame");
+        assert_eq!(&decode_op(&bytes).expect("decode"), operation);
+    }
+}

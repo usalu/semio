@@ -204,6 +204,9 @@ name = "arbitrary"
 version = "1.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3bc62ac97cc33321f50863d514c3bc38a453947a8f9e781137e47c7401020aed"
+dependencies = [
+ "derive_arbitrary",
+]
 
 [[package]]
 name = "arboard"
@@ -221,7 +224,7 @@ dependencies = [
  "objc2-foundation 0.3.2",
  "parking_lot",
  "percent-encoding",
- "windows-sys 0.52.0",
+ "windows-sys 0.61.2",
  "x11rb",
 ]
 
@@ -725,7 +728,7 @@ dependencies = [
  "cap-primitives",
  "cap-std",
  "io-lifetimes 3.0.1",
- "windows-sys 0.60.2",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -742,7 +745,7 @@ dependencies = [
  "maybe-owned",
  "rustix 1.1.5",
  "rustix-linux-procfs",
- "windows-sys 0.60.2",
+ "windows-sys 0.61.2",
  "winx",
 ]
 
@@ -1254,6 +1257,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "derive_arbitrary"
+version = "1.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1b034bd7d5f032402a2479444dcc6f74e36a03f31854d41680fb240ef682a1ac"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 3.0.9",
+]
+
+[[package]]
 name = "digest"
 version = "0.10.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1431,7 +1445,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "39cab71617ae0d63f51a36d69f866391735b51691dbda63cf6f96d042b63efeb"
 dependencies = [
  "libc",
- "windows-sys 0.52.0",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -4120,7 +4134,7 @@ dependencies = [
  "errno",
  "libc",
  "linux-raw-sys 0.12.1",
- "windows-sys 0.52.0",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -6668,6 +6682,15 @@ dependencies = [
 [[package]]
 name = "semio-framework-process-routing-workspace"
 version = "0.1.0"
+
+[[package]]
+name = "semio-framework-raster"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-geometry",
+ "vello",
+ "wgpu",
+]
 
 [[package]]
 name = "semio-framework-replication"
@@ -9447,6 +9470,7 @@ dependencies = [
  "semio-framework-pack",
  "semio-framework-pack-json",
  "semio-framework-replication",
+ "semio-framework-trace",
  "semio-framework-value",
  "semio-framework-value-ordered",
  "semio-os-flow-drawing",
@@ -10491,6 +10515,7 @@ dependencies = [
  "semio-framework-artifact-reference",
  "semio-framework-async",
  "semio-framework-async-macros",
+ "semio-framework-deflate",
  "semio-framework-diagnostic",
  "semio-framework-io-control",
  "semio-framework-io-schema",
@@ -10513,6 +10538,7 @@ dependencies = [
  "semio-os-store-text-io",
  "semio-ui-contract-validation",
  "serde_json",
+ "zip",
 ]
 
 [[package]]
@@ -16973,7 +16999,11 @@ name = "semio-plugin-mounted-owner"
 version = "0.1.0"
 dependencies = [
  "semio-framework-job",
+ "semio-framework-trace",
  "semio-framework-value",
+ "semio-framework-value-testing-allocator",
+ "semio-framework-value-testing-effect-bank",
+ "serde_json",
 ]
 
 [[package]]
@@ -17665,6 +17695,7 @@ dependencies = [
  "semio-plugin-reactor-lifecycle",
  "semio-plugin-runtime-instances",
  "semio-plugin-runtime-ops-document",
+ "semio-plugin-runtime-ops-raw-media",
  "semio-plugin-runtime-ops-surface",
  "semio-plugin-runtime-ops-wire",
  "semio-plugin-testing-caller",
@@ -17700,6 +17731,19 @@ dependencies = [
  "semio-plugin-reactor-lifecycle",
  "semio-plugin-runtime-instances",
  "semio-plugin-runtime-ops-wire",
+]
+
+[[package]]
+name = "semio-plugin-runtime-ops-raw-media"
+version = "0.1.0"
+dependencies = [
+ "semio-framework",
+ "semio-framework-job",
+ "semio-framework-value",
+ "semio-os-kernel",
+ "semio-plugin-decl-media",
+ "semio-plugin-reactor-app",
+ "semio-plugin-reactor-lifecycle",
 ]
 
 [[package]]
@@ -17764,6 +17808,7 @@ dependencies = [
  "semio-framework-test-fixtures",
  "semio-framework-trace",
  "semio-framework-value",
+ "semio-framework-value-testing-allocator",
  "semio-os-kernel",
  "semio-plugin-decl-app",
  "semio-plugin-decl-emission",
@@ -17868,6 +17913,7 @@ dependencies = [
  "semio-plugin-mounted-owner",
  "semio-plugin-ownership",
  "semio-plugin-reactor-app",
+ "semio-plugin-reactor-jobs",
  "semio-plugin-testing-laws",
  "semio-plugin-time-travel",
  "semio-plugin-window-config",
@@ -18847,6 +18893,8 @@ dependencies = [
  "semio-framework-job-worker",
  "semio-framework-pack-json",
  "semio-framework-schema",
+ "semio-framework-schema-composition",
+ "semio-framework-schema-state",
  "semio-framework-trace",
  "semio-framework-value",
  "semio-framework-value-derive",
@@ -19766,6 +19814,68 @@ dependencies = [
 ]
 
 [[package]]
+name = "semio-plugin-tests-mounted-grant"
+version = "0.1.0"
+dependencies = [
+ "semio-framework",
+ "semio-framework-action-bus",
+ "semio-framework-artifact-reference",
+ "semio-framework-async-macros",
+ "semio-framework-diagnostic",
+ "semio-framework-job",
+ "semio-framework-trace",
+ "semio-framework-value",
+ "semio-framework-value-derive",
+ "semio-framework-value-snapshot-read",
+ "semio-os-kernel",
+ "semio-os-store-backbone",
+ "semio-plugin-abi",
+ "semio-plugin-actor-host",
+ "semio-plugin-app-builder",
+ "semio-plugin-builder",
+ "semio-plugin-decl-app",
+ "semio-plugin-decl-emission",
+ "semio-plugin-decl-media",
+ "semio-plugin-decl-surface",
+ "semio-plugin-decl-tool-contract",
+ "semio-plugin-decl-views",
+ "semio-plugin-instance-app",
+ "semio-plugin-interaction",
+ "semio-plugin-mounted-owner",
+ "semio-plugin-ownership",
+ "semio-plugin-plugin-program",
+ "semio-plugin-reactor-app",
+ "semio-plugin-reactor-core",
+ "semio-plugin-reactor-lifecycle",
+ "semio-plugin-reactor-patches",
+ "semio-plugin-reactor-tasks",
+ "semio-plugin-reactor-turn",
+ "semio-plugin-retained-command",
+ "semio-plugin-runtime-instances",
+ "semio-plugin-runtime-ops",
+ "semio-plugin-testing-caller",
+ "semio-plugin-testing-fixtures",
+ "semio-plugin-testing-fixtures-publication",
+ "semio-plugin-testing-laws",
+ "semio-plugin-tests-03",
+ "semio-plugin-tests-05",
+ "semio-plugin-tool-machine",
+ "semio-plugin-tool-run",
+ "semio-plugin-window-config",
+ "semio-plugin-window-kits",
+ "semio-plugin-window-kits-rich",
+ "semio-plugin-window-transient",
+ "semio-ui-contract",
+ "semio-ui-layout",
+ "semio-ui-locale",
+ "semio-ui-runtime",
+ "semio-ui-runtime-presentation",
+ "semio-ui-runtime-reconcile",
+ "semio-ui-scene",
+ "serde_json",
+]
+
+[[package]]
 name = "semio-plugin-time-travel"
 version = "0.1.0"
 dependencies = [
@@ -20216,6 +20326,15 @@ dependencies = [
  "semio-framework-value",
  "semio-framework-value-testing-allocator",
  "semio-ui-retained-tree",
+ "serde_json",
+]
+
+[[package]]
+name = "semio-renderer-media-native"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-raster",
+ "semio-framework-value",
  "serde_json",
 ]
 
@@ -20767,6 +20886,7 @@ dependencies = [
  "semio-framework-value-native-owned",
  "semio-os-flow",
  "semio-os-infinite",
+ "semio-os-infinite-board-dag-host",
  "semio-os-infinite-board-normal-focus",
  "semio-os-infinite-board-normal-gestures",
  "semio-os-kernel",
@@ -20800,6 +20920,7 @@ dependencies = [
  "semio-ui-styling",
  "semio-ui-theme",
  "semio-ui-wgpu-input",
+ "semio-ui-wgpu-render",
  "serde_json",
 ]
 
@@ -21135,6 +21256,7 @@ dependencies = [
  "semio-os-kernel",
  "semio-os-services-native-io",
  "semio-plugin-host",
+ "semio-plugin-host-shard",
  "semio-ui-declaration",
  "semio-ui-locale",
  "semio-ui-theme",
@@ -21198,8 +21320,10 @@ dependencies = [
  "semio-renderer-wgpu-kernel-pool",
  "semio-renderer-wgpu-kernel-protocol",
  "semio-renderer-wgpu-kernel-runtime",
+ "semio-renderer-wgpu-media-presenter",
  "semio-renderer-wgpu-media-slots",
  "semio-renderer-wgpu-native-platform",
+ "semio-renderer-wgpu-program-bridge",
  "semio-renderer-wgpu-runtime-mailbox",
  "semio-renderer-wgpu-scene-state",
  "semio-renderer-wgpu-shell-docs",
@@ -21407,6 +21531,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "semio-renderer-wgpu-media-presenter"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-value",
+ "semio-renderer-media-native",
+ "semio-renderer-wgpu-media-slots",
+ "semio-ui-contract",
+ "semio-ui-theme",
+ "semio-ui-wgpu-paint-overlay",
+ "serde_json",
+]
+
+[[package]]
 name = "semio-renderer-wgpu-media-slots"
 version = "0.1.0"
 dependencies = [
@@ -21506,8 +21643,10 @@ dependencies = [
  "semio-framework-hash",
  "semio-framework-job",
  "semio-framework-pack-json",
+ "semio-framework-replication",
  "semio-framework-trace",
  "semio-framework-value",
+ "semio-os-extension",
  "semio-os-flow",
  "semio-os-kernel",
  "semio-os-services",
@@ -21554,6 +21693,7 @@ dependencies = [
  "semio-renderer-wgpu-program-bridge",
  "semio-renderer-wgpu-scene-canvas2d",
  "semio-renderer-wgpu-shell-actions",
+ "semio-renderer-wgpu-shell-dock",
  "semio-renderer-wgpu-shell-pointer",
  "semio-renderer-wgpu-shell-view-chrome",
  "semio-renderer-wgpu-ui-engine-focus",
@@ -22165,6 +22305,7 @@ dependencies = [
  "semio-framework-value",
  "semio-os-config",
  "semio-os-infinite",
+ "semio-os-io",
  "semio-os-kernel",
  "semio-os-services",
  "semio-plugin-host",
@@ -22181,6 +22322,7 @@ dependencies = [
  "semio-renderer-wgpu-shell-surfaces",
  "semio-renderer-wgpu-shell-sync",
  "semio-renderer-wgpu-shell-vocab",
+ "semio-renderer-wgpu-video-render-host",
  "semio-ui-contract",
  "semio-ui-declaration",
  "semio-ui-host",
@@ -22336,6 +22478,7 @@ dependencies = [
  "semio-renderer-wgpu-shell-sync",
  "semio-renderer-wgpu-shell-window-actions",
  "semio-renderer-wgpu-shell-windows",
+ "semio-ui-wgpu-layout",
 ]
 
 [[package]]
@@ -23441,6 +23584,7 @@ dependencies = [
  "semio-renderer-wgpu-shell-window-actions",
  "semio-renderer-wgpu-shell-windows",
  "semio-renderer-wgpu-test-support",
+ "semio-renderer-wgpu-ui-engine-tests",
  "semio-ui-contract",
  "semio-ui-declaration",
  "semio-ui-draw-contract",
@@ -24570,6 +24714,7 @@ dependencies = [
  "semio-renderer-wgpu-ui-engine-dump",
  "semio-renderer-wgpu-ui-engine-focus",
  "semio-ui-contract",
+ "semio-ui-contract-values",
  "semio-ui-declaration",
  "semio-ui-draw-contract",
  "semio-ui-layout",
@@ -24592,6 +24737,19 @@ dependencies = [
  "serde_json",
  "wasm-bindgen",
  "web-sys",
+]
+
+[[package]]
+name = "semio-renderer-wgpu-video-render-host"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-async-macros",
+ "semio-framework-geometry",
+ "semio-framework-io-base64",
+ "semio-framework-kernel-media-jobs",
+ "semio-framework-pixels",
+ "semio-framework-raster",
+ "serde_json",
 ]
 
 [[package]]
@@ -25463,6 +25621,7 @@ dependencies = [
 name = "semio-ui-wgpu-events"
 version = "0.1.0"
 dependencies = [
+ "semio-framework-pack-json",
  "semio-framework-value",
  "semio-ui-action",
  "semio-ui-arena",
@@ -25637,8 +25796,22 @@ dependencies = [
  "semio-ui-wgpu-layout",
  "semio-ui-wgpu-light",
  "semio-ui-wgpu-mounted-layout",
+ "semio-ui-wgpu-paint-overlay",
  "semio-ui-wgpu-paint-sync",
  "semio-ui-wgpu-paint-widgets",
+ "semio-ui-wgpu-widget-kit",
+]
+
+[[package]]
+name = "semio-ui-wgpu-paint-overlay"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-pixels",
+ "semio-ui-declaration",
+ "semio-ui-draw-contract",
+ "semio-ui-text",
+ "semio-ui-theme",
+ "semio-ui-wgpu-layout",
  "semio-ui-wgpu-widget-kit",
 ]
 
@@ -25667,6 +25840,7 @@ name = "semio-ui-wgpu-paint-sync"
 version = "0.1.0"
 dependencies = [
  "semio-framework-pixels",
+ "semio-framework-value",
  "semio-ui-arena",
  "semio-ui-contract",
  "semio-ui-declaration",
@@ -26064,7 +26238,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c3d1e2c7f27f8d4cb10542a02c49005dbd6e93095799d6f3be745fae9f8fedd4"
 dependencies = [
  "libc",
- "windows-sys 0.60.2",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -26371,7 +26545,7 @@ dependencies = [
  "getrandom 0.4.3",
  "once_cell",
  "rustix 1.1.5",
- "windows-sys 0.52.0",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -26743,7 +26917,7 @@ checksum = "f2f6fb2847f6742cd76af783a2a2c49e9375d0a111c7bef6f71cd9e738c72d6e"
 dependencies = [
  "memoffset",
  "tempfile",
- "windows-sys 0.60.2",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -27898,7 +28072,7 @@ version = "0.1.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c2a7b1c03c876122aa43f3020e6c3c3ee5c05081c9a00739faf7503aeba10d22"
 dependencies = [
- "windows-sys 0.48.0",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -28752,6 +28926,21 @@ dependencies = [
 ]
 
 [[package]]
+name = "zip"
+version = "2.6.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1dcb24d0152526ae49b9b96c1dcf71850ca1e0b882e4e28ed898a93c41334744"
+dependencies = [
+ "arbitrary",
+ "crc32fast",
+ "crossbeam-utils",
+ "flate2",
+ "indexmap",
+ "memchr",
+ "zopfli",
+]
+
+[[package]]
 name = "zlib-rs"
 version = "0.6.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -28762,6 +28951,18 @@ name = "zmij"
 version = "1.0.23"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "29666d0abbfad1e3dc4dcf6144730dd3a3ab225bbbdac83319345b1b44ccfc1b"
+
+[[package]]
+name = "zopfli"
+version = "0.8.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "aaf7fc5d30c28483d93805c4a5e12b05bbb52407fa67c5f8bd552374cd01fb11"
+dependencies = [
+ "bumpalo",
+ "crc32fast",
+ "log",
+ "simd-adler32",
+]
 
 [[package]]
 name = "zstd"

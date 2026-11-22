@@ -3,8 +3,7 @@ import * as fs from "node:fs";
 import {dirname,join,posix} from "node:path";
 import Ajv from "ajv";
 import picomatch from "picomatch";
-import ts from "typescript";
-import {evaluateExtractedFunctionV1} from "../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧩️extracted-function/🟦️.ts";
+import {loadProductFunctionsSyncV1} from "../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧩️extracted-function/🟦️.ts";
 import {testPythonV1} from "../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";
 import {testScratchRootV1} from "../../../../../../../../../../🔨️modules/🏃️process/🧪️testing/🏖️sandbox/🟦️.ts";
 import {createBuildInputPathMatcherV1} from "../../../../../📥️inputs/🟨️.mjs";
@@ -12,11 +11,8 @@ import {INFERENCE_LIMITS_V1} from "../../../🧬️schema/🟨️.mjs";
 import fixture from "./🔣️.json";
 import schema from "./🧬️schema/🔣️.json";
 
-function sourceMatcher(ports: Parameters<typeof evaluateExtractedFunctionV1>[2]){
- const source=ts.createSourceFile("owner.mjs",fs.readFileSync(new URL("../../🟨️.mjs",import.meta.url),"utf8"),ts.ScriptTarget.Latest,true,ts.ScriptKind.JS);
- const declaration=source.statements.find(node=>ts.isFunctionDeclaration(node)&&node.name?.text==="readBuildSourceInputMatchesV1");
- if(!declaration)throw Error("Actual selected input matcher required");
- return evaluateExtractedFunctionV1(declaration.getText(source).replace(/^export\s+/,""),"readBuildSourceInputMatchesV1",{INFERENCE_LIMITS_V1,...ports});
+function sourceMatcher(ports: Record<string,unknown>){
+ return loadProductFunctionsSyncV1(new URL("../../🟨️.mjs",import.meta.url),["readBuildSourceInputMatchesV1"],{INFERENCE_LIMITS_V1,...ports}).readBuildSourceInputMatchesV1;
 }
 
 test("identical source glob questions retain each target's matches and avoid repeated candidate filtering",async()=>{

@@ -217,7 +217,7 @@ impl KernelRequestQueue {
                 let page_released = usize::from(owner.remaining_pages() < before);
                 (terminal, usize::from(terminal || page_released != 0), released, page_released)
             }
-            KernelRequest::CreateApp { owner, .. } => {
+            KernelRequest::CreateApp { owner, .. } | KernelRequest::ActivateExtension { owner, .. } => {
                 owner.begin_close();
                 let terminal = owner.terminal_is_empty() && request_bytes <= maximum_bytes;
                 (terminal, usize::from(terminal), if terminal { request_bytes } else { 0 }, 0)

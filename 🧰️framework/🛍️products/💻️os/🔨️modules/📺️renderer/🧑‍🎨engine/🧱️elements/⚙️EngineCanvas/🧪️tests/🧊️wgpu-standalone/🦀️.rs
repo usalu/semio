@@ -348,7 +348,7 @@ fn saturated_graph_and_board_wheel_queues_preserve_cameras() {
     let graph_before = ENGINE_SURFACES.with(|cell| {
         let map = cell.borrow();
         let Some(NodeGraphEngine::Dag(host)) = map.get(graph_id).unwrap().node_graph.as_ref() else { unreachable!() };
-        [host.dag.host_snapshot.camera.x, host.dag.host_snapshot.camera.y, host.dag.host_snapshot.camera.zoom]
+        [host.dag.graph.host_snapshot.camera.x, host.dag.graph.host_snapshot.camera.y, host.dag.graph.host_snapshot.camera.zoom]
     });
     let mut graph_input = semio_ui_wgpu_input::InputState::default();
     saturate(&mut graph_input, 0);
@@ -356,19 +356,19 @@ fn saturated_graph_and_board_wheel_queues_preserve_cameras() {
     let graph_after = ENGINE_SURFACES.with(|cell| {
         let map = cell.borrow();
         let Some(NodeGraphEngine::Dag(host)) = map.get(graph_id).unwrap().node_graph.as_ref() else { unreachable!() };
-        [host.dag.host_snapshot.camera.x, host.dag.host_snapshot.camera.y, host.dag.host_snapshot.camera.zoom]
+        [host.dag.graph.host_snapshot.camera.x, host.dag.graph.host_snapshot.camera.y, host.dag.graph.host_snapshot.camera.zoom]
     });
     assert_eq!(graph_after, graph_before);
     let graph_selection_before = ENGINE_SURFACES.with(|cell| {
         let map = cell.borrow();
         let Some(NodeGraphEngine::Dag(host)) = map.get(graph_id).unwrap().node_graph.as_ref() else { unreachable!() };
-        host.selected_node_ids_json()
+        host.selected_node_ids()
     });
     assert_eq!(node_graph_pointer_down_into(graph_id, "controller", Rect { x: 0.0, y: 0.0, w: 800.0, h: 600.0 }, 200.0, 200.0, 0, false, false, false, false, &mut graph_input), Err(semio_ui_action::BoundedActionFault::ItemCredits));
     let graph_selection_after = ENGINE_SURFACES.with(|cell| {
         let map = cell.borrow();
         let Some(NodeGraphEngine::Dag(host)) = map.get(graph_id).unwrap().node_graph.as_ref() else { unreachable!() };
-        host.selected_node_ids_json()
+        host.selected_node_ids()
     });
     assert_eq!(graph_selection_after, graph_selection_before);
 

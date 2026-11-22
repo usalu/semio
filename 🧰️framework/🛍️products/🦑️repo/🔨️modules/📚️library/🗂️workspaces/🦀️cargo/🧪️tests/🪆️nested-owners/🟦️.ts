@@ -4,7 +4,7 @@ import Ajv from "ajv";
 import TOML from "@iarna/toml";
 import { mkdtempSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
-import { discoverCargoWorkspaces, cargoRepositoryPackages, cargoWorkspaceForManifest, publishCargoWorkspaceMembership } from "../../🟦️.ts";
+import { discoverCargoWorkspaces, cargoRepositoryPackages, cargoWorkspaceForManifest, publishCargoWorkspaceMembership, cargoWorkspacePreparationInvocationV1 } from "../../🟦️.ts";
 const owner=resolve(import.meta.dir,"../.."),fixture=JSON.parse(readFileSync(join(owner,"🧪️tests/🧫️fixtures/🪆️nested-owners/🔣️.json"),"utf8")),artifactRoot=process.env.SEMIO_TEST_ARTIFACT_DIR;
 if(!artifactRoot)throw Error("SEMIO_TEST_ARTIFACT_DIR is required");
 const put=(root:string,path:string,text:string):void=>{mkdirSync(dirname(join(root,path)),{recursive:true});writeFileSync(join(root,path),text);};
@@ -33,4 +33,28 @@ test("authored nested native owners survive deletion without concealing retained
   for(const scope of scopes){const source=readFileSync(join(root,scope.manifest),"utf8");expect(Bun.TOML.parse(source)).toEqual(TOML.parse(source));publishCargoWorkspaceMembership(root,scope,"write");const actual=native(root,scope.manifest);expect(actual.exitCode===0,actual.stderr.toString()).toBe(scope.directory==="owners/application"?row.applicationMetadataValid:true);if(actual.exitCode===0){const metadata=JSON.parse(actual.stdout.toString());expect(metadata.workspace_members.length).toBe(packages.filter(p=>p.workspace===scope.directory).length);}}
   if(row.removed==="none")expect(cargoWorkspaceForManifest(root,"owners/application/extension/artifact/oracle/native/Cargo.toml").directory).toBe("owners/application/extension/artifact/oracle/native");
  }
+});
+
+const admission='[workspace.metadata.semio.repository]\nschema-version=1\nexclude-patterns=[]\n';
+const tree=(name:string):string=>{
+ mkdirSync(artifactRoot!,{recursive:true});const root=mkdtempSync(join(artifactRoot!,name));
+ put(root,"Cargo.toml",'[workspace]\nresolver="2"\nmembers=["framework/kernel"]\nexclude=["owners/**"]\n'+admission+'member-manifests=["framework/*/Cargo.toml"]\nowner-manifests=["owners/*/Cargo.toml"]\n');
+ put(root,"framework/kernel/Cargo.toml",pkg("neutral-kernel"));put(root,"framework/kernel/🦀️.rs","");
+ for(const owner of ["application","other"]){put(root,"owners/"+owner+"/Cargo.toml",'[workspace]\nresolver="2"\nmembers=["member"]\n'+admission+'member-manifests=["member/Cargo.toml"]\n');put(root,"owners/"+owner+"/member/Cargo.toml",pkg(owner));put(root,"owners/"+owner+"/member/🦀️.rs","");}
+ return root;
+};
+const launch=(root:string,args:string[])=>cargoWorkspacePreparationInvocationV1({version:1,directory:"/p",leaseDirectory:"/l",program:"/program.ts"},root,args,root,{});
+const manifestOf=(request:ReturnType<typeof launch>):string|undefined=>request?.args[request.args.indexOf("--manifest")+1];
+test("a package selected from the repository root binds to its own nested workspace, root members stay at the root, and an explicit manifest wins",()=>{
+ const root=tree("nested-selection-");
+ expect(manifestOf(launch(root,["test","-p","application"]))).toBe("owners/application/Cargo.toml");
+ expect(manifestOf(launch(root,["test","--package=other"]))).toBe("owners/other/Cargo.toml");
+ expect(manifestOf(launch(root,["test","-p","neutral-kernel"]))).toBe("Cargo.toml");
+ expect(manifestOf(launch(root,["test","--manifest-path","owners/other/Cargo.toml","-p","application"]))).toBe("owners/other/Cargo.toml");
+});
+test("packages spanning two workspaces are refused and an unknown package is refused by the repository inventory",()=>{
+ const root=tree("nested-refusal-");
+ expect(()=>launch(root,["test","-p","application","-p","other"])).toThrow("Cargo command selects packages from different workspaces: application, other");
+ expect(()=>launch(root,["test","-p","application","-p","neutral-kernel"])).toThrow("different workspaces");
+ expect(()=>launch(root,["test","-p","missing"])).toThrow("Unknown current repository Cargo package: missing");
 });

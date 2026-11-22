@@ -1,0 +1,55 @@
+{
+  "id": "person-with-arm-sling",
+  "category": "humans",
+  "title": {
+    "en": "Person with Arm Sling",
+    "de": "Person mit Armschlinge"
+  },
+  "heightM": 1.8,
+  "widthM": 0.47,
+  "powerW": 132.2,
+  "poses": [
+    "standing",
+    "check-watch",
+    "contact-left",
+    "passing-right"
+  ],
+  "clips": [
+    "walk-cycle",
+    "glance-at-watch",
+    "idle-breathing"
+  ],
+  "representations": {
+    "50": "authored",
+    "100": "authored",
+    "200": "authored",
+    "500": "authored"
+  },
+  "symbols": [
+    "walking-direction-marker"
+  ],
+  "analytics": [
+    "thermal",
+    "transport",
+    "structural"
+  ],
+  "exports": [
+    "svg",
+    "pdf",
+    "dxf",
+    "dwg",
+    "png-sequence",
+    "mp4",
+    "webm",
+    "component",
+    "glb",
+    "fbx",
+    "model",
+    "model-zip"
+  ],
+  "distinction": {
+    "en": "A man of 1.78 m in a knee-length wool overcoat and scarf with his right forearm in a short-arm cast, carried in a navy pouch sling whose strap runs round the neck: standing, glancing at the watch and walking with the near elbow held at a right angle across the waist, with a walk cycle, a watch glance and idle breathing.",
+    "de": "Ein Mann von 1,78 m in knielangem Wollmantel und Schal, den rechten Unterarm im Unterarmgips in einer dunkelblauen Armschlinge, deren Gurt um den Nacken läuft: stehend, mit Blick auf die Uhr und gehend mit dem im rechten Winkel vor der Taille gehaltenen Ellbogen, mit einem Gehzyklus, einem Blick auf die Uhr und ruhigem Atmen."
+  },
+  "completion": "authored"
+}

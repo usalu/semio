@@ -27,10 +27,57 @@ def tag(solids, region, layer=None):
     return solids
 
 
-def clav(p):
-    """📐 A left-side point given in the thorax frame, in the frame of the left clavicle bone (joint at thorax 0.228, -0.10, 0.02; 80 degrees out of the sagittal plane)."""
-    du, dv, dw = p[0] - 0.228, p[1] + 0.10, p[2] - 0.02
-    return [0.17365 * du + 0.98481 * dw, dv, -0.98481 * du + 0.17365 * dw]
+_roots = importlib.util.spec_from_file_location("roots", os.path.join(HERE, "rework-05-" + SLUG + "-roots.py"))
+roots = importlib.util.module_from_spec(_roots)
+_roots.loader.exec_module(roots)
+GIRDLE = roots.shoulder_girdle()
+HIP = roots.pelvic_girdle()
+
+
+def quaternion(m):
+    """🧭 The unit quaternion `[x, y, z, w]` of a rotation matrix."""
+    tr = m[0][0] + m[1][1] + m[2][2]
+    if tr > 0:
+        s = math.sqrt(tr + 1) * 2
+        return [(m[2][1] - m[1][2]) / s, (m[0][2] - m[2][0]) / s, (m[1][0] - m[0][1]) / s, s / 4]
+    k = max(range(3), key=lambda a: m[a][a])
+    a, b, c = k, (k + 1) % 3, (k + 2) % 3
+    s = math.sqrt(1 + m[a][a] - m[b][b] - m[c][c]) * 2
+    q = [0, 0, 0, (m[c][b] - m[b][c]) / s]
+    q[a], q[b], q[c] = s / 4, (m[b][a] + m[a][b]) / s, (m[c][a] + m[a][c]) / s
+    return q
+
+
+def rebound(solid, bone, frame):
+    """🔗 A left-side solid stated in the frame of the parent bone (thorax or pelvis), bound to the girdle bone `bone` whose rest frame in that parent is `frame` (`o`, `r`): the solid keeps its place and rides on the girdle bone."""
+    r, o = frame["r"], frame["o"]
+    back = [[r[k][i] for k in range(3)] for i in range(3)]
+    out = dict(solid)
+    out["bone"] = bone
+    out["transform"] = {"rotation": [round(c, 6) for c in quaternion(back)], "translation": [round(-sum(back[i][k] * o[k] for k in range(3)), 5) for i in range(3)]}
+    return out
+
+
+def on_scapula(solid):
+    """🦴 A thorax-frame solid bound to the left scapula."""
+    return rebound(solid, "scapula-l", GIRDLE["scapula"])
+
+
+def on_hip(solid):
+    """🦴 A pelvis-frame solid bound to the left hip bone."""
+    return rebound(solid, "hip-bone-l", HIP)
+
+
+def blade(tone, half):
+    """🦴 The left scapular blade as a plate in the plane of the scapula bone (superior angle, root of the spine, inferior angle, lateral border, lateral angle, suprascapular notch), `half` thick to either side."""
+    at = lambda p: roots.within(GIRDLE["scapula"]["r"], roots.sub(p, GIRDLE["scapula"]["o"]))
+    rim = [at(p) for p in (roots.SUPERIOR_ANGLE, (0.205, 0.051, 0.071), (0.14, 0.058, 0.077), roots.INFERIOR_ANGLE, (0.105, 0.052, 0.1), (0.16, 0.022, 0.124), roots.LATERAL_ANGLE, (0.228, -0.002, 0.134), (0.233, 0.022, 0.105))]
+    profile = [(p[0], p[1]) for p in rim]
+    area = sum(profile[k][0] * profile[(k + 1) % len(profile)][1] - profile[(k + 1) % len(profile)][0] * profile[k][1] for k in range(len(profile)))
+    profile = profile if area > 0 else list(reversed(profile))
+    w = at(roots.INFERIOR_ANGLE)[2]
+    return X("scapula-l", "scapula-l", "bone", tone, profile, "xy", w - half, w + half)
+
 
 
 def parent_body(s):
@@ -72,7 +119,7 @@ def parent_body(s):
     out += tag(coat, "coat-torso", "coat")
     skirt = L("coat-skirt-l", "pelvis", "wool", 0.28, [(0.0, 0.006, 0.084, 0.112, 0.142, 2.5), (-0.1, 0.008, 0.088, 0.114, 0.146, 2.5), (-0.2, 0.01, 0.092, 0.116, 0.15, 2.6), (-0.3, 0.012, 0.096, 0.118, 0.154, 2.7)], step=st, weights=[{"bone": "pelvis", "weight": 0.5}, {"bone": "thigh-l", "weight": 0.5}])
     out += tag(B(skirt), "coat-torso", "coat")
-    yoke = L("coat-yoke-l", "clavicle-l", "wool", 0.32, [clav_row((0.238, -0.036, 0.05), 0.042, 0.088), clav_row((0.228, -0.034, 0.11), 0.042, 0.08), clav_row((0.212, -0.03, 0.165), 0.044, 0.07)], step=st, round1=0.03)
+    yoke = L("coat-yoke-l", "thorax", "wool", 0.32, [(0.238, -0.036, 0.05, 0.042, 0.088, 2.3), (0.228, -0.034, 0.11, 0.042, 0.08, 2.3), (0.212, -0.03, 0.165, 0.044, 0.07, 2.3), (0.21, -0.03, 0.18, 0.039, 0.061, 2.3), (0.208, -0.03, 0.19, 0.029, 0.044, 2.2), (0.207, -0.03, 0.195, 0.015, 0.022, 2.0)], smooth=False, rotation=[0, 0, 0, 1], weights=[{"bone": "thorax", "weight": 0.4}, {"bone": "clavicle-l", "weight": 0.6}])
     out += tag(B(yoke), "coat-torso", "coat")
     sleeve = [
         L("sleeve-upper-l", "upper-arm-l", "wool", 0.3, [(0.0, 0, 0, 0.064, 0.07), (0.07, 0.003, 0, 0.062, 0.068), (0.16, 0.002, 0, 0.057, 0.061), (0.25, 0, 0, 0.053, 0.055), (0.316, 0, 0, 0.051, 0.053)], step=st, round0=0.05, round1=0.04),
@@ -83,7 +130,7 @@ def parent_body(s):
     out += hand(s, "", "leather-glove", 0.2, 1.0, "gloves", "glove", "glove")
     legs = [
         L("jeans-thigh-l", "thigh-l", "denim", 0.42, [(-0.02, 0, 0, 0.09, 0.098), (0.06, 0.004, 0, 0.088, 0.096), (0.16, 0.008, 0, 0.08, 0.087), (0.26, 0.006, 0, 0.068, 0.074), (0.34, 0.004, 0, 0.063, 0.069), (0.4, 0.006, 0, 0.06, 0.066)], step=st, round0=0.03, round1=0.05),
-        L("jeans-shank-l", "shank-l", "denim", 0.42, [(-0.02, 0.006, 0, 0.06, 0.066), (0.03, 0.002, 0, 0.059, 0.064), (0.1, -0.01, 0, 0.062, 0.068), (0.17, -0.01, 0, 0.06, 0.063), (0.26, -0.006, 0, 0.056, 0.058), (0.34, -0.004, 0, 0.055, 0.057), (0.39, -0.002, 0, 0.056, 0.059)], step=st, round0=0.04),
+        L("jeans-shank-l", "shank-l", "denim", 0.42, [(-0.02, 0.006, 0, 0.06, 0.066), (0.03, 0.002, 0, 0.059, 0.064), (0.1, -0.01, 0, 0.062, 0.068), (0.17, -0.01, 0, 0.06, 0.063), (0.26, -0.006, 0, 0.054, 0.056), (0.34, -0.004, 0, 0.051, 0.054), (0.39, -0.002, 0, 0.051, 0.056)], step=st, round0=0.04),
     ]
     for x in legs:
         out += tag(B(x), "jeans", "denim")
@@ -108,12 +155,6 @@ def parent_body(s):
         out += tag(B(kit.box("coat-pocket-l", "pelvis", "wool", 0.24, (-0.03, -0.134, 0.12), (0.022, 0.012, 0.075), corner=0.004, role="detail", weights=[{"bone": "pelvis", "weight": 0.5}, {"bone": "thigh-l", "weight": 0.5}])), "coat-torso", "coat")
         out += tag(B(L("coat-lapel-l", "thorax", "wool", 0.26, [(0.262, -0.128, 0.05, 0.03, 0.009), (0.2, -0.172, 0.042, 0.04, 0.009), (0.135, -0.19, 0.02, 0.022, 0.008)], step=st, role="detail")), "coat-torso", "coat")
     return out
-
-
-def clav_row(p, rw, rv):
-    """📏 A station row on the left clavicle bone from a thorax-frame point; `rw` is the half height of the section, `rv` its half depth."""
-    u, v, w = clav(p)
-    return (u, v, w, rw, rv, 2.3)
 
 
 def hand(s, pre, material, tone, k, region, layer, name):
@@ -308,20 +349,21 @@ def parent_structure(s, rig):
     out += [S(L("sternum", "thorax", "bone", T, [(0.238, -0.104, 0, 0.03, 0.007), (0.2, -0.112, 0, 0.022, 0.0065), (0.14, -0.126, 0, 0.019, 0.006), (0.09, -0.139, 0, 0.017, 0.006), (0.062, -0.142, 0, 0.008, 0.005)], step=0.02, round1=0.006), "thorax")]
     if s <= 200:
         out += [S(x, "thorax") for x in B(C("costal-arch-l", "thorax", "bone", 0.86, (0.085, -0.139, 0.016), (0.0, -0.098, 0.105), 0.006, 0.005))]
-    out += [S(x, x["bone"]) for x in B(L("clavicle-l", "clavicle-l", "bone", T, [(0.0, 0.0, 0, 0.0085, 0.0085), (0.05, -0.01, 0, 0.0065, 0.0065), (0.11, 0.04, 0, 0.0065, 0.0065), (0.155, 0.088, 0.0, 0.007, 0.009)], step=0.02, round0=0.005, round1=0.005))]
-    blade = L("scapula-l", "clavicle-l", "bone", T, [clav_row2((0.09, 0.072, 0.086), 0.008, 0.012), clav_row2((0.15, 0.066, 0.102), 0.0075, 0.034), clav_row2((0.205, 0.056, 0.116), 0.0075, 0.05), clav_row2((0.238, 0.046, 0.112), 0.0075, 0.044)], step=0.02, round0=0.004, round1=0.004)
-    out += [S(x, x["bone"]) for x in B(blade)]
-    out += [S(x, "scapula" + x["id"][-2:]) for x in B(C("scapular-spine-l", "clavicle-l", "bone", T, clav((0.214, 0.062, 0.078)), clav((0.25, -0.012, 0.176)), 0.0065, 0.0085))]
-    out += [S(x, "scapula" + x["id"][-2:]) for x in B(C("scapula-neck-l", "clavicle-l", "bone", T, clav((0.215, 0.04, 0.13)), clav((0.224, -0.02, 0.158)), 0.01))]
-    out += [S(x, "scapula" + x["id"][-2:]) for x in B(E("glenoid-l", "scapula-l", "bone", T, (0.03, -0.004, -0.018), (0.02, 0.016, 0.008)))]
+    out += [S(x, x["bone"]) for x in B(L("clavicle-l", "clavicle-l", "bone", T, [(0.0, 0.0, 0, 0.0085, 0.0085), (0.05, 0.0, -0.011, 0.0065, 0.0065), (0.115, 0.0, 0.009, 0.0065, 0.0065), (GIRDLE["clavicle"]["length"], 0.0, 0.0, 0.0095, 0.007)], step=0.02, round0=0.005, round1=0.005))]
+    out += [S(x, x["bone"]) for x in B(blade(T, 0.004 if s == 50 else 0.0075))]
+    out += [S(x, x["bone"]) for x in B(on_scapula(C("scapular-spine-l", "thorax", "bone", T, (0.207, 0.05, 0.078), (0.25, 0.005, 0.182), 0.0065, 0.0085)))]
+    out += [S(x, x["bone"]) for x in B(on_scapula(C("acromion-l", "thorax", "bone", T, (0.25, 0.005, 0.182), (0.251, -0.031, 0.172), 0.0085, 0.008)))]
+    out += [S(x, x["bone"]) for x in B(on_scapula(C("coracoid-l", "thorax", "bone", T, (0.226, -0.03, 0.142), (0.218, -0.062, 0.15), 0.0075, 0.006)))]
+    out += [S(x, x["bone"]) for x in B(on_scapula(C("scapula-neck-l", "thorax", "bone", T, (0.213, -0.005, 0.138), (0.215, -0.02, 0.151), 0.012)))]
+    out += [S(x, x["bone"]) for x in B(on_scapula(E("glenoid-l", "thorax", "bone", T, (0.215, -0.022, 0.153), (0.018, 0.013, 0.0065))))]
     out += [S(L("sacrum", "pelvis", "bone", T, [(0.105, 0.044, 0, 0.052, 0.022), (0.065, 0.07, 0, 0.046, 0.018), (0.025, 0.086, 0, 0.03, 0.012), (-0.012, 0.086, 0, 0.012, 0.008)], step=0.02, round1=0.006), "pelvis")]
-    out += [S(x, "pelvis") for x in B(X("ilium-l", "pelvis", "bone", T, [(0.072, 0.036), (0.0827, 0.0529), (-0.0473, 0.1349), (-0.058, 0.118)], "yz", 0.0, 0.13))]
-    out += [S(x, "pelvis") for x in B(C("ischium-l", "pelvis", "bone", T, (0.012, 0.016, 0.09), (-0.078, 0.036, 0.062), 0.019, 0.015))]
+    out += [S(x, x["bone"]) for x in B(on_hip(X("ilium-l", "pelvis", "bone", T, [(0.072, 0.036), (0.0827, 0.0529), (-0.0473, 0.1349), (-0.058, 0.118)], "yz", 0.0, 0.13)))]
+    out += [S(x, x["bone"]) for x in B(on_hip(C("ischium-l", "pelvis", "bone", T, (0.012, 0.016, 0.09), (-0.078, 0.036, 0.062), 0.019, 0.015)))]
     out += [S(x, "hip-bone" + x["id"][-2:]) for x in B(C("iliac-column-l", "hip-bone-l", "bone", T, (0.004, 0, 0), (0.078, 0, 0), 0.017, 0.021))]
     out += [S(x, "hip-bone" + x["id"][-2:]) for x in B(E("acetabulum-l", "hip-bone-l", "bone", T, (0.1, 0, 0), (0.03, 0.03, 0.026)))]
-    out += [S(x, "pelvis") for x in B(C("pubis-l", "pelvis", "bone", T, (-0.006, -0.026, 0.082), (-0.046, -0.072, 0.008), 0.0115, 0.0105))]
+    out += [S(x, x["bone"]) for x in B(on_hip(C("pubis-l", "pelvis", "bone", T, (-0.006, -0.026, 0.082), (-0.046, -0.072, 0.008), 0.0115, 0.0105)))]
     if s <= 200:
-        out += [S(x, "pelvis") for x in B(C("ischiopubic-ramus-l", "pelvis", "bone", T, (-0.05, -0.068, 0.012), (-0.08, 0.03, 0.056), 0.0085, 0.01))]
+        out += [S(x, x["bone"]) for x in B(on_hip(C("ischiopubic-ramus-l", "pelvis", "bone", T, (-0.05, -0.068, 0.012), (-0.08, 0.03, 0.056), 0.0085, 0.01)))]
     leg = [
         E("femur-head-l", "thigh-l", "bone", T, (0, 0, 0), (0.0235, 0.0235, 0.0235)),
         C("femur-neck-l", "thigh-l", "bone", T, (0, 0, 0), (0.03, 0.0, 0.05), 0.015, 0.017),
@@ -362,12 +404,6 @@ def parent_structure(s, rig):
         for y in B(x):
             out.append(y if "member" in y else S(y, y["bone"]))
     return out + joints_and_masses(rig, lambda b: not b.startswith("toddler"), s)
-
-
-def clav_row2(p, rw, rv):
-    """📏 A station row of a flat blade on the left clavicle bone from a thorax-frame point; `rw` half thickness front to back is given along v here, `rv` the half width in the blade."""
-    u, v, w = clav(p)
-    return (u, v, w, rv, rw, 2.0)
 
 
 BIG = ("pelvis", "lumbar", "thorax", "neck", "head", "upper-arm-l", "upper-arm-r", "forearm-l", "forearm-r", "thigh-l", "thigh-r", "shank-l", "shank-r", "toddler-head", "toddler-thigh-l", "toddler-thigh-r", "toddler-shank-l", "toddler-shank-r")
@@ -435,18 +471,18 @@ def schematic(s, rig):
             front = (0.228 - (k - 1) * 0.0235, -0.104 - (k - 1) * 0.0058) if k <= 7 else (0.228 - 6 * 0.0235 - (k - 7) * 0.03, -0.139 + (k - 7) * 0.012)
             out += [bone_solid(ring("rib-%d-r" % k, "thorax", 0.86, back, front, hw, h, sweep, -1), "thorax"), bone_solid(ring("rib-%d-l" % k, "thorax", 0.86, back, front, hw, h, sweep, 1), "thorax")]
         out.append(S(L("sternum", "thorax", "bone", T, [(0.238, -0.1, 0, 0.03, 0.015), (0.14, -0.122, 0, 0.022, 0.015), (0.075, -0.136, 0, 0.017, 0.015)], round1=0.006), "thorax"))
-        out += pair(L("scapula-l", "clavicle-l", "bone", T, [clav_row2((0.09, 0.064, 0.086), 0.015, 0.016), clav_row2((0.15, 0.06, 0.102), 0.015, 0.034), clav_row2((0.205, 0.05, 0.116), 0.015, 0.05), clav_row2((0.238, 0.042, 0.112), 0.015, 0.044)], round0=0.004, round1=0.004))
+        out += pair(blade(T, 0.015))
         out.append(S(L("sacrum", "pelvis", "bone", T, [(0.105, 0.044, 0, 0.052, 0.022), (0.065, 0.066, 0, 0.046, 0.018), (0.025, 0.078, 0, 0.03, 0.015)], round1=0.006), "pelvis"))
-        out += pair(X("ilium-l", "pelvis", "bone", T, [(0.072, 0.036), (0.088, 0.0614), (-0.042, 0.1434), (-0.058, 0.118)], "yz", 0.0, 0.13), "pelvis")
-        out += pair(C("scapular-spine-l", "clavicle-l", "bone", T, clav((0.214, 0.055, 0.085)), clav((0.25, -0.008, 0.176)), 0.015), "scapula-l")
-        out += pair(C("ischium-l", "pelvis", "bone", T, (0.012, 0.016, 0.09), (-0.07, 0.034, 0.062), 0.019, 0.015), "pelvis")
-        out += pair(C("pubis-l", "pelvis", "bone", T, (-0.006, -0.026, 0.082), (-0.046, -0.066, 0.012), 0.015), "pelvis")
+        out += pair(on_hip(X("ilium-l", "pelvis", "bone", T, [(0.072, 0.036), (0.088, 0.0614), (-0.042, 0.1434), (-0.058, 0.118)], "yz", 0.0, 0.13)))
+        out += pair(on_scapula(C("scapular-spine-l", "thorax", "bone", T, (0.207, 0.05, 0.078), (0.25, 0.0, 0.178), 0.015)))
+        out += pair(on_hip(C("ischium-l", "pelvis", "bone", T, (0.012, 0.016, 0.09), (-0.07, 0.034, 0.062), 0.019, 0.015)))
+        out += pair(on_hip(C("pubis-l", "pelvis", "bone", T, (-0.006, -0.026, 0.082), (-0.046, -0.066, 0.012), 0.015)))
     else:
         out.append(S(E("ribcage", "thorax", "bone", 0.86, (0.15, -0.045, 0), (0.125, 0.1, 0.135)), "thorax"))
         out.append(S(E("pelvic-girdle", "pelvis", "bone", T, (0.04, 0.02, 0), (0.085, 0.08, 0.15)), "pelvis"))
     out += pair(C("iliac-column-l", "hip-bone-l", "bone", T, (0.004, 0, 0), (0.1, 0, 0), 0.017, 0.021))
-    out += pair(C("clavicle-l", "clavicle-l", "bone", T, (0.0, 0.0, 0), (0.155, 0.08, 0), 0.0085))
-    out += pair(E("glenoid-l", "scapula-l", "bone", T, (0.03, -0.004, -0.018 if two else 0), (0.02, 0.016, 0.008)))
+    out += pair(C("clavicle-l", "clavicle-l", "bone", T, (0.0, 0.0, 0), (GIRDLE["clavicle"]["length"], 0.0, 0), 0.0085))
+    out += pair(on_scapula(E("glenoid-l", "thorax", "bone", T, (0.215, -0.022, 0.153) if two else (0.222, -0.026, 0.165), (0.018, 0.013, 0.0065))))
     if two:
         for x in [E("femur-head-l", "thigh-l", "bone", T, (0, 0, 0), (0.0235, 0.0235, 0.0235)), C("femur-neck-l", "thigh-l", "bone", T, (0, 0, 0), (0.03, 0.0, 0.05), 0.016, 0.017), E("femur-trochanter-l", "thigh-l", "bone", T, (0.024, 0.0, 0.062), (0.024, 0.018, 0.015)),
                   L("femur-l", "thigh-l", "bone", T, [(0.035, 0.0, 0.052, 0.017, 0.016), (0.12, 0.008, 0.036, 0.015, 0.015), (0.24, 0.01, 0.018, 0.015, 0.015), (0.34, 0.004, 0.006, 0.0185, 0.0165), (0.378, 0.0, 0.0, 0.034, 0.024)]),
@@ -459,7 +495,8 @@ def schematic(s, rig):
                   L("metacarpus-l", "hand-l", "bone", T, [(0.026, 0, 0, 0.015, 0.026), (0.094, -0.002, 0, 0.015, 0.038)]), L("phalanges-l", "hand-l", "bone", T, [(0.098, -0.002, 0, 0.015, 0.038), (0.15, -0.002, -0.006, 0.015, 0.034), (0.176, -0.003, -0.01, 0.015, 0.024)])]:
             out += pair(x)
     else:
-        out += pair(C("femur-l", "thigh-l", "bone", T, (0, 0, 0), (0.4, 0.004, 0), h)) + pair(C("tibia-l", "shank-l", "bone", T, (0, 0.002, 0), (0.4, 0, 0), h)) + pair(C("humerus-l", "upper-arm-l", "bone", T, (0.0, 0, 0), (0.31, 0, 0), h))
+        for x in (C("femur-l", "thigh-l", "bone", T, (0, 0, 0), (0.4, 0.004, 0), 0.015), C("tibia-l", "shank-l", "bone", T, (0, 0.002, 0), (0.4, 0, 0), 0.0135), C("humerus-l", "upper-arm-l", "bone", T, (0.0, 0, 0), (0.31, 0, 0), 0.011)):
+            out += [bone_solid({**y, "slender": True}, y["bone"]) for y in B(x)]
         out += pair_of("foot-bones-l", "boot-l", "foot-l") + pair_of("toe-bones-l", "boot-toe-l", "toe-l") + pair_of("forearm-bones-l", "sleeve-fore-l", "forearm-l") + pair_of("hand-bones-l", "glove-l", "hand-l")
     T = 0.78
     out.append(S(E("toddler-cranium", "toddler-head", "bone", T, (0.078, 0.01, 0), (0.07, 0.08, 0.063)), "toddler-head"))
@@ -543,8 +580,8 @@ def toddler_structure(s, rig):
 
 DECISIONS = {
     50: [
-        ("Body: both figures are lofts through stated anatomical sections on a rig with a lumbar and a thoracic spine bone, clavicles, scapulae and finger and thumb chains; the parent's coat has a yoke on the clavicles, set-in sleeves with rounded shoulder and elbow ends and a skirt that follows each thigh by half, the gloved fingers are separate and close around the child's thigh.",
-         "Body: Beide Figuren sind Lofts durch festgelegte anatomische Querschnitte auf einem Rig mit Lenden- und Brustwirbelsäule, Schlüsselbeinen, Schulterblättern sowie Finger- und Daumenketten; der Mantel hat eine Passe auf den Schlüsselbeinen, eingesetzte Ärmel mit gerundeten Schulter- und Ellbogenenden und einen Schoß, der jedem Oberschenkel zur Hälfte folgt, die behandschuhten Finger sind einzeln und schließen sich um den Oberschenkel des Kindes."),
+        ("Body: both figures are lofts through stated anatomical sections on a rig with a lumbar and a thoracic spine bone, a shoulder girdle of clavicles (sternum to acromion, running 24 degrees back and 8 degrees up) and scapulae that carry the arms at the glenoid, hip bones from the sacroiliac joints to the hip joints that carry the legs, and finger and thumb chains; the parent's coat has a yoke on the clavicles, set-in sleeves with rounded shoulder and elbow ends and a skirt that follows each thigh by half, the gloved fingers are separate and close around the child's thigh.",
+         "Body: Beide Figuren sind Lofts durch festgelegte anatomische Querschnitte auf einem Rig mit Lenden- und Brustwirbelsäule, einem Schultergürtel aus Schlüsselbeinen (Brustbein bis Schulterhöhe, 24 Grad nach hinten und 8 Grad nach oben) und Schulterblättern, die die Arme an der Gelenkpfanne tragen, Hüftbeinen von den Kreuzbein-Darmbein-Gelenken zu den Hüftgelenken, die die Beine tragen, sowie Finger- und Daumenketten; der Mantel hat eine Passe auf den Schlüsselbeinen, eingesetzte Ärmel mit gerundeten Schulter- und Ellbogenenden und einen Schoß, der jedem Oberschenkel zur Hälfte folgt, die behandschuhten Finger sind einzeln und schließen sich um den Oberschenkel des Kindes."),
         ("Toddler: the 24-month child keeps its own proportions, a head of 0.205 m on 0.865 m of stature with a small low face, almost no neck, a barrel trunk with a belly and a nappy seat, short thick limbs in a padded overall, mittens with thumbs and rubber boots.",
          "Kleinkind: Das 24 Monate alte Kind behält seine eigenen Proportionen, ein Kopf von 0,205 m bei 0,865 m Körperhöhe mit kleinem, tief sitzendem Gesicht, fast kein Hals, ein tonnenförmiger Rumpf mit Bauch und Windelpo, kurze kräftige Gliedmaßen im gefütterten Overall, Fäustlinge mit Daumen und Gummistiefel."),
         ("Thermal: every garment and skin surface is its region; at this scale the inner layers (air, sweater, sock) are nested shells inside the outer one, and the breath and plume emitters are small solids at nose, mouth and crown of both figures.",

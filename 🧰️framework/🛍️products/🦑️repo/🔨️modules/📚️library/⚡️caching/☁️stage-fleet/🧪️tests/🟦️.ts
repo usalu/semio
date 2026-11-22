@@ -77,9 +77,10 @@ test("two machines at different paths: the first computes and shares, the second
  const second=await two.cache.run(key,join(two.root,"out"),producer("alpha",state),undefined,"mod");
  expect([second.hit,state.calls]).toEqual([true,1]);
  expect(tree(join(two.root,"out"))).toEqual(tree(join(one.root,"out")));expect(second.files).toEqual(first.files);
- expect(two.events.map(event=>event.kind)).toEqual(["served"]);expect(two.cache.fleet()).toEqual({served:1,shared:0,waited:0,skipped:0});expect(two.cache.stats()).toMatchObject({hits:1,misses:0});
+ expect(two.events.map(event=>event.kind)).toEqual(["served"]);expect(two.cache.fleet()).toEqual({served:1,shared:0,waited:0,skipped:0});expect(two.cache.stats()).toMatchObject({hits:0,fleetHits:1,misses:0});
  const third=await two.cache.run(key,join(two.root,"again"),producer("alpha",state),undefined,"mod");
  expect([third.hit,state.calls,two.events.length]).toEqual([true,1,1]);
+ expect(two.cache.stats()).toMatchObject({hits:1,fleetHits:1,misses:0});
  const changed=await two.cache.run(keyOf("transpile","component-1","t2"),join(two.root,"changed"),producer("beta",state),undefined,"mod");
  expect([changed.hit,state.calls]).toEqual([false,2]);
  const status=await (await fetch(`${server.url}/status`,{headers:{authorization:`Bearer ${token}`}})).json() as {entries:number};

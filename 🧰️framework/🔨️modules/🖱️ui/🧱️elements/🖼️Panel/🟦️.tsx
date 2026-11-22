@@ -7,6 +7,7 @@
 
 // #region 🔌️Adapters
 import * as React from "react";
+import chromeParityConstants from "../../🧬️schema/📐️chrome-parity-constants/🧮️values.json";
 import { panelTabFirstDraggableElementId } from "../../🔨️modules/🆔️element-identity/🟦️.ts";
 // 🧱️core: reactHostPort imported directly from 🫀️core/Ports, NOT via the barrel — this component calls
 // reactHostPort.useRef/.useMemo at module top level, which requires a non-circular import (see
@@ -169,7 +170,7 @@ export function useNativeDragAndDrop<TElement extends HTMLElement = HTMLDivEleme
 
 /** 📏️ The inline extent an open anchored panel takes when its caller states no `size`.
  * The panel floats over the window column at that width; the column itself does not shrink. */
-export const PANEL_DEFAULT_SIZE_PX = 300;
+export const PANEL_DEFAULT_SIZE_PX = chromeParityConstants.sizes.panelDefaultPx;
 
 /**
  * 🔲️ Props interface for the Panel component.

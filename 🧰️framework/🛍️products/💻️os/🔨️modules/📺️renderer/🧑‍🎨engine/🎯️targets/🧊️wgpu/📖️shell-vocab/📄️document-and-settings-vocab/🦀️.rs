@@ -23,6 +23,8 @@ pub(super) fn shell_chrome_document_and_settings(key: &'static str, is_de: bool)
         ("document.open.failed", true) => Some("Konnte nicht geöffnet werden:"),
         ("document.open.cancel", false) => Some("Cancel"),
         ("document.open.cancel", true) => Some("Abbrechen"),
+        ("local-files.opening", false) => Some("Opening {name}…"),
+        ("local-files.opening", true) => Some("{name} wird geöffnet…"),
         ("document.open.busy", false) => Some("Another document is still opening"),
         ("document.open.busy", true) => Some("Ein anderes Dokument wird noch geöffnet"),
         ("open-artifact.document-failed", false) => Some("Opened the app, but its document could not be attached here"),

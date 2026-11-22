@@ -1,0 +1,21 @@
+{
+  "cases": [
+    {"name": "no fleet answers: only the local grant", "host": {"local": 4, "fleetIdle": null, "availableMegabytes": 64000, "pressure": "normal", "unitMegabytes": 512}, "expect": {"jobs": 4, "local": 4, "remote": 0, "reason": "fleet-local-only"}},
+    {"name": "fleet down or nothing idle: only the local grant", "host": {"local": 4, "fleetIdle": 0, "availableMegabytes": 64000, "pressure": "normal", "unitMegabytes": 512}, "expect": {"jobs": 4, "local": 4, "remote": 0, "reason": "fleet-local-only"}},
+    {"name": "four local plus forty idle slots", "host": {"local": 4, "fleetIdle": 40, "availableMegabytes": 64000, "pressure": "normal", "unitMegabytes": 512}, "expect": {"jobs": 44, "local": 4, "remote": 40, "reason": "fleet-all"}},
+    {"name": "the cap bounds local plus remote", "host": {"local": 4, "fleetIdle": 100, "availableMegabytes": 64000, "pressure": "normal", "unitMegabytes": 512}, "expect": {"jobs": 48, "local": 4, "remote": 44, "reason": "fleet-cap"}},
+    {"name": "a local grant at the cap leaves no remote job", "host": {"local": 48, "fleetIdle": 5, "availableMegabytes": null, "pressure": null, "unitMegabytes": 512}, "expect": {"jobs": 48, "local": 48, "remote": 0, "reason": "fleet-cap"}},
+    {"name": "the local compiles eat the memory: no light job", "host": {"local": 10, "fleetIdle": 30, "availableMegabytes": 6000, "pressure": "normal", "unitMegabytes": 512}, "expect": {"jobs": 10, "local": 10, "remote": 0, "reason": "fleet-memory"}},
+    {"name": "the spare memory carries nine light jobs", "host": {"local": 2, "fleetIdle": 30, "availableMegabytes": 4000, "pressure": "normal", "unitMegabytes": 512}, "expect": {"jobs": 11, "local": 2, "remote": 9, "reason": "fleet-memory"}},
+    {"name": "unknown memory is no limit", "host": {"local": 4, "fleetIdle": 12, "availableMegabytes": null, "pressure": null, "unitMegabytes": 512}, "expect": {"jobs": 16, "local": 4, "remote": 12, "reason": "fleet-all"}},
+    {"name": "raised memory pressure halves the remote jobs", "host": {"local": 4, "fleetIdle": 7, "availableMegabytes": 64000, "pressure": "warn", "unitMegabytes": 512}, "expect": {"jobs": 7, "local": 4, "remote": 3, "reason": "fleet-pressure"}},
+    {"name": "critical memory pressure keeps every remote job away", "host": {"local": 1, "fleetIdle": 7, "availableMegabytes": 64000, "pressure": "critical", "unitMegabytes": 512}, "expect": {"jobs": 1, "local": 1, "remote": 0, "reason": "fleet-pressure"}},
+    {"name": "one idle slot under raised pressure is none", "host": {"local": 4, "fleetIdle": 1, "availableMegabytes": 64000, "pressure": "warn", "unitMegabytes": 512}, "expect": {"jobs": 4, "local": 4, "remote": 0, "reason": "fleet-pressure"}}
+  ],
+  "invalid": [
+    {"name": "no local core", "host": {"local": 0, "fleetIdle": 3, "availableMegabytes": null, "pressure": null, "unitMegabytes": 512}},
+    {"name": "negative idle slots", "host": {"local": 2, "fleetIdle": -1, "availableMegabytes": null, "pressure": null, "unitMegabytes": 512}},
+    {"name": "unknown pressure", "host": {"local": 2, "fleetIdle": 3, "availableMegabytes": null, "pressure": "bogus", "unitMegabytes": 512}},
+    {"name": "fractional idle slots", "host": {"local": 2, "fleetIdle": 1.5, "availableMegabytes": null, "pressure": null, "unitMegabytes": 512}}
+  ]
+}

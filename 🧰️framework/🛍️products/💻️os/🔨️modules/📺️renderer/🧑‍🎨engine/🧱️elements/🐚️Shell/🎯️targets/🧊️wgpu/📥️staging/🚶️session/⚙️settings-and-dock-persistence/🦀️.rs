@@ -219,7 +219,6 @@ impl<'ctx> SessionCtx<'ctx> {
         display_panel_body("framework.marketplace.panel", sections)
     }
 
-    //#region 🧭️PanelAnchorAccessors
     /// 🧭️ The dock arrangement this session's sources declare, before any persisted override — the wgpu
     /// twin of React's `defaultDock` (`🏛️ShellHost/🟦️.tsx`'s 🧭️DockAssembly): app panel tabs routed to
     /// their `PanelGroup` corner, the framework Display branch and the sync leaf on bottom-left, the
@@ -357,7 +356,6 @@ impl<'ctx> SessionCtx<'ctx> {
         self.windows.active_window_id = self.dock.dock.active_window_id.clone();
         true
     }
-    //#endregion 🧭️PanelAnchorAccessors
 }
 
 /// 🩺️ One line per chrome-walk sync, naming the surfaces a DRAIN-eviction rule would have retired
@@ -453,15 +451,16 @@ pub fn mirror_engine_surface_states(
                     constructed.push(host_id);
                 }
             }
-            semio_renderer_wgpu_engine_attach::engine_surface_attach::EngineSurfaceKindDetail::Board2d { snapshot_json } => {
+            semio_renderer_wgpu_engine_attach::engine_surface_attach::EngineSurfaceKindDetail::Board2d { snapshot_json, suggestion_menu_json } => {
                 if let Some(surface) =
-                    board2d_states.get_or_insert_with(host_id.clone(), || Board2dSurface { surface_id: surface_id.clone(), bounds, controller_id: controller_id.clone(), snapshot_json: snapshot_json.clone(), window_id: window_id.clone() })
+                    board2d_states.get_or_insert_with(host_id.clone(), || Board2dSurface { surface_id: surface_id.clone(), bounds, controller_id: controller_id.clone(), snapshot_json: snapshot_json.clone(), window_id: window_id.clone(), suggestion_menu_json: suggestion_menu_json.clone() })
                 {
                     surface.surface_id = surface_id;
                     surface.bounds = bounds;
                     surface.controller_id = controller_id;
                     surface.snapshot_json = snapshot_json;
                     surface.window_id = window_id;
+                    surface.suggestion_menu_json = suggestion_menu_json;
                 }
                 if created {
                     constructed.push(host_id);

@@ -6,7 +6,7 @@
  * flux. Temperatures are centred on the air temperature, fluxes on 0 W/m² (positive = leaving the surface); `shared` ranges are the documented comparison ranges of
  * 📏️quantities (identical for every asset, scale and time), `auto` normalises to the values present and the legend says so, `span` (surface temperature only; every other quantity falls
  * back to `shared`) is a symmetric ±spanK range around the air temperature, so moderate sources stay readable in a mild room, and the legend states it. Open strokes that carry a region (ruling 2) are painted
- * as a halo of the region colour under the ink line. Air transport lives in 💨️transport-view.
+ * as a halo of the region colour under the ink line. The air is drawn by 🌊️flow-view.
  *
  * View independence: the field is solved once in world space; this function only maps region values to the shapes of the chosen viewpoint (elevation, front or plan). The quantity, unit, legend, centre and
  * range (also `auto`, which spans every region of the field, not the shapes of the view) are therefore identical in all three views, and a region has the same value wherever it is visible. A region without any shape in the

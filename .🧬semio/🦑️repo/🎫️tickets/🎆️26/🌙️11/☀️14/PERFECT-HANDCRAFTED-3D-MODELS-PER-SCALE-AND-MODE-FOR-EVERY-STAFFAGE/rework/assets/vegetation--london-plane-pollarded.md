@@ -80,3 +80,9 @@ Chisel: `rework-london-plane-pollarded-model.py` (every station, angle, length, 
 7. 1:500: leaders are 240 mm rods inside the foliage (needed so that `shoot-bark` is drawn); they do not show from outside.
 8. Not rendered after the last change: 1:50 poses `midday-heat`, `autumn-leaf-fall` (rendered, not read), clips `breeze-sway` and `diurnal-transpiration` (rendered, not read); 2D of 1:200 after the last fix (rendered, not read); thermal and structure sheets of 1:200 and 1:500 were read only in part (1:500 structure, 1:100 thermal cut). The last change touched only the 1:100 plume relief and the 2D paint order.
 9. `leaf-sun` / `leaf-shade` `areaM2` (65.0 / 51.3 m2, `areaBasis: exchange`) are the authored leaf areas of the old model and were not re-derived for the new crown (5.65 m instead of 6.8 m spread: leaf area index now higher).
+
+### Final catalog check (2026-11-22 13:43, after the third publish)
+
+`r3-validate.ts vegetation/london-plane-pollarded --catalog-only --volumes` → `VALID vegetation/london-plane-pollarded (catalog file as it is): schema 0, validateAsset 0, checkVolumes 0`
+
+Status of this pass: partial. Open for the next pass: items 2, 3, 4, 8 and 9 above; item 1 is a question for the dev (kit polyhedra against kernel lofts).

@@ -448,4 +448,27 @@ pub fn inflate(stored: &[u8], max_output_len: usize) -> Result<Vec<u8>, DeflateE
         }
     }
 }
+/// 🔬️ Inflates only the first `limit` output bytes of `stored` and reports whether more output followed, so a bounded content check never materializes a whole entry. A stream that ends or breaks before the limit is the same error [`inflate`] gives.
+pub fn inflate_head(stored: &[u8], limit: usize) -> Result<(Vec<u8>, bool), DeflateError> {
+    let mut inflater = Inflater::new();
+    let mut output = Vec::new();
+    let mut index = 0usize;
+    let mut pending: Option<u8> = None;
+    loop {
+        if pending.is_none() && index < stored.len() {
+            pending = Some(stored[index]);
+            index += 1;
+        }
+        match inflater.advance(&mut pending, index >= stored.len())? {
+            InflateOutcome::NeedInput => {}
+            InflateOutcome::Wrote(byte) => {
+                if output.len() >= limit {
+                    return Ok((output, true));
+                }
+                output.push(byte);
+            }
+            InflateOutcome::Done => return Ok((output, false)),
+        }
+    }
+}
 //#endregion 🔖️Inflate

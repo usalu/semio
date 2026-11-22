@@ -1,0 +1,23 @@
+{
+  "title": "Used Musical Instruments Staffage Collection",
+  "emoji": "🎻",
+  "status": "open",
+  "description": "Use a massive wave of Opus 5.5 agents to extend the staffage with a huge collection of used instruments. Forty handcrafted second-hand musical instruments and music equipment (strings, keyboards, woodwinds, brass, percussion, folk instruments, amplification and stage equipment) in the staffage archive `🎓️teaching/🏛️architecture/🧍️staffage`, categories objects and appliances, each with rig, poses (stored in case or on stand, carried, played), clips, thermal and structural model, 2D representations and 3D volumes at 1:50, 1:100, 1:200, 1:500, manifest rows and the collection `used-instruments`, verified by the product's validators and tests.",
+  "goal": "animate",
+  "sessions": [
+    "bc5b8b96-9241-4eeb-85cb-aeaa1a98facb"
+  ],
+  "interactions": [
+    {
+      "kind": "ticket.open",
+      "date": "2026-11-22 15:50:47",
+      "author": "",
+      "system": "mac",
+      "client": "claude-code",
+      "checkpoint": "",
+      "prompt": "Use a massive wave of Opus 5.5 agents to extend the staffage with a huge collection of used instruments. Forty handcrafted second-hand musical instruments and music equipment (strings, keyboards, woodwinds, brass, percussion, folk instruments, amplification and stage equipment) in the staffage archive `🎓️teaching/🏛️architecture/🧍️staffage`, categories objects and appliances, each with rig, poses (stored in case or on stand, carried, played), clips, thermal and structural model, 2D representations and 3D volumes at 1:50, 1:100, 1:200, 1:500, manifest rows and the collection `used-instruments`, verified by the product's validators and tests.",
+      "llm": "opus-5-5",
+      "effort": "high"
+    }
+  ]
+}

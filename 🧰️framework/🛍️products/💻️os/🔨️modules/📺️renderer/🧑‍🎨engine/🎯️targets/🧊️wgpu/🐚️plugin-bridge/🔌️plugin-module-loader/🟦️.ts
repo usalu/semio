@@ -11,8 +11,8 @@ import { buildPluginHandle } from "./🔌️plugin-handle/🟦️.ts";
  * `loadPluginModule` shape). `dispose()` disposes every instance's worker-side actor entry via
  * `ShardClient.dispose` — no shared module lease to refcount any more, one actor belongs to exactly
  * one instance. */
-export async function loadPluginModule(pluginId: string, moduleUrl: string, signal: AbortSignal | undefined, admittedDescriptor: import("@semio-tech/framework").PluginPackageDescriptor | undefined, consumedTopicsFor: (appId: string) => readonly string[]): Promise<WgpuPluginHandle> {
-  const { registry, manifest, packageId, componentSha256, shardClient } = await acquirePluginDescriptor({ signal, admittedDescriptor, pluginId, moduleUrl });
+export async function loadPluginModule(pluginId: string, moduleUrl: string, signal: AbortSignal | undefined, admittedDescriptor: import("@semio-tech/framework").PluginPackageDescriptor | undefined, consumedTopicsFor: (appId: string) => readonly string[], host?: string): Promise<WgpuPluginHandle> {
+  const { registry, manifest, packageId, componentSha256, shardClient } = await acquirePluginDescriptor({ signal, admittedDescriptor, pluginId, moduleUrl, host });
   const { requireActorId, requireUiRoute, executeFor, uiRouteByInstance, state, closingInstances, actorIdByInstance, channelRequests, requireChannel, lifecycleByInstance, channelByInstance, openingInstances, retiringInstances, releaseInstance, codecActorId } = createInstanceBookkeeping({ pluginId });
   const { renderSurface } = createRenderSurface({ requireActorId, requireUiRoute, executeFor, uiRouteByInstance });
   const { drainSpawnedJobs, turnOutcomes, drainTypedOperations, channelHandle } = createTurnDrivers({ requireUiRoute, executeFor, state, closingInstances, actorIdByInstance, requireActorId, pluginId });

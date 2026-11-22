@@ -1,0 +1,13 @@
+{
+  "version": 1,
+  "description": "Language-neutral vectors of the admission probe: whether a unit that asked now would queue, given the running units, the waiters and the freeze. Every vector is hand-derived from the EASY backfilling law of `admitWaitersV1`; a reimplementation in another language must agree.",
+  "cases": [
+    {"name": "nothing running: the first unit always starts", "state": {"budgetBytes": 1073741824, "frozen": false, "nowMs": 0, "running": []}, "waiting": [], "candidate": {"predictedBytes": 6442450944, "expectedWallMs": null, "remainingMs": 0, "arrival": 0}, "wait": false},
+    {"name": "a frozen broker with nothing running still starts the first unit", "state": {"budgetBytes": 1073741824, "frozen": true, "nowMs": 0, "running": []}, "waiting": [], "candidate": {"predictedBytes": 1073741824, "expectedWallMs": null, "remainingMs": 0, "arrival": 0}, "wait": false},
+    {"name": "the charged budget is full: the next component waits", "state": {"budgetBytes": 6657199308, "frozen": false, "nowMs": 0, "running": [{"predictedBytes": 6442450944, "expectedEndMs": null}]}, "waiting": [], "candidate": {"predictedBytes": 3221225472, "expectedWallMs": null, "remainingMs": 0, "arrival": 0}, "wait": true},
+    {"name": "a frozen broker queues even a small unit while anything runs", "state": {"budgetBytes": 10737418240, "frozen": true, "nowMs": 0, "running": [{"predictedBytes": 1073741824, "expectedEndMs": null}]}, "waiting": [], "candidate": {"predictedBytes": 268435456, "expectedWallMs": null, "remainingMs": 0, "arrival": 0}, "wait": true},
+    {"name": "headroom in the budget admits", "state": {"budgetBytes": 10737418240, "frozen": false, "nowMs": 0, "running": [{"predictedBytes": 1073741824, "expectedEndMs": null}]}, "waiting": [], "candidate": {"predictedBytes": 2147483648, "expectedWallMs": null, "remainingMs": 0, "arrival": 0}, "wait": false},
+    {"name": "a short unit backfills before the reservation of a larger waiter", "state": {"budgetBytes": 4294967296, "frozen": false, "nowMs": 0, "running": [{"predictedBytes": 2147483648, "expectedEndMs": 1000}]}, "waiting": [{"predictedBytes": 3221225472, "expectedWallMs": null, "remainingMs": 0, "arrival": 0}], "candidate": {"predictedBytes": 1073741824, "expectedWallMs": 500, "remainingMs": 0, "arrival": 1}, "wait": false},
+    {"name": "an unbounded unit that would delay the reservation waits", "state": {"budgetBytes": 4294967296, "frozen": false, "nowMs": 0, "running": [{"predictedBytes": 2147483648, "expectedEndMs": 1000}]}, "waiting": [{"predictedBytes": 3221225472, "expectedWallMs": null, "remainingMs": 0, "arrival": 0}], "candidate": {"predictedBytes": 1610612736, "expectedWallMs": null, "remainingMs": 0, "arrival": 1}, "wait": true}
+  ]
+}

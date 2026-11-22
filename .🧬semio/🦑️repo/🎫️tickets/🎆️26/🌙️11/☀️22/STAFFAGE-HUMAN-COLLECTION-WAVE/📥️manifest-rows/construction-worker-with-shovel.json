@@ -1,0 +1,52 @@
+{
+  "id": "construction-worker-with-shovel",
+  "category": "humans",
+  "title": {
+    "en": "Construction Worker with Shovel",
+    "de": "Bauarbeitende Person mit Schaufel"
+  },
+  "heightM": 1.74,
+  "widthM": 0.869,
+  "powerW": 611.2,
+  "poses": [
+    "driving-blade",
+    "prying-soil",
+    "lifting-soil",
+    "resting-on-shovel"
+  ],
+  "clips": [
+    "dig-cycle",
+    "idle-breathing"
+  ],
+  "representations": {
+    "50": "authored",
+    "100": "authored",
+    "200": "authored",
+    "500": "authored"
+  },
+  "symbols": [],
+  "analytics": [
+    "thermal",
+    "transport",
+    "structural"
+  ],
+  "exports": [
+    "svg",
+    "pdf",
+    "dxf",
+    "dwg",
+    "png-sequence",
+    "mp4",
+    "webm",
+    "component",
+    "glb",
+    "fbx",
+    "model",
+    "model-zip"
+  ],
+  "distinction": {
+    "en": "A construction worker in hi-vis vest, hard hat, gloves and safety boots digging with a 1.21 m round-point shovel with D-grip: driving the blade, prying the soil loose, lifting about 7 kg of soil and resting on the planted shovel, both hands solved onto grip and shaft; heavy work of 5.5 to 6.5 met with a passive tool.",
+    "de": "Eine Bauarbeiterin bzw. ein Bauarbeiter in Warnweste, Schutzhelm, Handschuhen und Sicherheitsstiefeln gräbt mit einer 1,21 m langen Spitzschaufel mit D-Griff: Blatt einstoßen, Erde lösen, etwa 7 kg Erde anheben und auf die eingesteckte Schaufel gestützt verschnaufen, beide Hände auf Griff und Stiel gelöst; schwere Arbeit von 5,5 bis 6,5 met mit einem passiven Werkzeug."
+  },
+  "completion": "authored"
+}

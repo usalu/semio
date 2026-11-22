@@ -22,17 +22,16 @@ type Environment=Readonly<Record<string,string|undefined>>;
 /** 🚚️ How the closure entries a record names travel with it: bundles of the recipes it refers to, exported from and imported into the closure store of this machine. An exported bundle reads its layers from the store while it is iterated (one layer at a time) and carries the stamp of the stored entry; `source` names the stored document an imported bundle came from, and `held` answers the local key of the entry that was imported from the document of that digest while it is still in the store. */
 export type ProjectClosureTravelV1=Readonly<{export(root:string,image:string):Promise<readonly Readonly<{recipeKey:string;stamp?:string;bundle:unknown}>[]>;import(root:string,bundles:readonly Readonly<{recipeKey:string;bundle:unknown;source?:string;neutral?:string}>[]):Promise<number>;held?(root:string,source:string,neutral?:string,refusedMilliseconds?:number):Promise<string|undefined>}>;
 export type ProjectRecordInfoV1=Readonly<{cachePath:string;fleet:string;keyText:string;exportRecord():unknown;import(portable:unknown):Promise<boolean>;closures?:ProjectClosureTravelV1|undefined;expectedMilliseconds?:number|undefined;ttlMilliseconds?:number|undefined}>;
-const SOURCE_ANALYSES="../../🕸️graph/📥️inference/🧬️source-analyses/🟨️.mjs",SCRIPT_INPUTS="../../🕸️graph/📥️inference/🧭️script-inputs/🟨️.mjs",OBSERVATION="../../👁️observation/🟨️.mjs";
 /** 🪪️ The ids of the source analyses this process registered for its inference, in the order of their roles: a taken record names the providers of its producer by role and the id of a provider contains a hash of the module location, so the taker puts in the ids it has registered (the module is loaded only when a record is taken; a process that cannot load it takes records whose analysis rows cannot hold, and infers those projects itself). */
 async function registeredProvidersV1():Promise<readonly string[]>{
- const loaded=await import(SOURCE_ANALYSES) as {prepareSourceAnalysesV1():Readonly<Record<string,{id:string}>>},own=await import(SCRIPT_INPUTS).then(module=>(module as {scriptProviderIdsV1():readonly string[]}).scriptProviderIdsV1(),()=>[] as readonly string[]);
+ const loaded=await import("../../🕸️graph/📥️inference/🧬️source-analyses/🟨️.mjs") as {prepareSourceAnalysesV1():Readonly<Record<string,{id:string}>>},own=await import("../../🕸️graph/📥️inference/🧭️script-inputs/🟨️.mjs").then(module=>(module as {scriptProviderIdsV1():readonly string[]}).scriptProviderIdsV1(),()=>[] as readonly string[]);
  return[...Object.values(loaded.prepareSourceAnalysesV1()).map(provider=>provider.id),...own];
 }
 
 /** 🧬️ Whether one closure entry a stored record carries still holds on this tree, the verdict a taker gives the entries it imported: the rows of the entry and of its layers probed against the files, listings and analyses of the tree, in steps that give the event loop its turns. A record whose entries walked files that changed since is stale for every reader although its own rows hold, so a pool that counted it as stored never refreshed it.
  * @see ./🧪️tests/🤝️pool-reader/🟦️.ts */
 export async function closureBundleHoldsV1(bundle:Readonly<{rows:readonly unknown[];layers:Iterable<readonly unknown[]>}>):Promise<boolean>{
- const observation=await import(OBSERVATION) as {observationRowsHoldAsyncV1(rows:readonly unknown[],step:()=>unknown):Promise<boolean>;observationLayerHoldsAsyncV1(layer:readonly unknown[],step:()=>unknown):Promise<boolean>};
+ const observation=await import("../../👁️observation/🟨️.mjs") as {observationRowsHoldAsyncV1(rows:readonly unknown[],step:()=>unknown):Promise<boolean>;observationLayerHoldsAsyncV1(layer:readonly unknown[],step:()=>unknown):Promise<boolean>};
  let turns=0;const step=()=>++turns%2048===0?new Promise<void>(done=>setImmediate(done)):undefined;
  if(!await observation.observationRowsHoldAsyncV1([...bundle.rows],step))return false;
  for(const layer of bundle.layers)if(!await observation.observationLayerHoldsAsyncV1(layer,step))return false;
@@ -42,12 +41,12 @@ export async function closureBundleHoldsV1(bundle:Readonly<{rows:readonly unknow
 /** 🔒️ The question a taker puts to the `closure` rows of a record, answered from the closures of this tree after the entries they name are settled (the script inputs register the provider when they load); undefined when it cannot be asked here, and a row the provider cannot answer (`!stale`, `!unreadable`, `!unregistered`: the entry could not be settled in this process) counts as fresh, never as stale. */
 async function closureHoldsOfV1(rows:readonly ObservationRowV1[],image:string):Promise<((row:ObservationRowV1)=>boolean)|undefined>{
  const closures=rows.filter(row=>row.kind==="closure");if(closures.length===0)return undefined;
- try{await import(SCRIPT_INPUTS);const observation=await import(OBSERVATION) as {settleClosureRowsV1(rows:readonly unknown[],value:unknown):Promise<void>;observationRowsHoldV1(rows:readonly unknown[]):boolean};await observation.settleClosureRowsV1(closures,JSON.parse(image));return row=>observation.observationRowsHoldV1([row])||["!stale","!unreadable","!unregistered"].some(answer=>observation.observationRowsHoldV1([{...row,fact:answer}]));}catch{return undefined;}
+ try{await import("../../🕸️graph/📥️inference/🧭️script-inputs/🟨️.mjs");const observation=await import("../../👁️observation/🟨️.mjs") as {settleClosureRowsV1(rows:readonly unknown[],value:unknown):Promise<void>;observationRowsHoldV1(rows:readonly unknown[]):boolean};await observation.settleClosureRowsV1(closures,JSON.parse(image));return row=>observation.observationRowsHoldV1([row])||["!stale","!unreadable","!unregistered"].some(answer=>observation.observationRowsHoldV1([{...row,fact:answer}]));}catch{return undefined;}
 }
 
 /** 📂️ The question a taker puts to every row that is neither a file digest nor a closure (a directory listing, an existence, a real path): the verdict of `observationRowFreshV1` on this tree; a row it cannot judge counts as fresh, never as stale. */
 async function rowHoldsOfV1():Promise<((row:ObservationRowV1)=>boolean)|undefined>{
- try{const observation=await import(OBSERVATION) as {observationRowFreshV1(row:unknown):boolean};return row=>{try{return observation.observationRowFreshV1(row);}catch{return true;}};}catch{return undefined;}
+ try{const observation=await import("../../👁️observation/🟨️.mjs") as {observationRowFreshV1(row:unknown):boolean};return row=>{try{return observation.observationRowFreshV1(row);}catch{return true;}};}catch{return undefined;}
 }
 
 /** 🚪️ The answer of the gate: whether the record was taken from the fleet, and how to store the computed one or give the claim back. */

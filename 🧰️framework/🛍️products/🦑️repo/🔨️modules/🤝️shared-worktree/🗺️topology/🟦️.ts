@@ -1,7 +1,7 @@
 import {validateJsonSchemaSubset} from "../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import schema from "./🧬️schema/🔣️.json" with {type:"json"};
 import topologyJson from "./🔣️.json" with {type:"json"};
-import {launchdPriorityKeysV1,servicePriorityOfServiceV1,systemdPriorityLinesV1,taskPriorityXmlV1} from "../../📚️library/🏗️build/🌐️remote-execution/🛰️sidecar/🪜️priority/🟦️.ts";
+import {launchdPriorityKeysV1,servicePriorityOfServiceV1,shellPriorityLinesV1,taskPriorityXmlV1} from "../../📚️library/🏗️build/🌐️remote-execution/🛰️sidecar/🪜️priority/🟦️.ts";
 import buildPolicy from "../../📚️library/🏗️build/🔣️policy.json" with {type:"json"};
 import type {SidecarSettingsV1} from "../🔁️replica/🧷️sidecars/🟦️.ts";
 
@@ -275,19 +275,27 @@ const LOGON="<LogonTrigger><Enabled>true</Enabled></LogonTrigger>",
  REVIVE="<TimeTrigger><Enabled>true</Enabled><StartBoundary>2026-01-01T00:00:00</StartBoundary><Repetition><Interval>PT1M</Interval><StopAtDurationEnd>false</StopAtDurationEnd></Repetition></TimeTrigger>",
  FOREVER="<RestartOnFailure><Interval>PT1M</Interval><Count>255</Count></RestartOnFailure><ExecutionTimeLimit>PT0S</ExecutionTimeLimit>";
 
+/** 🐧️ The directory of the launch scripts of the Linux services, inside the entry directory of the account: the system units are fixed bootstraps (`User`, `CAP_SYS_NICE`, restart policy, one `ExecStart` that runs `<name>.sh` of this directory), so the account that owns the entry directory changes what a service runs, in which scheduling class and with which environment without any privilege. */
+export const linuxLaunchDirectoryV1=(entry:string):string=>`${entry}/service`;
+
+const launchTargetOf=(entry:string,name:string):string=>`${linuxLaunchDirectoryV1(entry)}/${name}.sh`;
+const launchOf=(service:string,lines:readonly string[]):string=>["#!/bin/sh",...shellPriorityLinesV1(servicePriorityOfServiceV1(service)),...lines].join("\n");
+const bootstrapOf=(entry:string,name:string):readonly string[]=>["AmbientCapabilities=CAP_SYS_NICE",`ExecStart=/bin/sh "${launchTargetOf(entry,name)}"`];
+
 /** 🧰️ The named pieces of the worker services: `target` and `definition` of the replica daemon (`run`), `compact-target` and `compact-definition` of the daily `compact`, and on Linux `timer-target` and `timer-definition` of the timer that starts it. With `server` (the group server, on the platform that the topology names for it) the daily compaction passes `--collect-blobs`: only group servers delete unreferenced blobs, because a worker's view of the other origins may lag. */
 export function workerPartsV1(topology:FleetTopologyV1,groupId:string,platform:FleetPlatformV1,server:boolean=false):Readonly<Record<string,string>>{
  const group=groupV1(topology,groupId),directory=replicaDirectory(topology,platform),entry=entryDirectoryPathV1(platform),collect=server?["--collect-blobs"]:[];
  if(server&&group.server.platform!==platform)throw Error(`Server platform required: ${group.id} runs its server on ${group.server.platform}, not ${platform}`);
  if(platform==="linux")return Object.freeze({target:LINUX_REPLICA_UNIT,definition:[
   "[Unit]",`Description=semio fleet replica daemon (${group.id}) for %i`,"After=network-online.target remote-fs.target",`RequiresMountsFor=${topology.storeMount.linux}`,UNLIMITED_STARTS,"",
-  "[Service]","User=%i",`ExecStart=/bin/sh ${entry}/boot.sh run`,...STOP_BOUND,...systemdPriorityLinesV1(servicePriorityOfServiceV1("replica")),
+  "[Service]","User=%i",...bootstrapOf(entry,"replica"),...STOP_BOUND,
   "Restart=always","RestartSec=2","LimitNOFILE=65536","",
   "[Install]","WantedBy=multi-user.target"
  ].join("\n"),"compact-target":LINUX_COMPACT_UNIT,"compact-definition":[
   "[Unit]",`Description=semio fleet journal compaction (${group.id}) for %i`,"After=network-online.target remote-fs.target",`RequiresMountsFor=${topology.storeMount.linux}`,"",
-  "[Service]","Type=oneshot","User=%i",...systemdPriorityLinesV1(servicePriorityOfServiceV1("compact")),`WorkingDirectory=${directory}`,`ExecStart=${REPO} ${SCRIPT} compact${collect.map(flag=>` ${flag}`).join("")}`
- ].join("\n"),"timer-target":LINUX_COMPACT_TIMER,"timer-definition":[
+  "[Service]","Type=oneshot","User=%i",...bootstrapOf(entry,"compact")
+ ].join("\n"),"launch-target":launchTargetOf(entry,"replica"),"launch-definition":launchOf("replica",[`exec /bin/sh "${entry}/boot.sh" run`]),
+ "compact-launch-target":launchTargetOf(entry,"compact"),"compact-launch-definition":launchOf("compact",[`cd "${directory}" && exec ${REPO} ${SCRIPT} compact${collect.map(flag=>` ${flag}`).join("")}`]),"timer-target":LINUX_COMPACT_TIMER,"timer-definition":[
   "[Unit]",`Description=daily semio fleet journal compaction (${group.id}) for %i`,"",
   "[Timer]","OnCalendar=daily","RandomizedDelaySec=3h","Persistent=true","",
   "[Install]","WantedBy=timers.target"
@@ -301,7 +309,7 @@ export function workerPartsV1(topology:FleetTopologyV1,groupId:string,platform:F
 
 const linuxServerV1=(topology:FleetTopologyV1,group:FleetGroupV1):Record<string,string>=>{
  const store=group.nfs.export,mount=topology.storeMount.linux,peers=peersOf(topology,group),names=buildPolicy.remoteCache.server.tokenEnvironment,port=portOf(group),
-  worktree=worktreePathV1(topology,"linux"),directory=replicaDirectory(topology,"linux"),replica=`semio-fleet-replica@${STORE_USER}.service`,archive=peers.length>0?` --archive ${archiveOf(peers,"linux")}`:"";
+  worktree=worktreePathV1(topology,"linux"),directory=replicaDirectory(topology,"linux"),entry=entryDirectoryPathV1("linux"),replica=`semio-fleet-replica@${STORE_USER}.service`,archive=peers.length>0?` --archive ${archiveOf(peers,"linux")}`:"";
  const peerLine=(peer:FleetPeerV1):string=>{
   const {nfs,server}=peer.group;
   if(server.protocol==="smb")return `//${nfs.host}${nfs.export} ${peer.path} cifs ${PEER_SMB_OPTIONS} 0 0`;
@@ -330,17 +338,19 @@ const linuxServerV1=(topology:FleetTopologyV1,group:FleetGroupV1):Record<string,
   "cache-target":"/etc/systemd/system/semio-fleet-cache.service",
   "cache-unit":[
    "[Unit]",`Description=semio fleet remote cache (${group.id})`,"After=network-online.target","Wants=network-online.target",UNLIMITED_STARTS,"",
-   "[Service]",`User=${STORE_USER}`,`Group=${STORE_USER}`,...systemdPriorityLinesV1(servicePriorityOfServiceV1("cache")),`WorkingDirectory=${worktree}`,`EnvironmentFile=${TOKENS}`,"Environment=SEMIO_LANGUAGE=en",`Environment=SEMIO_FLEET_NETWORK=${group.server.network}`,
-   `ExecStart=${REPO} remote-cache serve --host fleet --port ${port} --directory ${CACHE_DIRECTORY} --max-bytes ${CACHE_BYTES}`,
+   "[Service]",`User=${STORE_USER}`,`Group=${STORE_USER}`,...bootstrapOf(entry,"cache"),
    "Restart=always","RestartSec=2","LimitNOFILE=65536","",
    "[Install]","WantedBy=multi-user.target"
   ].join("\n"),
+  "cache-launch-target":launchTargetOf(entry,"cache"),
+  "cache-launch":launchOf("cache",[`set -a; . ${TOKENS}; set +a`,"export SEMIO_LANGUAGE=en",`export SEMIO_FLEET_NETWORK=${group.server.network}`,`cd "${worktree}" && exec ${REPO} remote-cache serve --host fleet --port ${port} --directory ${CACHE_DIRECTORY} --max-bytes ${CACHE_BYTES}`]),
   "replica-unit":workerPartsV1(topology,group.id,"linux")["definition"]!,
+  "relay-launch-target":launchTargetOf(entry,"relay"),
+  "relay-launch":launchOf("relay",[`cd "${directory}" && exec ${REPO} ${SCRIPT} relay`]),
   "relay-target":"/etc/systemd/system/semio-fleet-relay.service",
   "relay-unit":[
    "[Unit]",`Description=semio fleet relay (${group.id})`,`After=network-online.target remote-fs.target ${replica}`,"Wants=network-online.target",`RequiresMountsFor=${mount}`,`ConditionPathExists=${worktree}/.cache/f/machine.json`,UNLIMITED_STARTS,"",
-   "[Service]",`User=${STORE_USER}`,`Group=${STORE_USER}`,...systemdPriorityLinesV1(servicePriorityOfServiceV1("relay")),`WorkingDirectory=${directory}`,
-   `ExecStart=${REPO} ${SCRIPT} relay`,
+   "[Service]",`User=${STORE_USER}`,`Group=${STORE_USER}`,...bootstrapOf(entry,"relay"),
    "Restart=always","RestartSec=2","LimitNOFILE=65536","",
    "[Install]","WantedBy=multi-user.target"
   ].join("\n")

@@ -10,13 +10,12 @@
  */
 import { PLANAR_VIEWPOINTS, type Alternative, type Asset, type Slug, type Text, type UnavailableCause, type Viewpoint } from "../../🧬️schema/🟦️.ts";
 import type { DepictionOptions, DrawingScene, Fidelity, EvaluatedState, EvaluationQuery, RepresentationResolution, RepresentationSelector, View } from "../🔗️contracts/🟦️.ts";
-import { type Analysis, depict, resolveDepiction } from "../🎨️depiction/🟦️.ts";
+import { type Analysis, depict, resolveDepiction, transportOf } from "../🎨️depiction/🟦️.ts";
 import { ViewMissingError } from "../🎨️depiction/🔭️views/🟦️.ts";
 import { evaluate } from "../🧮️evaluation/🟦️.ts";
 import { RepresentationError } from "../🖨️representation/🟦️.ts";
 import { solveStructure } from "../🏗️structure/🟦️.ts";
 import { solveThermalAt } from "../🌡️thermal/🟦️.ts";
-import { solveTransport } from "../💨️transport/🟦️.ts";
 
 /** 🎯️ Which drawing to project: the authored representation of a scale, or a named symbol shown at a scale (`denominator` maps its paper size). */
 export type DrawingSource = { readonly kind: "scale"; readonly denominator: number } | { readonly kind: "symbol"; readonly symbol: Slug; readonly denominator: number };
@@ -96,7 +95,7 @@ function run(asset: Asset, query: EvaluationQuery, viewpoints: readonly Viewpoin
   const environment = options.environmentTimeline ?? options.environment;
   const thermal = mode === "thermal" ? solveThermalAt(asset, query, environment) : undefined;
   const structure = mode === "forces" || mode === "moments" ? solveStructure(state) : undefined;
-  const transport = options.transport.length > 0 ? solveTransport(asset, query, environment ?? asset.thermal.environment) : undefined;
+  const transport = (options.flow?.length ?? 0) > 0 ? transportOf({ asset, query }, options) : undefined;
   const analysis: Analysis = { ...(thermal ? { thermal } : {}), ...(structure ? { structure } : {}), ...(transport ? { transport } : {}) };
   const views = Object.fromEntries(
     viewpoints.map((viewpoint): [Viewpoint, ResolvedDrawing | DrawingUnavailable] => {

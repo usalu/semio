@@ -7,7 +7,7 @@ import {validateRemoteExecutionRustcActionV1} from "../../../🧱️actions/🟦
 import {testScratchRootV1} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎛️execution/🟦️.ts";
 import {OFFLOAD_POLICY_V1} from "../../📐️policy/🟦️.ts";
 import type {OffloadPlanV1} from "../../🗺️paths/🟦️.ts";
-import {buildOffloadActionV1,offloadCommandV1} from "../🟦️.ts";
+import {buildOffloadActionV1,offloadRustcCommandV1} from "../🟦️.ts";
 
 const scratch:string[]=[],policy=OFFLOAD_POLICY_V1;
 afterEach(()=>{for(const path of scratch.splice(0))rmSync(path,{recursive:true,force:true});});
@@ -47,7 +47,7 @@ test("the same unit described by a POSIX requester and by a native Windows reque
  const other=await build({...posixPlan,environment:{...posixPlan.environment,SEMIO_CWD_NAME:"./elsewhere"}});
  expect(other.hash,"a different name is a different action").not.toBe(left.hash);
  for(const value of [posixPlan,windowsPlan]){
-  const command=offloadCommandV1(value,"x86_64-pc-windows-msvc");
+  const command=offloadRustcCommandV1(value,"x86_64-pc-windows-msvc");
   expect(command.arguments.join("\n")).not.toContain("\\");
   expect(validateRemoteExecutionRustcActionV1({arguments:[...command.arguments],environment_variables:command.environment.map(([name,text])=>({name,value:text})),output_paths:[policy.virtual.out,policy.virtual.root],working_directory:""})).toBeUndefined();
  }
@@ -55,8 +55,8 @@ test("the same unit described by a POSIX requester and by a native Windows reque
 
 test("the macOS object prefix is part of the command only for an Apple target, decided by the requester's target, not by the executing host",()=>{
  const value=plan("/",0o644,"target");
- expect(offloadCommandV1(value,"aarch64-apple-darwin").arguments.some(argument=>argument.includes("oso_prefix"))).toBe(true);
- expect(offloadCommandV1(value,"x86_64-pc-windows-msvc").arguments.some(argument=>argument.includes("oso_prefix"))).toBe(false);
+ expect(offloadRustcCommandV1(value,"aarch64-apple-darwin").arguments.some(argument=>argument.includes("oso_prefix"))).toBe(true);
+ expect(offloadRustcCommandV1(value,"x86_64-pc-windows-msvc").arguments.some(argument=>argument.includes("oso_prefix"))).toBe(false);
 });
 
 test("a tree larger than the upload bound is no reason to stay: blobs the store already holds do not travel, and only what is missing counts against the bound",async()=>{

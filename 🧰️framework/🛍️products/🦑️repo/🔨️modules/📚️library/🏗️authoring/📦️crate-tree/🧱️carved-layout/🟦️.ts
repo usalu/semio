@@ -40,6 +40,8 @@ function applyEdits(text: string, edits: readonly { start: number; end: number; 
 class Collector {
   readonly root = nestOf("", "");
   readonly owned = new Map<string, Set<string>>();
+  readonly roots = new Map<string, Set<string>>();
+  private current = new Set<string>();
   constructor(private readonly idents: ReadonlySet<string>) {}
 
   derived(statement: string): boolean {
@@ -50,6 +52,8 @@ class Collector {
   collect(crate: string, source: string, scope: string): void {
     const owned = this.owned.get(crate) ?? new Set<string>();
     this.owned.set(crate, owned);
+    this.current = this.roots.get(crate) ?? new Set<string>();
+    this.roots.set(crate, this.current);
     const tree = parseRustSourceTree(source);
     this.walk(source, tree.modules, tree.items, scope, this.root, [], owned, true);
   }
@@ -76,12 +80,14 @@ class Collector {
         const file = resolve(scope, node.pathAttribute);
         if (node.name === "component" && hasGlob) {
           if (nest.component === null) { nest.component = { source, node, scope }; nest.componentFile = file; }
+          this.current.add(file);
           owned.add(path.join("::"));
           continue;
         }
         const child = nest.children.get(node.name) ?? nestOf(node.name, scope);
         nest.children.set(node.name, child);
         if (child.leaf === null) { child.leaf = { source, node, scope }; child.file = file; }
+        this.current.add(file);
         owned.add([...path, node.name].join("::"));
       }
     }
@@ -121,7 +127,7 @@ class Rebuilder {
     body.push(...node.items);
     for (const child of node.children.values()) {
       this.placed.add(child);
-      if ((child.leaf && fileOf(node) !== null) || (child.extended && !child.leaf && !child.component)) continue;
+      if ((child.leaf && fileOf(node) !== null) || (child.extended && !child.leaf && !child.component)) { this.cover(child); continue; }
       body.push(child.leaf ? mount(child.leaf, inner) : this.wrapper(child, inner));
     }
     return [...lines, ...body.map((line) => indented(line, "    ")).map((line) => `    ${line}`), "}"].join("\n");
@@ -132,8 +138,15 @@ class Rebuilder {
     if (!node) return "";
     this.placed.add(node);
     if (node.leaf) return this.parentFile(path) !== null || this.nodeAt(path.slice(0, -1))?.extended ? "" : mount(node.leaf, scope);
-    if (node.extended && !node.component) { for (const child of node.children.values()) this.placed.add(child); return ""; }
-    return node.header !== null ? this.wrapper(node, scope) : "";
+    if (node.extended && !node.component) { node.children.forEach((child) => this.cover(child)); return ""; }
+    if (node.header !== null) return this.wrapper(node, scope);
+    this.cover(node);
+    return "";
+  }
+
+  cover(node: Nest): void {
+    this.placed.add(node);
+    node.children.forEach((child) => this.cover(child));
   }
 
   statement(parsed: Parsed, scope: string): string {
@@ -180,6 +193,7 @@ class Rebuilder {
         const path = [...here, node.name];
         const inner = resolve(scope, node.pathAttribute ?? node.name);
         const target = this.nodeAt(path);
+        if (target !== null) this.placed.add(target);
         const own = (item: RustSourceItem): Parsed | null => { const text = source.slice(item.start, item.end); return item.kind === "use" && this.collector.derived(text) ? parseUse(text) : null; };
         if (target !== null && target.header !== null && node.items.some((item) => own(item)?.glob === true && own(item)!.path.join("::") === path.join("::")) && this.fullyDerived(source, node)) {
           const start = lineStartOf(source, node.start);
@@ -227,7 +241,7 @@ export function readCarvedLayout(repoRoot: string, packageDirRel: string): Carve
   const lib = readCargoLib(manifestPath);
   const workspace = (runtimeParseTomlV1(manifestText) as { package?: { workspace?: string } }).package?.workspace;
   const artifactDir = resolve(dirname(manifestPath), workspace ?? ".");
-  const providers = [...dependencyRows(manifestText)].flatMap(([name, spec]) => {
+  const providers: { name: string; dir: string; manifest: string; entry: string; text: string }[] = [...dependencyRows(manifestText)].flatMap(([name, spec]) => {
     const dir = resolve(dirname(manifestPath), spec.path!);
     const manifest = resolve(dir, "Cargo.toml");
     if (!dir.startsWith(`${artifactDir}/`) || dir === dirname(manifestPath) || !existsSync(manifest)) return [];
@@ -238,6 +252,7 @@ export function readCarvedLayout(repoRoot: string, packageDirRel: string): Carve
   if (!signed.size) return null;
   const idents = new Set(providers.map((provider) => crateIdent(provider.name)));
   const collector = new Collector(idents);
+  providers.splice(0, providers.length, ...providers.filter((provider) => signed.has(provider.name)));
   const ordered = [...providers.filter((provider) => signed.has(provider.name)), ...providers.filter((provider) => !signed.has(provider.name))];
   const bodyOf = (provider: { entry: string; text: string }): { text: string; scope: string } => {
     const hoisted = /#\[path\s*=\s*"([^"]*)"\]\s*mod\s+mirror\s*;/u.exec(provider.text);
@@ -288,21 +303,69 @@ export function readCarvedLayout(repoRoot: string, packageDirRel: string): Carve
     }
     pending = pending.filter((entry) => !ready.includes(entry));
   }
+  const heads = new RegExp(`(?<![A-Za-z0-9_:])(?:${[...idents].map((ident) => ident.replace(/[.*+?^${}()|[\]\\]/gu, "\\$&")).join("|")})::`, "gu");
+  const stripDerived = (text: string): string => {
+    const tree = parseRustSourceTree(text);
+    const edits: { start: number; end: number; text: string }[] = [];
+    const isDerived = (item: RustSourceItem): boolean => item.kind === "use" && collector.derived(text.slice(item.start, item.end));
+    const fully = (node: RustModuleNode): boolean => (node.items.length > 0 || node.children.length > 0) && node.items.every(isDerived) && node.children.every((child) => child.inline && fully(child));
+    const visit = (nodes: readonly RustModuleNode[], items: readonly RustSourceItem[]): void => {
+      for (const item of items) if (isDerived(item)) edits.push({ start: lineStartOf(text, item.start), end: lineEndOf(text, item.end), text: "" });
+      for (const node of nodes) if (node.inline && fully(node)) edits.push({ start: lineStartOf(text, node.start), end: lineEndOf(text, node.end), text: "" }); else if (node.inline) visit(node.children, node.items);
+    };
+    visit(tree.modules, tree.items);
+    return applyEdits(text, edits);
+  };
+  const repoint = (text: string): string => stripDerived(text).replace(heads, "crate::");
+  if (idents.size) {
+    for (const decl of collectDecls(lib.entry, rootSource, read).decls.values()) {
+      if (decl.file === null) continue;
+      const text = read(decl.file);
+      if (text !== null && repoint(text) !== text) overlay.set(decl.file, repoint(text));
+    }
+    rootSource = repoint(rootSource);
+  }
   const rootTree = parseRustSourceTree(rootSource);
   const present = new Set(rootTree.items.map((item) => rootSource.slice(item.start, item.end).trim()));
   const additions = [...collector.root.items, ...regions.flatMap((region) => region.uses)].filter((statement) => !present.has(statement.trim()) && !/^(?:\s*#\[[^\]]*\]\s*)*(?:pub(?:\([^)]*\))?\s+)?use\s+crate::\{[^}]*\};$/u.test(statement.trim()));
   const insertAt = Math.min(...[...rootTree.items, ...rootTree.modules].map((node) => node.start), rootSource.length);
   const unique = [...new Set(additions.map((statement) => statement.trim()))];
   const leftovers: Nest[] = [];
-  const scan = (node: Nest, parent: Nest): void => { if (!rebuilder.placed.has(node) && !(node.leaf && fileOf(parent) !== null)) { leftovers.push(node); return; } node.children.forEach((child) => scan(child, node)); };
+  const touched = (node: Nest): boolean => rebuilder.placed.has(node) || [...node.children.values()].some(touched);
+  const scan = (node: Nest, parent: Nest): void => { if (!touched(node) && !(node.leaf && (fileOf(parent) !== null || node.leaf.node.visibility === "private"))) { leftovers.push(node); return; } node.children.forEach((child) => scan(child, node)); };
   collector.root.children.forEach((child) => scan(child, collector.root));
   const tail = [...regions.map((region) => region.text), ...leftovers.map((node) => rebuilder.wrapper(node, rootDir))];
   if (leftovers.length) notes.push(`${leftovers.length} carved module(s) had no re-export in the root and were mounted at its end`);
   rootSource = `${rootSource.slice(0, insertAt)}${unique.length ? `${unique.join("\n")}\n\n` : ""}${rootSource.slice(insertAt)}`;
   rootSource = `${rootSource.trimEnd()}\n${tail.length ? `\n${tail.join("\n\n")}\n` : ""}`;
+  const mounted = (file: string, seen: Set<string>): Set<string> => {
+    if (seen.has(file) || !existsSync(file)) return seen;
+    seen.add(file);
+    const visit = (nodes: readonly RustModuleNode[], scope: string): void => {
+      for (const node of nodes) {
+        if (node.inline) visit(node.children, resolve(scope, node.pathAttribute ?? node.name));
+        else if (node.pathAttribute !== null) mounted(resolve(scope, node.pathAttribute), seen);
+      }
+    };
+    visit(parseRustSourceTree(readFileSync(file, "utf8")).modules, dirname(file));
+    return seen;
+  };
+  const decls = [...collectDecls(lib.entry, rootSource, read).decls.values()];
+  const closureOf = (name: string): Set<string> => [...(collector.roots.get(name) ?? [])].reduce((seen, file) => mounted(file, seen), new Set<string>());
+  const closures = new Map(providers.filter((provider) => signed.has(provider.name)).map((provider) => [provider.name, closureOf(provider.name)] as const));
+  const manifestDeps = new Map(providers.map((provider) => [provider.name, Object.keys((runtimeParseTomlV1(readFileSync(provider.manifest, "utf8")) as { dependencies?: Record<string, unknown> }).dependencies ?? {}).filter((key) => providers.some((other) => other.name === key))] as const));
+  const reaches = (from: string, to: string, seen = new Set<string>()): boolean => from !== to && !seen.has(from) && (seen.add(from), (manifestDeps.get(from) ?? []).some((next) => next === to || reaches(next, to, seen)));
+  const ownerOfFile = (file: string): string | undefined => [...closures].filter(([, closure]) => closure.has(file)).sort(([a, left], [b, right]) => Number(reaches(a, b)) - Number(reaches(b, a)) || Number(collector.roots.get(b)?.has(file) ?? false) - Number(collector.roots.get(a)?.has(file) ?? false) || left.size - right.size)[0]?.[0];
+  const declarers = new Map<string, string[]>();
+  for (const [name, effs] of collector.owned) if (signed.has(name)) for (const eff of effs) declarers.set(eff, [...(declarers.get(eff) ?? []), name]);
+  const ownerOfDecl = (decl: { eff: readonly string[]; file: string | null; declFile: string }): string | undefined => { const only = declarers.get(decl.eff.join("::")); return only?.length === 1 ? only[0] : ownerOfFile(decl.file ?? decl.declFile); };
+  const declaredElsewhere = new Set(decls.filter((decl) => ownerOfFile(decl.file ?? decl.declFile) !== undefined).map((decl) => decl.eff.join("::")));
+  const assigned = new Map<string, string[]>();
+  for (const decl of decls) { const owner = ownerOfDecl(decl); if (owner) assigned.set(owner, [...(assigned.get(owner) ?? []), decl.eff.join("::")]); }
   const crates = providers.map((provider): CarvedCrate => {
+    const derived = [...new Set(assigned.get(provider.name) ?? [])].sort();
     const parsed = runtimeParseTomlV1(readFileSync(provider.manifest, "utf8")) as { package?: { description?: string; metadata?: { semio?: { carve?: { owned?: string[] } } } }; dependencies?: Record<string, unknown> };
-    return { recorded: parsed.package?.metadata?.semio?.carve?.owned?.slice().sort() ?? null, name: provider.name, ident: crateIdent(provider.name), packageDir: relativeTo(repoRoot, provider.dir), description: parsed.package?.description ?? "", owned: [...(collector.owned.get(provider.name) ?? [])].sort(), dependsOn: Object.keys(parsed.dependencies ?? {}).filter((key) => providers.some((other) => other.name === key)).sort(), signed: signed.has(provider.name) };
+    return { recorded: parsed.package?.metadata?.semio?.carve?.owned?.slice().sort() ?? (signed.has(provider.name) ? [...new Set([...derived, ...[...(collector.owned.get(provider.name) ?? [])].filter((eff) => !declaredElsewhere.has(eff))])].sort() : null), name: provider.name, ident: crateIdent(provider.name), packageDir: relativeTo(repoRoot, provider.dir), description: parsed.package?.description ?? "", owned: [...(collector.owned.get(provider.name) ?? [])].sort(), dependsOn: Object.keys(parsed.dependencies ?? {}).filter((key) => providers.some((other) => other.name === key)).sort(), signed: signed.has(provider.name) };
   });
   return { crates, rootSource, overlay, uncarvedManifest: uncarvedManifestText(manifestText, new Set(providers.map((provider) => provider.name))), notes };
 }

@@ -8,7 +8,7 @@ const asset = JSON.parse(readFileSync(join(S, "🗂️catalog", process.argv[2]!
 const query = { kind: "pose", pose: process.argv[3] ?? asset.presentation.defaultPose };
 const env = asset.thermal.environment;
 const cpu = (): number => process.cpuUsage().user / 1000;
-const base = { maxAgeS: 16, pathlines: false, streamlines: false };
+const base = { maxAgeS: 16, pathlines: false };
 let c = cpu();
 for (let t = 0.5; t <= 16; t += 0.5) transport.solveTransport(asset, { ...query, timeS: t }, env, base);
 console.log("develop cpu ms", (cpu() - c).toFixed(0));

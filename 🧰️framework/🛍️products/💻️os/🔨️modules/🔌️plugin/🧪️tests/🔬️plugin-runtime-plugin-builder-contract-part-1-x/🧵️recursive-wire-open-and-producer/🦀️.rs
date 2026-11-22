@@ -14,10 +14,10 @@ fn recursive_fixture_wire_schema(_mutation: &RecursiveFixtureMutation) -> Option
 pub fn recursive_fixture_owners_birth_demand<P>() -> Result<semio_framework_value::retained_clone::RetainedCloneBirthDemand, semio_framework_value::ValueError>
 where
     P: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + ArtifactPack + ::semio_os_kernel::os_store::serialization::ArtifactStoreSnapshot + semio_framework_value::retirement::RetireOwned + semio_framework_value::retained_clone::RetainedClone + Sync,
-    RecursiveFixtureMutation: Mutation<P>,
+    RecursiveFixtureMutation: Mutation<P> + semio_os_kernel::ColdMutation<P>,
 {
     let base = store::os_store::document_store_owners::bounded_artifact_store_owners_birth_demand::<P, RecursiveFixtureMutation>()?;
-    let preparation = store::operation_wire_preparation_factory_source_birth_demand::<P, RecursiveFixtureMutation>(semio_framework_value::retained_clone::RetainedCloneBirthDemand { capacity_bytes: store::paged_one_item_factory_birth_bytes::<P, RecursiveFixtureMutation, store::MutationApplyEdit<P, RecursiveFixtureMutation>>(), depth: 1 })?;
+    let preparation = store::operation_wire_preparation_factory_source_birth_demand::<P, RecursiveFixtureMutation>(semio_framework_value::retained_clone::RetainedCloneBirthDemand { capacity_bytes: semio_framework_value::factory_constructor_birth_bytes::<store::ColdMutationApplyFactory<P, RecursiveFixtureMutation>>(0), depth: 1 })?;
     let capacity_bytes = base.capacity_bytes.checked_add(preparation.capacity_bytes).ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit, "fixture catalog original source tree capacity overflow"))?;
     Ok(semio_framework_value::retained_clone::RetainedCloneBirthDemand { capacity_bytes, depth: base.depth.max(preparation.depth) })
 }
@@ -27,12 +27,12 @@ where
 pub fn recursive_fixture_owners<P>(prefix: &'static str, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<(store::os_store::document_store_owners::DocumentStoreOwners<P, RecursiveFixtureMutation>, semio_framework_value::retained_clone::RetainedCloneProgress), store::os_store::document_store_owners::DocumentStoreOwnersAdmissionError<P, RecursiveFixtureMutation>>
 where
     P: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + ArtifactPack + ::semio_os_kernel::os_store::serialization::ArtifactStoreSnapshot + semio_framework_value::retirement::RetireOwned + semio_framework_value::retained_clone::RetainedClone + Sync,
-    RecursiveFixtureMutation: Mutation<P>,
+    RecursiveFixtureMutation: Mutation<P> + semio_os_kernel::ColdMutation<P>,
 {
-    let preparation = store::operation_wire_preparation_factory_source_birth_demand::<P, RecursiveFixtureMutation>(semio_framework_value::retained_clone::RetainedCloneBirthDemand { capacity_bytes: store::paged_one_item_factory_birth_bytes::<P, RecursiveFixtureMutation, store::MutationApplyEdit<P, RecursiveFixtureMutation>>(), depth: 1 })
+    let preparation = store::operation_wire_preparation_factory_source_birth_demand::<P, RecursiveFixtureMutation>(semio_framework_value::retained_clone::RetainedCloneBirthDemand { capacity_bytes: semio_framework_value::factory_constructor_birth_bytes::<store::ColdMutationApplyFactory<P, RecursiveFixtureMutation>>(0), depth: 1 })
         .map_err(|error| store::os_store::document_store_owners::DocumentStoreOwnersAdmissionError { error, owners: None, progress: Default::default() })?;
     store::os_store::document_store_owners::bounded_artifact_store_owners_with_one_item_preparation(grant, preparation, || {
-        store::operation_wire_preparation_factory(store::mutation_apply_preparation_factory::<P, RecursiveFixtureMutation>(), recursive_fixture_wire_source, recursive_fixture_wire_schema)
+        store::operation_wire_preparation_factory(store::cold_mutation_apply_preparation_factory::<P, RecursiveFixtureMutation>(), recursive_fixture_wire_source, recursive_fixture_wire_schema)
     })
 }
 
@@ -40,7 +40,7 @@ where
 fn funded_recursive_fixture_owners<P>(prefix: &'static str) -> Result<store::os_store::document_store_owners::DocumentStoreOwners<P, RecursiveFixtureMutation>, semio_framework_value::ValueError>
 where
     P: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + ArtifactPack + ::semio_os_kernel::os_store::serialization::ArtifactStoreSnapshot + semio_framework_value::retirement::RetireOwned + semio_framework_value::retained_clone::RetainedClone + Sync,
-    RecursiveFixtureMutation: Mutation<P>,
+    RecursiveFixtureMutation: Mutation<P> + semio_os_kernel::ColdMutation<P>,
 {
     store::os_store::document_store_owners::fund_document_store_owners(recursive_fixture_owners_birth_demand::<P>()?, |grant| recursive_fixture_owners::<P>(prefix, grant))
 }
@@ -82,7 +82,17 @@ impl store::MemberSnapshotOpenOperation for RecursiveBranchSnapshotOpen {
         })
     }
 
-    fn step(&mut self, cx: &mut semio_framework_job::StepContext<'_>, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> store::MemberSnapshotOpenStep {
+    fn step(&mut self, cx: &mut semio_framework_job::StepContext<'_>, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<store::MemberSnapshotOpenStep, semio_framework_job::OriginalTurnFailure> {
+        Ok(self.advance(cx, grant))
+    }
+
+    fn take_ready(&mut self, cx: &mut semio_framework_job::StepContext<'_>) -> Result<Option<(Self::Snapshot, store::MemberOpenRequest)>, semio_framework_job::OriginalTurnFailure> {
+        Ok(self.take_ready_snapshot(cx))
+    }
+}
+
+impl RecursiveBranchSnapshotOpen {
+    fn advance(&mut self, cx: &mut semio_framework_job::StepContext<'_>, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> store::MemberSnapshotOpenStep {
         if let Some(diagnostic) = self.diagnostic {
             return store::MemberSnapshotOpenStep::Rejected(diagnostic);
         }
@@ -127,7 +137,7 @@ impl store::MemberSnapshotOpenOperation for RecursiveBranchSnapshotOpen {
         store::MemberSnapshotOpenStep::Ready
     }
 
-    fn take_ready(&mut self, cx: &mut semio_framework_job::StepContext<'_>) -> Option<(Self::Snapshot, store::MemberOpenRequest)> {
+    fn take_ready_snapshot(&mut self, cx: &mut semio_framework_job::StepContext<'_>) -> Option<(RecursiveBranchSnapshot, store::MemberOpenRequest)> {
         if self.terminal || self.diagnostic.is_some() || self.request.as_ref()?.check_step_authority(cx).is_err() || self.input.len() != self.expected_bytes? {
             return None;
         }
@@ -138,9 +148,7 @@ impl store::MemberSnapshotOpenOperation for RecursiveBranchSnapshotOpen {
         self.terminal = true;
         Some((snapshot, request))
     }
-}
 
-impl RecursiveBranchSnapshotOpen {
     pub fn close_demands(&self, maximum_copy_bytes: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
         if let Some(active) = self.active.as_ref() {
             return store::os_store::snapshot_read::artifact_retirement_box_demands(active, maximum_copy_bytes);
@@ -158,41 +166,46 @@ impl RecursiveBranchSnapshotOpen {
 impl store::ErasedSnapshotRetirement for RecursiveBranchSnapshotOpen {
  fn next_demand(&self,maximum_body_bytes:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{self.close_demands(maximum_body_bytes)}
 
-    fn close_step(&mut self, grant: store::RetainedCloneGrant) -> Result<store::RetainedCloneStep, semio_framework_value::ValueError> {
-        let empty = store::RetainedCloneProgress::default();
-        if self.terminal {
-            return Ok(store::RetainedCloneStep::Complete(empty));
-        }
-        if grant.maximum_items == 0 {
-            return Ok(store::RetainedCloneStep::Progress(empty));
-        }
-        let demand = self.close_demands(grant.maximum_copy_bytes)?;
-        if grant.maximum_depth < demand.depth {
-            return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "recursive snapshot retirement exceeds admitted depth"));
-        }
-        if grant.maximum_capacity_bytes < demand.capacity_bytes || grant.maximum_release_bytes < demand.release_bytes {
-            return Ok(store::RetainedCloneStep::Progress(empty));
-        }
-        self.diagnostic.get_or_insert(store::MemberOpenDiagnostic::Cancelled);
-        if self.active.is_some() {
-            return store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.active, grant);
-        }
-        if self.snapshot.is_some() {
-            return store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.snapshot, &mut self.active, grant);
-        }
-        if self.request.is_some() {
-            let step = semio_framework_value_retirement_owner::retirement_owner_close(&mut self.request, grant)?;
-            return Ok(store::RetainedCloneStep::Progress(step.progress()));
-        }
-        if self.input.capacity() != 0 {
-            let released_bytes = self.input.capacity();
-            drop(std::mem::take(&mut self.input));
+    fn close_step(&mut self, body: usize, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> semio_framework_value::OriginalRetirementPoll {
+        use semio_framework_value::RetirementPollExit as Exit;
+        let grant = effect.grant();
+        let result = (|| -> Result<store::RetainedCloneStep, Exit> {
+            let empty = store::RetainedCloneProgress::default();
+            if self.terminal {
+                return Ok(store::RetainedCloneStep::Complete(empty));
+            }
+            if grant.maximum_items == 0 {
+                return Ok(store::RetainedCloneStep::Progress(empty));
+            }
+            let demand = self.close_demands(grant.maximum_copy_bytes)?;
+            if grant.maximum_depth < demand.depth {
+                return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "recursive snapshot retirement exceeds admitted depth").into());
+            }
+            if grant.maximum_capacity_bytes < demand.capacity_bytes || grant.maximum_release_bytes < demand.release_bytes {
+                return Ok(store::RetainedCloneStep::Progress(empty));
+            }
+            self.diagnostic.get_or_insert(store::MemberOpenDiagnostic::Cancelled);
+            if self.active.is_some() {
+                return Exit::resume(store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.active, body, effect));
+            }
+            if self.snapshot.is_some() {
+                return Ok(store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.snapshot, &mut self.active, effect).result?);
+            }
+            if self.request.is_some() {
+                let step = Exit::resume(semio_framework_value_retirement_owner::retirement_owner_close(&mut self.request, effect))?;
+                return Ok(store::RetainedCloneStep::Progress(step.progress()));
+            }
+            if self.input.capacity() != 0 {
+                let released_bytes = self.input.capacity();
+                drop(std::mem::take(&mut self.input));
+                self.expected_bytes = None;
+                return Ok(store::RetainedCloneStep::Progress(store::RetainedCloneProgress { copied_items: 1, released_bytes, ..empty }));
+            }
             self.expected_bytes = None;
-            return Ok(store::RetainedCloneStep::Progress(store::RetainedCloneProgress { copied_items: 1, released_bytes, ..empty }));
-        }
-        self.expected_bytes = None;
-        self.terminal = true;
-        Ok(store::RetainedCloneStep::Complete(store::RetainedCloneProgress { copied_items: 1, ..empty }))
+            self.terminal = true;
+            Ok(store::RetainedCloneStep::Complete(store::RetainedCloneProgress { copied_items: 1, ..empty }))
+        })();
+        Exit::settle(effect, result)
     }
 
     fn terminal_is_empty(&self) -> bool {
@@ -226,6 +239,45 @@ pub struct RecursiveMemberStoreProducer<P>(::std::marker::PhantomData<fn()->(P)>
 impl<P> Copy for RecursiveMemberStoreProducer<P> {}
 impl<P> Clone for RecursiveMemberStoreProducer<P> {fn clone(&self)->Self{*self}}
 impl<P> RecursiveMemberStoreProducer<P> {pub const fn new()->Self{Self(::std::marker::PhantomData)}}
+
+macro_rules! recursive_fixture_snapshot {
+    ($snapshot:ty, $extension:literal) => {
+        impl pack::snapshot::ArtifactDsl for $snapshot {
+            const EXTENSION: &'static str = $extension;
+            fn parse_dsl(text: &str) -> Result<Self, TextError> {
+                let value = serde_json::from_str::<Value>(text).map_err(|error| TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, error.to_string(), TextSpan::at(1, 1)))?;
+                <Self as semio_framework_value::FromValue>::from_value(value.into()).map_err(|error| TextError::from_value_error(error, TextSpan::at(1, 1)))
+            }
+            fn print_dsl(&self) -> String { semio_framework_pack_json::to_json_string(self) }
+        }
+
+        impl ArtifactPack for $snapshot {
+            fn encode_pack_with(&self, _options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
+                Ok(semio_framework_pack_json::to_json_string(self).into_bytes())
+            }
+            fn decode_pack_with(bytes: &[u8], _options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
+                let value = serde_json::from_slice::<Value>(bytes).map_err(|error| match (u32::try_from(error.line()), u32::try_from(error.column())) { (Ok(line), Ok(column)) => store::PackError::from(semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, error.to_string(), semio_framework_diagnostic::TextSpan::at(line, column))), _ => store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::OwnershipLimit, error.to_string())) })?;
+                <Self as semio_framework_value::FromValue>::from_value(value.into()).map_err(|error| store::PackError::from(error))
+            }
+        }
+
+        impl ::semio_os_kernel::os_store::serialization::ArtifactStoreSnapshot for $snapshot {
+            fn reference_snapshot_codec() -> Option<::semio_os_kernel::os_store::serialization::ArtifactReferenceSnapshotCodec<Self>> { Some(::semio_os_kernel::os_store::serialization::reference_snapshot_codec::<Self>()) }
+            fn sqlite_snapshot_codec() -> Option<store::os_store::serialization::ArtifactSqliteSnapshotCodec> { Some(<Self as store::os_store::ArtifactSqliteSnapshotOperations>::sqlite_codec()) }
+        }
+
+        impl store::os_store::document_store_owners::MemberStoreProducer<$snapshot, RecursiveFixtureMutation> for RecursiveMemberStoreProducer<$snapshot> {
+            type SnapshotOpen = RecursiveBranchSnapshotOpen;
+            fn member_store_owners_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(0) }
+            fn member_store_owners_birth_demand(&self) -> Result<semio_framework_value::retained_clone::RetainedCloneBirthDemand, semio_framework_value::ValueError> {
+                recursive_fixture_owners_birth_demand::<$snapshot>()
+            }
+            fn member_store_owners(&self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<(store::os_store::document_store_owners::DocumentStoreOwners<$snapshot, RecursiveFixtureMutation>, semio_framework_value::retained_clone::RetainedCloneProgress), store::os_store::document_store_owners::DocumentStoreOwnersAdmissionError<$snapshot, RecursiveFixtureMutation>> {
+                recursive_fixture_owners::<$snapshot>("recursive-member", grant)
+            }
+        }
+    };
+}
 
 recursive_fixture_snapshot!(RecursiveBranchSnapshot, "recursive-branch-test");
 
@@ -263,10 +315,12 @@ async fn assert_parent_restore_case<const HAS_CHILD: bool>(row: &Value, cx:&mut 
 
 #[semio_framework_async_macros::async_test]
 async fn member_factory_parent_snapshot_restore_matches_neutral_corpus() {
+    let mut caller=semio_plugin_testing_laws::OriginalFixtureCaller::admit().expect("original composition caller input");let mut context=caller.context();let cx=&mut context;
     let fixture: Value = serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../../🏪️store/🧩️composition/🪪️member-dialect/🧪️tests/🧫️fixtures/🔣️.json"))).unwrap();
     for row in fixture["publicRestoreCases"].as_array().unwrap() {
-        if row["parentHasChild"].as_bool().unwrap() { assert_parent_restore_case::<true>(row).await; }
-        else { assert_parent_restore_case::<false>(row).await; }
+        if row["parentHasChild"].as_bool().unwrap() { assert_parent_restore_case::<true>(row, cx).await; }
+        else { assert_parent_restore_case::<false>(row, cx).await; }
     }
+    let fuel=cx.fuel_remaining();drop(context);caller.retire(fuel).expect("original composition caller paid retirement");
 }
 //#endregion 🧬️ComposedParentFixture

@@ -24,7 +24,7 @@ fn paint2d_selected_layer_marquee_publishes_intrinsic_intent_and_cancel_keeps_co
     paint2d_pointer_move_into(&scene,bounds,50.0,50.0,&mut input).unwrap();drain(&mut input);
     paint2d_pointer_button_into(&scene,bounds,50.0,50.0,false,0,false,false,&mut input).unwrap();
     paint2d_pointer_cancel_into(surface_id);
-    assert!(semio_renderer_wgpu_engine_board::paint2d::advance_paint2d_pixel_selection_into(&scene,&mut input).unwrap().2);
+    assert!(semio_renderer_wgpu_engine_board::paint2d::advance_paint2d_pixel_selection_into(&scene,"selection-fixture-window",&mut input).unwrap().2);
     assert!(drain(&mut input).is_empty());assert!(scene.paint_2d.as_ref().unwrap().pixel_selection_json.is_some());
     drop_engine_surface(surface_id);
 }

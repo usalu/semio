@@ -11,8 +11,17 @@ extern crate semio_framework_value_derive as value_derive;
 //#region 🪢️Mounts
 #[path = "🏗️compliant/🦀️.rs"]
 pub mod compliant;
+#[cfg(test)]
+#[path = "🏗️compliant/🧪️tests/🧩️example/🦀️.rs"]
+mod example_compliant;
 #[path = "🎬️demo/🦀️.rs"]
 pub mod demo;
+#[cfg(test)]
+#[path = "🎬️demo/🧪️tests/🧩️example/🦀️.rs"]
+mod example_demo;
 #[path = "🚨️noncompliant/🦀️.rs"]
 pub mod noncompliant;
+#[cfg(test)]
+#[path = "🚨️noncompliant/🧪️tests/🧩️example/🦀️.rs"]
+mod example_noncompliant;
 //#endregion 🪢️Mounts

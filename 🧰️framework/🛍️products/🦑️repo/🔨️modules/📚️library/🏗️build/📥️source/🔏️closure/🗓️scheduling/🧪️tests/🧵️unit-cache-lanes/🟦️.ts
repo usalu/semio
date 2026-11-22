@@ -2,7 +2,7 @@
 import {expect, test} from "bun:test";
 import {spawnSync} from "node:child_process";
 import {createHash} from "node:crypto";
-import {existsSync, readFileSync, realpathSync, statSync} from "node:fs";
+import {existsSync, readdirSync, readFileSync, statSync} from "node:fs";
 import {dirname, join, normalize, resolve} from "node:path";
 import {buildSourceClosureIdentityV1, type BuildSourceClosureV1} from "../../../🟦️.ts";
 import {buildSchedulingDomainOfV1, buildSchedulingKeyedPathsV1, buildSchedulingPortsV1, buildSchedulingPrefixesV1, buildSchedulingV1, splitBuildSourceClosureV1} from "../../🟦️.ts";
@@ -14,11 +14,13 @@ const domain = () => buildSchedulingV1().domains.find((row) => row.id === ID)!;
 const sha = (text: string) => createHash("sha256").update(text).digest("hex");
 const file = (path: string, text: string) => ({path, sha256: sha(text), base64: Buffer.from(text).toString("base64"), imports: {}});
 const oracle = join(import.meta.dir, "../🐍️oracle/🐍️.py");
+const skipped = new Set(["node_modules", "target", ".cache", "dist", "🗑️generated"]);
+const scan = (folder: string): string[] => readdirSync(join(root, folder), {withFileTypes: true}).flatMap((entry) => entry.isDirectory() ? (skipped.has(entry.name) ? [] : scan(folder + "/" + entry.name)) : /\.(ts|mjs)$/u.test(entry.name) && /🧵️lane\/(🏊️pool|📤️retention)\//u.test(readFileSync(join(root, folder, entry.name), "utf8")) ? [folder + "/" + entry.name] : []);
 
 test("the lane domain names exactly the pool and the retention, with real directories and real port files", () => {
   expect(domain().prefixes).toEqual([lane + "🏊️pool/", lane + "📤️retention/"]);
   for (const prefix of domain().prefixes) expect(statSync(join(root, prefix)).isDirectory(), prefix).toBe(true);
-  expect(domain().ports).toEqual([lane + "🏊️pool/🟦️.ts", lane + "📤️retention/🟦️.ts"]);
+  expect(domain().ports).toEqual([lane + "🏊️pool/🟦️.ts", lane + "🏊️pool/🎯️product/🟦️.ts", lane + "📤️retention/🟦️.ts"]);
   for (const port of domain().ports) expect(statSync(join(root, port)).isFile() && buildSchedulingDomainOfV1(port), port).toBe(ID);
   expect(domain().contract.en.length).toBeLessThanOrEqual(400);
   expect(domain().contract.de.length).toBeLessThanOrEqual(400);
@@ -37,7 +39,7 @@ test("the lane prefixes overlap no other domain and no content island: the Pytho
 
 test("keyed code imports the lane scheduling modules only through their ports", () => {
   const prefixes = domain().prefixes, ports = buildSchedulingPortsV1(buildSchedulingV1(), [ID]);
-  const found = spawnSync("git", ["grep", "-l", "-E", "🧵️lane/(🏊️pool|📤️retention)/", "--", "*.ts", "*.mjs", ":!.🧬semio"], {cwd: dirname(realpathSync(join(root, "package.json"))), encoding: "utf8"}).stdout.split("\n").filter(Boolean);
+  const found = scan("🧰️framework");
   const importers = found.filter((path) => !prefixes.some((prefix) => path.startsWith(prefix)) && !path.includes("/🧪️tests/") && existsSync(join(root, path)));
   expect(importers.length).toBeGreaterThan(0);
   for (const path of importers) {

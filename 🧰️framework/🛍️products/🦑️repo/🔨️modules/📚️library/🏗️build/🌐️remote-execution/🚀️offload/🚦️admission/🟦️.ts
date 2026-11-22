@@ -32,7 +32,7 @@ export function readOffloadMemoV1<T extends {atMs:number}>(root:string,name:stri
  try{const value=JSON.parse(readFileSync(memoPath(root,name),"utf8")) as T;return now-value.atMs<windowMilliseconds&&now>=value.atMs?value:undefined;}catch{return undefined;}
 }
 /** 🖊️ Writes the shared verdict atomically; a failure only costs the next caller one more question. */
-export function writeOffloadMemoV1(root:string,name:string,value:{atMs:number}):void{
+export function writeOffloadMemoV1<T extends {atMs:number}>(root:string,name:string,value:T):void{
  try{mkdirSync(root,{recursive:true});const path=memoPath(root,name),temporary=path+"."+randomBytes(3).toString("hex");writeFileSync(temporary,JSON.stringify(value));renameSync(temporary,path);}catch{}
 }
 /** 🚦️ The host's verdict, shared within the memo window. */
@@ -60,27 +60,42 @@ export function slotQueueMillisecondsV1(root:string,slots:number,now:number=Date
 
 /** 🌡️ How many other machines could take a unit of this machine right now, asked of the scheduler itself (`/v1/fleet/idle?origin=`: signed like every fleet call, one request with a time limit): the answer is the counting the scheduler runs when a unit is submitted (platform key with toolchain and target, action format, headroom, slots, refusal cool-down, never the requester) over its live table at that moment, so the door and the submission cannot disagree about a table; only time can move between the two. `0` when no scheduler is published, it does not answer in time or nobody qualifies; never throws. */
 export async function fleetHeadroomV1(environment:Readonly<Record<string,string|undefined>>,ports:OffloadAdmissionPortsV1={}):Promise<number>{
+ const answer=await fleetIdleAnswerV1(environment,ports);
+ return Number.isInteger(answer?.candidates)&&answer!.candidates!>0?answer!.candidates!:0;
+}
+
+/** 🛰️ How many action slots other machines of the same platform and toolchain have free right now, the width a build sizes its jobs to (`planFleetJobsV1`): the `slots` of the scheduler's idle answer, else its candidate count for a scheduler that does not count slots yet; `null` when offloading is off, no scheduler is published or it does not answer in time, so the build stays at its local grant. Never throws. */
+export async function fleetIdleSlotsV1(environment:Readonly<Record<string,string|undefined>>,ports:OffloadAdmissionPortsV1={}):Promise<number|null>{
+ if(offloadModeV1(environment)==="never")return null;
+ const answer=await fleetIdleAnswerV1(environment,ports);
+ if(answer===undefined)return null;
+ const value=Number.isInteger(answer.slots)?answer.slots:answer.candidates;
+ return Number.isInteger(value)&&value!>=0?value!:null;
+}
+
+/** 📡️ The scheduler's own idle counting for this machine (`/v1/fleet/idle?origin=`, signed, one request with a time limit); `undefined` when none is published, it does not answer in time or refuses. Never throws. */
+async function fleetIdleAnswerV1(environment:Readonly<Record<string,string|undefined>>,ports:OffloadAdmissionPortsV1):Promise<{candidates?:number;slots?:number}|undefined>{
  try{
   const fleet=await import("../../../🌐️remote-cache/🛰️fleet/🟦️.ts"),{resolveRemoteExecutionEndpointV1,resolveRemoteExecutionSchedulerV1}=await import("../../🧭️endpoint/🟦️.ts"),{remoteExecutionOriginV1}=await import("../../🌡️load/🟦️.ts");
   const root=environment.SEMIO_WORKSPACE_ROOT??fleet.fleetCacheRootV1(environment)??workspaceRootFromV1(process.cwd());
   const published=resolveRemoteExecutionEndpointV1({environment,...root===undefined?{}:{root}})?.endpoint;
-  if(!published)return 0;
+  if(!published)return undefined;
   const scheduler=await resolveRemoteExecutionSchedulerV1({environment,...root===undefined?{}:{root}},published);
-  if(scheduler===undefined)return 0;
+  if(scheduler===undefined)return undefined;
   const call=ports.fleet?.fetch??(root===undefined?fetch:fleet.remoteCacheFetchV1({...environment,SEMIO_WORKSPACE_ROOT:root},{root,audience:"execution",roleOf:()=>"submit"})),own=root===undefined?"":remoteExecutionOriginV1(root,environment);
   const response=await call(scheduler.url.replace(/\/+$/u,"")+"/v1/fleet/idle?origin="+encodeURIComponent(own),{signal:AbortSignal.any([...ports.signal?[ports.signal]:[],AbortSignal.timeout(ports.fleet?.timeoutMilliseconds??limits.fleetStatusMilliseconds)])});
-  if(!response.ok){await response.body?.cancel();return 0;}
-  const answer=await response.json() as {candidates?:number};
-  return Number.isInteger(answer.candidates)&&answer.candidates!>0?answer.candidates!:0;
- }catch{return 0;}
+  if(!response.ok){await response.body?.cancel();return undefined;}
+  return await response.json() as {candidates?:number;slots?:number};
+ }catch{return undefined;}
 }
 
-/** 🌊️ Returns the fleet fanout ceiling when offloading can relieve this machine: a scheduler is published, at least one other machine has headroom (`fleetHeadroomV1`), and either the door refused the whole build (`doorRefused`, the one verdict the build then hands to every compiler call through `SEMIO_OFFLOAD_PRESSURE`) or a local unit would queue. `undefined` keeps the caller waiting as before: no scheduler, nobody with headroom, or a calm machine. */
+/** 🌊️ Returns the fleet fanout ceiling when offloading can relieve this machine: a scheduler is published, at least one other machine has headroom (`fleetHeadroomV1`), and either the door refused the whole build (`doorRefused`, the one verdict the build then hands to every compiler call through `SEMIO_OFFLOAD_PRESSURE`) or a local unit would queue. `undefined` keeps the caller waiting as before: no scheduler, nobody with headroom, or a calm machine. Under `pin` every unit goes to the named machine, so the ceiling is granted without pressure. */
 export async function offloadFanOutJobsV1(environment:Readonly<Record<string,string|undefined>>,ports:OffloadAdmissionPortsV1={}):Promise<number|undefined>{
  if(offloadModeV1(environment)==="never")return undefined;
  const fleet=await import("../../../🌐️remote-cache/🛰️fleet/🟦️.ts"),{resolveRemoteExecutionEndpointV1}=await import("../../🧭️endpoint/🟦️.ts"),root=environment.SEMIO_WORKSPACE_ROOT??fleet.fleetCacheRootV1(environment)??workspaceRootFromV1(process.cwd());
  const published=resolveRemoteExecutionEndpointV1({environment,...root===undefined?{}:{root}})?.endpoint;
  if(!published)return undefined;
+ if(offloadModeV1(environment)==="pin")return Math.min(limits.fanOutJobs,availableParallelism());
  if(ports.doorRefused!==true&&(await localUnitAdmissionV1(ports)).verdict!=="wait")return undefined;
  return await fleetHeadroomV1(environment,ports)>0?Math.min(limits.fanOutJobs,availableParallelism()):undefined;
 }
@@ -102,4 +117,20 @@ export function writeUnitCostV1(root:string,crate:string,milliseconds:number):vo
 /** 🎯️ Whether a unit is worth a round trip: its recorded local cost is not below the measured round trip; a unit without a record is offloaded (the first compile teaches the cost). */
 export function worthARoundTripV1(root:string,crate:string):boolean{
  const cost=readUnitCostV1(root,crate);return cost===undefined||cost>=limits.roundTripMilliseconds;
+}
+
+/** 🧭️ The signals one unit's offload decision reads, each asked only when the cheaper ones before it did not decide: a unit worth a round trip, the door's verdict on the whole build (`SEMIO_OFFLOAD_PRESSURE=door`), the unit-cache slot queue, the host-capacity verdict and the build's own admission broker (`wait` when the unit would queue behind the memory budget or a frozen broker, `unknown` when no broker answers). */
+export type OffloadGateInputV1=Readonly<{mode:"distribute"|"pin"|"never";door:boolean;worth:()=>boolean;slotQueueMilliseconds:()=>number;host:()=>Promise<"admit"|"wait">;broker:()=>Promise<"admit"|"wait"|"unknown">}>;
+/** 🧭️ Why a unit is offered to the fleet or stays: the first signal that decides (`headroom`: this machine is calm, the unit goes where another machine has room). */
+export type OffloadGateReasonV1="never"|"pin"|"cheap"|"door"|"slot-queue"|"host-wait"|"broker-wait"|"headroom";
+/** 🚪️ Whether a unit is offered to the fleet, and whether it queues there. `pin` offers every unit and queues it on the named machine. `distribute` offers every unit worth a round trip: where this machine is saturated (the door refused the build, a slot queue, the host or the build's memory budget would make the unit wait) the unit queues on the fleet because waiting here would be no better; where this machine is calm, the fleet takes it only if another machine has headroom now, else it compiles here. Unknown signals count as calm. */
+export async function offloadGateV1(input:OffloadGateInputV1):Promise<Readonly<{offload:boolean;queue:boolean;reason:OffloadGateReasonV1}>>{
+ if(input.mode==="never")return{offload:false,queue:false,reason:"never"};
+ if(input.mode==="pin")return{offload:true,queue:true,reason:"pin"};
+ if(!input.worth())return{offload:false,queue:false,reason:"cheap"};
+ if(input.door)return{offload:true,queue:true,reason:"door"};
+ if(input.slotQueueMilliseconds()>=limits.queueThresholdMilliseconds)return{offload:true,queue:true,reason:"slot-queue"};
+ if(await input.host()==="wait")return{offload:true,queue:true,reason:"host-wait"};
+ if(await input.broker()==="wait")return{offload:true,queue:true,reason:"broker-wait"};
+ return{offload:true,queue:false,reason:"headroom"};
 }

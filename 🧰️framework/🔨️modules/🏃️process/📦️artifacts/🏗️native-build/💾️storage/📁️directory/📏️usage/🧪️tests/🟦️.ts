@@ -138,11 +138,8 @@ test("accepted stat failures drain before exact primary rejection escapes the ac
  }}finally{database.close();}
 });
 
-import {readFileSync} from "node:fs";
 import {posix,win32} from "node:path";
-import ts from "typescript";
-import {transformSync} from "esbuild";
-import {evaluateExtractedFunctionV1} from "../../../../../../🧪️testing/🧩️extracted-function/🟦️.ts";
+import {loadProductFunctionsSyncV1,loadProductFunctionsV1} from "../../../../../../🧪️testing/🧩️extracted-function/🟦️.ts";
 test("the actual walk admits atomic entry names before child stat effects",async()=>{
  const root=resolve("entry-model"),policy=protocol.usage.entry,host=process.platform==="win32"?"win32":"linux";
  for(const row of fixture.entryNames.filter(row=>row.platform===host)){
@@ -153,16 +150,14 @@ test("the actual walk admits atomic entry names before child stat effects",async
  }
 });
 test("the private atomic append equals independent POSIX and Windows path oracles without Unicode normalization",()=>{
- const source=ts.createSourceFile("usage.ts",readFileSync(new URL("../🟦️.ts",import.meta.url),"utf8"),ts.ScriptTarget.Latest,true),node=source.statements.find(row=>ts.isFunctionDeclaration(row)&&row.name?.text==="appendNativeDirectoryEntryV1");expect(node,"actual fast append required").toBeDefined();
- const append=evaluateExtractedFunctionV1(transformSync(node!.getText(source),{loader:"ts",format:"cjs"}).code,"appendNativeDirectoryEntryV1",{protocol});
+ const {appendNativeDirectoryEntryV1:append}=loadProductFunctionsSyncV1(new URL("../🟦️.ts",import.meta.url),["appendNativeDirectoryEntryV1"],{protocol});
  for(const row of fixture.entryNames){const system=row.platform==="win32"?win32:posix,parent=system.resolve(row.parent),prefix=parent.endsWith(system.sep)?parent:parent+system.sep;if(row.valid)expect(append(prefix,row.name,row.platform==="win32")).toBe(system.join(parent,row.name));else expect(()=>append(prefix,row.name,row.platform==="win32")).toThrow(protocol.usage.entry.refusal);}
  const compose=fixture.entryNames.filter(row=>row.name==="é"||row.name==="é").map(row=>append("/data/",row.name,false));expect(compose[0]).not.toBe(compose[1]);
 });
 test("the system walk preserves exact scalar metadata and required precision observations without ignored errors",async()=>{
- const source=ts.createSourceFile("usage.ts",readFileSync(new URL("../🟦️.ts",import.meta.url),"utf8"),ts.ScriptTarget.Latest,true),node=source.statements.find(row=>ts.isFunctionDeclaration(row)&&row.name?.text==="systemNativeDirectoryWalkV1");expect(node,"actual exact metadata system port required").toBeDefined();
  for(const row of fixture.metadata){
   const calls:string[]=[],stop=new AbortController(),failure=Error("exact metadata failure"),abort=Error("metadata preparation cancelled"),numeric:{dev:number;ino:number;nlink:number;blocks:number;size:number}&Record<string,number>={dev:1,ino:2,nlink:1,blocks:8,size:4};numeric[row.field]=row.value;const flags={isFile:()=>true,isDirectory:()=>false},number={...flags,...numeric},exact={...flags,dev:1n,ino:9007199254740993n,nlink:1n,blocks:8n,size:4n};
-  const factory=evaluateExtractedFunctionV1(transformSync(node!.getText(source),{loader:"ts",format:"cjs"}).code,"systemNativeDirectoryWalkV1",{protocol,listEntries:async()=>[],statEntry:async(_path:unknown,options?:{bigint?:boolean})=>{calls.push(options?.bigint?"bigint":"number");if(row.kind==="initial-error"||row.kind==="exact-error"&&options?.bigint)throw failure;if(row.kind==="cancel")stop.abort(abort);return options?.bigint?exact:number;}}),port:NativeDirectoryWalkPortV1=factory(stop.signal);let observed:unknown,caught:unknown;
+  const factory=(await loadProductFunctionsV1(new URL("../🟦️.ts",import.meta.url),["systemNativeDirectoryWalkV1"],{protocol,listEntries:async()=>[],statEntry:async(_path:unknown,options?:{bigint?:boolean})=>{calls.push(options?.bigint?"bigint":"number");if(row.kind==="initial-error"||row.kind==="exact-error"&&options?.bigint)throw failure;if(row.kind==="cancel")stop.abort(abort);return options?.bigint?exact:number;}})).systemNativeDirectoryWalkV1,port:NativeDirectoryWalkPortV1=factory(stop.signal);let observed:unknown,caught:unknown;
   try{observed=await port.stat("first");}catch(error){caught=error;}
   if(row.kind==="initial-error"||row.kind==="exact-error"||row.kind==="cancel"){expect(caught,row.id).toBe(row.kind==="cancel"?abort:failure);expect(calls,row.id).toEqual(row.kind==="exact-error"?["number","bigint"]:["number"]);continue;}
   expect(caught,row.id).toBeUndefined();expect(observed,row.id).toBe(row.kind==="safe"?number:exact);expect(await port.stat("next"),row.id).toBe(row.kind==="safe"?number:exact);expect(calls,row.id).toEqual(row.kind==="safe"?["number","number"]:["number","bigint","bigint"]);

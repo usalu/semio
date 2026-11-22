@@ -1,6 +1,6 @@
 import {createHash} from "node:crypto";
 import {spawnSync} from "node:child_process";
-import {cpus,release} from "node:os";
+import {cpus,homedir,release} from "node:os";
 import {isAbsolute,join,relative,resolve,win32} from "node:path";
 import {mkdirSync,readFileSync,realpathSync,renameSync,statSync,writeFileSync} from "node:fs";
 import {randomBytes} from "node:crypto";
@@ -94,12 +94,25 @@ function spellingOfHint(directory:string,hint:string):string|undefined{
  }catch{return undefined;}
 }
 
-/** 🧭️ The roots of one unit: the working directory Cargo gave the compiler (the workspace root for a member, the package directory for a registry crate) and, when the launcher states it, the workspace root, each in every spelling. Roots shorter than four characters are never replaced. */
-export function portableRootsV1(input:Readonly<{cwd:string;workspace:string|undefined;hints?:readonly (string|undefined)[]}>):readonly PortableRootV1[]{
+/** 🧰️ The directories of the Rust toolchain a machine keeps outside the checkout: the Cargo home (registry and git checkouts), the rustup home and the compiler's sysroot when it is not inside the rustup home. */
+export type ToolRootsV1=Readonly<{cargoHome?:string|undefined;rustupHome?:string|undefined;sysroot?:string|undefined}>;
+
+const inside=(path:string,parent:string):boolean=>{const rows=spellings(parent).flatMap(row=>forms(row));return forms(path).some(form=>rows.some(row=>form===row||form.startsWith(row+"/")||form.startsWith(row+"\\")));};
+
+/** 🧰️ The tool roots a machine names for a compilation: `CARGO_HOME` and `RUSTUP_HOME` of the environment, else the defaults below the user's home (`~/.cargo`, `~/.rustup`), and the sysroot when it lies outside the rustup home (inside it the rustup token covers it, so two machines never tokenise one path two ways). */
+export function toolRootsV1(environment:Readonly<Record<string,string|undefined>>,sysroot?:string|undefined):ToolRootsV1{
+ const home=environment.HOME||environment.USERPROFILE||homedir(),named=(value:string|undefined,fallback:string)=>value!==undefined&&value!==""?value:home?join(home,fallback):undefined;
+ const cargoHome=named(environment.CARGO_HOME,".cargo"),rustupHome=named(environment.RUSTUP_HOME,".rustup");
+ return Object.freeze({...cargoHome===undefined?{}:{cargoHome},...rustupHome===undefined?{}:{rustupHome},...sysroot!==undefined&&sysroot!==""&&(rustupHome===undefined||!inside(sysroot,rustupHome))?{sysroot}:{}});
+}
+
+/** 🧭️ The roots of one unit: the working directory Cargo gave the compiler (the workspace root for a member, the package directory for a registry crate), the workspace root when the launcher states it, and the tool roots (Cargo home, rustup home, sysroot), each in every spelling. A path inside several roots takes the token of the deepest one, so a Cargo home below the checkout is the Cargo home token on every machine, wherever its Cargo home is. Roots shorter than four characters are never replaced. */
+export function portableRootsV1(input:Readonly<{cwd:string;workspace:string|undefined;hints?:readonly (string|undefined)[]}&ToolRootsV1>):readonly PortableRootV1[]{
  const hints=(input.hints??[]).filter((hint):hint is string=>typeof hint==="string"&&hint!==""),first=(paths:string[])=>paths.find(path=>hints.some(hint=>hint===path||hint.startsWith(path+"/")||hint.startsWith(path+"\\")))??paths[0]!;
  const make=(path:string,token:string):PortableRootV1[]=>{const all=spellings(path);for(const hint of hints){const extra=spellingOfHint(path,hint);if(extra!==undefined&&!all.includes(extra))all.push(extra);}const chosen=first(all);return all.map(row=>({path:row,token,...(row===chosen?{preferred:true}:{})}));};
  const rows:PortableRootV1[]=make(input.cwd,fleet.tokens.cwd);
- if(input.workspace&&absolute(input.workspace)!==absolute(input.cwd))for(const row of make(input.workspace,fleet.tokens.workspace))if(!rows.some(other=>other.path===row.path))rows.push(row);
+ const add=(path:string|undefined,token:string)=>{if(path&&absolute(path)!==absolute(input.cwd))for(const row of make(path,token))if(!rows.some(other=>other.path===row.path))rows.push(row);};
+ add(input.workspace,fleet.tokens.workspace);add(input.cargoHome,fleet.tokens.cargoHome);add(input.rustupHome,fleet.tokens.rustupHome);add(input.sysroot,fleet.tokens.sysroot);
  return rows.filter(row=>row.path.length>=4).sort((left,right)=>right.path.length-left.path.length);
 }
 

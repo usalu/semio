@@ -73,7 +73,7 @@ fn close_store(mut store: store::ArtifactStore<Process3dSnapshot, Process3dMutat
     let mut disposer = semio_plugin::ArtifactDocumentStoreDisposer::<Process3dSnapshot, Process3dMutation>::new();
     for _ in 0..PROCESS3D_MAXIMUM_DOMAIN_ITEMS {
         let demand = disposer.retirement_demands(&store, PROCESS3D_OWNER_BYTES).expect("the store quotes its next close turn");
-        if matches!(disposer.close_step_cold(&mut store, process3d_demand_grant(demand)), Ok(semio_plugin::PluginLifecycleStep::Complete(_))) {
+        if matches!(disposer.close_step_cold(&mut store, semio_plugin::plugin_self_funded_grant(demand, semio_plugin::PLUGIN_SELF_FUNDED_BODY_BYTES)), Ok(semio_plugin::PluginLifecycleStep::Complete(_))) {
             break;
         }
     }
@@ -344,7 +344,7 @@ fn measure_one_store_replacement(round: u64) -> ReplacementPhaseBudget {
     let mut disposer = semio_plugin::ArtifactDocumentStoreDisposer::<Process3dSnapshot, Process3dMutation>::new();
     for _ in 0..PROCESS3D_MAXIMUM_DOMAIN_ITEMS {
         let demand = disposer.retirement_demands(&displaced, PROCESS3D_OWNER_BYTES).expect("the displaced store quotes its next close turn");
-        if matches!(measure_phase(&mut budget, 2, || disposer.close_step_cold(&mut displaced, process3d_demand_grant(demand))), Ok(semio_plugin::PluginLifecycleStep::Complete(_))) {
+        if matches!(measure_phase(&mut budget, 2, || disposer.close_step_cold(&mut displaced, semio_plugin::plugin_self_funded_grant(demand, semio_plugin::PLUGIN_SELF_FUNDED_BODY_BYTES))), Ok(semio_plugin::PluginLifecycleStep::Complete(_))) {
             break;
         }
     }

@@ -11,8 +11,9 @@ import {sweepLeakedSandboxImagesV1,writeSandboxOwnerV1} from "../../../../../../
 import {adoptInstalledRustToolchainForV1,adoptInstalledNxToolkitIdentityV1} from "./🧰️adoption/🟦️.ts";
 import {privateRepositoryStartDirectoryV1,testCheckoutRootV1,requirePrivateRepositoryWorkspaceV1,privateRepositoryParentsV1,privateRepositoryDeepestV1,privateRepositoryInvocationV1,withPrivateRepositoryWorkingDirectoryV1,type PrivateRepositoryProfileV1} from "./📥️invocation/🟦️.ts";
 export {testCheckoutRootV1,testToolchainDirectoryV1,testNxToolkitDirectoryV1,requirePrivateRepositoryWorkspaceV1,type PrivateRepositoryProfileV1} from "./📥️invocation/🟦️.ts";
+export {adoptInstalledNxToolkitIdentityV1} from "./🧰️adoption/🟦️.ts";
 
-import {type RepositoryCachePartitionIdV1} from "../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/🟦️.ts";
+import {pinHostFreeBytesForSizingV1,type RepositoryCachePartitionIdV1} from "../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/🟦️.ts";
 import {openRepositoryCachePartitionV1} from "../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/♻️reset/🟦️.ts";
 import {repositoryCheckoutRootV1} from "../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/🧭️root/🟦️.ts";
 import {createIssuedResourceControlV1,type ScriptInvocation} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
@@ -32,13 +33,15 @@ function releasePrivateRootAtExitV1(root:string):void{
  const release=()=>{try{detachDiskImagesUnderV1(root);rmSync(root,{recursive:true,force:true});}catch{}};
  process.once("exit",release);
 }
+/** 🌡️ The host free bytes every image of a private repository is sized from (40 GiB: a graph image of 3 GiB funds the production optional headroom, a rust image of 13 GiB), fixed so that sizing never depends on the disk or load of the machine; images are sparse and only grow with what the test writes. */
+export const privateRepositoryHostFreeBytesV1=40*1073741824;
 /** 🏗️ Creates the private repository below the first scratch parent that leaves room for the deepest store path, or adopts the one a parent test process published in `SEMIO_PRIVATE_REPOSITORY`. */
 async function openPrivateRepositoryWorkspaceV1(profile:PrivateRepositoryProfileV1):Promise<PrivateRepositoryWorkspaceV1>{
  const adopted=process.env.SEMIO_PRIVATE_REPOSITORY;let root:string,owned:boolean;
  if(adopted){root=realpathSync(resolve(adopted));owned=false;}
  else if(!testRunnerV1)throw Error("private-repository-needs-runner-or-parent");
  else{const parents=privateRepositoryParentsV1(repositoryCheckoutRootV1(privateRepositoryStartDirectoryV1)??testCheckoutRootV1(),profile),parent=parents.find(path=>privateRepositoryDeepestV1(join(path,"r000000"),profile)<=256);if(parent===undefined)throw Error("private-repository-parent-too-deep:"+parents.join(","));await mkdir(parent,{recursive:true});reapStalePrivateRootsV1(parent);root=realpathSync(await mkdtemp(join(parent,"r")));writeSandboxOwnerV1(root);releasePrivateRootAtExitV1(root);owned=true;process.env.SEMIO_PRIVATE_REPOSITORY=root;}
- requirePrivateRepositoryWorkspaceV1(root);adoptInstalledRustToolchainForV1(root,testCheckoutRootV1());adoptInstalledNxToolkitIdentityV1(testCheckoutRootV1());
+ requirePrivateRepositoryWorkspaceV1(root);pinHostFreeBytesForSizingV1(privateRepositoryHostFreeBytesV1);adoptInstalledRustToolchainForV1(root,testCheckoutRootV1());adoptInstalledNxToolkitIdentityV1(testCheckoutRootV1());
  const invoke=privateRepositoryInvocationV1(root);
  return Object.freeze({root,owned,invoke,within:<T,>(body:()=>Promise<T>)=>withPrivateRepositoryWorkingDirectoryV1(root,body),
   prepare:(...partitions:RepositoryCachePartitionIdV1[])=>invoke(async original=>{const control=createIssuedResourceControlV1(original,"repository:private-prepare",0);for(const id of partitions)await(await openRepositoryCachePartitionV1(root,id,control)).close();},{owner:"private-repository-provisioning",maximumElapsedMilliseconds:150000}),

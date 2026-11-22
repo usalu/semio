@@ -25,6 +25,8 @@ path = "../../🧪️tests/🛍️catalogue-carrier-map/🦀️.rs"
 default = []
 # 🧬️ TypeScript mirror rendered from the contract's versioned owned schema metadata.
 typegen = ["dep:semio-ui-contract-typegen"]
+# 🧪️ Narrow arena, handback and resident-ledger observers for the companion laws; never part of a normal build.
+testkit = []
 
 [dependencies]
 semio-framework-value-native-owned = { path = "../../../../🌱️value/🛬️decode/🧳️owned/📦️packages/🦀️rust" }

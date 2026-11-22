@@ -9,6 +9,35 @@ description = "Component crate of semio-s-artifact-stdio-pdf: inferences"
 [package.metadata.semio]
 role = "library"
 
+[package.metadata.semio.carve]
+owned = [
+  "standards::v1_7::subsets::base::io::foreign_artifacts",
+  "standards::v1_7::subsets::base::io::foreign_artifacts::dct_lookup",
+  "standards::v1_7::subsets::base::io::foreign_artifacts::dct_view",
+  "standards::v1_7::subsets::base::io::foreign_artifacts::install_pack",
+  "standards::v1_7::subsets::base::io::foreign_artifacts::png_source",
+  "standards::v1_7::subsets::base::io::foreign_artifacts::png_source::samples",
+  "standards::v1_7::subsets::base::io::sqlite::snapshot",
+  "standards::v1_7::subsets::base::io::text::snapshot::date::tests",
+  "standards::v1_7::subsets::base::io::text::snapshot::producer_tests",
+  "standards::v1_7::subsets::base::modules::encryption",
+  "standards::v1_7::subsets::base::modules::filters",
+  "standards::v1_7::subsets::base::modules::filters::decoded_stream",
+  "standards::v1_7::subsets::base::modules::filters::flate_pipeline_tests",
+  "standards::v1_7::subsets::base::schema::content_mapping",
+  "standards::v1_7::subsets::base::schema::inferences",
+  "standards::v1_7::subsets::base::schema::inferences::outline",
+  "standards::v1_7::subsets::base::schema::inferences::outline::tests",
+  "standards::v1_7::subsets::base::schema::inferences::tests",
+  "standards::v1_7::subsets::base::schema::snapshot::recursive_retirement_tests",
+  "viewer::pdf17::modes",
+  "viewer::pdf17::modes::view",
+  "viewer::pdf17a::modes",
+  "viewer::pdf17a::modes::view",
+  "viewer::pdf17e::modes",
+  "viewer::pdf17e::modes::view",
+]
+
 [lints]
 workspace = true
 
@@ -19,6 +48,7 @@ path = "🦀️.rs"
 semio-framework-pixels = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🔲️pixels/📦️packages/🦀️rust" }
 semio-s-artifact-stdio-pdf-lexer = { path = "../../../../🔨️modules/🔤️lexer/📦️packages/🦀️rust" }
 pack = { workspace = true }
+semio-framework-pack-source = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🎒️pack/🚰️source/📦️packages/🦀️rust" }
 semio-framework-2d = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/◻️2d/📦️packages/🦀️rust" }
 semio-framework-artifact-reference = { workspace = true }
 semio-framework-async = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust" }

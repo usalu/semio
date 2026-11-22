@@ -22990,6 +22990,105 @@
                 }
               },
               {
+                "id": "set-entry",
+                "label": {
+                  "native": {
+                    "en": "Set Entry",
+                    "de": "Eintrag setzen"
+                  },
+                  "reuse": {
+                    "en": "Set Entry",
+                    "de": "Eintrag setzen"
+                  }
+                },
+                "kind": "mutation",
+                "iconId": "sparkles",
+                "args": [
+                  {
+                    "id": "object",
+                    "label": {
+                      "native": {
+                        "en": "Family (catalog, trailer, info, viewer)",
+                        "de": "Familie (catalog, trailer, info, viewer)"
+                      },
+                      "reuse": {
+                        "en": "Family (catalog, trailer, info, viewer)",
+                        "de": "Familie (catalog, trailer, info, viewer)"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string",
+                      "minLen": 1
+                    },
+                    "required": true
+                  },
+                  {
+                    "id": "text",
+                    "label": {
+                      "native": {
+                        "en": "Value (key=value to add)",
+                        "de": "Wert (key=value zum Hinzufügen)"
+                      },
+                      "reuse": {
+                        "en": "Value (key=value to add)",
+                        "de": "Wert (key=value zum Hinzufügen)"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string",
+                      "minLen": 0
+                    },
+                    "required": false
+                  },
+                  {
+                    "id": "extra",
+                    "label": {
+                      "native": {
+                        "en": "Key",
+                        "de": "Schlüssel"
+                      },
+                      "reuse": {
+                        "en": "Key",
+                        "de": "Schlüssel"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string",
+                      "minLen": 0
+                    },
+                    "required": false
+                  }
+                ],
+                "inPalette": true,
+                "semantics": {
+                  "effects": {
+                    "writes": [
+                      "artifact:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": true
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.write"
+                    ],
+                    "approval": "whenDestructive"
+                  },
+                  "execution": {
+                    "preview": "diff",
+                    "undo": {
+                      "kind": "inverse"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": true,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              },
+              {
                 "id": "create-annotation",
                 "label": {
                   "native": {
@@ -36238,6 +36337,105 @@
                       "reuse": {
                         "en": "Artifact Identity",
                         "de": "Artefaktidentität"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string",
+                      "minLen": 0
+                    },
+                    "required": false
+                  }
+                ],
+                "inPalette": true,
+                "semantics": {
+                  "effects": {
+                    "writes": [
+                      "artifact:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": true
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.write"
+                    ],
+                    "approval": "whenDestructive"
+                  },
+                  "execution": {
+                    "preview": "diff",
+                    "undo": {
+                      "kind": "inverse"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": true,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              },
+              {
+                "id": "set-entry",
+                "label": {
+                  "native": {
+                    "en": "Set Entry",
+                    "de": "Eintrag setzen"
+                  },
+                  "reuse": {
+                    "en": "Set Entry",
+                    "de": "Eintrag setzen"
+                  }
+                },
+                "kind": "mutation",
+                "iconId": "sparkles",
+                "args": [
+                  {
+                    "id": "object",
+                    "label": {
+                      "native": {
+                        "en": "Family (catalog, trailer, info, viewer)",
+                        "de": "Familie (catalog, trailer, info, viewer)"
+                      },
+                      "reuse": {
+                        "en": "Family (catalog, trailer, info, viewer)",
+                        "de": "Familie (catalog, trailer, info, viewer)"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string",
+                      "minLen": 1
+                    },
+                    "required": true
+                  },
+                  {
+                    "id": "text",
+                    "label": {
+                      "native": {
+                        "en": "Value (key=value to add)",
+                        "de": "Wert (key=value zum Hinzufügen)"
+                      },
+                      "reuse": {
+                        "en": "Value (key=value to add)",
+                        "de": "Wert (key=value zum Hinzufügen)"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string",
+                      "minLen": 0
+                    },
+                    "required": false
+                  },
+                  {
+                    "id": "extra",
+                    "label": {
+                      "native": {
+                        "en": "Key",
+                        "de": "Schlüssel"
+                      },
+                      "reuse": {
+                        "en": "Key",
+                        "de": "Schlüssel"
                       }
                     },
                     "schema": {
@@ -50336,6 +50534,105 @@
                 }
               },
               {
+                "id": "set-entry",
+                "label": {
+                  "native": {
+                    "en": "Set Entry",
+                    "de": "Eintrag setzen"
+                  },
+                  "reuse": {
+                    "en": "Set Entry",
+                    "de": "Eintrag setzen"
+                  }
+                },
+                "kind": "mutation",
+                "iconId": "sparkles",
+                "args": [
+                  {
+                    "id": "object",
+                    "label": {
+                      "native": {
+                        "en": "Family (catalog, trailer, info, viewer)",
+                        "de": "Familie (catalog, trailer, info, viewer)"
+                      },
+                      "reuse": {
+                        "en": "Family (catalog, trailer, info, viewer)",
+                        "de": "Familie (catalog, trailer, info, viewer)"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string",
+                      "minLen": 1
+                    },
+                    "required": true
+                  },
+                  {
+                    "id": "text",
+                    "label": {
+                      "native": {
+                        "en": "Value (key=value to add)",
+                        "de": "Wert (key=value zum Hinzufügen)"
+                      },
+                      "reuse": {
+                        "en": "Value (key=value to add)",
+                        "de": "Wert (key=value zum Hinzufügen)"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string",
+                      "minLen": 0
+                    },
+                    "required": false
+                  },
+                  {
+                    "id": "extra",
+                    "label": {
+                      "native": {
+                        "en": "Key",
+                        "de": "Schlüssel"
+                      },
+                      "reuse": {
+                        "en": "Key",
+                        "de": "Schlüssel"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string",
+                      "minLen": 0
+                    },
+                    "required": false
+                  }
+                ],
+                "inPalette": true,
+                "semantics": {
+                  "effects": {
+                    "writes": [
+                      "artifact:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": true
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.write"
+                    ],
+                    "approval": "whenDestructive"
+                  },
+                  "execution": {
+                    "preview": "diff",
+                    "undo": {
+                      "kind": "inverse"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": true,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              },
+              {
                 "id": "create-annotation",
                 "label": {
                   "native": {
@@ -63584,6 +63881,105 @@
                       "reuse": {
                         "en": "Artifact Identity",
                         "de": "Artefaktidentität"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string",
+                      "minLen": 0
+                    },
+                    "required": false
+                  }
+                ],
+                "inPalette": true,
+                "semantics": {
+                  "effects": {
+                    "writes": [
+                      "artifact:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": true
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.write"
+                    ],
+                    "approval": "whenDestructive"
+                  },
+                  "execution": {
+                    "preview": "diff",
+                    "undo": {
+                      "kind": "inverse"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": true,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              },
+              {
+                "id": "set-entry",
+                "label": {
+                  "native": {
+                    "en": "Set Entry",
+                    "de": "Eintrag setzen"
+                  },
+                  "reuse": {
+                    "en": "Set Entry",
+                    "de": "Eintrag setzen"
+                  }
+                },
+                "kind": "mutation",
+                "iconId": "sparkles",
+                "args": [
+                  {
+                    "id": "object",
+                    "label": {
+                      "native": {
+                        "en": "Family (catalog, trailer, info, viewer)",
+                        "de": "Familie (catalog, trailer, info, viewer)"
+                      },
+                      "reuse": {
+                        "en": "Family (catalog, trailer, info, viewer)",
+                        "de": "Familie (catalog, trailer, info, viewer)"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string",
+                      "minLen": 1
+                    },
+                    "required": true
+                  },
+                  {
+                    "id": "text",
+                    "label": {
+                      "native": {
+                        "en": "Value (key=value to add)",
+                        "de": "Wert (key=value zum Hinzufügen)"
+                      },
+                      "reuse": {
+                        "en": "Value (key=value to add)",
+                        "de": "Wert (key=value zum Hinzufügen)"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string",
+                      "minLen": 0
+                    },
+                    "required": false
+                  },
+                  {
+                    "id": "extra",
+                    "label": {
+                      "native": {
+                        "en": "Key",
+                        "de": "Schlüssel"
+                      },
+                      "reuse": {
+                        "en": "Key",
+                        "de": "Schlüssel"
                       }
                     },
                     "schema": {
@@ -76910,6 +77306,105 @@
                 }
               },
               {
+                "id": "set-entry",
+                "label": {
+                  "native": {
+                    "en": "Set Entry",
+                    "de": "Eintrag setzen"
+                  },
+                  "reuse": {
+                    "en": "Set Entry",
+                    "de": "Eintrag setzen"
+                  }
+                },
+                "kind": "mutation",
+                "iconId": "sparkles",
+                "args": [
+                  {
+                    "id": "object",
+                    "label": {
+                      "native": {
+                        "en": "Family (catalog, trailer, info, viewer)",
+                        "de": "Familie (catalog, trailer, info, viewer)"
+                      },
+                      "reuse": {
+                        "en": "Family (catalog, trailer, info, viewer)",
+                        "de": "Familie (catalog, trailer, info, viewer)"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string",
+                      "minLen": 1
+                    },
+                    "required": true
+                  },
+                  {
+                    "id": "text",
+                    "label": {
+                      "native": {
+                        "en": "Value (key=value to add)",
+                        "de": "Wert (key=value zum Hinzufügen)"
+                      },
+                      "reuse": {
+                        "en": "Value (key=value to add)",
+                        "de": "Wert (key=value zum Hinzufügen)"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string",
+                      "minLen": 0
+                    },
+                    "required": false
+                  },
+                  {
+                    "id": "extra",
+                    "label": {
+                      "native": {
+                        "en": "Key",
+                        "de": "Schlüssel"
+                      },
+                      "reuse": {
+                        "en": "Key",
+                        "de": "Schlüssel"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string",
+                      "minLen": 0
+                    },
+                    "required": false
+                  }
+                ],
+                "inPalette": true,
+                "semantics": {
+                  "effects": {
+                    "writes": [
+                      "artifact:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": true
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.write"
+                    ],
+                    "approval": "whenDestructive"
+                  },
+                  "execution": {
+                    "preview": "diff",
+                    "undo": {
+                      "kind": "inverse"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": true,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              },
+              {
                 "id": "create-annotation",
                 "label": {
                   "native": {
@@ -90197,6 +90692,105 @@
                 }
               },
               {
+                "id": "set-entry",
+                "label": {
+                  "native": {
+                    "en": "Set Entry",
+                    "de": "Eintrag setzen"
+                  },
+                  "reuse": {
+                    "en": "Set Entry",
+                    "de": "Eintrag setzen"
+                  }
+                },
+                "kind": "mutation",
+                "iconId": "sparkles",
+                "args": [
+                  {
+                    "id": "object",
+                    "label": {
+                      "native": {
+                        "en": "Family (catalog, trailer, info, viewer)",
+                        "de": "Familie (catalog, trailer, info, viewer)"
+                      },
+                      "reuse": {
+                        "en": "Family (catalog, trailer, info, viewer)",
+                        "de": "Familie (catalog, trailer, info, viewer)"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string",
+                      "minLen": 1
+                    },
+                    "required": true
+                  },
+                  {
+                    "id": "text",
+                    "label": {
+                      "native": {
+                        "en": "Value (key=value to add)",
+                        "de": "Wert (key=value zum Hinzufügen)"
+                      },
+                      "reuse": {
+                        "en": "Value (key=value to add)",
+                        "de": "Wert (key=value zum Hinzufügen)"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string",
+                      "minLen": 0
+                    },
+                    "required": false
+                  },
+                  {
+                    "id": "extra",
+                    "label": {
+                      "native": {
+                        "en": "Key",
+                        "de": "Schlüssel"
+                      },
+                      "reuse": {
+                        "en": "Key",
+                        "de": "Schlüssel"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string",
+                      "minLen": 0
+                    },
+                    "required": false
+                  }
+                ],
+                "inPalette": true,
+                "semantics": {
+                  "effects": {
+                    "writes": [
+                      "artifact:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": true
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.write"
+                    ],
+                    "approval": "whenDestructive"
+                  },
+                  "execution": {
+                    "preview": "diff",
+                    "undo": {
+                      "kind": "inverse"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": true,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              },
+              {
                 "id": "create-annotation",
                 "label": {
                   "native": {
@@ -103445,6 +104039,105 @@
                       "reuse": {
                         "en": "Artifact Identity",
                         "de": "Artefaktidentität"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string",
+                      "minLen": 0
+                    },
+                    "required": false
+                  }
+                ],
+                "inPalette": true,
+                "semantics": {
+                  "effects": {
+                    "writes": [
+                      "artifact:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": true
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.write"
+                    ],
+                    "approval": "whenDestructive"
+                  },
+                  "execution": {
+                    "preview": "diff",
+                    "undo": {
+                      "kind": "inverse"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": true,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              },
+              {
+                "id": "set-entry",
+                "label": {
+                  "native": {
+                    "en": "Set Entry",
+                    "de": "Eintrag setzen"
+                  },
+                  "reuse": {
+                    "en": "Set Entry",
+                    "de": "Eintrag setzen"
+                  }
+                },
+                "kind": "mutation",
+                "iconId": "sparkles",
+                "args": [
+                  {
+                    "id": "object",
+                    "label": {
+                      "native": {
+                        "en": "Family (catalog, trailer, info, viewer)",
+                        "de": "Familie (catalog, trailer, info, viewer)"
+                      },
+                      "reuse": {
+                        "en": "Family (catalog, trailer, info, viewer)",
+                        "de": "Familie (catalog, trailer, info, viewer)"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string",
+                      "minLen": 1
+                    },
+                    "required": true
+                  },
+                  {
+                    "id": "text",
+                    "label": {
+                      "native": {
+                        "en": "Value (key=value to add)",
+                        "de": "Wert (key=value zum Hinzufügen)"
+                      },
+                      "reuse": {
+                        "en": "Value (key=value to add)",
+                        "de": "Wert (key=value zum Hinzufügen)"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string",
+                      "minLen": 0
+                    },
+                    "required": false
+                  },
+                  {
+                    "id": "extra",
+                    "label": {
+                      "native": {
+                        "en": "Key",
+                        "de": "Schlüssel"
+                      },
+                      "reuse": {
+                        "en": "Key",
+                        "de": "Schlüssel"
                       }
                     },
                     "schema": {

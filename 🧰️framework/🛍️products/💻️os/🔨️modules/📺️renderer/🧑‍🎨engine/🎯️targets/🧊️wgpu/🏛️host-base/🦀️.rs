@@ -631,6 +631,9 @@ pub mod frame_latency;
 mod actor_observation_port;
 pub use actor_observation_port::*;
 
+#[cfg(not(target_arch = "wasm32"))]
+pub use semio_plugin_host_shard::{begin_spawned_job, cancel_spawned_job, end_spawned_job, spawned_jobs_snapshot, step_spawned_job, JobLedger, SpawnedJob, SpawnedJobRow};
+
 // 🥽️ Target-neutral: the catalog is `include_str!`-embedded, and `scenes::render_icon_render` needs
 // `mesh_asset_transport_url` on the browser build too — the same public-id → transport-path rewrite
 // React's `IconRenderHost` applies before handing a `/mesh/…` id to its loader.

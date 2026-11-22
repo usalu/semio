@@ -66,6 +66,7 @@ semio-framework = { path = "../../../../../../../../../../📦️packages/🦀�
 semio-framework-artifact-reference = { workspace = true }
 semio-framework-io-base64 = { path = "../../../../../../../../../../🔨️modules/🚪️io/🔤️base64/📦️packages/🦀️rust" }
 semio-framework-job = { workspace = true }
+semio-renderer-wgpu-ui-engine-tests = { path = "../../../🧿️ui-engine-tests/📦️packages/🦀️rust" }
 semio-framework-job-worker = { path = "../../../../../../../../../../🔨️modules/🧵️job/👷️worker/📦️packages/🦀️rust" }
 semio-os-config = { workspace = true }
 semio-os-kernel = { path = "../../../../../../../../📦️packages/🦀️rust" }

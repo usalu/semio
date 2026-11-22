@@ -328,12 +328,14 @@
       "clip": "idle-breathing",
       "view": "thermal",
       "environment": "office-still",
-      "transport": [
+      "flow": [
+        "streams",
+        "moisture",
         "pathlines"
       ],
-      "transportAgeS": 3.5,
-      "transportStrokeMm": 0.1,
-      "transportTrailS": 1,
+      "flowDevelopS": 5,
+      "flowStrokeMm": 0.4,
+      "flowTrailS": 1,
       "viewpoint": "elevation",
       "theme": "dark",
       "thermalSpanK": 25,
@@ -377,12 +379,14 @@
       "clip": "typing",
       "view": "thermal",
       "environment": "office-still",
-      "transport": [
+      "flow": [
+        "streams",
+        "moisture",
         "pathlines"
       ],
-      "transportAgeS": 3,
-      "transportStrokeMm": 0.1,
-      "transportTrailS": 1,
+      "flowDevelopS": 5,
+      "flowStrokeMm": 0.4,
+      "flowTrailS": 1,
       "viewpoint": "elevation",
       "theme": "dark",
       "thermalSpanK": 25,
@@ -394,12 +398,14 @@
       "clip": "stir-and-taste",
       "view": "thermal",
       "environment": "office-still",
-      "transport": [
+      "flow": [
+        "streams",
+        "moisture",
         "pathlines"
       ],
-      "transportAgeS": 3.5,
-      "transportStrokeMm": 0.1,
-      "transportTrailS": 1,
+      "flowDevelopS": 5,
+      "flowStrokeMm": 0.4,
+      "flowTrailS": 1,
       "viewpoint": "elevation",
       "theme": "dark",
       "thermalSpanK": 25,
@@ -588,11 +594,13 @@
       "environment": "office-neutral",
       "viewpoint": "elevation",
       "theme": "dark",
-      "transport": [
-        "pathlines"
+      "flow": [
+        "streams",
+        "moisture",
+        "fog"
       ],
-      "transportAgeS": 0.2,
-      "transportStrokeMm": 0.1,
+      "flowDevelopS": 4,
+      "flowStrokeMm": 0.4,
       "thermalSpanK": 78,
       "scale": 50,
       "fps": 15

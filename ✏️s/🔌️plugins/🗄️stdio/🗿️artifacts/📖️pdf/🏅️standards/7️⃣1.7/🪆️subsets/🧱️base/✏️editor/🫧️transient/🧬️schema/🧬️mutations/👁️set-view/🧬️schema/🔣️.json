@@ -1,0 +1,17 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/app/stdio/pdf/view/transient/mutation/set-view/schema.json",
+  "title": "SetView",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["zoomMode", "zoomPermille", "page", "revision", "query", "matchCase", "active"],
+  "properties": {
+    "zoomMode": { "type": "string", "x-semio-ui": { "widget": "text", "role": "value", "label": { "en": "Zoom mode", "de": "Zoommodus" }, "description": { "en": "Fit mode of the page view; empty means actual size.", "de": "Anpassungsmodus der Seitenansicht; leer bedeutet Originalgröße." }, "group": "view", "order": 10 } },
+    "zoomPermille": { "type": "integer", "minimum": 0, "x-semio-ui": { "widget": "stepper", "role": "value", "label": { "en": "Zoom", "de": "Zoom" }, "description": { "en": "Zoom factor in per mille, used by the factor mode.", "de": "Zoomfaktor in Promille, genutzt vom Faktormodus." }, "step": 1, "precision": 0, "group": "view", "order": 20 } },
+    "page": { "type": "integer", "minimum": 0, "x-semio-ui": { "widget": "stepper", "role": "value", "label": { "en": "Page", "de": "Seite" }, "description": { "en": "Page the view is anchored to.", "de": "Seite, an der die Ansicht verankert ist." }, "step": 1, "precision": 0, "group": "view", "order": 30 } },
+    "revision": { "type": "integer", "minimum": 0, "x-semio-ui": { "widget": "stepper", "role": "value", "label": { "en": "Fit revision", "de": "Anpassungsrevision" }, "description": { "en": "Counter that re-triggers the fit of the view.", "de": "Zähler, der die Anpassung der Ansicht erneut auslöst." }, "step": 1, "precision": 0, "group": "view", "order": 40 } },
+    "query": { "type": "string", "x-semio-ui": { "widget": "text", "role": "value", "label": { "en": "Search query", "de": "Suchbegriff" }, "description": { "en": "Text searched in the document; empty clears the search.", "de": "Im Dokument gesuchter Text; leer löscht die Suche." }, "group": "search", "order": 50 } },
+    "matchCase": { "type": "boolean", "x-semio-ui": { "widget": "toggle", "role": "value", "label": { "en": "Match case", "de": "Groß-/Kleinschreibung" }, "description": { "en": "Whether the search distinguishes upper and lower case.", "de": "Ob die Suche Groß- und Kleinschreibung unterscheidet." }, "group": "search", "order": 60 } },
+    "active": { "anyOf": [{ "type": "integer", "minimum": 0 }, { "type": "null" }], "x-semio-ui": { "widget": "stepper", "role": "value", "label": { "en": "Active match", "de": "Aktiver Treffer" }, "description": { "en": "Index of the highlighted search match; empty for none.", "de": "Index des hervorgehobenen Suchtreffers; leer für keinen." }, "step": 1, "precision": 0, "group": "search", "order": 70 } }
+  }
+}

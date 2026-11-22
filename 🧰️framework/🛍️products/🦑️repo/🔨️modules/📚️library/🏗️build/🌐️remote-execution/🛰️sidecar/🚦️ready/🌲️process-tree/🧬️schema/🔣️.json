@@ -36,6 +36,7 @@
         "holderWaitRestartMilliseconds": 600000,
         "codeCheckMilliseconds": 60000,
         "staleStageMilliseconds": 1800000,
+        "codeQuietMilliseconds": 300000,
         "semanticsSources": [
           {"file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️load/🤝️selected-exchange/🧬️schema/🔣️.json", "pointer": "/definitions/Policy/const/revision"},
           {"file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🧬️schema/🔣️.json", "pointer": "/$defs/record/const/stamp"}

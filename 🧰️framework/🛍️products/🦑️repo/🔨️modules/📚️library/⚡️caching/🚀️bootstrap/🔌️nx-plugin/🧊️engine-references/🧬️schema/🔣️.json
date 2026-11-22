@@ -1,0 +1,41 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio:nx-engine-references-memo:v1",
+  "title": "Nx Engine References Memo",
+  "description": "🧊️ The persisted memo of the literal references of the private Nx engine sources, kept per checkout in the per-user cache directory: each workspace-relative file records the stamp it was read at and the sha256 of its text, each text digest records the references its scan found, so a fresh process scans only text it never saw. 🧊️ Das gespeicherte Gedächtnis der literalen Verweise der privaten Nx-Motor-Quellen: je Datei Stempel und sha256 des Textes, je Textdigest die gefundenen Verweise.",
+  "$ref": "#/definitions/Memo",
+  "definitions": {
+    "Sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+    "Reference": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "specifier"],
+      "properties": {
+        "kind": { "enum": ["module", "file-url", "directory-url"] },
+        "specifier": { "type": "string", "maxLength": 4096 }
+      }
+    },
+    "File": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["stamp", "sha256"],
+      "properties": {
+        "stamp": { "type": "string", "pattern": "^[0-9]+:[0-9]+:[0-9]+:[0-9]+$" },
+        "sha256": { "$ref": "#/definitions/Sha256" }
+      }
+    },
+    "Memo": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "files", "references"],
+      "properties": {
+        "version": { "const": 1 },
+        "files": { "type": "object", "additionalProperties": { "$ref": "#/definitions/File" } },
+        "references": { "type": "object", "additionalProperties": { "type": "array", "items": { "$ref": "#/definitions/Reference" } } }
+      }
+    },
+    "Limits": {
+      "const": { "maximumBytes": 16777216, "environment": "SEMIO_NX_ENGINE_REFERENCES_DIRECTORY" }
+    }
+  }
+}

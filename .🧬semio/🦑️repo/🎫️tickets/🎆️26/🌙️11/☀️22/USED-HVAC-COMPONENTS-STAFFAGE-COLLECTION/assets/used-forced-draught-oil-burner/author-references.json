@@ -1,0 +1,12 @@
+[
+ {"id": "en-267", "citation": "EN 267:2020 Forced draught oil burners: definitions, requirements, testing, marking (monoblock burners for light heating oil, pre-purge before ignition, flame supervision, firing ranges of the 20 to 40 kW class)."},
+ {"id": "din-51603-1", "citation": "DIN 51603-1:2020 Liquid fuels, fuel oils, part 1: fuel oil EL (light heating oil, net calorific value about 42.6 MJ/kg = 11.86 kWh/kg, density about 0.84 kg/l)."},
+ {"id": "din-4798", "citation": "DIN 4798-1:2014 Oil burner hoses, part 1: requirements (NBR inner hose with stainless steel wire braid, nominal size DN 8 = 3/8 inch, outer diameter about 15 to 16 mm, M16 x 1.5 or 3/8 inch connections)."},
+ {"id": "riello-40-g", "citation": "Riello 40 G series monoblock light-oil burners, installation manuals and technical data (read 2026-11-22): firing range about 1.6 to 3.5 kg/h (19 to 41 kW), absorbed electrical power about 0.15 kW, net weight about 11 kg, blast tube diameter 89 mm, flange with four bolts on a 150 mm circle; used as the type reference for overall proportions, not as a measured specimen."},
+ {"id": "turns-2012", "citation": "Turns, S. R. (2012). An Introduction to Combustion: Concepts and Applications, 3rd ed., McGraw-Hill (stoichiometric air of light fuel oil about 14.5 kg/kg, excess air, water vapour of the flue gas)."},
+ {"id": "incropera-2018", "citation": "Incropera, F. P., DeWitt, D. P., Bergman, T. L., Lavine, A. S. (2018). Fundamentals of Heat and Mass Transfer, 8th ed., Wiley (radiative properties of painted, oxidised and bare metals, polymers and timber; thermal properties of metals and polymers)."},
+ {"id": "iso-10456", "citation": "EN ISO 10456:2007 Building materials and products, hygrothermal properties (design conductivity and specific heat of softwood 0.13 W/mK and 1600 J/kgK, steel 50 W/mK and 450 J/kgK, polyamide about 0.25 W/mK)."},
+ {"id": "en-338", "citation": "EN 338:2016 Structural timber, strength classes (C24 softwood: mean density 420 kg/m3, E0,mean 11 GPa; pallet and crate pine of about 470 kg/m3 at 15 % moisture)."},
+ {"id": "din-iso-128-50", "citation": "DIN ISO 128-50:2002 Technical drawings, general principles of presentation, part 50: basic conventions for areas on sections and cuts."},
+ {"id": "din-1356-1", "citation": "DIN 1356-1:1995 Building drawings, part 1: types of drawings, contents and basic principles of presentation (scales, line groups)."}
+]

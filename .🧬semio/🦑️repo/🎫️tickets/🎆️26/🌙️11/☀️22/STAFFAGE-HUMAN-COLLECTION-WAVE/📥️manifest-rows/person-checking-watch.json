@@ -1,0 +1,53 @@
+{
+  "id": "person-checking-watch",
+  "category": "humans",
+  "title": {
+    "en": "Person Checking a Watch",
+    "de": "Person schaut auf die Uhr"
+  },
+  "heightM": 1.753,
+  "widthM": 0.499,
+  "powerW": 124.1,
+  "poses": [
+    "checking-watch",
+    "tapping-foot",
+    "waiting",
+    "hand-on-hip"
+  ],
+  "clips": [
+    "impatient-tapping",
+    "glance-at-watch",
+    "idle-breathing"
+  ],
+  "representations": {
+    "50": "authored",
+    "100": "authored",
+    "200": "authored",
+    "500": "authored"
+  },
+  "symbols": [],
+  "analytics": [
+    "thermal",
+    "transport",
+    "structural"
+  ],
+  "exports": [
+    "svg",
+    "pdf",
+    "dxf",
+    "dwg",
+    "png-sequence",
+    "mp4",
+    "webm",
+    "component",
+    "glb",
+    "fbx",
+    "model",
+    "model-zip"
+  ],
+  "distinction": {
+    "en": "A woman of 1.75 m waiting on a station platform in a sage hooded sweatshirt, black slim jeans and white canvas sneakers, headphones round her neck and her hair in a ponytail: raising the left wrist to read a wristwatch, tapping the right foot, waiting and with a hand on the hip, with an impatient tapping loop, a glance at the watch and idle breathing.",
+    "de": "Eine Frau von 1,75 m, die auf einem Bahnsteig wartet, in salbeigrünem Kapuzenpullover, schwarzer enger Jeans und weißen Stoffsneakern, Kopfhörer um den Hals und das Haar im Pferdeschwanz: das linke Handgelenk gehoben, um die Armbanduhr zu lesen, mit dem rechten Fuß tippend, wartend und mit einer Hand an der Hüfte, mit einer ungeduldigen Tippschleife, einem Blick auf die Uhr und ruhigem Atmen."
+  },
+  "completion": "authored"
+}

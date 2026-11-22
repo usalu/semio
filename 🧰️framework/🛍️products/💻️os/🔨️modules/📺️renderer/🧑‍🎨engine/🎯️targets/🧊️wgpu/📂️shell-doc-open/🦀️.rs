@@ -56,6 +56,9 @@ pub use staged_doc_open__space_admin_and_settle::*;
 #[path = "../../../🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/📂️doc-open/📤️icon-export/🦀️.rs"]
 mod staged_doc_open__icon_export;
 pub use staged_doc_open__icon_export::*;
+#[path = "../../../🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/📂️doc-open/🎥️video-export/🦀️.rs"]
+mod staged_doc_open__video_export;
+pub use staged_doc_open__video_export::*;
 #[path = "../../../🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/📂️doc-open/📨️command-dispatch/🦀️.rs"]
 mod staged_doc_open__command_dispatch;
 #[path = "../../../🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/📂️doc-open/🔑️storage-prefs-and-i18n/🦀️.rs"]

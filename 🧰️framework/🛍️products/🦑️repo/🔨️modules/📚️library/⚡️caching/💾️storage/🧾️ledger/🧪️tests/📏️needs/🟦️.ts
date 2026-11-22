@@ -124,7 +124,10 @@ test("the unit cache keeps its collection shares, one compile of room above the 
   ["carry without carried",document=>{delete document.areas.find((row:any)=>row.id==="rust").recreate;}],
   ["carried without carry",document=>{delete document.areas.find((row:any)=>row.id==="rust").carry;}],
   ["carry outside every nested area",document=>{document.areas.find((row:any)=>row.id==="rust").carry=["somewhere/else"];}],
-  ["carry that climbs",document=>{document.areas.find((row:any)=>row.id==="rust").carry=["u/../x"];}]
+  ["carry that climbs",document=>{document.areas.find((row:any)=>row.id==="rust").carry=["u/../x"];}],
+  ["reclaim share with soft at target",document=>{document.areas.find((row:any)=>row.id==="cargo-store").reclaimShare.softBasisPoints=2500;}],
+  ["reclaim share with floors reversed",document=>{document.areas.find((row:any)=>row.id==="cargo-store").reclaimShare.softFloorBytes=8*GIB;}],
+  ["reclaim share beside an absolute reclaim",document=>{document.areas.find((row:any)=>row.id==="cargo-store").reclaim={softAvailableBytes:1,targetAvailableBytes:2};}]
  ];
  for(const[name,mutate]of mutations){const document=clone(policy);mutate(document);expect(()=>readCacheLedgerV1(document),name).toThrow();}
  const small=clone(budgetPolicy.partitions);small.rust.capacityBytes=16*GIB;small.rust.maximumLogicalBytes=16*GIB-1048576;

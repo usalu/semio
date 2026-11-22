@@ -10,7 +10,22 @@ pub const INSPECTOR_BODY_KEY: &str = "pdf.object";
 
 pub const OBJECT_DOMAIN: &str = "objects";
 
-const PAGE_ACTIONS: [&str; 75] = [
+const PAGE_ACTIONS: [&str; 90] = [
+    "presence-pointer",
+    "presence-pointer-leave",
+    "presence-caret",
+    "presence-caret-clear",
+    "zoom-in",
+    "zoom-out",
+    "fit-page",
+    "fit-width",
+    "actual-size",
+    "go-to-page",
+    "set-query",
+    "toggle-match-case",
+    "next-hit",
+    "previous-hit",
+    "set-entry",
     "create-annotation",
     "fill-form-field",
     "replace-page",

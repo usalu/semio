@@ -5,7 +5,7 @@ import{closeSync,constants,existsSync,fstatSync,lstatSync,openSync,readlinkSync,
 import{dirname,join,resolve}from"node:path";
 import{fileURLToPath}from"node:url";
 import{abortLeaseRootV1,registerLeaseImplementationProviderV1,registerLeaseYieldHandlerV1}from"../../../../../../🔨️modules/🏃️process/🔒️leases/📈️standing/🟦️.ts";
-import{physicalSourceOriginV1}from"../📥️inputs/🔏️revision/🟨️.mjs";
+import{implementationPinnedV1,physicalSourceOriginV1}from"../📥️inputs/🔏️revision/🟨️.mjs";
 import{STALE_IMPLEMENTATION_CODE_V1,STALE_IMPLEMENTATION_CODES_V1,churnReasonTextV1,concurrentEditOfV1,restartExpectedV1,installRestartableFailureHandlerV1}from"../../../../../../🔨️modules/📁️filesystem/🧾️observation/🔁️churn/🟦️.ts";
 const protocol=JSON.parse(JSON.stringify(schemaContract.$defs.Protocol.const));
 const staleCode=STALE_IMPLEMENTATION_CODE_V1,tableCode="SEMIO_STAMP_TABLE_INVALID";
@@ -82,7 +82,7 @@ export function createFormatStampsV1({base,table=protocol,environment=process.en
   return extract(entry,document,formatStampLanguagesV1(environment),path);
  };
  const moved=ids=>[...ids].filter(id=>owned.has(id)).flatMap(id=>differences(id,owned.get(id),live(id)));
- const ensureCurrent=(ids=[...owned.keys()],context="",kind="yield")=>{const rows=moved(ids);if(rows.length)throw new StaleImplementationErrorV1(rows,{context,kind,languages:formatStampLanguagesV1(environment)});};
+ const ensureCurrent=(ids=[...owned.keys()],context="",kind="yield")=>{if(kind==="yield"&&implementationPinnedV1())return;const rows=moved(ids);if(rows.length)throw new StaleImplementationErrorV1(rows,{context,kind,languages:formatStampLanguagesV1(environment)});};
  const idsOf=resource=>[...new Set(table.resources.filter(row=>resource.startsWith(row.prefix)).flatMap(row=>row.stamps))].filter(id=>owned.has(id));
  const guard=admission=>{if(admission.mode!=="exclusive"||typeof admission.resource!=="string")return;const ids=idsOf(admission.resource);if(ids.length)ensureCurrent(ids,admission.resource,"yield");};
  return Object.freeze({declare(id,document){owned.set(id,extract(entryOf(id),document,formatStampLanguagesV1(environment),"declared document"));},owned:()=>new Map(owned),live,moved,ensureCurrent,idsOf,guard});

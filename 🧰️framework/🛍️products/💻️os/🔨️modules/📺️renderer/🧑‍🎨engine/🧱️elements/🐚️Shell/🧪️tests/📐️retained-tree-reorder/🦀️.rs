@@ -12,22 +12,22 @@ fn retained_tree_reorder_marker_follows_the_physical_pointer_and_clears() {
     let component = |wire: Value| serde_json::from_value(wire).expect("tree reorder component");
     let row = |id, key: &str| {
         let payload = serde_json::json!({ "documentId": "surface-owner", "stepId": key }).to_string();
-        let mut record = tree_pointer_record(id, key, component(serde_json::json!({
+        tree_pointer_record(id, key, component(serde_json::json!({
             "type": "treeItem",
             "label": key,
             "draggable": true,
             "dragData": { (ui_contract::TREE_ROW_REORDER_MIME): payload },
-        })), &[], None);
-        record.bindings.try_push(ui_contract::ActionBinding {
-            trigger: ui_contract::Trigger::Drop,
-            action: ui_contract::ActionId::try_v1("s.test.tree", "dropRow").expect("bounded row drop action"),
-            args: None,
-            capability: None,
-        }).expect("row drop binding");
-        record
+        })), &[], None)
     };
+    let mut root = tree_pointer_record(1, "root", component(serde_json::json!({ "type": "tree" })), &[2], None);
+    root.bindings.try_push(ui_contract::ActionBinding {
+        trigger: ui_contract::Trigger::Drop,
+        action: ui_contract::ActionId::try_v1("s.test.tree", "dropRow").expect("bounded tree drop action"),
+        args: None,
+        capability: None,
+    }).expect("tree drop binding");
     let records = vec![
-        tree_pointer_record(1, "root", component(serde_json::json!({ "type": "tree" })), &[2], None),
+        root,
         tree_pointer_record(2, "rows", component(serde_json::json!({ "type": "treeSection", "defaultOpen": true })), &[3, 4], None),
         row(3, "first"),
         row(4, "second"),

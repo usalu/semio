@@ -31,6 +31,7 @@ import {
   applyFrameworkLayoutSeed,
   flattenPanelTabLeaves,
   withoutUiRefreshSectionsV1,
+  uiRefreshSectionsOnlyV1,
   pluginShouldReceiveContributions,
   retitleWindowLayoutNode
 } from "../../🛠️ShellHelpers/🛣️route-and-chrome/🟦️.tsx";
@@ -108,7 +109,6 @@ export function useContributionsAndRefresh(core: ShellCoreAfterFocusAndInput) {
     browserActorForSessionV1, publishUiRefreshSectionsV1, loadedPluginsRef, registry, extensionLedgerRef, spawnedIdsRef,
     activeUtilityByWindowIdRef, activeWindowIdRef, shellStateRef, injectActiveTool, resolvedTargetViewState
   } = core;
-  //#region 🧩️ContributionsPush
   
   /**
    * 🧩️ The host→guest contributions push, owned OUTSIDE `refreshUi`'s generation race.
@@ -205,7 +205,6 @@ export function useContributionsAndRefresh(core: ShellCoreAfterFocusAndInput) {
     contributionsInstanceRef.current = session?.instanceId ?? null;
     if (previous != null && previous !== (session?.instanceId ?? null)) contributionsPublisherRef.current?.retire(previous);
   }, [session?.instanceId]);
-  //#endregion 🧩️ContributionsPush
 
   /** 🪟️ The window ids the CURRENT mode layout mounts — assigned every render from
    * `effectiveModeLayout` (declared far below, where the layout itself is resolved). A refresh pass
@@ -277,9 +276,12 @@ export function useContributionsAndRefresh(core: ShellCoreAfterFocusAndInput) {
       }
       const built = buildUiRefreshRequest(scope, fetchWindowInstances, panelTabLeaves, viewState, cache);
       const request = browserActorForSessionV1(nextSession) === null ? built : withoutUiRefreshSectionsV1(built);
-      if (request) {
-        const response = await hopTrace.timeAsync("refresh.guest", { instanceId: nextSession.instanceId, scope: scope.kind, windows: (request.windows ?? []).length, panels: (request.panels ?? []).length }, () =>
-          program.refreshUi(nextSession.instanceId, request),
+      const sectionRequest = uiRefreshSectionsOnlyV1(request);
+      const bodyRequest = sectionRequest === null ? request : withoutUiRefreshSectionsV1(request);
+      let sectionFailure: { readonly error: unknown } | null = null;
+      if (bodyRequest) {
+        const response = await hopTrace.timeAsync("refresh.guest", { instanceId: nextSession.instanceId, scope: scope.kind, windows: (bodyRequest.windows ?? []).length, panels: (bodyRequest.panels ?? []).length }, () =>
+          program.refreshUi(nextSession.instanceId, bodyRequest),
         );
         if (generation !== refreshGenerationRef.current && !(replaceBodies && generation === replaceBodiesGenerationRef.current)) return;
         const slotContext = {
@@ -311,6 +313,16 @@ export function useContributionsAndRefresh(core: ShellCoreAfterFocusAndInput) {
         if (generation !== refreshGenerationRef.current && !(replaceBodies && generation === replaceBodiesGenerationRef.current)) return;
         applyUiRefreshResponseToCache(cache, { ...response, windows: resolvedWindows, panels: resolvedPanels });
         pendingRefreshEffects = response.requestedEffects ?? [];
+      }
+      if (sectionRequest) {
+        try {
+          const sections = await hopTrace.timeAsync("refresh.sections", { instanceId: nextSession.instanceId, scope: scope.kind }, () => program.refreshUi(nextSession.instanceId, sectionRequest));
+          if (generation !== refreshGenerationRef.current && !(replaceBodies && generation === replaceBodiesGenerationRef.current)) return;
+          applyUiRefreshResponseToCache(cache, { ...sections, windows: [], panels: [] });
+          pendingRefreshEffects = [...pendingRefreshEffects, ...(sections.requestedEffects ?? [])];
+        } catch (error) {
+          sectionFailure = { error };
+        }
       }
       const closeApplySpan = hopTrace.open("refresh.apply", { instanceId: nextSession.instanceId, scope: scope.kind });
       dispatch({
@@ -359,12 +371,12 @@ export function useContributionsAndRefresh(core: ShellCoreAfterFocusAndInput) {
           }
         }
       }
+      if (sectionFailure) throw sectionFailure.error;
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [appLabelsOverlay, hostMode, injectActiveTool, publishContributions, uiLocale, uiTerminology],
   );
 
-  //#region 🤝️UiRefreshCoalescing
   
   const runUiRefreshPassRef = useRef(runUiRefreshPass);
   runUiRefreshPassRef.current = runUiRefreshPass;
@@ -421,7 +433,6 @@ export function useContributionsAndRefresh(core: ShellCoreAfterFocusAndInput) {
     [],
   );
   refreshUiRef.current = refreshUi;
-  //#endregion 🤝️UiRefreshCoalescing
   refreshDirectoryHomeRef.current = async (nextSession) => refreshUi(nextSession);
 
   useEffect(() => {

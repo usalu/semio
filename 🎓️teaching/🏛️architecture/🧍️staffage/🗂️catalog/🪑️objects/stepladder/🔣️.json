@@ -938,7 +938,7 @@
               "region": "platform",
               "material": "alu-mill",
               "kind": "poly",
-              "points": [[0.218, 0.012], [-0.032, 0.012], [-0.032, -0.044], [0.218, -0.044]],
+              "points": [[0.218, 0.053], [-0.032, 0.053], [-0.032, -0.017], [0.218, -0.017]],
               "closed": true
             },
             {
@@ -1203,7 +1203,7 @@
               "region": "platform",
               "material": "alu-mill",
               "kind": "poly",
-              "points": [[-0.145, 1.006], [0.145, 1.006], [0.145, 1.062], [-0.145, 1.062]],
+              "points": [[-0.145, 0.99], [0.145, 0.99], [0.145, 1.06], [-0.145, 1.06]],
               "closed": true
             },
             {
@@ -3627,8 +3627,8 @@
           "de": "Beim Zusammenklappen, Stützrahmen um 0,5 Grad geschlossen"
         },
         "description": {
-          "en": "In-between key of the folding clip: knuckles lifted, platform rising, all four shoes on the ground.",
-          "de": "Zwischenstellung des Klapp-Clips: Kniegelenke angehoben, Plattform steigt, alle vier Schuhe am Boden."
+          "en": "In-between key of the folding clip: knuckles lifted, the platform already lifted off its rest tube, the ladder standing on the edges of its four soles.",
+          "de": "Zwischenstellung des Klapp-Clips: Kniegelenke angehoben, die Plattform bereits vom Auflagerohr gehoben, die Leiter steht auf den Kanten ihrer vier Sohlen."
         },
         "bones": {
           "rear-frame": {
@@ -3641,7 +3641,7 @@
             "angleDeg": 8.7581
           },
           "platform": {
-            "angleDeg": -0.9841
+            "angleDeg": -3.8438
           }
         },
         "ground": "auto",
@@ -3677,7 +3677,8 @@
         },
         "loads": [],
         "root": {
-          "angleDeg": -0.2039
+          "angleDeg": -0.2066,
+          "y": 0.00016
         },
         "key": true
       },
@@ -3688,8 +3689,8 @@
           "de": "Beim Zusammenklappen, Stützrahmen um 2,0 Grad geschlossen"
         },
         "description": {
-          "en": "In-between key of the folding clip: knuckles lifted, platform rising, all four shoes on the ground.",
-          "de": "Zwischenstellung des Klapp-Clips: Kniegelenke angehoben, Plattform steigt, alle vier Schuhe am Boden."
+          "en": "In-between key of the folding clip: knuckles lifted, the platform already lifted off its rest tube, the ladder standing on the edges of its four soles.",
+          "de": "Zwischenstellung des Klapp-Clips: Kniegelenke angehoben, die Plattform bereits vom Auflagerohr gehoben, die Leiter steht auf den Kanten ihrer vier Sohlen."
         },
         "bones": {
           "rear-frame": {
@@ -3702,7 +3703,7 @@
             "angleDeg": 16.9932
           },
           "platform": {
-            "angleDeg": -3.9365
+            "angleDeg": -14.3089
           }
         },
         "ground": "auto",
@@ -3738,7 +3739,8 @@
         },
         "loads": [],
         "root": {
-          "angleDeg": -0.8086
+          "angleDeg": -0.8202,
+          "y": 0.00064
         },
         "key": true
       },
@@ -3749,8 +3751,8 @@
           "de": "Beim Zusammenklappen, Stützrahmen um 5,0 Grad geschlossen"
         },
         "description": {
-          "en": "In-between key of the folding clip: knuckles lifted, platform rising, all four shoes on the ground.",
-          "de": "Zwischenstellung des Klapp-Clips: Kniegelenke angehoben, Plattform steigt, alle vier Schuhe am Boden."
+          "en": "In-between key of the folding clip: knuckles lifted, the platform already lifted off its rest tube, the ladder standing on the edges of its four soles.",
+          "de": "Zwischenstellung des Klapp-Clips: Kniegelenke angehoben, die Plattform bereits vom Auflagerohr gehoben, die Leiter steht auf den Kanten ihrer vier Sohlen."
         },
         "bones": {
           "rear-frame": {
@@ -3763,7 +3765,7 @@
             "angleDeg": 25.9795
           },
           "platform": {
-            "angleDeg": -9.8413
+            "angleDeg": -30.9449
           }
         },
         "ground": "auto",
@@ -3799,7 +3801,8 @@
         },
         "loads": [],
         "root": {
-          "angleDeg": -1.9803
+          "angleDeg": -2.0155,
+          "y": 0.00158
         },
         "key": true
       },
@@ -3810,8 +3813,8 @@
           "de": "Beim Zusammenklappen, Stützrahmen um 10,0 Grad geschlossen"
         },
         "description": {
-          "en": "In-between key of the folding clip: knuckles lifted, platform rising, all four shoes on the ground.",
-          "de": "Zwischenstellung des Klapp-Clips: Kniegelenke angehoben, Plattform steigt, alle vier Schuhe am Boden."
+          "en": "In-between key of the folding clip: knuckles lifted, the platform already lifted off its rest tube, the ladder standing on the edges of its four soles.",
+          "de": "Zwischenstellung des Klapp-Clips: Kniegelenke angehoben, die Plattform bereits vom Auflagerohr gehoben, die Leiter steht auf den Kanten ihrer vier Sohlen."
         },
         "bones": {
           "rear-frame": {
@@ -3824,7 +3827,7 @@
             "angleDeg": 35.3951
           },
           "platform": {
-            "angleDeg": -19.6825
+            "angleDeg": -48.5444
           }
         },
         "ground": "auto",
@@ -3860,7 +3863,8 @@
         },
         "loads": [],
         "root": {
-          "angleDeg": -3.7853
+          "angleDeg": -3.885,
+          "y": 0.00305
         },
         "key": true
       },
@@ -3871,8 +3875,8 @@
           "de": "Beim Zusammenklappen, Stützrahmen um 15,0 Grad geschlossen"
         },
         "description": {
-          "en": "In-between key of the folding clip: knuckles lifted, platform rising, all four shoes on the ground.",
-          "de": "Zwischenstellung des Klapp-Clips: Kniegelenke angehoben, Plattform steigt, alle vier Schuhe am Boden."
+          "en": "In-between key of the folding clip: knuckles lifted, the platform already lifted off its rest tube, the ladder standing on the edges of its four soles.",
+          "de": "Zwischenstellung des Klapp-Clips: Kniegelenke angehoben, die Plattform bereits vom Auflagerohr gehoben, die Leiter steht auf den Kanten ihrer vier Sohlen."
         },
         "bones": {
           "rear-frame": {
@@ -3885,7 +3889,7 @@
             "angleDeg": 42.0262
           },
           "platform": {
-            "angleDeg": -29.5238
+            "angleDeg": -57.3325
           }
         },
         "ground": "auto",
@@ -3921,7 +3925,8 @@
         },
         "loads": [],
         "root": {
-          "angleDeg": -5.3041
+          "angleDeg": -5.5272,
+          "y": 0.00433
         },
         "key": true
       },
@@ -3932,8 +3937,8 @@
           "de": "Beim Zusammenklappen, Stützrahmen um 20,0 Grad geschlossen"
         },
         "description": {
-          "en": "In-between key of the folding clip: knuckles lifted, platform rising, all four shoes on the ground.",
-          "de": "Zwischenstellung des Klapp-Clips: Kniegelenke angehoben, Plattform steigt, alle vier Schuhe am Boden."
+          "en": "In-between key of the folding clip: knuckles lifted, the platform already lifted off its rest tube, the ladder standing on the edges of its four soles.",
+          "de": "Zwischenstellung des Klapp-Clips: Kniegelenke angehoben, die Plattform bereits vom Auflagerohr gehoben, die Leiter steht auf den Kanten ihrer vier Sohlen."
         },
         "bones": {
           "rear-frame": {
@@ -3946,7 +3951,7 @@
             "angleDeg": 46.9432
           },
           "platform": {
-            "angleDeg": -39.3651
+            "angleDeg": -60.8986
           }
         },
         "ground": "auto",
@@ -3982,7 +3987,8 @@
         },
         "loads": [],
         "root": {
-          "angleDeg": -6.3078
+          "angleDeg": -6.7872,
+          "y": 0.00532
         },
         "key": true
       },
@@ -3993,8 +3999,8 @@
           "de": "Beim Zusammenklappen, Stützrahmen um 25,0 Grad geschlossen"
         },
         "description": {
-          "en": "In-between key of the folding clip: knuckles lifted, platform rising, all four shoes on the ground.",
-          "de": "Zwischenstellung des Klapp-Clips: Kniegelenke angehoben, Plattform steigt, alle vier Schuhe am Boden."
+          "en": "In-between key of the folding clip: knuckles lifted, the platform already lifted off its rest tube, the ladder standing on the edges of its four soles.",
+          "de": "Zwischenstellung des Klapp-Clips: Kniegelenke angehoben, die Plattform bereits vom Auflagerohr gehoben, die Leiter steht auf den Kanten ihrer vier Sohlen."
         },
         "bones": {
           "rear-frame": {
@@ -4007,7 +4013,7 @@
             "angleDeg": 50.0838
           },
           "platform": {
-            "angleDeg": -49.2063
+            "angleDeg": -61.8876
           }
         },
         "ground": "auto",
@@ -4043,7 +4049,8 @@
         },
         "loads": [],
         "root": {
-          "angleDeg": -6.2388
+          "angleDeg": -7.329,
+          "y": 0.00574
         },
         "key": true
       },
@@ -4054,8 +4061,8 @@
           "de": "Zusammengeklappt"
         },
         "description": {
-          "en": "Closed for carrying and storing: the rear frame lies 7 degrees off the stiles behind the treads, the spreader knuckles stand up, the platform is turned up; it still stands on its four shoes, 0.18 m apart.",
-          "de": "Zum Tragen und Lagern geschlossen: der Stützrahmen liegt 7 Grad neben den Holmen hinter den Stufen, die Kniegelenke der Spreizen stehen nach oben, die Plattform ist hochgeklappt; sie steht noch auf ihren vier Schuhen, 0,18 m auseinander."
+          "en": "Closed for carrying and storing: the rear frame lies 7 degrees off the stiles behind the treads, the spreader knuckles stand up, the platform is turned up; it stands on the edges of its four rubber soles, 0.18 m apart.",
+          "de": "Zum Tragen und Lagern geschlossen: der Stützrahmen liegt 7 Grad neben den Holmen hinter den Stufen, die Kniegelenke der Spreizen stehen nach oben, die Plattform ist hochgeklappt; sie steht auf den Kanten ihrer vier Gummisohlen, 0,18 m auseinander."
         },
         "bones": {
           "rear-frame": {
@@ -4104,7 +4111,8 @@
         },
         "loads": [],
         "root": {
-          "angleDeg": -1.0363
+          "angleDeg": -5.3073,
+          "y": 0.00416
         }
       }
     ],
@@ -4428,8 +4436,8 @@
           "de": "Zusammenklappen"
         },
         "description": {
-          "en": "The spreader knuckles are lifted, the rear frame swings in on the head hinge and the platform turns up; 4 s, then the ladder stands closed.",
-          "de": "Die Kniegelenke der Spreizen werden angehoben, der Stützrahmen schwenkt am Kopfgelenk ein und die Plattform klappt hoch; 4 s, danach steht die Leiter geschlossen."
+          "en": "The platform is lifted off its rest tube and the spreader knuckles are lifted, the rear frame swings in on the head hinge; 4 s, then the ladder stands closed on its sole edges.",
+          "de": "Die Plattform wird vom Auflagerohr gehoben, die Kniegelenke der Spreizen werden angehoben, der Stützrahmen schwenkt am Kopfgelenk ein; 4 s, danach steht die Leiter geschlossen auf ihren Sohlenkanten."
         },
         "durationS": 5,
         "fps": 15,
@@ -6369,6 +6377,30 @@
             "part": "joint"
           },
           {
+            "id": "st-shoe-front-l",
+            "of": "shoe-front-l",
+            "member": "front-frame",
+            "part": "member"
+          },
+          {
+            "id": "st-shoe-front-r",
+            "of": "shoe-front-r",
+            "member": "front-frame",
+            "part": "member"
+          },
+          {
+            "id": "st-shoe-rear-l",
+            "of": "shoe-rear-l",
+            "member": "rear-frame",
+            "part": "member"
+          },
+          {
+            "id": "st-shoe-rear-r",
+            "of": "shoe-rear-r",
+            "member": "rear-frame",
+            "part": "member"
+          },
+          {
             "id": "support-foot-front-left",
             "kind": "box",
             "bone": "front-frame",
@@ -6505,6 +6537,10 @@
           {
             "en": "The ladder folds: rear frame on the head hinge (0 to 31.5 degrees), each spreader as two links on their own bones meeting in the knuckle, the platform on its axle bone; pose `folded` and clip `fold-up` use them.",
             "de": "Die Leiter klappt: Stützrahmen am Kopfgelenk (0 bis 31,5 Grad), jede Spreize als zwei Glieder an eigenen Knochen, die sich im Kniegelenk treffen, die Plattform an ihrem Achsknochen; Pose `folded` und Clip `fold-up` nutzen sie."
+          },
+          {
+            "en": "Structure: the four rubber shoes are members of their frames, so the load path runs stile or rail end, shoe, contact pad, ground without a gap.",
+            "de": "Tragwerk: Die vier Gummischuhe sind Stäbe ihrer Rahmen, der Lastpfad läuft also lückenlos Holmende, Schuh, Aufstandsfläche, Boden."
           }
         ]
       },
@@ -7440,6 +7476,30 @@
             "part": "member"
           },
           {
+            "id": "st-shoe-front-l",
+            "of": "shoe-front-l",
+            "member": "front-frame",
+            "part": "member"
+          },
+          {
+            "id": "st-shoe-front-r",
+            "of": "shoe-front-r",
+            "member": "front-frame",
+            "part": "member"
+          },
+          {
+            "id": "st-shoe-rear-l",
+            "of": "shoe-rear-l",
+            "member": "rear-frame",
+            "part": "member"
+          },
+          {
+            "id": "st-shoe-rear-r",
+            "of": "shoe-rear-r",
+            "member": "rear-frame",
+            "part": "member"
+          },
+          {
             "id": "support-foot-front-left",
             "kind": "box",
             "bone": "front-frame",
@@ -7600,6 +7660,10 @@
           {
             "en": "The ladder folds: rear frame on the head hinge (0 to 31.5 degrees), each spreader as two links on their own bones meeting in the knuckle, the platform on its axle bone; pose `folded` and clip `fold-up` use them.",
             "de": "Die Leiter klappt: Stützrahmen am Kopfgelenk (0 bis 31,5 Grad), jede Spreize als zwei Glieder an eigenen Knochen, die sich im Kniegelenk treffen, die Plattform an ihrem Achsknochen; Pose `folded` und Clip `fold-up` nutzen sie."
+          },
+          {
+            "en": "Structure: the four rubber shoes are members of their frames, so the load path runs stile or rail end, shoe, contact pad, ground without a gap.",
+            "de": "Tragwerk: Die vier Gummischuhe sind Stäbe ihrer Rahmen, der Lastpfad läuft also lückenlos Holmende, Schuh, Aufstandsfläche, Boden."
           }
         ]
       },
@@ -7811,7 +7875,7 @@
             "material": "alu-mill",
             "role": "body",
             "tone": 0.6,
-            "profile": [[0.218, 0.012], [-0.032, 0.012], [-0.032, -0.044], [0.218, -0.044]],
+            "profile": [[0.218, 0.053], [-0.032, 0.053], [-0.032, -0.017], [0.218, -0.017]],
             "plane": "xy",
             "from": -0.145,
             "to": 0.145
@@ -8221,6 +8285,30 @@
             "part": "member"
           },
           {
+            "id": "st-shoe-front-l",
+            "of": "shoe-front-l",
+            "member": "front-frame",
+            "part": "member"
+          },
+          {
+            "id": "st-shoe-front-r",
+            "of": "shoe-front-r",
+            "member": "front-frame",
+            "part": "member"
+          },
+          {
+            "id": "st-shoe-rear-l",
+            "of": "shoe-rear-l",
+            "member": "rear-frame",
+            "part": "member"
+          },
+          {
+            "id": "st-shoe-rear-r",
+            "of": "shoe-rear-r",
+            "member": "rear-frame",
+            "part": "member"
+          },
+          {
             "id": "support-foot-front-left",
             "kind": "box",
             "bone": "front-frame",
@@ -8379,12 +8467,16 @@
             "de": "Tragwerk: die schlanken Holme, Hinterholme und Bänder sind selbst die Stäbe, dazu Stufen, Plattform und Traverse; ein Knoten je Gelenk, je Schuh eine Kontaktplatte und die Halbmassen auf Holmen und Hinterholmen."
           },
           {
-            "en": "The platform is drawn and modelled 56 mm deep (deck with its side cheeks) so that it prints over the whole band.",
-            "de": "Die Plattform ist 56 mm stark gezeichnet und modelliert (Deck mit Seitenwangen), damit sie im ganzen Band druckt."
-          },
-          {
             "en": "The ladder folds: rear frame on the head hinge (0 to 31.5 degrees), each spreader as two links on their own bones meeting in the knuckle, the platform on its axle bone; pose `folded` and clip `fold-up` use them.",
             "de": "Die Leiter klappt: Stützrahmen am Kopfgelenk (0 bis 31,5 Grad), jede Spreize als zwei Glieder an eigenen Knochen, die sich im Kniegelenk treffen, die Plattform an ihrem Achsknochen; Pose `folded` und Clip `fold-up` nutzen sie."
+          },
+          {
+            "en": "Structure: the four rubber shoes are members of their frames, so the load path runs stile or rail end, shoe, contact pad, ground without a gap.",
+            "de": "Tragwerk: Die vier Gummischuhe sind Stäbe ihrer Rahmen, der Lastpfad läuft also lückenlos Holmende, Schuh, Aufstandsfläche, Boden."
+          },
+          {
+            "en": "The platform is drawn and modelled 70 mm deep (0.2 mm on paper at 1:350, the end of the band) downwards from its true standing surface at 1.06 m, so that it prints in every folding state too.",
+            "de": "Die Plattform ist von ihrer wahren Standfläche auf 1,06 m nach unten 70 mm stark gezeichnet und modelliert (0,2 mm auf dem Papier bei 1:350, dem Bandende), damit sie auch in jeder Klappstellung druckt."
           }
         ]
       },
@@ -8917,6 +9009,30 @@
             "part": "member"
           },
           {
+            "id": "st-shoe-front-l",
+            "of": "shoe-front-l",
+            "member": "front-frame",
+            "part": "member"
+          },
+          {
+            "id": "st-shoe-front-r",
+            "of": "shoe-front-r",
+            "member": "front-frame",
+            "part": "member"
+          },
+          {
+            "id": "st-shoe-rear-l",
+            "of": "shoe-rear-l",
+            "member": "rear-frame",
+            "part": "member"
+          },
+          {
+            "id": "st-shoe-rear-r",
+            "of": "shoe-rear-r",
+            "member": "rear-frame",
+            "part": "member"
+          },
+          {
             "id": "support-foot-front-left",
             "kind": "box",
             "bone": "front-frame",
@@ -9077,6 +9193,10 @@
           {
             "en": "The ladder folds: rear frame on the head hinge (0 to 31.5 degrees), each spreader as two links on their own bones meeting in the knuckle, the platform on its axle bone; pose `folded` and clip `fold-up` use them.",
             "de": "Die Leiter klappt: Stützrahmen am Kopfgelenk (0 bis 31,5 Grad), jede Spreize als zwei Glieder an eigenen Knochen, die sich im Kniegelenk treffen, die Plattform an ihrem Achsknochen; Pose `folded` und Clip `fold-up` nutzen sie."
+          },
+          {
+            "en": "Structure: the four rubber shoes are members of their frames, so the load path runs stile or rail end, shoe, contact pad, ground without a gap.",
+            "de": "Tragwerk: Die vier Gummischuhe sind Stäbe ihrer Rahmen, der Lastpfad läuft also lückenlos Holmende, Schuh, Aufstandsfläche, Boden."
           }
         ]
       }

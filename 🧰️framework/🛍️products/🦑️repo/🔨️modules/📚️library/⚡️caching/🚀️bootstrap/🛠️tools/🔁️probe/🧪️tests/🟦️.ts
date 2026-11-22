@@ -1,7 +1,7 @@
 import {test,expect} from "bun:test";
 import {createRequire} from "node:module";
 import {readFileSync} from "node:fs";
-import {join} from "node:path";
+import {isAbsolute,join} from "node:path";
 import Ajv from "ajv";
 import {validateJsonSchemaSubset} from "../../../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import probeSchema from "../../../../../📦️packages/🟦️typescript/⚡️caching/🔁️verification/🧬️schema/🔣️json/🟦️.ts";
@@ -33,7 +33,8 @@ test("the Nx probe invocation pins the sandboxed runtime and strips ambient task
  expect(invocation.command).toBe(row.command);
  expect(invocation.arguments.slice(1)).toEqual(row.arguments);
  expect(invocation.arguments[0]).toBe(createRequire(join(root,".nx/installation/package.json")).resolve("nx/bin/nx.js"));
- expect(invocation.environment).toEqual(row.expectedEnvironment);
+ const {SEMIO_NX_AUTHORIZER_ROOT:authorizerRoot,...environment}=invocation.environment as Record<string,string|undefined>;
+ expect(environment).toEqual(row.expectedEnvironment);expect(authorizerRoot===undefined||isAbsolute(authorizerRoot)).toBe(true);
  for(const key of row.absentEnvironment)expect(key in invocation.environment,key).toBe(false);
  expect(tool.version()).toBe(JSON.parse(readFileSync(createRequire(join(root,".nx/installation/package.json")).resolve("nx/package.json"),"utf8")).version);
 });

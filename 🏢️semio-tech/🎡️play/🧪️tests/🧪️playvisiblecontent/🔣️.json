@@ -1,0 +1,17 @@
+{
+  "fallback": [
+    { "url": "https://play.example/modules/a.wasm", "type": "text/html; charset=utf-8", "status": 200, "release": true, "answer": "/modules/a.wasm → 200 text/html; charset=utf-8" },
+    { "url": "https://play.example/modules/a.wasm", "type": "text/html", "status": 200, "release": false, "answer": null },
+    { "url": "https://play.example/chunk.js", "type": "TEXT/HTML", "status": 200, "release": true, "answer": "/chunk.js → 200 TEXT/HTML" },
+    { "url": "https://play.example/data.json", "type": "application/json", "status": 200, "release": true, "answer": null },
+    { "url": "https://play.example/a.png", "type": "text/html", "status": 200, "release": false, "answer": "/a.png → 200 text/html" },
+    { "url": "https://play.example/a%20b.svg", "type": "text/html", "status": 200, "release": true, "answer": "/a%20b.svg → 200 text/html" },
+    { "url": "https://play.example/", "type": "text/html", "status": 200, "release": true, "answer": null },
+    { "url": "data:text/html,x.js", "type": "text/html", "status": 200, "release": true, "answer": null }
+  ],
+  "canvases": [
+    { "name": "flat", "width": 16, "height": 16, "pixels": "flat", "colors": 1 },
+    { "name": "two halves", "width": 16, "height": 16, "pixels": "stripes", "colors": 2 },
+    { "name": "border only", "width": 16, "height": 16, "pixels": "border", "colors": 1 }
+  ]
+}

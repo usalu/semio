@@ -32,7 +32,7 @@ type Operation="serve"|"status"|"gc"|"rotate"|"evidence";
 
 const LANGUAGES=texts.languages as readonly RemoteCacheLanguageV1[],
  OPTIONS:Readonly<Record<Operation,Readonly<{valued:readonly string[];plain:readonly string[]}>>>={
-  serve:{valued:["--port","--host","--directory","--max-bytes","--grace-seconds","--tls-certificate","--tls-key","--lang","--mirror-directory"],plain:["--read-only","--no-mirror"]},
+  serve:{valued:["--port","--host","--directory","--max-bytes","--grace-seconds","--tls-certificate","--tls-key","--lang","--mirror-directory","--staleness"],plain:["--read-only","--no-mirror"]},
   status:{valued:["--directory","--lang"],plain:[]},
   gc:{valued:["--directory","--max-bytes","--grace-seconds","--current-keys","--lang"],plain:["--dry-run","--json"]},
   rotate:{valued:["--lang"],plain:[]},
@@ -126,7 +126,10 @@ export async function serveRemoteCacheV1(args:readonly string[],context:RemoteCa
  const view=grouped?await fleetGroupViewV1(context.root,context.environment):undefined,fleet=grouped&&network!==undefined?{storeRoot:machine!.storeRoot!,group:machine!.group,...(view?.enforceNetwork===true?{networks:[network]}:{}),peerStores:view?.peerStores??{},root:context.root,inGroup:view?.inGroup??"sealed"}:undefined;
  const tokens=bare;
  if(!loopback&&tokens.read===undefined&&tokens.write===undefined&&fleet===undefined)throw Error(both("error.token"));
- await context.progress("remote-cache:open");say("serve.open",{directory});
+ const modeAsked=flags["--staleness"]??policy.staleness.mode;
+ if(modeAsked!=="off"&&modeAsked!=="dry-run"&&modeAsked!=="enforce")throw Error(both("error.option",{operation:"serve",option:`--staleness=${modeAsked}`}));
+ const chosen=variable(names.toolchains)?.split(",").map(row=>row.trim()).filter(row=>/^[0-9a-f]{64}$/u.test(row)),toolchains=chosen===undefined||chosen.length===0?undefined:new Set(chosen);
+ await context.progress("remote-cache:open");say("serve.open",{directory});if(modeAsked!=="off")say("serve.staleness",{mode:modeAsked,workspace:context.root});
  const{createCasStoreV1,casRootV1}=await import("../../🗄️cas/🗃️store/🟦️.ts"),hostStore=createCasStoreV1({root:casRootV1(context.environment)});
  const server=await startRemoteCacheServerV1({
   hostStore,directory,host,...(fleet===undefined?{}:{fleet}),
@@ -142,6 +145,7 @@ export async function serveRemoteCacheV1(args:readonly string[],context:RemoteCa
   validation:policy.actionResults as RemoteCacheValidationV1,
   maximumActionResultBytes:policy.maximumActionResultBytes,
   maintenanceSeconds:policy.maintenanceSeconds,
+  staleness:{mode:modeAsked,workspace:context.root,recheckSeconds:policy.staleness.recheckSeconds,manifestNames:policy.staleness.manifestNames,examples:policy.staleness.examples,...toolchains===undefined?{}:{toolchains:()=>toolchains}},
   signal:context.signal,
   onEvent:event=>{
    if(event.stage==="listening"){
@@ -267,7 +271,7 @@ export async function collectRemoteCacheV1(args:readonly string[],context:Remote
  }
  if(report.locked){talk("gc.locked",{lock:report.lock});return {exitCode:1};}
  const value=report.value;
- talk(dryRun?"gc.summary.plan":"gc.summary.apply",{entries:value.removed.entries,total:value.scanned.entries,bytes:formatRemoteCacheBytesV1(value.removed.bytes),superseded:value.removed.superseded,age:value.removed.age,budget:value.removed.budget,dangling:value.removed.dangling,remaining:value.remaining.entries,left:formatRemoteCacheBytesV1(value.remaining.bytes),blobs:value.reclaimed.entries,freed:formatRemoteCacheBytesV1(value.reclaimed.bytes)});
+ talk(dryRun?"gc.summary.plan":"gc.summary.apply",{entries:value.removed.entries,total:value.scanned.entries,bytes:formatRemoteCacheBytesV1(value.removed.bytes),stale:value.removed.stale,age:value.removed.age,budget:value.removed.budget,dangling:value.removed.dangling,remaining:value.remaining.entries,left:formatRemoteCacheBytesV1(value.remaining.bytes),blobs:value.reclaimed.entries,freed:formatRemoteCacheBytesV1(value.reclaimed.bytes)});
  if(value.deferred)talk("gc.deferred");
  const document={directory,...value};if(json)requireRemoteCacheShapeV1("GcResult",document,"Closed remote cache gc result required");
  return {exitCode:0,...(json?{result:document}:{})};

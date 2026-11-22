@@ -37,7 +37,7 @@ impl Ui {
         let viewport_rect = viewport;
         let theme = self.theme;
         let Some(surface) = self.windows.token(window_id) else { return UiFrameStep::Missing };
-        let presentation = self.presentation();
+        let presentation = semio_ui_wgpu_paint::RetainedPaintPresentation { window: semio_ui_wgpu_paint::media_window_handle(window_id), ..self.presentation() };
         let Some(window) = self.windows.get_mut(window_id).filter(|window| window.closing.is_none()) else { return UiFrameStep::Missing };
         let Some(root) = window.tree.root else { return UiFrameStep::Missing };
         let reversed = window.router.flow().block == ui_contract::FlowBlock::Up;

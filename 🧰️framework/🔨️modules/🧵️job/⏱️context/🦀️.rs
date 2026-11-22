@@ -81,7 +81,7 @@ pub struct OriginalCallerSource<'source>{pub ledger:&'source Arc<JobPayloadOpera
 pub use owned_source::{OriginalReturnBirthState,OriginalCallerCloseReturn,source_loan_transfer_demand,OriginalCallerSourceAdmission,OriginalSourceCloseContext,OriginalSourceCloseProducer,OriginalCallerSourceParent,OriginalCallerSourceLoan,OriginalCallerChildSource,OriginalChildTurnReturn,ORIGINAL_NATIVE_SOURCE_CAPACITY,OriginalNativeLease,OriginalNativeRetirement,OriginalNativeBorrow,OriginalNativeBorrowed,OriginalNativeRecipientIdentity,OriginalNativeRecipientClosed,OriginalNativeRetiredWitness};
 #[path="🛬️owned/🦀️.rs"]
 mod original_job_decoder;
-pub use original_job_decoder::{OriginalJobDecodeOwner,OriginalCreditedOutput,original_receiving_scope_headroom,unquoted_receiving_work};
+pub use original_job_decoder::{OriginalJobDecodeOwner,OriginalCreditedOutput,original_receiving_scope_headroom,original_receiving_service_scope_headroom,unquoted_receiving_work};
 //#endregion 📄️RetainedPayload
 
 #[path="📦️return/🪶️weak/🦀️.rs"]
@@ -111,6 +111,7 @@ pub struct StepContext<'a> {
     return_budget:Option<original_job_continuation::OriginalReturnBudgetReference<'a>>,
     reserved_return_progress:RetainedCloneProgress,
     reserved_return_work:u64,
+    birth_work:u128,
     reserved_observer:Option<(&'a mut RetainedCloneProgress,&'a mut u128)>,
     native_weak_parent:Option<original_native_weak_return::OriginalNativeWeakParent>,
     source_epoch: Option<u64>,
@@ -180,7 +181,12 @@ impl JobPayloadStep for StepContext<'_> {
 
 impl<'a> StepContext<'a> {
     pub fn admit_original_core_wire_delivery(&mut self)->Result<bool,OriginalTurnFailure>{original_job_continuation::source::admit_original_core_wire_delivery(self)}
+    /// 🗂️ Requests the return table's birth; true iff this very call admitted a table, which the resident birth service now does inside the turn, so it answers false unless the table is born by the call itself.
     pub fn admit_original_return_table(&mut self)->Result<bool,OriginalTurnFailure>{original_job_continuation::source::admit_original_return_table(self)}
+    /// 🌱️ Requests the return table's birth and answers whether the table is born and the Source origin current for this turn, the explicit predicate a caller waits on.
+    pub fn admit_original_return_origin(&mut self)->Result<bool,OriginalTurnFailure>{original_job_continuation::source::admit_original_return_table(self)?;Ok(self.return_budget.as_ref().is_some_and(|budget|budget.get().table().is_some())&&self.original_return_origin_current()?)}
+    /// 🔭️ Whether the Source origin is current for this turn.
+    pub fn original_return_origin_current(&mut self)->Result<bool,OriginalTurnFailure>{let parent=self.original_source_parent()?;parent.admit_return_origin(self)}
     pub fn admit_original_escrow_publisher(&mut self)->Result<bool,OriginalTurnFailure>{original_job_continuation::source::admit_original_escrow_publisher(self)}
     pub fn publish_original_escrow(&mut self,header:usize,expose:impl for<'loan> FnOnce(&'loan [u8])->Result<(),OriginalTurnFailure>)->Result<bool,OriginalTurnFailure>{original_job_continuation::source::publish_original_escrow(self,header,expose)}
     pub fn native_receiving_identity(&self)->Option<(semio_framework_value_native_owned::NativeAllocationIdentity,u64)>{self.original_decoder.as_deref().and_then(|owner|owner.receiving_identity())}
@@ -190,10 +196,11 @@ impl<'a> StepContext<'a> {
         self.receiving.open(self.retained_grant()).map_err(OriginalTurnFailure::from)?;
         let mut operation=Some(operation);self.original_receiving_outcome(out,None,semio_framework_job_receiving::OriginalReceivingOperation::Receive(&mut |native,grant|operation.take().unwrap()(native,grant)))
     }
-    /// Lends the decoder, physical grant and work actually available to its receiving body.
-    pub fn with_native_receiving_work(&mut self,out:&mut Option<OriginalNativeReceivingOutcome>,operation:impl FnOnce(&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>,RetainedCloneGrant,u64)->Result<(),ValueError>)->Result<bool,OriginalTurnFailure>{
+    /// 🤝️ Lends the decoder, physical grant and work actually available to its receiving body; `floor` is the next indivisible action, which the scope's share is raised to cover (never above the whole turn).
+    pub fn with_native_receiving_work(&mut self,out:&mut Option<OriginalNativeReceivingOutcome>,floor:semio_framework_value_retained_clone::RetirementDemand,operation:impl FnOnce(&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>,RetainedCloneGrant,u64)->Result<(),ValueError>)->Result<bool,OriginalTurnFailure>{
+        if self.receiving_floor_exceeds_turn(floor){return Ok(false)}
         self.receiving.open(self.retained_grant()).map_err(OriginalTurnFailure::from)?;
-        let mut operation=Some(operation);self.original_receiving_outcome(out,None,semio_framework_job_receiving::OriginalReceivingOperation::ReceiveWithWork(&mut |native,grant,units|operation.take().unwrap()(native,grant,units)))
+        let mut operation=Some(operation);let quote=self.covering_receiving_quote(floor);self.original_receiving_outcome(out,quote,semio_framework_job_receiving::OriginalReceivingOperation::ReceiveWithWork(&mut |native,grant,units|operation.take().unwrap()(native,grant,units)))
     }
     /// 🎯️ Like [`Self::with_native_receiving`], but its receiving scope claims exactly the quoted grant and work plus its own control, so the held scope credit never takes the rest of the turn or Source stock.
     pub fn with_native_receiving_quoted(&mut self,out:&mut Option<OriginalNativeReceivingOutcome>,quote:(RetainedCloneGrant,u64),operation:impl FnOnce(&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>,RetainedCloneGrant)->Result<(),ValueError>)->Result<bool,OriginalTurnFailure>{
@@ -231,7 +238,7 @@ impl<'a> StepContext<'a> {
         assert!(retained_progress.fits(budget.retained),"original job recipient exceeds its incoming retained grant");
         let turn_retained_start=*retained_progress;
         StepContext { original_decoder:None,receiving:Default::default(),retained:budget.retained, retained_progress, operation, generation, fuel_remaining: budget.fuel,original_total_fuel:budget.fuel,issued_ceiling:(budget.retained,budget.fuel),original_total_work_start:0,original_absolute_deadline:budget.deadline_us,original_total_retained:budget.retained,
-            work_units_spent:0, deadline_us: budget.deadline_us, now_us, clock: std::cell::Cell::new(clock), cancel, stage: "initial", preview_sequence, payload_ledger, source_parent:None,source_turn:None,return_budget:None,reserved_return_progress:Default::default(),reserved_return_work:0,reserved_observer:None,native_weak_parent:None,source_epoch:None,original_retirement:false,original_clock_binding:None,original_work_recipient:None,original_total_retained_start:turn_retained_start,original_total_retained_bound:false,retained_policy:None,original_physical_recipient:None,replacement_current:None, payload_page_granted: false }
+            work_units_spent:0, deadline_us: budget.deadline_us, now_us, clock: std::cell::Cell::new(clock), cancel, stage: "initial", preview_sequence, payload_ledger, source_parent:None,source_turn:None,return_budget:None,reserved_return_progress:Default::default(),reserved_return_work:0,birth_work:0,reserved_observer:None,native_weak_parent:None,source_epoch:None,original_retirement:false,original_clock_binding:None,original_work_recipient:None,original_total_retained_start:turn_retained_start,original_total_retained_bound:false,retained_policy:None,original_physical_recipient:None,replacement_current:None, payload_page_granted: false }
     }
 
     pub fn with_payload_authority(operation:OperationId,generation:Generation,budget:StepBudget,cancel:&'a CancelToken,now_us:fn()->Option<u64>,preview_sequence:&'a mut u64,retained_progress:&'a mut RetainedCloneProgress,authority:&'a JobPayloadAuthority)->Result<Self,ValueError>{
@@ -397,7 +404,7 @@ impl<'a> StepContext<'a> {
 
     pub fn original_absolute_deadline_us(&self)->u64{self.original_absolute_deadline}
 
-    pub fn original_total_retained_grant(&self)->RetainedCloneGrant{let current=retained_delta(*self.retained_progress,self.reserved_return_progress);let remaining=retained_min(retained_remaining(self.original_total_retained,retained_delta(current,self.original_total_retained_start)),retained_remaining(self.issued_ceiling.0,current));self.return_budget.as_ref().filter(|budget|budget.get().is_bound()).map_or(remaining,|budget|retained_min(remaining,budget.get().remaining().map_or(RetainedCloneGrant::default(),|remaining|remaining.0)))}
+    pub fn original_total_retained_grant(&self)->RetainedCloneGrant{let current=retained_delta(*self.retained_progress,self.reserved_return_progress);let remaining=retained_remaining(self.original_total_retained,retained_delta(current,self.original_total_retained_start));self.return_budget.as_ref().filter(|budget|budget.get().is_bound()).map_or_else(||retained_min(remaining,retained_remaining(self.issued_ceiling.0,current)),|budget|retained_min(remaining,budget.get().remaining().map_or(RetainedCloneGrant::default(),|remaining|remaining.0)))}
     /// 🏛️ The Source's own remaining total, independent of this turn's issued ceiling, so a narrow turn is never mistaken for a permanent misfit.
     pub fn original_source_total_grant(&self)->RetainedCloneGrant{
         let current=retained_delta(*self.retained_progress,self.reserved_return_progress);
@@ -459,7 +466,7 @@ impl<'a> StepContext<'a> {
         receive_original_retained_work(self,semio_framework_value_retained_clone::RetainedWorkOutcome{result,work:turn.work})?;Ok(output.is_some())
     }
 
-    /// first one).
+    /// 🥇️ first one).
     pub fn stage(&self) -> &'static str {
         self.stage
     }
@@ -503,7 +510,9 @@ impl<'a> StepContext<'a> {
     }
     pub fn bind_original_physical_recipient(&mut self,recipient:&'a mut RetainedCloneProgress)->Result<(),ValueError>{self.original_source_parent()?;if self.original_physical_recipient.is_some(){return Err(ValueError::invariant("original physical delta already has its external recipient"))}self.original_physical_recipient=Some((recipient,*self.retained_progress));Ok(())}
     pub fn bind_original_work_recipient(&mut self,recipient:&'a mut u128)->Result<(),ValueError>{self.original_source_parent()?;if self.original_clock_binding.is_none()||self.original_work_recipient.is_some(){return Err(ValueError::invariant("original work return requires its one source-bound clock and external recipient"))}self.original_work_recipient=Some(recipient);Ok(())}
-    pub fn original_work_units_spent(&self)->u128{self.work_units_spent}
+    pub fn original_work_units_spent(&self)->u128{self.work_units_spent.saturating_sub(self.birth_work)}
+    /// 🌱️ Takes the resident birth service's own funded work and retention since the given baselines out of the business view: it is framework overhead, never part of the call's `original_work_units_spent` nor of its retained start.
+    pub fn exclude_original_birth(&mut self,work_before:u128,retained_before:RetainedCloneProgress){let work=self.work_units_spent.saturating_sub(work_before.saturating_add(self.birth_work));self.birth_work=self.birth_work.saturating_add(work);if let Ok(spent)=retained_delta(*self.retained_progress,retained_before).checked_add(self.original_total_retained_start){self.original_total_retained_start=spent}}
     pub fn reserved_return_progress(&self)->RetainedCloneProgress{self.reserved_return_progress}
     /// 🏠️ Marks this Source's return budget as served by a host that never hands published headers back, so settled return rows are acknowledged locally.
     pub fn acknowledge_return_rows_locally(&mut self){if let Some(budget)=self.return_budget.as_mut(){budget.get_mut().local_acknowledgement=true}}
@@ -574,7 +583,7 @@ impl<'a> StepContext<'a> {
         semio_framework_trace::record_trace_event_at(self.operation, self.generation, semio_framework_trace::TraceStage::StageChanged { label }, at_us)
     }
 
-    /// [`StepOutcome::PreviewReady`]/[`ProgressEvent::PreviewPatch`] a job emits.
+    /// 🖼️ [`StepOutcome::PreviewReady`]/[`ProgressEvent::PreviewPatch`] a job emits.
     /// 🔢️ Advances the preview sequence shared across a retained operation’s steps.
     pub fn preview_sequence(&self) -> u64 { *self.preview_sequence }
 

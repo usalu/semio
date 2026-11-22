@@ -1,0 +1,15 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/app/stdio/pdf/view/transient/mutations.json",
+  "title": "PdfViewTransientMutation",
+  "oneOf": [
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["SetView"],
+      "properties": {
+        "SetView": { "$ref": "https://json.schemas.assets.semio-tech.com/app/stdio/pdf/view/transient/mutation/set-view/schema.json" }
+      }
+    }
+  ]
+}

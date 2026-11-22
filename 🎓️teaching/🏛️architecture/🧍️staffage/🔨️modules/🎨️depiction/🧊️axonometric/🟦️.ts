@@ -2,7 +2,7 @@
  *
  * Pipeline, one source for every step: the bone frames of `evaluate` pose the tessellated solids of the volume (./🧱️mesh, the kernel tessellator at a chord tolerance of 0.04 paper millimetres, the same glyph placements as `modelOf` in ../../🧊️volume/🧷️frames); the camera is the fourth camera of ../🔭️views (isometric, ISO 5456-3 dimetric or free, the vertical axis true to scale);
  * exact hidden-surface removal (./📐️visibility) leaves, per solid, the visible faces as convex polygons that ./🖇️stitch merges per solid and shading band into one clean outline path; the visible silhouette, crease and interpenetration lines come from ./🧭️edges and the same exact hidden-line removal and are stroked with the pens of the authored representation of the scale.
- * Level of detail is the individually authored volume of the scale (its own `body`, `thermal` and `structure` solids, never a filtered copy of another scale) and the role pens of the representation (a role whose pen is `null` at that scale is not drawn), nothing else. The seven views use the colours, ramps, hatch patterns, values and legends of the planar views (`baseStyle`, `thermalView`, `memberView`); the arrows, arcs, centre of mass and emitter cones of the analytic views are the 3D glyph solids of the model.
+ * Level of detail is the individually authored volume of the scale (its own `body`, `thermal` and `structure` solids, never a filtered copy of another scale) and the role pens of the representation (a role whose pen is `null` at that scale is not drawn), nothing else. The seven views use the colours, ramps, hatch patterns, values and legends of the planar views (`baseStyle`, `thermalView`, `memberView`); the arrows, arcs and centre of mass of the analytic views are the 3D glyph solids of the model; the air flow of the thermal view is not a solid here but the flow layers of `flowView`, projected through this camera.
  *
  * What is to scale: see {@link axonometricCamera}. Deterministic in `(state, options, analysis)`. Expensive: progress and cancellation go through the checkpoints of the generator ({@link Checkpoint}), driven by `depict(..., control)` or `depictAsync`.
  *
@@ -11,7 +11,7 @@
  */
 import type { ShapeRole, Slug, Text } from "../../../🧬️schema/🟦️.ts";
 import type { Shape } from "../../../🧬️schema/🟦️.ts";
-import type { EmitterState, Fill, Legend, StructuralResult, ThermalField, LayerId, PathCommand } from "../../🔗️contracts/🟦️.ts";
+import type { Fill, Legend, StructuralResult, ThermalField, LayerId, PathCommand } from "../../🔗️contracts/🟦️.ts";
 import { formatNumber } from "../../📐️units/🟦️.ts";
 import { type Analytic, Slots, frameDataOf, glyphPaintOf } from "../../🧊️volume/🧷️frames/🟦️.ts";
 import { lineLook, solidLook } from "../../🧊️volume/🎨️looks/🟦️.ts";
@@ -54,8 +54,8 @@ const GLYPH_PEN_MM = 0.18;
 /** 📐️ What the depiction of a figure leaves for the shared annotations of `depict`: the camera, the legends of the analytic view, the true height of the posed solids and the number of visible solids. */
 export type AxonometricFigure = { readonly camera: AxonometricCamera; readonly legends: readonly Legend[]; readonly heightM: number; readonly visibleSolids: number };
 
-/** 🧮️ The analyses the analytic views read (the emitters belong to the thermal view). */
-export type Analysis3d = { readonly thermal?: ThermalField; readonly structure?: StructuralResult; readonly emitters?: readonly EmitterState[] };
+/** 🧮️ The analyses the analytic views read. */
+export type Analysis3d = { readonly thermal?: ThermalField; readonly structure?: StructuralResult };
 
 /** ⚙️ How the figure is drawn besides the context: whether glyph bodies get outlines (for CAD scenes) and the overhang of the ground outline in metres (`null` draws no ground). */
 export type FigureOptions = { readonly glyphEdges?: boolean; readonly groundOverhangM: number | null };
@@ -230,7 +230,7 @@ export function* drawAxonometric(canvas: Canvas, ctx: Ctx, source: Source, analy
 
   yield { done: 600, total: PERMILLE, label: LABELS.paint };
   const order = [...pieces.keys()].sort((a, b) => Number(glazing[a]) - Number(glazing[b]) || a - b);
-  const slotOf = (p: Part): { readonly kind: "arrow" | "arc" | "mass" | "emitter"; readonly material: Slug; readonly detail: string } | undefined => [...slots.map.values()].find((s) => p.material === s.material);
+  const slotOf = (p: Part): { readonly kind: "arrow" | "arc" | "mass"; readonly material: Slug; readonly detail: string } | undefined => [...slots.map.values()].find((s) => p.material === s.material);
   for (const part of order) {
     const p = parts[part]!;
     const byBand = pieces.get(part)!;
@@ -242,7 +242,7 @@ export function* drawAxonometric(canvas: Canvas, ctx: Ctx, source: Source, analy
       value = style.value;
     } else {
       const slot = slotOf(p);
-      const paint = slot === undefined ? undefined : glyphPaintOf(slot, theme, frame.glyphPaints);
+      const paint = slot === undefined ? undefined : glyphPaintOf(slot, theme);
       base = paint === undefined ? null : { color: paint.hex, ...(paint.alpha < 1 ? { opacity: paint.alpha } : {}) };
       value = undefined;
     }

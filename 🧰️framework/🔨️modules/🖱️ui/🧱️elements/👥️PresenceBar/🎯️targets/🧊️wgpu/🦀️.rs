@@ -119,6 +119,28 @@ pub fn build_presence_bar(id: impl Into<String>, peers: &[PresencePeerRow], max:
     presence_stack(id, children)
 }
 
+/// 🔤️ React `TableAvatar`'s initials: the first letter of the first two space-separated words, upper-cased, at most two characters.
+pub fn presence_initials(name: &str) -> String {
+    name.trim().split(' ').take(2).filter_map(|word| word.chars().next()).collect::<String>().to_uppercase().chars().take(2).collect()
+}
+
+/// 🧩️ One cell of the painted roster row — React `PresenceBar`'s `SharedBorderRowCell`s: an avatar per visible peer, then the `+N` chip.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum PresenceCell {
+    Peer { actor: String, initials: String, color: u8, is_agent: bool, badge: Option<String> },
+    Overflow { count: usize },
+}
+
+/// 🧩️ The roster as painted cells, capped at `max` (default [`PRESENCE_BAR_DEFAULT_MAX`]); empty for an empty roster, which React paints as muted text instead.
+pub fn presence_bar_cells(peers: &[PresencePeerRow], max: Option<usize>) -> Vec<PresenceCell> {
+    let visible = peers.len().min(max.unwrap_or(PRESENCE_BAR_DEFAULT_MAX));
+    let mut cells: Vec<PresenceCell> = peers[..visible].iter().map(|peer| PresenceCell::Peer { actor: peer.actor.clone(), initials: presence_initials(&peer.label), color: peer.color.unwrap_or(0), is_agent: peer.is_agent, badge: peer.activity.as_ref().map(|activity| activity.badge.clone()) }).collect();
+    if peers.len() > visible {
+        cells.push(PresenceCell::Overflow { count: peers.len() - visible });
+    }
+    cells
+}
+
 /// 🔖️ This element's own empty-state copy — React's `ui.presence.empty`
 /// (`🖱️ui/🎯️targets/⚛️react/🟦️.tsx`'s translation table). Shared by the `UiNode` roster above and by
 /// [`presence_bar_chip_text`], so the two can never drift.
@@ -131,6 +153,16 @@ pub fn presence_empty_label(locale: Locale) -> String {
 // 🚫️async: E1 pure accessor consumed by sync render/paint call sites — see R9
 pub fn presence_agent_label(locale: Locale) -> String {
     LocalizedLabel::native("AI agent", "KI-Agent").resolve(Terminology::ALL[0], locale).to_string()
+}
+
+/// 🎭️ The role word of a peer's accessible name — React's `ui.presence.role.author` / `.spectator`.
+pub fn presence_role_label(role: PresenceRole, locale: Locale) -> String {
+    match role {
+        PresenceRole::Author => LocalizedLabel::native("Editing", "Bearbeitet"),
+        PresenceRole::Spectator => LocalizedLabel::native("Viewing", "Betrachtet"),
+    }
+    .resolve(Terminology::ALL[0], locale)
+    .to_string()
 }
 
 /// ➕️ The `+N more` suffix past the visible cap — React's `ui.presence.overflow`.
@@ -168,7 +200,7 @@ pub fn presence_bar_chip_text(peers: &[PresencePeerRow], max: Option<usize>, loc
 }
 
 /// ♿️ What the roster chip is announced as — React's per-row `aria-label` joined like [`presence_bar_chip_text`]: each
-/// visible peer is its name with its qualifiers in parentheses (the agent word, then its activity text), never the
+/// visible peer is its name with its qualifiers in parentheses (the agent word, the role word, then its activity text), never the
 /// decorative badge, then the overflow suffix.
 // 🚫️async: E1 pure accessor consumed by sync render/paint call sites — see R9
 pub fn presence_bar_chip_accessible_text(peers: &[PresencePeerRow], max: Option<usize>, locale: Locale) -> String {
@@ -180,7 +212,7 @@ pub fn presence_bar_chip_accessible_text(peers: &[PresencePeerRow], max: Option<
     let mut parts: Vec<String> = peers[..visible_count]
         .iter()
         .map(|peer| {
-            let qualifiers: Vec<String> = peer.is_agent.then(|| presence_agent_label(locale)).into_iter().chain(peer.activity.as_ref().map(|activity| activity.text.clone())).collect();
+            let qualifiers: Vec<String> = peer.is_agent.then(|| presence_agent_label(locale)).into_iter().chain(peer.role.map(|role| presence_role_label(role, locale))).chain(peer.activity.as_ref().map(|activity| activity.text.clone())).collect();
             if qualifiers.is_empty() {
                 peer.label.clone()
             } else {

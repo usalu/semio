@@ -22,6 +22,7 @@
       "maxLength": 64,
       "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
     },
+    "FlowLayer": { "description": "A layer of the thermodynamic flow view, the one vocabulary of drawn air: streams (stream lines of the instant with arrow heads, coloured by the temperature excess of the air), tracers (particles advected along the streams), moisture (vapour clouds and dotted vapour lines), fog (condensed droplets where the mixture is below its dew point) and pathlines (the path each parcel actually travelled, the honest picture of unsteady flow such as breath).", "enum": ["streams", "tracers", "moisture", "fog", "pathlines"] },
     "LodId": { "description": "A level of detail of the cast levels file.", "enum": ["full", "preview", "poster"] },
     "LodRevision": { "description": "Eight lower-case hex digits of the canonical-JSON hash of a resolved level.", "type": "string", "pattern": "^[0-9a-f]{8}$" },
     "Revision": { "description": "A content hash: sha256 and 64 lower-case hex digits.", "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
@@ -38,7 +39,7 @@
         "scale": { "type": "object", "additionalProperties": false, "required": ["denominator"], "properties": { "denominator": { "enum": [500, 200, 100, 50] } } },
         "state": { "type": "object", "additionalProperties": false, "required": ["kind", "id"], "properties": { "kind": { "enum": ["pose", "clip"] }, "id": { "$ref": "#/$defs/Slug" } } },
         "clock": {
-          "description": "The clock of the frames. rate is not known to the exporter: a scene adds it (staffage_provenance with a rate, or a staffage_motion).",
+          "description": "The clock of the frames. offsetS is the clip time of frame 0 and always 0: the history of the air (flowDevelopS) lies before the frames and never shifts them. rate is not known to the exporter: a scene adds it (staffage_provenance with a rate, or a staffage_motion).",
           "type": "object",
           "additionalProperties": false,
           "required": ["fps", "durationS", "loop", "offsetS", "frames"],
@@ -53,22 +54,22 @@
             { "additionalProperties": false, "required": ["kind", "dynamics", "gravityMS2"], "properties": { "kind": { "const": "structural" }, "dynamics": { "enum": ["quasi-static", "inertial"] }, "gravityMS2": { "type": "number" } } },
             {
               "additionalProperties": false,
-              "required": ["kind", "spanK", "transport", "environment"],
+              "required": ["kind", "spanK", "flow", "environment"],
               "properties": {
                 "kind": { "const": "thermal" },
                 "environment": { "type": "object", "additionalProperties": false, "required": ["id", "revision"], "properties": { "id": { "$ref": "#/$defs/Slug" }, "revision": { "$ref": "#/$defs/Revision" } } },
                 "spanK": { "anyOf": [{ "type": "number", "exclusiveMinimum": 0 }, { "type": "null" }] },
-                "transport": { "type": "array", "items": { "enum": ["parcels", "pathlines", "streamlines", "condensation"] } }
+                "flow": { "description": "The layers of the flow view drawn over the figure, in the order of the cast entry; empty for a cast without drawn air.", "type": "array", "items": { "$ref": "#/$defs/FlowLayer" } }
               }
             },
             {
               "additionalProperties": false,
-              "required": ["kind", "spanK", "transport", "timeline"],
+              "required": ["kind", "spanK", "flow", "timeline"],
               "properties": {
                 "kind": { "const": "thermal" },
                 "timeline": { "type": "array", "minItems": 1, "items": { "type": "object", "additionalProperties": false, "required": ["t", "id", "ease", "revision"], "properties": { "t": { "type": "number", "minimum": 0 }, "id": { "$ref": "#/$defs/Slug" }, "ease": { "enum": ["step", "linear"] }, "revision": { "$ref": "#/$defs/Revision" } } } },
                 "spanK": { "anyOf": [{ "type": "number", "exclusiveMinimum": 0 }, { "type": "null" }] },
-                "transport": { "type": "array", "items": { "enum": ["parcels", "pathlines", "streamlines", "condensation"] } }
+                "flow": { "description": "The layers of the flow view drawn over the figure, in the order of the cast entry; empty for a cast without drawn air.", "type": "array", "items": { "$ref": "#/$defs/FlowLayer" } }
               }
             }
           ]
@@ -153,7 +154,7 @@
       }
     },
     "Cast": {
-      "description": "One cast. Give exactly one of pose and clip. fps needs a clip or a timeline. environment, timeline and thermalSpanK exist for the thermal view only; environment and timeline exclude each other. A cast has no language: it renders figure-only (no text), so its output is the same for every language.",
+      "description": "One cast. Give exactly one of pose and clip. fps needs a clip or a timeline. environment, timeline, thermalSpanK and flow exist for the thermal view only; environment and timeline exclude each other. flow needs flowDevelopS; flowTrailS, flowStrokeMm and flowSpacingMm need flow, flowTrailS the pathlines layer. A cast has no language: it renders figure-only (no text), so its output is the same for every language.",
       "type": "object",
       "additionalProperties": false,
       "required": ["asset", "view", "theme", "viewpoint", "scale"],
@@ -163,10 +164,11 @@
         "clip": { "$ref": "#/$defs/Slug" },
         "view": { "enum": ["dark-line", "dark-solid", "light-line", "light-solid", "thermal", "forces", "moments"] },
         "theme": { "description": "The ink and palette of the analytic views (thermal, forces, moments); required, no default. Line and solid views carry their theme in the view name.", "enum": ["dark", "light"] },
-        "transport": { "description": "Air-transport layers drawn on the figure (breathing plumes, pathlines); figure-only, so no emitter markers or labels.", "type": "array", "uniqueItems": true, "items": { "enum": ["parcels", "pathlines", "streamlines", "condensation"] } },
-        "transportAgeS": { "description": "Transport layers of a clip only. The longest life of a parcel and of its pathline in seconds; the frames sample the absolute time from this many seconds on, so every frame of the loop already shows the developed field and the loop never restarts from empty air; a looping clip also makes the field periodic with the clip duration, so the seam has no jump (the period is derived, never authored). Absent: parcels live 30 s and the frames start at time 0.", "type": "number", "exclusiveMinimum": 0 },
-        "transportStrokeMm": { "description": "Transport layers only. Paper width of a pathline in millimetres at the cast scale; absent: 0.08 mm, a hairline for print that vanishes when the figure plays at a few hundred pixels.", "type": "number", "exclusiveMinimum": 0 },
-        "transportTrailS": { "description": "Transport layers only. Seconds of each pathline's recent travel that stay visible: the line fades towards its tail, so a jet reads as a dispersing puff instead of a bundle anchored at the nozzle; absent: the whole path from emission to now at constant opacity.", "type": "number", "exclusiveMinimum": 0 },
+        "flow": { "description": "The layers of the thermodynamic flow view drawn over the figure (the air of breath, plumes, jets, steam); figure-only, so no legends and no labels.", "type": "array", "minItems": 1, "uniqueItems": true, "items": { "$ref": "#/$defs/FlowLayer" } },
+        "flowDevelopS": { "description": "Flow layers only, required with them, never defaulted: the seconds the air has developed before every frame. The flow of a frame is solved that many seconds after the frame's own time and no parcel lives longer, so frame 0 already shows the developed field instead of empty air. A looping clip moves on by whole periods, so pose and breath stay in phase, the field is periodic with the clip and the loop closes without a jump (the period is derived, never authored); a pose keeps its instant; a clip that does not loop shows the air this many seconds ahead of its figure, so keep it short against the changes of such a clip.", "type": "number", "exclusiveMinimum": 0 },
+        "flowTrailS": { "description": "The pathlines layer only. Seconds of each path's recent travel that stay visible: the line fades towards its tail, so breath reads as a dispersing puff instead of a bundle anchored at the nose; absent: the whole path from the emission at full strength.", "type": "number", "exclusiveMinimum": 0 },
+        "flowStrokeMm": { "description": "Flow layers only. Paper width of the widest stream in millimetres at the cast scale; every line of the flow (streams, tracers, vapour lines, paths) scales with it. Absent: 0.3 mm, the hairlines of a print, which vanish when the figure plays at a few hundred pixels.", "type": "number", "exclusiveMinimum": 0 },
+        "flowSpacingMm": { "description": "Flow layers only. The smallest paper distance in millimetres between two drawn streams, puffs or paths at the cast scale (the generalisation of the flow marks); the level of detail multiplies it by its flowSpacingFactor. Absent: 2.2 mm.", "type": "number", "exclusiveMinimum": 0 },
         "viewpoint": { "enum": ["elevation", "front", "plan", "axonometric"] },
         "scale": { "description": "The authored scale variant, required, no default: a preset denominator at which the asset holds an authored representation (the exporter refuses unavailable and derived scales).", "enum": [500, 200, 100, 50] },
         "fps": { "description": "Frames per second of a clip or timeline; required for both, forbidden for a still pose. A schedule of more than 600 frames is thinned to 600 evenly spaced samples, so the exported index fps may be fractional; play such a cast with a rate in the scene.", "type": "integer", "minimum": 1, "maximum": 120 },
@@ -194,9 +196,9 @@
         { "if": { "properties": { "mirror": { "const": true } }, "required": ["mirror"] }, "then": { "properties": { "viewpoint": { "const": "elevation" } } } },
         { "if": { "anyOf": [{ "properties": { "environment": {} }, "required": ["environment"] }, { "properties": { "timeline": {} }, "required": ["timeline"] }, { "properties": { "thermalSpanK": {} }, "required": ["thermalSpanK"] }] }, "then": { "properties": { "view": { "const": "thermal" } } } },
         { "if": { "properties": { "environment": {} }, "required": ["environment"] }, "then": { "not": { "properties": { "timeline": {} }, "required": ["timeline"] } } },
-        { "if": { "anyOf": [{ "properties": { "transportAgeS": {} }, "required": ["transportAgeS"] }, { "properties": { "transportStrokeMm": {} }, "required": ["transportStrokeMm"] }, { "properties": { "transportTrailS": {} }, "required": ["transportTrailS"] }] }, "then": { "properties": { "transport": {} }, "required": ["transport"] } },
-        { "if": { "properties": { "transportAgeS": {} }, "required": ["transportAgeS"] }, "then": { "properties": { "clip": {} }, "required": ["clip"] } },
-        { "if": { "properties": { "transport": {} }, "required": ["transport"] }, "then": { "properties": { "view": { "const": "thermal" }, "transportAgeS": {} }, "required": ["transportAgeS"] } },
+        { "if": { "anyOf": [{ "properties": { "flowDevelopS": {} }, "required": ["flowDevelopS"] }, { "properties": { "flowTrailS": {} }, "required": ["flowTrailS"] }, { "properties": { "flowStrokeMm": {} }, "required": ["flowStrokeMm"] }, { "properties": { "flowSpacingMm": {} }, "required": ["flowSpacingMm"] }] }, "then": { "properties": { "flow": {} }, "required": ["flow"] } },
+        { "if": { "properties": { "flowTrailS": {} }, "required": ["flowTrailS"] }, "then": { "properties": { "flow": { "type": "array", "contains": { "const": "pathlines" } } } } },
+        { "if": { "properties": { "flow": {} }, "required": ["flow"] }, "then": { "properties": { "view": { "const": "thermal" }, "flowDevelopS": {} }, "required": ["flowDevelopS"] } },
         { "if": { "properties": { "view": { "const": "thermal" } }, "required": ["view"] }, "then": { "oneOf": [{ "properties": { "environment": {} }, "required": ["environment"] }, { "properties": { "timeline": {} }, "required": ["timeline"] }] } },
         { "if": { "anyOf": [{ "properties": { "clip": {} }, "required": ["clip"] }, { "properties": { "timeline": {} }, "required": ["timeline"] }] }, "then": { "properties": { "fps": {} }, "required": ["fps"] } },
         { "if": { "properties": { "fps": {} }, "required": ["fps"] }, "then": { "anyOf": [{ "properties": { "clip": {} }, "required": ["clip"] }, { "properties": { "timeline": {} }, "required": ["timeline"] }] } }

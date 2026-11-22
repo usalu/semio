@@ -90,6 +90,10 @@ mod framing {
 
     pub const TAG_DATA: u8 = 0;
     pub const TAG_HEARTBEAT: u8 = 1;
+    /// 💼️ Child to parent: the live spawned jobs of the child's shard, so the parent's Task Manager lists them.
+    pub const TAG_JOBS: u8 = 2;
+    /// 🛑️ Parent to child: one job cancel, `[actor:u64 LE][job:u64 LE]`.
+    pub const TAG_JOB_CANCEL: u8 = 3;
 
     #[derive(Debug, PartialEq, Eq)]
     pub enum Frame {
@@ -101,6 +105,7 @@ mod framing {
     pub struct Decoder {
         pub bytes: Vec<u8>,
         frames: VecDeque<Frame>,
+        side: VecDeque<(u8, Vec<u8>)>,
     }
 
     #[derive(Debug)]
@@ -145,6 +150,11 @@ mod framing {
             self.frames.pop_front()
         }
 
+        /// 💼️ The next job side-channel frame (`TAG_JOBS` or `TAG_JOB_CANCEL`) as `(tag, payload)`.
+        pub fn pop_side(&mut self) -> Option<(u8, Vec<u8>)> {
+            self.side.pop_front()
+        }
+
         fn decode(&mut self) -> io::Result<()> {
             for _ in 0..PIPE_FRAMES_PER_POLL {
                 if self.bytes.len() < 5 {
@@ -161,7 +171,11 @@ mod framing {
                 let tag = self.bytes[0];
                 let payload = self.bytes[5..frame_len].to_vec();
                 self.bytes.drain(..frame_len);
-                self.frames.push_back(if tag == TAG_HEARTBEAT { Frame::Heartbeat } else { Frame::Data(payload) });
+                match tag {
+                    TAG_HEARTBEAT => self.frames.push_back(Frame::Heartbeat),
+                    TAG_JOBS | TAG_JOB_CANCEL => self.side.push_back((tag, payload)),
+                    _ => self.frames.push_back(Frame::Data(payload)),
+                }
             }
             Ok(())
         }
@@ -199,10 +213,11 @@ mod framing {
 /// ::beat` uses for its own extra, non-trait method) — `ProcessShardWatchdog` (below) reads both.
 pub struct ProcessTransport {
     child: Mutex<Child>,
-    stdin: Mutex<ChildStdin>,
+    stdin: Arc<Mutex<ChildStdin>>,
     stdout: Mutex<ChildStdout>,
     decoder: Mutex<framing::Decoder>,
     pub inbound: Mutex<VecDeque<Vec<u8>>>,
+    jobs: Mutex<Option<Vec<u8>>>,
     heartbeat_ms: Arc<AtomicU64>,
     alive: Arc<AtomicBool>,
     killed: Arc<AtomicBool>,
@@ -221,7 +236,7 @@ impl ProcessTransport {
         let heartbeat_ms = Arc::new(AtomicU64::new(now_ms()));
         let alive = Arc::new(AtomicBool::new(true));
 
-        Ok(Self { child: Mutex::new(child), stdin: Mutex::new(stdin), stdout: Mutex::new(stdout), decoder: Mutex::new(framing::Decoder::default()), inbound: Mutex::new(VecDeque::new()), heartbeat_ms, alive, killed: Arc::new(AtomicBool::new(false)) })
+        Ok(Self { child: Mutex::new(child), stdin: Arc::new(Mutex::new(stdin)), stdout: Mutex::new(stdout), decoder: Mutex::new(framing::Decoder::default()), inbound: Mutex::new(VecDeque::new()), jobs: Mutex::new(None), heartbeat_ms, alive, killed: Arc::new(AtomicBool::new(false)) })
     }
 
     fn poll_pipe(&self) {
@@ -246,6 +261,36 @@ impl ProcessTransport {
                 if let Ok(mut inbound) = self.inbound.lock() {
                     inbound.push_back(bytes);
                 }
+            }
+        }
+        while let Some((tag, payload)) = decoder.pop_side() {
+            self.heartbeat_ms.store(now_ms(), Ordering::SeqCst);
+            if tag == framing::TAG_JOBS {
+                if let Ok(mut jobs) = self.jobs.lock() {
+                    *jobs = Some(payload);
+                }
+            }
+        }
+    }
+
+    /// 💼️ The child's latest live-job snapshot (the bytes the child's `send_jobs` wrote), once per change; `None` while nothing new arrived.
+    pub fn take_jobs_snapshot(&self) -> Option<Vec<u8>> {
+        self.poll_pipe();
+        self.jobs.lock().ok().and_then(|mut jobs| jobs.take())
+    }
+
+    /// 🛑️ A sender that asks the child to cancel one `(actor, job)`; it owns its own handle on the child's stdin, so a Task Manager row can keep it after this call.
+    pub fn job_cancel_sender(&self) -> impl Fn(u64, u64) + Send + Sync + 'static {
+        let (stdin, killed) = (Arc::clone(&self.stdin), Arc::clone(&self.killed));
+        move |actor, job| {
+            if killed.load(Ordering::SeqCst) {
+                return;
+            }
+            let mut payload = [0u8; 16];
+            payload[..8].copy_from_slice(&actor.to_le_bytes());
+            payload[8..].copy_from_slice(&job.to_le_bytes());
+            if let Ok(mut stdin) = stdin.lock() {
+                let _ = framing::write_frame(&mut *stdin, framing::TAG_JOB_CANCEL, &payload);
             }
         }
     }
@@ -328,6 +373,7 @@ pub struct StdioTransport {
     stdin: Mutex<io::Stdin>,
     decoder: Mutex<framing::Decoder>,
     pub inbound: Mutex<VecDeque<Vec<u8>>>,
+    cancels: Mutex<Vec<(u64, u64)>>,
     alive: Arc<AtomicBool>,
     _heartbeat: semio_plugin_host_engine::PeriodicPoolTimer,
 }
@@ -357,7 +403,7 @@ impl StdioTransport {
             })
         };
 
-        Self { stdout, stdin: Mutex::new(stdin), decoder: Mutex::new(framing::Decoder::default()), inbound: Mutex::new(VecDeque::new()), alive, _heartbeat: heartbeat }
+        Self { stdout, stdin: Mutex::new(stdin), decoder: Mutex::new(framing::Decoder::default()), inbound: Mutex::new(VecDeque::new()), cancels: Mutex::new(Vec::new()), alive, _heartbeat: heartbeat }
     }
 
     fn poll_pipe(&self) {
@@ -383,6 +429,26 @@ impl StdioTransport {
                 }
             }
         }
+        while let Some((tag, payload)) = decoder.pop_side() {
+            if let (framing::TAG_JOB_CANCEL, Ok(bytes)) = (tag, <[u8; 16]>::try_from(payload.as_slice())) {
+                if let Ok(mut cancels) = self.cancels.lock() {
+                    cancels.push((u64::from_le_bytes(bytes[..8].try_into().expect("eight bytes")), u64::from_le_bytes(bytes[8..].try_into().expect("eight bytes"))));
+                }
+            }
+        }
+    }
+
+    /// 💼️ Tells the parent which spawned jobs this shard drives right now (one `TAG_JOBS` frame).
+    pub fn send_jobs(&self, snapshot: &[u8]) {
+        if let Ok(mut guard) = self.stdout.lock() {
+            let _ = framing::write_frame(&mut *guard, framing::TAG_JOBS, snapshot);
+        }
+    }
+
+    /// 🛑️ The job cancels the parent's Task Manager sent since the last call, as `(actor, job)`.
+    pub fn take_job_cancels(&self) -> Vec<(u64, u64)> {
+        self.poll_pipe();
+        self.cancels.lock().map(|mut cancels| std::mem::take(&mut *cancels)).unwrap_or_default()
     }
 }
 
@@ -496,6 +562,6 @@ impl ProcessShardWatchdog {
 }
 //#endregion 🚑️Watchdog
 
-pub use framing::{Decoder, Frame, PipeState, TAG_DATA, TAG_HEARTBEAT, write_frame};
+pub use framing::{Decoder, Frame, PipeState, TAG_DATA, TAG_HEARTBEAT, TAG_JOBS, TAG_JOB_CANCEL, write_frame};
 #[cfg(any(test, feature = "testkit"))]
 pub use framing::read_frame;

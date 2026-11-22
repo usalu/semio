@@ -190,6 +190,20 @@ pub fn semio_wgpu_host_window_blur() {
     shell::note_host_window_blur();
 }
 
+/// 🛬️ wasm file-drop hook: the page hands the shell the OS files it took from a drop, which open like Open File.
+#[cfg(target_arch = "wasm32")]
+#[wasm_bindgen(js_name = semioWgpuHostFileDrop)]
+pub fn semio_wgpu_host_file_drop(files_json: String) {
+    shell::note_host_file_drop_json(&files_json);
+}
+
+/// 🗂️ wasm local-catalog hook: the page hands the shell the device's local document catalog (the store facet's snapshot).
+#[cfg(target_arch = "wasm32")]
+#[wasm_bindgen(js_name = semioWgpuHostLocalCatalog)]
+pub fn semio_wgpu_host_local_catalog(catalog_json: String) {
+    shell::note_host_local_catalog_json(&catalog_json);
+}
+
 /// 🗄️ wasm host storage hook: the page seeds the Shell's persisted keys from its own storage.
 #[cfg(target_arch = "wasm32")]
 #[wasm_bindgen(js_name = semioWgpuSetHostStorage)]

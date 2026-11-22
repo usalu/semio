@@ -77,12 +77,21 @@ fn numbers(entries: &[(&str, f64)]) -> UiAssemblyResult<UiValue> {
 
 /// 🖼️ The strip body. `object_domain` is the page editor's object selection domain; activating a row selects that page in it.
 pub fn render_thumbnail_strip(snapshot: &PdfSnapshot, controller_id: &str, object_domain: &str, locale: Locale) -> UiAssemblyResult<semio_ui_contract::BuiltNode> {
+    render_thumbnail_strip_marked(snapshot, controller_id, object_domain, locale, &|_| Vec::new())
+}
+
+/// 👥️ [`render_thumbnail_strip`] with the captions of the collaborators on each page appended to its row text, so the row says who is there in words and not only in colour.
+pub fn render_thumbnail_strip_marked(snapshot: &PdfSnapshot, controller_id: &str, object_domain: &str, locale: Locale, peers: &dyn Fn(usize) -> Vec<String>) -> UiAssemblyResult<semio_ui_contract::BuiltNode> {
     let action = |name: &str| ActionId::try_v1(controller_id, name).ok_or_else(|| error("pdf.thumbnails.action"));
     let count = snapshot.pages.len();
     let mut tree = semio_ui_contract::tree().try_id("pdf-thumbnails").map_err(|_| error("pdf.thumbnails.root-id"))?;
     for thumbnail in thumbnails(snapshot, THUMBNAIL_EDGE) {
         let page = thumbnail.page;
-        let text = format!("{} {} / {count} ({}x{})", label(locale, "Page", "Seite"), page + 1, thumbnail.width, thumbnail.height);
+        let mut text = format!("{} {} / {count} ({}x{})", label(locale, "Page", "Seite"), page + 1, thumbnail.width, thumbnail.height);
+        let here = peers(page);
+        if !here.is_empty() {
+            text.push_str(&format!(" - {}: {}", label(locale, "here", "hier"), here.join(", ")));
+        }
         let targets = json!([{ "granularity": "object", "id": thumbnail.target }]).to_string();
         let mut selection = UiMapBuilder::try_new().ok_or_else(|| error("pdf.thumbnails.selection"))?;
         for (key, value) in [("domainId", object_domain), ("targets", targets.as_str()), ("merge", "replace"), ("method", "pick")] {

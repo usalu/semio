@@ -1,0 +1,95 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/framework/repo/cargo-image-auto-reclaim/v1",
+  "title": "Automatic reclaim of the Rust compiler image: when the honest available space falls below the soft threshold of the ledger the single-flight reclaim of `repo cache gc` runs before more compile work is admitted",
+  "definitions": {
+    "Policy": {
+      "const": {
+        "claim": "rust-image-reclaim",
+        "joinPollMilliseconds": 250,
+        "cooldownMilliseconds": 5000,
+        "progressMilliseconds": 2000
+      }
+    },
+    "Messages": {
+      "const": {
+        "due": {
+          "en": "[repo cargo] compiler image has {free} GiB available, below the soft threshold of {soft} GiB: reclaiming idle incremental sessions, superseded runs and stale units (never those a running build holds) up to {target} GiB before admitting more compile work",
+          "de": "[repo cargo] Compiler-Image hat {free} GiB verfügbar, unter der weichen Schwelle von {soft} GiB: gebe ruhende Inkrementsitzungen, überholte Läufe und veraltete Einheiten frei (nie solche, die ein laufender Build hält), bis {target} GiB erreicht sind, bevor weitere Kompilierarbeit zugelassen wird"
+        },
+        "joined": {
+          "en": "[repo cargo] another command is already reclaiming the compiler image: waiting for it ({free} GiB available)",
+          "de": "[repo cargo] ein anderer Befehl gibt das Compiler-Image bereits frei: warte darauf ({free} GiB verfügbar)"
+        },
+        "progress": {
+          "en": "[repo cargo] reclaiming the compiler image: {stage} ({done}/{total})",
+          "de": "[repo cargo] gebe das Compiler-Image frei: {stage} ({done}/{total})"
+        },
+        "done": {
+          "en": "[repo cargo] compiler image reclaimed {freed} GiB: {free} GiB available now (target {target} GiB)",
+          "de": "[repo cargo] Compiler-Image hat {freed} GiB freigegeben: jetzt {free} GiB verfügbar (Ziel {target} GiB)"
+        },
+        "nothing": {
+          "en": "[repo cargo] nothing reclaimable in the compiler image: every remaining unit is held by a running build ({free} GiB available)",
+          "de": "[repo cargo] im Compiler-Image ist nichts freigebbar: jede übrige Einheit wird von einem laufenden Build gehalten ({free} GiB verfügbar)"
+        },
+        "cancelled": {
+          "en": "[repo cargo] reclaim of the compiler image cancelled",
+          "de": "[repo cargo] Freigabe des Compiler-Images abgebrochen"
+        }
+      }
+    },
+    "Rule": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["softAvailableBytes", "targetAvailableBytes"],
+      "properties": {
+        "softAvailableBytes": {"type": "integer", "minimum": 0},
+        "targetAvailableBytes": {"type": "integer", "minimum": 1}
+      }
+    },
+    "Vector": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "availableBytes", "rule", "due", "demandBytes"],
+      "properties": {
+        "name": {"type": "string", "minLength": 1},
+        "availableBytes": {"type": "integer", "minimum": 0},
+        "rule": {"$ref": "#/definitions/Rule"},
+        "due": {"type": "boolean"},
+        "demandBytes": {"type": "integer", "minimum": 0}
+      }
+    },
+    "ShareVector": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "volumeBytes", "share", "softAvailableBytes", "targetAvailableBytes"],
+      "properties": {
+        "name": {"type": "string", "minLength": 1},
+        "volumeBytes": {"type": "integer", "minimum": 1},
+        "share": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["softBasisPoints", "targetBasisPoints", "softFloorBytes", "targetFloorBytes"],
+          "properties": {
+            "softBasisPoints": {"type": "integer", "minimum": 1, "maximum": 5000},
+            "targetBasisPoints": {"type": "integer", "minimum": 1, "maximum": 5000},
+            "softFloorBytes": {"type": "integer", "minimum": 0},
+            "targetFloorBytes": {"type": "integer", "minimum": 0}
+          }
+        },
+        "softAvailableBytes": {"type": "integer", "minimum": 0},
+        "targetAvailableBytes": {"type": "integer", "minimum": 0}
+      }
+    },
+    "Vectors": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["vectors", "shares"],
+      "properties": {
+        "vectors": {"type": "array", "minItems": 1, "items": {"$ref": "#/definitions/Vector"}},
+        "shares": {"type": "array", "minItems": 1, "items": {"$ref": "#/definitions/ShareVector"}}
+      }
+    }
+  }
+}

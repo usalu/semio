@@ -56,6 +56,19 @@ impl<'ctx> ActionsCtx<'ctx> {
         Ok(())
     }
 
+    /// 🗂️ React's `openKeptFile`: starts the reopen of a document the device keeps, on the surface its catalog entry names, as the shell's one cancellable document open (its band reads "Opening {name}…" with Cancel, the frame pump publishes the instance through the import's keep and rollback path). Only the owner program's install on demand, which has its own cancellable band, runs in this turn. A document already on screen stays.
+    pub async fn open_kept_file(&mut self, document_id: &str) -> Result<(), String> {
+        let row = self.history.local_files.iter().find(|row| row.document_id == document_id).cloned().ok_or("natural-file.kept-owner-retired")?;
+        if self.docs.sync_program_identity().is_some_and(|identity| identity.document_id == row.document_id) { return Ok(()); }
+        let source_instance = self.docs.session.as_ref().map(|session| session.instance_id).ok_or("natural-file.kept-owner-retired")?;
+        self.plugins.install_plugin(&row.plugin_id).await.map_err(|error| error.to_string())?;
+        let program = self.plugins.plugins.iter().find(|entry| entry.plugin_id == row.plugin_id).cloned().ok_or("natural-file.kept-surface-unavailable")?;
+        let app = program.manifest.apps.iter().find(|app| app.id == row.app_id && app.io.artifact_schema == row.schema).cloned().ok_or("natural-file.kept-surface-unavailable")?;
+        let request = semio_renderer_wgpu_shell_doc_open::KeptFileRequest { document_id: row.document_id, schema: row.schema, name: row.name, target: row.target };
+        if !self.opening.start_kept_file_open(request, program, app, source_instance) { return Err("document.open-busy".into()); }
+        Ok(())
+    }
+
     /// 📇️ ticket §2/§C6 — opens an explicit document id/schema on the same `framework/sync`
     /// `ArtifactHost` sequence `attach_sync_backbone` uses, but with caller-supplied bindings (task
     /// 2's default-binding computation, or an explicit override) instead of parsing a manual sync-
@@ -145,7 +158,7 @@ impl<'ctx> ActionsCtx<'ctx> {
             let _ = self.detach_sync_backbone_internal().await;
             return Err(error);
         }
-        self.sync.sync_status = Some(ArtifactSyncStatus::default());
+        self.sync.sync_status = None;
         if let Some(document_key) = self.sync.sync_channel.as_ref().map(|channel| shell_hub_document_key(&channel.document_key)) {
             self.sync.publish_hub_document_status(document_key, ShellHubRemoteV1::Detached);
         }
@@ -248,6 +261,13 @@ impl<'ctx> ActionsCtx<'ctx> {
                     self.history.ensure_local_folder_bindings();
                     let Some(offer) = self.docs.folder_reconnect_offer(&self.history, &self.sync) else { return Ok(()) };
                     if let Err(error) = self.reattach_local_folder(&offer).await {
+                        self.prefs.note_dispatch_fault(&error, &mut self.chrome);
+                    }
+                    Ok(())
+                }
+                semio_renderer_wgpu_shell_prefs::LOCAL_FILE_OPEN_ACTION => {
+                    let Some(document_id) = action.args.as_ref().and_then(|args| args.get("documentId")).and_then(|value| value.as_str()).map(str::to_string) else { return Ok(()) };
+                    if let Err(error) = self.open_kept_file(&document_id).await {
                         self.prefs.note_dispatch_fault(&error, &mut self.chrome);
                     }
                     Ok(())

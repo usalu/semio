@@ -45,3 +45,14 @@ Several lanes saw the Write tool refuse new report files. If Write is refused, c
 
 ## Addendum 06:05: rule 10 replaced (tests)
 10. Tests: `cd /Users/ueli/Documents/semio && repo test-file [--json] [--bail] <path>...` (MCP tool `test_file` after the next MCP rebuild). It routes each file by the suite table of its area (build, caching, process; other files run plain) and runs it as the suite runner would (Original envelope with the suite's caller grant, genuine-birth launcher, managed Python, hermetic sandbox, checkout as working directory) without a graph read, 0.5–15 s per file; exit 0 all passed, 1 a file failed, 2 refused; `--dry-run` shows the routing, `--json` one structured result, Ctrl-C cancels. Do not call `bun test` yourself; the raw form of the old rule 10 is only for the case that `repo` itself does not start.
+
+## Addendum 15:00 (resume after halt)
+- Rule 4 scratch root is now `/private/tmp/claude-501/-Users-ueli-Documents-semio/3a99932f-dbc8-44a3-a665-189b4162729c/scratchpad/<lane>/`. Older scratch paths may be wiped; staged inputs live in `T/🧰️scripts/<lane>/`.
+- Coordinator memory is the binding constraint for the whole-graph seal (whole read running since 14:41). Before any test run heavier than ONE file or any build, check load (< 40) and `memory_pressure` free % (>= 25 %); otherwise wait 60 s and recheck.
+- Never kill, signal or restart the whole read (`repo show projects`, graph sidecar, owner-pool children) or pid 72392.
+
+## Addendum 15:30: more lanes, test claims
+Fleet raised to ~15 lanes on user request. Test lanes claim each file in `W/claims-tests.md` before touching it (one line, append with `>>`). Load gate stays 40, memory gate 25 % free.
+
+## Addendum 16:32: seal window
+The whole read (pid 11561) is expected to seal 17:00-17:20; its memory-overrun watch stops it if host memory pressure leaves `normal`. From 16:50 until the seal (or 17:30): run at most ONE `repo test-file` file at a time per lane, no `repo run`, no `repo cargo` builds, no whole-suite runs on this Mac. Pure edits and reading are fine.

@@ -1,4 +1,6 @@
-import { expect, test } from "bun:test";
+import { expect, setDefaultTimeout, test } from "bun:test";
+
+setDefaultTimeout(60000);
 import { Database } from "bun:sqlite";
 import Ajv from "ajv";
 import { readFileSync } from "node:fs";
@@ -73,7 +75,8 @@ test("graph-free playground admits exact renderer requests and keeps their origi
     expect(capabilities.buildMode).toBe(profile);
     expect(capabilities.arguments).toEqual(request);
     expect(capabilities.selection).toEqual(request);
-    expect(capabilities.launches).toEqual([request]);
+    const { generatedPrerequisiteArgumentsV1 } = await import("../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/📥️source/🏭️generated-owner/🟦️.ts");
+    expect(capabilities.launches).toEqual([request, ...(await generatedPrerequisiteArgumentsV1(root)).map(child => ["repo", ...child])]);
     const envelope = createScriptProcessEnvelope({ version: 1, owner: "test:dev-playground", maximumElapsedMilliseconds: 10000 }, capabilities, Date.now());
     await withScriptProcessEnvelope(envelope, async original => {
       expect(readOwnedBuildInvocationV1(root, original, argv).buildMode).toBe(profile);

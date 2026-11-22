@@ -512,6 +512,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'sta
             if source.terminal_is_empty(){let bytes=std::mem::size_of_val(&**source);drop(self.tools.original_emission_admission.take());return Ok(PluginLifecycleStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:std::mem::size_of::<usize>(),released_bytes:bytes,..Default::default()}))}
             let before=cx.retained_progress();source.close_step(&self.tools.tool_cancellations,cx)?;let after=cx.retained_progress();return Ok(PluginLifecycleStep::Progress(RetainedCloneProgress{copied_items:after.copied_items-before.copied_items,copied_bytes:after.copied_bytes-before.copied_bytes,retained_capacity_bytes:after.retained_capacity_bytes-before.retained_capacity_bytes,released_bytes:after.released_bytes-before.released_bytes}))
         }
+        if self.tools.original_emission_result.is_some(){drop(self.tools.original_emission_result.take());return Ok(PluginLifecycleStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:size_of::<Option<semio_framework::kernel::InvocationResult>>(),..Default::default()}))}
         if self.tools.original_emission_receipt.is_some(){self.tools.original_emission_receipt=None;return Ok(PluginLifecycleStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:size_of::<Option<semio_plugin_job::original_emission::OriginalEmissionReceipt>>(),..Default::default()}))}
         let Some((_, operation_id)) = self.tools.tool_operations.next_id_from(0) else { return Ok(PluginLifecycleStep::Progress(RetainedCloneProgress::default())) };
         let operation = self.tools.tool_operations.get_mut(operation_id).ok_or_else(|| plugin_sdk_fault("typed operation owner changed during bounded close"))?;
@@ -573,7 +574,47 @@ impl<'v, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'stati
 
     /// 🩺️ The ladder frontier a stalled close is parked on, named for deadline reports.
     pub fn close_rung_name(&self) -> String {
-        format!("{:?}", self.close_rung())
+        match self.close_rung() {
+            CloseRung::RetainedFields => format!("RetainedFields/{}", self.retained_fields_frontier()),
+            rung => format!("{rung:?}"),
+        }
+    }
+
+    /// 🩺️ The first retained-field owner still holding custody, in the order [`LadderCtx::retained_fields_close_step`] releases them.
+    pub fn retained_fields_frontier(&self) -> &'static str {
+        let tools = &self.tools;
+        [
+            (self.history.history_view.is_none(), "history_view"),
+            (self.history.cache_retirement.is_none(), "cache_retirement"),
+            (self.history.cache.is_none(), "cache"),
+            (self.history.command_log.terminal_is_empty(), "command_log"),
+            (self.history.history_dirty_sequences.is_empty(), "history_dirty_sequences"),
+            (self.child_composition.pending_child_pins.is_empty(), "pending_child_pins"),
+            (self.child_composition.composition.terminal_is_empty(), "composition"),
+            (self.interaction.interaction_hover.is_empty(), "interaction_hover"),
+            (self.interaction.interaction_ui_topology.is_empty(), "interaction_ui_topology"),
+            (self.txn.pending_transaction.is_none(), "pending_transaction"),
+            (self.txn.pending_transaction_proposal.is_none(), "pending_transaction_proposal"),
+            (self.roster.pending_presence.is_empty(), "pending_presence"),
+            (self.pending.last_emit_wire.is_none(), "last_emit_wire"),
+            (tools.typed_effect_outbox.len() == 0, "typed_effect_outbox"),
+            (tools.typed_event_outbox.len() == 0, "typed_event_outbox"),
+            (tools.typed_ui_outbox.len() == 0, "typed_ui_outbox"),
+            (!tools.operation_progress_retired, "operation_progress_retired"),
+            (tools.typed_completion_outbox.len() == 0, "typed_completion_outbox"),
+            (tools.typed_composed_outbox.len() == 0, "typed_composed_outbox"),
+            (tools.registry.terminal_is_empty(), "registry"),
+            (tools.declared_tools.is_none(), "declared_tools"),
+            (tools.declared_owner.is_none(), "declared_owner"),
+            (tools.tool_jobs.original_terminal_is_empty(), "tool_jobs"),
+            (tools.bounded_tool_proofs.is_empty(), "bounded_tool_proofs"),
+            (tools.bounded_tool_contracts.is_empty(), "bounded_tool_contracts"),
+            (tools.framework_tool_registrations.is_empty(), "framework_tool_registrations"),
+            (tools.app_tool_registrations.is_empty(), "app_tool_registrations"),
+            (tools.tool_job_controller_id.is_empty(), "tool_job_controller_id"),
+            (self.ingest.envelope_field_decoders.custody_is_closed(), "envelope_field_decoders"),
+            (self.ingest.envelope_completed_records.custody_is_closed(), "envelope_completed_records"),
+        ].into_iter().find_map(|(empty, name)| (!empty).then_some(name)).unwrap_or("none")
     }
 
     pub fn close_rung(&self) -> CloseRung {

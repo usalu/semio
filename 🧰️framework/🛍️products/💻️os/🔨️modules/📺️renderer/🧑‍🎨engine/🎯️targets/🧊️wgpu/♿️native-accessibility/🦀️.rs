@@ -39,21 +39,39 @@ pub struct NativeAccessibilityPublication {
 
 struct PublishedAccessibility {
     version: u64,
+    base: NativeAccessibilityPublication,
+    extra: Vec<NativeAccessibilityWindow>,
     publication: Arc<NativeAccessibilityPublication>,
+}
+
+impl PublishedAccessibility {
+    fn recompose(&mut self) {
+        let mut composed = self.base.clone();
+        composed.windows.extend(self.extra.iter().cloned());
+        if *self.publication != composed {
+            self.version = self.version.wrapping_add(1);
+            self.publication = Arc::new(composed);
+        }
+    }
 }
 
 fn published() -> &'static Mutex<PublishedAccessibility> {
     static PUBLISHED: OnceLock<Mutex<PublishedAccessibility>> = OnceLock::new();
-    PUBLISHED.get_or_init(|| Mutex::new(PublishedAccessibility { version: 0, publication: Arc::new(NativeAccessibilityPublication::default()) }))
+    PUBLISHED.get_or_init(|| Mutex::new(PublishedAccessibility { version: 0, base: NativeAccessibilityPublication::default(), extra: Vec::new(), publication: Arc::new(NativeAccessibilityPublication::default()) }))
 }
 
 /// 📣️ Publishes one presented frame's projection; the platform tree follows only when it changed.
 pub fn publish_native_accessibility(publication: NativeAccessibilityPublication) {
     let mut published = published().lock().unwrap_or_else(PoisonError::into_inner);
-    if *published.publication != publication {
-        published.version = published.version.wrapping_add(1);
-        published.publication = Arc::new(publication);
-    }
+    published.base = publication;
+    published.recompose();
+}
+
+/// 🎞️ Publishes the windows the host itself announces next to the shell's (the native media slots' transport controls): they join every publication until replaced, so a shell frame that publishes without them does not drop them.
+pub fn publish_native_accessibility_windows(windows: Vec<NativeAccessibilityWindow>) {
+    let mut published = published().lock().unwrap_or_else(PoisonError::into_inner);
+    published.extra = windows;
+    published.recompose();
 }
 
 fn published_snapshot() -> (u64, Arc<NativeAccessibilityPublication>) {

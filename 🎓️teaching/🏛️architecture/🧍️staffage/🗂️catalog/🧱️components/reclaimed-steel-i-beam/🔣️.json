@@ -1,0 +1,7659 @@
+{
+ "$schema": "../../../🧬️schema/🔣️.json#/$defs/AssetDocument",
+ "version": "semio.staffage/v2",
+ "asset": {
+  "id": "reclaimed-steel-i-beam",
+  "category": "components",
+  "title": {
+   "en": "Reclaimed Steel I-Beam",
+   "de": "Gebrauchter Stahlträger"
+  },
+  "summary": {
+   "en": "A historic INP 240 rolled steel beam (DIN 1025-1, tapered flanges) of 6.0 m, dismantled from a floor: one end flame-cut by hand, the other end with its riveted cleat of two angles L 80 x 8 whose bolt holes are open, four old bolt holes in the web and a rust patina; it lies on two squared-timber bearers in the yard, hangs from a two-leg sling when lifted and is reinstalled as a simply supported floor beam of 5.91 m span.",
+   "de": "Ein historischer gewalzter Stahlträger INP 240 (DIN 1025-1, geneigte Flansche) von 6,0 m, aus einer Decke ausgebaut: ein Ende von Hand brenngeschnitten, am anderen Ende der genietete Anschluss aus zwei Winkeln L 80 x 8 mit offenen Schraubenlöchern, vier alte Schraubenlöcher im Steg und eine Rostpatina; er liegt auf zwei Kanthölzern im Lager, hängt beim Anheben an einem Zweistranggehänge und wird als frei aufliegender Deckenträger mit 5,91 m Stützweite wieder eingebaut."
+  },
+  "tags": [
+   "component",
+   "reclaimed",
+   "steel",
+   "beam",
+   "i-section",
+   "historic",
+   "riveted",
+   "structural"
+  ],
+  "provenance": {
+   "author": "Semio staffage component authors",
+   "method": "handcrafted",
+   "created": "2026-11-22",
+   "references": [
+    {
+     "id": "din-1025-1",
+     "citation": "DIN 1025-1:1995-05 Hot rolled I-sections, Part 1: Narrow flange I-sections (I-series), dimensions, masses, static values. INP 240: h 240, b 106, s 8.7, t 13.1, r1 8.7, r2 5.2 mm, flange slope 14 %, A 46.1 cm², G 36.2 kg/m, Iy 4250 cm⁴, Wy 354 cm³, Iz 221 cm⁴, U 0.844 m²/m (same values as the historic profile tables of the Deutsches Normalprofil since 1881)."
+    },
+    {
+     "id": "din-1028",
+     "citation": "DIN 1028:1994-03 Hot rolled equal leg angles: L 80 x 80 x 8, A 12.3 cm², 9.63 kg/m, root radius 10 mm."
+    },
+    {
+     "id": "din-124",
+     "citation": "DIN 124:2011-03 Round head rivets for steel structures: d 16 mm, head diameter about 28 mm, head height about 11 mm."
+    },
+    {
+     "id": "din-17100",
+     "citation": "DIN 17100:1980-01 Steels for general structural purposes: St 37-2, upper yield strength 235 N/mm² for thicknesses up to 16 mm (the grade of rolled beams of this period)."
+    },
+    {
+     "id": "din-1050",
+     "citation": "DIN 1050:1968-06 Steel in building construction, design and execution: allowable stress for St 37, load case H, 160 N/mm² (1600 kp/cm²)."
+    },
+    {
+     "id": "en-1993-1-1",
+     "citation": "EN 1993-1-1:2005 Eurocode 3, design of steel structures, 3.2.6: E = 210 000 N/mm², density 7850 kg/m³."
+    },
+    {
+     "id": "en-1991-1-1",
+     "citation": "EN 1991-1-1:2002 Eurocode 1, Part 1-1, Table 6.2: floors of category A, qk 2.0 kN/m², Qk 2.0 kN; Table A.1 for floor build-up weights."
+    },
+    {
+     "id": "en-338",
+     "citation": "EN 338:2016 Structural timber, strength classes: C24, mean density 420 kg/m³, E0,mean 11 000 N/mm², fm,k 24 N/mm²; EN ISO 10456:2007 softwood 0.13 W/mK, 1600 J/kgK."
+    },
+    {
+     "id": "en-iso-10456",
+     "citation": "EN ISO 10456:2007 Building materials and products, hygrothermal properties: steel 50 W/mK, 450 J/kgK, 7800 kg/m³."
+    },
+    {
+     "id": "rust-radiation",
+     "citation": "VDI-Wärmeatlas, 11th ed. (2013), section K1 (emissivity of oxidised and rusted iron and steel 0.6 to 0.85) and ASHRAE Handbook Fundamentals (2021), chapter 4 (solar absorptance of rusted and weathered metal about 0.7 to 0.8); the rounded values of this asset are authored estimates guided by these tables, not measurements."
+    },
+    {
+     "id": "iso-8501-1",
+     "citation": "ISO 8501-1:2007 Preparation of steel substrates, visual assessment of surface cleanliness: rust grade C (mill scale rusted away, slight pitting visible), the state assumed for the patina."
+    },
+    {
+     "id": "en-iso-9013",
+     "citation": "EN ISO 9013:2017 Thermal cutting, classification of thermal cuts: perpendicularity and drag lines of oxyfuel cuts (a hand cut of demolition is far outside the machine tolerance ranges, here 10 mm over the depth)."
+    },
+    {
+     "id": "en-818-4",
+     "citation": "EN 818-4:1996+A1:2008 Short link chain for lifting purposes, chain slings grade 8; DGUV Regel 109-017: two-leg slings with an inclination of at most 60° to the vertical; the legs of this asset are set at 60° to the horizontal (30° to the vertical)."
+    },
+    {
+     "id": "din-iso-128-50",
+     "citation": "DIN ISO 128-50:2002 Technical drawings, basic conventions for areas on sections and views (hatching and stippling)."
+    },
+    {
+     "id": "din-1356-1",
+     "citation": "DIN 1356-1:1995 Building drawings, part 1: types, contents and line groups of building drawings at 1:50 to 1:500."
+    }
+   ],
+   "notes": {
+    "en": "Reclaimed beam INP 240 of 6.000 m steel length plus the 8 mm cleat outstanding legs (6.008 m overall), stored at 0.21 L on two bearers 100 x 100 x 600 mm; reinstalled span 5.906 m between the centre of a 200 mm wall bearing and the cleat bolt plane. The modelled section (polygon with the DIN radii) has A 46.7 cm², Iy 4307 cm⁴ and U 0.844 m²/m against the table values 46.1 cm², 4250 cm⁴ and 0.844 m²/m (+1.3 %, +1.3 %, 0 %); the structural section uses the table values.",
+    "de": "Gebrauchter Träger INP 240 mit 6,000 m Stahllänge zuzüglich der 8 mm abstehenden Winkelschenkel (6,008 m gesamt), bei 0,21 L auf zwei Kanthölzern 100 x 100 x 600 mm gelagert; Stützweite im Wiedereinbau 5,906 m zwischen der Mitte eines 200-mm-Mauerauflagers und der Schraubenebene des Winkels. Der modellierte Querschnitt (Polygon mit den DIN-Radien) hat A 46,7 cm², Iy 4307 cm⁴ und U 0,844 m²/m gegenüber den Tabellenwerten 46,1 cm², 4250 cm⁴ und 0,844 m²/m (+1,3 %, +1,3 %, 0 %); der statische Querschnitt verwendet die Tabellenwerte."
+   }
+  },
+  "dimensions": {
+   "heightM": 0.34,
+   "widthM": 6.008,
+   "depthM": 0.6,
+   "massKg": 227.79
+  },
+  "materials": [
+   {
+    "id": "steel-rusted",
+    "title": {
+     "en": "Historic mild steel St 37 with rust patina",
+     "de": "Historischer Flussstahl St 37 mit Rostpatina"
+    },
+    "emissivity": 0.8,
+    "solarAbsorptivity": 0.78,
+    "densityKgM3": 7850.0,
+    "conductivityWmK": 50,
+    "specificHeatJKgK": 450.0,
+    "elasticModulusPa": 210000000000,
+    "strengthPa": 235000000,
+    "source": "authored-estimate",
+    "reference": "rust-radiation"
+   },
+   {
+    "id": "softwood-weathered",
+    "title": {
+     "en": "Weathered softwood C24, squared",
+     "de": "Verwittertes Nadelholz C24, Kantholz"
+    },
+    "emissivity": 0.9,
+    "solarAbsorptivity": 0.7,
+    "densityKgM3": 420.0,
+    "conductivityWmK": 0.13,
+    "specificHeatJKgK": 1600.0,
+    "elasticModulusPa": 11000000000,
+    "strengthPa": 24000000,
+    "source": "literature",
+    "reference": "en-338"
+   }
+  ],
+  "rig": {
+   "kind": "structural",
+   "root": "beam",
+   "bones": [
+    {
+     "id": "beam",
+     "parent": null,
+     "title": {
+      "en": "Beam INP 240 (rigid root)",
+      "de": "Träger INP 240 (starre Wurzel)"
+     },
+     "x": 0,
+     "y": 0.22,
+     "angleDeg": 0,
+     "lengthM": 6.0,
+     "joint": {
+      "type": "fixed"
+     },
+     "mass": {
+      "kg": 219.56,
+      "comX": 3.0,
+      "comY": 0,
+      "distribution": "uniform",
+      "source": "literature",
+      "reference": "din-1025-1"
+     },
+     "section": {
+      "areaM2": 0.00461,
+      "secondMomentM4": 4.25e-05,
+      "extremeFibreM": 0.12,
+      "material": "steel-rusted",
+      "title": {
+       "en": "INP 240, DIN 1025-1 (A 46.1 cm², Iy 4250 cm⁴)",
+       "de": "INP 240, DIN 1025-1 (A 46,1 cm², Iy 4250 cm⁴)"
+      }
+     }
+    },
+    {
+     "id": "cleat",
+     "parent": "beam",
+     "title": {
+      "en": "Riveted end cleat, two angles L 80 x 8",
+      "de": "Genieteter Endwinkel, zwei Winkel L 80 x 8"
+     },
+     "x": 5.93,
+     "y": 0,
+     "angleDeg": 0,
+     "lengthM": 0.07800000000000001,
+     "joint": {
+      "type": "fixed"
+     },
+     "mass": {
+      "kg": 3.19,
+      "comX": 0.045,
+      "comY": 0,
+      "distribution": "point",
+      "source": "literature",
+      "reference": "din-1028"
+     }
+    },
+    {
+     "id": "bearer-a",
+     "parent": "beam",
+     "title": {
+      "en": "Squared-timber bearer A (stays on the ground)",
+      "de": "Kantholzunterleger A (bleibt am Boden)"
+     },
+     "x": 1.2,
+     "y": -0.17,
+     "angleDeg": 0,
+     "lengthM": 0.1,
+     "joint": {
+      "type": "prismatic",
+      "axisDeg": 90,
+      "minM": -1.0,
+      "maxM": 0
+     },
+     "mass": {
+      "kg": 2.52,
+      "comX": 0.05,
+      "comY": 0,
+      "distribution": "point",
+      "source": "literature",
+      "reference": "en-338"
+     }
+    },
+    {
+     "id": "bearer-b",
+     "parent": "beam",
+     "title": {
+      "en": "Squared-timber bearer B (stays on the ground)",
+      "de": "Kantholzunterleger B (bleibt am Boden)"
+     },
+     "x": 4.7,
+     "y": -0.17,
+     "angleDeg": 0,
+     "lengthM": 0.1,
+     "joint": {
+      "type": "prismatic",
+      "axisDeg": 90,
+      "minM": -1.0,
+      "maxM": 0
+     },
+     "mass": {
+      "kg": 2.52,
+      "comX": 0.05,
+      "comY": 0,
+      "distribution": "point",
+      "source": "literature",
+      "reference": "en-338"
+     }
+    },
+    {
+     "id": "load-carrier",
+     "parent": "beam",
+     "title": {
+      "en": "Load carrier (massless, moves the point load)",
+      "de": "Lastträger (masselos, bewegt die Einzellast)"
+     },
+     "x": 0.3,
+     "y": 0.12,
+     "angleDeg": 0,
+     "lengthM": 0,
+     "joint": {
+      "type": "prismatic",
+      "axisDeg": 0,
+      "minM": 0,
+      "maxM": 5.4
+     }
+    }
+   ]
+  },
+  "volumes": {
+   "50": {
+    "status": "authored",
+    "denominator": 50,
+    "body": [
+     {
+      "id": "top-flange",
+      "kind": "extrude",
+      "bone": "beam",
+      "material": "steel-rusted",
+      "role": "body",
+      "tone": 0.46,
+      "profile": [
+       [
+        0.095928,
+        0.00435
+       ],
+       [
+        0.097984,
+        0.004597
+       ],
+       [
+        0.099924,
+        0.005322
+       ],
+       [
+        0.101637,
+        0.006486
+       ],
+       [
+        0.103027,
+        0.008021
+       ],
+       [
+        0.104014,
+        0.009841
+       ],
+       [
+        0.104544,
+        0.011844
+       ],
+       [
+        0.109678,
+        0.048521
+       ],
+       [
+        0.110257,
+        0.050279
+       ],
+       [
+        0.111416,
+        0.051724
+       ],
+       [
+        0.113006,
+        0.05267
+       ],
+       [
+        0.114828,
+        0.053
+       ],
+       [
+        0.12,
+        0.053
+       ],
+       [
+        0.12,
+        -0.053
+       ],
+       [
+        0.114828,
+        -0.053
+       ],
+       [
+        0.113006,
+        -0.05267
+       ],
+       [
+        0.111416,
+        -0.051724
+       ],
+       [
+        0.110257,
+        -0.050279
+       ],
+       [
+        0.109678,
+        -0.048521
+       ],
+       [
+        0.104544,
+        -0.011844
+       ],
+       [
+        0.104014,
+        -0.009841
+       ],
+       [
+        0.103027,
+        -0.008021
+       ],
+       [
+        0.101637,
+        -0.006486
+       ],
+       [
+        0.099924,
+        -0.005322
+       ],
+       [
+        0.097984,
+        -0.004597
+       ],
+       [
+        0.095928,
+        -0.00435
+       ]
+      ],
+      "plane": "yz",
+      "from": 0.01,
+      "to": 6.0
+     },
+     {
+      "id": "bottom-flange",
+      "kind": "extrude",
+      "bone": "beam",
+      "material": "steel-rusted",
+      "role": "body",
+      "tone": 0.44,
+      "profile": [
+       [
+        -0.095928,
+        -0.00435
+       ],
+       [
+        -0.097984,
+        -0.004597
+       ],
+       [
+        -0.099924,
+        -0.005322
+       ],
+       [
+        -0.101637,
+        -0.006486
+       ],
+       [
+        -0.103027,
+        -0.008021
+       ],
+       [
+        -0.104014,
+        -0.009841
+       ],
+       [
+        -0.104544,
+        -0.011844
+       ],
+       [
+        -0.109678,
+        -0.048521
+       ],
+       [
+        -0.110257,
+        -0.050279
+       ],
+       [
+        -0.111416,
+        -0.051724
+       ],
+       [
+        -0.113006,
+        -0.05267
+       ],
+       [
+        -0.114828,
+        -0.053
+       ],
+       [
+        -0.12,
+        -0.053
+       ],
+       [
+        -0.12,
+        0.053
+       ],
+       [
+        -0.114828,
+        0.053
+       ],
+       [
+        -0.113006,
+        0.05267
+       ],
+       [
+        -0.111416,
+        0.051724
+       ],
+       [
+        -0.110257,
+        0.050279
+       ],
+       [
+        -0.109678,
+        0.048521
+       ],
+       [
+        -0.104544,
+        0.011844
+       ],
+       [
+        -0.104014,
+        0.009841
+       ],
+       [
+        -0.103027,
+        0.008021
+       ],
+       [
+        -0.101637,
+        0.006486
+       ],
+       [
+        -0.099924,
+        0.005322
+       ],
+       [
+        -0.097984,
+        0.004597
+       ],
+       [
+        -0.095928,
+        0.00435
+       ]
+      ],
+      "plane": "yz",
+      "from": 0.0,
+      "to": 6.0
+     },
+     {
+      "id": "web",
+      "kind": "extrude",
+      "bone": "beam",
+      "material": "steel-rusted",
+      "role": "body",
+      "tone": 0.52,
+      "profile": [
+       [
+        0.0,
+        -0.095928
+       ],
+       [
+        6.0,
+        -0.095928
+       ],
+       [
+        6.0,
+        0.095928
+       ],
+       [
+        0.01,
+        0.095928
+       ]
+      ],
+      "plane": "xy",
+      "from": -0.00435,
+      "to": 0.00435,
+      "holes": [
+       [
+        [
+         2.411,
+         -0.035
+        ],
+        [
+         2.410163,
+         -0.03079
+        ],
+        [
+         2.407778,
+         -0.027222
+        ],
+        [
+         2.40421,
+         -0.024837
+        ],
+        [
+         2.4,
+         -0.024
+        ],
+        [
+         2.39579,
+         -0.024837
+        ],
+        [
+         2.392222,
+         -0.027222
+        ],
+        [
+         2.389837,
+         -0.03079
+        ],
+        [
+         2.389,
+         -0.035
+        ],
+        [
+         2.389837,
+         -0.03921
+        ],
+        [
+         2.392222,
+         -0.042778
+        ],
+        [
+         2.39579,
+         -0.045163
+        ],
+        [
+         2.4,
+         -0.046
+        ],
+        [
+         2.40421,
+         -0.045163
+        ],
+        [
+         2.407778,
+         -0.042778
+        ],
+        [
+         2.410163,
+         -0.03921
+        ]
+       ],
+       [
+        [
+         2.411,
+         0.035
+        ],
+        [
+         2.410163,
+         0.03921
+        ],
+        [
+         2.407778,
+         0.042778
+        ],
+        [
+         2.40421,
+         0.045163
+        ],
+        [
+         2.4,
+         0.046
+        ],
+        [
+         2.39579,
+         0.045163
+        ],
+        [
+         2.392222,
+         0.042778
+        ],
+        [
+         2.389837,
+         0.03921
+        ],
+        [
+         2.389,
+         0.035
+        ],
+        [
+         2.389837,
+         0.03079
+        ],
+        [
+         2.392222,
+         0.027222
+        ],
+        [
+         2.39579,
+         0.024837
+        ],
+        [
+         2.4,
+         0.024
+        ],
+        [
+         2.40421,
+         0.024837
+        ],
+        [
+         2.407778,
+         0.027222
+        ],
+        [
+         2.410163,
+         0.03079
+        ]
+       ],
+       [
+        [
+         3.611,
+         -0.035
+        ],
+        [
+         3.610163,
+         -0.03079
+        ],
+        [
+         3.607778,
+         -0.027222
+        ],
+        [
+         3.60421,
+         -0.024837
+        ],
+        [
+         3.6,
+         -0.024
+        ],
+        [
+         3.59579,
+         -0.024837
+        ],
+        [
+         3.592222,
+         -0.027222
+        ],
+        [
+         3.589837,
+         -0.03079
+        ],
+        [
+         3.589,
+         -0.035
+        ],
+        [
+         3.589837,
+         -0.03921
+        ],
+        [
+         3.592222,
+         -0.042778
+        ],
+        [
+         3.59579,
+         -0.045163
+        ],
+        [
+         3.6,
+         -0.046
+        ],
+        [
+         3.60421,
+         -0.045163
+        ],
+        [
+         3.607778,
+         -0.042778
+        ],
+        [
+         3.610163,
+         -0.03921
+        ]
+       ],
+       [
+        [
+         3.611,
+         0.035
+        ],
+        [
+         3.610163,
+         0.03921
+        ],
+        [
+         3.607778,
+         0.042778
+        ],
+        [
+         3.60421,
+         0.045163
+        ],
+        [
+         3.6,
+         0.046
+        ],
+        [
+         3.59579,
+         0.045163
+        ],
+        [
+         3.592222,
+         0.042778
+        ],
+        [
+         3.589837,
+         0.03921
+        ],
+        [
+         3.589,
+         0.035
+        ],
+        [
+         3.589837,
+         0.03079
+        ],
+        [
+         3.592222,
+         0.027222
+        ],
+        [
+         3.59579,
+         0.024837
+        ],
+        [
+         3.6,
+         0.024
+        ],
+        [
+         3.60421,
+         0.024837
+        ],
+        [
+         3.607778,
+         0.027222
+        ],
+        [
+         3.610163,
+         0.03079
+        ]
+       ]
+      ]
+     },
+     {
+      "id": "cleat-web-leg-r",
+      "kind": "box",
+      "bone": "cleat",
+      "material": "steel-rusted",
+      "role": "body",
+      "tone": 0.4,
+      "size": [
+       0.07,
+       0.16,
+       0.008
+      ],
+      "transform": {
+       "translation": [
+        0.035,
+        0,
+        -0.00835
+       ]
+      }
+     },
+     {
+      "id": "cleat-outstanding-r",
+      "kind": "extrude",
+      "bone": "cleat",
+      "material": "steel-rusted",
+      "role": "body",
+      "tone": 0.38,
+      "profile": [
+       [
+        -0.08,
+        -0.08435
+       ],
+       [
+        0.08,
+        -0.08435
+       ],
+       [
+        0.08,
+        -0.00435
+       ],
+       [
+        -0.08,
+        -0.00435
+       ]
+      ],
+      "plane": "yz",
+      "from": 0.07,
+      "to": 0.078,
+      "holes": [
+       [
+        [
+         -0.0245,
+         -0.04935
+        ],
+        [
+         -0.025299,
+         -0.045332
+        ],
+        [
+         -0.027575,
+         -0.041925
+        ],
+        [
+         -0.030982,
+         -0.039649
+        ],
+        [
+         -0.035,
+         -0.03885
+        ],
+        [
+         -0.039018,
+         -0.039649
+        ],
+        [
+         -0.042425,
+         -0.041925
+        ],
+        [
+         -0.044701,
+         -0.045332
+        ],
+        [
+         -0.0455,
+         -0.04935
+        ],
+        [
+         -0.044701,
+         -0.053368
+        ],
+        [
+         -0.042425,
+         -0.056775
+        ],
+        [
+         -0.039018,
+         -0.059051
+        ],
+        [
+         -0.035,
+         -0.05985
+        ],
+        [
+         -0.030982,
+         -0.059051
+        ],
+        [
+         -0.027575,
+         -0.056775
+        ],
+        [
+         -0.025299,
+         -0.053368
+        ]
+       ],
+       [
+        [
+         0.0455,
+         -0.04935
+        ],
+        [
+         0.044701,
+         -0.045332
+        ],
+        [
+         0.042425,
+         -0.041925
+        ],
+        [
+         0.039018,
+         -0.039649
+        ],
+        [
+         0.035,
+         -0.03885
+        ],
+        [
+         0.030982,
+         -0.039649
+        ],
+        [
+         0.027575,
+         -0.041925
+        ],
+        [
+         0.025299,
+         -0.045332
+        ],
+        [
+         0.0245,
+         -0.04935
+        ],
+        [
+         0.025299,
+         -0.053368
+        ],
+        [
+         0.027575,
+         -0.056775
+        ],
+        [
+         0.030982,
+         -0.059051
+        ],
+        [
+         0.035,
+         -0.05985
+        ],
+        [
+         0.039018,
+         -0.059051
+        ],
+        [
+         0.042425,
+         -0.056775
+        ],
+        [
+         0.044701,
+         -0.053368
+        ]
+       ]
+      ]
+     },
+     {
+      "id": "cleat-root-r",
+      "kind": "extrude",
+      "bone": "cleat",
+      "material": "steel-rusted",
+      "role": "body",
+      "tone": 0.38,
+      "profile": [
+       [
+        -0.02235,
+        0.07
+       ],
+       [
+        -0.01926,
+        0.069511
+       ],
+       [
+        -0.016472,
+        0.06809
+       ],
+       [
+        -0.01426,
+        0.065878
+       ],
+       [
+        -0.012839,
+        0.06309
+       ],
+       [
+        -0.01235,
+        0.06
+       ],
+       [
+        -0.01235,
+        0.07
+       ]
+      ],
+      "plane": "zx",
+      "from": -0.08,
+      "to": 0.08
+     },
+     {
+      "id": "rivet-heads-r",
+      "kind": "revolve",
+      "bone": "cleat",
+      "material": "steel-rusted",
+      "role": "body",
+      "tone": 0.3,
+      "profile": [
+       [
+        0.0,
+        0.0
+       ],
+       [
+        0.0,
+        0.014
+       ],
+       [
+        0.002847,
+        0.013523
+       ],
+       [
+        0.0055,
+        0.012124
+       ],
+       [
+        0.007778,
+        0.009899
+       ],
+       [
+        0.009526,
+        0.007
+       ],
+       [
+        0.010625,
+        0.003623
+       ],
+       [
+        0.011,
+        0.0
+       ]
+      ],
+      "axis": [
+       0,
+       0,
+       -1
+      ],
+      "origin": [
+       0.035,
+       -0.035,
+       -0.01235
+      ],
+      "repeat": {
+       "count": 2,
+       "translation": [
+        0,
+        0.07,
+        0
+       ]
+      }
+     },
+     {
+      "id": "cleat-web-leg-l",
+      "kind": "box",
+      "bone": "cleat",
+      "material": "steel-rusted",
+      "role": "body",
+      "tone": 0.4,
+      "size": [
+       0.07,
+       0.16,
+       0.008
+      ],
+      "transform": {
+       "translation": [
+        0.035,
+        0,
+        0.00835
+       ]
+      }
+     },
+     {
+      "id": "cleat-outstanding-l",
+      "kind": "extrude",
+      "bone": "cleat",
+      "material": "steel-rusted",
+      "role": "body",
+      "tone": 0.38,
+      "profile": [
+       [
+        -0.08,
+        0.00435
+       ],
+       [
+        0.08,
+        0.00435
+       ],
+       [
+        0.08,
+        0.08435
+       ],
+       [
+        -0.08,
+        0.08435
+       ]
+      ],
+      "plane": "yz",
+      "from": 0.07,
+      "to": 0.078,
+      "holes": [
+       [
+        [
+         -0.0245,
+         0.04935
+        ],
+        [
+         -0.025299,
+         0.053368
+        ],
+        [
+         -0.027575,
+         0.056775
+        ],
+        [
+         -0.030982,
+         0.059051
+        ],
+        [
+         -0.035,
+         0.05985
+        ],
+        [
+         -0.039018,
+         0.059051
+        ],
+        [
+         -0.042425,
+         0.056775
+        ],
+        [
+         -0.044701,
+         0.053368
+        ],
+        [
+         -0.0455,
+         0.04935
+        ],
+        [
+         -0.044701,
+         0.045332
+        ],
+        [
+         -0.042425,
+         0.041925
+        ],
+        [
+         -0.039018,
+         0.039649
+        ],
+        [
+         -0.035,
+         0.03885
+        ],
+        [
+         -0.030982,
+         0.039649
+        ],
+        [
+         -0.027575,
+         0.041925
+        ],
+        [
+         -0.025299,
+         0.045332
+        ]
+       ],
+       [
+        [
+         0.0455,
+         0.04935
+        ],
+        [
+         0.044701,
+         0.053368
+        ],
+        [
+         0.042425,
+         0.056775
+        ],
+        [
+         0.039018,
+         0.059051
+        ],
+        [
+         0.035,
+         0.05985
+        ],
+        [
+         0.030982,
+         0.059051
+        ],
+        [
+         0.027575,
+         0.056775
+        ],
+        [
+         0.025299,
+         0.053368
+        ],
+        [
+         0.0245,
+         0.04935
+        ],
+        [
+         0.025299,
+         0.045332
+        ],
+        [
+         0.027575,
+         0.041925
+        ],
+        [
+         0.030982,
+         0.039649
+        ],
+        [
+         0.035,
+         0.03885
+        ],
+        [
+         0.039018,
+         0.039649
+        ],
+        [
+         0.042425,
+         0.041925
+        ],
+        [
+         0.044701,
+         0.045332
+        ]
+       ]
+      ]
+     },
+     {
+      "id": "cleat-root-l",
+      "kind": "extrude",
+      "bone": "cleat",
+      "material": "steel-rusted",
+      "role": "body",
+      "tone": 0.38,
+      "profile": [
+       [
+        0.01235,
+        0.07
+       ],
+       [
+        0.01235,
+        0.06
+       ],
+       [
+        0.012839,
+        0.06309
+       ],
+       [
+        0.01426,
+        0.065878
+       ],
+       [
+        0.016472,
+        0.06809
+       ],
+       [
+        0.01926,
+        0.069511
+       ],
+       [
+        0.02235,
+        0.07
+       ]
+      ],
+      "plane": "zx",
+      "from": -0.08,
+      "to": 0.08
+     },
+     {
+      "id": "rivet-heads-l",
+      "kind": "revolve",
+      "bone": "cleat",
+      "material": "steel-rusted",
+      "role": "body",
+      "tone": 0.3,
+      "profile": [
+       [
+        0.0,
+        0.0
+       ],
+       [
+        0.0,
+        0.014
+       ],
+       [
+        0.002847,
+        0.013523
+       ],
+       [
+        0.0055,
+        0.012124
+       ],
+       [
+        0.007778,
+        0.009899
+       ],
+       [
+        0.009526,
+        0.007
+       ],
+       [
+        0.010625,
+        0.003623
+       ],
+       [
+        0.011,
+        0.0
+       ]
+      ],
+      "axis": [
+       0,
+       0,
+       1
+      ],
+      "origin": [
+       0.035,
+       -0.035,
+       0.01235
+      ],
+      "repeat": {
+       "count": 2,
+       "translation": [
+        0,
+        0.07,
+        0
+       ]
+      }
+     },
+     {
+      "id": "bearer-a",
+      "kind": "box",
+      "bone": "bearer-a",
+      "material": "softwood-weathered",
+      "role": "body",
+      "tone": 0.7,
+      "size": [
+       0.1,
+       0.1,
+       0.6
+      ],
+      "transform": {
+       "translation": [
+        0.05,
+        0,
+        0
+       ]
+      }
+     },
+     {
+      "id": "bearer-b",
+      "kind": "box",
+      "bone": "bearer-b",
+      "material": "softwood-weathered",
+      "role": "body",
+      "tone": 0.7,
+      "size": [
+       0.1,
+       0.1,
+       0.6
+      ],
+      "transform": {
+       "translation": [
+        0.05,
+        0,
+        0
+       ]
+      }
+     }
+    ],
+    "thermal": [
+     {
+      "id": "th-top-flange",
+      "of": "top-flange",
+      "region": "top-flange"
+     },
+     {
+      "id": "th-bottom-flange",
+      "of": "bottom-flange",
+      "region": "bottom-flange"
+     },
+     {
+      "id": "th-web",
+      "of": "web",
+      "region": "web",
+      "sectionFaces": [
+       "+v",
+       "-v"
+      ]
+     },
+     {
+      "id": "th-cleat-web-leg-r",
+      "of": "cleat-web-leg-r",
+      "region": "end-cleat"
+     },
+     {
+      "id": "th-cleat-outstanding-r",
+      "of": "cleat-outstanding-r",
+      "region": "end-cleat"
+     },
+     {
+      "id": "th-cleat-root-r",
+      "of": "cleat-root-r",
+      "region": "end-cleat"
+     },
+     {
+      "id": "th-rivet-heads-r",
+      "of": "rivet-heads-r",
+      "region": "end-cleat"
+     },
+     {
+      "id": "th-cleat-web-leg-l",
+      "of": "cleat-web-leg-l",
+      "region": "end-cleat"
+     },
+     {
+      "id": "th-cleat-outstanding-l",
+      "of": "cleat-outstanding-l",
+      "region": "end-cleat"
+     },
+     {
+      "id": "th-cleat-root-l",
+      "of": "cleat-root-l",
+      "region": "end-cleat"
+     },
+     {
+      "id": "th-rivet-heads-l",
+      "of": "rivet-heads-l",
+      "region": "end-cleat"
+     },
+     {
+      "id": "th-bearer-a",
+      "of": "bearer-a",
+      "region": "bearers"
+     },
+     {
+      "id": "th-bearer-b",
+      "of": "bearer-b",
+      "region": "bearers"
+     }
+    ],
+    "structure": [
+     {
+      "id": "member-beam",
+      "kind": "extrude",
+      "bone": "beam",
+      "material": "steel-rusted",
+      "role": "body",
+      "tone": 0.5,
+      "profile": [
+       [
+        0.12,
+        0.053
+       ],
+       [
+        0.114828,
+        0.053
+       ],
+       [
+        0.113006,
+        0.05267
+       ],
+       [
+        0.111416,
+        0.051724
+       ],
+       [
+        0.110257,
+        0.050279
+       ],
+       [
+        0.109678,
+        0.048521
+       ],
+       [
+        0.104544,
+        0.011844
+       ],
+       [
+        0.104014,
+        0.009841
+       ],
+       [
+        0.103027,
+        0.008021
+       ],
+       [
+        0.101637,
+        0.006486
+       ],
+       [
+        0.099924,
+        0.005322
+       ],
+       [
+        0.097984,
+        0.004597
+       ],
+       [
+        0.095928,
+        0.00435
+       ],
+       [
+        -0.095928,
+        0.00435
+       ],
+       [
+        -0.097984,
+        0.004597
+       ],
+       [
+        -0.099924,
+        0.005322
+       ],
+       [
+        -0.101637,
+        0.006486
+       ],
+       [
+        -0.103027,
+        0.008021
+       ],
+       [
+        -0.104014,
+        0.009841
+       ],
+       [
+        -0.104544,
+        0.011844
+       ],
+       [
+        -0.109678,
+        0.048521
+       ],
+       [
+        -0.110257,
+        0.050279
+       ],
+       [
+        -0.111416,
+        0.051724
+       ],
+       [
+        -0.113006,
+        0.05267
+       ],
+       [
+        -0.114828,
+        0.053
+       ],
+       [
+        -0.12,
+        0.053
+       ],
+       [
+        -0.12,
+        -0.053
+       ],
+       [
+        -0.114828,
+        -0.053
+       ],
+       [
+        -0.113006,
+        -0.05267
+       ],
+       [
+        -0.111416,
+        -0.051724
+       ],
+       [
+        -0.110257,
+        -0.050279
+       ],
+       [
+        -0.109678,
+        -0.048521
+       ],
+       [
+        -0.104544,
+        -0.011844
+       ],
+       [
+        -0.104014,
+        -0.009841
+       ],
+       [
+        -0.103027,
+        -0.008021
+       ],
+       [
+        -0.101637,
+        -0.006486
+       ],
+       [
+        -0.099924,
+        -0.005322
+       ],
+       [
+        -0.097984,
+        -0.004597
+       ],
+       [
+        -0.095928,
+        -0.00435
+       ],
+       [
+        0.095928,
+        -0.00435
+       ],
+       [
+        0.097984,
+        -0.004597
+       ],
+       [
+        0.099924,
+        -0.005322
+       ],
+       [
+        0.101637,
+        -0.006486
+       ],
+       [
+        0.103027,
+        -0.008021
+       ],
+       [
+        0.104014,
+        -0.009841
+       ],
+       [
+        0.104544,
+        -0.011844
+       ],
+       [
+        0.109678,
+        -0.048521
+       ],
+       [
+        0.110257,
+        -0.050279
+       ],
+       [
+        0.111416,
+        -0.051724
+       ],
+       [
+        0.113006,
+        -0.05267
+       ],
+       [
+        0.114828,
+        -0.053
+       ],
+       [
+        0.12,
+        -0.053
+       ]
+      ],
+      "plane": "yz",
+      "from": 0.005,
+      "to": 6.0,
+      "member": "beam",
+      "part": "member",
+      "slender": true
+     },
+     {
+      "id": "member-cleat-leg-r",
+      "of": "cleat-web-leg-r",
+      "member": "cleat",
+      "part": "member"
+     },
+     {
+      "id": "member-cleat-outstanding-r",
+      "of": "cleat-outstanding-r",
+      "member": "cleat",
+      "part": "member"
+     },
+     {
+      "id": "member-cleat-leg-l",
+      "of": "cleat-web-leg-l",
+      "member": "cleat",
+      "part": "member"
+     },
+     {
+      "id": "member-cleat-outstanding-l",
+      "of": "cleat-outstanding-l",
+      "member": "cleat",
+      "part": "member"
+     },
+     {
+      "id": "joint-rivets",
+      "kind": "capsule",
+      "bone": "cleat",
+      "material": "steel-rusted",
+      "role": "body",
+      "tone": 0.3,
+      "p0": [
+       0.035,
+       -0.035,
+       -0.01235
+      ],
+      "p1": [
+       0.035,
+       -0.035,
+       0.01235
+      ],
+      "r0": 0.008,
+      "r1": 0.008,
+      "member": "cleat",
+      "part": "joint",
+      "repeat": {
+       "count": 2,
+       "translation": [
+        0,
+        0.07,
+        0
+       ]
+      }
+     },
+     {
+      "id": "member-bearer-a",
+      "of": "bearer-a",
+      "member": "bearer-a",
+      "part": "member"
+     },
+     {
+      "id": "member-bearer-b",
+      "of": "bearer-b",
+      "member": "bearer-b",
+      "part": "member"
+     },
+     {
+      "id": "joint-load-carrier",
+      "kind": "box",
+      "bone": "load-carrier",
+      "material": "steel-rusted",
+      "role": "body",
+      "tone": 0.3,
+      "size": [
+       0.1,
+       0.0075,
+       0.106
+      ],
+      "transform": {
+       "translation": [
+        0,
+        -0.00375,
+        0
+       ]
+      },
+      "member": "load-carrier",
+      "part": "joint"
+     }
+    ],
+    "decisions": [
+     {
+      "en": "Body: the true INP 240 section of DIN 1025-1 in three parts that meet at the web tangents of the root fillets (95.9 mm from the axis): each flange an extrude of its tapered outline with the 8.7 mm root fillets and 5.2 mm toe radii, the web an 8.7 mm plate with the four old 22 mm bolt holes and the hand flame cut slanting 10 mm across the web (the top flange is 10 mm shorter than the bottom flange).",
+      "de": "Körper: der wahre Querschnitt INP 240 nach DIN 1025-1 in drei Teilen, die sich an den Stegtangenten der Ausrundungen treffen (95,9 mm von der Achse): jeder Flansch ein Extrude seines geneigten Umrisses mit Ausrundungen 8,7 mm und Kantenradien 5,2 mm, der Steg eine 8,7-mm-Platte mit den vier alten 22-mm-Schraubenlöchern und dem 10 mm schrägen Handbrennschnitt über den Steg (der Obergurt ist 10 mm kürzer als der Untergurt)."
+     },
+     {
+      "en": "Cleat: on each side a web leg 70 x 160 x 8 mm, an outstanding leg 8 x 160 x 80 mm with the two 21 mm holes of the removed bolts and the 10 mm root fillet of the angle, and two DIN 124 rivet heads of 28 x 11 mm; the bearers are 100 x 100 x 600 mm boxes touching the bottom flange and the ground.",
+      "de": "Winkel: je Seite ein Stegschenkel 70 x 160 x 8 mm, ein abstehender Schenkel 8 x 160 x 80 mm mit den zwei 21-mm-Löchern der entfernten Schrauben und die 10-mm-Ausrundung des Winkels sowie zwei Nietköpfe DIN 124 von 28 x 11 mm; die Unterleger sind Quader 100 x 100 x 600 mm, die Untergurt und Boden berühren."
+     },
+     {
+      "en": "Thermal: every body solid is its own surface (references): top flange, bottom flange, web (its two contact faces with the flanges are section faces), the cleat parts and the bearers.",
+      "de": "Thermik: jeder Körper ist seine eigene Oberfläche (Verweise): Obergurt, Untergurt, Steg (seine zwei Kontaktflächen zu den Flanschen sind Schnittflächen), die Winkelteile und die Unterleger."
+     },
+     {
+      "en": "Structure: the beam member as one slender extrude of the whole true section along the beam bone, the cleat legs as members of the cleat bone with the rivet shanks as a joint, the bearers as members, a joint for the load carrier on the top flange.",
+      "de": "Tragwerk: das Trägerglied als ein schlankes Extrude des ganzen wahren Querschnitts entlang des Trägerknochens, die Winkelschenkel als Glieder des Winkelknochens mit den Nietschäften als Gelenk, die Unterleger als Glieder, ein Gelenk für den Lastträger auf dem Obergurt."
+     }
+    ]
+   },
+   "100": {
+    "status": "authored",
+    "denominator": 100,
+    "body": [
+     {
+      "id": "top-flange",
+      "kind": "box",
+      "bone": "beam",
+      "material": "steel-rusted",
+      "role": "body",
+      "tone": 0.46,
+      "size": [
+       6.0,
+       0.015,
+       0.106
+      ],
+      "transform": {
+       "translation": [
+        3.0,
+        0.1125,
+        0
+       ]
+      }
+     },
+     {
+      "id": "bottom-flange",
+      "kind": "box",
+      "bone": "beam",
+      "material": "steel-rusted",
+      "role": "body",
+      "tone": 0.44,
+      "size": [
+       6.0,
+       0.015,
+       0.106
+      ],
+      "transform": {
+       "translation": [
+        3.0,
+        -0.1125,
+        0
+       ]
+      }
+     },
+     {
+      "id": "web",
+      "kind": "extrude",
+      "bone": "beam",
+      "material": "steel-rusted",
+      "role": "body",
+      "tone": 0.52,
+      "profile": [
+       [
+        0.0,
+        -0.105
+       ],
+       [
+        6.0,
+        -0.105
+       ],
+       [
+        6.0,
+        0.105
+       ],
+       [
+        0.0,
+        0.105
+       ]
+      ],
+      "plane": "xy",
+      "from": -0.00435,
+      "to": 0.00435,
+      "holes": [
+       [
+        [
+         2.411,
+         -0.035
+        ],
+        [
+         2.410163,
+         -0.03079
+        ],
+        [
+         2.407778,
+         -0.027222
+        ],
+        [
+         2.40421,
+         -0.024837
+        ],
+        [
+         2.4,
+         -0.024
+        ],
+        [
+         2.39579,
+         -0.024837
+        ],
+        [
+         2.392222,
+         -0.027222
+        ],
+        [
+         2.389837,
+         -0.03079
+        ],
+        [
+         2.389,
+         -0.035
+        ],
+        [
+         2.389837,
+         -0.03921
+        ],
+        [
+         2.392222,
+         -0.042778
+        ],
+        [
+         2.39579,
+         -0.045163
+        ],
+        [
+         2.4,
+         -0.046
+        ],
+        [
+         2.40421,
+         -0.045163
+        ],
+        [
+         2.407778,
+         -0.042778
+        ],
+        [
+         2.410163,
+         -0.03921
+        ]
+       ],
+       [
+        [
+         2.411,
+         0.035
+        ],
+        [
+         2.410163,
+         0.03921
+        ],
+        [
+         2.407778,
+         0.042778
+        ],
+        [
+         2.40421,
+         0.045163
+        ],
+        [
+         2.4,
+         0.046
+        ],
+        [
+         2.39579,
+         0.045163
+        ],
+        [
+         2.392222,
+         0.042778
+        ],
+        [
+         2.389837,
+         0.03921
+        ],
+        [
+         2.389,
+         0.035
+        ],
+        [
+         2.389837,
+         0.03079
+        ],
+        [
+         2.392222,
+         0.027222
+        ],
+        [
+         2.39579,
+         0.024837
+        ],
+        [
+         2.4,
+         0.024
+        ],
+        [
+         2.40421,
+         0.024837
+        ],
+        [
+         2.407778,
+         0.027222
+        ],
+        [
+         2.410163,
+         0.03079
+        ]
+       ],
+       [
+        [
+         3.611,
+         -0.035
+        ],
+        [
+         3.610163,
+         -0.03079
+        ],
+        [
+         3.607778,
+         -0.027222
+        ],
+        [
+         3.60421,
+         -0.024837
+        ],
+        [
+         3.6,
+         -0.024
+        ],
+        [
+         3.59579,
+         -0.024837
+        ],
+        [
+         3.592222,
+         -0.027222
+        ],
+        [
+         3.589837,
+         -0.03079
+        ],
+        [
+         3.589,
+         -0.035
+        ],
+        [
+         3.589837,
+         -0.03921
+        ],
+        [
+         3.592222,
+         -0.042778
+        ],
+        [
+         3.59579,
+         -0.045163
+        ],
+        [
+         3.6,
+         -0.046
+        ],
+        [
+         3.60421,
+         -0.045163
+        ],
+        [
+         3.607778,
+         -0.042778
+        ],
+        [
+         3.610163,
+         -0.03921
+        ]
+       ],
+       [
+        [
+         3.611,
+         0.035
+        ],
+        [
+         3.610163,
+         0.03921
+        ],
+        [
+         3.607778,
+         0.042778
+        ],
+        [
+         3.60421,
+         0.045163
+        ],
+        [
+         3.6,
+         0.046
+        ],
+        [
+         3.59579,
+         0.045163
+        ],
+        [
+         3.592222,
+         0.042778
+        ],
+        [
+         3.589837,
+         0.03921
+        ],
+        [
+         3.589,
+         0.035
+        ],
+        [
+         3.589837,
+         0.03079
+        ],
+        [
+         3.592222,
+         0.027222
+        ],
+        [
+         3.59579,
+         0.024837
+        ],
+        [
+         3.6,
+         0.024
+        ],
+        [
+         3.60421,
+         0.024837
+        ],
+        [
+         3.607778,
+         0.027222
+        ],
+        [
+         3.610163,
+         0.03079
+        ]
+       ]
+      ],
+      "sheet": true
+     },
+     {
+      "id": "cleat-angle-r",
+      "kind": "extrude",
+      "bone": "cleat",
+      "material": "steel-rusted",
+      "role": "body",
+      "tone": 0.4,
+      "profile": [
+       [
+        -0.00435,
+        0.078
+       ],
+       [
+        -0.08435,
+        0.078
+       ],
+       [
+        -0.08435,
+        0.063
+       ],
+       [
+        -0.01935,
+        0.063
+       ],
+       [
+        -0.01935,
+        0.0
+       ],
+       [
+        -0.00435,
+        0.0
+       ]
+      ],
+      "plane": "zx",
+      "from": -0.08,
+      "to": 0.08
+     },
+     {
+      "id": "cleat-angle-l",
+      "kind": "extrude",
+      "bone": "cleat",
+      "material": "steel-rusted",
+      "role": "body",
+      "tone": 0.4,
+      "profile": [
+       [
+        0.00435,
+        0.0
+       ],
+       [
+        0.01935,
+        0.0
+       ],
+       [
+        0.01935,
+        0.063
+       ],
+       [
+        0.08435,
+        0.063
+       ],
+       [
+        0.08435,
+        0.078
+       ],
+       [
+        0.00435,
+        0.078
+       ]
+      ],
+      "plane": "zx",
+      "from": -0.08,
+      "to": 0.08
+     },
+     {
+      "id": "bearer-a",
+      "kind": "box",
+      "bone": "bearer-a",
+      "material": "softwood-weathered",
+      "role": "body",
+      "tone": 0.7,
+      "size": [
+       0.1,
+       0.1,
+       0.6
+      ],
+      "transform": {
+       "translation": [
+        0.05,
+        0,
+        0
+       ]
+      }
+     },
+     {
+      "id": "bearer-b",
+      "kind": "box",
+      "bone": "bearer-b",
+      "material": "softwood-weathered",
+      "role": "body",
+      "tone": 0.7,
+      "size": [
+       0.1,
+       0.1,
+       0.6
+      ],
+      "transform": {
+       "translation": [
+        0.05,
+        0,
+        0
+       ]
+      }
+     }
+    ],
+    "thermal": [
+     {
+      "id": "th-top-flange",
+      "of": "top-flange",
+      "region": "top-flange"
+     },
+     {
+      "id": "th-bottom-flange",
+      "of": "bottom-flange",
+      "region": "bottom-flange"
+     },
+     {
+      "id": "th-web",
+      "of": "web",
+      "region": "web",
+      "sectionFaces": [
+       "+v",
+       "-v"
+      ]
+     },
+     {
+      "id": "th-cleat-angle-r",
+      "of": "cleat-angle-r",
+      "region": "end-cleat"
+     },
+     {
+      "id": "th-cleat-angle-l",
+      "of": "cleat-angle-l",
+      "region": "end-cleat"
+     },
+     {
+      "id": "th-bearer-a",
+      "of": "bearer-a",
+      "region": "bearers"
+     },
+     {
+      "id": "th-bearer-b",
+      "of": "bearer-b",
+      "region": "bearers"
+     }
+    ],
+    "structure": [
+     {
+      "id": "member-beam",
+      "kind": "extrude",
+      "bone": "beam",
+      "material": "steel-rusted",
+      "role": "body",
+      "tone": 0.5,
+      "profile": [
+       [
+        0.12,
+        0.053
+       ],
+       [
+        0.114828,
+        0.053
+       ],
+       [
+        0.113006,
+        0.05267
+       ],
+       [
+        0.111416,
+        0.051724
+       ],
+       [
+        0.110257,
+        0.050279
+       ],
+       [
+        0.109678,
+        0.048521
+       ],
+       [
+        0.104544,
+        0.011844
+       ],
+       [
+        0.104014,
+        0.009841
+       ],
+       [
+        0.103027,
+        0.008021
+       ],
+       [
+        0.101637,
+        0.006486
+       ],
+       [
+        0.099924,
+        0.005322
+       ],
+       [
+        0.097984,
+        0.004597
+       ],
+       [
+        0.095928,
+        0.00435
+       ],
+       [
+        -0.095928,
+        0.00435
+       ],
+       [
+        -0.097984,
+        0.004597
+       ],
+       [
+        -0.099924,
+        0.005322
+       ],
+       [
+        -0.101637,
+        0.006486
+       ],
+       [
+        -0.103027,
+        0.008021
+       ],
+       [
+        -0.104014,
+        0.009841
+       ],
+       [
+        -0.104544,
+        0.011844
+       ],
+       [
+        -0.109678,
+        0.048521
+       ],
+       [
+        -0.110257,
+        0.050279
+       ],
+       [
+        -0.111416,
+        0.051724
+       ],
+       [
+        -0.113006,
+        0.05267
+       ],
+       [
+        -0.114828,
+        0.053
+       ],
+       [
+        -0.12,
+        0.053
+       ],
+       [
+        -0.12,
+        -0.053
+       ],
+       [
+        -0.114828,
+        -0.053
+       ],
+       [
+        -0.113006,
+        -0.05267
+       ],
+       [
+        -0.111416,
+        -0.051724
+       ],
+       [
+        -0.110257,
+        -0.050279
+       ],
+       [
+        -0.109678,
+        -0.048521
+       ],
+       [
+        -0.104544,
+        -0.011844
+       ],
+       [
+        -0.104014,
+        -0.009841
+       ],
+       [
+        -0.103027,
+        -0.008021
+       ],
+       [
+        -0.101637,
+        -0.006486
+       ],
+       [
+        -0.099924,
+        -0.005322
+       ],
+       [
+        -0.097984,
+        -0.004597
+       ],
+       [
+        -0.095928,
+        -0.00435
+       ],
+       [
+        0.095928,
+        -0.00435
+       ],
+       [
+        0.097984,
+        -0.004597
+       ],
+       [
+        0.099924,
+        -0.005322
+       ],
+       [
+        0.101637,
+        -0.006486
+       ],
+       [
+        0.103027,
+        -0.008021
+       ],
+       [
+        0.104014,
+        -0.009841
+       ],
+       [
+        0.104544,
+        -0.011844
+       ],
+       [
+        0.109678,
+        -0.048521
+       ],
+       [
+        0.110257,
+        -0.050279
+       ],
+       [
+        0.111416,
+        -0.051724
+       ],
+       [
+        0.113006,
+        -0.05267
+       ],
+       [
+        0.114828,
+        -0.053
+       ],
+       [
+        0.12,
+        -0.053
+       ]
+      ],
+      "plane": "yz",
+      "from": 0.0,
+      "to": 6.0,
+      "member": "beam",
+      "part": "member",
+      "slender": true
+     },
+     {
+      "id": "member-cleat-angle-r",
+      "of": "cleat-angle-r",
+      "member": "cleat",
+      "part": "member"
+     },
+     {
+      "id": "member-cleat-angle-l",
+      "of": "cleat-angle-l",
+      "member": "cleat",
+      "part": "member"
+     },
+     {
+      "id": "joint-rivets",
+      "kind": "box",
+      "bone": "cleat",
+      "material": "steel-rusted",
+      "role": "body",
+      "tone": 0.3,
+      "size": [
+       0.016,
+       0.086,
+       0.0387
+      ],
+      "transform": {
+       "translation": [
+        0.035,
+        0,
+        0
+       ]
+      },
+      "member": "cleat",
+      "part": "joint"
+     },
+     {
+      "id": "member-bearer-a",
+      "of": "bearer-a",
+      "member": "bearer-a",
+      "part": "member"
+     },
+     {
+      "id": "member-bearer-b",
+      "of": "bearer-b",
+      "member": "bearer-b",
+      "part": "member"
+     },
+     {
+      "id": "joint-load-carrier",
+      "kind": "box",
+      "bone": "load-carrier",
+      "material": "steel-rusted",
+      "role": "body",
+      "tone": 0.3,
+      "size": [
+       0.1,
+       0.015,
+       0.106
+      ],
+      "transform": {
+       "translation": [
+        0,
+        -0.0075,
+        0
+       ]
+      },
+      "member": "load-carrier",
+      "part": "joint"
+     }
+    ],
+    "decisions": [
+     {
+      "en": "Body: parallel flanges of 15 mm (the 13.1 mm mean flange with taper and radii is below the 15 mm feature), the web as a declared 8.7 mm sheet (210 mm high, 24 times its thickness) that keeps its four 22 mm holes, the hand cut squared.",
+      "de": "Körper: parallele Flansche von 15 mm (der 13,1 mm mittlere Flansch mit Neigung und Radien liegt unter der Einzelheit von 15 mm), der Steg als erklärtes 8,7-mm-Blech (210 mm hoch, 24-mal seine Dicke) mit seinen vier 22-mm-Löchern, der Handschnitt rechtwinklig."
+     },
+     {
+      "en": "Cleat: each angle one L extrude with 15 mm legs; rivet heads (11 mm) and the 21 mm leg holes are left out of the solid and drawn as circles.",
+      "de": "Winkel: jeder Winkel ein L-Extrude mit 15-mm-Schenkeln; Nietköpfe (11 mm) und die 21-mm-Schenkellöcher fehlen im Körper und sind als Kreise gezeichnet."
+     },
+     {
+      "en": "Thermal: references to the body solids, the web contact faces as section faces. Structure: the true section as slender member, the two angles as cleat members, one rivet block as joint, bearers, load joint 15 mm.",
+      "de": "Thermik: Verweise auf die Körper, die Kontaktflächen des Stegs als Schnittflächen. Tragwerk: der wahre Querschnitt als schlankes Glied, die zwei Winkel als Winkelglieder, ein Nietblock als Gelenk, Unterleger, Lastgelenk 15 mm."
+     }
+    ]
+   },
+   "200": {
+    "status": "authored",
+    "denominator": 200,
+    "body": [
+     {
+      "id": "top-flange",
+      "kind": "box",
+      "bone": "beam",
+      "material": "steel-rusted",
+      "role": "body",
+      "tone": 0.46,
+      "size": [
+       6.0,
+       0.03,
+       0.106
+      ],
+      "transform": {
+       "translation": [
+        3.0,
+        0.105,
+        0
+       ]
+      }
+     },
+     {
+      "id": "bottom-flange",
+      "kind": "box",
+      "bone": "beam",
+      "material": "steel-rusted",
+      "role": "body",
+      "tone": 0.44,
+      "size": [
+       6.0,
+       0.03,
+       0.106
+      ],
+      "transform": {
+       "translation": [
+        3.0,
+        -0.105,
+        0
+       ]
+      }
+     },
+     {
+      "id": "web",
+      "kind": "box",
+      "bone": "beam",
+      "material": "steel-rusted",
+      "role": "body",
+      "tone": 0.52,
+      "size": [
+       6.0,
+       0.18,
+       0.0087
+      ],
+      "transform": {
+       "translation": [
+        3.0,
+        0,
+        0
+       ]
+      },
+      "sheet": true
+     },
+     {
+      "id": "cleat-block-r",
+      "kind": "box",
+      "bone": "cleat",
+      "material": "steel-rusted",
+      "role": "body",
+      "tone": 0.38,
+      "size": [
+       0.078,
+       0.18,
+       0.08
+      ],
+      "transform": {
+       "translation": [
+        0.039,
+        0,
+        -0.04435
+       ]
+      }
+     },
+     {
+      "id": "cleat-block-l",
+      "kind": "box",
+      "bone": "cleat",
+      "material": "steel-rusted",
+      "role": "body",
+      "tone": 0.38,
+      "size": [
+       0.078,
+       0.18,
+       0.08
+      ],
+      "transform": {
+       "translation": [
+        0.039,
+        0,
+        0.04435
+       ]
+      }
+     },
+     {
+      "id": "bearer-a",
+      "kind": "box",
+      "bone": "bearer-a",
+      "material": "softwood-weathered",
+      "role": "body",
+      "tone": 0.7,
+      "size": [
+       0.1,
+       0.1,
+       0.6
+      ],
+      "transform": {
+       "translation": [
+        0.05,
+        0,
+        0
+       ]
+      }
+     },
+     {
+      "id": "bearer-b",
+      "kind": "box",
+      "bone": "bearer-b",
+      "material": "softwood-weathered",
+      "role": "body",
+      "tone": 0.7,
+      "size": [
+       0.1,
+       0.1,
+       0.6
+      ],
+      "transform": {
+       "translation": [
+        0.05,
+        0,
+        0
+       ]
+      }
+     }
+    ],
+    "thermal": [
+     {
+      "id": "th-top-flange",
+      "of": "top-flange",
+      "region": "top-flange"
+     },
+     {
+      "id": "th-bottom-flange",
+      "of": "bottom-flange",
+      "region": "bottom-flange"
+     },
+     {
+      "id": "th-web",
+      "of": "web",
+      "region": "web",
+      "sectionFaces": [
+       "+v",
+       "-v"
+      ]
+     },
+     {
+      "id": "th-cleat-block-r",
+      "of": "cleat-block-r",
+      "region": "end-cleat"
+     },
+     {
+      "id": "th-cleat-block-l",
+      "of": "cleat-block-l",
+      "region": "end-cleat"
+     },
+     {
+      "id": "th-bearer-a",
+      "of": "bearer-a",
+      "region": "bearers"
+     },
+     {
+      "id": "th-bearer-b",
+      "of": "bearer-b",
+      "region": "bearers"
+     }
+    ],
+    "structure": [
+     {
+      "id": "member-beam",
+      "kind": "extrude",
+      "bone": "beam",
+      "material": "steel-rusted",
+      "role": "body",
+      "tone": 0.5,
+      "profile": [
+       [
+        0.12,
+        0.053
+       ],
+       [
+        0.114828,
+        0.053
+       ],
+       [
+        0.113006,
+        0.05267
+       ],
+       [
+        0.111416,
+        0.051724
+       ],
+       [
+        0.110257,
+        0.050279
+       ],
+       [
+        0.109678,
+        0.048521
+       ],
+       [
+        0.104544,
+        0.011844
+       ],
+       [
+        0.104014,
+        0.009841
+       ],
+       [
+        0.103027,
+        0.008021
+       ],
+       [
+        0.101637,
+        0.006486
+       ],
+       [
+        0.099924,
+        0.005322
+       ],
+       [
+        0.097984,
+        0.004597
+       ],
+       [
+        0.095928,
+        0.00435
+       ],
+       [
+        -0.095928,
+        0.00435
+       ],
+       [
+        -0.097984,
+        0.004597
+       ],
+       [
+        -0.099924,
+        0.005322
+       ],
+       [
+        -0.101637,
+        0.006486
+       ],
+       [
+        -0.103027,
+        0.008021
+       ],
+       [
+        -0.104014,
+        0.009841
+       ],
+       [
+        -0.104544,
+        0.011844
+       ],
+       [
+        -0.109678,
+        0.048521
+       ],
+       [
+        -0.110257,
+        0.050279
+       ],
+       [
+        -0.111416,
+        0.051724
+       ],
+       [
+        -0.113006,
+        0.05267
+       ],
+       [
+        -0.114828,
+        0.053
+       ],
+       [
+        -0.12,
+        0.053
+       ],
+       [
+        -0.12,
+        -0.053
+       ],
+       [
+        -0.114828,
+        -0.053
+       ],
+       [
+        -0.113006,
+        -0.05267
+       ],
+       [
+        -0.111416,
+        -0.051724
+       ],
+       [
+        -0.110257,
+        -0.050279
+       ],
+       [
+        -0.109678,
+        -0.048521
+       ],
+       [
+        -0.104544,
+        -0.011844
+       ],
+       [
+        -0.104014,
+        -0.009841
+       ],
+       [
+        -0.103027,
+        -0.008021
+       ],
+       [
+        -0.101637,
+        -0.006486
+       ],
+       [
+        -0.099924,
+        -0.005322
+       ],
+       [
+        -0.097984,
+        -0.004597
+       ],
+       [
+        -0.095928,
+        -0.00435
+       ],
+       [
+        0.095928,
+        -0.00435
+       ],
+       [
+        0.097984,
+        -0.004597
+       ],
+       [
+        0.099924,
+        -0.005322
+       ],
+       [
+        0.101637,
+        -0.006486
+       ],
+       [
+        0.103027,
+        -0.008021
+       ],
+       [
+        0.104014,
+        -0.009841
+       ],
+       [
+        0.104544,
+        -0.011844
+       ],
+       [
+        0.109678,
+        -0.048521
+       ],
+       [
+        0.110257,
+        -0.050279
+       ],
+       [
+        0.111416,
+        -0.051724
+       ],
+       [
+        0.113006,
+        -0.05267
+       ],
+       [
+        0.114828,
+        -0.053
+       ],
+       [
+        0.12,
+        -0.053
+       ]
+      ],
+      "plane": "yz",
+      "from": 0.0,
+      "to": 6.0,
+      "member": "beam",
+      "part": "member",
+      "slender": true
+     },
+     {
+      "id": "member-cleat-block-r",
+      "of": "cleat-block-r",
+      "member": "cleat",
+      "part": "member"
+     },
+     {
+      "id": "member-cleat-block-l",
+      "of": "cleat-block-l",
+      "member": "cleat",
+      "part": "member"
+     },
+     {
+      "id": "member-bearer-a",
+      "of": "bearer-a",
+      "member": "bearer-a",
+      "part": "member"
+     },
+     {
+      "id": "member-bearer-b",
+      "of": "bearer-b",
+      "member": "bearer-b",
+      "part": "member"
+     },
+     {
+      "id": "joint-load-carrier",
+      "kind": "box",
+      "bone": "load-carrier",
+      "material": "steel-rusted",
+      "role": "body",
+      "tone": 0.3,
+      "size": [
+       0.1,
+       0.03,
+       0.106
+      ],
+      "transform": {
+       "translation": [
+        0,
+        -0.015,
+        0
+       ]
+      },
+      "member": "load-carrier",
+      "part": "joint"
+     }
+    ],
+    "decisions": [
+     {
+      "en": "Body: flange slabs of 30 mm and the web as a declared 8.7 mm sheet (180 mm, 21 times its thickness) without holes; the two cleat angles each a block 78 x 180 x 80 mm filling the clear depth between the flanges, so the front view keeps no sliver below the feature.",
+      "de": "Körper: Flanschplatten von 30 mm und der Steg als erklärtes 8,7-mm-Blech (180 mm, 21-mal seine Dicke) ohne Löcher; die zwei Winkel je ein Block 78 x 180 x 80 mm, der die lichte Höhe zwischen den Flanschen füllt, damit die Vorderansicht keinen Spalt unter der Einzelheit behält."
+     },
+     {
+      "en": "Thermal: references to the body solids; only the total area is compared at this scale. Structure: the true section as slender member (true at every scale), the cleat blocks as members, bearers, load joint 30 mm.",
+      "de": "Thermik: Verweise auf die Körper; in diesem Maßstab wird nur die Gesamtfläche verglichen. Tragwerk: der wahre Querschnitt als schlankes Glied (in jedem Maßstab wahr), die Winkelblöcke als Glieder, Unterleger, Lastgelenk 30 mm."
+     }
+    ]
+   },
+   "500": {
+    "status": "authored",
+    "denominator": 500,
+    "body": [
+     {
+      "id": "beam",
+      "kind": "box",
+      "bone": "beam",
+      "material": "steel-rusted",
+      "role": "body",
+      "tone": 0.42,
+      "size": [
+       6.008,
+       0.24,
+       0.106
+      ],
+      "transform": {
+       "translation": [
+        3.004,
+        0,
+        0
+       ]
+      }
+     },
+     {
+      "id": "bearer-a",
+      "kind": "box",
+      "bone": "bearer-a",
+      "material": "softwood-weathered",
+      "role": "body",
+      "tone": 0.66,
+      "size": [
+       0.1,
+       0.1,
+       0.6
+      ],
+      "transform": {
+       "translation": [
+        0.05,
+        0,
+        0
+       ]
+      }
+     },
+     {
+      "id": "bearer-b",
+      "kind": "box",
+      "bone": "bearer-b",
+      "material": "softwood-weathered",
+      "role": "body",
+      "tone": 0.66,
+      "size": [
+       0.1,
+       0.1,
+       0.6
+      ],
+      "transform": {
+       "translation": [
+        0.05,
+        0,
+        0
+       ]
+      }
+     }
+    ],
+    "thermal": [
+     {
+      "id": "th-top-slab",
+      "kind": "box",
+      "bone": "beam",
+      "material": "steel-rusted",
+      "role": "body",
+      "tone": 0.46,
+      "size": [
+       5.933,
+       0.075,
+       0.106
+      ],
+      "transform": {
+       "translation": [
+        2.9665,
+        0.0825,
+        0
+       ]
+      },
+      "region": "top-flange",
+      "sectionFaces": [
+       "-v"
+      ]
+     },
+     {
+      "id": "th-web-slab",
+      "kind": "box",
+      "bone": "beam",
+      "material": "steel-rusted",
+      "role": "body",
+      "tone": 0.52,
+      "size": [
+       5.933,
+       0.09,
+       0.106
+      ],
+      "transform": {
+       "translation": [
+        2.9665,
+        0,
+        0
+       ]
+      },
+      "region": "web",
+      "sectionFaces": [
+       "+v",
+       "-v"
+      ]
+     },
+     {
+      "id": "th-bottom-slab",
+      "kind": "box",
+      "bone": "beam",
+      "material": "steel-rusted",
+      "role": "body",
+      "tone": 0.44,
+      "size": [
+       5.933,
+       0.075,
+       0.106
+      ],
+      "transform": {
+       "translation": [
+        2.9665,
+        -0.0825,
+        0
+       ]
+      },
+      "region": "bottom-flange",
+      "sectionFaces": [
+       "+v"
+      ]
+     },
+     {
+      "id": "th-cleat-end",
+      "kind": "box",
+      "bone": "cleat",
+      "material": "steel-rusted",
+      "role": "body",
+      "tone": 0.38,
+      "size": [
+       0.075,
+       0.24,
+       0.106
+      ],
+      "transform": {
+       "translation": [
+        0.0405,
+        0,
+        0
+       ]
+      },
+      "region": "end-cleat"
+     },
+     {
+      "id": "th-bearer-a",
+      "of": "bearer-a",
+      "region": "bearers"
+     },
+     {
+      "id": "th-bearer-b",
+      "of": "bearer-b",
+      "region": "bearers"
+     }
+    ],
+    "structure": [
+     {
+      "id": "member-beam",
+      "kind": "extrude",
+      "bone": "beam",
+      "material": "steel-rusted",
+      "role": "body",
+      "tone": 0.5,
+      "profile": [
+       [
+        0.12,
+        0.053
+       ],
+       [
+        0.114828,
+        0.053
+       ],
+       [
+        0.113006,
+        0.05267
+       ],
+       [
+        0.111416,
+        0.051724
+       ],
+       [
+        0.110257,
+        0.050279
+       ],
+       [
+        0.109678,
+        0.048521
+       ],
+       [
+        0.104544,
+        0.011844
+       ],
+       [
+        0.104014,
+        0.009841
+       ],
+       [
+        0.103027,
+        0.008021
+       ],
+       [
+        0.101637,
+        0.006486
+       ],
+       [
+        0.099924,
+        0.005322
+       ],
+       [
+        0.097984,
+        0.004597
+       ],
+       [
+        0.095928,
+        0.00435
+       ],
+       [
+        -0.095928,
+        0.00435
+       ],
+       [
+        -0.097984,
+        0.004597
+       ],
+       [
+        -0.099924,
+        0.005322
+       ],
+       [
+        -0.101637,
+        0.006486
+       ],
+       [
+        -0.103027,
+        0.008021
+       ],
+       [
+        -0.104014,
+        0.009841
+       ],
+       [
+        -0.104544,
+        0.011844
+       ],
+       [
+        -0.109678,
+        0.048521
+       ],
+       [
+        -0.110257,
+        0.050279
+       ],
+       [
+        -0.111416,
+        0.051724
+       ],
+       [
+        -0.113006,
+        0.05267
+       ],
+       [
+        -0.114828,
+        0.053
+       ],
+       [
+        -0.12,
+        0.053
+       ],
+       [
+        -0.12,
+        -0.053
+       ],
+       [
+        -0.114828,
+        -0.053
+       ],
+       [
+        -0.113006,
+        -0.05267
+       ],
+       [
+        -0.111416,
+        -0.051724
+       ],
+       [
+        -0.110257,
+        -0.050279
+       ],
+       [
+        -0.109678,
+        -0.048521
+       ],
+       [
+        -0.104544,
+        -0.011844
+       ],
+       [
+        -0.104014,
+        -0.009841
+       ],
+       [
+        -0.103027,
+        -0.008021
+       ],
+       [
+        -0.101637,
+        -0.006486
+       ],
+       [
+        -0.099924,
+        -0.005322
+       ],
+       [
+        -0.097984,
+        -0.004597
+       ],
+       [
+        -0.095928,
+        -0.00435
+       ],
+       [
+        0.095928,
+        -0.00435
+       ],
+       [
+        0.097984,
+        -0.004597
+       ],
+       [
+        0.099924,
+        -0.005322
+       ],
+       [
+        0.101637,
+        -0.006486
+       ],
+       [
+        0.103027,
+        -0.008021
+       ],
+       [
+        0.104014,
+        -0.009841
+       ],
+       [
+        0.104544,
+        -0.011844
+       ],
+       [
+        0.109678,
+        -0.048521
+       ],
+       [
+        0.110257,
+        -0.050279
+       ],
+       [
+        0.111416,
+        -0.051724
+       ],
+       [
+        0.113006,
+        -0.05267
+       ],
+       [
+        0.114828,
+        -0.053
+       ],
+       [
+        0.12,
+        -0.053
+       ]
+      ],
+      "plane": "yz",
+      "from": 0.0,
+      "to": 6.0,
+      "member": "beam",
+      "part": "member",
+      "slender": true
+     },
+     {
+      "id": "member-cleat",
+      "kind": "box",
+      "bone": "cleat",
+      "material": "steel-rusted",
+      "role": "body",
+      "tone": 0.38,
+      "size": [
+       0.078,
+       0.16,
+       0.106
+      ],
+      "transform": {
+       "translation": [
+        0.039,
+        0,
+        0
+       ]
+      },
+      "member": "cleat",
+      "part": "member"
+     },
+     {
+      "id": "member-bearer-a",
+      "of": "bearer-a",
+      "member": "bearer-a",
+      "part": "member"
+     },
+     {
+      "id": "member-bearer-b",
+      "of": "bearer-b",
+      "member": "bearer-b",
+      "part": "member"
+     },
+     {
+      "id": "joint-load-carrier",
+      "kind": "box",
+      "bone": "load-carrier",
+      "material": "steel-rusted",
+      "role": "body",
+      "tone": 0.3,
+      "size": [
+       0.1,
+       0.075,
+       0.106
+      ],
+      "transform": {
+       "translation": [
+        0,
+        -0.0375,
+        0
+       ]
+      },
+      "member": "load-carrier",
+      "part": "joint"
+     }
+    ],
+    "decisions": [
+     {
+      "en": "Body: one bar 6008 x 240 x 106 mm that takes the cleat in, and the two bearer blocks of 100 x 100 x 600 mm (above the 75 mm feature, kept to show the storage state).",
+      "de": "Körper: ein Stab 6008 x 240 x 106 mm, der den Winkel aufnimmt, und die zwei Unterlegerblöcke 100 x 100 x 600 mm (über der Einzelheit von 75 mm, behalten, um den Lagerzustand zu zeigen)."
+     },
+     {
+      "en": "Thermal: the bar shared among three slabs of 75 / 90 / 75 mm for top flange, web and bottom flange with their contact faces as section faces, the last 75 mm of the bar as the cleat region, the bearers as references.",
+      "de": "Thermik: der Stab auf drei Platten von 75 / 90 / 75 mm für Obergurt, Steg und Untergurt aufgeteilt, ihre Kontaktflächen als Schnittflächen, die letzten 75 mm des Stabs als Winkelregion, die Unterleger als Verweise."
+     },
+     {
+      "en": "Structure: the true section as slender member, the cleat as one 78 x 160 x 106 mm member inside the bar, bearers, load joint 75 mm.",
+      "de": "Tragwerk: der wahre Querschnitt als schlankes Glied, der Winkel als ein Glied 78 x 160 x 106 mm im Stab, Unterleger, Lastgelenk 75 mm."
+     }
+    ]
+   }
+  },
+  "anchors": [
+   {
+    "id": "ground-a",
+    "bone": "bearer-a",
+    "x": 0.05,
+    "y": -0.05,
+    "kind": "contact",
+    "title": {
+     "en": "Bearer A on the yard ground",
+     "de": "Unterleger A auf dem Lagerplatz"
+    },
+    "support": "contact",
+    "footprintLengthM": 0.1,
+    "footprintWidthM": 0.6,
+    "frictionCoefficient": 0.5
+   },
+   {
+    "id": "ground-b",
+    "bone": "bearer-b",
+    "x": 0.05,
+    "y": -0.05,
+    "kind": "contact",
+    "title": {
+     "en": "Bearer B on the yard ground",
+     "de": "Unterleger B auf dem Lagerplatz"
+    },
+    "support": "contact",
+    "footprintLengthM": 0.1,
+    "footprintWidthM": 0.6,
+    "frictionCoefficient": 0.5
+   },
+   {
+    "id": "sling-a",
+    "bone": "beam",
+    "x": 1.25,
+    "y": 0.12,
+    "kind": "support",
+    "title": {
+     "en": "Sling point A on the top flange (leg at 60°)",
+     "de": "Anschlagpunkt A am Obergurt (Strang unter 60°)"
+    },
+    "support": "pin"
+   },
+   {
+    "id": "sling-b",
+    "bone": "beam",
+    "x": 4.75,
+    "y": 0.12,
+    "kind": "support",
+    "title": {
+     "en": "Sling point B on the top flange (leg at 120°)",
+     "de": "Anschlagpunkt B am Obergurt (Strang unter 120°)"
+    },
+    "support": "roller",
+    "normalDeg": 120
+   },
+   {
+    "id": "bearing-wall",
+    "bone": "beam",
+    "x": 0.1,
+    "y": -0.12,
+    "kind": "support",
+    "title": {
+     "en": "Flame-cut end on a wall bearing plate, roller",
+     "de": "Brenngeschnittenes Ende auf Mauerlagerplatte, Rollenlager"
+    },
+    "support": "roller",
+    "normalDeg": 90,
+    "footprintLengthM": 0.2,
+    "footprintWidthM": 0.106
+   },
+   {
+    "id": "bearing-cleat",
+    "bone": "cleat",
+    "x": 0.07400000000000001,
+    "y": 0,
+    "kind": "support",
+    "title": {
+     "en": "Cleat bolted to a girder web, pin",
+     "de": "Winkelanschluss an Unterzugsteg, Festlager"
+    },
+    "support": "pin"
+   },
+   {
+    "id": "load-point",
+    "bone": "load-carrier",
+    "x": 0,
+    "y": 0,
+    "kind": "load",
+    "title": {
+     "en": "Concentrated load on the top flange",
+     "de": "Einzellast auf dem Obergurt"
+    }
+   }
+  ],
+  "representations": {
+   "50": {
+    "status": "authored",
+    "denominator": 50,
+    "validRange": {
+     "minDenominator": 20,
+     "maxDenominator": 75
+    },
+    "pens": {
+     "body": 0.35,
+     "detail": 0.18,
+     "texture": 0.1,
+     "glazing": 0.13,
+     "ground": 0.5
+    },
+    "hatches": [
+     {
+      "id": "rust",
+      "title": {
+       "en": "Rust patina",
+       "de": "Rostpatina"
+      },
+      "pattern": "stipple",
+      "angleDeg": 0,
+      "spacingMm": 0.8,
+      "penMm": 0.1
+     }
+    ],
+    "geometry": {
+     "elevation": [
+      {
+       "id": "top-flange-edge",
+       "bone": "beam",
+       "role": "body",
+       "z": 2.2,
+       "filled": true,
+       "tone": 0.42,
+       "region": "top-flange",
+       "material": "steel-rusted",
+       "penMm": 0.25,
+       "kind": "poly",
+       "points": [
+        [
+         0.01,
+         0.110306
+        ],
+        [
+         6.0,
+         0.110306
+        ],
+        [
+         6.0,
+         0.12
+        ],
+        [
+         0.01,
+         0.12
+        ]
+       ],
+       "closed": true
+      },
+      {
+       "id": "top-flange-underside",
+       "bone": "beam",
+       "role": "body",
+       "z": 2.1,
+       "filled": true,
+       "tone": 0.26,
+       "region": "top-flange",
+       "material": "steel-rusted",
+       "penMm": 0.18,
+       "kind": "poly",
+       "points": [
+        [
+         0.01,
+         0.095928
+        ],
+        [
+         6.0,
+         0.095928
+        ],
+        [
+         6.0,
+         0.110306
+        ],
+        [
+         0.01,
+         0.110306
+        ]
+       ],
+       "closed": true
+      },
+      {
+       "id": "bottom-flange-edge",
+       "bone": "beam",
+       "role": "body",
+       "z": 2.2,
+       "filled": true,
+       "tone": 0.42,
+       "region": "bottom-flange",
+       "material": "steel-rusted",
+       "penMm": 0.25,
+       "kind": "poly",
+       "points": [
+        [
+         0.0,
+         -0.110306
+        ],
+        [
+         6.0,
+         -0.110306
+        ],
+        [
+         6.0,
+         -0.12
+        ],
+        [
+         0.0,
+         -0.12
+        ]
+       ],
+       "closed": true
+      },
+      {
+       "id": "bottom-flange-underside",
+       "bone": "beam",
+       "role": "body",
+       "z": 2.1,
+       "filled": true,
+       "tone": 0.26,
+       "region": "bottom-flange",
+       "material": "steel-rusted",
+       "penMm": 0.18,
+       "kind": "poly",
+       "points": [
+        [
+         0.0,
+         -0.095928
+        ],
+        [
+         6.0,
+         -0.095928
+        ],
+        [
+         6.0,
+         -0.110306
+        ],
+        [
+         0.0,
+         -0.110306
+        ]
+       ],
+       "closed": true
+      },
+      {
+       "id": "web-face",
+       "bone": "beam",
+       "role": "body",
+       "z": 2.0,
+       "filled": true,
+       "tone": 0.55,
+       "region": "web",
+       "material": "steel-rusted",
+       "hatch": "rust",
+       "penMm": 0.18,
+       "kind": "path",
+       "d": "M 0.000000 -0.095928 L 6.000000 -0.095928 L 6.000000 0.095928 L 0.010000 0.095928 Z M 2.411000 -0.035000 L 2.410163 -0.030790 L 2.407778 -0.027222 L 2.404210 -0.024837 L 2.400000 -0.024000 L 2.395790 -0.024837 L 2.392222 -0.027222 L 2.389837 -0.030790 L 2.389000 -0.035000 L 2.389837 -0.039210 L 2.392222 -0.042778 L 2.395790 -0.045163 L 2.400000 -0.046000 L 2.404210 -0.045163 L 2.407778 -0.042778 L 2.410163 -0.039210 Z M 2.411000 0.035000 L 2.410163 0.039210 L 2.407778 0.042778 L 2.404210 0.045163 L 2.400000 0.046000 L 2.395790 0.045163 L 2.392222 0.042778 L 2.389837 0.039210 L 2.389000 0.035000 L 2.389837 0.030790 L 2.392222 0.027222 L 2.395790 0.024837 L 2.400000 0.024000 L 2.404210 0.024837 L 2.407778 0.027222 L 2.410163 0.030790 Z M 3.611000 -0.035000 L 3.610163 -0.030790 L 3.607778 -0.027222 L 3.604210 -0.024837 L 3.600000 -0.024000 L 3.595790 -0.024837 L 3.592222 -0.027222 L 3.589837 -0.030790 L 3.589000 -0.035000 L 3.589837 -0.039210 L 3.592222 -0.042778 L 3.595790 -0.045163 L 3.600000 -0.046000 L 3.604210 -0.045163 L 3.607778 -0.042778 L 3.610163 -0.039210 Z M 3.611000 0.035000 L 3.610163 0.039210 L 3.607778 0.042778 L 3.604210 0.045163 L 3.600000 0.046000 L 3.595790 0.045163 L 3.592222 0.042778 L 3.589837 0.039210 L 3.589000 0.035000 L 3.589837 0.030790 L 3.592222 0.027222 L 3.595790 0.024837 L 3.600000 0.024000 L 3.604210 0.024837 L 3.607778 0.027222 L 3.610163 0.030790 Z"
+      },
+      {
+       "id": "flame-cut-edge",
+       "bone": "beam",
+       "role": "detail",
+       "z": 4.0,
+       "filled": false,
+       "tone": 0.2,
+       "region": "web",
+       "kind": "poly",
+       "points": [
+        [
+         0.0,
+         -0.12
+        ],
+        [
+         0.0,
+         -0.095928
+        ],
+        [
+         0.01,
+         0.095928
+        ],
+        [
+         0.01,
+         0.12
+        ]
+       ],
+       "closed": false
+      },
+      {
+       "id": "heat-tint",
+       "bone": "beam",
+       "role": "texture",
+       "z": 4.1,
+       "filled": false,
+       "tone": 0.3,
+       "region": "web",
+       "kind": "poly",
+       "points": [
+        [
+         0.018,
+         -0.095928
+        ],
+        [
+         0.028,
+         0.095928
+        ]
+       ],
+       "closed": false
+      },
+      {
+       "id": "bolt-hole-rim-2-40-a",
+       "bone": "beam",
+       "role": "texture",
+       "z": 4.2,
+       "filled": false,
+       "tone": 0.2,
+       "region": "web",
+       "kind": "ellipse",
+       "cx": 2.403,
+       "cy": -0.038,
+       "rx": 0.011,
+       "ry": 0.011
+      },
+      {
+       "id": "bolt-hole-rim-2-40-b",
+       "bone": "beam",
+       "role": "texture",
+       "z": 4.2,
+       "filled": false,
+       "tone": 0.2,
+       "region": "web",
+       "kind": "ellipse",
+       "cx": 2.403,
+       "cy": 0.032,
+       "rx": 0.011,
+       "ry": 0.011
+      },
+      {
+       "id": "bolt-hole-rim-3-60-a",
+       "bone": "beam",
+       "role": "texture",
+       "z": 4.2,
+       "filled": false,
+       "tone": 0.2,
+       "region": "web",
+       "kind": "ellipse",
+       "cx": 3.603,
+       "cy": -0.038,
+       "rx": 0.011,
+       "ry": 0.011
+      },
+      {
+       "id": "bolt-hole-rim-3-60-b",
+       "bone": "beam",
+       "role": "texture",
+       "z": 4.2,
+       "filled": false,
+       "tone": 0.2,
+       "region": "web",
+       "kind": "ellipse",
+       "cx": 3.603,
+       "cy": 0.032,
+       "rx": 0.011,
+       "ry": 0.011
+      },
+      {
+       "id": "cleat-leg",
+       "bone": "cleat",
+       "role": "body",
+       "z": 3.0,
+       "filled": true,
+       "tone": 0.4,
+       "region": "end-cleat",
+       "material": "steel-rusted",
+       "kind": "rect",
+       "x": 0.0,
+       "y": -0.08,
+       "w": 0.078,
+       "h": 0.16
+      },
+      {
+       "id": "cleat-heel",
+       "bone": "cleat",
+       "role": "detail",
+       "z": 3.2,
+       "filled": false,
+       "tone": 0.2,
+       "region": "end-cleat",
+       "kind": "poly",
+       "points": [
+        [
+         0.07,
+         -0.08
+        ],
+        [
+         0.07,
+         0.08
+        ]
+       ],
+       "closed": false
+      },
+      {
+       "id": "rivet-head-0",
+       "bone": "cleat",
+       "role": "detail",
+       "z": 3.5,
+       "filled": true,
+       "tone": 0.28,
+       "region": "end-cleat",
+       "material": "steel-rusted",
+       "kind": "ellipse",
+       "cx": 0.035,
+       "cy": -0.035,
+       "rx": 0.014,
+       "ry": 0.014
+      },
+      {
+       "id": "rivet-head-1",
+       "bone": "cleat",
+       "role": "detail",
+       "z": 3.5,
+       "filled": true,
+       "tone": 0.28,
+       "region": "end-cleat",
+       "material": "steel-rusted",
+       "kind": "ellipse",
+       "cx": 0.035,
+       "cy": 0.035,
+       "rx": 0.014,
+       "ry": 0.014
+      },
+      {
+       "id": "bearer-a-end",
+       "bone": "bearer-a",
+       "role": "body",
+       "z": 1.0,
+       "filled": true,
+       "tone": 0.72,
+       "region": "bearers",
+       "material": "softwood-weathered",
+       "kind": "rect",
+       "x": 0.0,
+       "y": -0.05,
+       "w": 0.1,
+       "h": 0.1
+      },
+      {
+       "id": "bearer-a-ring-0",
+       "bone": "bearer-a",
+       "role": "texture",
+       "z": 1.5,
+       "filled": false,
+       "tone": 0.4,
+       "region": "bearers",
+       "kind": "poly",
+       "points": [
+        [
+         0.019218,
+         -0.045775
+        ],
+        [
+         0.018045,
+         -0.044454
+        ],
+        [
+         0.01682,
+         -0.04318
+        ],
+        [
+         0.015546,
+         -0.041955
+        ],
+        [
+         0.014225,
+         -0.040782
+        ],
+        [
+         0.012859,
+         -0.039661
+        ],
+        [
+         0.01145,
+         -0.038594
+        ],
+        [
+         0.010001,
+         -0.037584
+        ],
+        [
+         0.008512,
+         -0.036631
+        ],
+        [
+         0.006988,
+         -0.035738
+        ],
+        [
+         0.00543,
+         -0.034905
+        ]
+       ],
+       "closed": false
+      },
+      {
+       "id": "bearer-a-ring-1",
+       "bone": "bearer-a",
+       "role": "texture",
+       "z": 1.5,
+       "filled": false,
+       "tone": 0.4,
+       "region": "bearers",
+       "kind": "poly",
+       "points": [
+        [
+         0.042915,
+         -0.045491
+        ],
+        [
+         0.041712,
+         -0.04324
+        ],
+        [
+         0.040422,
+         -0.041038
+        ],
+        [
+         0.039046,
+         -0.038888
+        ],
+        [
+         0.037586,
+         -0.036794
+        ],
+        [
+         0.036046,
+         -0.034759
+        ],
+        [
+         0.034426,
+         -0.032786
+        ],
+        [
+         0.032731,
+         -0.030878
+        ],
+        [
+         0.030962,
+         -0.029038
+        ],
+        [
+         0.029122,
+         -0.027269
+        ],
+        [
+         0.027214,
+         -0.025574
+        ],
+        [
+         0.025241,
+         -0.023954
+        ],
+        [
+         0.023206,
+         -0.022414
+        ],
+        [
+         0.021112,
+         -0.020954
+        ],
+        [
+         0.018962,
+         -0.019578
+        ],
+        [
+         0.01676,
+         -0.018288
+        ],
+        [
+         0.014509,
+         -0.017085
+        ],
+        [
+         0.012213,
+         -0.015971
+        ],
+        [
+         0.009874,
+         -0.014948
+        ],
+        [
+         0.007498,
+         -0.014018
+        ],
+        [
+         0.005086,
+         -0.013181
+        ]
+       ],
+       "closed": false
+      },
+      {
+       "id": "bearer-a-ring-2",
+       "bone": "bearer-a",
+       "role": "texture",
+       "z": 1.5,
+       "filled": false,
+       "tone": 0.4,
+       "region": "bearers",
+       "kind": "poly",
+       "points": [
+        [
+         0.064746,
+         -0.04558
+        ],
+        [
+         0.06353,
+         -0.042472
+        ],
+        [
+         0.062192,
+         -0.039414
+        ],
+        [
+         0.060736,
+         -0.036411
+        ],
+        [
+         0.059162,
+         -0.033467
+        ],
+        [
+         0.057474,
+         -0.030588
+        ],
+        [
+         0.055675,
+         -0.027777
+        ],
+        [
+         0.053766,
+         -0.025038
+        ],
+        [
+         0.051752,
+         -0.022377
+        ],
+        [
+         0.049635,
+         -0.019797
+        ],
+        [
+         0.047417,
+         -0.017302
+        ],
+        [
+         0.045104,
+         -0.014896
+        ],
+        [
+         0.042698,
+         -0.012583
+        ],
+        [
+         0.040203,
+         -0.010365
+        ],
+        [
+         0.037623,
+         -0.008248
+        ],
+        [
+         0.034962,
+         -0.006234
+        ],
+        [
+         0.032223,
+         -0.004325
+        ],
+        [
+         0.029412,
+         -0.002526
+        ],
+        [
+         0.026533,
+         -0.000838
+        ],
+        [
+         0.023589,
+         0.000736
+        ],
+        [
+         0.020586,
+         0.002192
+        ],
+        [
+         0.017528,
+         0.00353
+        ],
+        [
+         0.01442,
+         0.004746
+        ],
+        [
+         0.011266,
+         0.00584
+        ],
+        [
+         0.008072,
+         0.006809
+        ],
+        [
+         0.004843,
+         0.007651
+        ]
+       ],
+       "closed": false
+      },
+      {
+       "id": "bearer-a-ring-3",
+       "bone": "bearer-a",
+       "role": "texture",
+       "z": 1.5,
+       "filled": false,
+       "tone": 0.4,
+       "region": "bearers",
+       "kind": "poly",
+       "points": [
+        [
+         0.084861,
+         -0.042553
+        ],
+        [
+         0.08351,
+         -0.038658
+        ],
+        [
+         0.082007,
+         -0.034818
+        ],
+        [
+         0.080355,
+         -0.031041
+        ],
+        [
+         0.078556,
+         -0.027331
+        ],
+        [
+         0.076612,
+         -0.023695
+        ],
+        [
+         0.074527,
+         -0.020138
+        ],
+        [
+         0.072304,
+         -0.016665
+        ],
+        [
+         0.069947,
+         -0.013283
+        ],
+        [
+         0.067458,
+         -0.009995
+        ],
+        [
+         0.064843,
+         -0.006808
+        ],
+        [
+         0.062104,
+         -0.003726
+        ],
+        [
+         0.059246,
+         -0.000754
+        ],
+        [
+         0.056274,
+         0.002104
+        ],
+        [
+         0.053192,
+         0.004843
+        ],
+        [
+         0.050005,
+         0.007458
+        ],
+        [
+         0.046717,
+         0.009947
+        ],
+        [
+         0.043335,
+         0.012304
+        ],
+        [
+         0.039862,
+         0.014527
+        ],
+        [
+         0.036305,
+         0.016612
+        ],
+        [
+         0.032669,
+         0.018556
+        ],
+        [
+         0.028959,
+         0.020355
+        ],
+        [
+         0.025182,
+         0.022007
+        ],
+        [
+         0.021342,
+         0.02351
+        ],
+        [
+         0.017447,
+         0.024861
+        ],
+        [
+         0.013501,
+         0.026058
+        ],
+        [
+         0.009512,
+         0.027099
+        ],
+        [
+         0.005484,
+         0.027982
+        ]
+       ],
+       "closed": false
+      },
+      {
+       "id": "bearer-a-ring-4",
+       "bone": "bearer-a",
+       "role": "texture",
+       "z": 1.5,
+       "filled": false,
+       "tone": 0.4,
+       "region": "bearers",
+       "kind": "poly",
+       "points": [
+        [
+         0.094062,
+         -0.013922
+        ],
+        [
+         0.09158,
+         -0.009688
+        ],
+        [
+         0.088934,
+         -0.005554
+        ],
+        [
+         0.086127,
+         -0.001527
+        ],
+        [
+         0.083165,
+         0.002387
+        ],
+        [
+         0.080051,
+         0.006181
+        ],
+        [
+         0.07679,
+         0.00985
+        ],
+        [
+         0.073388,
+         0.013388
+        ],
+        [
+         0.06985,
+         0.01679
+        ],
+        [
+         0.066181,
+         0.020051
+        ],
+        [
+         0.062387,
+         0.023165
+        ],
+        [
+         0.058473,
+         0.026127
+        ],
+        [
+         0.054446,
+         0.028934
+        ],
+        [
+         0.050312,
+         0.03158
+        ],
+        [
+         0.046078,
+         0.034062
+        ],
+        [
+         0.041749,
+         0.036376
+        ],
+        [
+         0.037332,
+         0.038518
+        ],
+        [
+         0.032835,
+         0.040485
+        ],
+        [
+         0.028265,
+         0.042274
+        ],
+        [
+         0.023627,
+         0.043882
+        ],
+        [
+         0.01893,
+         0.045307
+        ]
+       ],
+       "closed": false
+      },
+      {
+       "id": "bearer-a-check",
+       "bone": "bearer-a",
+       "role": "detail",
+       "z": 1.6,
+       "filled": false,
+       "tone": 0.3,
+       "region": "bearers",
+       "kind": "poly",
+       "points": [
+        [
+         0.05,
+         0.05
+        ],
+        [
+         0.058,
+         0.02
+        ],
+        [
+         0.055,
+         0.0
+        ]
+       ],
+       "closed": false
+      },
+      {
+       "id": "bearer-b-end",
+       "bone": "bearer-b",
+       "role": "body",
+       "z": 1.0,
+       "filled": true,
+       "tone": 0.72,
+       "region": "bearers",
+       "material": "softwood-weathered",
+       "kind": "rect",
+       "x": 0.0,
+       "y": -0.05,
+       "w": 0.1,
+       "h": 0.1
+      },
+      {
+       "id": "bearer-b-ring-0",
+       "bone": "bearer-b",
+       "role": "texture",
+       "z": 1.5,
+       "filled": false,
+       "tone": 0.4,
+       "region": "bearers",
+       "kind": "poly",
+       "points": [
+        [
+         0.019218,
+         -0.045775
+        ],
+        [
+         0.018045,
+         -0.044454
+        ],
+        [
+         0.01682,
+         -0.04318
+        ],
+        [
+         0.015546,
+         -0.041955
+        ],
+        [
+         0.014225,
+         -0.040782
+        ],
+        [
+         0.012859,
+         -0.039661
+        ],
+        [
+         0.01145,
+         -0.038594
+        ],
+        [
+         0.010001,
+         -0.037584
+        ],
+        [
+         0.008512,
+         -0.036631
+        ],
+        [
+         0.006988,
+         -0.035738
+        ],
+        [
+         0.00543,
+         -0.034905
+        ]
+       ],
+       "closed": false
+      },
+      {
+       "id": "bearer-b-ring-1",
+       "bone": "bearer-b",
+       "role": "texture",
+       "z": 1.5,
+       "filled": false,
+       "tone": 0.4,
+       "region": "bearers",
+       "kind": "poly",
+       "points": [
+        [
+         0.042915,
+         -0.045491
+        ],
+        [
+         0.041712,
+         -0.04324
+        ],
+        [
+         0.040422,
+         -0.041038
+        ],
+        [
+         0.039046,
+         -0.038888
+        ],
+        [
+         0.037586,
+         -0.036794
+        ],
+        [
+         0.036046,
+         -0.034759
+        ],
+        [
+         0.034426,
+         -0.032786
+        ],
+        [
+         0.032731,
+         -0.030878
+        ],
+        [
+         0.030962,
+         -0.029038
+        ],
+        [
+         0.029122,
+         -0.027269
+        ],
+        [
+         0.027214,
+         -0.025574
+        ],
+        [
+         0.025241,
+         -0.023954
+        ],
+        [
+         0.023206,
+         -0.022414
+        ],
+        [
+         0.021112,
+         -0.020954
+        ],
+        [
+         0.018962,
+         -0.019578
+        ],
+        [
+         0.01676,
+         -0.018288
+        ],
+        [
+         0.014509,
+         -0.017085
+        ],
+        [
+         0.012213,
+         -0.015971
+        ],
+        [
+         0.009874,
+         -0.014948
+        ],
+        [
+         0.007498,
+         -0.014018
+        ],
+        [
+         0.005086,
+         -0.013181
+        ]
+       ],
+       "closed": false
+      },
+      {
+       "id": "bearer-b-ring-2",
+       "bone": "bearer-b",
+       "role": "texture",
+       "z": 1.5,
+       "filled": false,
+       "tone": 0.4,
+       "region": "bearers",
+       "kind": "poly",
+       "points": [
+        [
+         0.064746,
+         -0.04558
+        ],
+        [
+         0.06353,
+         -0.042472
+        ],
+        [
+         0.062192,
+         -0.039414
+        ],
+        [
+         0.060736,
+         -0.036411
+        ],
+        [
+         0.059162,
+         -0.033467
+        ],
+        [
+         0.057474,
+         -0.030588
+        ],
+        [
+         0.055675,
+         -0.027777
+        ],
+        [
+         0.053766,
+         -0.025038
+        ],
+        [
+         0.051752,
+         -0.022377
+        ],
+        [
+         0.049635,
+         -0.019797
+        ],
+        [
+         0.047417,
+         -0.017302
+        ],
+        [
+         0.045104,
+         -0.014896
+        ],
+        [
+         0.042698,
+         -0.012583
+        ],
+        [
+         0.040203,
+         -0.010365
+        ],
+        [
+         0.037623,
+         -0.008248
+        ],
+        [
+         0.034962,
+         -0.006234
+        ],
+        [
+         0.032223,
+         -0.004325
+        ],
+        [
+         0.029412,
+         -0.002526
+        ],
+        [
+         0.026533,
+         -0.000838
+        ],
+        [
+         0.023589,
+         0.000736
+        ],
+        [
+         0.020586,
+         0.002192
+        ],
+        [
+         0.017528,
+         0.00353
+        ],
+        [
+         0.01442,
+         0.004746
+        ],
+        [
+         0.011266,
+         0.00584
+        ],
+        [
+         0.008072,
+         0.006809
+        ],
+        [
+         0.004843,
+         0.007651
+        ]
+       ],
+       "closed": false
+      },
+      {
+       "id": "bearer-b-ring-3",
+       "bone": "bearer-b",
+       "role": "texture",
+       "z": 1.5,
+       "filled": false,
+       "tone": 0.4,
+       "region": "bearers",
+       "kind": "poly",
+       "points": [
+        [
+         0.084861,
+         -0.042553
+        ],
+        [
+         0.08351,
+         -0.038658
+        ],
+        [
+         0.082007,
+         -0.034818
+        ],
+        [
+         0.080355,
+         -0.031041
+        ],
+        [
+         0.078556,
+         -0.027331
+        ],
+        [
+         0.076612,
+         -0.023695
+        ],
+        [
+         0.074527,
+         -0.020138
+        ],
+        [
+         0.072304,
+         -0.016665
+        ],
+        [
+         0.069947,
+         -0.013283
+        ],
+        [
+         0.067458,
+         -0.009995
+        ],
+        [
+         0.064843,
+         -0.006808
+        ],
+        [
+         0.062104,
+         -0.003726
+        ],
+        [
+         0.059246,
+         -0.000754
+        ],
+        [
+         0.056274,
+         0.002104
+        ],
+        [
+         0.053192,
+         0.004843
+        ],
+        [
+         0.050005,
+         0.007458
+        ],
+        [
+         0.046717,
+         0.009947
+        ],
+        [
+         0.043335,
+         0.012304
+        ],
+        [
+         0.039862,
+         0.014527
+        ],
+        [
+         0.036305,
+         0.016612
+        ],
+        [
+         0.032669,
+         0.018556
+        ],
+        [
+         0.028959,
+         0.020355
+        ],
+        [
+         0.025182,
+         0.022007
+        ],
+        [
+         0.021342,
+         0.02351
+        ],
+        [
+         0.017447,
+         0.024861
+        ],
+        [
+         0.013501,
+         0.026058
+        ],
+        [
+         0.009512,
+         0.027099
+        ],
+        [
+         0.005484,
+         0.027982
+        ]
+       ],
+       "closed": false
+      },
+      {
+       "id": "bearer-b-ring-4",
+       "bone": "bearer-b",
+       "role": "texture",
+       "z": 1.5,
+       "filled": false,
+       "tone": 0.4,
+       "region": "bearers",
+       "kind": "poly",
+       "points": [
+        [
+         0.094062,
+         -0.013922
+        ],
+        [
+         0.09158,
+         -0.009688
+        ],
+        [
+         0.088934,
+         -0.005554
+        ],
+        [
+         0.086127,
+         -0.001527
+        ],
+        [
+         0.083165,
+         0.002387
+        ],
+        [
+         0.080051,
+         0.006181
+        ],
+        [
+         0.07679,
+         0.00985
+        ],
+        [
+         0.073388,
+         0.013388
+        ],
+        [
+         0.06985,
+         0.01679
+        ],
+        [
+         0.066181,
+         0.020051
+        ],
+        [
+         0.062387,
+         0.023165
+        ],
+        [
+         0.058473,
+         0.026127
+        ],
+        [
+         0.054446,
+         0.028934
+        ],
+        [
+         0.050312,
+         0.03158
+        ],
+        [
+         0.046078,
+         0.034062
+        ],
+        [
+         0.041749,
+         0.036376
+        ],
+        [
+         0.037332,
+         0.038518
+        ],
+        [
+         0.032835,
+         0.040485
+        ],
+        [
+         0.028265,
+         0.042274
+        ],
+        [
+         0.023627,
+         0.043882
+        ],
+        [
+         0.01893,
+         0.045307
+        ]
+       ],
+       "closed": false
+      },
+      {
+       "id": "bearer-b-check",
+       "bone": "bearer-b",
+       "role": "detail",
+       "z": 1.6,
+       "filled": false,
+       "tone": 0.3,
+       "region": "bearers",
+       "kind": "poly",
+       "points": [
+        [
+         0.05,
+         0.05
+        ],
+        [
+         0.058,
+         0.02
+        ],
+        [
+         0.055,
+         0.0
+        ]
+       ],
+       "closed": false
+      }
+     ],
+     "front": [
+      {
+       "id": "beam-end",
+       "bone": "beam",
+       "role": "body",
+       "z": 2.0,
+       "filled": true,
+       "tone": 0.48,
+       "regions": [
+        "top-flange",
+        "web",
+        "bottom-flange"
+       ],
+       "material": "steel-rusted",
+       "kind": "poly",
+       "points": [
+        [
+         0.053,
+         0.34
+        ],
+        [
+         0.053,
+         0.334828
+        ],
+        [
+         0.05267,
+         0.333006
+        ],
+        [
+         0.051724,
+         0.331416
+        ],
+        [
+         0.050279,
+         0.330257
+        ],
+        [
+         0.048521,
+         0.329678
+        ],
+        [
+         0.011844,
+         0.324544
+        ],
+        [
+         0.009841,
+         0.324014
+        ],
+        [
+         0.008021,
+         0.323027
+        ],
+        [
+         0.006486,
+         0.321637
+        ],
+        [
+         0.005322,
+         0.319924
+        ],
+        [
+         0.004597,
+         0.317984
+        ],
+        [
+         0.00435,
+         0.315928
+        ],
+        [
+         0.00435,
+         0.124072
+        ],
+        [
+         0.004597,
+         0.122016
+        ],
+        [
+         0.005322,
+         0.120076
+        ],
+        [
+         0.006486,
+         0.118363
+        ],
+        [
+         0.008021,
+         0.116973
+        ],
+        [
+         0.009841,
+         0.115986
+        ],
+        [
+         0.011844,
+         0.115456
+        ],
+        [
+         0.048521,
+         0.110322
+        ],
+        [
+         0.050279,
+         0.109743
+        ],
+        [
+         0.051724,
+         0.108584
+        ],
+        [
+         0.05267,
+         0.106994
+        ],
+        [
+         0.053,
+         0.105172
+        ],
+        [
+         0.053,
+         0.1
+        ],
+        [
+         -0.053,
+         0.1
+        ],
+        [
+         -0.053,
+         0.105172
+        ],
+        [
+         -0.05267,
+         0.106994
+        ],
+        [
+         -0.051724,
+         0.108584
+        ],
+        [
+         -0.050279,
+         0.109743
+        ],
+        [
+         -0.048521,
+         0.110322
+        ],
+        [
+         -0.011844,
+         0.115456
+        ],
+        [
+         -0.009841,
+         0.115986
+        ],
+        [
+         -0.008021,
+         0.116973
+        ],
+        [
+         -0.006486,
+         0.118363
+        ],
+        [
+         -0.005322,
+         0.120076
+        ],
+        [
+         -0.004597,
+         0.122016
+        ],
+        [
+         -0.00435,
+         0.124072
+        ],
+        [
+         -0.00435,
+         0.315928
+        ],
+        [
+         -0.004597,
+         0.317984
+        ],
+        [
+         -0.005322,
+         0.319924
+        ],
+        [
+         -0.006486,
+         0.321637
+        ],
+        [
+         -0.008021,
+         0.323027
+        ],
+        [
+         -0.009841,
+         0.324014
+        ],
+        [
+         -0.011844,
+         0.324544
+        ],
+        [
+         -0.048521,
+         0.329678
+        ],
+        [
+         -0.050279,
+         0.330257
+        ],
+        [
+         -0.051724,
+         0.331416
+        ],
+        [
+         -0.05267,
+         0.333006
+        ],
+        [
+         -0.053,
+         0.334828
+        ],
+        [
+         -0.053,
+         0.34
+        ]
+       ],
+       "closed": true
+      },
+      {
+       "id": "cleat-outstanding-r",
+       "bone": "cleat",
+       "role": "body",
+       "z": 3.0,
+       "filled": true,
+       "tone": 0.38,
+       "region": "end-cleat",
+       "material": "steel-rusted",
+       "kind": "path",
+       "d": "M -0.004350 0.140000 L -0.084350 0.140000 L -0.084350 0.300000 L -0.004350 0.300000 Z M -0.038850 0.185000 L -0.039649 0.189018 L -0.041925 0.192425 L -0.045332 0.194701 L -0.049350 0.195500 L -0.053368 0.194701 L -0.056775 0.192425 L -0.059051 0.189018 L -0.059850 0.185000 L -0.059051 0.180982 L -0.056775 0.177575 L -0.053368 0.175299 L -0.049350 0.174500 L -0.045332 0.175299 L -0.041925 0.177575 L -0.039649 0.180982 Z M -0.038850 0.255000 L -0.039649 0.259018 L -0.041925 0.262425 L -0.045332 0.264701 L -0.049350 0.265500 L -0.053368 0.264701 L -0.056775 0.262425 L -0.059051 0.259018 L -0.059850 0.255000 L -0.059051 0.250982 L -0.056775 0.247575 L -0.053368 0.245299 L -0.049350 0.244500 L -0.045332 0.245299 L -0.041925 0.247575 L -0.039649 0.250982 Z"
+      },
+      {
+       "id": "cleat-outstanding-l",
+       "bone": "cleat",
+       "role": "body",
+       "z": 3.0,
+       "filled": true,
+       "tone": 0.38,
+       "region": "end-cleat",
+       "material": "steel-rusted",
+       "kind": "path",
+       "d": "M 0.004350 0.140000 L 0.084350 0.140000 L 0.084350 0.300000 L 0.004350 0.300000 Z M 0.059850 0.185000 L 0.059051 0.189018 L 0.056775 0.192425 L 0.053368 0.194701 L 0.049350 0.195500 L 0.045332 0.194701 L 0.041925 0.192425 L 0.039649 0.189018 L 0.038850 0.185000 L 0.039649 0.180982 L 0.041925 0.177575 L 0.045332 0.175299 L 0.049350 0.174500 L 0.053368 0.175299 L 0.056775 0.177575 L 0.059051 0.180982 Z M 0.059850 0.255000 L 0.059051 0.259018 L 0.056775 0.262425 L 0.053368 0.264701 L 0.049350 0.265500 L 0.045332 0.264701 L 0.041925 0.262425 L 0.039649 0.259018 L 0.038850 0.255000 L 0.039649 0.250982 L 0.041925 0.247575 L 0.045332 0.245299 L 0.049350 0.244500 L 0.053368 0.245299 L 0.056775 0.247575 L 0.059051 0.250982 Z"
+      },
+      {
+       "id": "bearer-a-side",
+       "bone": "bearer-a",
+       "role": "body",
+       "z": 1.0,
+       "filled": true,
+       "tone": 0.7,
+       "region": "bearers",
+       "material": "softwood-weathered",
+       "kind": "rect",
+       "x": -0.3,
+       "y": 0.0,
+       "w": 0.6,
+       "h": 0.1
+      },
+      {
+       "id": "bearer-b-side",
+       "bone": "bearer-b",
+       "role": "body",
+       "z": 1.1,
+       "filled": true,
+       "tone": 0.7,
+       "region": "bearers",
+       "material": "softwood-weathered",
+       "kind": "rect",
+       "x": -0.3,
+       "y": 0.0,
+       "w": 0.6,
+       "h": 0.1
+      },
+      {
+       "id": "bearer-b-grain-0",
+       "bone": "bearer-b",
+       "role": "texture",
+       "z": 1.5,
+       "filled": false,
+       "tone": 0.4,
+       "region": "bearers",
+       "kind": "poly",
+       "points": [
+        [
+         -0.29,
+         0.028
+        ],
+        [
+         -0.12,
+         0.032
+        ],
+        [
+         0.06,
+         0.025
+        ],
+        [
+         0.29,
+         0.03
+        ]
+       ],
+       "closed": false
+      },
+      {
+       "id": "bearer-b-grain-1",
+       "bone": "bearer-b",
+       "role": "texture",
+       "z": 1.5,
+       "filled": false,
+       "tone": 0.4,
+       "region": "bearers",
+       "kind": "poly",
+       "points": [
+        [
+         -0.29,
+         0.061
+        ],
+        [
+         -0.12,
+         0.065
+        ],
+        [
+         0.06,
+         0.058
+        ],
+        [
+         0.29,
+         0.063
+        ]
+       ],
+       "closed": false
+      },
+      {
+       "id": "bearer-b-grain-2",
+       "bone": "bearer-b",
+       "role": "texture",
+       "z": 1.5,
+       "filled": false,
+       "tone": 0.4,
+       "region": "bearers",
+       "kind": "poly",
+       "points": [
+        [
+         -0.29,
+         0.083
+        ],
+        [
+         -0.12,
+         0.087
+        ],
+        [
+         0.06,
+         0.08
+        ],
+        [
+         0.29,
+         0.085
+        ]
+       ],
+       "closed": false
+      }
+     ],
+     "plan": [
+      {
+       "id": "top-flange-top",
+       "bone": "beam",
+       "role": "body",
+       "z": 2.0,
+       "filled": true,
+       "tone": 0.5,
+       "region": "top-flange",
+       "material": "steel-rusted",
+       "hatch": "rust",
+       "kind": "rect",
+       "x": 0.0,
+       "y": -0.053,
+       "w": 6.0,
+       "h": 0.106
+      },
+      {
+       "id": "flame-cut-step",
+       "bone": "beam",
+       "role": "detail",
+       "z": 3.0,
+       "filled": false,
+       "tone": 0.2,
+       "region": "bottom-flange",
+       "kind": "poly",
+       "points": [
+        [
+         0.01,
+         -0.053
+        ],
+        [
+         0.01,
+         0.053
+        ]
+       ],
+       "closed": false
+      },
+      {
+       "id": "web-line",
+       "bone": "beam",
+       "role": "texture",
+       "z": 3.1,
+       "filled": false,
+       "tone": 0.3,
+       "region": "web",
+       "kind": "poly",
+       "points": [
+        [
+         0.05,
+         0.0
+        ],
+        [
+         5.95,
+         0.0
+        ]
+       ],
+       "closed": false
+      },
+      {
+       "id": "cleat-outstanding-plan",
+       "bone": "cleat",
+       "role": "body",
+       "z": 1.5,
+       "filled": true,
+       "tone": 0.38,
+       "region": "end-cleat",
+       "material": "steel-rusted",
+       "kind": "rect",
+       "x": 6.0,
+       "y": -0.08435,
+       "w": 0.008,
+       "h": 0.1687
+      },
+      {
+       "id": "bearer-a-top",
+       "bone": "bearer-a",
+       "role": "body",
+       "z": 1.0,
+       "filled": true,
+       "tone": 0.7,
+       "region": "bearers",
+       "material": "softwood-weathered",
+       "kind": "rect",
+       "x": 1.2,
+       "y": -0.3,
+       "w": 0.1,
+       "h": 0.6
+      },
+      {
+       "id": "bearer-a-grain-0",
+       "bone": "bearer-a",
+       "role": "texture",
+       "z": 1.2,
+       "filled": false,
+       "tone": 0.4,
+       "region": "bearers",
+       "kind": "poly",
+       "points": [
+        [
+         1.222,
+         -0.29
+        ],
+        [
+         1.225,
+         -0.1
+        ],
+        [
+         1.22,
+         0.1
+        ],
+        [
+         1.224,
+         0.29
+        ]
+       ],
+       "closed": false
+      },
+      {
+       "id": "bearer-a-grain-1",
+       "bone": "bearer-a",
+       "role": "texture",
+       "z": 1.2,
+       "filled": false,
+       "tone": 0.4,
+       "region": "bearers",
+       "kind": "poly",
+       "points": [
+        [
+         1.261,
+         -0.29
+        ],
+        [
+         1.264,
+         -0.1
+        ],
+        [
+         1.259,
+         0.1
+        ],
+        [
+         1.263,
+         0.29
+        ]
+       ],
+       "closed": false
+      },
+      {
+       "id": "bearer-a-grain-2",
+       "bone": "bearer-a",
+       "role": "texture",
+       "z": 1.2,
+       "filled": false,
+       "tone": 0.4,
+       "region": "bearers",
+       "kind": "poly",
+       "points": [
+        [
+         1.283,
+         -0.29
+        ],
+        [
+         1.286,
+         -0.1
+        ],
+        [
+         1.281,
+         0.1
+        ],
+        [
+         1.285,
+         0.29
+        ]
+       ],
+       "closed": false
+      },
+      {
+       "id": "bearer-b-top",
+       "bone": "bearer-b",
+       "role": "body",
+       "z": 1.0,
+       "filled": true,
+       "tone": 0.7,
+       "region": "bearers",
+       "material": "softwood-weathered",
+       "kind": "rect",
+       "x": 4.7,
+       "y": -0.3,
+       "w": 0.1,
+       "h": 0.6
+      },
+      {
+       "id": "bearer-b-grain-0",
+       "bone": "bearer-b",
+       "role": "texture",
+       "z": 1.2,
+       "filled": false,
+       "tone": 0.4,
+       "region": "bearers",
+       "kind": "poly",
+       "points": [
+        [
+         4.722,
+         -0.29
+        ],
+        [
+         4.725,
+         -0.1
+        ],
+        [
+         4.72,
+         0.1
+        ],
+        [
+         4.724,
+         0.29
+        ]
+       ],
+       "closed": false
+      },
+      {
+       "id": "bearer-b-grain-1",
+       "bone": "bearer-b",
+       "role": "texture",
+       "z": 1.2,
+       "filled": false,
+       "tone": 0.4,
+       "region": "bearers",
+       "kind": "poly",
+       "points": [
+        [
+         4.761,
+         -0.29
+        ],
+        [
+         4.764,
+         -0.1
+        ],
+        [
+         4.759,
+         0.1
+        ],
+        [
+         4.763,
+         0.29
+        ]
+       ],
+       "closed": false
+      },
+      {
+       "id": "bearer-b-grain-2",
+       "bone": "bearer-b",
+       "role": "texture",
+       "z": 1.2,
+       "filled": false,
+       "tone": 0.4,
+       "region": "bearers",
+       "kind": "poly",
+       "points": [
+        [
+         4.783,
+         -0.29
+        ],
+        [
+         4.786,
+         -0.1
+        ],
+        [
+         4.781,
+         0.1
+        ],
+        [
+         4.785,
+         0.29
+        ]
+       ],
+       "closed": false
+      }
+     ]
+    },
+    "decisions": {
+     "silhouette": {
+      "en": "Side elevation of the 6.008 m beam on its two bearers (120 x 6.8 mm on paper): the 9.7 mm flange edges, the dark sloped flange undersides above and below the web, the web face with the four old 22 mm bolt holes seen through as white discs, the slanted hand flame cut at the left end and the riveted cleat with two round rivet heads at the right end; the bearers are seen end-on with their growth rings. Front view onto the cleat end: the true INP 240 section with tapered flanges, root fillets and toe radii, the two outstanding cleat legs with their open bolt holes, the bearer behind. Plan: the top flange with the rust stipple, the cleat legs showing beyond the flange edges and the two bearers crossing below.",
+      "de": "Seitenansicht des 6,008 m langen Trägers auf seinen beiden Unterlegern (120 x 6,8 mm auf Papier): die 9,7 mm hohen Flanschkanten, die dunklen geneigten Flanschunterseiten über und unter dem Steg, die Stegfläche mit den vier alten 22-mm-Schraubenlöchern, durch die man als weiße Scheiben hindurchsieht, der schräge Handbrennschnitt am linken Ende und der genietete Winkelanschluss mit zwei Rundnietköpfen am rechten Ende; die Unterleger erscheinen in Stirnansicht mit ihren Jahrringen. Vorderansicht auf das Winkelende: der wahre Querschnitt INP 240 mit geneigten Flanschen, Ausrundungen und Flanschkantenradien, die beiden abstehenden Winkelschenkel mit offenen Schraubenlöchern, dahinter der Unterleger. Draufsicht: der Obergurt mit der Rostpunktierung, die über die Flanschkanten hinausragenden Winkelschenkel und die beiden darunter querenden Unterleger."
+     },
+     "retained": {
+      "en": "Every part above the 7.5 mm smallest feature at its true place: flange taper (16.5 to 9.7 mm), root radius 8.7 mm and toe radius 5.2 mm in the front view, the 10 mm slant of the flame cut, the bolt holes at 2.40 m and 3.60 m, the cleat angles 80 x 8 x 160 mm, the 28 mm rivet heads and the 21 mm holes of the removed bolts, the bearers 100 x 100 x 600 mm.",
+      "de": "Jedes Teil über der kleinsten Einzelheit von 7,5 mm an seiner wahren Stelle: Flanschneigung (16,5 bis 9,7 mm), Ausrundung 8,7 mm und Kantenradius 5,2 mm in der Vorderansicht, die 10 mm Schräge des Brennschnitts, die Schraubenlöcher bei 2,40 m und 3,60 m, die Winkel 80 x 8 x 160 mm, die 28-mm-Nietköpfe und die 21-mm-Löcher der entfernten Schrauben, die Unterleger 100 x 100 x 600 mm."
+     },
+     "merged": {
+      "en": "The web leg and the edge of the outstanding leg of the near cleat angle are one shape in side view; the root fillets and the sloped inner face of each flange form the dark underside band.",
+      "de": "Stegschenkel und Kante des abstehenden Schenkels des vorderen Winkels sind in der Seitenansicht eine Form; Ausrundungen und geneigte Innenfläche jedes Flansches bilden das dunkle Unterseitenband."
+     },
+     "omitted": {
+      "en": "Pitting depth and mill-scale flakes (below 1 mm), the dross beard of the flame cut (about 2 mm), the rivet shanks inside the web and the far cleat angle in side view.",
+      "de": "Narbentiefe und Walzzunderreste (unter 1 mm), der Schlackenbart des Brennschnitts (etwa 2 mm), die Nietschäfte im Steg und der hintere Winkel in der Seitenansicht."
+     },
+     "thinElements": {
+      "en": "The 9.7 mm flange edges and the 8 mm cleat legs in plan are filled strips with a 0.25 mm and the body pen; the heat tint beside the cut, the bolt hole rims and the growth rings are texture strokes of 0.1 mm.",
+      "de": "Die 9,7 mm hohen Flanschkanten und die 8 mm dicken Winkelschenkel in der Draufsicht sind gefüllte Streifen mit 0,25-mm- und Konturfeder; Anlauffarbe neben dem Schnitt, Lochränder und Jahrringe sind Texturstriche von 0,1 mm."
+     },
+     "hatching": {
+      "en": "A stipple of 0.8 mm spacing on the web face and the top flange stands for the rust patina (rust grade C); no section hatch, because no view is a section.",
+      "de": "Eine Punktierung mit 0,8 mm Abstand auf Stegfläche und Obergurt steht für die Rostpatina (Rostgrad C); keine Schnittschraffur, da keine Ansicht ein Schnitt ist."
+     },
+     "styles": {
+      "en": "Line group 0.35 / 0.18 / 0.1 mm (DIN 1356-1 for 1:50); tones: lit flange edges 0.42, shaded undersides 0.26, web 0.55, cleat 0.38 to 0.40, weathered timber 0.70 to 0.72.",
+      "de": "Liniengruppe 0,35 / 0,18 / 0,1 mm (DIN 1356-1 für 1:50); Töne: belichtete Flanschkanten 0,42, verschattete Unterseiten 0,26, Steg 0,55, Winkel 0,38 bis 0,40, verwittertes Holz 0,70 bis 0,72."
+     },
+     "overlays": {
+      "en": "None in the drawing; the structural views add the bearer contacts, the sling points or the two new bearings of the pose.",
+      "de": "Keine in der Zeichnung; die Tragwerksansichten ergänzen die Unterlegerkontakte, die Anschlagpunkte oder die beiden neuen Auflager der Pose."
+     }
+    }
+   },
+   "100": {
+    "status": "authored",
+    "denominator": 100,
+    "validRange": {
+     "minDenominator": 75,
+     "maxDenominator": 150
+    },
+    "pens": {
+     "body": 0.25,
+     "detail": 0.13,
+     "texture": 0.1,
+     "glazing": 0.1,
+     "ground": 0.35
+    },
+    "hatches": [
+     {
+      "id": "rust",
+      "title": {
+       "en": "Rust patina",
+       "de": "Rostpatina"
+      },
+      "pattern": "stipple",
+      "angleDeg": 0,
+      "spacingMm": 0.8,
+      "penMm": 0.1
+     }
+    ],
+    "geometry": {
+     "elevation": [
+      {
+       "id": "top-flange-edge",
+       "bone": "beam",
+       "role": "body",
+       "z": 2.2,
+       "filled": true,
+       "tone": 0.4,
+       "region": "top-flange",
+       "material": "steel-rusted",
+       "penMm": 0.18,
+       "kind": "rect",
+       "x": 0.0,
+       "y": 0.105,
+       "w": 6.0,
+       "h": 0.015
+      },
+      {
+       "id": "bottom-flange-edge",
+       "bone": "beam",
+       "role": "body",
+       "z": 2.2,
+       "filled": true,
+       "tone": 0.4,
+       "region": "bottom-flange",
+       "material": "steel-rusted",
+       "penMm": 0.18,
+       "kind": "rect",
+       "x": 0.0,
+       "y": -0.12,
+       "w": 6.0,
+       "h": 0.015
+      },
+      {
+       "id": "web-face",
+       "bone": "beam",
+       "role": "body",
+       "z": 2.0,
+       "filled": true,
+       "tone": 0.55,
+       "region": "web",
+       "material": "steel-rusted",
+       "hatch": "rust",
+       "penMm": 0.18,
+       "kind": "rect",
+       "x": 0.0,
+       "y": -0.105,
+       "w": 6.0,
+       "h": 0.21
+      },
+      {
+       "id": "bolt-hole-2-40-a",
+       "bone": "beam",
+       "role": "detail",
+       "z": 3.0,
+       "filled": true,
+       "tone": 0.12,
+       "region": "web",
+       "material": "steel-rusted",
+       "penMm": 0.1,
+       "kind": "ellipse",
+       "cx": 2.4,
+       "cy": -0.035,
+       "rx": 0.011,
+       "ry": 0.011
+      },
+      {
+       "id": "bolt-hole-2-40-b",
+       "bone": "beam",
+       "role": "detail",
+       "z": 3.0,
+       "filled": true,
+       "tone": 0.12,
+       "region": "web",
+       "material": "steel-rusted",
+       "penMm": 0.1,
+       "kind": "ellipse",
+       "cx": 2.4,
+       "cy": 0.035,
+       "rx": 0.011,
+       "ry": 0.011
+      },
+      {
+       "id": "bolt-hole-3-60-a",
+       "bone": "beam",
+       "role": "detail",
+       "z": 3.0,
+       "filled": true,
+       "tone": 0.12,
+       "region": "web",
+       "material": "steel-rusted",
+       "penMm": 0.1,
+       "kind": "ellipse",
+       "cx": 3.6,
+       "cy": -0.035,
+       "rx": 0.011,
+       "ry": 0.011
+      },
+      {
+       "id": "bolt-hole-3-60-b",
+       "bone": "beam",
+       "role": "detail",
+       "z": 3.0,
+       "filled": true,
+       "tone": 0.12,
+       "region": "web",
+       "material": "steel-rusted",
+       "penMm": 0.1,
+       "kind": "ellipse",
+       "cx": 3.6,
+       "cy": 0.035,
+       "rx": 0.011,
+       "ry": 0.011
+      },
+      {
+       "id": "cleat-leg",
+       "bone": "cleat",
+       "role": "body",
+       "z": 3.0,
+       "filled": true,
+       "tone": 0.4,
+       "region": "end-cleat",
+       "material": "steel-rusted",
+       "penMm": 0.18,
+       "kind": "rect",
+       "x": 0.0,
+       "y": -0.08,
+       "w": 0.078,
+       "h": 0.16
+      },
+      {
+       "id": "rivet-head-0",
+       "bone": "cleat",
+       "role": "detail",
+       "z": 3.5,
+       "filled": false,
+       "tone": 0.28,
+       "region": "end-cleat",
+       "kind": "ellipse",
+       "cx": 0.035,
+       "cy": -0.035,
+       "rx": 0.014,
+       "ry": 0.014
+      },
+      {
+       "id": "rivet-head-1",
+       "bone": "cleat",
+       "role": "detail",
+       "z": 3.5,
+       "filled": false,
+       "tone": 0.28,
+       "region": "end-cleat",
+       "kind": "ellipse",
+       "cx": 0.035,
+       "cy": 0.035,
+       "rx": 0.014,
+       "ry": 0.014
+      },
+      {
+       "id": "bearer-a-end",
+       "bone": "bearer-a",
+       "role": "body",
+       "z": 1.0,
+       "filled": true,
+       "tone": 0.72,
+       "region": "bearers",
+       "material": "softwood-weathered",
+       "kind": "rect",
+       "x": 0.0,
+       "y": -0.05,
+       "w": 0.1,
+       "h": 0.1
+      },
+      {
+       "id": "bearer-a-ring",
+       "bone": "bearer-a",
+       "role": "texture",
+       "z": 1.5,
+       "filled": false,
+       "tone": 0.4,
+       "region": "bearers",
+       "kind": "poly",
+       "points": [
+        [
+         0.042915,
+         -0.045491
+        ],
+        [
+         0.041712,
+         -0.04324
+        ],
+        [
+         0.040422,
+         -0.041038
+        ],
+        [
+         0.039046,
+         -0.038888
+        ],
+        [
+         0.037586,
+         -0.036794
+        ],
+        [
+         0.036046,
+         -0.034759
+        ],
+        [
+         0.034426,
+         -0.032786
+        ],
+        [
+         0.032731,
+         -0.030878
+        ],
+        [
+         0.030962,
+         -0.029038
+        ],
+        [
+         0.029122,
+         -0.027269
+        ],
+        [
+         0.027214,
+         -0.025574
+        ],
+        [
+         0.025241,
+         -0.023954
+        ],
+        [
+         0.023206,
+         -0.022414
+        ],
+        [
+         0.021112,
+         -0.020954
+        ],
+        [
+         0.018962,
+         -0.019578
+        ],
+        [
+         0.01676,
+         -0.018288
+        ],
+        [
+         0.014509,
+         -0.017085
+        ],
+        [
+         0.012213,
+         -0.015971
+        ],
+        [
+         0.009874,
+         -0.014948
+        ],
+        [
+         0.007498,
+         -0.014018
+        ],
+        [
+         0.005086,
+         -0.013181
+        ]
+       ],
+       "closed": false
+      },
+      {
+       "id": "bearer-b-end",
+       "bone": "bearer-b",
+       "role": "body",
+       "z": 1.0,
+       "filled": true,
+       "tone": 0.72,
+       "region": "bearers",
+       "material": "softwood-weathered",
+       "kind": "rect",
+       "x": 0.0,
+       "y": -0.05,
+       "w": 0.1,
+       "h": 0.1
+      },
+      {
+       "id": "bearer-b-ring",
+       "bone": "bearer-b",
+       "role": "texture",
+       "z": 1.5,
+       "filled": false,
+       "tone": 0.4,
+       "region": "bearers",
+       "kind": "poly",
+       "points": [
+        [
+         0.042915,
+         -0.045491
+        ],
+        [
+         0.041712,
+         -0.04324
+        ],
+        [
+         0.040422,
+         -0.041038
+        ],
+        [
+         0.039046,
+         -0.038888
+        ],
+        [
+         0.037586,
+         -0.036794
+        ],
+        [
+         0.036046,
+         -0.034759
+        ],
+        [
+         0.034426,
+         -0.032786
+        ],
+        [
+         0.032731,
+         -0.030878
+        ],
+        [
+         0.030962,
+         -0.029038
+        ],
+        [
+         0.029122,
+         -0.027269
+        ],
+        [
+         0.027214,
+         -0.025574
+        ],
+        [
+         0.025241,
+         -0.023954
+        ],
+        [
+         0.023206,
+         -0.022414
+        ],
+        [
+         0.021112,
+         -0.020954
+        ],
+        [
+         0.018962,
+         -0.019578
+        ],
+        [
+         0.01676,
+         -0.018288
+        ],
+        [
+         0.014509,
+         -0.017085
+        ],
+        [
+         0.012213,
+         -0.015971
+        ],
+        [
+         0.009874,
+         -0.014948
+        ],
+        [
+         0.007498,
+         -0.014018
+        ],
+        [
+         0.005086,
+         -0.013181
+        ]
+       ],
+       "closed": false
+      }
+     ],
+     "front": [
+      {
+       "id": "beam-end",
+       "bone": "beam",
+       "role": "body",
+       "z": 2.0,
+       "filled": true,
+       "tone": 0.48,
+       "regions": [
+        "top-flange",
+        "web",
+        "bottom-flange"
+       ],
+       "material": "steel-rusted",
+       "kind": "poly",
+       "points": [
+        [
+         -0.053,
+         0.34
+        ],
+        [
+         0.053,
+         0.34
+        ],
+        [
+         0.053,
+         0.325
+        ],
+        [
+         0.00435,
+         0.325
+        ],
+        [
+         0.00435,
+         0.115
+        ],
+        [
+         0.053,
+         0.115
+        ],
+        [
+         0.053,
+         0.1
+        ],
+        [
+         -0.053,
+         0.1
+        ],
+        [
+         -0.053,
+         0.115
+        ],
+        [
+         -0.00435,
+         0.115
+        ],
+        [
+         -0.00435,
+         0.325
+        ],
+        [
+         -0.053,
+         0.325
+        ]
+       ],
+       "closed": true
+      },
+      {
+       "id": "cleat-outstanding-r",
+       "bone": "cleat",
+       "role": "body",
+       "z": 3.0,
+       "filled": true,
+       "tone": 0.38,
+       "region": "end-cleat",
+       "material": "steel-rusted",
+       "penMm": 0.18,
+       "kind": "rect",
+       "x": -0.08435,
+       "y": 0.14,
+       "w": 0.08,
+       "h": 0.16
+      },
+      {
+       "id": "cleat-hole-r-a",
+       "bone": "cleat",
+       "role": "detail",
+       "z": 3.2,
+       "filled": false,
+       "tone": 0.2,
+       "region": "end-cleat",
+       "kind": "ellipse",
+       "cx": -0.04935,
+       "cy": 0.185,
+       "rx": 0.0105,
+       "ry": 0.0105
+      },
+      {
+       "id": "cleat-hole-r-b",
+       "bone": "cleat",
+       "role": "detail",
+       "z": 3.2,
+       "filled": false,
+       "tone": 0.2,
+       "region": "end-cleat",
+       "kind": "ellipse",
+       "cx": -0.04935,
+       "cy": 0.255,
+       "rx": 0.0105,
+       "ry": 0.0105
+      },
+      {
+       "id": "cleat-outstanding-l",
+       "bone": "cleat",
+       "role": "body",
+       "z": 3.0,
+       "filled": true,
+       "tone": 0.38,
+       "region": "end-cleat",
+       "material": "steel-rusted",
+       "penMm": 0.18,
+       "kind": "rect",
+       "x": 0.00435,
+       "y": 0.14,
+       "w": 0.08,
+       "h": 0.16
+      },
+      {
+       "id": "cleat-hole-l-a",
+       "bone": "cleat",
+       "role": "detail",
+       "z": 3.2,
+       "filled": false,
+       "tone": 0.2,
+       "region": "end-cleat",
+       "kind": "ellipse",
+       "cx": 0.04935,
+       "cy": 0.185,
+       "rx": 0.0105,
+       "ry": 0.0105
+      },
+      {
+       "id": "cleat-hole-l-b",
+       "bone": "cleat",
+       "role": "detail",
+       "z": 3.2,
+       "filled": false,
+       "tone": 0.2,
+       "region": "end-cleat",
+       "kind": "ellipse",
+       "cx": 0.04935,
+       "cy": 0.255,
+       "rx": 0.0105,
+       "ry": 0.0105
+      },
+      {
+       "id": "bearer-a-side",
+       "bone": "bearer-a",
+       "role": "body",
+       "z": 1.0,
+       "filled": true,
+       "tone": 0.7,
+       "region": "bearers",
+       "material": "softwood-weathered",
+       "kind": "rect",
+       "x": -0.3,
+       "y": 0.0,
+       "w": 0.6,
+       "h": 0.1
+      },
+      {
+       "id": "bearer-b-side",
+       "bone": "bearer-b",
+       "role": "body",
+       "z": 1.1,
+       "filled": true,
+       "tone": 0.7,
+       "region": "bearers",
+       "material": "softwood-weathered",
+       "kind": "rect",
+       "x": -0.3,
+       "y": 0.0,
+       "w": 0.6,
+       "h": 0.1
+      }
+     ],
+     "plan": [
+      {
+       "id": "top-flange-top",
+       "bone": "beam",
+       "role": "body",
+       "z": 2.0,
+       "filled": true,
+       "tone": 0.5,
+       "regions": [
+        "top-flange",
+        "bottom-flange",
+        "web"
+       ],
+       "material": "steel-rusted",
+       "hatch": "rust",
+       "kind": "rect",
+       "x": 0.0,
+       "y": -0.053,
+       "w": 6.0,
+       "h": 0.106
+      },
+      {
+       "id": "cleat-outstanding-plan",
+       "bone": "cleat",
+       "role": "body",
+       "z": 1.5,
+       "filled": true,
+       "tone": 0.38,
+       "region": "end-cleat",
+       "material": "steel-rusted",
+       "penMm": 0.18,
+       "kind": "rect",
+       "x": 5.993,
+       "y": -0.08435,
+       "w": 0.015,
+       "h": 0.1687
+      },
+      {
+       "id": "bearer-a-top",
+       "bone": "bearer-a",
+       "role": "body",
+       "z": 1.0,
+       "filled": true,
+       "tone": 0.7,
+       "region": "bearers",
+       "material": "softwood-weathered",
+       "kind": "rect",
+       "x": 1.2,
+       "y": -0.3,
+       "w": 0.1,
+       "h": 0.6
+      },
+      {
+       "id": "bearer-b-top",
+       "bone": "bearer-b",
+       "role": "body",
+       "z": 1.0,
+       "filled": true,
+       "tone": 0.7,
+       "region": "bearers",
+       "material": "softwood-weathered",
+       "kind": "rect",
+       "x": 4.7,
+       "y": -0.3,
+       "w": 0.1,
+       "h": 0.6
+      }
+     ]
+    },
+    "decisions": {
+     "silhouette": {
+      "en": "Side elevation (60 x 3.4 mm): two 15 mm flange bands, the web face with the rust stipple and the four bolt holes as dark dots, the cleat at the right end with its rivet heads as circles, the bearers end-on. Front view: the I section with parallel 15 mm flanges and the 8.7 mm web, the outstanding cleat legs with the bolt holes as circles, the bearer behind. Plan: the top flange, the cleat legs beyond it and the two bearers.",
+      "de": "Seitenansicht (60 x 3,4 mm): zwei 15 mm hohe Flanschbänder, die Stegfläche mit Rostpunktierung und den vier Schraubenlöchern als dunkle Punkte, der Winkel am rechten Ende mit den Nietköpfen als Kreise, die Unterleger in Stirnansicht. Vorderansicht: der I-Querschnitt mit parallelen 15-mm-Flanschen und 8,7-mm-Steg, die abstehenden Winkelschenkel mit den Schraubenlöchern als Kreise, dahinter der Unterleger. Draufsicht: der Obergurt, die darüber hinausragenden Winkelschenkel und die beiden Unterleger."
+     },
+     "retained": {
+      "en": "Depth 240 mm, flange width 106 mm, the I shape, the cleat (78 x 160 mm), the four 22 mm bolt holes at their places (0.22 mm on paper), both bearers at 1.25 m from the ends.",
+      "de": "Höhe 240 mm, Flanschbreite 106 mm, die I-Form, der Winkel (78 x 160 mm), die vier 22-mm-Schraubenlöcher an ihrer Stelle (0,22 mm auf Papier), beide Unterleger 1,25 m von den Enden."
+     },
+     "merged": {
+      "en": "Flange taper, root fillets and toe radii are generalised to parallel flanges of 15 mm (the mean flange is 13.1 mm, below the 15 mm feature); the sloped undersides join the flange band.",
+      "de": "Flanschneigung, Ausrundungen und Kantenradien sind zu parallelen Flanschen von 15 mm verallgemeinert (der mittlere Flansch ist 13,1 mm, unter der Einzelheit von 15 mm); die geneigten Unterseiten gehen im Flanschband auf."
+     },
+     "omitted": {
+      "en": "The 10 mm slant of the flame cut (0.1 mm on paper) and the heat tint; the cleat holes are drawn as circles, not as openings (21 mm would leave a white gap below 0.15 mm at 1:150).",
+      "de": "Die 10 mm Schräge des Brennschnitts (0,1 mm auf Papier) und die Anlauffarbe; die Winkellöcher sind als Kreise gezeichnet, nicht als Öffnungen (21 mm ließen bei 1:150 eine weiße Lücke unter 0,15 mm)."
+     },
+     "thinElements": {
+      "en": "Flange bands and cleat use a 0.18 mm pen; the web of 8.7 mm in the front view is a filled strip.",
+      "de": "Flanschbänder und Winkel mit 0,18-mm-Feder; der 8,7-mm-Steg in der Vorderansicht ist ein gefüllter Streifen."
+     },
+     "hatching": {
+      "en": "Rust stipple of 0.8 mm on the web face and the top flange; no section hatch.",
+      "de": "Rostpunktierung mit 0,8 mm auf Stegfläche und Obergurt; keine Schnittschraffur."
+     },
+     "styles": {
+      "en": "Line group 0.25 / 0.13 / 0.1 mm; the same tones as at 1:50.",
+      "de": "Liniengruppe 0,25 / 0,13 / 0,1 mm; dieselben Töne wie bei 1:50."
+     },
+     "overlays": {
+      "en": "None; analysis overlays come from the structural and thermal views.",
+      "de": "Keine; Analyseüberlagerungen kommen aus den Tragwerks- und Thermikansichten."
+     }
+    }
+   },
+   "200": {
+    "status": "authored",
+    "denominator": 200,
+    "validRange": {
+     "minDenominator": 150,
+     "maxDenominator": 350
+    },
+    "pens": {
+     "body": 0.18,
+     "detail": 0.1,
+     "texture": null,
+     "glazing": 0.1,
+     "ground": 0.25
+    },
+    "hatches": [],
+    "geometry": {
+     "elevation": [
+      {
+       "id": "beam-side",
+       "bone": "beam",
+       "role": "body",
+       "z": 2.0,
+       "filled": true,
+       "tone": 0.52,
+       "regions": [
+        "web",
+        "top-flange",
+        "bottom-flange"
+       ],
+       "material": "steel-rusted",
+       "kind": "rect",
+       "x": 0.0,
+       "y": -0.12,
+       "w": 6.0,
+       "h": 0.24
+      },
+      {
+       "id": "top-flange-line",
+       "bone": "beam",
+       "role": "detail",
+       "z": 2.5,
+       "filled": false,
+       "tone": 0.3,
+       "region": "top-flange",
+       "kind": "poly",
+       "points": [
+        [
+         0.0,
+         0.09
+        ],
+        [
+         5.93,
+         0.09
+        ]
+       ],
+       "closed": false
+      },
+      {
+       "id": "bottom-flange-line",
+       "bone": "beam",
+       "role": "detail",
+       "z": 2.5,
+       "filled": false,
+       "tone": 0.3,
+       "region": "bottom-flange",
+       "kind": "poly",
+       "points": [
+        [
+         0.0,
+         -0.09
+        ],
+        [
+         5.93,
+         -0.09
+        ]
+       ],
+       "closed": false
+      },
+      {
+       "id": "cleat-block",
+       "bone": "cleat",
+       "role": "body",
+       "z": 3.0,
+       "filled": true,
+       "tone": 0.36,
+       "region": "end-cleat",
+       "material": "steel-rusted",
+       "penMm": 0.13,
+       "kind": "rect",
+       "x": 0.0,
+       "y": -0.09,
+       "w": 0.078,
+       "h": 0.18
+      },
+      {
+       "id": "bearer-a-end",
+       "bone": "bearer-a",
+       "role": "body",
+       "z": 1.0,
+       "filled": true,
+       "tone": 0.72,
+       "region": "bearers",
+       "material": "softwood-weathered",
+       "kind": "rect",
+       "x": 0.0,
+       "y": -0.05,
+       "w": 0.1,
+       "h": 0.1
+      },
+      {
+       "id": "bearer-b-end",
+       "bone": "bearer-b",
+       "role": "body",
+       "z": 1.0,
+       "filled": true,
+       "tone": 0.72,
+       "region": "bearers",
+       "material": "softwood-weathered",
+       "kind": "rect",
+       "x": 0.0,
+       "y": -0.05,
+       "w": 0.1,
+       "h": 0.1
+      }
+     ],
+     "front": [
+      {
+       "id": "beam-end",
+       "bone": "beam",
+       "role": "body",
+       "z": 2.0,
+       "filled": true,
+       "tone": 0.45,
+       "regions": [
+        "top-flange",
+        "web",
+        "bottom-flange"
+       ],
+       "material": "steel-rusted",
+       "kind": "poly",
+       "points": [
+        [
+         -0.053,
+         0.34
+        ],
+        [
+         0.053,
+         0.34
+        ],
+        [
+         0.053,
+         0.31
+        ],
+        [
+         0.00435,
+         0.31
+        ],
+        [
+         0.00435,
+         0.13
+        ],
+        [
+         0.053,
+         0.13
+        ],
+        [
+         0.053,
+         0.1
+        ],
+        [
+         -0.053,
+         0.1
+        ],
+        [
+         -0.053,
+         0.13
+        ],
+        [
+         -0.00435,
+         0.13
+        ],
+        [
+         -0.00435,
+         0.31
+        ],
+        [
+         -0.053,
+         0.31
+        ]
+       ],
+       "closed": true
+      },
+      {
+       "id": "cleat-block-end",
+       "bone": "cleat",
+       "role": "body",
+       "z": 3.0,
+       "filled": true,
+       "tone": 0.36,
+       "region": "end-cleat",
+       "material": "steel-rusted",
+       "penMm": 0.13,
+       "kind": "rect",
+       "x": -0.08435,
+       "y": 0.13,
+       "w": 0.1687,
+       "h": 0.18
+      },
+      {
+       "id": "bearer-a-side",
+       "bone": "bearer-a",
+       "role": "body",
+       "z": 1.0,
+       "filled": true,
+       "tone": 0.7,
+       "region": "bearers",
+       "material": "softwood-weathered",
+       "kind": "rect",
+       "x": -0.3,
+       "y": 0.0,
+       "w": 0.6,
+       "h": 0.1
+      },
+      {
+       "id": "bearer-b-side",
+       "bone": "bearer-b",
+       "role": "body",
+       "z": 1.1,
+       "filled": true,
+       "tone": 0.7,
+       "region": "bearers",
+       "material": "softwood-weathered",
+       "kind": "rect",
+       "x": -0.3,
+       "y": 0.0,
+       "w": 0.6,
+       "h": 0.1
+      }
+     ],
+     "plan": [
+      {
+       "id": "top-flange-top",
+       "bone": "beam",
+       "role": "body",
+       "z": 2.0,
+       "filled": true,
+       "tone": 0.5,
+       "regions": [
+        "top-flange",
+        "bottom-flange",
+        "web"
+       ],
+       "material": "steel-rusted",
+       "kind": "rect",
+       "x": 0.0,
+       "y": -0.053,
+       "w": 6.0,
+       "h": 0.106
+      },
+      {
+       "id": "cleat-block-plan",
+       "bone": "cleat",
+       "role": "body",
+       "z": 1.5,
+       "filled": true,
+       "tone": 0.36,
+       "region": "end-cleat",
+       "material": "steel-rusted",
+       "penMm": 0.13,
+       "kind": "rect",
+       "x": 5.93,
+       "y": -0.08435,
+       "w": 0.078,
+       "h": 0.1687
+      },
+      {
+       "id": "bearer-a-top",
+       "bone": "bearer-a",
+       "role": "body",
+       "z": 1.0,
+       "filled": true,
+       "tone": 0.7,
+       "region": "bearers",
+       "material": "softwood-weathered",
+       "kind": "rect",
+       "x": 1.2,
+       "y": -0.3,
+       "w": 0.1,
+       "h": 0.6
+      },
+      {
+       "id": "bearer-b-top",
+       "bone": "bearer-b",
+       "role": "body",
+       "z": 1.0,
+       "filled": true,
+       "tone": 0.7,
+       "region": "bearers",
+       "material": "softwood-weathered",
+       "kind": "rect",
+       "x": 4.7,
+       "y": -0.3,
+       "w": 0.1,
+       "h": 0.6
+      }
+     ]
+    },
+    "decisions": {
+     "silhouette": {
+      "en": "Side elevation (30 x 1.7 mm): one steel bar with fine lines at the 30 mm flange bands, the cleat as a block at the right end, the bearers end-on. Front view: an I with 30 mm flanges and the web, the cleat as one block between the flanges, the bearer behind. Plan: the top flange, the cleat block showing beside it and the two bearers.",
+      "de": "Seitenansicht (30 x 1,7 mm): ein Stahlstab mit feinen Linien an den 30 mm hohen Flanschbändern, der Winkel als Block am rechten Ende, die Unterleger in Stirnansicht. Vorderansicht: ein I mit 30-mm-Flanschen und Steg, der Winkel als ein Block zwischen den Flanschen, dahinter der Unterleger. Draufsicht: der Obergurt, der seitlich sichtbare Winkelblock und die beiden Unterleger."
+     },
+     "retained": {
+      "en": "Depth, flange width, the I reading of the section, the end cleat and the two bearers at their places; overall height 0.34 m and length 6.008 m as at every scale.",
+      "de": "Höhe, Flanschbreite, die I-Lesbarkeit des Querschnitts, der Endwinkel und die beiden Unterleger an ihrer Stelle; Gesamthöhe 0,34 m und Länge 6,008 m wie in jedem Maßstab."
+     },
+     "merged": {
+      "en": "The two cleat angles with the web between them are one block of 78 x 180 x 169 mm that fills the clear depth between the flanges, so no white sliver below 0.15 mm stays at 1:350.",
+      "de": "Die beiden Winkel mit dem Steg dazwischen sind ein Block 78 x 180 x 169 mm, der die lichte Höhe zwischen den Flanschen füllt, damit bei 1:350 kein weißer Spalt unter 0,15 mm bleibt."
+     },
+     "omitted": {
+      "en": "Bolt holes (22 mm), rivet heads, cut slant, stipple and growth rings: all below the 30 mm feature.",
+      "de": "Schraubenlöcher (22 mm), Nietköpfe, Schnittschräge, Punktierung und Jahrringe: alle unter der Einzelheit von 30 mm."
+     },
+     "thinElements": {
+      "en": "Flange lines and the cleat outline use the 0.1 and 0.13 mm pens; the 8.7 mm web is a filled strip of the I.",
+      "de": "Flanschlinien und Winkelkontur mit 0,1- und 0,13-mm-Feder; der 8,7-mm-Steg ist ein gefüllter Streifen des I."
+     },
+     "hatching": {
+      "en": "No hatch at this scale.",
+      "de": "Keine Schraffur in diesem Maßstab."
+     },
+     "styles": {
+      "en": "Line group 0.18 / 0.1 mm, no texture pen.",
+      "de": "Liniengruppe 0,18 / 0,1 mm, keine Texturfeder."
+     },
+     "overlays": {
+      "en": "None.",
+      "de": "Keine."
+     }
+    }
+   },
+   "500": {
+    "status": "authored",
+    "denominator": 500,
+    "validRange": {
+     "minDenominator": 350,
+     "maxDenominator": 1000
+    },
+    "pens": {
+     "body": 0.13,
+     "detail": null,
+     "texture": null,
+     "glazing": null,
+     "ground": 0.18
+    },
+    "hatches": [],
+    "geometry": {
+     "elevation": [
+      {
+       "id": "beam",
+       "bone": "beam",
+       "role": "body",
+       "z": 2.0,
+       "filled": true,
+       "tone": 0.4,
+       "regions": [
+        "top-flange",
+        "web",
+        "bottom-flange",
+        "end-cleat"
+       ],
+       "material": "steel-rusted",
+       "kind": "rect",
+       "x": 0.0,
+       "y": -0.12,
+       "w": 6.008,
+       "h": 0.24
+      },
+      {
+       "id": "bearer-a-end",
+       "bone": "bearer-a",
+       "role": "body",
+       "z": 1.0,
+       "filled": true,
+       "tone": 0.65,
+       "region": "bearers",
+       "material": "softwood-weathered",
+       "kind": "rect",
+       "x": 0.0,
+       "y": -0.05,
+       "w": 0.1,
+       "h": 0.1
+      },
+      {
+       "id": "bearer-b-end",
+       "bone": "bearer-b",
+       "role": "body",
+       "z": 1.0,
+       "filled": true,
+       "tone": 0.65,
+       "region": "bearers",
+       "material": "softwood-weathered",
+       "kind": "rect",
+       "x": 0.0,
+       "y": -0.05,
+       "w": 0.1,
+       "h": 0.1
+      }
+     ],
+     "front": [
+      {
+       "id": "beam-end",
+       "bone": "beam",
+       "role": "body",
+       "z": 2.0,
+       "filled": true,
+       "tone": 0.3,
+       "regions": [
+        "top-flange",
+        "web",
+        "bottom-flange",
+        "end-cleat"
+       ],
+       "material": "steel-rusted",
+       "kind": "rect",
+       "x": -0.053,
+       "y": 0.1,
+       "w": 0.106,
+       "h": 0.24
+      },
+      {
+       "id": "bearer-a-side",
+       "bone": "bearer-a",
+       "role": "body",
+       "z": 1.0,
+       "filled": true,
+       "tone": 0.62,
+       "region": "bearers",
+       "material": "softwood-weathered",
+       "kind": "rect",
+       "x": -0.3,
+       "y": 0.0,
+       "w": 0.6,
+       "h": 0.1
+      },
+      {
+       "id": "bearer-b-side",
+       "bone": "bearer-b",
+       "role": "body",
+       "z": 1.1,
+       "filled": true,
+       "tone": 0.62,
+       "region": "bearers",
+       "material": "softwood-weathered",
+       "kind": "rect",
+       "x": -0.3,
+       "y": 0.0,
+       "w": 0.6,
+       "h": 0.1
+      }
+     ],
+     "plan": [
+      {
+       "id": "beam-top",
+       "bone": "beam",
+       "role": "body",
+       "z": 2.0,
+       "filled": true,
+       "tone": 0.4,
+       "regions": [
+        "top-flange",
+        "end-cleat"
+       ],
+       "material": "steel-rusted",
+       "kind": "rect",
+       "x": 0.0,
+       "y": -0.053,
+       "w": 6.008,
+       "h": 0.106
+      },
+      {
+       "id": "bearer-a-top",
+       "bone": "bearer-a",
+       "role": "body",
+       "z": 1.0,
+       "filled": true,
+       "tone": 0.65,
+       "region": "bearers",
+       "material": "softwood-weathered",
+       "kind": "rect",
+       "x": 1.2,
+       "y": -0.3,
+       "w": 0.1,
+       "h": 0.6
+      },
+      {
+       "id": "bearer-b-top",
+       "bone": "bearer-b",
+       "role": "body",
+       "z": 1.0,
+       "filled": true,
+       "tone": 0.65,
+       "region": "bearers",
+       "material": "softwood-weathered",
+       "kind": "rect",
+       "x": 4.7,
+       "y": -0.3,
+       "w": 0.1,
+       "h": 0.6
+      }
+     ]
+    },
+    "decisions": {
+     "silhouette": {
+      "en": "Side elevation (12 x 0.7 mm): one solid bar of 6.008 x 0.24 m on two bearer blocks. Front view: the bar end of 106 x 240 mm on the 600 mm bearer. Plan: the bar of 106 mm width crossing the two bearers.",
+      "de": "Seitenansicht (12 x 0,7 mm): ein Vollstab 6,008 x 0,24 m auf zwei Unterlegerblöcken. Vorderansicht: das Stabende 106 x 240 mm auf dem 600 mm langen Unterleger. Draufsicht: der 106 mm breite Stab über den beiden Unterlegern."
+     },
+     "retained": {
+      "en": "Length, depth, width and the two bearers, which carry the storage state into the site plan scale.",
+      "de": "Länge, Höhe, Breite und die beiden Unterleger, die den Lagerzustand bis in den Lageplanmaßstab tragen."
+     },
+     "merged": {
+      "en": "Flanges, web and cleat are one bar; the cleat is inside its outline.",
+      "de": "Flansche, Steg und Winkel sind ein Stab; der Winkel liegt in seiner Kontur."
+     },
+     "omitted": {
+      "en": "Every detail of the section, the holes and the cut: the 13 mm flanges are below the 75 mm feature.",
+      "de": "Jede Einzelheit des Querschnitts, der Löcher und des Schnitts: die 13-mm-Flansche liegen unter der Einzelheit von 75 mm."
+     },
+     "thinElements": {
+      "en": "The 106 mm bar end in the front view is 0.21 mm on paper; with the 0.13 mm pen it prints at 1:1000 (0.24 mm).",
+      "de": "Das 106 mm breite Stabende in der Vorderansicht ist 0,21 mm auf Papier; mit der 0,13-mm-Feder druckt es bei 1:1000 (0,24 mm)."
+     },
+     "hatching": {
+      "en": "No hatch.",
+      "de": "Keine Schraffur."
+     },
+     "styles": {
+      "en": "Body pen 0.13 mm only.",
+      "de": "Nur Konturfeder 0,13 mm."
+     },
+     "overlays": {
+      "en": "None.",
+      "de": "Keine."
+     }
+    }
+   }
+  },
+  "symbols": [],
+  "poses": [
+   {
+    "id": "stored",
+    "title": {
+     "en": "Stored on two bearers",
+     "de": "Auf zwei Unterlegern gelagert"
+    },
+    "description": {
+     "en": "The beam lies upright on two 100 x 100 mm squared-timber bearers at 1.25 m from each end (about 0.21 L, where the support and span moments of the self-weight are smallest), as the component exchange keeps it in the yard.",
+     "de": "Der Träger liegt aufrecht auf zwei Kanthölzern 100 x 100 mm, je 1,25 m vom Ende (etwa 0,21 L, wo Stütz- und Feldmoment aus Eigengewicht am kleinsten sind), so wie die Bauteilbörse ihn im Lager hält."
+    },
+    "bones": {},
+    "ground": "authored",
+    "contacts": [
+     "ground-a",
+     "ground-b"
+    ],
+    "thermal": {
+     "regions": {
+      "top-flange": {
+       "exposedFraction": 1,
+       "sunlitFraction": 1
+      },
+      "web": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.4
+      },
+      "bottom-flange": {
+       "exposedFraction": 0.97,
+       "sunlitFraction": 0
+      },
+      "end-cleat": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.5
+      },
+      "bearers": {
+       "exposedFraction": 0.75,
+       "sunlitFraction": 0.45,
+       "contact": {
+        "fraction": 0.2,
+        "tempC": 18
+       }
+      }
+     },
+     "emitters": {}
+    },
+    "loads": []
+   },
+   {
+    "id": "lifted",
+    "title": {
+     "en": "Lifted by a two-leg sling",
+     "de": "Am Zweistranggehänge angehoben"
+    },
+    "description": {
+     "en": "A two-leg chain sling with legs at 60° is choked around the top flange at the two lifting points above the bearers; the beam hangs 0.60 m above the bearers, which stay on the ground. The sling points carry the whole beam.",
+     "de": "Ein Zweistrang-Kettengehänge mit Strängen unter 60° ist an den beiden Anschlagpunkten über den Unterlegern um den Obergurt geschnürt; der Träger hängt 0,60 m über den Unterlegern, die am Boden bleiben. Die Anschlagpunkte tragen den ganzen Träger."
+    },
+    "bones": {
+     "bearer-a": {
+      "dy": -0.6
+     },
+     "bearer-b": {
+      "dy": -0.6
+     }
+    },
+    "root": {
+     "x": 0,
+     "y": 0.6,
+     "angleDeg": 0
+    },
+    "ground": "authored",
+    "contacts": [
+     "sling-a",
+     "sling-b"
+    ],
+    "thermal": {
+     "regions": {
+      "top-flange": {
+       "exposedFraction": 1,
+       "sunlitFraction": 1
+      },
+      "web": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.4
+      },
+      "bottom-flange": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0
+      },
+      "end-cleat": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.5
+      },
+      "bearers": {
+       "exposedFraction": 0.75,
+       "sunlitFraction": 0.45,
+       "contact": {
+        "fraction": 0.2,
+        "tempC": 18
+       }
+      }
+     },
+     "emitters": {}
+    },
+    "loads": []
+   },
+   {
+    "id": "reinstalled",
+    "title": {
+     "en": "Reinstalled as a floor beam",
+     "de": "Als Deckenträger wieder eingebaut"
+    },
+    "description": {
+     "en": "Back in service as a simply supported floor beam: the flame-cut end on a wall bearing plate (roller, 200 mm bearing), the cleat bolted to a girder web (pin), span 5.91 m, carrying a floor of 2.0 kN/m² dead and 2.0 kN/m² imposed load over a beam spacing of 1.2 m.",
+     "de": "Wieder im Einsatz als frei aufliegender Deckenträger: das brenngeschnittene Ende auf einer Mauerlagerplatte (Rollenlager, 200 mm Auflagertiefe), der Winkel an einen Unterzugsteg geschraubt (Festlager), Stützweite 5,91 m, mit einer Decke von 2,0 kN/m² ständiger und 2,0 kN/m² Nutzlast bei 1,2 m Trägerabstand."
+    },
+    "bones": {
+     "bearer-a": {
+      "dy": -0.4
+     },
+     "bearer-b": {
+      "dy": -0.4
+     }
+    },
+    "root": {
+     "x": 0,
+     "y": 0.4,
+     "angleDeg": 0
+    },
+    "ground": "authored",
+    "contacts": [
+     "bearing-wall",
+     "bearing-cleat"
+    ],
+    "thermal": {
+     "regions": {
+      "top-flange": {
+       "exposedFraction": 0.25,
+       "sunlitFraction": 0,
+       "contact": {
+        "fraction": 0.75,
+        "tempC": 20
+       }
+      },
+      "web": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0
+      },
+      "bottom-flange": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0
+      },
+      "end-cleat": {
+       "exposedFraction": 0.6,
+       "sunlitFraction": 0,
+       "contact": {
+        "fraction": 0.4,
+        "tempC": 20
+       }
+      },
+      "bearers": {
+       "exposedFraction": 0.75,
+       "sunlitFraction": 0.45,
+       "contact": {
+        "fraction": 0.2,
+        "tempC": 18
+       }
+      }
+     },
+     "emitters": {}
+    },
+    "loads": [
+     {
+      "id": "floor-dead",
+      "kind": "carried",
+      "title": {
+       "en": "Floor build-up 2.4 kN/m (2.0 kN/m² over 1.2 m)",
+       "de": "Deckenaufbau 2,4 kN/m (2,0 kN/m² über 1,2 m)"
+      },
+      "fxN": 0,
+      "fyN": 0,
+      "distributed": {
+       "bone": "beam",
+       "fromM": 0,
+       "toM": 6.0,
+       "wxNPerM": 0,
+       "wyNPerM": -2400
+      },
+      "source": "authored-estimate",
+      "reference": "en-1991-1-1"
+     },
+     {
+      "id": "floor-imposed",
+      "kind": "imposed",
+      "title": {
+       "en": "Imposed floor load 2.4 kN/m (category A, 2.0 kN/m² over 1.2 m)",
+       "de": "Nutzlast 2,4 kN/m (Kategorie A, 2,0 kN/m² über 1,2 m)"
+      },
+      "fxN": 0,
+      "fyN": 0,
+      "distributed": {
+       "bone": "beam",
+       "fromM": 0,
+       "toM": 6.0,
+       "wxNPerM": 0,
+       "wyNPerM": -2400
+      },
+      "source": "literature",
+      "reference": "en-1991-1-1"
+     }
+    ]
+   },
+   {
+    "id": "reinstalled-point-load",
+    "title": {
+     "en": "Reinstalled, point load at midspan",
+     "de": "Wieder eingebaut, Einzellast in Feldmitte"
+    },
+    "description": {
+     "en": "The reinstalled beam with its floor build-up and the 2 kN concentrated imposed load of EN 1991-1-1 at midspan.",
+     "de": "Der wieder eingebaute Träger mit Deckenaufbau und der Einzellast 2 kN nach EN 1991-1-1 in Feldmitte."
+    },
+    "bones": {
+     "bearer-a": {
+      "dy": -0.4
+     },
+     "bearer-b": {
+      "dy": -0.4
+     },
+     "load-carrier": {
+      "dx": 2.752
+     }
+    },
+    "root": {
+     "x": 0,
+     "y": 0.4,
+     "angleDeg": 0
+    },
+    "ground": "authored",
+    "contacts": [
+     "bearing-wall",
+     "bearing-cleat"
+    ],
+    "thermal": {
+     "regions": {
+      "top-flange": {
+       "exposedFraction": 0.25,
+       "sunlitFraction": 0,
+       "contact": {
+        "fraction": 0.75,
+        "tempC": 20
+       }
+      },
+      "web": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0
+      },
+      "bottom-flange": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0
+      },
+      "end-cleat": {
+       "exposedFraction": 0.6,
+       "sunlitFraction": 0,
+       "contact": {
+        "fraction": 0.4,
+        "tempC": 20
+       }
+      },
+      "bearers": {
+       "exposedFraction": 0.75,
+       "sunlitFraction": 0.45,
+       "contact": {
+        "fraction": 0.2,
+        "tempC": 18
+       }
+      }
+     },
+     "emitters": {}
+    },
+    "loads": [
+     {
+      "id": "floor-dead",
+      "kind": "carried",
+      "title": {
+       "en": "Floor build-up 2.4 kN/m (2.0 kN/m² over 1.2 m)",
+       "de": "Deckenaufbau 2,4 kN/m (2,0 kN/m² über 1,2 m)"
+      },
+      "fxN": 0,
+      "fyN": 0,
+      "distributed": {
+       "bone": "beam",
+       "fromM": 0,
+       "toM": 6.0,
+       "wxNPerM": 0,
+       "wyNPerM": -2400
+      },
+      "source": "authored-estimate",
+      "reference": "en-1991-1-1"
+     },
+     {
+      "id": "point-load",
+      "kind": "live",
+      "title": {
+       "en": "Concentrated load 2 kN",
+       "de": "Einzellast 2 kN"
+      },
+      "anchor": "load-point",
+      "fxN": 0,
+      "fyN": -2000,
+      "source": "literature",
+      "reference": "en-1991-1-1"
+     }
+    ]
+   }
+  ],
+  "clips": [
+   {
+    "id": "lift",
+    "title": {
+     "en": "Lift off the bearers",
+     "de": "Abheben von den Unterlegern"
+    },
+    "description": {
+     "en": "The sling takes up the load for two seconds, then the crane hoists the beam 0.60 m clear of the bearers, which stay behind on the ground.",
+     "de": "Das Gehänge nimmt zwei Sekunden lang die Last auf, dann hebt der Kran den Träger 0,60 m von den Unterlegern ab, die am Boden zurückbleiben."
+    },
+    "durationS": 8,
+    "fps": 30,
+    "loop": false,
+    "rootMotion": "none",
+    "keys": [
+     {
+      "t": 0,
+      "pose": "stored",
+      "ease": "linear"
+     },
+     {
+      "t": 2,
+      "pose": "stored",
+      "ease": "smooth"
+     },
+     {
+      "t": 8,
+      "pose": "lifted",
+      "ease": "smooth"
+     }
+    ],
+    "contacts": [
+     {
+      "anchor": "ground-a",
+      "fromS": 0,
+      "toS": 2
+     },
+     {
+      "anchor": "ground-b",
+      "fromS": 0,
+      "toS": 2
+     },
+     {
+      "anchor": "sling-a",
+      "fromS": 2,
+      "toS": 8
+     },
+     {
+      "anchor": "sling-b",
+      "fromS": 2,
+      "toS": 8
+     }
+    ],
+    "phases": [
+     {
+      "id": "take-up",
+      "fromS": 0,
+      "toS": 2,
+      "title": {
+       "en": "Sling takes up the load",
+       "de": "Gehänge nimmt die Last auf"
+      }
+     },
+     {
+      "id": "hoist",
+      "fromS": 2,
+      "toS": 8,
+      "title": {
+       "en": "Hoist",
+       "de": "Heben"
+      }
+     }
+    ],
+    "events": [
+     {
+      "t": 2,
+      "kind": "contact-off",
+      "title": {
+       "en": "The beam leaves the bearers",
+       "de": "Der Träger verlässt die Unterleger"
+      }
+     },
+     {
+      "t": 2,
+      "kind": "contact-on",
+      "title": {
+       "en": "The sling points carry the beam",
+       "de": "Die Anschlagpunkte tragen den Träger"
+      }
+     }
+    ],
+    "tracks": []
+   },
+   {
+    "id": "moving-load",
+    "title": {
+     "en": "Moving point load on the reinstalled beam",
+     "de": "Wandernde Einzellast auf dem wieder eingebauten Träger"
+    },
+    "description": {
+     "en": "A 2 kN load travels along the top flange from the wall bearing to the cleat end over the floor build-up, so the span moment and the reactions shift with it.",
+     "de": "Eine Last von 2 kN wandert über dem Deckenaufbau auf dem Obergurt vom Mauerauflager zum Winkelende; Feldmoment und Auflagerkräfte verschieben sich mit ihr."
+    },
+    "durationS": 6,
+    "fps": 30,
+    "loop": false,
+    "rootMotion": "none",
+    "keys": [
+     {
+      "t": 0,
+      "pose": "reinstalled-point-load",
+      "ease": "smooth",
+      "bones": {
+       "load-carrier": {
+        "dx": 0.1
+       }
+      }
+     },
+     {
+      "t": 6,
+      "pose": "reinstalled-point-load",
+      "ease": "smooth",
+      "bones": {
+       "load-carrier": {
+        "dx": 5.4
+       }
+      }
+     }
+    ],
+    "contacts": [
+     {
+      "anchor": "bearing-wall",
+      "fromS": 0,
+      "toS": 6
+     },
+     {
+      "anchor": "bearing-cleat",
+      "fromS": 0,
+      "toS": 6
+     }
+    ],
+    "phases": [
+     {
+      "id": "travel",
+      "fromS": 0,
+      "toS": 6,
+      "title": {
+       "en": "Travel",
+       "de": "Wanderung"
+      }
+     }
+    ],
+    "events": [
+     {
+      "t": 0,
+      "kind": "motion",
+      "title": {
+       "en": "Load starts beside the wall bearing",
+       "de": "Last beginnt neben dem Mauerauflager"
+      }
+     }
+    ],
+    "tracks": []
+   }
+  ],
+  "thermal": {
+   "environment": {
+    "airTempC": 20,
+    "meanRadiantTempC": 20,
+    "skyTempC": 8,
+    "groundTempC": 18,
+    "relativeHumidity": 0.5,
+    "windMS": 1,
+    "windDirectionDeg": 0,
+    "solarWM2": 500,
+    "diffuseFraction": 0.2,
+    "pressurePa": 101325
+   },
+   "operating": [],
+   "regions": [
+    {
+     "id": "top-flange",
+     "title": {
+      "en": "Top flange (upper face, edges, sloped inner faces)",
+      "de": "Obergurt (Oberseite, Kanten, geneigte Innenflächen)"
+     },
+     "kind": "surface",
+     "model": "passive",
+     "material": "steel-rusted",
+     "areaM2": 1.433,
+     "characteristicLengthM": 0.106,
+     "geometry": "horizontal-plate-up",
+     "skyViewFactor": 0.9,
+     "layers": [],
+     "heatCapacityJM2K": 22100.0,
+     "source": "authored-estimate",
+     "reference": "rust-radiation"
+    },
+    {
+     "id": "web",
+     "title": {
+      "en": "Web faces and their fillets (both sides)",
+      "de": "Stegflächen mit Ausrundungen (beidseitig)"
+     },
+     "kind": "surface",
+     "model": "passive",
+     "material": "steel-rusted",
+     "areaM2": 2.305,
+     "characteristicLengthM": 0.19,
+     "geometry": "vertical-plate",
+     "skyViewFactor": 0.35,
+     "layers": [],
+     "heatCapacityJM2K": 15300.0,
+     "source": "authored-estimate",
+     "reference": "rust-radiation"
+    },
+    {
+     "id": "bottom-flange",
+     "title": {
+      "en": "Bottom flange (soffit, edges, sloped inner faces)",
+      "de": "Untergurt (Unterseite, Kanten, geneigte Innenflächen)"
+     },
+     "kind": "surface",
+     "model": "passive",
+     "material": "steel-rusted",
+     "areaM2": 1.436,
+     "characteristicLengthM": 0.106,
+     "geometry": "horizontal-plate-down",
+     "skyViewFactor": 0.1,
+     "layers": [],
+     "heatCapacityJM2K": 22100.0,
+     "source": "authored-estimate",
+     "reference": "rust-radiation"
+    },
+    {
+     "id": "end-cleat",
+     "title": {
+      "en": "Riveted end cleat with its rivet heads",
+      "de": "Genieteter Endwinkel mit Nietköpfen"
+     },
+     "kind": "surface",
+     "model": "passive",
+     "material": "steel-rusted",
+     "areaM2": 0.108,
+     "characteristicLengthM": 0.16,
+     "geometry": "vertical-plate",
+     "skyViewFactor": 0.4,
+     "layers": [],
+     "heatCapacityJM2K": 13300.0,
+     "source": "authored-estimate",
+     "reference": "rust-radiation"
+    },
+    {
+     "id": "bearers",
+     "title": {
+      "en": "Squared-timber bearers",
+      "de": "Kantholzunterleger"
+     },
+     "kind": "surface",
+     "model": "passive",
+     "material": "softwood-weathered",
+     "areaM2": 0.52,
+     "characteristicLengthM": 0.1,
+     "geometry": "horizontal-plate-up",
+     "skyViewFactor": 0.5,
+     "layers": [],
+     "heatCapacityJM2K": 15500.0,
+     "source": "authored-estimate",
+     "reference": "en-338"
+    }
+   ],
+   "emitters": [],
+   "assumptions": [
+    {
+     "en": "All steel regions are rusted mild steel of rust grade C (ISO 8501-1): emissivity 0.80 and solar absorptance 0.78 instead of about 0.25 / 0.45 for bright or 0.85 / 0.5 for freshly painted steel (VDI-Wärmeatlas K1, ASHRAE Fundamentals chapter 4; authored estimates).",
+     "de": "Alle Stahlregionen sind rostiger Flussstahl im Rostgrad C (ISO 8501-1): Emissionsgrad 0,80 und solarer Absorptionsgrad 0,78 statt etwa 0,25 / 0,45 bei blankem oder 0,85 / 0,5 bei frisch gestrichenem Stahl (VDI-Wärmeatlas K1, ASHRAE Fundamentals Kapitel 4; Schätzungen)."
+    },
+    {
+     "en": "Heat capacity per area is the mass of each part times 450 J/kgK over its outer area (steel conducts the 8.7 to 16.5 mm walls through within seconds, Biot far below 0.1); the bearers count their whole 100 mm section of weathered C24 softwood.",
+     "de": "Die Wärmekapazität je Fläche ist die Masse jedes Teils mal 450 J/kgK über seiner Außenfläche (Stahl leitet die 8,7 bis 16,5 mm dicken Wände in Sekunden durch, Biot weit unter 0,1); die Unterleger zählen ihren ganzen 100-mm-Querschnitt aus verwittertem Nadelholz C24."
+    },
+    {
+     "en": "Region areas are the outer surfaces of the exact 1:50 geometry: each flange with its edges, sloped inner faces, end faces and the 8.7 mm strip it shares with the web, the web with both faces, the bores of the old holes and its end faces, the cleat with its face against the web, the bearers on all six faces (faces against another part or the ground count, as the solver applies the contact fractions of the pose).",
+     "de": "Die Regionsflächen sind die Außenflächen der genauen Geometrie 1:50: jeder Flansch mit Kanten, geneigten Innenflächen und Stirnflächen und dem 8,7-mm-Streifen, den er mit dem Steg teilt, der Steg mit beiden Seiten, den Bohrungen der alten Löcher und seinen Stirnflächen, der Winkel mit seiner Fläche am Steg, die Unterleger mit allen sechs Flächen (Flächen an einem anderen Teil oder am Boden zählen, da der Löser die Kontaktanteile der Pose anwendet)."
+    },
+    {
+     "en": "In the yard the top flange is in full sun, the web chambers half shaded, the soffit and the bearer undersides shaded; the bearers lie with a fifth of their surface on ground at 18 °C. Reinstalled, the beam is indoors without sun, the floor covers three quarters of the top flange and the girder web about 40 % of the cleat.",
+     "de": "Im Lager liegt der Obergurt voll in der Sonne, die Stegkammern halb im Schatten, Unterseite und Unterlegerunterseiten im Schatten; die Unterleger liegen mit einem Fünftel ihrer Fläche auf Boden von 18 °C. Wieder eingebaut ist der Träger innen ohne Sonne, die Decke bedeckt drei Viertel des Obergurts und der Unterzugsteg etwa 40 % des Winkels."
+    },
+    {
+     "en": "The beam is no device: it has no operating heat and no nameplate power (0 W).",
+     "de": "Der Träger ist kein Gerät: er hat keine Betriebswärme und keine Nennleistung (0 W)."
+    }
+   ],
+   "passengers": []
+  },
+  "structure": {
+   "gravityMS2": 9.81,
+   "dynamics": "quasi-static",
+   "supports": [],
+   "assumptions": [
+    {
+     "en": "Stored: the beam rests on the two bearers at 1.25 m from each end (0.21 L, near the 0.207 L at which support and span moments of a uniform self-weight are equal); the reactions reach the ground through the bearers as unilateral contacts with friction 0.5.",
+     "de": "Gelagert: der Träger liegt auf den beiden Unterlegern 1,25 m von jedem Ende (0,21 L, nahe 0,207 L, bei dem Stütz- und Feldmoment aus gleichmäßigem Eigengewicht gleich sind); die Auflagerkräfte gehen über die Unterleger als einseitige Kontakte mit Reibung 0,5 in den Boden."
+    },
+    {
+     "en": "Lifted: the two sling points at the same places carry the beam, a pin at A and a roller at B whose normal lies along the leg at 120°, which reproduces the inclined leg forces and the compression they put into the beam.",
+     "de": "Angehoben: die beiden Anschlagpunkte an denselben Stellen tragen den Träger, ein Festlager bei A und ein Rollenlager bei B mit der Normalen entlang des Strangs unter 120°, was die geneigten Strangkräfte und den Druck, den sie in den Träger einleiten, wiedergibt."
+    },
+    {
+     "en": "Reinstalled: simply supported between a roller under the flame-cut end (200 mm bearing on a wall plate) and a pin at the bolt plane of the cleat, span 5.906 m; floor build-up 2.4 kN/m and imposed 2.4 kN/m (EN 1991-1-1, category A, 1.2 m beam spacing) give about 22.5 kN m and 64 N/mm² with the self-weight, well below the 160 N/mm² allowed for St 37 by DIN 1050; midspan deflection about 9 mm (L/650).",
+     "de": "Wieder eingebaut: frei aufliegend zwischen einem Rollenlager unter dem brenngeschnittenen Ende (200 mm Auflager auf einer Mauerplatte) und einem Festlager in der Schraubenebene des Winkels, Stützweite 5,906 m; Deckenaufbau 2,4 kN/m und Nutzlast 2,4 kN/m (EN 1991-1-1, Kategorie A, 1,2 m Trägerabstand) ergeben mit Eigengewicht etwa 22,5 kN m und 64 N/mm², deutlich unter den 160 N/mm², die DIN 1050 für St 37 zulässt; Durchbiegung in Feldmitte etwa 9 mm (L/650)."
+    },
+    {
+     "en": "Section from the DIN 1025-1 table (A 46.1 cm², Iy 4250 cm⁴, extreme fibre 120 mm), E 210 000 N/mm²; mass of the beam from the modelled solids at 7850 kg/m³, the cleat and rivets as a point mass, the bearers at 420 kg/m³.",
+     "de": "Querschnitt aus der Tabelle DIN 1025-1 (A 46,1 cm², Iy 4250 cm⁴, Randfaser 120 mm), E 210 000 N/mm²; Trägermasse aus den modellierten Körpern mit 7850 kg/m³, Winkel und Niete als Punktmasse, Unterleger mit 420 kg/m³."
+    },
+    {
+     "en": "The solver treats the asset as one rigid body: in the lifted and reinstalled poses the 5 kg of the bearers left on the ground is carried by the slings or the bearings as well (2 % of the total), an accepted simplification.",
+     "de": "Der Löser behandelt das Asset als einen starren Körper: in der angehobenen und der wieder eingebauten Pose tragen Anschlagpunkte oder Auflager die 5 kg der am Boden gebliebenen Unterleger mit (2 % der Gesamtlast), eine bewusste Vereinfachung."
+    }
+   ],
+   "clinical": false
+  },
+  "presentation": {
+   "defaultPose": "stored",
+   "defaultClip": "lift",
+   "defaultScale": 100
+  },
+  "exports": [
+   "svg",
+   "pdf",
+   "dxf",
+   "dwg",
+   "png-sequence",
+   "mp4",
+   "webm",
+   "component",
+   "glb",
+   "fbx",
+   "model",
+   "model-zip"
+  ],
+  "completion": "authored"
+ }
+}

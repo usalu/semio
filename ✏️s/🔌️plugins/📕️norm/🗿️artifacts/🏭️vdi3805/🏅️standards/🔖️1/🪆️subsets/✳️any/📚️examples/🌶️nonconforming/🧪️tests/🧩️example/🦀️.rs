@@ -1,6 +1,6 @@
 #[semio_framework_async_macros::async_test]
 async fn primary_asset_is_nonempty() {
-    let text = semio_s_artifact_norm_vdi3805_examples::nonconforming::PRIMARY_TEXT;
+    let text = super::PRIMARY_TEXT;
     assert!(text.len() > 8);
 }
 
@@ -8,7 +8,7 @@ async fn primary_asset_is_nonempty() {
 async fn primary_asset_decodes_to_nonconforming_valve_dataset() {
     use semio_s_artifact_norm_vdi3805_io::text::snapshot::decode_vdi3805_dsl;
     use semio_s_artifact_norm_vdi3805_model::nonconforming_valve_dataset;
-    let text = semio_s_artifact_norm_vdi3805_examples::nonconforming::PRIMARY_TEXT;
+    let text = super::PRIMARY_TEXT;
     let decoded = decode_vdi3805_dsl(text).expect("nonconforming dsl");
     assert_eq!(decoded, nonconforming_valve_dataset());
 }

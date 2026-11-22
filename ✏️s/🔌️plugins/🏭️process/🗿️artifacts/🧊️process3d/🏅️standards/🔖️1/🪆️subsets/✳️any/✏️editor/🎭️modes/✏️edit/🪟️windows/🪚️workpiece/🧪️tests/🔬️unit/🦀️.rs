@@ -33,12 +33,11 @@ async fn render_world_scene_contains_processed_mesh() {
 #[semio_framework_async_macros::async_test]
 async fn renderer_camera_gesture_republishes_the_pose_without_resetting_the_field_of_view() {
     use semio_s_artifact_process_process3d_commands::camera::set_camera::SetCamera;
-    use semio_s_artifact_process_process3d_editor::Process3dCommand;
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../🧪️tests/🧫️fixtures/camera-gesture.json")).unwrap();
     assert!(SetCamera::from_viewport(&semio_framework::DslValue::from(&fixture["malformedCamera"])).is_none());
     let fov = fixture["retainedFieldOfView"].as_f64().unwrap();
     let mut app = context::app();
-    context::settled_dispatch(&mut app, Process3dCommand::SetCamera(SetCamera { position: [3.0, -3.0, 2.0], target: [0.0; 3], fov: Some(fov) }));
+    context::settled_action(&mut app, "setCamera", Some(&semio_framework::DslValue::from(&fixture["seed"])));
     let before = app.snapshot().unwrap();
     let args = semio_framework::DslValue::from(&fixture["args"]);
     let (_, receipt) = context::settled_action(&mut app, "setCamera", Some(&args));
@@ -166,6 +165,7 @@ async fn workpiece_hover_is_local_and_click_commits_at_the_preview_center() {
     use semio_s_artifact_process_process3d_editor::Process3dPlayApp;
 
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../🧪️tests/🧫️fixtures/workpiece-placement.json")).unwrap();
+    let metres = |value: &serde_json::Value| value.as_array().unwrap().iter().map(|coordinate| coordinate.as_f64().unwrap()).collect::<Vec<_>>();
     let args = |value: &serde_json::Value| semio_framework_pack_json::from_json_str::<semio_framework::DslValue>(&value.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     for invalid in fixture["invalid"].as_array().unwrap() {
         for verb in ["worldPointerMove", "worldPointerDown"] {
@@ -246,7 +246,7 @@ async fn workpiece_hover_is_local_and_click_commits_at_the_preview_center() {
     let snapshot = application.snapshot().expect("published snapshot");
     assert_eq!(snapshot.step_payloads.len(), before + 1);
     let semio_s_artifact_process_process3d_model::snapshot::ProcessMeasure::Cut { pose, .. } = &snapshot.step_payloads.last().unwrap().measure else { panic!("cut placement") };
-    assert_eq!(serde_json::json!(pose.position), *position);
+    assert_eq!(pose.position.to_vec(), metres(position));
     assert!(render(&mut application, &second).engagement_preview_json.is_none());
     assert_eq!(render(&mut application, &view).engagement_preview_json, primary_preview);
 
@@ -311,8 +311,8 @@ async fn workpiece_hover_is_local_and_click_commits_at_the_preview_center() {
     assert_eq!((origin.machine_id.as_str(), origin.capability_id.as_str()), (machine, capability));
     use semio_s_artifact_process_process3d_model::snapshot::{ProcessMeasure, WorkingSolid};
     let ProcessMeasure::Cut { tool: WorkingSolid::Box { width, depth, height }, pose } = &step.measure else { panic!("expected the robotic mill box"); };
-    assert_eq!(serde_json::json!(pose.position), *position);
-    assert_eq!(serde_json::json!([width, depth, height]), chosen["dimensionsMetres"]);
+    assert_eq!(pose.position.to_vec(), metres(position));
+    assert_eq!(vec![*width, *depth, *height], metres(&chosen["dimensionsMetres"]));
     assert_eq!(preview(&mut application, &second).as_deref(), Some(sibling_preview.as_str()));
 
     arm(&mut application, &view, capability);

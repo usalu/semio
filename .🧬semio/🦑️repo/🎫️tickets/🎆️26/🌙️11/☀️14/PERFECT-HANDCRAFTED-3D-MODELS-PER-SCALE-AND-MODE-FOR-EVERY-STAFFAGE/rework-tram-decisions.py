@@ -1,0 +1,25 @@
+"""📝 Tram: decisions of every scale say how the load path is closed (pass 1, second round)."""
+import json
+
+PATH = "volumes/vehicles/tram.json"
+doc = json.load(open(PATH))
+V = doc["volumes"]
+ADD = {
+    "50": (" The load path is closed part by part: wheel, journal and bearing sit in the gearbox or axle box, which carries the side beam through the rubber primary spring; the secondary springs carry the bolsters of the car body; the pantograph stands with four insulators on two reinforced roof bows and turns in two shaft bearings, its coupling rod is pinned to the lower arm; the upper articulation link is pinned into both end rings and every door leaf hangs from its carriage on the door lintel.",
+           " Der Lastweg ist Teil für Teil geschlossen: Rad, Achsschenkel und Lager sitzen im Getriebe oder Achslager, das über die Gummi-Primärfeder den Langträger trägt; die Sekundärfedern tragen die Drehgestellträger des Wagenkastens; der Stromabnehmer steht mit vier Isolatoren auf zwei verstärkten Dachspriegeln und dreht in zwei Wellenlagern, seine Koppelstange ist am Unterarm angelenkt; der obere Gelenklenker ist in beide Endrahmen gebolzt und jeder Türflügel hängt mit seinem Laufwagen am Türsturz."),
+    "100": (" The load path is closed: the trailing bogie has its 250 mm axle boxes and every wheel a primary pad under the side beam (they are no longer merged), journals run into the gearboxes and axle boxes, secondary springs carry bolsters that tie into the stepped sills, a traction link joins the two cross members under the pivot, the pantograph feet stand on two extra roof bows, the cant rails are 120 mm deep so that every bow lands on them, door leaves hang from carriages on a door header between the door posts, and the cab has a floor frame, bulkhead posts, B-posts and a header ring; the cross-bearers that ran through the wheels stand behind the wheel wells now.",
+            " Der Lastweg ist geschlossen: das Laufdrehgestell hat seine 250-mm-Achslager und jedes Rad ein Primärfederpaket unter dem Langträger (sie gehen nicht mehr im Träger auf), die Achsschenkel laufen in Getriebe und Achslager, Sekundärfedern tragen Drehgestellträger, die in die gestuften Schweller einbinden, ein Lenker verbindet die beiden Querträger unter dem Drehzapfen, die Stromabnehmerfüße stehen auf zwei zusätzlichen Dachspriegeln, die Obergurte sind 120 mm hoch, damit jeder Spriegel auf ihnen aufliegt, die Türflügel hängen mit Laufwagen an einem Türsturz zwischen den Türsäulen, und der Fahrerstand hat Bodenrahmen, Stirnwandsäulen, B-Säulen und einen Stirndachring; die Querträger, die durch die Räder liefen, stehen jetzt hinter den Radkästen."),
+    "200": (" The load path is closed: primary pads join the gearboxes to the side beams, a lower chord per side joins the two legs to the cross member, secondary springs carry bolsters that tie into the stepped sills, the pantograph feet stand on two extra roof bows, the cant rails are 140 mm deep so that every bow lands on them, door leaves hang from carriages on a door header, the cab has a floor frame, bulkhead posts, B-posts and a header ring, and the cross-bearers stand clear of the wheels.",
+            " Der Lastweg ist geschlossen: Primärfederpakete verbinden die Getriebe mit den Langträgern, ein Untergurt je Seite verbindet die beiden Beine mit dem Querträger, Sekundärfedern tragen Drehgestellträger, die in die gestuften Schweller einbinden, die Stromabnehmerfüße stehen auf zwei zusätzlichen Dachspriegeln, die Obergurte sind 140 mm hoch, damit jeder Spriegel auf ihnen aufliegt, die Türflügel hängen mit Laufwagen an einem Türsturz, der Fahrerstand hat Bodenrahmen, Stirnwandsäulen, B-Säulen und einen Stirndachring, und die Querträger stehen frei von den Rädern."),
+    "500": (" The load path is closed: two secondary springs per side carry a bolster that ties into the stepped sill, the pantograph base stands on two bearers over two extra roof bows, the cant rails are 160 mm deep so that the bows land on them, and the cab ring is carried by bulkhead posts, B-posts and a header ring.",
+            " Der Lastweg ist geschlossen: zwei Sekundärfedern je Seite tragen einen Drehgestellträger, der in den gestuften Schweller einbindet, der Stromabnehmersockel steht auf zwei Trägern über zwei zusätzlichen Dachspriegeln, die Obergurte sind 160 mm hoch, damit die Spriegel auf ihnen aufliegen, und der Fahrerstandsring wird von Stirnwandsäulen, B-Säulen und einem Stirndachring getragen."),
+}
+for sc, (en, de) in ADD.items():
+    d = V[sc]["decisions"][2]
+    if "load path is closed" not in d["en"]:
+        d["en"] += en
+        d["de"] += de
+d = V["100"]["decisions"][1]
+d["en"] = d["en"].replace("calipers, primary springs and brackets merge into them", "calipers and brackets merge into them, the primary springs are pads between hub and beam")
+d["de"] = d["de"].replace("Zangen, Primärfedern und Konsolen gehen in ihnen auf", "Zangen und Konsolen gehen in ihnen auf, die Primärfedern sind Pakete zwischen Radlager und Träger")
+json.dump(doc, open(PATH, "w"), ensure_ascii=False)

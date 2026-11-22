@@ -30,7 +30,7 @@ impl NodeKey {
 /// 🚩️ Per-node dirty/interaction bits. Hand-rolled over a `u16` (no `bitflags` dep) to keep the
 /// crate dependency-free for this ~10-flag set.
 #[derive(Clone, Copy, PartialEq, Eq, Debug, Default)]
-pub struct NodeFlags(pub(super) u16);
+pub struct NodeFlags(pub(super) u32);
 
 impl NodeFlags {
     pub const HOVERED: NodeFlags = NodeFlags(1 << 0);
@@ -64,6 +64,8 @@ impl NodeFlags {
     pub const DISCLOSURE_CHANGED: NodeFlags = NodeFlags(1 << 14);
     /// 🏆️ The innermost enabled control and opted-in silhouettes paint hover. [`NodeFlags::HOVERED`] marks the full pointer path.
     pub const HOVER_OWNER: NodeFlags = NodeFlags(1 << 15);
+    /// 🗓️ A date or colour popup cell holds the popup's keyboard focus (the focused day, the highlighted swatch): the sync pass stamps it from the picker cell model each frame and paint draws the focus ring from it, as the browser pickers do — no real arena focus moves.
+    pub const PICKER_FOCUS: NodeFlags = NodeFlags(1 << 16);
 
     pub const fn empty() -> Self {
         NodeFlags(0)
@@ -185,6 +187,16 @@ impl EditTextLayout {
 #[derive(Clone, Debug, Default)]
 pub struct WidgetState {
     pub edit: Option<EditState>,
+    /// 📅️ An open date popup's focused day (days since 1970-01-01); the shown month follows it. `None` while closed.
+    pub picker_day: Option<i64>,
+    /// 🏷️ The open popup's localized accessible names — previous month, next month, colours — written by the sync pass (empty while the host named no locale).
+    pub picker_names: Option<[&'static str; 3]>,
+    /// 📅️ A `date` input's value in the host language's field format (`MM/DD/YYYY`, `DD.MM.YYYY`), written by the sync pass; `None` while no locale is named or the value is no date.
+    pub date_display: Option<String>,
+    /// 📅️ Whether the open date popup's weeks start on Monday (the host language's rule), written by the sync pass for the keyboard's Home and End.
+    pub picker_week_monday: bool,
+    /// 📎️ A `file` input's localized chrome — the Choose button caption and the empty-value caption — written by the sync pass, which knows the locale (empty while the host named none).
+    pub file_chrome: Option<(&'static str, &'static str)>,
     pub caret_visible: bool,
     pub slider_draft_value: Option<f64>,
     /// 🎚️ The open press of a continuous control (a dragged `Slider`, a typed number `Input` without a commit policy):

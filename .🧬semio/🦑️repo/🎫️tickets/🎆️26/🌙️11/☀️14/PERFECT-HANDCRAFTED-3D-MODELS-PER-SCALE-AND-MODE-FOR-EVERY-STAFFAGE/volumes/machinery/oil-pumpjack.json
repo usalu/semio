@@ -26225,6 +26225,475 @@
        0.0255
       ]
      ]
+    },
+    {
+     "id": "ladder-stringer-l",
+     "bone": "post",
+     "material": "painted-steel",
+     "role": "body",
+     "tone": 0.5,
+     "kind": "extrude",
+     "profile": [
+      [
+       -0.25,
+       1.70972
+      ],
+      [
+       3.56,
+       0.19002
+      ],
+      [
+       3.56,
+       0.25002
+      ],
+      [
+       -0.25,
+       1.76972
+      ]
+     ],
+     "plane": "xy",
+     "from": 0.21,
+     "to": 0.22
+    },
+    {
+     "id": "ladder-stringer-r",
+     "bone": "post",
+     "material": "painted-steel",
+     "role": "body",
+     "tone": 0.5,
+     "kind": "extrude",
+     "profile": [
+      [
+       -0.25,
+       1.70972
+      ],
+      [
+       3.56,
+       0.19002
+      ],
+      [
+       3.56,
+       0.25002
+      ],
+      [
+       -0.25,
+       1.76972
+      ]
+     ],
+     "plane": "xy",
+     "from": -0.22,
+     "to": -0.21
+    },
+    {
+     "id": "ladder-rung-1",
+     "bone": "post",
+     "material": "painted-steel",
+     "role": "body",
+     "tone": 0.45,
+     "kind": "capsule",
+     "p0": [
+      0.05,
+      1.62006,
+      -0.215
+     ],
+     "p1": [
+      0.05,
+      1.62006,
+      0.215
+     ],
+     "r0": 0.01,
+     "r1": 0.01,
+     "slender": true
+    },
+    {
+     "id": "ladder-rung-2",
+     "bone": "post",
+     "material": "painted-steel",
+     "role": "body",
+     "tone": 0.45,
+     "kind": "capsule",
+     "p0": [
+      0.33,
+      1.50837,
+      -0.215
+     ],
+     "p1": [
+      0.33,
+      1.50837,
+      0.215
+     ],
+     "r0": 0.01,
+     "r1": 0.01,
+     "slender": true
+    },
+    {
+     "id": "ladder-rung-3",
+     "bone": "post",
+     "material": "painted-steel",
+     "role": "body",
+     "tone": 0.45,
+     "kind": "capsule",
+     "p0": [
+      0.61,
+      1.39669,
+      -0.215
+     ],
+     "p1": [
+      0.61,
+      1.39669,
+      0.215
+     ],
+     "r0": 0.01,
+     "r1": 0.01,
+     "slender": true
+    },
+    {
+     "id": "ladder-rung-4",
+     "bone": "post",
+     "material": "painted-steel",
+     "role": "body",
+     "tone": 0.45,
+     "kind": "capsule",
+     "p0": [
+      0.89,
+      1.285,
+      -0.215
+     ],
+     "p1": [
+      0.89,
+      1.285,
+      0.215
+     ],
+     "r0": 0.01,
+     "r1": 0.01,
+     "slender": true
+    },
+    {
+     "id": "ladder-rung-5",
+     "bone": "post",
+     "material": "painted-steel",
+     "role": "body",
+     "tone": 0.45,
+     "kind": "capsule",
+     "p0": [
+      1.17,
+      1.17332,
+      -0.215
+     ],
+     "p1": [
+      1.17,
+      1.17332,
+      0.215
+     ],
+     "r0": 0.01,
+     "r1": 0.01,
+     "slender": true
+    },
+    {
+     "id": "ladder-rung-6",
+     "bone": "post",
+     "material": "painted-steel",
+     "role": "body",
+     "tone": 0.45,
+     "kind": "capsule",
+     "p0": [
+      1.45,
+      1.06164,
+      -0.215
+     ],
+     "p1": [
+      1.45,
+      1.06164,
+      0.215
+     ],
+     "r0": 0.01,
+     "r1": 0.01,
+     "slender": true
+    },
+    {
+     "id": "ladder-rung-7",
+     "bone": "post",
+     "material": "painted-steel",
+     "role": "body",
+     "tone": 0.45,
+     "kind": "capsule",
+     "p0": [
+      1.73,
+      0.94995,
+      -0.215
+     ],
+     "p1": [
+      1.73,
+      0.94995,
+      0.215
+     ],
+     "r0": 0.01,
+     "r1": 0.01,
+     "slender": true
+    },
+    {
+     "id": "ladder-rung-8",
+     "bone": "post",
+     "material": "painted-steel",
+     "role": "body",
+     "tone": 0.45,
+     "kind": "capsule",
+     "p0": [
+      2.01,
+      0.83827,
+      -0.215
+     ],
+     "p1": [
+      2.01,
+      0.83827,
+      0.215
+     ],
+     "r0": 0.01,
+     "r1": 0.01,
+     "slender": true
+    },
+    {
+     "id": "ladder-rung-9",
+     "bone": "post",
+     "material": "painted-steel",
+     "role": "body",
+     "tone": 0.45,
+     "kind": "capsule",
+     "p0": [
+      2.29,
+      0.72659,
+      -0.215
+     ],
+     "p1": [
+      2.29,
+      0.72659,
+      0.215
+     ],
+     "r0": 0.01,
+     "r1": 0.01,
+     "slender": true
+    },
+    {
+     "id": "ladder-rung-10",
+     "bone": "post",
+     "material": "painted-steel",
+     "role": "body",
+     "tone": 0.45,
+     "kind": "capsule",
+     "p0": [
+      2.57,
+      0.6149,
+      -0.215
+     ],
+     "p1": [
+      2.57,
+      0.6149,
+      0.215
+     ],
+     "r0": 0.01,
+     "r1": 0.01,
+     "slender": true
+    },
+    {
+     "id": "ladder-rung-11",
+     "bone": "post",
+     "material": "painted-steel",
+     "role": "body",
+     "tone": 0.45,
+     "kind": "capsule",
+     "p0": [
+      2.85,
+      0.50322,
+      -0.215
+     ],
+     "p1": [
+      2.85,
+      0.50322,
+      0.215
+     ],
+     "r0": 0.01,
+     "r1": 0.01,
+     "slender": true
+    },
+    {
+     "id": "ladder-rung-12",
+     "bone": "post",
+     "material": "painted-steel",
+     "role": "body",
+     "tone": 0.45,
+     "kind": "capsule",
+     "p0": [
+      3.13,
+      0.39154,
+      -0.215
+     ],
+     "p1": [
+      3.13,
+      0.39154,
+      0.215
+     ],
+     "r0": 0.01,
+     "r1": 0.01,
+     "slender": true
+    },
+    {
+     "id": "ladder-rung-13",
+     "bone": "post",
+     "material": "painted-steel",
+     "role": "body",
+     "tone": 0.45,
+     "kind": "capsule",
+     "p0": [
+      3.41,
+      0.27985,
+      -0.215
+     ],
+     "p1": [
+      3.41,
+      0.27985,
+      0.215
+     ],
+     "r0": 0.01,
+     "r1": 0.01,
+     "slender": true
+    },
+    {
+     "id": "brake-shaft",
+     "bone": "gearbox",
+     "material": "cast-iron",
+     "role": "body",
+     "tone": 0.3,
+     "kind": "revolve",
+     "profile": [
+      [
+       0.0,
+       0.05
+      ],
+      [
+       0.39,
+       0.05
+      ]
+     ],
+     "axis": [
+      0.0,
+      0.0,
+      1.0
+     ],
+     "origin": [
+      1.25,
+      -0.55,
+      0.42
+     ]
+    },
+    {
+     "id": "brake-drum",
+     "bone": "gearbox",
+     "material": "cast-iron",
+     "role": "body",
+     "tone": 0.35,
+     "kind": "revolve",
+     "profile": [
+      [
+       0.0,
+       0.19
+      ],
+      [
+       0.11,
+       0.19
+      ]
+     ],
+     "axis": [
+      0.0,
+      0.0,
+      1.0
+     ],
+     "origin": [
+      1.25,
+      -0.55,
+      0.8
+     ]
+    },
+    {
+     "id": "brake-stand",
+     "bone": "skid",
+     "material": "painted-steel",
+     "role": "body",
+     "tone": 0.4,
+     "kind": "box",
+     "size": [
+      0.1,
+      0.3,
+      0.06
+     ],
+     "transform": {
+      "translation": [
+       6.95,
+       0.39,
+       0.97
+      ]
+     }
+    },
+    {
+     "id": "brake-lever",
+     "bone": "skid",
+     "material": "painted-steel",
+     "role": "body",
+     "tone": 0.3,
+     "kind": "capsule",
+     "p0": [
+      6.95,
+      0.5,
+      0.97
+     ],
+     "p1": [
+      7.1,
+      1.45,
+      0.97
+     ],
+     "r0": 0.016,
+     "r1": 0.016,
+     "slender": true
+    },
+    {
+     "id": "brake-band",
+     "bone": "gearbox",
+     "material": "painted-steel",
+     "role": "body",
+     "tone": 0.28,
+     "kind": "box",
+     "size": [
+      0.14,
+      0.08,
+      0.1
+     ],
+     "transform": {
+      "translation": [
+       1.25,
+       -0.32,
+       0.855
+      ]
+     }
+    },
+    {
+     "id": "brake-rod",
+     "bone": "skid",
+     "material": "painted-steel",
+     "role": "body",
+     "tone": 0.35,
+     "kind": "capsule",
+     "p0": [
+      6.99,
+      0.78,
+      0.97
+     ],
+     "p1": [
+      5.6,
+      1.13,
+      0.88
+     ],
+     "r0": 0.008,
+     "r1": 0.008,
+     "slender": true
     }
    ],
    "thermal": [
@@ -27761,6 +28230,111 @@
        0.025
       ]
      ]
+    },
+    {
+     "id": "th-ladder-stringer-l",
+     "of": "ladder-stringer-l",
+     "region": "steel"
+    },
+    {
+     "id": "th-ladder-stringer-r",
+     "of": "ladder-stringer-r",
+     "region": "steel"
+    },
+    {
+     "id": "th-ladder-rung-1",
+     "of": "ladder-rung-1",
+     "region": "steel"
+    },
+    {
+     "id": "th-ladder-rung-2",
+     "of": "ladder-rung-2",
+     "region": "steel"
+    },
+    {
+     "id": "th-ladder-rung-3",
+     "of": "ladder-rung-3",
+     "region": "steel"
+    },
+    {
+     "id": "th-ladder-rung-4",
+     "of": "ladder-rung-4",
+     "region": "steel"
+    },
+    {
+     "id": "th-ladder-rung-5",
+     "of": "ladder-rung-5",
+     "region": "steel"
+    },
+    {
+     "id": "th-ladder-rung-6",
+     "of": "ladder-rung-6",
+     "region": "steel"
+    },
+    {
+     "id": "th-ladder-rung-7",
+     "of": "ladder-rung-7",
+     "region": "steel"
+    },
+    {
+     "id": "th-ladder-rung-8",
+     "of": "ladder-rung-8",
+     "region": "steel"
+    },
+    {
+     "id": "th-ladder-rung-9",
+     "of": "ladder-rung-9",
+     "region": "steel"
+    },
+    {
+     "id": "th-ladder-rung-10",
+     "of": "ladder-rung-10",
+     "region": "steel"
+    },
+    {
+     "id": "th-ladder-rung-11",
+     "of": "ladder-rung-11",
+     "region": "steel"
+    },
+    {
+     "id": "th-ladder-rung-12",
+     "of": "ladder-rung-12",
+     "region": "steel"
+    },
+    {
+     "id": "th-ladder-rung-13",
+     "of": "ladder-rung-13",
+     "region": "steel"
+    },
+    {
+     "id": "th-brake-shaft",
+     "of": "brake-shaft",
+     "region": "gearbox"
+    },
+    {
+     "id": "th-brake-drum",
+     "of": "brake-drum",
+     "region": "gearbox"
+    },
+    {
+     "id": "th-brake-stand",
+     "of": "brake-stand",
+     "region": "steel"
+    },
+    {
+     "id": "th-brake-lever",
+     "of": "brake-lever",
+     "region": "steel"
+    },
+    {
+     "id": "th-brake-band",
+     "of": "brake-band",
+     "region": "steel"
+    },
+    {
+     "id": "th-brake-rod",
+     "of": "brake-rod",
+     "region": "steel"
     }
    ],
    "structure": [
@@ -28341,6 +28915,296 @@
      "of": "flowline",
      "member": "base",
      "part": "member"
+    },
+    {
+     "id": "member-skid-deck",
+     "of": "skid-deck",
+     "member": "skid",
+     "part": "member"
+    },
+    {
+     "id": "member-motor-feet",
+     "of": "motor-feet",
+     "member": "motor",
+     "part": "member"
+    },
+    {
+     "id": "member-motor-foot-1",
+     "of": "motor-foot-1",
+     "member": "motor",
+     "part": "member"
+    },
+    {
+     "id": "member-motor-foot-2",
+     "of": "motor-foot-2",
+     "member": "motor",
+     "part": "member"
+    },
+    {
+     "id": "member-bearing-cap-l",
+     "of": "bearing-cap-l",
+     "member": "gearbox",
+     "part": "member"
+    },
+    {
+     "id": "member-bearing-cap-r",
+     "of": "bearing-cap-r",
+     "member": "gearbox",
+     "part": "member"
+    },
+    {
+     "id": "member-saddle-l",
+     "of": "saddle-l",
+     "member": "post",
+     "part": "member"
+    },
+    {
+     "id": "member-saddle-r",
+     "of": "saddle-r",
+     "member": "post",
+     "part": "member"
+    },
+    {
+     "id": "member-tail-pin-l",
+     "of": "tail-pin-l",
+     "member": "beam",
+     "part": "member"
+    },
+    {
+     "id": "member-tail-pin-r",
+     "of": "tail-pin-r",
+     "member": "beam",
+     "part": "member"
+    },
+    {
+     "id": "member-tail-plate",
+     "of": "tail-plate",
+     "member": "beam",
+     "part": "member"
+    },
+    {
+     "id": "member-pitman-eye-l",
+     "of": "pitman-eye-l",
+     "member": "pitman",
+     "part": "member"
+    },
+    {
+     "id": "member-pitman-eye-r",
+     "of": "pitman-eye-r",
+     "member": "pitman",
+     "part": "member"
+    },
+    {
+     "id": "member-wellhead-base",
+     "of": "wellhead-base",
+     "member": "base",
+     "part": "member"
+    },
+    {
+     "id": "member-wellhead-valve",
+     "of": "wellhead-valve",
+     "member": "base",
+     "part": "member"
+    },
+    {
+     "id": "member-stuffing-box",
+     "of": "stuffing-box",
+     "member": "base",
+     "part": "member"
+    },
+    {
+     "id": "member-rod-clamp",
+     "of": "rod-clamp",
+     "member": "rod",
+     "part": "member"
+    },
+    {
+     "id": "member-horsehead-face",
+     "of": "horsehead-face",
+     "member": "horsehead",
+     "part": "member"
+    },
+    {
+     "id": "member-ladder-stringer-l",
+     "of": "ladder-stringer-l",
+     "member": "post",
+     "part": "member"
+    },
+    {
+     "id": "member-ladder-stringer-r",
+     "of": "ladder-stringer-r",
+     "member": "post",
+     "part": "member"
+    },
+    {
+     "id": "member-ladder-rung-1",
+     "of": "ladder-rung-1",
+     "member": "post",
+     "part": "member"
+    },
+    {
+     "id": "member-ladder-rung-2",
+     "of": "ladder-rung-2",
+     "member": "post",
+     "part": "member"
+    },
+    {
+     "id": "member-ladder-rung-3",
+     "of": "ladder-rung-3",
+     "member": "post",
+     "part": "member"
+    },
+    {
+     "id": "member-ladder-rung-4",
+     "of": "ladder-rung-4",
+     "member": "post",
+     "part": "member"
+    },
+    {
+     "id": "member-ladder-rung-5",
+     "of": "ladder-rung-5",
+     "member": "post",
+     "part": "member"
+    },
+    {
+     "id": "member-ladder-rung-6",
+     "of": "ladder-rung-6",
+     "member": "post",
+     "part": "member"
+    },
+    {
+     "id": "member-ladder-rung-7",
+     "of": "ladder-rung-7",
+     "member": "post",
+     "part": "member"
+    },
+    {
+     "id": "member-ladder-rung-8",
+     "of": "ladder-rung-8",
+     "member": "post",
+     "part": "member"
+    },
+    {
+     "id": "member-ladder-rung-9",
+     "of": "ladder-rung-9",
+     "member": "post",
+     "part": "member"
+    },
+    {
+     "id": "member-ladder-rung-10",
+     "of": "ladder-rung-10",
+     "member": "post",
+     "part": "member"
+    },
+    {
+     "id": "member-ladder-rung-11",
+     "of": "ladder-rung-11",
+     "member": "post",
+     "part": "member"
+    },
+    {
+     "id": "member-ladder-rung-12",
+     "of": "ladder-rung-12",
+     "member": "post",
+     "part": "member"
+    },
+    {
+     "id": "member-ladder-rung-13",
+     "of": "ladder-rung-13",
+     "member": "post",
+     "part": "member"
+    },
+    {
+     "id": "support-contact-a-l",
+     "kind": "box",
+     "bone": "base",
+     "material": "concrete",
+     "role": "ground",
+     "tone": 0.2,
+     "member": "base",
+     "part": "support",
+     "anchor": "contact-a-l",
+     "size": [
+      1.0,
+      0.01,
+      1.2
+     ],
+     "transform": {
+      "translation": [
+       -1.4,
+       0.005,
+       0.6
+      ]
+     }
+    },
+    {
+     "id": "support-contact-a-r",
+     "kind": "box",
+     "bone": "base",
+     "material": "concrete",
+     "role": "ground",
+     "tone": 0.2,
+     "member": "base",
+     "part": "support",
+     "anchor": "contact-a-r",
+     "size": [
+      1.0,
+      0.01,
+      1.2
+     ],
+     "transform": {
+      "translation": [
+       -1.4,
+       0.005,
+       -0.6
+      ]
+     }
+    },
+    {
+     "id": "support-contact-b-l",
+     "kind": "box",
+     "bone": "base",
+     "material": "concrete",
+     "role": "ground",
+     "tone": 0.2,
+     "member": "base",
+     "part": "support",
+     "anchor": "contact-b-l",
+     "size": [
+      1.0,
+      0.01,
+      1.2
+     ],
+     "transform": {
+      "translation": [
+       5.4,
+       0.005,
+       0.6
+      ]
+     }
+    },
+    {
+     "id": "support-contact-b-r",
+     "kind": "box",
+     "bone": "base",
+     "material": "concrete",
+     "role": "ground",
+     "tone": 0.2,
+     "member": "base",
+     "part": "support",
+     "anchor": "contact-b-r",
+     "size": [
+      1.0,
+      0.01,
+      1.2
+     ],
+     "transform": {
+      "translation": [
+       5.4,
+       0.005,
+       -0.6
+      ]
+     }
     }
    ],
    "decisions": [
@@ -28367,6 +29231,10 @@
     {
      "en": "Rework 10: the saddle bearing shaft and the crank shaft are modelled at this scale too, so the walking beam sits on the post and the cranks on the gear reducer.",
      "de": "Überarbeitung 10: Sattellagerwelle und Kurbelwelle sind auch in diesem Maßstab modelliert, damit der Schwengel auf dem Bock und die Kurbeln am Getriebe sitzen."
+    },
+    {
+     "en": "Access ladder and brake at 1:50: two 60 x 10 mm flat stringers 440 mm apart with thirteen 20 mm rungs at 280 mm stand on the slab in front of the well-side legs and end under the cap plate; a 380 x 110 mm brake drum sits outboard of the crank on the extended input shaft, with its band block, a 1 m hand lever on a stand at the motor end of the skid and a 16 mm pull rod. The structure names every part that passes load on (deck, motor feet, bearing caps, saddle blocks, tail hangers, pitman eyes, wellhead stack, rod clamp, horsehead face, ladder) and ends in the four slab bearings.",
+     "de": "Aufstiegsleiter und Bremse bei 1:50: zwei Flachstahlholme 60 x 10 mm im Abstand von 440 mm mit dreizehn 20-mm-Sprossen im Raster von 280 mm stehen vor den bohrlochseitigen Beinen auf der Platte und enden unter der Kopfplatte; eine Bremstrommel 380 x 110 mm sitzt außerhalb der Kurbel auf der verlängerten Antriebswelle, mit Bandklotz, einem 1 m langen Handhebel auf einem Bock am Motorende des Rahmens und einer 16-mm-Zugstange. Das Tragwerk nennt jedes Teil, das Last weitergibt (Deckblech, Motorfüße, Lagerdeckel, Sattelböcke, Hängelaschen, Schubstangenaugen, Bohrlochkopf, Stangenklemme, Pferdekopfstirn, Leiter), und endet in den vier Plattenauflagern."
     }
    ]
   },
@@ -48045,6 +48913,475 @@
        23
       ]
      ]
+    },
+    {
+     "id": "ladder-stringer-l",
+     "bone": "post",
+     "material": "painted-steel",
+     "role": "body",
+     "tone": 0.5,
+     "kind": "extrude",
+     "profile": [
+      [
+       -0.25,
+       1.70972
+      ],
+      [
+       3.55,
+       0.19401
+      ],
+      [
+       3.55,
+       0.25401
+      ],
+      [
+       -0.25,
+       1.76972
+      ]
+     ],
+     "plane": "xy",
+     "from": 0.20500000000000002,
+     "to": 0.22
+    },
+    {
+     "id": "ladder-stringer-r",
+     "bone": "post",
+     "material": "painted-steel",
+     "role": "body",
+     "tone": 0.5,
+     "kind": "extrude",
+     "profile": [
+      [
+       -0.25,
+       1.70972
+      ],
+      [
+       3.55,
+       0.19401
+      ],
+      [
+       3.55,
+       0.25401
+      ],
+      [
+       -0.25,
+       1.76972
+      ]
+     ],
+     "plane": "xy",
+     "from": -0.22,
+     "to": -0.20500000000000002
+    },
+    {
+     "id": "ladder-rung-1",
+     "bone": "post",
+     "material": "painted-steel",
+     "role": "body",
+     "tone": 0.45,
+     "kind": "capsule",
+     "p0": [
+      0.05,
+      1.62006,
+      -0.2125
+     ],
+     "p1": [
+      0.05,
+      1.62006,
+      0.2125
+     ],
+     "r0": 0.01,
+     "r1": 0.01,
+     "slender": true
+    },
+    {
+     "id": "ladder-rung-2",
+     "bone": "post",
+     "material": "painted-steel",
+     "role": "body",
+     "tone": 0.45,
+     "kind": "capsule",
+     "p0": [
+      0.33,
+      1.50837,
+      -0.2125
+     ],
+     "p1": [
+      0.33,
+      1.50837,
+      0.2125
+     ],
+     "r0": 0.01,
+     "r1": 0.01,
+     "slender": true
+    },
+    {
+     "id": "ladder-rung-3",
+     "bone": "post",
+     "material": "painted-steel",
+     "role": "body",
+     "tone": 0.45,
+     "kind": "capsule",
+     "p0": [
+      0.61,
+      1.39669,
+      -0.2125
+     ],
+     "p1": [
+      0.61,
+      1.39669,
+      0.2125
+     ],
+     "r0": 0.01,
+     "r1": 0.01,
+     "slender": true
+    },
+    {
+     "id": "ladder-rung-4",
+     "bone": "post",
+     "material": "painted-steel",
+     "role": "body",
+     "tone": 0.45,
+     "kind": "capsule",
+     "p0": [
+      0.89,
+      1.285,
+      -0.2125
+     ],
+     "p1": [
+      0.89,
+      1.285,
+      0.2125
+     ],
+     "r0": 0.01,
+     "r1": 0.01,
+     "slender": true
+    },
+    {
+     "id": "ladder-rung-5",
+     "bone": "post",
+     "material": "painted-steel",
+     "role": "body",
+     "tone": 0.45,
+     "kind": "capsule",
+     "p0": [
+      1.17,
+      1.17332,
+      -0.2125
+     ],
+     "p1": [
+      1.17,
+      1.17332,
+      0.2125
+     ],
+     "r0": 0.01,
+     "r1": 0.01,
+     "slender": true
+    },
+    {
+     "id": "ladder-rung-6",
+     "bone": "post",
+     "material": "painted-steel",
+     "role": "body",
+     "tone": 0.45,
+     "kind": "capsule",
+     "p0": [
+      1.45,
+      1.06164,
+      -0.2125
+     ],
+     "p1": [
+      1.45,
+      1.06164,
+      0.2125
+     ],
+     "r0": 0.01,
+     "r1": 0.01,
+     "slender": true
+    },
+    {
+     "id": "ladder-rung-7",
+     "bone": "post",
+     "material": "painted-steel",
+     "role": "body",
+     "tone": 0.45,
+     "kind": "capsule",
+     "p0": [
+      1.73,
+      0.94995,
+      -0.2125
+     ],
+     "p1": [
+      1.73,
+      0.94995,
+      0.2125
+     ],
+     "r0": 0.01,
+     "r1": 0.01,
+     "slender": true
+    },
+    {
+     "id": "ladder-rung-8",
+     "bone": "post",
+     "material": "painted-steel",
+     "role": "body",
+     "tone": 0.45,
+     "kind": "capsule",
+     "p0": [
+      2.01,
+      0.83827,
+      -0.2125
+     ],
+     "p1": [
+      2.01,
+      0.83827,
+      0.2125
+     ],
+     "r0": 0.01,
+     "r1": 0.01,
+     "slender": true
+    },
+    {
+     "id": "ladder-rung-9",
+     "bone": "post",
+     "material": "painted-steel",
+     "role": "body",
+     "tone": 0.45,
+     "kind": "capsule",
+     "p0": [
+      2.29,
+      0.72659,
+      -0.2125
+     ],
+     "p1": [
+      2.29,
+      0.72659,
+      0.2125
+     ],
+     "r0": 0.01,
+     "r1": 0.01,
+     "slender": true
+    },
+    {
+     "id": "ladder-rung-10",
+     "bone": "post",
+     "material": "painted-steel",
+     "role": "body",
+     "tone": 0.45,
+     "kind": "capsule",
+     "p0": [
+      2.57,
+      0.6149,
+      -0.2125
+     ],
+     "p1": [
+      2.57,
+      0.6149,
+      0.2125
+     ],
+     "r0": 0.01,
+     "r1": 0.01,
+     "slender": true
+    },
+    {
+     "id": "ladder-rung-11",
+     "bone": "post",
+     "material": "painted-steel",
+     "role": "body",
+     "tone": 0.45,
+     "kind": "capsule",
+     "p0": [
+      2.85,
+      0.50322,
+      -0.2125
+     ],
+     "p1": [
+      2.85,
+      0.50322,
+      0.2125
+     ],
+     "r0": 0.01,
+     "r1": 0.01,
+     "slender": true
+    },
+    {
+     "id": "ladder-rung-12",
+     "bone": "post",
+     "material": "painted-steel",
+     "role": "body",
+     "tone": 0.45,
+     "kind": "capsule",
+     "p0": [
+      3.13,
+      0.39154,
+      -0.2125
+     ],
+     "p1": [
+      3.13,
+      0.39154,
+      0.2125
+     ],
+     "r0": 0.01,
+     "r1": 0.01,
+     "slender": true
+    },
+    {
+     "id": "ladder-rung-13",
+     "bone": "post",
+     "material": "painted-steel",
+     "role": "body",
+     "tone": 0.45,
+     "kind": "capsule",
+     "p0": [
+      3.41,
+      0.27985,
+      -0.2125
+     ],
+     "p1": [
+      3.41,
+      0.27985,
+      0.2125
+     ],
+     "r0": 0.01,
+     "r1": 0.01,
+     "slender": true
+    },
+    {
+     "id": "brake-shaft",
+     "bone": "gearbox",
+     "material": "cast-iron",
+     "role": "body",
+     "tone": 0.3,
+     "kind": "revolve",
+     "profile": [
+      [
+       0.0,
+       0.05
+      ],
+      [
+       0.39,
+       0.05
+      ]
+     ],
+     "axis": [
+      0.0,
+      0.0,
+      1.0
+     ],
+     "origin": [
+      1.25,
+      -0.55,
+      0.42
+     ]
+    },
+    {
+     "id": "brake-drum",
+     "bone": "gearbox",
+     "material": "cast-iron",
+     "role": "body",
+     "tone": 0.35,
+     "kind": "revolve",
+     "profile": [
+      [
+       0.0,
+       0.19
+      ],
+      [
+       0.11,
+       0.19
+      ]
+     ],
+     "axis": [
+      0.0,
+      0.0,
+      1.0
+     ],
+     "origin": [
+      1.25,
+      -0.55,
+      0.8
+     ]
+    },
+    {
+     "id": "brake-stand",
+     "bone": "skid",
+     "material": "painted-steel",
+     "role": "body",
+     "tone": 0.4,
+     "kind": "box",
+     "size": [
+      0.1,
+      0.3,
+      0.06
+     ],
+     "transform": {
+      "translation": [
+       6.95,
+       0.39,
+       0.97
+      ]
+     }
+    },
+    {
+     "id": "brake-lever",
+     "bone": "skid",
+     "material": "painted-steel",
+     "role": "body",
+     "tone": 0.3,
+     "kind": "capsule",
+     "p0": [
+      6.95,
+      0.5,
+      0.97
+     ],
+     "p1": [
+      7.1,
+      1.45,
+      0.97
+     ],
+     "r0": 0.016,
+     "r1": 0.016,
+     "slender": true
+    },
+    {
+     "id": "brake-band",
+     "bone": "gearbox",
+     "material": "painted-steel",
+     "role": "body",
+     "tone": 0.28,
+     "kind": "box",
+     "size": [
+      0.14,
+      0.08,
+      0.1
+     ],
+     "transform": {
+      "translation": [
+       1.25,
+       -0.32,
+       0.855
+      ]
+     }
+    },
+    {
+     "id": "brake-rod",
+     "bone": "skid",
+     "material": "painted-steel",
+     "role": "body",
+     "tone": 0.35,
+     "kind": "capsule",
+     "p0": [
+      6.99,
+      0.78,
+      0.97
+     ],
+     "p1": [
+      5.6,
+      1.13,
+      0.88
+     ],
+     "r0": 0.008,
+     "r1": 0.008,
+     "slender": true
     }
    ],
    "thermal": [
@@ -49291,6 +50628,111 @@
        0.025
       ]
      ]
+    },
+    {
+     "id": "th-ladder-stringer-l",
+     "of": "ladder-stringer-l",
+     "region": "steel"
+    },
+    {
+     "id": "th-ladder-stringer-r",
+     "of": "ladder-stringer-r",
+     "region": "steel"
+    },
+    {
+     "id": "th-ladder-rung-1",
+     "of": "ladder-rung-1",
+     "region": "steel"
+    },
+    {
+     "id": "th-ladder-rung-2",
+     "of": "ladder-rung-2",
+     "region": "steel"
+    },
+    {
+     "id": "th-ladder-rung-3",
+     "of": "ladder-rung-3",
+     "region": "steel"
+    },
+    {
+     "id": "th-ladder-rung-4",
+     "of": "ladder-rung-4",
+     "region": "steel"
+    },
+    {
+     "id": "th-ladder-rung-5",
+     "of": "ladder-rung-5",
+     "region": "steel"
+    },
+    {
+     "id": "th-ladder-rung-6",
+     "of": "ladder-rung-6",
+     "region": "steel"
+    },
+    {
+     "id": "th-ladder-rung-7",
+     "of": "ladder-rung-7",
+     "region": "steel"
+    },
+    {
+     "id": "th-ladder-rung-8",
+     "of": "ladder-rung-8",
+     "region": "steel"
+    },
+    {
+     "id": "th-ladder-rung-9",
+     "of": "ladder-rung-9",
+     "region": "steel"
+    },
+    {
+     "id": "th-ladder-rung-10",
+     "of": "ladder-rung-10",
+     "region": "steel"
+    },
+    {
+     "id": "th-ladder-rung-11",
+     "of": "ladder-rung-11",
+     "region": "steel"
+    },
+    {
+     "id": "th-ladder-rung-12",
+     "of": "ladder-rung-12",
+     "region": "steel"
+    },
+    {
+     "id": "th-ladder-rung-13",
+     "of": "ladder-rung-13",
+     "region": "steel"
+    },
+    {
+     "id": "th-brake-shaft",
+     "of": "brake-shaft",
+     "region": "gearbox"
+    },
+    {
+     "id": "th-brake-drum",
+     "of": "brake-drum",
+     "region": "gearbox"
+    },
+    {
+     "id": "th-brake-stand",
+     "of": "brake-stand",
+     "region": "steel"
+    },
+    {
+     "id": "th-brake-lever",
+     "of": "brake-lever",
+     "region": "steel"
+    },
+    {
+     "id": "th-brake-band",
+     "of": "brake-band",
+     "region": "steel"
+    },
+    {
+     "id": "th-brake-rod",
+     "of": "brake-rod",
+     "region": "steel"
     }
    ],
    "structure": [
@@ -49871,6 +51313,272 @@
      "of": "flowline",
      "member": "base",
      "part": "member"
+    },
+    {
+     "id": "member-skid-deck",
+     "of": "skid-deck",
+     "member": "skid",
+     "part": "member"
+    },
+    {
+     "id": "member-motor-feet",
+     "of": "motor-feet",
+     "member": "motor",
+     "part": "member"
+    },
+    {
+     "id": "member-bearing-cap-l",
+     "of": "bearing-cap-l",
+     "member": "gearbox",
+     "part": "member"
+    },
+    {
+     "id": "member-bearing-cap-r",
+     "of": "bearing-cap-r",
+     "member": "gearbox",
+     "part": "member"
+    },
+    {
+     "id": "member-saddle-l",
+     "of": "saddle-l",
+     "member": "post",
+     "part": "member"
+    },
+    {
+     "id": "member-saddle-r",
+     "of": "saddle-r",
+     "member": "post",
+     "part": "member"
+    },
+    {
+     "id": "member-tail-pin-l",
+     "of": "tail-pin-l",
+     "member": "beam",
+     "part": "member"
+    },
+    {
+     "id": "member-tail-pin-r",
+     "of": "tail-pin-r",
+     "member": "beam",
+     "part": "member"
+    },
+    {
+     "id": "member-tail-plate",
+     "of": "tail-plate",
+     "member": "beam",
+     "part": "member"
+    },
+    {
+     "id": "member-pitman-eye-l",
+     "of": "pitman-eye-l",
+     "member": "pitman",
+     "part": "member"
+    },
+    {
+     "id": "member-pitman-eye-r",
+     "of": "pitman-eye-r",
+     "member": "pitman",
+     "part": "member"
+    },
+    {
+     "id": "member-wellhead-base",
+     "of": "wellhead-base",
+     "member": "base",
+     "part": "member"
+    },
+    {
+     "id": "member-wellhead-top",
+     "of": "wellhead-top",
+     "member": "base",
+     "part": "member"
+    },
+    {
+     "id": "member-rod-clamp",
+     "of": "rod-clamp",
+     "member": "rod",
+     "part": "member"
+    },
+    {
+     "id": "member-ladder-stringer-l",
+     "of": "ladder-stringer-l",
+     "member": "post",
+     "part": "member"
+    },
+    {
+     "id": "member-ladder-stringer-r",
+     "of": "ladder-stringer-r",
+     "member": "post",
+     "part": "member"
+    },
+    {
+     "id": "member-ladder-rung-1",
+     "of": "ladder-rung-1",
+     "member": "post",
+     "part": "member"
+    },
+    {
+     "id": "member-ladder-rung-2",
+     "of": "ladder-rung-2",
+     "member": "post",
+     "part": "member"
+    },
+    {
+     "id": "member-ladder-rung-3",
+     "of": "ladder-rung-3",
+     "member": "post",
+     "part": "member"
+    },
+    {
+     "id": "member-ladder-rung-4",
+     "of": "ladder-rung-4",
+     "member": "post",
+     "part": "member"
+    },
+    {
+     "id": "member-ladder-rung-5",
+     "of": "ladder-rung-5",
+     "member": "post",
+     "part": "member"
+    },
+    {
+     "id": "member-ladder-rung-6",
+     "of": "ladder-rung-6",
+     "member": "post",
+     "part": "member"
+    },
+    {
+     "id": "member-ladder-rung-7",
+     "of": "ladder-rung-7",
+     "member": "post",
+     "part": "member"
+    },
+    {
+     "id": "member-ladder-rung-8",
+     "of": "ladder-rung-8",
+     "member": "post",
+     "part": "member"
+    },
+    {
+     "id": "member-ladder-rung-9",
+     "of": "ladder-rung-9",
+     "member": "post",
+     "part": "member"
+    },
+    {
+     "id": "member-ladder-rung-10",
+     "of": "ladder-rung-10",
+     "member": "post",
+     "part": "member"
+    },
+    {
+     "id": "member-ladder-rung-11",
+     "of": "ladder-rung-11",
+     "member": "post",
+     "part": "member"
+    },
+    {
+     "id": "member-ladder-rung-12",
+     "of": "ladder-rung-12",
+     "member": "post",
+     "part": "member"
+    },
+    {
+     "id": "member-ladder-rung-13",
+     "of": "ladder-rung-13",
+     "member": "post",
+     "part": "member"
+    },
+    {
+     "id": "support-contact-a-l",
+     "kind": "box",
+     "bone": "base",
+     "material": "concrete",
+     "role": "ground",
+     "tone": 0.2,
+     "member": "base",
+     "part": "support",
+     "anchor": "contact-a-l",
+     "size": [
+      1.0,
+      0.01,
+      1.2
+     ],
+     "transform": {
+      "translation": [
+       -1.4,
+       0.005,
+       0.6
+      ]
+     }
+    },
+    {
+     "id": "support-contact-a-r",
+     "kind": "box",
+     "bone": "base",
+     "material": "concrete",
+     "role": "ground",
+     "tone": 0.2,
+     "member": "base",
+     "part": "support",
+     "anchor": "contact-a-r",
+     "size": [
+      1.0,
+      0.01,
+      1.2
+     ],
+     "transform": {
+      "translation": [
+       -1.4,
+       0.005,
+       -0.6
+      ]
+     }
+    },
+    {
+     "id": "support-contact-b-l",
+     "kind": "box",
+     "bone": "base",
+     "material": "concrete",
+     "role": "ground",
+     "tone": 0.2,
+     "member": "base",
+     "part": "support",
+     "anchor": "contact-b-l",
+     "size": [
+      1.0,
+      0.01,
+      1.2
+     ],
+     "transform": {
+      "translation": [
+       5.4,
+       0.005,
+       0.6
+      ]
+     }
+    },
+    {
+     "id": "support-contact-b-r",
+     "kind": "box",
+     "bone": "base",
+     "material": "concrete",
+     "role": "ground",
+     "tone": 0.2,
+     "member": "base",
+     "part": "support",
+     "anchor": "contact-b-r",
+     "size": [
+      1.0,
+      0.01,
+      1.2
+     ],
+     "transform": {
+      "translation": [
+       5.4,
+       0.005,
+       -0.6
+      ]
+     }
     }
    ],
    "decisions": [
@@ -49893,6 +51601,10 @@
     {
      "en": "Rework 10: the saddle bearing shaft and the crank shaft are modelled at this scale too, so the walking beam sits on the post and the cranks on the gear reducer.",
      "de": "Überarbeitung 10: Sattellagerwelle und Kurbelwelle sind auch in diesem Maßstab modelliert, damit der Schwengel auf dem Bock und die Kurbeln am Getriebe sitzen."
+    },
+    {
+     "en": "Access ladder and brake at 1:100 (smallest feature 15 mm): stringers 60 x 15 mm, the thirteen 20 mm rungs, brake drum, band block, lever and 16 mm pull rod are kept at their true sections; the structure ends in the four slab bearings.",
+     "de": "Aufstiegsleiter und Bremse bei 1:100 (kleinstes Detail 15 mm): Holme 60 x 15 mm, die dreizehn 20-mm-Sprossen, Bremstrommel, Bandklotz, Hebel und 16-mm-Zugstange behalten ihre wahren Querschnitte; das Tragwerk endet in den vier Plattenauflagern."
     }
    ]
   },
@@ -66404,6 +68116,434 @@
       0,
       -0.76
      ]
+    },
+    {
+     "id": "ladder-stringer-l",
+     "bone": "post",
+     "material": "painted-steel",
+     "role": "body",
+     "tone": 0.5,
+     "kind": "extrude",
+     "profile": [
+      [
+       -0.25,
+       1.70972
+      ],
+      [
+       3.55,
+       0.19401
+      ],
+      [
+       3.55,
+       0.25401
+      ],
+      [
+       -0.25,
+       1.76972
+      ]
+     ],
+     "plane": "xy",
+     "from": 0.19,
+     "to": 0.22
+    },
+    {
+     "id": "ladder-stringer-r",
+     "bone": "post",
+     "material": "painted-steel",
+     "role": "body",
+     "tone": 0.5,
+     "kind": "extrude",
+     "profile": [
+      [
+       -0.25,
+       1.70972
+      ],
+      [
+       3.55,
+       0.19401
+      ],
+      [
+       3.55,
+       0.25401
+      ],
+      [
+       -0.25,
+       1.76972
+      ]
+     ],
+     "plane": "xy",
+     "from": -0.22,
+     "to": -0.19
+    },
+    {
+     "id": "ladder-rung-1",
+     "bone": "post",
+     "material": "painted-steel",
+     "role": "body",
+     "tone": 0.45,
+     "kind": "capsule",
+     "p0": [
+      0.05,
+      1.62006,
+      -0.20500000000000002
+     ],
+     "p1": [
+      0.05,
+      1.62006,
+      0.20500000000000002
+     ],
+     "r0": 0.01,
+     "r1": 0.01,
+     "slender": true
+    },
+    {
+     "id": "ladder-rung-2",
+     "bone": "post",
+     "material": "painted-steel",
+     "role": "body",
+     "tone": 0.45,
+     "kind": "capsule",
+     "p0": [
+      0.33,
+      1.50837,
+      -0.20500000000000002
+     ],
+     "p1": [
+      0.33,
+      1.50837,
+      0.20500000000000002
+     ],
+     "r0": 0.01,
+     "r1": 0.01,
+     "slender": true
+    },
+    {
+     "id": "ladder-rung-3",
+     "bone": "post",
+     "material": "painted-steel",
+     "role": "body",
+     "tone": 0.45,
+     "kind": "capsule",
+     "p0": [
+      0.61,
+      1.39669,
+      -0.20500000000000002
+     ],
+     "p1": [
+      0.61,
+      1.39669,
+      0.20500000000000002
+     ],
+     "r0": 0.01,
+     "r1": 0.01,
+     "slender": true
+    },
+    {
+     "id": "ladder-rung-4",
+     "bone": "post",
+     "material": "painted-steel",
+     "role": "body",
+     "tone": 0.45,
+     "kind": "capsule",
+     "p0": [
+      0.89,
+      1.285,
+      -0.20500000000000002
+     ],
+     "p1": [
+      0.89,
+      1.285,
+      0.20500000000000002
+     ],
+     "r0": 0.01,
+     "r1": 0.01,
+     "slender": true
+    },
+    {
+     "id": "ladder-rung-5",
+     "bone": "post",
+     "material": "painted-steel",
+     "role": "body",
+     "tone": 0.45,
+     "kind": "capsule",
+     "p0": [
+      1.17,
+      1.17332,
+      -0.20500000000000002
+     ],
+     "p1": [
+      1.17,
+      1.17332,
+      0.20500000000000002
+     ],
+     "r0": 0.01,
+     "r1": 0.01,
+     "slender": true
+    },
+    {
+     "id": "ladder-rung-6",
+     "bone": "post",
+     "material": "painted-steel",
+     "role": "body",
+     "tone": 0.45,
+     "kind": "capsule",
+     "p0": [
+      1.45,
+      1.06164,
+      -0.20500000000000002
+     ],
+     "p1": [
+      1.45,
+      1.06164,
+      0.20500000000000002
+     ],
+     "r0": 0.01,
+     "r1": 0.01,
+     "slender": true
+    },
+    {
+     "id": "ladder-rung-7",
+     "bone": "post",
+     "material": "painted-steel",
+     "role": "body",
+     "tone": 0.45,
+     "kind": "capsule",
+     "p0": [
+      1.73,
+      0.94995,
+      -0.20500000000000002
+     ],
+     "p1": [
+      1.73,
+      0.94995,
+      0.20500000000000002
+     ],
+     "r0": 0.01,
+     "r1": 0.01,
+     "slender": true
+    },
+    {
+     "id": "ladder-rung-8",
+     "bone": "post",
+     "material": "painted-steel",
+     "role": "body",
+     "tone": 0.45,
+     "kind": "capsule",
+     "p0": [
+      2.01,
+      0.83827,
+      -0.20500000000000002
+     ],
+     "p1": [
+      2.01,
+      0.83827,
+      0.20500000000000002
+     ],
+     "r0": 0.01,
+     "r1": 0.01,
+     "slender": true
+    },
+    {
+     "id": "ladder-rung-9",
+     "bone": "post",
+     "material": "painted-steel",
+     "role": "body",
+     "tone": 0.45,
+     "kind": "capsule",
+     "p0": [
+      2.29,
+      0.72659,
+      -0.20500000000000002
+     ],
+     "p1": [
+      2.29,
+      0.72659,
+      0.20500000000000002
+     ],
+     "r0": 0.01,
+     "r1": 0.01,
+     "slender": true
+    },
+    {
+     "id": "ladder-rung-10",
+     "bone": "post",
+     "material": "painted-steel",
+     "role": "body",
+     "tone": 0.45,
+     "kind": "capsule",
+     "p0": [
+      2.57,
+      0.6149,
+      -0.20500000000000002
+     ],
+     "p1": [
+      2.57,
+      0.6149,
+      0.20500000000000002
+     ],
+     "r0": 0.01,
+     "r1": 0.01,
+     "slender": true
+    },
+    {
+     "id": "ladder-rung-11",
+     "bone": "post",
+     "material": "painted-steel",
+     "role": "body",
+     "tone": 0.45,
+     "kind": "capsule",
+     "p0": [
+      2.85,
+      0.50322,
+      -0.20500000000000002
+     ],
+     "p1": [
+      2.85,
+      0.50322,
+      0.20500000000000002
+     ],
+     "r0": 0.01,
+     "r1": 0.01,
+     "slender": true
+    },
+    {
+     "id": "ladder-rung-12",
+     "bone": "post",
+     "material": "painted-steel",
+     "role": "body",
+     "tone": 0.45,
+     "kind": "capsule",
+     "p0": [
+      3.13,
+      0.39154,
+      -0.20500000000000002
+     ],
+     "p1": [
+      3.13,
+      0.39154,
+      0.20500000000000002
+     ],
+     "r0": 0.01,
+     "r1": 0.01,
+     "slender": true
+    },
+    {
+     "id": "ladder-rung-13",
+     "bone": "post",
+     "material": "painted-steel",
+     "role": "body",
+     "tone": 0.45,
+     "kind": "capsule",
+     "p0": [
+      3.41,
+      0.27985,
+      -0.20500000000000002
+     ],
+     "p1": [
+      3.41,
+      0.27985,
+      0.20500000000000002
+     ],
+     "r0": 0.01,
+     "r1": 0.01,
+     "slender": true
+    },
+    {
+     "id": "brake-shaft",
+     "bone": "gearbox",
+     "material": "cast-iron",
+     "role": "body",
+     "tone": 0.3,
+     "kind": "revolve",
+     "profile": [
+      [
+       0.0,
+       0.05
+      ],
+      [
+       0.39,
+       0.05
+      ]
+     ],
+     "axis": [
+      0.0,
+      0.0,
+      1.0
+     ],
+     "origin": [
+      1.25,
+      -0.55,
+      0.42
+     ]
+    },
+    {
+     "id": "brake-drum",
+     "bone": "gearbox",
+     "material": "cast-iron",
+     "role": "body",
+     "tone": 0.35,
+     "kind": "revolve",
+     "profile": [
+      [
+       0.0,
+       0.19
+      ],
+      [
+       0.11,
+       0.19
+      ]
+     ],
+     "axis": [
+      0.0,
+      0.0,
+      1.0
+     ],
+     "origin": [
+      1.25,
+      -0.55,
+      0.8
+     ]
+    },
+    {
+     "id": "brake-stand",
+     "bone": "skid",
+     "material": "painted-steel",
+     "role": "body",
+     "tone": 0.4,
+     "kind": "box",
+     "size": [
+      0.1,
+      0.3,
+      0.06
+     ],
+     "transform": {
+      "translation": [
+       6.95,
+       0.39,
+       0.97
+      ]
+     }
+    },
+    {
+     "id": "brake-lever",
+     "bone": "skid",
+     "material": "painted-steel",
+     "role": "body",
+     "tone": 0.3,
+     "kind": "capsule",
+     "p0": [
+      6.95,
+      0.5,
+      0.97
+     ],
+     "p1": [
+      7.1,
+      1.45,
+      0.97
+     ],
+     "r0": 0.016,
+     "r1": 0.016,
+     "slender": true
     }
    ],
    "thermal": [
@@ -67435,6 +69575,101 @@
      "id": "th-crank-shaft",
      "of": "crank-shaft",
      "region": "crank"
+    },
+    {
+     "id": "th-ladder-stringer-l",
+     "of": "ladder-stringer-l",
+     "region": "steel"
+    },
+    {
+     "id": "th-ladder-stringer-r",
+     "of": "ladder-stringer-r",
+     "region": "steel"
+    },
+    {
+     "id": "th-ladder-rung-1",
+     "of": "ladder-rung-1",
+     "region": "steel"
+    },
+    {
+     "id": "th-ladder-rung-2",
+     "of": "ladder-rung-2",
+     "region": "steel"
+    },
+    {
+     "id": "th-ladder-rung-3",
+     "of": "ladder-rung-3",
+     "region": "steel"
+    },
+    {
+     "id": "th-ladder-rung-4",
+     "of": "ladder-rung-4",
+     "region": "steel"
+    },
+    {
+     "id": "th-ladder-rung-5",
+     "of": "ladder-rung-5",
+     "region": "steel"
+    },
+    {
+     "id": "th-ladder-rung-6",
+     "of": "ladder-rung-6",
+     "region": "steel"
+    },
+    {
+     "id": "th-ladder-rung-7",
+     "of": "ladder-rung-7",
+     "region": "steel"
+    },
+    {
+     "id": "th-ladder-rung-8",
+     "of": "ladder-rung-8",
+     "region": "steel"
+    },
+    {
+     "id": "th-ladder-rung-9",
+     "of": "ladder-rung-9",
+     "region": "steel"
+    },
+    {
+     "id": "th-ladder-rung-10",
+     "of": "ladder-rung-10",
+     "region": "steel"
+    },
+    {
+     "id": "th-ladder-rung-11",
+     "of": "ladder-rung-11",
+     "region": "steel"
+    },
+    {
+     "id": "th-ladder-rung-12",
+     "of": "ladder-rung-12",
+     "region": "steel"
+    },
+    {
+     "id": "th-ladder-rung-13",
+     "of": "ladder-rung-13",
+     "region": "steel"
+    },
+    {
+     "id": "th-brake-shaft",
+     "of": "brake-shaft",
+     "region": "gearbox"
+    },
+    {
+     "id": "th-brake-drum",
+     "of": "brake-drum",
+     "region": "gearbox"
+    },
+    {
+     "id": "th-brake-stand",
+     "of": "brake-stand",
+     "region": "steel"
+    },
+    {
+     "id": "th-brake-lever",
+     "of": "brake-lever",
+     "region": "steel"
     }
    ],
    "structure": [
@@ -67555,12 +69790,6 @@
     {
      "id": "member-pitman-r",
      "of": "pitman-r",
-     "member": "pitman",
-     "part": "member"
-    },
-    {
-     "id": "member-equalizer",
-     "of": "equalizer",
      "member": "pitman",
      "part": "member"
     },
@@ -68081,6 +70310,236 @@
      "of": "flowline",
      "member": "base",
      "part": "member"
+    },
+    {
+     "id": "member-skid-deck",
+     "of": "skid-deck",
+     "member": "skid",
+     "part": "member"
+    },
+    {
+     "id": "member-motor-feet",
+     "of": "motor-feet",
+     "member": "motor",
+     "part": "member"
+    },
+    {
+     "id": "member-crank-shaft",
+     "of": "crank-shaft",
+     "member": "crank",
+     "part": "member"
+    },
+    {
+     "id": "member-saddle-l",
+     "of": "saddle-l",
+     "member": "post",
+     "part": "member"
+    },
+    {
+     "id": "member-saddle-r",
+     "of": "saddle-r",
+     "member": "post",
+     "part": "member"
+    },
+    {
+     "id": "member-tail-pin",
+     "of": "tail-pin",
+     "member": "beam",
+     "part": "member"
+    },
+    {
+     "id": "member-equalizer",
+     "of": "equalizer",
+     "member": "pitman",
+     "part": "member"
+    },
+    {
+     "id": "member-wellhead",
+     "of": "wellhead",
+     "member": "base",
+     "part": "member"
+    },
+    {
+     "id": "member-ladder-stringer-l",
+     "of": "ladder-stringer-l",
+     "member": "post",
+     "part": "member"
+    },
+    {
+     "id": "member-ladder-stringer-r",
+     "of": "ladder-stringer-r",
+     "member": "post",
+     "part": "member"
+    },
+    {
+     "id": "member-ladder-rung-1",
+     "of": "ladder-rung-1",
+     "member": "post",
+     "part": "member"
+    },
+    {
+     "id": "member-ladder-rung-2",
+     "of": "ladder-rung-2",
+     "member": "post",
+     "part": "member"
+    },
+    {
+     "id": "member-ladder-rung-3",
+     "of": "ladder-rung-3",
+     "member": "post",
+     "part": "member"
+    },
+    {
+     "id": "member-ladder-rung-4",
+     "of": "ladder-rung-4",
+     "member": "post",
+     "part": "member"
+    },
+    {
+     "id": "member-ladder-rung-5",
+     "of": "ladder-rung-5",
+     "member": "post",
+     "part": "member"
+    },
+    {
+     "id": "member-ladder-rung-6",
+     "of": "ladder-rung-6",
+     "member": "post",
+     "part": "member"
+    },
+    {
+     "id": "member-ladder-rung-7",
+     "of": "ladder-rung-7",
+     "member": "post",
+     "part": "member"
+    },
+    {
+     "id": "member-ladder-rung-8",
+     "of": "ladder-rung-8",
+     "member": "post",
+     "part": "member"
+    },
+    {
+     "id": "member-ladder-rung-9",
+     "of": "ladder-rung-9",
+     "member": "post",
+     "part": "member"
+    },
+    {
+     "id": "member-ladder-rung-10",
+     "of": "ladder-rung-10",
+     "member": "post",
+     "part": "member"
+    },
+    {
+     "id": "member-ladder-rung-11",
+     "of": "ladder-rung-11",
+     "member": "post",
+     "part": "member"
+    },
+    {
+     "id": "member-ladder-rung-12",
+     "of": "ladder-rung-12",
+     "member": "post",
+     "part": "member"
+    },
+    {
+     "id": "member-ladder-rung-13",
+     "of": "ladder-rung-13",
+     "member": "post",
+     "part": "member"
+    },
+    {
+     "id": "support-contact-a-l",
+     "kind": "box",
+     "bone": "base",
+     "material": "concrete",
+     "role": "ground",
+     "tone": 0.2,
+     "member": "base",
+     "part": "support",
+     "anchor": "contact-a-l",
+     "size": [
+      1.0,
+      0.01,
+      1.2
+     ],
+     "transform": {
+      "translation": [
+       -1.4,
+       0.005,
+       0.6
+      ]
+     }
+    },
+    {
+     "id": "support-contact-a-r",
+     "kind": "box",
+     "bone": "base",
+     "material": "concrete",
+     "role": "ground",
+     "tone": 0.2,
+     "member": "base",
+     "part": "support",
+     "anchor": "contact-a-r",
+     "size": [
+      1.0,
+      0.01,
+      1.2
+     ],
+     "transform": {
+      "translation": [
+       -1.4,
+       0.005,
+       -0.6
+      ]
+     }
+    },
+    {
+     "id": "support-contact-b-l",
+     "kind": "box",
+     "bone": "base",
+     "material": "concrete",
+     "role": "ground",
+     "tone": 0.2,
+     "member": "base",
+     "part": "support",
+     "anchor": "contact-b-l",
+     "size": [
+      1.0,
+      0.01,
+      1.2
+     ],
+     "transform": {
+      "translation": [
+       5.4,
+       0.005,
+       0.6
+      ]
+     }
+    },
+    {
+     "id": "support-contact-b-r",
+     "kind": "box",
+     "bone": "base",
+     "material": "concrete",
+     "role": "ground",
+     "tone": 0.2,
+     "member": "base",
+     "part": "support",
+     "anchor": "contact-b-r",
+     "size": [
+      1.0,
+      0.01,
+      1.2
+     ],
+     "transform": {
+      "translation": [
+       5.4,
+       0.005,
+       -0.6
+      ]
+     }
     }
    ],
    "decisions": [
@@ -68103,6 +70562,10 @@
     {
      "en": "Rework 10: the saddle bearing shaft and the crank shaft are modelled at this scale too, so the walking beam sits on the post and the cranks on the gear reducer.",
      "de": "Überarbeitung 10: Sattellagerwelle und Kurbelwelle sind auch in diesem Maßstab modelliert, damit der Schwengel auf dem Bock und die Kurbeln am Getriebe sitzen."
+    },
+    {
+     "en": "Access ladder and brake at 1:200 (smallest feature 30 mm): stringers 60 x 30 mm with the rungs as true 20 mm rods, brake drum on its shaft and the hand lever; band block and pull rod are left out because nothing of them prints; the structure ends in the four slab bearings.",
+     "de": "Aufstiegsleiter und Bremse bei 1:200 (kleinstes Detail 30 mm): Holme 60 x 30 mm mit den Sprossen als wahre 20-mm-Stäbe, Bremstrommel auf ihrer Welle und der Handhebel; Bandklotz und Zugstange entfallen, weil nichts davon druckbar ist; das Tragwerk endet in den vier Plattenauflagern."
     }
    ]
   },
@@ -80279,6 +82742,120 @@
       0,
       -0.76
      ]
+    },
+    {
+     "id": "ladder-stringer-l",
+     "bone": "post",
+     "material": "painted-steel",
+     "role": "body",
+     "tone": 0.5,
+     "kind": "extrude",
+     "profile": [
+      [
+       -0.25,
+       1.70972
+      ],
+      [
+       3.525,
+       0.20398
+      ],
+      [
+       3.525,
+       0.27898
+      ],
+      [
+       -0.25,
+       1.78472
+      ]
+     ],
+     "plane": "xy",
+     "from": 0.14500000000000002,
+     "to": 0.22
+    },
+    {
+     "id": "ladder-stringer-r",
+     "bone": "post",
+     "material": "painted-steel",
+     "role": "body",
+     "tone": 0.5,
+     "kind": "extrude",
+     "profile": [
+      [
+       -0.25,
+       1.70972
+      ],
+      [
+       3.525,
+       0.20398
+      ],
+      [
+       3.525,
+       0.27898
+      ],
+      [
+       -0.25,
+       1.78472
+      ]
+     ],
+     "plane": "xy",
+     "from": -0.22,
+     "to": -0.14500000000000002
+    },
+    {
+     "id": "brake-shaft",
+     "bone": "gearbox",
+     "material": "cast-iron",
+     "role": "body",
+     "tone": 0.3,
+     "kind": "revolve",
+     "profile": [
+      [
+       0.0,
+       0.05
+      ],
+      [
+       0.39,
+       0.05
+      ]
+     ],
+     "axis": [
+      0.0,
+      0.0,
+      1.0
+     ],
+     "origin": [
+      1.25,
+      -0.55,
+      0.42
+     ]
+    },
+    {
+     "id": "brake-drum",
+     "bone": "gearbox",
+     "material": "cast-iron",
+     "role": "body",
+     "tone": 0.35,
+     "kind": "revolve",
+     "profile": [
+      [
+       0.0,
+       0.19
+      ],
+      [
+       0.11,
+       0.19
+      ]
+     ],
+     "axis": [
+      0.0,
+      0.0,
+      1.0
+     ],
+     "origin": [
+      1.25,
+      -0.55,
+      0.8
+     ]
     }
    ],
    "thermal": [
@@ -81140,6 +83717,26 @@
      "id": "th-crank-shaft",
      "of": "crank-shaft",
      "region": "crank"
+    },
+    {
+     "id": "th-ladder-stringer-l",
+     "of": "ladder-stringer-l",
+     "region": "steel"
+    },
+    {
+     "id": "th-ladder-stringer-r",
+     "of": "ladder-stringer-r",
+     "region": "steel"
+    },
+    {
+     "id": "th-brake-shaft",
+     "of": "brake-shaft",
+     "region": "gearbox"
+    },
+    {
+     "id": "th-brake-drum",
+     "of": "brake-drum",
+     "region": "gearbox"
     }
    ],
    "structure": [
@@ -81218,12 +83815,6 @@
     {
      "id": "member-pitman-r",
      "of": "pitman-r",
-     "member": "pitman",
-     "part": "member"
-    },
-    {
-     "id": "member-equalizer",
-     "of": "equalizer",
      "member": "pitman",
      "part": "member"
     },
@@ -81728,6 +84319,152 @@
      "of": "flowline",
      "member": "base",
      "part": "member"
+    },
+    {
+     "id": "member-skid-deck",
+     "of": "skid-deck",
+     "member": "skid",
+     "part": "member"
+    },
+    {
+     "id": "member-motor-feet",
+     "of": "motor-feet",
+     "member": "motor",
+     "part": "member"
+    },
+    {
+     "id": "member-crank-shaft",
+     "of": "crank-shaft",
+     "member": "crank",
+     "part": "member"
+    },
+    {
+     "id": "member-saddle-l",
+     "of": "saddle-l",
+     "member": "post",
+     "part": "member"
+    },
+    {
+     "id": "member-saddle-r",
+     "of": "saddle-r",
+     "member": "post",
+     "part": "member"
+    },
+    {
+     "id": "member-equalizer",
+     "of": "equalizer",
+     "member": "pitman",
+     "part": "member"
+    },
+    {
+     "id": "member-wellhead",
+     "of": "wellhead",
+     "member": "base",
+     "part": "member"
+    },
+    {
+     "id": "member-ladder-stringer-l",
+     "of": "ladder-stringer-l",
+     "member": "post",
+     "part": "member"
+    },
+    {
+     "id": "member-ladder-stringer-r",
+     "of": "ladder-stringer-r",
+     "member": "post",
+     "part": "member"
+    },
+    {
+     "id": "support-contact-a-l",
+     "kind": "box",
+     "bone": "base",
+     "material": "concrete",
+     "role": "ground",
+     "tone": 0.2,
+     "member": "base",
+     "part": "support",
+     "anchor": "contact-a-l",
+     "size": [
+      1.0,
+      0.01,
+      1.2
+     ],
+     "transform": {
+      "translation": [
+       -1.4,
+       0.005,
+       0.6
+      ]
+     }
+    },
+    {
+     "id": "support-contact-a-r",
+     "kind": "box",
+     "bone": "base",
+     "material": "concrete",
+     "role": "ground",
+     "tone": 0.2,
+     "member": "base",
+     "part": "support",
+     "anchor": "contact-a-r",
+     "size": [
+      1.0,
+      0.01,
+      1.2
+     ],
+     "transform": {
+      "translation": [
+       -1.4,
+       0.005,
+       -0.6
+      ]
+     }
+    },
+    {
+     "id": "support-contact-b-l",
+     "kind": "box",
+     "bone": "base",
+     "material": "concrete",
+     "role": "ground",
+     "tone": 0.2,
+     "member": "base",
+     "part": "support",
+     "anchor": "contact-b-l",
+     "size": [
+      1.0,
+      0.01,
+      1.2
+     ],
+     "transform": {
+      "translation": [
+       5.4,
+       0.005,
+       0.6
+      ]
+     }
+    },
+    {
+     "id": "support-contact-b-r",
+     "kind": "box",
+     "bone": "base",
+     "material": "concrete",
+     "role": "ground",
+     "tone": 0.2,
+     "member": "base",
+     "part": "support",
+     "anchor": "contact-b-r",
+     "size": [
+      1.0,
+      0.01,
+      1.2
+     ],
+     "transform": {
+      "translation": [
+       5.4,
+       0.005,
+       -0.6
+      ]
+     }
     }
    ],
    "decisions": [
@@ -81746,6 +84483,10 @@
     {
      "en": "Rework 10: the saddle bearing shaft and the crank shaft are modelled at this scale too, so the walking beam sits on the post and the cranks on the gear reducer.",
      "de": "Überarbeitung 10: Sattellagerwelle und Kurbelwelle sind auch in diesem Maßstab modelliert, damit der Schwengel auf dem Bock und die Kurbeln am Getriebe sitzen."
+    },
+    {
+     "en": "Access ladder and brake at 1:500 (smallest feature 75 mm): the ladder is two 75 mm stringers without rungs, the brake is the drum on its shaft; lever, band block and pull rod are left out; the structure ends in the four slab bearings.",
+     "de": "Aufstiegsleiter und Bremse bei 1:500 (kleinstes Detail 75 mm): die Leiter besteht aus zwei 75-mm-Holmen ohne Sprossen, die Bremse aus der Trommel auf ihrer Welle; Hebel, Bandklotz und Zugstange entfallen; das Tragwerk endet in den vier Plattenauflagern."
     }
    ]
   }

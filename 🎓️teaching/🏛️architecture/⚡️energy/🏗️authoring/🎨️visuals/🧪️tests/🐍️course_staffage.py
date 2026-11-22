@@ -14,6 +14,7 @@ TEACHING = next(path for path in Path(__file__).resolve().parents if path.name =
 CASES = json.loads((TEACHING / "🏛️architecture/🧍️staffage/🧫️fixtures/🎓️course-coverage/🔣️.json").read_text(encoding="utf-8"))
 ARCHITECTURE = TEACHING / CASES["architecture"]
 ENUMS = CASES["enums"]
+FLOW_OPTIONS = tuple(CASES["flow_options"])
 QUOTED = re.compile(r"""(["'])([^"'\n\\]*)\1""")
 CALLED = re.compile(r"""\b(?:%s)\(\s*(["'])([^"'\n\\]*)\1""" % "|".join(map(re.escape, CASES["sources"]["cast_calls"])))
 KEYWORD = re.compile(r"""\b(?:%s)\s*=\s*(["'])([^"'\n\\]*)\1""" % "|".join(map(re.escape, CASES["sources"]["cast_keywords"])))
@@ -124,7 +125,7 @@ def cast_issues(cast_id, cast, catalog, presets):
         issue("fps-forbidden", "a still pose has no fps")
     elif "fps" in cast and (not number(cast["fps"], 1) or cast["fps"] > 120 or int(cast["fps"]) != cast["fps"]):
         issue("fps-range", f"fps {cast['fps']!r} must be an integer between 1 and 120")
-    scenario = [key for key in ("environment", "timeline", "thermalSpanK", "transport", "transportAgeS", "transportStrokeMm", "transportTrailS") if key in cast]
+    scenario = [key for key in ("environment", "timeline", "thermalSpanK", "flow", *FLOW_OPTIONS) if key in cast]
     if style == "thermal":
         if ("environment" in cast) == ("timeline" in cast):
             issue("thermal-scenario", "the thermal view needs exactly one of environment and timeline")
@@ -149,14 +150,13 @@ def cast_issues(cast_id, cast, catalog, presets):
             issue("thermal-regions", f"asset {asset['id']} has no thermal regions")
         if "thermalSpanK" in cast and not number(cast["thermalSpanK"], 0, True):
             issue("span-range", f"thermalSpanK {cast['thermalSpanK']!r} must be a number above 0")
-        if "transport" in cast and (not isinstance(cast["transport"], list) or any(layer not in ENUMS["transport"] for layer in cast["transport"]) or len(set(cast["transport"])) != len(cast["transport"])):
-            issue("transport-layer", f"transport {cast['transport']!r} must list layers of {ENUMS['transport']}")
-        if "transport" in cast and "transportAgeS" not in cast:
-            issue("transport-age", "transport requires transportAgeS")
-        if any(key in cast for key in ("transportAgeS", "transportStrokeMm", "transportTrailS")) and (not cast.get("transport") or (
-            "transportAgeS" in cast and ("clip" not in cast or not number(cast["transportAgeS"], 0, True))
-        ) or any(key in cast and not number(cast[key], 0, True) for key in ("transportStrokeMm", "transportTrailS"))):
-            issue("transport-age", "transportAgeS, transportStrokeMm and transportTrailS need a transport layer, and transportAgeS a clip; all transport dimensions must be finite numbers above 0")
+        layers = cast["flow"] if isinstance(cast.get("flow"), list) else []
+        if "flow" in cast and (not layers or any(layer not in ENUMS["flow"] for layer in layers) or len({str(layer) for layer in layers}) != len(layers)):
+            issue("flow-layer", f"flow {cast['flow']!r} must list one or more distinct layers of {ENUMS['flow']}")
+        if "flow" in cast and "flowDevelopS" not in cast:
+            issue("flow-options", "flow layers require flowDevelopS, the seconds the air has developed before every frame")
+        if any(key in cast for key in FLOW_OPTIONS) and (not layers or any(key in cast and not number(cast[key], 0, True) for key in FLOW_OPTIONS) or ("flowTrailS" in cast and "pathlines" not in layers)):
+            issue("flow-options", f"{', '.join(FLOW_OPTIONS)} need flow layers and must be finite numbers above 0; flowTrailS needs the layer 'pathlines'")
     else:
         for key in scenario:
             issue("scenario-forbidden", f"{key!r} belongs to the thermal view, not {style!r}")
@@ -165,7 +165,7 @@ def cast_issues(cast_id, cast, catalog, presets):
         if structure.get("dynamics") not in ENUMS["dynamics"] or not number(structure.get("gravityMS2"), 0, True):
             issue("structural-model", f"asset {asset['id']} needs structure.dynamics of {ENUMS['dynamics']} and a gravityMS2 above 0")
     analytics = (row or {}).get("analytics", [])
-    needs = [("thermal", style == "thermal"), ("transport", bool(cast.get("transport"))), ("structural", style in ("forces", "moments"))]
+    needs = [("thermal", style == "thermal"), ("transport", isinstance(cast.get("flow"), list) and bool(cast["flow"])), ("structural", style in ("forces", "moments"))]
     for name, required in needs:
         if required and row is not None and name not in analytics:
             issue("analytics", f"asset {asset['id']} row lists analytics {analytics} without {name!r}")

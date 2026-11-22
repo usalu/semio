@@ -19,7 +19,8 @@
       "undeclaredUnusedAgeMs": 604800000,
       "undeclaredQuietMs": 3600000,
       "ignored": [
-        ".DS_Store"
+        ".DS_Store",
+        "b/image-relocation.json"
       ]
     },
     "rust": {
@@ -502,6 +503,12 @@
       },
       "managed": {
         "owner": "cargo"
+      },
+      "reclaimShare": {
+        "softBasisPoints": 1500,
+        "targetBasisPoints": 2500,
+        "softFloorBytes": 2147483648,
+        "targetFloorBytes": 4294967296
       },
       "writers": [
         "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/🟦️.ts"
@@ -1514,6 +1521,15 @@
   "retirements": [
     {
       "root": "native",
+      "directory": "test-admission",
+      "quietMs": 900000,
+      "reason": {
+        "en": "The admitted-worker test scratch lives in the test sandbox area (test-sandbox/admission).",
+        "de": "Die Arbeitsfläche des Tests der zugelassenen Worker liegt im Bereich test-sandbox (test-sandbox/admission)."
+      }
+    },
+    {
+      "root": "native",
       "directory": "f/source-analyses",
       "within": "fleet-state",
       "quietMs": 900000,
@@ -1703,5 +1719,19 @@
         "de": "Wurzel aus der Zeit vor den Partitionen ohne Schreiber."
       }
     }
-  ]
+  ],
+  "strays": {
+    "quietMs": 900000,
+    "ignoredSegments": [
+      "node_modules",
+      ".git"
+    ],
+    "excludedDirectories": [
+      ".🧬semio"
+    ],
+    "reason": {
+      "en": "A cache root outside the checkout root: a tool ran from a member directory. Nothing reads it; the entries are removed once quiet and unheld.",
+      "de": "Eine Cache-Wurzel ausserhalb der Checkout-Wurzel: ein Werkzeug lief in einem Mitgliedsverzeichnis. Niemand liest sie; die Einträge werden entfernt, sobald sie ruhig und unbelegt sind."
+    }
+  }
 }

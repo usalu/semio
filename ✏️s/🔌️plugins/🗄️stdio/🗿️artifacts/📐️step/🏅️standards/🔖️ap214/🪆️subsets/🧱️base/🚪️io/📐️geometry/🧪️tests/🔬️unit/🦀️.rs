@@ -72,6 +72,20 @@ async fn read_solids_take_booleans() {
     let removed = std::f64::consts::PI * 0.051 * 0.051 * 0.2;
     assert!((before - after - removed).abs() < 1e-5, "the core removes exactly its own volume: {before} → {after} (expected −{removed})");
 }
+
+/// 🧱️ The committed Open CASCADE export of a 20 mm cube wraps every edge's `LINE` in a
+/// `SURFACE_CURVE` with its two p-curves, the AP214/AP242 form every OCC-based writer emits.
+const OPEN_CASCADE_CUBE_STEP: &str = include_str!("../../../../../6️⃣cc6/🧪️tests/🧫️fixtures/⚽️cut-sphere-from-box/🅰️operand-a.step");
+
+#[semio_framework_async_macros::async_test]
+async fn surface_curve_edges_read_their_three_dimensional_curve() {
+    let body = read_step(OPEN_CASCADE_CUBE_STEP).expect("an Open CASCADE export reads");
+    assert_eq!((body.solids.len(), body.faces.len(), body.edges.len()), (1, 6, 12));
+    assert!(body.edges.iter().all(|(_, edge)| matches!(body.curves3.get(edge.curve), Some(Curve3::Line { .. }))), "every SURFACE_CURVE edge is read as its LINE");
+    let solid = body.solids.iter().next().map(|(id, _)| id).expect("solid");
+    let volume = semio_framework_3d_brep_queries::mass_properties::solid_volume(&body, solid, 1e-3).expect("volume");
+    assert!((volume - 8_000.0).abs() < 1e-6, "volume {volume} matches the 20 mm cube in its own millimetre units");
+}
 //#endregion 🔖️RealExports
 
 #[semio_framework_async_macros::async_test]

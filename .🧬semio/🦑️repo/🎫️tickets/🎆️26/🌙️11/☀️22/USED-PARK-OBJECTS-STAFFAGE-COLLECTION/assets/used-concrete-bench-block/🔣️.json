@@ -1,0 +1,7990 @@
+{
+ "$schema": "../../../🧬️schema/🔣️.json#/$defs/AssetDocument",
+ "version": "semio.staffage/v2",
+ "asset": {
+  "id": "used-concrete-bench-block",
+  "category": "furniture",
+  "title": {
+   "en": "Used Concrete Seating Block",
+   "de": "Gebrauchter Betonsitzblock"
+  },
+  "summary": {
+   "en": "A precast concrete seating block of the municipal catalogue type, 2.0 x 0.5 m and 0.45 m high to the seat, about 1 t, freestanding by its own weight on a chippings bed in a water-bound park path, with five greyed and checked robinia battens screwed along its top. Years of service left the north top arris ground round and chipped by skateboards, a green algae film on the shaded north face, rust halos at the two lifting sockets, sticker residue and chewing gum; the depot lifts it by crane on those sockets, and in summer it is a warm seat for people from both sides.",
+   "de": "Ein Betonsitzblock aus Fertigteil vom Typ der kommunalen Kataloge, 2,0 x 0,5 m und 0,45 m Sitzhöhe, etwa 1 t, frei durch sein Eigengewicht auf einem Splittbett in einem wassergebundenen Parkweg stehend, mit fünf vergrauten, rissigen Robinienleisten oben aufgeschraubt. Die Jahre im Einsatz haben die nördliche Oberkante von Skateboards rund geschliffen und abgeplatzt, einen grünen Algenbelag auf der schattigen Nordseite, Rosthöfe um die beiden Transportankerhülsen, Aufkleberreste und Kaugummi hinterlassen; der Bauhof hebt ihn an diesen Hülsen mit dem Kran, und im Sommer ist er ein warmer Sitz für Menschen von beiden Seiten."
+  },
+  "tags": [
+   "used",
+   "park",
+   "public-space",
+   "seating",
+   "bench",
+   "street-furniture",
+   "precast-concrete",
+   "concrete",
+   "timber",
+   "robinia",
+   "seating-block",
+   "skateboarding",
+   "weathered"
+  ],
+  "provenance": {
+   "author": "Semio staffage content (used park objects wave)",
+   "method": "handcrafted",
+   "created": "2026-11-22",
+   "references": [
+    {
+     "id": "en-1991-1-1-2002",
+     "citation": "EN 1991-1-1:2002 Eurocode 1: Actions on structures, Part 1-1: General actions, densities, self-weight, imposed loads for buildings (Table A.1: normal-weight concrete 24 kN/m3, reinforced 25 kN/m3; Table A.3 timber densities)."
+    },
+    {
+     "id": "en-1992-1-1-2004",
+     "citation": "EN 1992-1-1:2004 Eurocode 2: Design of concrete structures, Part 1-1 (Table 3.1: C35/45, fck 35 MPa, Ecm 34 GPa)."
+    },
+    {
+     "id": "din-en-206-din-1045-2",
+     "citation": "DIN EN 206:2021 and DIN 1045-2:2023 Concrete: specification, performance, production and conformity (exposure classes XC4, XF4 and XM for unprotected precast street furniture exposed to rain, frost, de-icing salt and abrasion)."
+    },
+    {
+     "id": "din-en-13198-2003",
+     "citation": "DIN EN 13198:2003 Precast concrete products - Street furniture and garden products (requirements and tests for precast seating, planters and bollards: dimensional tolerances, durability, stability)."
+    },
+    {
+     "id": "vdi-bv-bs-6205-2012",
+     "citation": "VDI/BV-BS 6205:2012 Lifting inserts and lifting insert systems for precast concrete elements (threaded lifting sockets, load directions, dynamic factor 1.3 for crane lifts, edge distances)."
+    },
+    {
+     "id": "din-18040-3-2014",
+     "citation": "DIN 18040-3:2014 Construction of accessible buildings - Public traffic and open space (resting places: seat heights of about 0.46-0.48 m, seating with and without backrest along paths)."
+    },
+    {
+     "id": "en-16139-2013",
+     "citation": "EN 16139:2013 Furniture - Strength, durability and safety - Requirements for non-domestic seating (test levels for public use) with the test methods of EN 1728:2012."
+    },
+    {
+     "id": "en-338-2016",
+     "citation": "EN 338:2016 Structural timber - Strength classes (hardwood class D40: E0,mean 13 GPa)."
+    },
+    {
+     "id": "din-en-350-2016",
+     "citation": "DIN EN 350:2016 Durability of wood and wood-based products (Robinia pseudoacacia heartwood durability class 1-2 against fungi, used untreated in exterior street furniture)."
+    },
+    {
+     "id": "wagenfuehr-holzatlas-2007",
+     "citation": "Wagenfuehr, R. (2007). Holzatlas, 6th ed., Fachbuchverlag Leipzig (Robinia pseudoacacia: density 0.73-0.80 g/cm3 at 12-15 % moisture content)."
+    },
+    {
+     "id": "iso-10456-2007",
+     "citation": "ISO 10456:2007 Building materials and products - Hygrothermal properties - Tabulated design values (reinforced concrete 2500 kg/m3, 2.3 W/mK, 1000 J/kgK; hardwood 0.18 W/mK, 1600 J/kgK; steel 50 W/mK, 450 J/kgK)."
+    },
+    {
+     "id": "incropera-2018",
+     "citation": "Incropera, F. P., DeWitt, D. P., Bergman, T. L., Lavine, A. S. (2018). Fundamentals of Heat and Mass Transfer, 8th ed., Wiley (total hemispherical emissivity of concrete 0.88-0.93, wood 0.82-0.92, galvanised steel)."
+    },
+    {
+     "id": "levinson-akbari-2002",
+     "citation": "Levinson, R., Akbari, H. (2002). Effects of composition and exposure on the solar reflectance of Portland cement concrete. Cement and Concrete Research 32(11), 1679-1698 (new grey concrete reflects about 0.35-0.5; weathering and soiling lower the reflectance, so weathered grey concrete absorbs about 0.65)."
+    },
+    {
+     "id": "feist-hon-1984",
+     "citation": "Feist, W. C., Hon, D. N.-S. (1984). Chemistry of weathering and protection. In: Rowell, R. (ed.), The Chemistry of Solid Wood, Advances in Chemistry 207, American Chemical Society, 401-451 (photodegradation and leaching turn exposed wood silver-grey with surface checks)."
+    },
+    {
+     "id": "gaylarde-morton-1999",
+     "citation": "Gaylarde, C. C., Morton, L. H. G. (1999). Deteriogenic biofilms on buildings and their control: a review. Biofouling 14(1), 59-74 (green algal films on shaded, damp masonry and concrete faces)."
+    },
+    {
+     "id": "woolley-johns-2001",
+     "citation": "Woolley, H., Johns, R. (2001). Skateboarding: The city as a playground. Journal of Urban Design 6(2), 211-230 (skaters grind the arrises of benches and blocks in public squares; wax, metal streaks and chipped edges)."
+    },
+    {
+     "id": "municipal-seating-block-catalogues",
+     "citation": "Municipal street-furniture catalogues of German precast suppliers (catalogue-typical data, no brand): precast concrete seating blocks 1.5-2.5 m long, 0.4-0.6 m deep, seat 0.42-0.46 m high, 0.8-1.4 t, set freestanding by mass on a compacted gravel base and a chippings bed, hardwood or robinia battens screwed down along the seat, two cast-in threaded lifting sockets, edges chamfered 10-20 mm."
+    }
+   ],
+   "notes": {
+    "en": "Catalogue type of German municipal precast seating blocks (no brand): concrete C35/45 XC4/XF4 body 2000 x 500 x 405 mm with 15 mm chamfers on every edge, five robinia battens 80 x 45 mm with 12 mm gaps on 1.6 m of the seat, leaving the 0.2 m concrete ends bare with one threaded lifting socket Rd 24 each; seat 0.45 m (DIN 18040-3). Masses from the modelled 1:50 volumes: concrete 0.4035 m3 x 2500 = 1008.7 kg plus sockets 1.3 kg, battens 0.0286 m3 x 760 = 21.7 kg plus screws 0.47 kg, total 1032.2 kg. Traces of use: the south arris worn from the 15 mm chamfer to 24-42 mm rounds with two chips over 1.5 m by skateboard grinds, a 2 mm algae film over the lower 0.2-0.3 m of the north face and round the north-east corner, battens greyed with checks and a split end, rust halos, gum and stickers as texture. All numbers are literature or authored estimates; nothing is measured.",
+    "de": "Katalogtyp der deutschen kommunalen Betonsitzblöcke aus Fertigteil (ohne Marke): Betonkörper C35/45 XC4/XF4 2000 x 500 x 405 mm mit 15-mm-Fasen an allen Kanten, fünf Robinienleisten 80 x 45 mm mit 12-mm-Fugen auf 1,6 m der Sitzfläche, so dass die 0,2 m langen Betonenden mit je einer Transportankerhülse Rd 24 frei bleiben; Sitzhöhe 0,45 m (DIN 18040-3). Massen aus den modellierten 1:50-Volumen: Beton 0.4035 m3 x 2500 = 1008.7 kg plus Hülsen 1.3 kg, Leisten 0.0286 m3 x 760 = 21.7 kg plus Schrauben 0.47 kg, zusammen 1032.2 kg. Gebrauchsspuren: die Südkante auf 1,5 m von der 15-mm-Fase zu 24-42 mm Rundungen mit zwei Abplatzungen von Skateboard-Grinds abgeschliffen, ein 2 mm Algenbelag über die unteren 0,2-0,3 m der Nordseite und um die Nordostecke, Leisten vergraut mit Rissen und einem gespaltenen Ende, Rosthöfe, Kaugummi und Aufkleber als Textur. Alle Zahlen sind Literatur- oder Schätzwerte; nichts ist gemessen."
+   }
+  },
+  "dimensions": {
+   "heightM": 0.45,
+   "widthM": 2.0,
+   "depthM": 0.5,
+   "massKg": 1032.2
+  },
+  "materials": [
+   {
+    "id": "concrete-weathered",
+    "title": {
+     "en": "Weathered precast concrete C35/45",
+     "de": "Verwitterter Fertigteilbeton C35/45"
+    },
+    "emissivity": 0.92,
+    "solarAbsorptivity": 0.65,
+    "densityKgM3": 2500.0,
+    "conductivityWmK": 2.3,
+    "specificHeatJKgK": 1000,
+    "elasticModulusPa": 34000000000.0,
+    "strengthPa": 35000000.0,
+    "source": "literature",
+    "reference": "levinson-akbari-2002"
+   },
+   {
+    "id": "robinia-greyed",
+    "title": {
+     "en": "Greyed robinia hardwood",
+     "de": "Vergraute Robinie"
+    },
+    "emissivity": 0.9,
+    "solarAbsorptivity": 0.6,
+    "densityKgM3": 760.0,
+    "conductivityWmK": 0.18,
+    "specificHeatJKgK": 1600,
+    "elasticModulusPa": 13000000000.0,
+    "source": "authored-estimate",
+    "reference": "feist-hon-1984"
+   },
+   {
+    "id": "algae-biofilm",
+    "title": {
+     "en": "Green algae biofilm",
+     "de": "Grüner Algenbelag"
+    },
+    "emissivity": 0.95,
+    "solarAbsorptivity": 0.8,
+    "densityKgM3": 1050,
+    "conductivityWmK": 0.6,
+    "specificHeatJKgK": 3500,
+    "source": "authored-estimate",
+    "reference": "gaylarde-morton-1999"
+   },
+   {
+    "id": "steel-galvanised",
+    "title": {
+     "en": "Galvanised steel lifting socket",
+     "de": "Verzinkte Transportankerhülse"
+    },
+    "emissivity": 0.28,
+    "solarAbsorptivity": 0.65,
+    "densityKgM3": 7850.0,
+    "conductivityWmK": 50,
+    "specificHeatJKgK": 450,
+    "elasticModulusPa": 210000000000.0,
+    "source": "literature",
+    "reference": "incropera-2018"
+   },
+   {
+    "id": "stainless-a4",
+    "title": {
+     "en": "Stainless steel A4 screw",
+     "de": "Edelstahlschraube A4"
+    },
+    "emissivity": 0.35,
+    "solarAbsorptivity": 0.6,
+    "densityKgM3": 7950,
+    "conductivityWmK": 15,
+    "specificHeatJKgK": 500,
+    "elasticModulusPa": 200000000000.0,
+    "source": "literature",
+    "reference": "iso-10456-2007"
+   }
+  ],
+  "rig": {
+   "kind": "structural",
+   "root": "ground",
+   "bones": [
+    {
+     "id": "ground",
+     "parent": null,
+     "title": {
+      "en": "Bed in the water-bound path (stays behind)",
+      "de": "Bett im wassergebundenen Weg (bleibt liegen)"
+     },
+     "x": 0,
+     "y": 0,
+     "angleDeg": 0,
+     "lengthM": 0,
+     "joint": {
+      "type": "fixed"
+     }
+    },
+    {
+     "id": "block",
+     "parent": "ground",
+     "title": {
+      "en": "Precast concrete block (crane lift along its vertical axis)",
+      "de": "Betonfertigteil-Block (Kranhub entlang der Hochachse)"
+     },
+     "x": 0,
+     "y": 0,
+     "angleDeg": 0,
+     "lengthM": 2.0,
+     "joint": {
+      "type": "prismatic",
+      "axisDeg": 90,
+      "minM": 0,
+      "maxM": 1.2
+     },
+     "mass": {
+      "kg": 1010.0,
+      "comX": 1.0,
+      "comY": 0.2024,
+      "distribution": "uniform",
+      "source": "literature",
+      "reference": "en-1991-1-1-2002"
+     },
+     "section": {
+      "areaM2": 0.20174,
+      "secondMomentM4": 0.0027679,
+      "extremeFibreM": 0.2025,
+      "material": "concrete-weathered",
+      "title": {
+       "en": "Concrete section 500 x 405 mm, chamfered",
+       "de": "Betonquerschnitt 500 x 405 mm, gefast"
+      }
+     }
+    },
+    {
+     "id": "battens",
+     "parent": "block",
+     "title": {
+      "en": "Robinia seat battens",
+      "de": "Sitzleisten aus Robinie"
+     },
+     "x": 0.2,
+     "y": 0.405,
+     "angleDeg": 0,
+     "lengthM": 1.6,
+     "joint": {
+      "type": "fixed"
+     },
+     "mass": {
+      "kg": 22.2,
+      "comX": 0.8,
+      "comY": 0.0225,
+      "distribution": "uniform",
+      "source": "literature",
+      "reference": "wagenfuehr-holzatlas-2007"
+     },
+     "section": {
+      "areaM2": 0.01787,
+      "secondMomentM4": 3.037e-06,
+      "extremeFibreM": 0.0225,
+      "material": "robinia-greyed",
+      "title": {
+       "en": "Five battens 80 x 45 mm",
+       "de": "Fünf Leisten 80 x 45 mm"
+      }
+     }
+    }
+   ]
+  },
+  "anchors": [
+   {
+    "id": "bed-west",
+    "bone": "block",
+    "x": 0.5,
+    "y": 0,
+    "kind": "contact",
+    "title": {
+     "en": "West half of the base on the chippings bed",
+     "de": "Westliche Hälfte der Aufstandsfläche auf dem Splittbett"
+    },
+    "support": "contact",
+    "normalDeg": 90,
+    "footprintLengthM": 1.0,
+    "footprintWidthM": 0.5,
+    "frictionCoefficient": 0.6
+   },
+   {
+    "id": "bed-east",
+    "bone": "block",
+    "x": 1.5,
+    "y": 0,
+    "kind": "contact",
+    "title": {
+     "en": "East half of the base on the chippings bed",
+     "de": "Östliche Hälfte der Aufstandsfläche auf dem Splittbett"
+    },
+    "support": "contact",
+    "normalDeg": 90,
+    "footprintLengthM": 1.0,
+    "footprintWidthM": 0.5,
+    "frictionCoefficient": 0.6
+   },
+   {
+    "id": "socket-west",
+    "bone": "block",
+    "x": 0.1,
+    "y": 0.405,
+    "kind": "support",
+    "title": {
+     "en": "West threaded lifting socket Rd 24 with the sling leg",
+     "de": "Westliche Transportankerhülse Rd 24 mit Kettenstrang"
+    },
+    "support": "pin"
+   },
+   {
+    "id": "socket-east",
+    "bone": "block",
+    "x": 1.9,
+    "y": 0.405,
+    "kind": "support",
+    "title": {
+     "en": "East threaded lifting socket Rd 24 with the sling leg",
+     "de": "Östliche Transportankerhülse Rd 24 mit Kettenstrang"
+    },
+    "support": "pin"
+   },
+   {
+    "id": "north-arris",
+    "bone": "block",
+    "x": 1.0,
+    "y": 0.405,
+    "z": -0.25,
+    "kind": "load",
+    "title": {
+     "en": "North top arris where skateboards grind",
+     "de": "Nördliche Oberkante, an der Skateboards grinden"
+    }
+   }
+  ],
+  "representations": {
+   "50": {
+    "status": "authored",
+    "denominator": 50,
+    "validRange": {
+     "minDenominator": 20,
+     "maxDenominator": 75
+    },
+    "pens": {
+     "body": 0.5,
+     "detail": 0.25,
+     "texture": 0.13,
+     "glazing": null,
+     "ground": 0.7
+    },
+    "hatches": [
+     {
+      "id": "concrete-dots",
+      "title": {
+       "en": "Concrete stipple",
+       "de": "Betonpunktierung"
+      },
+      "pattern": "dots",
+      "angleDeg": 0,
+      "spacingMm": 0.9,
+      "penMm": 0.1
+     },
+     {
+      "id": "grain",
+      "title": {
+       "en": "Weathered grain",
+       "de": "Verwitterte Maserung"
+      },
+      "pattern": "lines",
+      "angleDeg": 0,
+      "spacingMm": 0.5,
+      "penMm": 0.1
+     }
+    ],
+    "geometry": {
+     "elevation": [
+      {
+       "id": "block",
+       "bone": "block",
+       "role": "body",
+       "z": 1,
+       "filled": true,
+       "tone": 0.58,
+       "kind": "poly",
+       "points": [
+        [
+         0.0,
+         0.015
+        ],
+        [
+         0.015,
+         0.0
+        ],
+        [
+         1.985,
+         0.0
+        ],
+        [
+         2.0,
+         0.015
+        ],
+        [
+         2.0,
+         0.39
+        ],
+        [
+         1.985,
+         0.405
+        ],
+        [
+         0.015,
+         0.405
+        ],
+        [
+         0.0,
+         0.39
+        ]
+       ],
+       "closed": true,
+       "region": "concrete-block",
+       "material": "concrete-weathered",
+       "hatch": "concrete-dots"
+      },
+      {
+       "id": "algae-north",
+       "bone": "block",
+       "role": "detail",
+       "z": 1.1,
+       "filled": true,
+       "tone": 0.36,
+       "kind": "poly",
+       "points": [
+        [
+         0.06,
+         0.016
+        ],
+        [
+         1.94,
+         0.016
+        ],
+        [
+         1.94,
+         0.2
+        ],
+        [
+         1.81,
+         0.262
+        ],
+        [
+         1.63,
+         0.238
+        ],
+        [
+         1.46,
+         0.302
+        ],
+        [
+         1.21,
+         0.281
+        ],
+        [
+         1.0,
+         0.312
+        ],
+        [
+         0.79,
+         0.27
+        ],
+        [
+         0.56,
+         0.292
+        ],
+        [
+         0.35,
+         0.243
+        ],
+        [
+         0.18,
+         0.252
+        ],
+        [
+         0.06,
+         0.181
+        ]
+       ],
+       "closed": true,
+       "region": "algae-film",
+       "material": "algae-biofilm"
+      },
+      {
+       "id": "end-chamfers",
+       "bone": "block",
+       "role": "detail",
+       "z": 1.2,
+       "filled": false,
+       "tone": 0.3,
+       "kind": "path",
+       "d": "M 0.015 0.015 L 0.015 0.39 M 1.985 0.015 L 1.985 0.39 M 0.015 0.015 L 1.985 0.015",
+       "region": "concrete-block",
+       "material": "concrete-weathered"
+      },
+      {
+       "id": "arris-wear",
+       "bone": "block",
+       "role": "detail",
+       "z": 1.3,
+       "filled": false,
+       "tone": 0.25,
+       "kind": "poly",
+       "points": [
+        [
+         0.015,
+         0.39
+        ],
+        [
+         0.25,
+         0.39
+        ],
+        [
+         0.31,
+         0.381
+        ],
+        [
+         0.52,
+         0.377
+        ],
+        [
+         0.63,
+         0.365
+        ],
+        [
+         0.69,
+         0.376
+        ],
+        [
+         0.98,
+         0.374
+        ],
+        [
+         1.24,
+         0.378
+        ],
+        [
+         1.39,
+         0.363
+        ],
+        [
+         1.44,
+         0.375
+        ],
+        [
+         1.68,
+         0.379
+        ],
+        [
+         1.75,
+         0.39
+        ],
+        [
+         1.985,
+         0.39
+        ]
+       ],
+       "closed": false,
+       "region": "concrete-block",
+       "material": "concrete-weathered"
+      },
+      {
+       "id": "grind-streaks",
+       "bone": "block",
+       "role": "texture",
+       "z": 1.4,
+       "filled": false,
+       "tone": 0.12,
+       "kind": "path",
+       "d": "M 0.34 0.392 L 0.52 0.388 M 0.58 0.39 L 0.84 0.385 M 0.9 0.392 L 1.18 0.389 M 1.22 0.39 L 1.37 0.386 M 1.46 0.391 L 1.66 0.388 M 0.42 0.383 L 0.66 0.38 M 1.02 0.384 L 1.31 0.381",
+       "region": "concrete-block",
+       "material": "concrete-weathered"
+      },
+      {
+       "id": "sticker-residue",
+       "bone": "block",
+       "role": "texture",
+       "z": 1.5,
+       "filled": true,
+       "tone": 0.85,
+       "kind": "rect",
+       "x": 1.53,
+       "y": 0.17,
+       "w": 0.075,
+       "h": 0.095,
+       "region": "concrete-block",
+       "material": "concrete-weathered"
+      },
+      {
+       "id": "battens",
+       "bone": "battens",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.66,
+       "kind": "rect",
+       "x": 0.0,
+       "y": 0.0,
+       "w": 1.6,
+       "h": 0.045,
+       "region": "seat-battens",
+       "material": "robinia-greyed",
+       "hatch": "grain"
+      },
+      {
+       "id": "batten-ease",
+       "bone": "battens",
+       "role": "detail",
+       "z": 2.1,
+       "filled": false,
+       "tone": 0.35,
+       "kind": "poly",
+       "points": [
+        [
+         0.0,
+         0.04
+        ],
+        [
+         1.6,
+         0.04
+        ]
+       ],
+       "closed": false,
+       "region": "seat-battens",
+       "material": "robinia-greyed"
+      },
+      {
+       "id": "batten-checks",
+       "bone": "battens",
+       "role": "texture",
+       "z": 2.2,
+       "filled": false,
+       "tone": 0.2,
+       "kind": "path",
+       "d": "M 0.12 0.026 L 0.43 0.024 M 0.71 0.017 L 0.98 0.02 M 1.24 0.03 L 1.51 0.027 M 1.45 0.012 L 1.6 0.015",
+       "region": "seat-battens",
+       "material": "robinia-greyed"
+      }
+     ],
+     "front": [
+      {
+       "id": "block",
+       "bone": "block",
+       "role": "body",
+       "z": 1,
+       "filled": true,
+       "tone": 0.58,
+       "kind": "poly",
+       "points": [
+        [
+         -0.235,
+         0.0
+        ],
+        [
+         0.235,
+         0.0
+        ],
+        [
+         0.25,
+         0.015
+        ],
+        [
+         0.25,
+         0.39
+        ],
+        [
+         0.235,
+         0.405
+        ],
+        [
+         -0.235,
+         0.405
+        ],
+        [
+         -0.25,
+         0.39
+        ],
+        [
+         -0.25,
+         0.015
+        ]
+       ],
+       "closed": true,
+       "region": "concrete-block",
+       "material": "concrete-weathered",
+       "hatch": "concrete-dots"
+      },
+      {
+       "id": "end-face-edge",
+       "bone": "block",
+       "role": "detail",
+       "z": 1.2,
+       "filled": false,
+       "tone": 0.3,
+       "kind": "poly",
+       "points": [
+        [
+         -0.22879,
+         0.015
+        ],
+        [
+         0.22879,
+         0.015
+        ],
+        [
+         0.235,
+         0.02121
+        ],
+        [
+         0.235,
+         0.38379
+        ],
+        [
+         0.22879,
+         0.39
+        ],
+        [
+         -0.22879,
+         0.39
+        ],
+        [
+         -0.235,
+         0.38379
+        ],
+        [
+         -0.235,
+         0.02121
+        ]
+       ],
+       "closed": true,
+       "region": "concrete-block",
+       "material": "concrete-weathered"
+      },
+      {
+       "id": "algae-end",
+       "bone": "block",
+       "role": "detail",
+       "z": 1.5,
+       "filled": true,
+       "tone": 0.36,
+       "kind": "poly",
+       "points": [
+        [
+         -0.225,
+         0.02
+        ],
+        [
+         -0.04,
+         0.02
+        ],
+        [
+         -0.03,
+         0.068
+        ],
+        [
+         -0.062,
+         0.139
+        ],
+        [
+         -0.088,
+         0.198
+        ],
+        [
+         -0.142,
+         0.258
+        ],
+        [
+         -0.19,
+         0.272
+        ],
+        [
+         -0.225,
+         0.252
+        ]
+       ],
+       "closed": true,
+       "region": "algae-film",
+       "material": "algae-biofilm"
+      },
+      {
+       "id": "end-sticker",
+       "bone": "block",
+       "role": "texture",
+       "z": 1.6,
+       "filled": true,
+       "tone": 0.85,
+       "kind": "rect",
+       "x": 0.08,
+       "y": 0.2,
+       "w": 0.09,
+       "h": 0.06,
+       "region": "concrete-block",
+       "material": "concrete-weathered"
+      },
+      {
+       "id": "batten-1",
+       "bone": "battens",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.66,
+       "kind": "poly",
+       "points": [
+        [
+         -0.224,
+         0.405
+        ],
+        [
+         -0.144,
+         0.405
+        ],
+        [
+         -0.144,
+         0.445
+        ],
+        [
+         -0.149,
+         0.45
+        ],
+        [
+         -0.219,
+         0.45
+        ],
+        [
+         -0.224,
+         0.445
+        ]
+       ],
+       "closed": true,
+       "region": "seat-battens",
+       "material": "robinia-greyed",
+       "penMm": 0.25
+      },
+      {
+       "id": "batten-2",
+       "bone": "battens",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.66,
+       "kind": "poly",
+       "points": [
+        [
+         -0.132,
+         0.405
+        ],
+        [
+         -0.052,
+         0.405
+        ],
+        [
+         -0.052,
+         0.445
+        ],
+        [
+         -0.057,
+         0.45
+        ],
+        [
+         -0.127,
+         0.45
+        ],
+        [
+         -0.132,
+         0.445
+        ]
+       ],
+       "closed": true,
+       "region": "seat-battens",
+       "material": "robinia-greyed",
+       "penMm": 0.25
+      },
+      {
+       "id": "batten-3",
+       "bone": "battens",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.66,
+       "kind": "poly",
+       "points": [
+        [
+         -0.04,
+         0.405
+        ],
+        [
+         0.04,
+         0.405
+        ],
+        [
+         0.04,
+         0.445
+        ],
+        [
+         0.035,
+         0.45
+        ],
+        [
+         -0.035,
+         0.45
+        ],
+        [
+         -0.04,
+         0.445
+        ]
+       ],
+       "closed": true,
+       "region": "seat-battens",
+       "material": "robinia-greyed",
+       "penMm": 0.25
+      },
+      {
+       "id": "batten-4",
+       "bone": "battens",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.66,
+       "kind": "poly",
+       "points": [
+        [
+         0.052,
+         0.405
+        ],
+        [
+         0.132,
+         0.405
+        ],
+        [
+         0.132,
+         0.445
+        ],
+        [
+         0.127,
+         0.45
+        ],
+        [
+         0.057,
+         0.45
+        ],
+        [
+         0.052,
+         0.445
+        ]
+       ],
+       "closed": true,
+       "region": "seat-battens",
+       "material": "robinia-greyed",
+       "penMm": 0.25
+      },
+      {
+       "id": "batten-5",
+       "bone": "battens",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.66,
+       "kind": "poly",
+       "points": [
+        [
+         0.144,
+         0.405
+        ],
+        [
+         0.224,
+         0.405
+        ],
+        [
+         0.224,
+         0.445
+        ],
+        [
+         0.219,
+         0.45
+        ],
+        [
+         0.149,
+         0.45
+        ],
+        [
+         0.144,
+         0.445
+        ]
+       ],
+       "closed": true,
+       "region": "seat-battens",
+       "material": "robinia-greyed",
+       "penMm": 0.25
+      }
+     ],
+     "plan": [
+      {
+       "id": "block",
+       "bone": "block",
+       "role": "body",
+       "z": 1,
+       "filled": true,
+       "tone": 0.58,
+       "kind": "poly",
+       "points": [
+        [
+         0.0,
+         -0.235
+        ],
+        [
+         0.015,
+         -0.25
+        ],
+        [
+         1.985,
+         -0.25
+        ],
+        [
+         2.0,
+         -0.235
+        ],
+        [
+         2.0,
+         0.235
+        ],
+        [
+         1.985,
+         0.25
+        ],
+        [
+         0.015,
+         0.25
+        ],
+        [
+         0.0,
+         0.235
+        ]
+       ],
+       "closed": true,
+       "region": "concrete-block",
+       "material": "concrete-weathered",
+       "hatch": "concrete-dots"
+      },
+      {
+       "id": "top-face-edge",
+       "bone": "block",
+       "role": "detail",
+       "z": 1.2,
+       "filled": false,
+       "tone": 0.3,
+       "kind": "poly",
+       "points": [
+        [
+         0.015,
+         0.235
+        ],
+        [
+         0.015,
+         -0.235
+        ],
+        [
+         0.25,
+         -0.235
+        ],
+        [
+         0.31,
+         -0.226
+        ],
+        [
+         0.52,
+         -0.222
+        ],
+        [
+         0.63,
+         -0.21
+        ],
+        [
+         0.69,
+         -0.221
+        ],
+        [
+         0.98,
+         -0.219
+        ],
+        [
+         1.24,
+         -0.223
+        ],
+        [
+         1.39,
+         -0.208
+        ],
+        [
+         1.44,
+         -0.22
+        ],
+        [
+         1.68,
+         -0.224
+        ],
+        [
+         1.75,
+         -0.235
+        ],
+        [
+         1.985,
+         -0.235
+        ],
+        [
+         1.985,
+         0.235
+        ]
+       ],
+       "closed": true,
+       "region": "concrete-block",
+       "material": "concrete-weathered"
+      },
+      {
+       "id": "rust-halo-1",
+       "bone": "block",
+       "role": "texture",
+       "z": 1.3,
+       "filled": true,
+       "tone": 0.42,
+       "kind": "ellipse",
+       "cx": 0.1,
+       "cy": 0.012,
+       "rx": 0.045,
+       "ry": 0.034,
+       "region": "concrete-block",
+       "material": "concrete-weathered"
+      },
+      {
+       "id": "rust-halo-2",
+       "bone": "block",
+       "role": "texture",
+       "z": 1.3,
+       "filled": true,
+       "tone": 0.42,
+       "kind": "ellipse",
+       "cx": 1.9,
+       "cy": 0.012,
+       "rx": 0.045,
+       "ry": 0.034,
+       "region": "concrete-block",
+       "material": "concrete-weathered"
+      },
+      {
+       "id": "socket-1",
+       "bone": "block",
+       "role": "detail",
+       "z": 1.4,
+       "filled": true,
+       "tone": 0.2,
+       "kind": "ellipse",
+       "cx": 0.1,
+       "cy": 0.0,
+       "rx": 0.02,
+       "ry": 0.02,
+       "region": "concrete-block",
+       "material": "steel-galvanised"
+      },
+      {
+       "id": "socket-2",
+       "bone": "block",
+       "role": "detail",
+       "z": 1.4,
+       "filled": true,
+       "tone": 0.2,
+       "kind": "ellipse",
+       "cx": 1.9,
+       "cy": 0.0,
+       "rx": 0.02,
+       "ry": 0.02,
+       "region": "concrete-block",
+       "material": "steel-galvanised"
+      },
+      {
+       "id": "batten-1",
+       "bone": "battens",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.66,
+       "kind": "rect",
+       "x": 0.2,
+       "y": -0.224,
+       "w": 1.6,
+       "h": 0.08,
+       "region": "seat-battens",
+       "material": "robinia-greyed",
+       "hatch": "grain",
+       "penMm": 0.25
+      },
+      {
+       "id": "batten-2",
+       "bone": "battens",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.66,
+       "kind": "rect",
+       "x": 0.2,
+       "y": -0.132,
+       "w": 1.6,
+       "h": 0.08,
+       "region": "seat-battens",
+       "material": "robinia-greyed",
+       "hatch": "grain",
+       "penMm": 0.25
+      },
+      {
+       "id": "batten-3",
+       "bone": "battens",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.66,
+       "kind": "rect",
+       "x": 0.2,
+       "y": -0.04,
+       "w": 1.6,
+       "h": 0.08,
+       "region": "seat-battens",
+       "material": "robinia-greyed",
+       "hatch": "grain",
+       "penMm": 0.25
+      },
+      {
+       "id": "batten-4",
+       "bone": "battens",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.66,
+       "kind": "rect",
+       "x": 0.2,
+       "y": 0.052,
+       "w": 1.6,
+       "h": 0.08,
+       "region": "seat-battens",
+       "material": "robinia-greyed",
+       "hatch": "grain",
+       "penMm": 0.25
+      },
+      {
+       "id": "batten-5",
+       "bone": "battens",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.66,
+       "kind": "rect",
+       "x": 0.2,
+       "y": 0.144,
+       "w": 1.6,
+       "h": 0.08,
+       "region": "seat-battens",
+       "material": "robinia-greyed",
+       "hatch": "grain",
+       "penMm": 0.25
+      },
+      {
+       "id": "screw-heads",
+       "bone": "battens",
+       "role": "texture",
+       "z": 2.3,
+       "filled": false,
+       "tone": 0.15,
+       "kind": "path",
+       "d": "M 0.294 -0.184 L 0.306 -0.184 M 0.294 -0.092 L 0.306 -0.092 M 0.294 0.0 L 0.306 0.0 M 0.294 0.092 L 0.306 0.092 M 0.294 0.184 L 0.306 0.184 M 0.994 -0.184 L 1.006 -0.184 M 0.994 -0.092 L 1.006 -0.092 M 0.994 0.0 L 1.006 0.0 M 0.994 0.092 L 1.006 0.092 M 0.994 0.184 L 1.006 0.184 M 1.694 -0.184 L 1.706 -0.184 M 1.694 -0.092 L 1.706 -0.092 M 1.694 0.0 L 1.706 0.0 M 1.694 0.092 L 1.706 0.092 M 1.694 0.184 L 1.706 0.184",
+       "region": "seat-battens",
+       "material": "robinia-greyed"
+      },
+      {
+       "id": "gum-1",
+       "bone": "battens",
+       "role": "texture",
+       "z": 2.4,
+       "filled": true,
+       "tone": 0.25,
+       "kind": "ellipse",
+       "cx": 0.47,
+       "cy": -0.164,
+       "rx": 0.009,
+       "ry": 0.008,
+       "region": "seat-battens",
+       "material": "robinia-greyed"
+      },
+      {
+       "id": "gum-2",
+       "bone": "battens",
+       "role": "texture",
+       "z": 2.4,
+       "filled": true,
+       "tone": 0.25,
+       "kind": "ellipse",
+       "cx": 0.92,
+       "cy": -0.107,
+       "rx": 0.009,
+       "ry": 0.008,
+       "region": "seat-battens",
+       "material": "robinia-greyed"
+      },
+      {
+       "id": "gum-3",
+       "bone": "battens",
+       "role": "texture",
+       "z": 2.4,
+       "filled": true,
+       "tone": 0.25,
+       "kind": "ellipse",
+       "cx": 1.38,
+       "cy": 0.102,
+       "rx": 0.009,
+       "ry": 0.008,
+       "region": "seat-battens",
+       "material": "robinia-greyed"
+      },
+      {
+       "id": "gum-4",
+       "bone": "battens",
+       "role": "texture",
+       "z": 2.4,
+       "filled": true,
+       "tone": 0.25,
+       "kind": "ellipse",
+       "cx": 1.63,
+       "cy": -0.204,
+       "rx": 0.009,
+       "ry": 0.008,
+       "region": "seat-battens",
+       "material": "robinia-greyed"
+      },
+      {
+       "id": "gum-5",
+       "bone": "battens",
+       "role": "texture",
+       "z": 2.4,
+       "filled": true,
+       "tone": 0.25,
+       "kind": "ellipse",
+       "cx": 0.71,
+       "cy": 0.204,
+       "rx": 0.009,
+       "ry": 0.008,
+       "region": "seat-battens",
+       "material": "robinia-greyed"
+      },
+      {
+       "id": "gum-6",
+       "bone": "battens",
+       "role": "texture",
+       "z": 2.4,
+       "filled": true,
+       "tone": 0.25,
+       "kind": "ellipse",
+       "cx": 1.12,
+       "cy": -0.02,
+       "rx": 0.009,
+       "ry": 0.008,
+       "region": "seat-battens",
+       "material": "robinia-greyed"
+      },
+      {
+       "id": "batten-split",
+       "bone": "battens",
+       "role": "texture",
+       "z": 2.5,
+       "filled": false,
+       "tone": 0.15,
+       "kind": "poly",
+       "points": [
+        [
+         1.8,
+         -0.18
+        ],
+        [
+         1.71,
+         -0.183
+        ],
+        [
+         1.63,
+         -0.187
+        ]
+       ],
+       "closed": false,
+       "region": "seat-battens",
+       "material": "robinia-greyed"
+      }
+     ]
+    },
+    "decisions": {
+     "silhouette": {
+      "en": "Block 40 x 9 mm on paper with its whole construction: in elevation (the shaded north face) the 15 mm chamfers of every edge, the arris ground round over 1.5 m with its two chips as a line wandering 24-42 mm under the top, the grind streaks, a sticker and the five battens seen as one 45 mm strip with the eased edge and checks. Front (east end): the chamfered end face, the five eased batten ends with their 12 mm gaps and the algae film spreading round the north-east corner. Plan: the 15 mm top chamfers widening on the north side where the arris is worn, both lifting sockets in the bare ends with their rust halos, five battens with screw heads on three lines, gum spots and a split batten end.",
+      "de": "Block 40 x 9 mm auf dem Papier mit seiner ganzen Konstruktion: in der Ansicht (die schattige Nordseite) die 15-mm-Fasen aller Kanten, die auf 1,5 m rund geschliffene Kante mit ihren zwei Abplatzungen als Linie, die 24-42 mm unter der Oberseite wandert, die Grind-Striemen, ein Aufkleber und die fünf Leisten als ein 45-mm-Streifen mit gebrochener Kante und Rissen. Vorderansicht (Ostende): die gefaste Stirnfläche, die fünf gebrochenen Leistenenden mit ihren 12-mm-Fugen und der Algenbelag, der um die Nordostecke wächst. Draufsicht: die 15-mm-Oberkantenfasen, die auf der Nordseite breiter werden, wo die Kante abgeschliffen ist, beide Transportankerhülsen in den freien Enden mit ihren Rosthöfen, fünf Leisten mit Schraubenköpfen auf drei Linien, Kaugummiflecken und ein gespaltenes Leistenende."
+     },
+     "retained": {
+      "en": "Every chamfer, the worn arris and its chips, the batten gaps and eased edges, the sockets, the algae edge.",
+      "de": "Jede Fase, die abgeschliffene Kante mit ihren Abplatzungen, die Leistenfugen und gebrochenen Kanten, die Hülsen, der Rand des Algenbelags."
+     },
+     "merged": {
+      "en": "The five battens coincide in the side elevation; the 2 mm algae film is drawn as a patch on the north face in elevation and where it turns onto the east end in the front view; in the plan it lies edge-on in the outline.",
+      "de": "Die fünf Leisten decken sich in der Seitenansicht; der 2-mm-Algenbelag ist in der Ansicht als Fleck auf der Nordseite und in der Vorderansicht dort gezeichnet, wo er auf die Ostseite übergeht; in der Draufsicht liegt er auf der Kante im Umriss."
+     },
+     "omitted": {
+      "en": "The plastic dowels, the screw shanks and the cast-in socket bodies inside the concrete.",
+      "de": "Die Kunststoffdübel, die Schraubenschäfte und die einbetonierten Hülsenkörper im Beton."
+     },
+     "thinElements": {
+      "en": "The 12 mm batten gaps (0.24 mm) stay open between filled batten ends; the arris wear, the grind streaks, the checks and the screw heads are strokes, the sticker, rust halos and gum spots small filled texture.",
+      "de": "Die 12-mm-Leistenfugen (0,24 mm) bleiben zwischen den gefüllten Leistenenden offen; Kantenverschleiß, Grind-Striemen, Risse und Schraubenköpfe sind Striche, Aufkleber, Rosthöfe und Kaugummiflecken kleine gefüllte Textur."
+     },
+     "hatching": {
+      "en": "Concrete stipple of dots every 0.9 mm; weathered grain lines every 0.5 mm along the battens.",
+      "de": "Betonpunktierung alle 0,9 mm; verwitterte Maserungslinien alle 0,5 mm entlang der Leisten."
+     },
+     "styles": {
+      "en": "Concrete mid grey 0.58, greyed robinia lighter 0.66, algae dark 0.36, rust 0.42, gum near black, sticker residue pale.",
+      "de": "Beton mittelgrau 0,58, vergraute Robinie heller 0,66, Algen dunkel 0,36, Rost 0,42, Kaugummi fast schwarz, Aufkleberreste hell."
+     },
+     "overlays": {
+      "en": "Every shape carries one region (concrete-block, seat-battens or algae-film) and its material, so the thermal view paints the concrete, the battens and the algae film apart.",
+      "de": "Jede Form trägt eine Region (concrete-block, seat-battens oder algae-film) und ihr Material, so dass die thermische Ansicht Beton, Leisten und Algenbelag getrennt färbt."
+     }
+    }
+   },
+   "100": {
+    "status": "authored",
+    "denominator": 100,
+    "validRange": {
+     "minDenominator": 75,
+     "maxDenominator": 150
+    },
+    "pens": {
+     "body": 0.35,
+     "detail": 0.18,
+     "texture": 0.13,
+     "glazing": null,
+     "ground": 0.5
+    },
+    "hatches": [
+     {
+      "id": "grain",
+      "title": {
+       "en": "Weathered grain",
+       "de": "Verwitterte Maserung"
+      },
+      "pattern": "lines",
+      "angleDeg": 0,
+      "spacingMm": 0.45,
+      "penMm": 0.1
+     }
+    ],
+    "geometry": {
+     "elevation": [
+      {
+       "id": "block",
+       "bone": "block",
+       "role": "body",
+       "z": 1,
+       "filled": true,
+       "tone": 0.58,
+       "kind": "poly",
+       "points": [
+        [
+         0.0,
+         0.015
+        ],
+        [
+         0.015,
+         0.0
+        ],
+        [
+         1.985,
+         0.0
+        ],
+        [
+         2.0,
+         0.015
+        ],
+        [
+         2.0,
+         0.39
+        ],
+        [
+         1.985,
+         0.405
+        ],
+        [
+         0.015,
+         0.405
+        ],
+        [
+         0.0,
+         0.39
+        ]
+       ],
+       "closed": true,
+       "region": "concrete-block",
+       "material": "concrete-weathered"
+      },
+      {
+       "id": "algae-north",
+       "bone": "block",
+       "role": "detail",
+       "z": 1.1,
+       "filled": true,
+       "tone": 0.36,
+       "kind": "poly",
+       "points": [
+        [
+         0.06,
+         0.016
+        ],
+        [
+         1.94,
+         0.016
+        ],
+        [
+         1.94,
+         0.21
+        ],
+        [
+         1.62,
+         0.25
+        ],
+        [
+         1.3,
+         0.29
+        ],
+        [
+         1.0,
+         0.3
+        ],
+        [
+         0.65,
+         0.28
+        ],
+        [
+         0.3,
+         0.25
+        ],
+        [
+         0.06,
+         0.19
+        ]
+       ],
+       "closed": true,
+       "region": "algae-film",
+       "material": "algae-biofilm"
+      },
+      {
+       "id": "arris-wear",
+       "bone": "block",
+       "role": "detail",
+       "z": 1.3,
+       "filled": false,
+       "tone": 0.25,
+       "kind": "poly",
+       "points": [
+        [
+         0.015,
+         0.39
+        ],
+        [
+         0.25,
+         0.39
+        ],
+        [
+         0.35,
+         0.377
+        ],
+        [
+         1.65,
+         0.377
+        ],
+        [
+         1.75,
+         0.39
+        ],
+        [
+         1.985,
+         0.39
+        ]
+       ],
+       "closed": false,
+       "region": "concrete-block",
+       "material": "concrete-weathered"
+      },
+      {
+       "id": "battens",
+       "bone": "battens",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.66,
+       "kind": "rect",
+       "x": 0.0,
+       "y": 0.0,
+       "w": 1.6,
+       "h": 0.045,
+       "region": "seat-battens",
+       "material": "robinia-greyed",
+       "hatch": "grain"
+      }
+     ],
+     "front": [
+      {
+       "id": "block",
+       "bone": "block",
+       "role": "body",
+       "z": 1,
+       "filled": true,
+       "tone": 0.58,
+       "kind": "poly",
+       "points": [
+        [
+         -0.235,
+         0.0
+        ],
+        [
+         0.235,
+         0.0
+        ],
+        [
+         0.25,
+         0.015
+        ],
+        [
+         0.25,
+         0.39
+        ],
+        [
+         0.235,
+         0.405
+        ],
+        [
+         -0.235,
+         0.405
+        ],
+        [
+         -0.25,
+         0.39
+        ],
+        [
+         -0.25,
+         0.015
+        ]
+       ],
+       "closed": true,
+       "region": "concrete-block",
+       "material": "concrete-weathered"
+      },
+      {
+       "id": "algae-end",
+       "bone": "block",
+       "role": "detail",
+       "z": 1.5,
+       "filled": true,
+       "tone": 0.36,
+       "kind": "poly",
+       "points": [
+        [
+         -0.225,
+         0.02
+        ],
+        [
+         -0.035,
+         0.02
+        ],
+        [
+         -0.045,
+         0.11
+        ],
+        [
+         -0.09,
+         0.21
+        ],
+        [
+         -0.16,
+         0.27
+        ],
+        [
+         -0.225,
+         0.262
+        ]
+       ],
+       "closed": true,
+       "region": "algae-film",
+       "material": "algae-biofilm"
+      },
+      {
+       "id": "batten-1",
+       "bone": "battens",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.66,
+       "kind": "poly",
+       "points": [
+        [
+         -0.224,
+         0.405
+        ],
+        [
+         -0.144,
+         0.405
+        ],
+        [
+         -0.144,
+         0.45
+        ],
+        [
+         -0.224,
+         0.45
+        ]
+       ],
+       "closed": true,
+       "region": "seat-battens",
+       "material": "robinia-greyed"
+      },
+      {
+       "id": "batten-2",
+       "bone": "battens",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.66,
+       "kind": "poly",
+       "points": [
+        [
+         -0.132,
+         0.405
+        ],
+        [
+         -0.052,
+         0.405
+        ],
+        [
+         -0.052,
+         0.45
+        ],
+        [
+         -0.132,
+         0.45
+        ]
+       ],
+       "closed": true,
+       "region": "seat-battens",
+       "material": "robinia-greyed"
+      },
+      {
+       "id": "batten-3",
+       "bone": "battens",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.66,
+       "kind": "poly",
+       "points": [
+        [
+         -0.04,
+         0.405
+        ],
+        [
+         0.04,
+         0.405
+        ],
+        [
+         0.04,
+         0.45
+        ],
+        [
+         -0.04,
+         0.45
+        ]
+       ],
+       "closed": true,
+       "region": "seat-battens",
+       "material": "robinia-greyed"
+      },
+      {
+       "id": "batten-4",
+       "bone": "battens",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.66,
+       "kind": "poly",
+       "points": [
+        [
+         0.052,
+         0.405
+        ],
+        [
+         0.132,
+         0.405
+        ],
+        [
+         0.132,
+         0.45
+        ],
+        [
+         0.052,
+         0.45
+        ]
+       ],
+       "closed": true,
+       "region": "seat-battens",
+       "material": "robinia-greyed"
+      },
+      {
+       "id": "batten-5",
+       "bone": "battens",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.66,
+       "kind": "poly",
+       "points": [
+        [
+         0.144,
+         0.405
+        ],
+        [
+         0.224,
+         0.405
+        ],
+        [
+         0.224,
+         0.45
+        ],
+        [
+         0.144,
+         0.45
+        ]
+       ],
+       "closed": true,
+       "region": "seat-battens",
+       "material": "robinia-greyed"
+      }
+     ],
+     "plan": [
+      {
+       "id": "block",
+       "bone": "block",
+       "role": "body",
+       "z": 1,
+       "filled": true,
+       "tone": 0.58,
+       "kind": "poly",
+       "points": [
+        [
+         0.0,
+         -0.235
+        ],
+        [
+         0.015,
+         -0.25
+        ],
+        [
+         1.985,
+         -0.25
+        ],
+        [
+         2.0,
+         -0.235
+        ],
+        [
+         2.0,
+         0.235
+        ],
+        [
+         1.985,
+         0.25
+        ],
+        [
+         0.015,
+         0.25
+        ],
+        [
+         0.0,
+         0.235
+        ]
+       ],
+       "closed": true,
+       "region": "concrete-block",
+       "material": "concrete-weathered"
+      },
+      {
+       "id": "top-face-edge",
+       "bone": "block",
+       "role": "detail",
+       "z": 1.2,
+       "filled": false,
+       "tone": 0.3,
+       "kind": "poly",
+       "points": [
+        [
+         0.015,
+         0.235
+        ],
+        [
+         0.015,
+         -0.235
+        ],
+        [
+         0.25,
+         -0.235
+        ],
+        [
+         0.35,
+         -0.222
+        ],
+        [
+         1.65,
+         -0.222
+        ],
+        [
+         1.75,
+         -0.235
+        ],
+        [
+         1.985,
+         -0.235
+        ],
+        [
+         1.985,
+         0.235
+        ]
+       ],
+       "closed": true,
+       "region": "concrete-block",
+       "material": "concrete-weathered"
+      },
+      {
+       "id": "socket-1",
+       "bone": "block",
+       "role": "detail",
+       "z": 1.4,
+       "filled": true,
+       "tone": 0.2,
+       "kind": "ellipse",
+       "cx": 0.1,
+       "cy": 0.0,
+       "rx": 0.02,
+       "ry": 0.02,
+       "region": "concrete-block",
+       "material": "steel-galvanised"
+      },
+      {
+       "id": "socket-2",
+       "bone": "block",
+       "role": "detail",
+       "z": 1.4,
+       "filled": true,
+       "tone": 0.2,
+       "kind": "ellipse",
+       "cx": 1.9,
+       "cy": 0.0,
+       "rx": 0.02,
+       "ry": 0.02,
+       "region": "concrete-block",
+       "material": "steel-galvanised"
+      },
+      {
+       "id": "batten-1",
+       "bone": "battens",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.66,
+       "kind": "rect",
+       "x": 0.2,
+       "y": -0.224,
+       "w": 1.6,
+       "h": 0.08,
+       "region": "seat-battens",
+       "material": "robinia-greyed"
+      },
+      {
+       "id": "batten-2",
+       "bone": "battens",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.66,
+       "kind": "rect",
+       "x": 0.2,
+       "y": -0.132,
+       "w": 1.6,
+       "h": 0.08,
+       "region": "seat-battens",
+       "material": "robinia-greyed"
+      },
+      {
+       "id": "batten-3",
+       "bone": "battens",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.66,
+       "kind": "rect",
+       "x": 0.2,
+       "y": -0.04,
+       "w": 1.6,
+       "h": 0.08,
+       "region": "seat-battens",
+       "material": "robinia-greyed"
+      },
+      {
+       "id": "batten-4",
+       "bone": "battens",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.66,
+       "kind": "rect",
+       "x": 0.2,
+       "y": 0.052,
+       "w": 1.6,
+       "h": 0.08,
+       "region": "seat-battens",
+       "material": "robinia-greyed"
+      },
+      {
+       "id": "batten-5",
+       "bone": "battens",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.66,
+       "kind": "rect",
+       "x": 0.2,
+       "y": 0.144,
+       "w": 1.6,
+       "h": 0.08,
+       "region": "seat-battens",
+       "material": "robinia-greyed"
+      }
+     ]
+    },
+    "decisions": {
+     "silhouette": {
+      "en": "Block 20 x 4.5 mm: the chamfered outline, the worn arris as one line generalised to a 28 mm round over 1.3 m, the battens as one strip; front with the five square batten ends and the algae patch; plan with the battens, the generalised wear on the top face edge and both sockets.",
+      "de": "Block 20 x 4,5 mm: der gefaste Umriss, die abgeschliffene Kante als eine Linie, verallgemeinert zu einer 28-mm-Rundung über 1,3 m, die Leisten als ein Streifen; Vorderansicht mit den fünf rechtwinkligen Leistenenden und dem Algenfleck; Draufsicht mit den Leisten, dem verallgemeinerten Verschleiß an der Oberkante und beiden Hülsen."
+     },
+     "retained": {
+      "en": "The 15 mm chamfers (0.15 mm), the 12 mm batten gaps, the sockets, the wear line.",
+      "de": "Die 15-mm-Fasen (0,15 mm), die 12-mm-Leistenfugen, die Hülsen, die Verschleißlinie."
+     },
+     "merged": {
+      "en": "The two chips merge into the generalised wear; the eased batten edges become square.",
+      "de": "Die zwei Abplatzungen gehen im verallgemeinerten Verschleiß auf; die gebrochenen Leistenkanten werden rechtwinklig."
+     },
+     "omitted": {
+      "en": "Grind streaks, checks, screw heads, gum, sticker and rust halos (below 0.15 mm or meaningless at this size); the end-face chamfer line.",
+      "de": "Grind-Striemen, Risse, Schraubenköpfe, Kaugummi, Aufkleber und Rosthöfe (unter 0,15 mm oder bei dieser Größe bedeutungslos); die Fasenlinie der Stirnfläche."
+     },
+     "thinElements": {
+      "en": "Batten gaps of 0.12 mm stay open between the filled batten ends and plan strips.",
+      "de": "Leistenfugen von 0,12 mm bleiben zwischen den gefüllten Leistenenden und Draufsichtstreifen offen."
+     },
+     "hatching": {
+      "en": "Grain lines along the battens in elevation only; concrete as plain tone.",
+      "de": "Maserungslinien entlang der Leisten nur in der Ansicht; Beton als glatter Ton."
+     },
+     "styles": {
+      "en": "Same tones as 1:50.",
+      "de": "Gleiche Töne wie 1:50."
+     },
+     "overlays": {
+      "en": "Every shape carries one region (concrete-block, seat-battens or algae-film) and its material, so the thermal view paints the concrete, the battens and the algae film apart.",
+      "de": "Jede Form trägt eine Region (concrete-block, seat-battens oder algae-film) und ihr Material, so dass die thermische Ansicht Beton, Leisten und Algenbelag getrennt färbt."
+     }
+    }
+   },
+   "200": {
+    "status": "authored",
+    "denominator": 200,
+    "validRange": {
+     "minDenominator": 150,
+     "maxDenominator": 350
+    },
+    "pens": {
+     "body": 0.25,
+     "detail": 0.13,
+     "texture": null,
+     "glazing": null,
+     "ground": 0.35
+    },
+    "hatches": [],
+    "geometry": {
+     "elevation": [
+      {
+       "id": "block",
+       "bone": "block",
+       "role": "body",
+       "z": 1,
+       "filled": true,
+       "tone": 0.58,
+       "kind": "poly",
+       "points": [
+        [
+         0.0,
+         0.0
+        ],
+        [
+         2.0,
+         0.0
+        ],
+        [
+         2.0,
+         0.405
+        ],
+        [
+         1.8,
+         0.405
+        ],
+        [
+         1.8,
+         0.45
+        ],
+        [
+         0.2,
+         0.45
+        ],
+        [
+         0.2,
+         0.405
+        ],
+        [
+         0.0,
+         0.405
+        ]
+       ],
+       "closed": true,
+       "regions": [
+        "concrete-block",
+        "seat-battens"
+       ],
+       "material": "concrete-weathered"
+      },
+      {
+       "id": "seat-joint",
+       "bone": "block",
+       "role": "detail",
+       "z": 1.2,
+       "filled": false,
+       "tone": 0.3,
+       "kind": "poly",
+       "points": [
+        [
+         0.2,
+         0.405
+        ],
+        [
+         1.8,
+         0.405
+        ]
+       ],
+       "closed": false,
+       "region": "seat-battens",
+       "material": "robinia-greyed"
+      },
+      {
+       "id": "algae-north",
+       "bone": "block",
+       "role": "detail",
+       "z": 1.1,
+       "filled": true,
+       "tone": 0.36,
+       "kind": "poly",
+       "points": [
+        [
+         0.06,
+         0.016
+        ],
+        [
+         1.94,
+         0.016
+        ],
+        [
+         1.94,
+         0.22
+        ],
+        [
+         1.4,
+         0.29
+        ],
+        [
+         0.7,
+         0.28
+        ],
+        [
+         0.06,
+         0.2
+        ]
+       ],
+       "closed": true,
+       "region": "algae-film",
+       "material": "algae-biofilm"
+      }
+     ],
+     "front": [
+      {
+       "id": "block",
+       "bone": "block",
+       "role": "body",
+       "z": 1,
+       "filled": true,
+       "tone": 0.58,
+       "kind": "poly",
+       "points": [
+        [
+         -0.25,
+         0.0
+        ],
+        [
+         0.25,
+         0.0
+        ],
+        [
+         0.25,
+         0.405
+        ],
+        [
+         0.224,
+         0.405
+        ],
+        [
+         0.224,
+         0.45
+        ],
+        [
+         -0.224,
+         0.45
+        ],
+        [
+         -0.224,
+         0.405
+        ],
+        [
+         -0.25,
+         0.405
+        ]
+       ],
+       "closed": true,
+       "regions": [
+        "concrete-block",
+        "seat-battens"
+       ],
+       "material": "concrete-weathered"
+      },
+      {
+       "id": "seat-joint",
+       "bone": "block",
+       "role": "detail",
+       "z": 1.2,
+       "filled": false,
+       "tone": 0.3,
+       "kind": "path",
+       "d": "M -0.224 0.405 L 0.224 0.405 M -0.138 0.405 L -0.138 0.45 M -0.046 0.405 L -0.046 0.45 M 0.046 0.405 L 0.046 0.45 M 0.138 0.405 L 0.138 0.45",
+       "region": "seat-battens",
+       "material": "robinia-greyed"
+      },
+      {
+       "id": "algae-end",
+       "bone": "block",
+       "role": "detail",
+       "z": 1.5,
+       "filled": true,
+       "tone": 0.36,
+       "kind": "poly",
+       "points": [
+        [
+         -0.225,
+         0.02
+        ],
+        [
+         -0.03,
+         0.02
+        ],
+        [
+         -0.06,
+         0.17
+        ],
+        [
+         -0.14,
+         0.27
+        ],
+        [
+         -0.225,
+         0.27
+        ]
+       ],
+       "closed": true,
+       "region": "algae-film",
+       "material": "algae-biofilm"
+      }
+     ],
+     "plan": [
+      {
+       "id": "block",
+       "bone": "block",
+       "role": "body",
+       "z": 1,
+       "filled": true,
+       "tone": 0.58,
+       "kind": "rect",
+       "x": 0.0,
+       "y": -0.25,
+       "w": 2.0,
+       "h": 0.5,
+       "region": "concrete-block",
+       "material": "concrete-weathered"
+      },
+      {
+       "id": "deck",
+       "bone": "battens",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.66,
+       "kind": "rect",
+       "x": 0.2,
+       "y": -0.224,
+       "w": 1.6,
+       "h": 0.448,
+       "region": "seat-battens",
+       "material": "robinia-greyed"
+      },
+      {
+       "id": "deck-joints",
+       "bone": "battens",
+       "role": "detail",
+       "z": 2.1,
+       "filled": false,
+       "tone": 0.3,
+       "kind": "path",
+       "d": "M 0.2 -0.138 L 1.8 -0.138 M 0.2 -0.046 L 1.8 -0.046 M 0.2 0.046 L 1.8 0.046 M 0.2 0.138 L 1.8 0.138",
+       "region": "seat-battens",
+       "material": "robinia-greyed"
+      }
+     ]
+    },
+    "decisions": {
+     "silhouette": {
+      "en": "Block 10 x 2.25 mm: one stepped outline of concrete and seat in elevation and front (the 45 mm seat alone would print 0.13 mm at 1:350), the seat joint as a line, the batten joints as lines; plan with the bare concrete ends and the seat deck.",
+      "de": "Block 10 x 2,25 mm: ein abgestufter Umriss aus Beton und Sitz in Ansicht und Vorderansicht (der 45-mm-Sitz allein würde bei 1:350 mit 0,13 mm gedruckt), die Sitzfuge als Linie, die Leistenfugen als Linien; Draufsicht mit den freien Betonenden und dem Sitzdeck."
+     },
+     "retained": {
+      "en": "The 45 mm seat step at the bare ends and along the 26 mm side bands, the batten joints, the algae patch on the east end.",
+      "de": "Die 45-mm-Sitzstufe an den freien Enden und entlang der 26-mm-Randstreifen, die Leistenfugen, der Algenfleck an der Ostseite."
+     },
+     "merged": {
+      "en": "Concrete and seat are one shape in elevation and front; the five battens one deck with joint lines.",
+      "de": "Beton und Sitz sind in Ansicht und Vorderansicht eine Form; die fünf Leisten ein Deck mit Fugenlinien."
+     },
+     "omitted": {
+      "en": "The 15 mm chamfers (0.075 mm), the arris wear, the sockets, every texture.",
+      "de": "Die 15-mm-Fasen (0,075 mm), der Kantenverschleiß, die Hülsen, jede Textur."
+     },
+     "thinElements": {
+      "en": "The batten gaps are drawn as 0.13 mm joint lines, not as openings.",
+      "de": "Die Leistenfugen werden als 0,13-mm-Fugenlinien gezeichnet, nicht als Öffnungen."
+     },
+     "hatching": {
+      "en": "No hatches.",
+      "de": "Keine Schraffuren."
+     },
+     "styles": {
+      "en": "Concrete 0.58 for the merged mass, seat deck 0.66 in plan, algae 0.36.",
+      "de": "Beton 0,58 für die zusammengefasste Masse, Sitzdeck 0,66 in der Draufsicht, Algen 0,36."
+     },
+     "overlays": {
+      "en": "Every shape carries one region (concrete-block, seat-battens or algae-film) and its material, so the thermal view paints the concrete, the battens and the algae film apart.",
+      "de": "Jede Form trägt eine Region (concrete-block, seat-battens oder algae-film) und ihr Material, so dass die thermische Ansicht Beton, Leisten und Algenbelag getrennt färbt."
+     }
+    }
+   },
+   "500": {
+    "status": "authored",
+    "denominator": 500,
+    "validRange": {
+     "minDenominator": 350,
+     "maxDenominator": 1000
+    },
+    "pens": {
+     "body": 0.18,
+     "detail": null,
+     "texture": null,
+     "glazing": null,
+     "ground": 0.25
+    },
+    "hatches": [],
+    "geometry": {
+     "elevation": [
+      {
+       "id": "block",
+       "bone": "block",
+       "role": "body",
+       "z": 1,
+       "filled": true,
+       "tone": 0.58,
+       "kind": "poly",
+       "points": [
+        [
+         0.0,
+         0.0
+        ],
+        [
+         2.0,
+         0.0
+        ],
+        [
+         2.0,
+         0.375
+        ],
+        [
+         1.8,
+         0.375
+        ],
+        [
+         1.8,
+         0.45
+        ],
+        [
+         0.2,
+         0.45
+        ],
+        [
+         0.2,
+         0.375
+        ],
+        [
+         0.0,
+         0.375
+        ]
+       ],
+       "closed": true,
+       "regions": [
+        "concrete-block",
+        "seat-battens"
+       ],
+       "material": "concrete-weathered"
+      },
+      {
+       "id": "algae-north",
+       "bone": "block",
+       "role": "body",
+       "z": 1.1,
+       "filled": true,
+       "tone": 0.36,
+       "kind": "poly",
+       "points": [
+        [
+         0.06,
+         0.016
+        ],
+        [
+         1.94,
+         0.016
+        ],
+        [
+         1.94,
+         0.26
+        ],
+        [
+         0.06,
+         0.26
+        ]
+       ],
+       "closed": true,
+       "region": "algae-film",
+       "material": "algae-biofilm"
+      }
+     ],
+     "front": [
+      {
+       "id": "block",
+       "bone": "block",
+       "role": "body",
+       "z": 1,
+       "filled": true,
+       "tone": 0.58,
+       "kind": "rect",
+       "x": -0.25,
+       "y": 0.0,
+       "w": 0.5,
+       "h": 0.45,
+       "regions": [
+        "concrete-block",
+        "seat-battens"
+       ],
+       "material": "concrete-weathered"
+      },
+      {
+       "id": "algae-end",
+       "bone": "block",
+       "role": "body",
+       "z": 1.5,
+       "filled": true,
+       "tone": 0.36,
+       "kind": "poly",
+       "points": [
+        [
+         -0.225,
+         0.02
+        ],
+        [
+         -0.02,
+         0.02
+        ],
+        [
+         -0.02,
+         0.27
+        ],
+        [
+         -0.225,
+         0.27
+        ]
+       ],
+       "closed": true,
+       "region": "algae-film",
+       "material": "algae-biofilm"
+      }
+     ],
+     "plan": [
+      {
+       "id": "block",
+       "bone": "block",
+       "role": "body",
+       "z": 1,
+       "filled": true,
+       "tone": 0.58,
+       "kind": "rect",
+       "x": 0.0,
+       "y": -0.25,
+       "w": 2.0,
+       "h": 0.5,
+       "region": "concrete-block",
+       "material": "concrete-weathered"
+      },
+      {
+       "id": "seat",
+       "bone": "battens",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.66,
+       "kind": "rect",
+       "x": 0.2,
+       "y": -0.25,
+       "w": 1.6,
+       "h": 0.5,
+       "region": "seat-battens",
+       "material": "robinia-greyed"
+      }
+     ]
+    },
+    "decisions": {
+     "silhouette": {
+      "en": "Block 4 x 0.9 mm: the stepped long outline of the seat over the bare ends (generalised to a 75 mm step), the end as one rectangle with the algae patch, the plan as the concrete with the seat over its middle 1.6 m.",
+      "de": "Block 4 x 0,9 mm: der abgestufte Längsumriss des Sitzes über den freien Enden (verallgemeinert zu einer 75-mm-Stufe), das Ende als ein Rechteck mit dem Algenfleck, die Draufsicht als Beton mit dem Sitz über den mittleren 1,6 m."
+     },
+     "retained": {
+      "en": "Length, depth, seat height, the bare concrete ends and the algae on the shaded corner.",
+      "de": "Länge, Tiefe, Sitzhöhe, die freien Betonenden und die Algen an der schattigen Ecke."
+     },
+     "merged": {
+      "en": "The battens and the 26 mm concrete side bands merge into one seat course over the full depth.",
+      "de": "Die Leisten und die 26-mm-Betonrandstreifen gehen in einer Sitzlage über die ganze Tiefe auf."
+     },
+     "omitted": {
+      "en": "Chamfers, joints, wear, sockets and texture (all below 0.15 mm).",
+      "de": "Fasen, Fugen, Verschleiß, Hülsen und Textur (alle unter 0,15 mm)."
+     },
+     "thinElements": {
+      "en": "No thin elements remain; the algae patch keeps 0.25 x 0.2 m so it prints 0.2 mm at 1:1000.",
+      "de": "Es bleiben keine dünnen Elemente; der Algenfleck behält 0,25 x 0,2 m, so dass er bei 1:1000 mit 0,2 mm gedruckt wird."
+     },
+     "hatching": {
+      "en": "No hatches.",
+      "de": "Keine Schraffuren."
+     },
+     "styles": {
+      "en": "Concrete 0.58, seat 0.66, algae 0.36.",
+      "de": "Beton 0,58, Sitz 0,66, Algen 0,36."
+     },
+     "overlays": {
+      "en": "Every shape carries one region (concrete-block, seat-battens or algae-film) and its material, so the thermal view paints the concrete, the battens and the algae film apart.",
+      "de": "Jede Form trägt eine Region (concrete-block, seat-battens oder algae-film) und ihr Material, so dass die thermische Ansicht Beton, Leisten und Algenbelag getrennt färbt."
+     }
+    }
+   }
+  },
+  "symbols": [],
+  "poses": [
+   {
+    "id": "in-service",
+    "title": {
+     "en": "In service",
+     "de": "Im Einsatz"
+    },
+    "description": {
+     "en": "The block stands freestanding by its own weight on its chippings bed in the water-bound path, nobody seated, afternoon sun on the south face and the battens.",
+     "de": "Der Block steht frei durch sein Eigengewicht auf seinem Splittbett im wassergebundenen Weg, niemand sitzt, Nachmittagssonne auf der Südseite und den Leisten."
+    },
+    "bones": {},
+    "ground": "auto",
+    "contacts": [
+     "bed-west",
+     "bed-east"
+    ],
+    "thermal": {
+     "regions": {
+      "concrete-block": {
+       "exposedFraction": 0.45,
+       "sunlitFraction": 0.32,
+       "contact": {
+        "fraction": 0.25,
+        "tempC": 24
+       }
+      },
+      "seat-battens": {
+       "exposedFraction": 0.69,
+       "sunlitFraction": 0.36,
+       "contact": {
+        "fraction": 0.31,
+        "tempC": 34
+       }
+      },
+      "algae-film": {
+       "exposedFraction": 1.0,
+       "sunlitFraction": 0.05,
+       "wettedness": 0.4
+      }
+     },
+     "emitters": {}
+    },
+    "loads": []
+   },
+   {
+    "id": "maintenance",
+    "title": {
+     "en": "Lifted by the depot crane",
+     "de": "Vom Bauhofkran gehoben"
+    },
+    "description": {
+     "en": "The depot's truck-mounted crane holds the block 0.6 m above its bed on a two-leg chain sling screwed into the two lifting sockets; the bed stays behind with the pale imprint of the base.",
+     "de": "Der Ladekran des Bauhofs hält den Block an einem in die beiden Transportankerhülsen geschraubten Zweistrang-Kettengehänge 0,6 m über seinem Bett; das Bett bleibt mit dem hellen Abdruck der Aufstandsfläche zurück."
+    },
+    "bones": {
+     "block": {
+      "dy": 0.6
+     }
+    },
+    "ground": "auto",
+    "contacts": [
+     "socket-west",
+     "socket-east"
+    ],
+    "thermal": {
+     "regions": {
+      "concrete-block": {
+       "exposedFraction": 0.7,
+       "sunlitFraction": 0.3
+      },
+      "seat-battens": {
+       "exposedFraction": 0.69,
+       "sunlitFraction": 0.36,
+       "contact": {
+        "fraction": 0.31,
+        "tempC": 34
+       }
+      },
+      "algae-film": {
+       "exposedFraction": 1.0,
+       "sunlitFraction": 0.05,
+       "wettedness": 0.4
+      }
+     },
+     "emitters": {}
+    },
+    "loads": []
+   },
+   {
+    "id": "in-use",
+    "title": {
+     "en": "Three people sitting in the sun",
+     "de": "Drei Personen in der Sonne"
+    },
+    "description": {
+     "en": "Two adults sit on the south side and one on the north side of the backless block; the sun-heated battens and concrete warm the sitters from below.",
+     "de": "Zwei Erwachsene sitzen auf der Süd- und eine Person auf der Nordseite des lehnenlosen Blocks; die sonnenwarmen Leisten und der Beton wärmen die Sitzenden von unten."
+    },
+    "bones": {},
+    "ground": "auto",
+    "contacts": [
+     "bed-west",
+     "bed-east"
+    ],
+    "thermal": {
+     "regions": {
+      "concrete-block": {
+       "exposedFraction": 0.45,
+       "sunlitFraction": 0.25,
+       "contact": {
+        "fraction": 0.25,
+        "tempC": 24
+       }
+      },
+      "seat-battens": {
+       "exposedFraction": 0.42,
+       "sunlitFraction": 0.2,
+       "contact": {
+        "fraction": 0.27,
+        "tempC": 31
+       }
+      },
+      "algae-film": {
+       "exposedFraction": 1.0,
+       "sunlitFraction": 0.05,
+       "wettedness": 0.4
+      }
+     },
+     "emitters": {}
+    },
+    "loads": [
+     {
+      "id": "sitter-south-west",
+      "kind": "occupant",
+      "title": {
+       "en": "Adult sitting on the south side, west (75 kg)",
+       "de": "Erwachsene Person auf der Südseite, West (75 kg)"
+      },
+      "bone": "battens",
+      "x": 0.3,
+      "y": 0.045,
+      "z": 0.1,
+      "fxN": 0,
+      "fyN": -735.5,
+      "source": "authored-estimate",
+      "reference": "en-16139-2013"
+     },
+     {
+      "id": "sitter-south-east",
+      "kind": "occupant",
+      "title": {
+       "en": "Adult sitting on the south side, east (75 kg)",
+       "de": "Erwachsene Person auf der Südseite, Ost (75 kg)"
+      },
+      "bone": "battens",
+      "x": 1.15,
+      "y": 0.045,
+      "z": 0.1,
+      "fxN": 0,
+      "fyN": -735.5,
+      "source": "authored-estimate",
+      "reference": "en-16139-2013"
+     },
+     {
+      "id": "sitter-north",
+      "kind": "occupant",
+      "title": {
+       "en": "Adult sitting on the north side facing the lawn (75 kg)",
+       "de": "Erwachsene Person auf der Nordseite zur Wiese (75 kg)"
+      },
+      "bone": "battens",
+      "x": 0.75,
+      "y": 0.045,
+      "z": -0.1,
+      "fxN": 0,
+      "fyN": -735.5,
+      "source": "authored-estimate",
+      "reference": "en-16139-2013"
+     }
+    ]
+   },
+   {
+    "id": "skate-grind",
+    "title": {
+     "en": "Skateboard grinding the north arris",
+     "de": "Skateboard grindet die Nordkante"
+    },
+    "description": {
+     "en": "A skateboarder slides the trucks of the board along the north top arris, the smooth side along the path: the impact of landing on it and the friction along the edge are what wore it round and chipped it.",
+     "de": "Eine Person fährt mit den Achsen des Boards die nördliche Oberkante entlang, die glatte Seite am Weg: der Aufprall beim Aufspringen und die Reibung entlang der Kante haben sie rund geschliffen und abgeplatzt."
+    },
+    "bones": {},
+    "ground": "auto",
+    "contacts": [
+     "bed-west",
+     "bed-east"
+    ],
+    "thermal": {
+     "regions": {
+      "concrete-block": {
+       "exposedFraction": 0.45,
+       "sunlitFraction": 0.32,
+       "contact": {
+        "fraction": 0.25,
+        "tempC": 24
+       }
+      },
+      "seat-battens": {
+       "exposedFraction": 0.69,
+       "sunlitFraction": 0.36,
+       "contact": {
+        "fraction": 0.31,
+        "tempC": 34
+       }
+      },
+      "algae-film": {
+       "exposedFraction": 1.0,
+       "sunlitFraction": 0.05,
+       "wettedness": 0.4
+      }
+     },
+     "emitters": {}
+    },
+    "loads": [
+     {
+      "id": "skate-truck",
+      "kind": "live",
+      "title": {
+       "en": "Board trucks landing and sliding on the arris (80 kg, dynamic factor 2.5, friction 0.3)",
+       "de": "Achsen des Boards landen und gleiten auf der Kante (80 kg, dynamischer Faktor 2,5, Reibung 0,3)"
+      },
+      "anchor": "north-arris",
+      "fxN": 588.4,
+      "fyN": -1961.3,
+      "source": "authored-estimate",
+      "reference": "woolley-johns-2001"
+     }
+    ]
+   }
+  ],
+  "clips": [
+   {
+    "id": "crane-lift",
+    "title": {
+     "en": "Crane lift for maintenance",
+     "de": "Kranhub zur Wartung"
+    },
+    "description": {
+     "en": "The depot crew screws the lifting loops into the two sockets, the crane tensions the chain sling, the block leaves its bed and is held 0.6 m up so the bed can be re-levelled.",
+     "de": "Der Bauhof schraubt die Abhebeschlaufen in die beiden Hülsen, der Kran spannt das Kettengehänge, der Block verlässt sein Bett und wird 0,6 m hoch gehalten, damit das Bett neu abgezogen werden kann."
+    },
+    "durationS": 10,
+    "fps": 30,
+    "loop": false,
+    "rootMotion": "none",
+    "keys": [
+     {
+      "t": 0,
+      "pose": "in-service",
+      "ease": "smooth"
+     },
+     {
+      "t": 2,
+      "pose": "in-service",
+      "ease": "smooth"
+     },
+     {
+      "t": 8,
+      "pose": "maintenance",
+      "ease": "smooth"
+     },
+     {
+      "t": 10,
+      "pose": "maintenance",
+      "ease": "smooth"
+     }
+    ],
+    "contacts": [
+     {
+      "anchor": "bed-west",
+      "fromS": 0,
+      "toS": 2.3
+     },
+     {
+      "anchor": "bed-east",
+      "fromS": 0,
+      "toS": 2.3
+     },
+     {
+      "anchor": "socket-west",
+      "fromS": 1.6,
+      "toS": 10
+     },
+     {
+      "anchor": "socket-east",
+      "fromS": 1.6,
+      "toS": 10
+     }
+    ],
+    "phases": [
+     {
+      "id": "sling-up",
+      "fromS": 0,
+      "toS": 2,
+      "title": {
+       "en": "Sling screwed in and tensioned",
+       "de": "Gehänge eingeschraubt und gespannt"
+      }
+     },
+     {
+      "id": "lift",
+      "fromS": 2,
+      "toS": 8,
+      "title": {
+       "en": "Lift off the bed",
+       "de": "Abheben vom Bett"
+      }
+     },
+     {
+      "id": "hold",
+      "fromS": 8,
+      "toS": 10,
+      "title": {
+       "en": "Held above the bed",
+       "de": "Über dem Bett gehalten"
+      }
+     }
+    ],
+    "events": [
+     {
+      "t": 1.6,
+      "kind": "contact-on",
+      "title": {
+       "en": "Chain sling takes the load",
+       "de": "Kettengehänge übernimmt die Last"
+      },
+      "target": "socket-west"
+     },
+     {
+      "t": 2.3,
+      "kind": "contact-off",
+      "title": {
+       "en": "Block leaves its bed",
+       "de": "Block verlässt sein Bett"
+      },
+      "target": "bed-west"
+     }
+    ],
+    "tracks": []
+   },
+   {
+    "id": "sitting-in-sun",
+    "title": {
+     "en": "Sitting down on the sun-heated block",
+     "de": "Hinsetzen auf den sonnenwarmen Block"
+    },
+    "description": {
+     "en": "On a summer afternoon three people sit down one after the other; their bodies shade and cover the battens while the concrete keeps the heat of the day.",
+     "de": "An einem Sommernachmittag setzen sich drei Personen nacheinander; ihre Körper beschatten und bedecken die Leisten, während der Beton die Wärme des Tages hält."
+    },
+    "durationS": 60,
+    "fps": 30,
+    "loop": false,
+    "rootMotion": "none",
+    "keys": [
+     {
+      "t": 0,
+      "pose": "in-service",
+      "ease": "smooth"
+     },
+     {
+      "t": 6,
+      "pose": "in-use",
+      "ease": "smooth"
+     },
+     {
+      "t": 60,
+      "pose": "in-use",
+      "ease": "smooth"
+     }
+    ],
+    "contacts": [
+     {
+      "anchor": "bed-west",
+      "fromS": 0,
+      "toS": 60
+     },
+     {
+      "anchor": "bed-east",
+      "fromS": 0,
+      "toS": 60
+     }
+    ],
+    "phases": [
+     {
+      "id": "sitting-down",
+      "fromS": 0,
+      "toS": 6,
+      "title": {
+       "en": "Sitting down",
+       "de": "Hinsetzen"
+      }
+     },
+     {
+      "id": "seated",
+      "fromS": 6,
+      "toS": 60,
+      "title": {
+       "en": "Seated in the sun",
+       "de": "Sitzen in der Sonne"
+      }
+     }
+    ],
+    "events": [
+     {
+      "t": 2,
+      "kind": "load-on",
+      "title": {
+       "en": "First person sits down",
+       "de": "Erste Person setzt sich"
+      },
+      "target": "sitter-south-west"
+     },
+     {
+      "t": 4,
+      "kind": "load-on",
+      "title": {
+       "en": "Second person sits down",
+       "de": "Zweite Person setzt sich"
+      },
+      "target": "sitter-north"
+     },
+     {
+      "t": 6,
+      "kind": "load-on",
+      "title": {
+       "en": "Third person sits down",
+       "de": "Dritte Person setzt sich"
+      },
+      "target": "sitter-south-east"
+     }
+    ],
+    "tracks": [
+     {
+      "target": "load:sitter-south-west",
+      "ease": "smooth",
+      "keys": [
+       {
+        "t": 0,
+        "v": 0
+       },
+       {
+        "t": 2,
+        "v": 1
+       },
+       {
+        "t": 60,
+        "v": 1
+       }
+      ]
+     },
+     {
+      "target": "load:sitter-north",
+      "ease": "smooth",
+      "keys": [
+       {
+        "t": 0,
+        "v": 0
+       },
+       {
+        "t": 2,
+        "v": 0
+       },
+       {
+        "t": 4,
+        "v": 1
+       },
+       {
+        "t": 60,
+        "v": 1
+       }
+      ]
+     },
+     {
+      "target": "load:sitter-south-east",
+      "ease": "smooth",
+      "keys": [
+       {
+        "t": 0,
+        "v": 0
+       },
+       {
+        "t": 4,
+        "v": 0
+       },
+       {
+        "t": 6,
+        "v": 1
+       },
+       {
+        "t": 60,
+        "v": 1
+       }
+      ]
+     },
+     {
+      "target": "region:concrete-block:sunlitFraction",
+      "ease": "smooth",
+      "keys": [
+       {
+        "t": 0,
+        "v": 0.32
+       },
+       {
+        "t": 60,
+        "v": 0.25
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "skate-grind",
+    "title": {
+     "en": "Skateboard grind along the arris",
+     "de": "Skateboard-Grind entlang der Kante"
+    },
+    "description": {
+     "en": "A skater ollies onto the north arris, grinds along it and rolls off; the block does not move on its bed.",
+     "de": "Eine Person springt mit dem Board auf die Südkante, grindet sie entlang und rollt ab; der Block bewegt sich auf seinem Bett nicht."
+    },
+    "durationS": 1.5,
+    "fps": 30,
+    "loop": false,
+    "rootMotion": "none",
+    "keys": [
+     {
+      "t": 0,
+      "pose": "in-service",
+      "ease": "in"
+     },
+     {
+      "t": 0.4,
+      "pose": "skate-grind",
+      "ease": "linear"
+     },
+     {
+      "t": 1.1,
+      "pose": "skate-grind",
+      "ease": "out"
+     },
+     {
+      "t": 1.5,
+      "pose": "in-service",
+      "ease": "smooth"
+     }
+    ],
+    "contacts": [
+     {
+      "anchor": "bed-west",
+      "fromS": 0,
+      "toS": 1.5
+     },
+     {
+      "anchor": "bed-east",
+      "fromS": 0,
+      "toS": 1.5
+     }
+    ],
+    "phases": [
+     {
+      "id": "ollie",
+      "fromS": 0,
+      "toS": 0.4,
+      "title": {
+       "en": "Ollie onto the arris",
+       "de": "Ollie auf die Kante"
+      }
+     },
+     {
+      "id": "grind",
+      "fromS": 0.4,
+      "toS": 1.1,
+      "title": {
+       "en": "Grind",
+       "de": "Grind"
+      }
+     },
+     {
+      "id": "roll-off",
+      "fromS": 1.1,
+      "toS": 1.5,
+      "title": {
+       "en": "Roll off",
+       "de": "Abrollen"
+      }
+     }
+    ],
+    "events": [
+     {
+      "t": 0.4,
+      "kind": "load-on",
+      "title": {
+       "en": "Trucks land on the arris",
+       "de": "Achsen landen auf der Kante"
+      },
+      "target": "skate-truck"
+     },
+     {
+      "t": 1.1,
+      "kind": "load-off",
+      "title": {
+       "en": "Board leaves the arris",
+       "de": "Board verlässt die Kante"
+      },
+      "target": "skate-truck"
+     }
+    ],
+    "tracks": []
+   }
+  ],
+  "thermal": {
+   "environment": {
+    "airTempC": 28,
+    "meanRadiantTempC": 31,
+    "skyTempC": 15,
+    "groundTempC": 38,
+    "relativeHumidity": 0.45,
+    "windMS": 1.5,
+    "windDirectionDeg": 90,
+    "solarWM2": 800,
+    "diffuseFraction": 0.15,
+    "pressurePa": 101325
+   },
+   "referenceEnvironment": "summer-hot-sun",
+   "passengers": [],
+   "operating": [],
+   "regions": [
+    {
+     "id": "concrete-block",
+     "title": {
+      "en": "Weathered concrete block",
+      "de": "Verwitterter Betonblock"
+     },
+     "kind": "surface",
+     "model": "passive",
+     "material": "concrete-weathered",
+     "areaM2": 3.914,
+     "characteristicLengthM": 0.405,
+     "geometry": "vertical-plate",
+     "skyViewFactor": 0.55,
+     "layers": [
+      {
+       "id": "concrete-mass",
+       "title": {
+        "en": "Solid precast concrete",
+        "de": "Massiver Fertigteilbeton"
+       },
+       "kind": "masonry",
+       "material": "concrete-weathered",
+       "thicknessM": 0.25,
+       "resistanceM2KW": 0.1087,
+       "heatCapacityJM2K": 143875,
+       "source": "literature",
+       "reference": "iso-10456-2007"
+      }
+     ],
+     "heatCapacityJM2K": 143875,
+     "source": "literature",
+     "reference": "levinson-akbari-2002"
+    },
+    {
+     "id": "seat-battens",
+     "title": {
+      "en": "Greyed robinia seat battens",
+      "de": "Vergraute Robinien-Sitzleisten"
+     },
+     "kind": "surface",
+     "model": "passive",
+     "material": "robinia-greyed",
+     "areaM2": 1.989,
+     "characteristicLengthM": 0.08,
+     "geometry": "horizontal-plate-up",
+     "skyViewFactor": 0.95,
+     "layers": [
+      {
+       "id": "robinia-batten",
+       "title": {
+        "en": "Robinia batten",
+        "de": "Robinienleiste"
+       },
+       "kind": "timber",
+       "material": "robinia-greyed",
+       "thicknessM": 0.045,
+       "resistanceM2KW": 0.25,
+       "heatCapacityJM2K": 28071,
+       "source": "literature",
+       "reference": "iso-10456-2007"
+      }
+     ],
+     "heatCapacityJM2K": 28071,
+     "source": "authored-estimate",
+     "reference": "feist-hon-1984"
+    },
+    {
+     "id": "algae-film",
+     "title": {
+      "en": "Algae film on the shaded north face",
+      "de": "Algenbelag auf der schattigen Nordseite"
+     },
+     "kind": "surface",
+     "model": "passive",
+     "material": "algae-biofilm",
+     "areaM2": 0.524,
+     "characteristicLengthM": 0.3,
+     "geometry": "vertical-plate",
+     "skyViewFactor": 0.45,
+     "layers": [
+      {
+       "id": "algae-biofilm",
+       "title": {
+        "en": "Wet algal biofilm",
+        "de": "Nasser Algenbelag"
+       },
+       "kind": "shell",
+       "material": "algae-biofilm",
+       "thicknessM": 0.002,
+       "resistanceM2KW": 0.00333,
+       "heatCapacityJM2K": 7350,
+       "source": "literature",
+       "reference": "iso-10456-2007"
+      }
+     ],
+     "heatCapacityJM2K": 7350,
+     "source": "authored-estimate",
+     "reference": "gaylarde-morton-1999"
+    }
+   ],
+   "emitters": [],
+   "assumptions": [
+    {
+     "en": "Passive surfaces only: absorbed sun, long-wave exchange with sky and ground, convection and heat capacity; the block draws no power (0 W) and has no emitters.",
+     "de": "Nur passive Flächen: absorbierte Sonne, Langwellenaustausch mit Himmel und Boden, Konvektion und Wärmekapazität; der Block nimmt keine Leistung auf (0 W) und hat keine Emitter."
+    },
+    {
+     "en": "Weathered surfaces differ from new ones: soiled, weathered grey concrete absorbs about 0.65 of the sun instead of about 0.55 new (Levinson and Akbari 2002); robinia greyed by UV and leaching absorbs about 0.6 instead of about 0.7 for the fresh yellow-brown wood (Feist and Hon 1984); the wet algal film on the shaded north face absorbs about 0.8 and is kept moist (wettedness 0.4).",
+     "de": "Verwitterte Flächen unterscheiden sich von neuen: verschmutzter, verwitterter grauer Beton absorbiert etwa 0,65 der Sonne statt etwa 0,55 im Neuzustand (Levinson und Akbari 2002); durch UV und Auswaschung vergraute Robinie absorbiert etwa 0,6 statt etwa 0,7 beim frischen gelbbraunen Holz (Feist und Hon 1984); der nasse Algenbelag auf der schattigen Nordseite absorbiert etwa 0,8 und bleibt feucht (Benetzung 0,4)."
+    },
+    {
+     "en": "Areal heat capacity is rho*cp*min(thickness, sqrt(alpha*3600 s)): concrete takes part with 58 mm within an hour, so the 1 t block lags hours behind the sun and stays warm into the evening, while the 45 mm battens follow it within the hour (23 mm).",
+     "de": "Die flächenbezogene Wärmekapazität ist rho*cp*min(Dicke, sqrt(alpha*3600 s)): Beton nimmt binnen einer Stunde mit 58 mm teil, so dass der 1-t-Block der Sonne um Stunden nachläuft und bis in den Abend warm bleibt, während die 45-mm-Leisten ihr binnen einer Stunde folgen (23 mm)."
+    },
+    {
+     "en": "areaM2 is the total outer surface of each region's 1:50 solids: the concrete including its base on the bed and the top under the battens, the battens including their undersides, the algae film without its face against the concrete. Contact fractions: the base on the chippings bed at 24 degC, the batten undersides on the sun-warmed concrete at 34 degC, sitters' clothing at 31 degC (ISO 7730 range).",
+     "de": "areaM2 ist die gesamte Außenfläche der 1:50-Körper jeder Region: der Beton einschließlich seiner Aufstandsfläche auf dem Bett und der Oberseite unter den Leisten, die Leisten einschließlich ihrer Unterseiten, der Algenbelag ohne seine Fläche am Beton. Kontaktanteile: die Aufstandsfläche auf dem Splittbett bei 24 degC, die Leistenunterseiten auf dem sonnenwarmen Beton bei 34 degC, die Kleidung Sitzender bei 31 degC (Bereich nach ISO 7730)."
+    },
+    {
+     "en": "Reference case: a German summer afternoon, 28 degC air, 800 W/m2 sun from the south-west, 1.5 m/s breeze, hot water-bound gravel around it at 38 degC; sunlit fractions are scenario data of each pose and clip.",
+     "de": "Referenzfall: deutscher Sommernachmittag, 28 degC Luft, 800 W/m2 Sonne aus Südwest, 1,5 m/s Wind, heiße wassergebundene Decke ringsum bei 38 degC; besonnte Anteile sind Szenariodaten jeder Pose und jedes Clips."
+    }
+   ]
+  },
+  "structure": {
+   "gravityMS2": 9.80665,
+   "dynamics": "quasi-static",
+   "supports": [],
+   "assumptions": [
+    {
+     "en": "In service the block is a rigid body freestanding by its own weight (about 1 t) on its chippings bed, modelled as two unilateral contacts of 1.0 x 0.5 m each with friction 0.6 (concrete on chippings); it has no anchorage, so only its mass resists sliding and overturning.",
+     "de": "Im Einsatz ist der Block ein starrer Körper, der frei durch sein Eigengewicht (etwa 1 t) auf seinem Splittbett steht, abgebildet als zwei einseitige Kontakte von je 1,0 x 0,5 m mit Reibung 0,6 (Beton auf Splitt); er ist nicht verankert, nur seine Masse hält ihn gegen Gleiten und Kippen."
+    },
+    {
+     "en": "Maintenance: the crane holds the block on two cast-in threaded lifting sockets Rd 24, 0.1 m from each end (pins at the socket heads); the two-leg chain sling and the crane belong to the depot, not to the asset. Each socket carries half the weight, about 5 kN, times the dynamic factor 1.3 of VDI/BV-BS 6205 for a crane lift; the block spans 1.8 m between them as a beam under its own weight.",
+     "de": "Wartung: Der Kran hält den Block an zwei einbetonierten Transportankerhülsen Rd 24, 0,1 m von jedem Ende (Gelenke an den Hülsenköpfen); Zweistrang-Kettengehänge und Kran gehören dem Bauhof, nicht zum Asset. Jede Hülse trägt die Hälfte des Gewichts, etwa 5 kN, mal dem dynamischen Faktor 1,3 nach VDI/BV-BS 6205 für einen Kranhub; der Block spannt dazwischen 1,8 m als Balken unter seinem Eigengewicht."
+    },
+    {
+     "en": "In use: seated adults are 75 kg point loads on the battens (EN 16139 tests public seating at higher static loads; this is the service case, not the test case); the skateboard grind is an authored estimate of 80 kg times a dynamic factor 2.5 with friction 0.3 at the south arris.",
+     "de": "In Benutzung: sitzende Erwachsene sind Einzellasten von 75 kg auf den Leisten (EN 16139 prüft öffentliche Sitzmöbel mit höheren statischen Lasten; dies ist der Gebrauchsfall, nicht der Prüffall); der Skateboard-Grind ist eine Schätzung von 80 kg mal dynamischem Faktor 2,5 mit Reibung 0,3 an der Südkante."
+    },
+    {
+     "en": "Members: the concrete block (C35/45, section 500 x 405 mm) and the five robinia battens (80 x 45 mm, D40), screwed to the concrete by stainless A4 screws in plastic dowels on three lines; masses are section times density (concrete 2500, robinia 760, steel 7850 kg/m3).",
+     "de": "Glieder: der Betonblock (C35/45, Querschnitt 500 x 405 mm) und die fünf Robinienleisten (80 x 45 mm, D40), mit Edelstahlschrauben A4 in Kunststoffdübeln auf drei Linien am Beton verschraubt; Massen sind Querschnitt mal Dichte (Beton 2500, Robinie 760, Stahl 7850 kg/m3)."
+    }
+   ],
+   "clinical": false
+  },
+  "volumes": {
+   "50": {
+    "status": "authored",
+    "denominator": 50,
+    "body": [
+     {
+      "id": "block",
+      "kind": "polyhedron",
+      "bone": "block",
+      "material": "concrete-weathered",
+      "role": "body",
+      "tone": 0.58,
+      "vertices": [
+       [
+        0.0,
+        0.015,
+        -0.22879
+       ],
+       [
+        0.0,
+        0.015,
+        0.22879
+       ],
+       [
+        0.0,
+        0.02121,
+        0.235
+       ],
+       [
+        0.0,
+        0.38379,
+        0.235
+       ],
+       [
+        0.0,
+        0.39,
+        0.22879
+       ],
+       [
+        0.0,
+        0.39,
+        -0.22879
+       ],
+       [
+        0.0,
+        0.38689,
+        -0.23189
+       ],
+       [
+        0.0,
+        0.38379,
+        -0.235
+       ],
+       [
+        0.0,
+        0.02121,
+        -0.235
+       ],
+       [
+        0.015,
+        0.0,
+        -0.235
+       ],
+       [
+        0.015,
+        0.0,
+        0.235
+       ],
+       [
+        0.015,
+        0.015,
+        0.25
+       ],
+       [
+        0.015,
+        0.39,
+        0.25
+       ],
+       [
+        0.015,
+        0.405,
+        0.235
+       ],
+       [
+        0.015,
+        0.405,
+        -0.235
+       ],
+       [
+        0.015,
+        0.3975,
+        -0.2425
+       ],
+       [
+        0.015,
+        0.39,
+        -0.25
+       ],
+       [
+        0.015,
+        0.015,
+        -0.25
+       ],
+       [
+        0.25,
+        0.0,
+        -0.235
+       ],
+       [
+        0.25,
+        0.0,
+        0.235
+       ],
+       [
+        0.25,
+        0.015,
+        0.25
+       ],
+       [
+        0.25,
+        0.39,
+        0.25
+       ],
+       [
+        0.25,
+        0.405,
+        0.235
+       ],
+       [
+        0.25,
+        0.405,
+        -0.235
+       ],
+       [
+        0.25,
+        0.3975,
+        -0.2425
+       ],
+       [
+        0.25,
+        0.39,
+        -0.25
+       ],
+       [
+        0.25,
+        0.015,
+        -0.25
+       ],
+       [
+        0.31,
+        0.0,
+        -0.235
+       ],
+       [
+        0.31,
+        0.0,
+        0.235
+       ],
+       [
+        0.31,
+        0.015,
+        0.25
+       ],
+       [
+        0.31,
+        0.39,
+        0.25
+       ],
+       [
+        0.31,
+        0.405,
+        0.235
+       ],
+       [
+        0.31,
+        0.405,
+        -0.226
+       ],
+       [
+        0.31,
+        0.39732,
+        -0.24232
+       ],
+       [
+        0.31,
+        0.381,
+        -0.25
+       ],
+       [
+        0.31,
+        0.015,
+        -0.25
+       ],
+       [
+        0.52,
+        0.0,
+        -0.235
+       ],
+       [
+        0.52,
+        0.0,
+        0.235
+       ],
+       [
+        0.52,
+        0.015,
+        0.25
+       ],
+       [
+        0.52,
+        0.39,
+        0.25
+       ],
+       [
+        0.52,
+        0.405,
+        0.235
+       ],
+       [
+        0.52,
+        0.405,
+        -0.222
+       ],
+       [
+        0.52,
+        0.3966,
+        -0.2416
+       ],
+       [
+        0.52,
+        0.377,
+        -0.25
+       ],
+       [
+        0.52,
+        0.015,
+        -0.25
+       ],
+       [
+        0.63,
+        0.0,
+        -0.235
+       ],
+       [
+        0.63,
+        0.0,
+        0.235
+       ],
+       [
+        0.63,
+        0.015,
+        0.25
+       ],
+       [
+        0.63,
+        0.39,
+        0.25
+       ],
+       [
+        0.63,
+        0.405,
+        0.235
+       ],
+       [
+        0.63,
+        0.405,
+        -0.21
+       ],
+       [
+        0.63,
+        0.393,
+        -0.238
+       ],
+       [
+        0.63,
+        0.365,
+        -0.25
+       ],
+       [
+        0.63,
+        0.015,
+        -0.25
+       ],
+       [
+        0.69,
+        0.0,
+        -0.235
+       ],
+       [
+        0.69,
+        0.0,
+        0.235
+       ],
+       [
+        0.69,
+        0.015,
+        0.25
+       ],
+       [
+        0.69,
+        0.39,
+        0.25
+       ],
+       [
+        0.69,
+        0.405,
+        0.235
+       ],
+       [
+        0.69,
+        0.405,
+        -0.221
+       ],
+       [
+        0.69,
+        0.3963,
+        -0.2413
+       ],
+       [
+        0.69,
+        0.376,
+        -0.25
+       ],
+       [
+        0.69,
+        0.015,
+        -0.25
+       ],
+       [
+        0.98,
+        0.0,
+        -0.235
+       ],
+       [
+        0.98,
+        0.0,
+        0.235
+       ],
+       [
+        0.98,
+        0.015,
+        0.25
+       ],
+       [
+        0.98,
+        0.39,
+        0.25
+       ],
+       [
+        0.98,
+        0.405,
+        0.235
+       ],
+       [
+        0.98,
+        0.405,
+        -0.219
+       ],
+       [
+        0.98,
+        0.3957,
+        -0.2407
+       ],
+       [
+        0.98,
+        0.374,
+        -0.25
+       ],
+       [
+        0.98,
+        0.015,
+        -0.25
+       ],
+       [
+        1.24,
+        0.0,
+        -0.235
+       ],
+       [
+        1.24,
+        0.0,
+        0.235
+       ],
+       [
+        1.24,
+        0.015,
+        0.25
+       ],
+       [
+        1.24,
+        0.39,
+        0.25
+       ],
+       [
+        1.24,
+        0.405,
+        0.235
+       ],
+       [
+        1.24,
+        0.405,
+        -0.223
+       ],
+       [
+        1.24,
+        0.3969,
+        -0.2419
+       ],
+       [
+        1.24,
+        0.378,
+        -0.25
+       ],
+       [
+        1.24,
+        0.015,
+        -0.25
+       ],
+       [
+        1.39,
+        0.0,
+        -0.235
+       ],
+       [
+        1.39,
+        0.0,
+        0.235
+       ],
+       [
+        1.39,
+        0.015,
+        0.25
+       ],
+       [
+        1.39,
+        0.39,
+        0.25
+       ],
+       [
+        1.39,
+        0.405,
+        0.235
+       ],
+       [
+        1.39,
+        0.405,
+        -0.208
+       ],
+       [
+        1.39,
+        0.3924,
+        -0.2374
+       ],
+       [
+        1.39,
+        0.363,
+        -0.25
+       ],
+       [
+        1.39,
+        0.015,
+        -0.25
+       ],
+       [
+        1.44,
+        0.0,
+        -0.235
+       ],
+       [
+        1.44,
+        0.0,
+        0.235
+       ],
+       [
+        1.44,
+        0.015,
+        0.25
+       ],
+       [
+        1.44,
+        0.39,
+        0.25
+       ],
+       [
+        1.44,
+        0.405,
+        0.235
+       ],
+       [
+        1.44,
+        0.405,
+        -0.22
+       ],
+       [
+        1.44,
+        0.396,
+        -0.241
+       ],
+       [
+        1.44,
+        0.375,
+        -0.25
+       ],
+       [
+        1.44,
+        0.015,
+        -0.25
+       ],
+       [
+        1.68,
+        0.0,
+        -0.235
+       ],
+       [
+        1.68,
+        0.0,
+        0.235
+       ],
+       [
+        1.68,
+        0.015,
+        0.25
+       ],
+       [
+        1.68,
+        0.39,
+        0.25
+       ],
+       [
+        1.68,
+        0.405,
+        0.235
+       ],
+       [
+        1.68,
+        0.405,
+        -0.224
+       ],
+       [
+        1.68,
+        0.39668,
+        -0.24168
+       ],
+       [
+        1.68,
+        0.379,
+        -0.25
+       ],
+       [
+        1.68,
+        0.015,
+        -0.25
+       ],
+       [
+        1.75,
+        0.0,
+        -0.235
+       ],
+       [
+        1.75,
+        0.0,
+        0.235
+       ],
+       [
+        1.75,
+        0.015,
+        0.25
+       ],
+       [
+        1.75,
+        0.39,
+        0.25
+       ],
+       [
+        1.75,
+        0.405,
+        0.235
+       ],
+       [
+        1.75,
+        0.405,
+        -0.235
+       ],
+       [
+        1.75,
+        0.3975,
+        -0.2425
+       ],
+       [
+        1.75,
+        0.39,
+        -0.25
+       ],
+       [
+        1.75,
+        0.015,
+        -0.25
+       ],
+       [
+        1.985,
+        0.0,
+        -0.235
+       ],
+       [
+        1.985,
+        0.0,
+        0.235
+       ],
+       [
+        1.985,
+        0.015,
+        0.25
+       ],
+       [
+        1.985,
+        0.39,
+        0.25
+       ],
+       [
+        1.985,
+        0.405,
+        0.235
+       ],
+       [
+        1.985,
+        0.405,
+        -0.235
+       ],
+       [
+        1.985,
+        0.3975,
+        -0.2425
+       ],
+       [
+        1.985,
+        0.39,
+        -0.25
+       ],
+       [
+        1.985,
+        0.015,
+        -0.25
+       ],
+       [
+        2.0,
+        0.015,
+        -0.22879
+       ],
+       [
+        2.0,
+        0.015,
+        0.22879
+       ],
+       [
+        2.0,
+        0.02121,
+        0.235
+       ],
+       [
+        2.0,
+        0.38379,
+        0.235
+       ],
+       [
+        2.0,
+        0.39,
+        0.22879
+       ],
+       [
+        2.0,
+        0.39,
+        -0.22879
+       ],
+       [
+        2.0,
+        0.38689,
+        -0.23189
+       ],
+       [
+        2.0,
+        0.38379,
+        -0.235
+       ],
+       [
+        2.0,
+        0.02121,
+        -0.235
+       ]
+      ],
+      "triangles": [
+       [
+        0,
+        10,
+        1
+       ],
+       [
+        0,
+        9,
+        10
+       ],
+       [
+        1,
+        11,
+        2
+       ],
+       [
+        1,
+        10,
+        11
+       ],
+       [
+        2,
+        12,
+        3
+       ],
+       [
+        2,
+        11,
+        12
+       ],
+       [
+        3,
+        13,
+        4
+       ],
+       [
+        3,
+        12,
+        13
+       ],
+       [
+        4,
+        14,
+        5
+       ],
+       [
+        4,
+        13,
+        14
+       ],
+       [
+        5,
+        15,
+        6
+       ],
+       [
+        5,
+        14,
+        15
+       ],
+       [
+        6,
+        16,
+        7
+       ],
+       [
+        6,
+        15,
+        16
+       ],
+       [
+        7,
+        17,
+        8
+       ],
+       [
+        7,
+        16,
+        17
+       ],
+       [
+        8,
+        9,
+        0
+       ],
+       [
+        8,
+        17,
+        9
+       ],
+       [
+        9,
+        19,
+        10
+       ],
+       [
+        9,
+        18,
+        19
+       ],
+       [
+        10,
+        20,
+        11
+       ],
+       [
+        10,
+        19,
+        20
+       ],
+       [
+        11,
+        21,
+        12
+       ],
+       [
+        11,
+        20,
+        21
+       ],
+       [
+        12,
+        22,
+        13
+       ],
+       [
+        12,
+        21,
+        22
+       ],
+       [
+        13,
+        23,
+        14
+       ],
+       [
+        13,
+        22,
+        23
+       ],
+       [
+        14,
+        24,
+        15
+       ],
+       [
+        14,
+        23,
+        24
+       ],
+       [
+        15,
+        25,
+        16
+       ],
+       [
+        15,
+        24,
+        25
+       ],
+       [
+        16,
+        26,
+        17
+       ],
+       [
+        16,
+        25,
+        26
+       ],
+       [
+        17,
+        18,
+        9
+       ],
+       [
+        17,
+        26,
+        18
+       ],
+       [
+        18,
+        28,
+        19
+       ],
+       [
+        18,
+        27,
+        28
+       ],
+       [
+        19,
+        29,
+        20
+       ],
+       [
+        19,
+        28,
+        29
+       ],
+       [
+        20,
+        30,
+        21
+       ],
+       [
+        20,
+        29,
+        30
+       ],
+       [
+        21,
+        31,
+        22
+       ],
+       [
+        21,
+        30,
+        31
+       ],
+       [
+        22,
+        32,
+        23
+       ],
+       [
+        22,
+        31,
+        32
+       ],
+       [
+        23,
+        33,
+        24
+       ],
+       [
+        23,
+        32,
+        33
+       ],
+       [
+        24,
+        34,
+        25
+       ],
+       [
+        24,
+        33,
+        34
+       ],
+       [
+        25,
+        35,
+        26
+       ],
+       [
+        25,
+        34,
+        35
+       ],
+       [
+        26,
+        27,
+        18
+       ],
+       [
+        26,
+        35,
+        27
+       ],
+       [
+        27,
+        37,
+        28
+       ],
+       [
+        27,
+        36,
+        37
+       ],
+       [
+        28,
+        38,
+        29
+       ],
+       [
+        28,
+        37,
+        38
+       ],
+       [
+        29,
+        39,
+        30
+       ],
+       [
+        29,
+        38,
+        39
+       ],
+       [
+        30,
+        40,
+        31
+       ],
+       [
+        30,
+        39,
+        40
+       ],
+       [
+        31,
+        41,
+        32
+       ],
+       [
+        31,
+        40,
+        41
+       ],
+       [
+        32,
+        42,
+        33
+       ],
+       [
+        32,
+        41,
+        42
+       ],
+       [
+        33,
+        43,
+        34
+       ],
+       [
+        33,
+        42,
+        43
+       ],
+       [
+        34,
+        44,
+        35
+       ],
+       [
+        34,
+        43,
+        44
+       ],
+       [
+        35,
+        36,
+        27
+       ],
+       [
+        35,
+        44,
+        36
+       ],
+       [
+        36,
+        46,
+        37
+       ],
+       [
+        36,
+        45,
+        46
+       ],
+       [
+        37,
+        47,
+        38
+       ],
+       [
+        37,
+        46,
+        47
+       ],
+       [
+        38,
+        48,
+        39
+       ],
+       [
+        38,
+        47,
+        48
+       ],
+       [
+        39,
+        49,
+        40
+       ],
+       [
+        39,
+        48,
+        49
+       ],
+       [
+        40,
+        50,
+        41
+       ],
+       [
+        40,
+        49,
+        50
+       ],
+       [
+        41,
+        51,
+        42
+       ],
+       [
+        41,
+        50,
+        51
+       ],
+       [
+        42,
+        52,
+        43
+       ],
+       [
+        42,
+        51,
+        52
+       ],
+       [
+        43,
+        53,
+        44
+       ],
+       [
+        43,
+        52,
+        53
+       ],
+       [
+        44,
+        45,
+        36
+       ],
+       [
+        44,
+        53,
+        45
+       ],
+       [
+        45,
+        55,
+        46
+       ],
+       [
+        45,
+        54,
+        55
+       ],
+       [
+        46,
+        56,
+        47
+       ],
+       [
+        46,
+        55,
+        56
+       ],
+       [
+        47,
+        57,
+        48
+       ],
+       [
+        47,
+        56,
+        57
+       ],
+       [
+        48,
+        58,
+        49
+       ],
+       [
+        48,
+        57,
+        58
+       ],
+       [
+        49,
+        59,
+        50
+       ],
+       [
+        49,
+        58,
+        59
+       ],
+       [
+        50,
+        60,
+        51
+       ],
+       [
+        50,
+        59,
+        60
+       ],
+       [
+        51,
+        61,
+        52
+       ],
+       [
+        51,
+        60,
+        61
+       ],
+       [
+        52,
+        62,
+        53
+       ],
+       [
+        52,
+        61,
+        62
+       ],
+       [
+        53,
+        54,
+        45
+       ],
+       [
+        53,
+        62,
+        54
+       ],
+       [
+        54,
+        64,
+        55
+       ],
+       [
+        54,
+        63,
+        64
+       ],
+       [
+        55,
+        65,
+        56
+       ],
+       [
+        55,
+        64,
+        65
+       ],
+       [
+        56,
+        66,
+        57
+       ],
+       [
+        56,
+        65,
+        66
+       ],
+       [
+        57,
+        67,
+        58
+       ],
+       [
+        57,
+        66,
+        67
+       ],
+       [
+        58,
+        68,
+        59
+       ],
+       [
+        58,
+        67,
+        68
+       ],
+       [
+        59,
+        69,
+        60
+       ],
+       [
+        59,
+        68,
+        69
+       ],
+       [
+        60,
+        70,
+        61
+       ],
+       [
+        60,
+        69,
+        70
+       ],
+       [
+        61,
+        71,
+        62
+       ],
+       [
+        61,
+        70,
+        71
+       ],
+       [
+        62,
+        63,
+        54
+       ],
+       [
+        62,
+        71,
+        63
+       ],
+       [
+        63,
+        73,
+        64
+       ],
+       [
+        63,
+        72,
+        73
+       ],
+       [
+        64,
+        74,
+        65
+       ],
+       [
+        64,
+        73,
+        74
+       ],
+       [
+        65,
+        75,
+        66
+       ],
+       [
+        65,
+        74,
+        75
+       ],
+       [
+        66,
+        76,
+        67
+       ],
+       [
+        66,
+        75,
+        76
+       ],
+       [
+        67,
+        77,
+        68
+       ],
+       [
+        67,
+        76,
+        77
+       ],
+       [
+        68,
+        78,
+        69
+       ],
+       [
+        68,
+        77,
+        78
+       ],
+       [
+        69,
+        79,
+        70
+       ],
+       [
+        69,
+        78,
+        79
+       ],
+       [
+        70,
+        80,
+        71
+       ],
+       [
+        70,
+        79,
+        80
+       ],
+       [
+        71,
+        72,
+        63
+       ],
+       [
+        71,
+        80,
+        72
+       ],
+       [
+        72,
+        82,
+        73
+       ],
+       [
+        72,
+        81,
+        82
+       ],
+       [
+        73,
+        83,
+        74
+       ],
+       [
+        73,
+        82,
+        83
+       ],
+       [
+        74,
+        84,
+        75
+       ],
+       [
+        74,
+        83,
+        84
+       ],
+       [
+        75,
+        85,
+        76
+       ],
+       [
+        75,
+        84,
+        85
+       ],
+       [
+        76,
+        86,
+        77
+       ],
+       [
+        76,
+        85,
+        86
+       ],
+       [
+        77,
+        87,
+        78
+       ],
+       [
+        77,
+        86,
+        87
+       ],
+       [
+        78,
+        88,
+        79
+       ],
+       [
+        78,
+        87,
+        88
+       ],
+       [
+        79,
+        89,
+        80
+       ],
+       [
+        79,
+        88,
+        89
+       ],
+       [
+        80,
+        81,
+        72
+       ],
+       [
+        80,
+        89,
+        81
+       ],
+       [
+        81,
+        91,
+        82
+       ],
+       [
+        81,
+        90,
+        91
+       ],
+       [
+        82,
+        92,
+        83
+       ],
+       [
+        82,
+        91,
+        92
+       ],
+       [
+        83,
+        93,
+        84
+       ],
+       [
+        83,
+        92,
+        93
+       ],
+       [
+        84,
+        94,
+        85
+       ],
+       [
+        84,
+        93,
+        94
+       ],
+       [
+        85,
+        95,
+        86
+       ],
+       [
+        85,
+        94,
+        95
+       ],
+       [
+        86,
+        96,
+        87
+       ],
+       [
+        86,
+        95,
+        96
+       ],
+       [
+        87,
+        97,
+        88
+       ],
+       [
+        87,
+        96,
+        97
+       ],
+       [
+        88,
+        98,
+        89
+       ],
+       [
+        88,
+        97,
+        98
+       ],
+       [
+        89,
+        90,
+        81
+       ],
+       [
+        89,
+        98,
+        90
+       ],
+       [
+        90,
+        100,
+        91
+       ],
+       [
+        90,
+        99,
+        100
+       ],
+       [
+        91,
+        101,
+        92
+       ],
+       [
+        91,
+        100,
+        101
+       ],
+       [
+        92,
+        102,
+        93
+       ],
+       [
+        92,
+        101,
+        102
+       ],
+       [
+        93,
+        103,
+        94
+       ],
+       [
+        93,
+        102,
+        103
+       ],
+       [
+        94,
+        104,
+        95
+       ],
+       [
+        94,
+        103,
+        104
+       ],
+       [
+        95,
+        105,
+        96
+       ],
+       [
+        95,
+        104,
+        105
+       ],
+       [
+        96,
+        106,
+        97
+       ],
+       [
+        96,
+        105,
+        106
+       ],
+       [
+        97,
+        107,
+        98
+       ],
+       [
+        97,
+        106,
+        107
+       ],
+       [
+        98,
+        99,
+        90
+       ],
+       [
+        98,
+        107,
+        99
+       ],
+       [
+        99,
+        109,
+        100
+       ],
+       [
+        99,
+        108,
+        109
+       ],
+       [
+        100,
+        110,
+        101
+       ],
+       [
+        100,
+        109,
+        110
+       ],
+       [
+        101,
+        111,
+        102
+       ],
+       [
+        101,
+        110,
+        111
+       ],
+       [
+        102,
+        112,
+        103
+       ],
+       [
+        102,
+        111,
+        112
+       ],
+       [
+        103,
+        113,
+        104
+       ],
+       [
+        103,
+        112,
+        113
+       ],
+       [
+        104,
+        114,
+        105
+       ],
+       [
+        104,
+        113,
+        114
+       ],
+       [
+        105,
+        115,
+        106
+       ],
+       [
+        105,
+        114,
+        115
+       ],
+       [
+        106,
+        116,
+        107
+       ],
+       [
+        106,
+        115,
+        116
+       ],
+       [
+        107,
+        108,
+        99
+       ],
+       [
+        107,
+        116,
+        108
+       ],
+       [
+        108,
+        118,
+        109
+       ],
+       [
+        108,
+        117,
+        118
+       ],
+       [
+        109,
+        119,
+        110
+       ],
+       [
+        109,
+        118,
+        119
+       ],
+       [
+        110,
+        120,
+        111
+       ],
+       [
+        110,
+        119,
+        120
+       ],
+       [
+        111,
+        121,
+        112
+       ],
+       [
+        111,
+        120,
+        121
+       ],
+       [
+        112,
+        122,
+        113
+       ],
+       [
+        112,
+        121,
+        122
+       ],
+       [
+        113,
+        123,
+        114
+       ],
+       [
+        113,
+        122,
+        123
+       ],
+       [
+        114,
+        124,
+        115
+       ],
+       [
+        114,
+        123,
+        124
+       ],
+       [
+        115,
+        125,
+        116
+       ],
+       [
+        115,
+        124,
+        125
+       ],
+       [
+        116,
+        117,
+        108
+       ],
+       [
+        116,
+        125,
+        117
+       ],
+       [
+        117,
+        127,
+        118
+       ],
+       [
+        117,
+        126,
+        127
+       ],
+       [
+        118,
+        128,
+        119
+       ],
+       [
+        118,
+        127,
+        128
+       ],
+       [
+        119,
+        129,
+        120
+       ],
+       [
+        119,
+        128,
+        129
+       ],
+       [
+        120,
+        130,
+        121
+       ],
+       [
+        120,
+        129,
+        130
+       ],
+       [
+        121,
+        131,
+        122
+       ],
+       [
+        121,
+        130,
+        131
+       ],
+       [
+        122,
+        132,
+        123
+       ],
+       [
+        122,
+        131,
+        132
+       ],
+       [
+        123,
+        133,
+        124
+       ],
+       [
+        123,
+        132,
+        133
+       ],
+       [
+        124,
+        134,
+        125
+       ],
+       [
+        124,
+        133,
+        134
+       ],
+       [
+        125,
+        126,
+        117
+       ],
+       [
+        125,
+        134,
+        126
+       ],
+       [
+        0,
+        1,
+        2
+       ],
+       [
+        126,
+        128,
+        127
+       ],
+       [
+        0,
+        2,
+        3
+       ],
+       [
+        126,
+        129,
+        128
+       ],
+       [
+        0,
+        3,
+        4
+       ],
+       [
+        126,
+        130,
+        129
+       ],
+       [
+        0,
+        4,
+        5
+       ],
+       [
+        126,
+        131,
+        130
+       ],
+       [
+        0,
+        5,
+        6
+       ],
+       [
+        126,
+        132,
+        131
+       ],
+       [
+        0,
+        6,
+        7
+       ],
+       [
+        126,
+        133,
+        132
+       ],
+       [
+        0,
+        7,
+        8
+       ],
+       [
+        126,
+        134,
+        133
+       ]
+      ]
+     },
+     {
+      "id": "batten",
+      "kind": "extrude",
+      "bone": "battens",
+      "material": "robinia-greyed",
+      "role": "body",
+      "tone": 0.66,
+      "profile": [
+       [
+        0.0,
+        -0.224
+       ],
+       [
+        0.0,
+        -0.144
+       ],
+       [
+        0.04,
+        -0.144
+       ],
+       [
+        0.045,
+        -0.149
+       ],
+       [
+        0.045,
+        -0.219
+       ],
+       [
+        0.04,
+        -0.224
+       ]
+      ],
+      "plane": "yz",
+      "from": 0.0,
+      "to": 1.6,
+      "repeat": {
+       "count": 5,
+       "translation": [
+        0,
+        0,
+        0.092
+       ]
+      }
+     },
+     {
+      "id": "algae-north",
+      "kind": "extrude",
+      "bone": "block",
+      "material": "algae-biofilm",
+      "role": "body",
+      "tone": 0.36,
+      "profile": [
+       [
+        0.06,
+        0.016
+       ],
+       [
+        1.94,
+        0.016
+       ],
+       [
+        1.94,
+        0.2
+       ],
+       [
+        1.81,
+        0.262
+       ],
+       [
+        1.63,
+        0.238
+       ],
+       [
+        1.46,
+        0.302
+       ],
+       [
+        1.21,
+        0.281
+       ],
+       [
+        1.0,
+        0.312
+       ],
+       [
+        0.79,
+        0.27
+       ],
+       [
+        0.56,
+        0.292
+       ],
+       [
+        0.35,
+        0.243
+       ],
+       [
+        0.18,
+        0.252
+       ],
+       [
+        0.06,
+        0.181
+       ]
+      ],
+      "plane": "xy",
+      "from": -0.252,
+      "to": -0.25,
+      "sheet": true
+     },
+     {
+      "id": "algae-east",
+      "kind": "extrude",
+      "bone": "block",
+      "material": "algae-biofilm",
+      "role": "body",
+      "tone": 0.36,
+      "profile": [
+       [
+        0.02,
+        -0.225
+       ],
+       [
+        0.02,
+        -0.04
+       ],
+       [
+        0.068,
+        -0.03
+       ],
+       [
+        0.139,
+        -0.062
+       ],
+       [
+        0.198,
+        -0.088
+       ],
+       [
+        0.258,
+        -0.142
+       ],
+       [
+        0.272,
+        -0.19
+       ],
+       [
+        0.252,
+        -0.225
+       ]
+      ],
+      "plane": "yz",
+      "from": 2.0,
+      "to": 2.002,
+      "sheet": true
+     },
+     {
+      "id": "socket-west",
+      "kind": "revolve",
+      "bone": "block",
+      "material": "steel-galvanised",
+      "role": "detail",
+      "tone": 0.2,
+      "profile": [
+       [
+        0,
+        0.02
+       ],
+       [
+        0.003,
+        0.018
+       ],
+       [
+        0.003,
+        0.0
+       ]
+      ],
+      "axis": [
+       0,
+       1,
+       0
+      ],
+      "origin": [
+       0.1,
+       0.405,
+       0
+      ],
+      "texture": true
+     },
+     {
+      "id": "socket-east",
+      "kind": "revolve",
+      "bone": "block",
+      "material": "steel-galvanised",
+      "role": "detail",
+      "tone": 0.2,
+      "profile": [
+       [
+        0,
+        0.02
+       ],
+       [
+        0.003,
+        0.018
+       ],
+       [
+        0.003,
+        0.0
+       ]
+      ],
+      "axis": [
+       0,
+       1,
+       0
+      ],
+      "origin": [
+       1.9,
+       0.405,
+       0
+      ],
+      "texture": true
+     }
+    ],
+    "thermal": [
+     {
+      "id": "th-block",
+      "of": "block",
+      "region": "concrete-block"
+     },
+     {
+      "id": "th-batten",
+      "of": "batten",
+      "region": "seat-battens"
+     },
+     {
+      "id": "th-algae-north",
+      "of": "algae-north",
+      "region": "algae-film",
+      "sectionFaces": [
+       "+w"
+      ]
+     },
+     {
+      "id": "th-algae-east",
+      "of": "algae-east",
+      "region": "algae-film",
+      "sectionFaces": [
+       "-u"
+      ]
+     }
+    ],
+    "structure": [
+     {
+      "id": "m-block",
+      "of": "block",
+      "member": "block",
+      "part": "member"
+     },
+     {
+      "id": "m-batten",
+      "of": "batten",
+      "member": "battens",
+      "part": "member"
+     },
+     {
+      "id": "j-screws-1",
+      "kind": "capsule",
+      "bone": "battens",
+      "material": "stainless-a4",
+      "role": "detail",
+      "tone": 0.2,
+      "p0": [
+       0.1,
+       -0.035,
+       -0.184
+      ],
+      "p1": [
+       0.1,
+       0.041,
+       -0.184
+      ],
+      "r0": 0.004,
+      "r1": 0.004,
+      "member": "battens",
+      "part": "joint",
+      "repeat": {
+       "count": 5,
+       "translation": [
+        0,
+        0,
+        0.092
+       ]
+      }
+     },
+     {
+      "id": "j-screws-2",
+      "kind": "capsule",
+      "bone": "battens",
+      "material": "stainless-a4",
+      "role": "detail",
+      "tone": 0.2,
+      "p0": [
+       0.8,
+       -0.035,
+       -0.184
+      ],
+      "p1": [
+       0.8,
+       0.041,
+       -0.184
+      ],
+      "r0": 0.004,
+      "r1": 0.004,
+      "member": "battens",
+      "part": "joint",
+      "repeat": {
+       "count": 5,
+       "translation": [
+        0,
+        0,
+        0.092
+       ]
+      }
+     },
+     {
+      "id": "j-screws-3",
+      "kind": "capsule",
+      "bone": "battens",
+      "material": "stainless-a4",
+      "role": "detail",
+      "tone": 0.2,
+      "p0": [
+       1.5,
+       -0.035,
+       -0.184
+      ],
+      "p1": [
+       1.5,
+       0.041,
+       -0.184
+      ],
+      "r0": 0.004,
+      "r1": 0.004,
+      "member": "battens",
+      "part": "joint",
+      "repeat": {
+       "count": 5,
+       "translation": [
+        0,
+        0,
+        0.092
+       ]
+      }
+     },
+     {
+      "id": "j-socket-west",
+      "kind": "capsule",
+      "bone": "block",
+      "material": "steel-galvanised",
+      "role": "detail",
+      "tone": 0.2,
+      "p0": [
+       0.1,
+       0.305,
+       0
+      ],
+      "p1": [
+       0.1,
+       0.389,
+       0
+      ],
+      "r0": 0.016,
+      "r1": 0.016,
+      "member": "block",
+      "part": "joint"
+     },
+     {
+      "id": "j-socket-east",
+      "kind": "capsule",
+      "bone": "block",
+      "material": "steel-galvanised",
+      "role": "detail",
+      "tone": 0.2,
+      "p0": [
+       1.9,
+       0.305,
+       0
+      ],
+      "p1": [
+       1.9,
+       0.389,
+       0
+      ],
+      "r0": 0.016,
+      "r1": 0.016,
+      "member": "block",
+      "part": "joint"
+     },
+     {
+      "id": "mass-block",
+      "kind": "ellipsoid",
+      "bone": "block",
+      "material": "concrete-weathered",
+      "role": "detail",
+      "tone": 0.3,
+      "radii": [
+       0.03,
+       0.03,
+       0.03
+      ],
+      "transform": {
+       "translation": [
+        1.0,
+        0.20239,
+        0.0
+       ]
+      },
+      "member": "block",
+      "part": "mass"
+     },
+     {
+      "id": "mass-battens",
+      "kind": "ellipsoid",
+      "bone": "battens",
+      "material": "robinia-greyed",
+      "role": "detail",
+      "tone": 0.3,
+      "radii": [
+       0.02,
+       0.02,
+       0.02
+      ],
+      "transform": {
+       "translation": [
+        0.8,
+        0.0225,
+        0.0
+       ]
+      },
+      "member": "battens",
+      "part": "mass"
+     }
+    ],
+    "decisions": [
+     {
+      "en": "Body, authored for 7.5 mm: the concrete block as one closed polyhedron of 135 vertices: 15 mm chamfers on all twelve edges (chamfered end faces), and the north top arris ground by skateboards over 1.5 m from the 15 mm chamfer into 24-31 mm rounds with chips of 40 and 42 mm at 0.63 m and 1.39 m (nine-point sections at 15 stations); five robinia battens 80 x 45 mm with 5 mm eased top edges and 12 mm gaps on 1.6 m, set 26 mm in from the long faces and leaving the 0.2 m ends bare; the algae film as two declared 2 mm sheets on the north face and round the north-east corner onto the east end; the two lifting socket heads as texture.",
+      "de": "Körper, für 7,5 mm gebaut: der Betonblock als ein geschlossenes Polyeder aus 135 Ecken: 15-mm-Fasen an allen zwölf Kanten (gefaste Stirnflächen) und die von Skateboards auf 1,5 m abgeschliffene nördliche Oberkante, von der 15-mm-Fase zu 24-31-mm-Rundungen mit Abplatzungen von 40 und 42 mm bei 0,63 m und 1,39 m (neunpunktige Querschnitte an 15 Stationen); fünf Robinienleisten 80 x 45 mm mit 5 mm gebrochenen Oberkanten und 12-mm-Fugen auf 1,6 m, 26 mm von den Längsseiten eingerückt, die 0,2 m langen Enden frei; der Algenbelag als zwei deklarierte 2-mm-Häute auf der Nordseite und um die Nordostecke auf die Ostseite; die zwei Hülsenköpfe als Textur."
+     },
+     {
+      "en": "Thermal: the concrete, the battens and the algae film are each the surface of their body solids (the faces of the film against the concrete are section faces); no hidden regions, no emitters. Structure: the block and the battens are members along their bones; the three lines of stainless screws (8 mm) are the joints of battens and block, the two cast-in sockets (32 mm) the joints the crane load enters by; supports are the pose contacts on the bed or at the sockets; each bone carries its mass at its centre.",
+      "de": "Thermik: Beton, Leisten und Algenbelag sind jeweils die Oberfläche ihrer Körper (die Flächen des Belags am Beton sind Schnittflächen); keine verdeckten Regionen, keine Emitter. Tragwerk: Block und Leisten sind Glieder entlang ihrer Knochen; die drei Reihen Edelstahlschrauben (8 mm) sind die Gelenke zwischen Leisten und Block, die zwei einbetonierten Hülsen (32 mm) die Gelenke, über die die Kranlast eingeleitet wird; Auflager sind die Posenkontakte auf dem Bett oder an den Hülsen; jeder Knochen trägt seine Masse in seinem Schwerpunkt."
+     }
+    ]
+   },
+   "100": {
+    "status": "authored",
+    "denominator": 100,
+    "body": [
+     {
+      "id": "block",
+      "kind": "polyhedron",
+      "bone": "block",
+      "material": "concrete-weathered",
+      "role": "body",
+      "tone": 0.58,
+      "vertices": [
+       [
+        0.0,
+        0.015,
+        -0.22879
+       ],
+       [
+        0.0,
+        0.015,
+        0.22879
+       ],
+       [
+        0.0,
+        0.02121,
+        0.235
+       ],
+       [
+        0.0,
+        0.38379,
+        0.235
+       ],
+       [
+        0.0,
+        0.39,
+        0.22879
+       ],
+       [
+        0.0,
+        0.39,
+        -0.22879
+       ],
+       [
+        0.0,
+        0.38689,
+        -0.23189
+       ],
+       [
+        0.0,
+        0.38379,
+        -0.235
+       ],
+       [
+        0.0,
+        0.02121,
+        -0.235
+       ],
+       [
+        0.015,
+        0.0,
+        -0.235
+       ],
+       [
+        0.015,
+        0.0,
+        0.235
+       ],
+       [
+        0.015,
+        0.015,
+        0.25
+       ],
+       [
+        0.015,
+        0.39,
+        0.25
+       ],
+       [
+        0.015,
+        0.405,
+        0.235
+       ],
+       [
+        0.015,
+        0.405,
+        -0.235
+       ],
+       [
+        0.015,
+        0.3975,
+        -0.2425
+       ],
+       [
+        0.015,
+        0.39,
+        -0.25
+       ],
+       [
+        0.015,
+        0.015,
+        -0.25
+       ],
+       [
+        0.25,
+        0.0,
+        -0.235
+       ],
+       [
+        0.25,
+        0.0,
+        0.235
+       ],
+       [
+        0.25,
+        0.015,
+        0.25
+       ],
+       [
+        0.25,
+        0.39,
+        0.25
+       ],
+       [
+        0.25,
+        0.405,
+        0.235
+       ],
+       [
+        0.25,
+        0.405,
+        -0.235
+       ],
+       [
+        0.25,
+        0.3975,
+        -0.2425
+       ],
+       [
+        0.25,
+        0.39,
+        -0.25
+       ],
+       [
+        0.25,
+        0.015,
+        -0.25
+       ],
+       [
+        0.35,
+        0.0,
+        -0.235
+       ],
+       [
+        0.35,
+        0.0,
+        0.235
+       ],
+       [
+        0.35,
+        0.015,
+        0.25
+       ],
+       [
+        0.35,
+        0.39,
+        0.25
+       ],
+       [
+        0.35,
+        0.405,
+        0.235
+       ],
+       [
+        0.35,
+        0.405,
+        -0.222
+       ],
+       [
+        0.35,
+        0.3966,
+        -0.2416
+       ],
+       [
+        0.35,
+        0.377,
+        -0.25
+       ],
+       [
+        0.35,
+        0.015,
+        -0.25
+       ],
+       [
+        1.65,
+        0.0,
+        -0.235
+       ],
+       [
+        1.65,
+        0.0,
+        0.235
+       ],
+       [
+        1.65,
+        0.015,
+        0.25
+       ],
+       [
+        1.65,
+        0.39,
+        0.25
+       ],
+       [
+        1.65,
+        0.405,
+        0.235
+       ],
+       [
+        1.65,
+        0.405,
+        -0.222
+       ],
+       [
+        1.65,
+        0.3966,
+        -0.2416
+       ],
+       [
+        1.65,
+        0.377,
+        -0.25
+       ],
+       [
+        1.65,
+        0.015,
+        -0.25
+       ],
+       [
+        1.75,
+        0.0,
+        -0.235
+       ],
+       [
+        1.75,
+        0.0,
+        0.235
+       ],
+       [
+        1.75,
+        0.015,
+        0.25
+       ],
+       [
+        1.75,
+        0.39,
+        0.25
+       ],
+       [
+        1.75,
+        0.405,
+        0.235
+       ],
+       [
+        1.75,
+        0.405,
+        -0.235
+       ],
+       [
+        1.75,
+        0.3975,
+        -0.2425
+       ],
+       [
+        1.75,
+        0.39,
+        -0.25
+       ],
+       [
+        1.75,
+        0.015,
+        -0.25
+       ],
+       [
+        1.985,
+        0.0,
+        -0.235
+       ],
+       [
+        1.985,
+        0.0,
+        0.235
+       ],
+       [
+        1.985,
+        0.015,
+        0.25
+       ],
+       [
+        1.985,
+        0.39,
+        0.25
+       ],
+       [
+        1.985,
+        0.405,
+        0.235
+       ],
+       [
+        1.985,
+        0.405,
+        -0.235
+       ],
+       [
+        1.985,
+        0.3975,
+        -0.2425
+       ],
+       [
+        1.985,
+        0.39,
+        -0.25
+       ],
+       [
+        1.985,
+        0.015,
+        -0.25
+       ],
+       [
+        2.0,
+        0.015,
+        -0.22879
+       ],
+       [
+        2.0,
+        0.015,
+        0.22879
+       ],
+       [
+        2.0,
+        0.02121,
+        0.235
+       ],
+       [
+        2.0,
+        0.38379,
+        0.235
+       ],
+       [
+        2.0,
+        0.39,
+        0.22879
+       ],
+       [
+        2.0,
+        0.39,
+        -0.22879
+       ],
+       [
+        2.0,
+        0.38689,
+        -0.23189
+       ],
+       [
+        2.0,
+        0.38379,
+        -0.235
+       ],
+       [
+        2.0,
+        0.02121,
+        -0.235
+       ]
+      ],
+      "triangles": [
+       [
+        0,
+        10,
+        1
+       ],
+       [
+        0,
+        9,
+        10
+       ],
+       [
+        1,
+        11,
+        2
+       ],
+       [
+        1,
+        10,
+        11
+       ],
+       [
+        2,
+        12,
+        3
+       ],
+       [
+        2,
+        11,
+        12
+       ],
+       [
+        3,
+        13,
+        4
+       ],
+       [
+        3,
+        12,
+        13
+       ],
+       [
+        4,
+        14,
+        5
+       ],
+       [
+        4,
+        13,
+        14
+       ],
+       [
+        5,
+        15,
+        6
+       ],
+       [
+        5,
+        14,
+        15
+       ],
+       [
+        6,
+        16,
+        7
+       ],
+       [
+        6,
+        15,
+        16
+       ],
+       [
+        7,
+        17,
+        8
+       ],
+       [
+        7,
+        16,
+        17
+       ],
+       [
+        8,
+        9,
+        0
+       ],
+       [
+        8,
+        17,
+        9
+       ],
+       [
+        9,
+        19,
+        10
+       ],
+       [
+        9,
+        18,
+        19
+       ],
+       [
+        10,
+        20,
+        11
+       ],
+       [
+        10,
+        19,
+        20
+       ],
+       [
+        11,
+        21,
+        12
+       ],
+       [
+        11,
+        20,
+        21
+       ],
+       [
+        12,
+        22,
+        13
+       ],
+       [
+        12,
+        21,
+        22
+       ],
+       [
+        13,
+        23,
+        14
+       ],
+       [
+        13,
+        22,
+        23
+       ],
+       [
+        14,
+        24,
+        15
+       ],
+       [
+        14,
+        23,
+        24
+       ],
+       [
+        15,
+        25,
+        16
+       ],
+       [
+        15,
+        24,
+        25
+       ],
+       [
+        16,
+        26,
+        17
+       ],
+       [
+        16,
+        25,
+        26
+       ],
+       [
+        17,
+        18,
+        9
+       ],
+       [
+        17,
+        26,
+        18
+       ],
+       [
+        18,
+        28,
+        19
+       ],
+       [
+        18,
+        27,
+        28
+       ],
+       [
+        19,
+        29,
+        20
+       ],
+       [
+        19,
+        28,
+        29
+       ],
+       [
+        20,
+        30,
+        21
+       ],
+       [
+        20,
+        29,
+        30
+       ],
+       [
+        21,
+        31,
+        22
+       ],
+       [
+        21,
+        30,
+        31
+       ],
+       [
+        22,
+        32,
+        23
+       ],
+       [
+        22,
+        31,
+        32
+       ],
+       [
+        23,
+        33,
+        24
+       ],
+       [
+        23,
+        32,
+        33
+       ],
+       [
+        24,
+        34,
+        25
+       ],
+       [
+        24,
+        33,
+        34
+       ],
+       [
+        25,
+        35,
+        26
+       ],
+       [
+        25,
+        34,
+        35
+       ],
+       [
+        26,
+        27,
+        18
+       ],
+       [
+        26,
+        35,
+        27
+       ],
+       [
+        27,
+        37,
+        28
+       ],
+       [
+        27,
+        36,
+        37
+       ],
+       [
+        28,
+        38,
+        29
+       ],
+       [
+        28,
+        37,
+        38
+       ],
+       [
+        29,
+        39,
+        30
+       ],
+       [
+        29,
+        38,
+        39
+       ],
+       [
+        30,
+        40,
+        31
+       ],
+       [
+        30,
+        39,
+        40
+       ],
+       [
+        31,
+        41,
+        32
+       ],
+       [
+        31,
+        40,
+        41
+       ],
+       [
+        32,
+        42,
+        33
+       ],
+       [
+        32,
+        41,
+        42
+       ],
+       [
+        33,
+        43,
+        34
+       ],
+       [
+        33,
+        42,
+        43
+       ],
+       [
+        34,
+        44,
+        35
+       ],
+       [
+        34,
+        43,
+        44
+       ],
+       [
+        35,
+        36,
+        27
+       ],
+       [
+        35,
+        44,
+        36
+       ],
+       [
+        36,
+        46,
+        37
+       ],
+       [
+        36,
+        45,
+        46
+       ],
+       [
+        37,
+        47,
+        38
+       ],
+       [
+        37,
+        46,
+        47
+       ],
+       [
+        38,
+        48,
+        39
+       ],
+       [
+        38,
+        47,
+        48
+       ],
+       [
+        39,
+        49,
+        40
+       ],
+       [
+        39,
+        48,
+        49
+       ],
+       [
+        40,
+        50,
+        41
+       ],
+       [
+        40,
+        49,
+        50
+       ],
+       [
+        41,
+        51,
+        42
+       ],
+       [
+        41,
+        50,
+        51
+       ],
+       [
+        42,
+        52,
+        43
+       ],
+       [
+        42,
+        51,
+        52
+       ],
+       [
+        43,
+        53,
+        44
+       ],
+       [
+        43,
+        52,
+        53
+       ],
+       [
+        44,
+        45,
+        36
+       ],
+       [
+        44,
+        53,
+        45
+       ],
+       [
+        45,
+        55,
+        46
+       ],
+       [
+        45,
+        54,
+        55
+       ],
+       [
+        46,
+        56,
+        47
+       ],
+       [
+        46,
+        55,
+        56
+       ],
+       [
+        47,
+        57,
+        48
+       ],
+       [
+        47,
+        56,
+        57
+       ],
+       [
+        48,
+        58,
+        49
+       ],
+       [
+        48,
+        57,
+        58
+       ],
+       [
+        49,
+        59,
+        50
+       ],
+       [
+        49,
+        58,
+        59
+       ],
+       [
+        50,
+        60,
+        51
+       ],
+       [
+        50,
+        59,
+        60
+       ],
+       [
+        51,
+        61,
+        52
+       ],
+       [
+        51,
+        60,
+        61
+       ],
+       [
+        52,
+        62,
+        53
+       ],
+       [
+        52,
+        61,
+        62
+       ],
+       [
+        53,
+        54,
+        45
+       ],
+       [
+        53,
+        62,
+        54
+       ],
+       [
+        54,
+        64,
+        55
+       ],
+       [
+        54,
+        63,
+        64
+       ],
+       [
+        55,
+        65,
+        56
+       ],
+       [
+        55,
+        64,
+        65
+       ],
+       [
+        56,
+        66,
+        57
+       ],
+       [
+        56,
+        65,
+        66
+       ],
+       [
+        57,
+        67,
+        58
+       ],
+       [
+        57,
+        66,
+        67
+       ],
+       [
+        58,
+        68,
+        59
+       ],
+       [
+        58,
+        67,
+        68
+       ],
+       [
+        59,
+        69,
+        60
+       ],
+       [
+        59,
+        68,
+        69
+       ],
+       [
+        60,
+        70,
+        61
+       ],
+       [
+        60,
+        69,
+        70
+       ],
+       [
+        61,
+        71,
+        62
+       ],
+       [
+        61,
+        70,
+        71
+       ],
+       [
+        62,
+        63,
+        54
+       ],
+       [
+        62,
+        71,
+        63
+       ],
+       [
+        0,
+        1,
+        2
+       ],
+       [
+        63,
+        65,
+        64
+       ],
+       [
+        0,
+        2,
+        3
+       ],
+       [
+        63,
+        66,
+        65
+       ],
+       [
+        0,
+        3,
+        4
+       ],
+       [
+        63,
+        67,
+        66
+       ],
+       [
+        0,
+        4,
+        5
+       ],
+       [
+        63,
+        68,
+        67
+       ],
+       [
+        0,
+        5,
+        6
+       ],
+       [
+        63,
+        69,
+        68
+       ],
+       [
+        0,
+        6,
+        7
+       ],
+       [
+        63,
+        70,
+        69
+       ],
+       [
+        0,
+        7,
+        8
+       ],
+       [
+        63,
+        71,
+        70
+       ]
+      ]
+     },
+     {
+      "id": "batten",
+      "kind": "extrude",
+      "bone": "battens",
+      "material": "robinia-greyed",
+      "role": "body",
+      "tone": 0.66,
+      "profile": [
+       [
+        0.0,
+        -0.224
+       ],
+       [
+        0.0,
+        -0.144
+       ],
+       [
+        0.045,
+        -0.144
+       ],
+       [
+        0.045,
+        -0.224
+       ]
+      ],
+      "plane": "yz",
+      "from": 0.0,
+      "to": 1.6,
+      "repeat": {
+       "count": 5,
+       "translation": [
+        0,
+        0,
+        0.092
+       ]
+      }
+     },
+     {
+      "id": "algae-north",
+      "kind": "extrude",
+      "bone": "block",
+      "material": "algae-biofilm",
+      "role": "body",
+      "tone": 0.36,
+      "profile": [
+       [
+        0.06,
+        0.016
+       ],
+       [
+        1.94,
+        0.016
+       ],
+       [
+        1.94,
+        0.21
+       ],
+       [
+        1.62,
+        0.25
+       ],
+       [
+        1.3,
+        0.29
+       ],
+       [
+        1.0,
+        0.3
+       ],
+       [
+        0.65,
+        0.28
+       ],
+       [
+        0.3,
+        0.25
+       ],
+       [
+        0.06,
+        0.19
+       ]
+      ],
+      "plane": "xy",
+      "from": -0.252,
+      "to": -0.25,
+      "sheet": true
+     },
+     {
+      "id": "algae-east",
+      "kind": "extrude",
+      "bone": "block",
+      "material": "algae-biofilm",
+      "role": "body",
+      "tone": 0.36,
+      "profile": [
+       [
+        0.02,
+        -0.225
+       ],
+       [
+        0.02,
+        -0.035
+       ],
+       [
+        0.11,
+        -0.045
+       ],
+       [
+        0.21,
+        -0.09
+       ],
+       [
+        0.27,
+        -0.16
+       ],
+       [
+        0.262,
+        -0.225
+       ]
+      ],
+      "plane": "yz",
+      "from": 2.0,
+      "to": 2.002,
+      "sheet": true
+     },
+     {
+      "id": "socket-west",
+      "kind": "revolve",
+      "bone": "block",
+      "material": "steel-galvanised",
+      "role": "detail",
+      "tone": 0.2,
+      "profile": [
+       [
+        0,
+        0.02
+       ],
+       [
+        0.003,
+        0.018
+       ],
+       [
+        0.003,
+        0.0
+       ]
+      ],
+      "axis": [
+       0,
+       1,
+       0
+      ],
+      "origin": [
+       0.1,
+       0.405,
+       0
+      ],
+      "texture": true
+     },
+     {
+      "id": "socket-east",
+      "kind": "revolve",
+      "bone": "block",
+      "material": "steel-galvanised",
+      "role": "detail",
+      "tone": 0.2,
+      "profile": [
+       [
+        0,
+        0.02
+       ],
+       [
+        0.003,
+        0.018
+       ],
+       [
+        0.003,
+        0.0
+       ]
+      ],
+      "axis": [
+       0,
+       1,
+       0
+      ],
+      "origin": [
+       1.9,
+       0.405,
+       0
+      ],
+      "texture": true
+     }
+    ],
+    "thermal": [
+     {
+      "id": "th-block",
+      "of": "block",
+      "region": "concrete-block"
+     },
+     {
+      "id": "th-batten",
+      "of": "batten",
+      "region": "seat-battens"
+     },
+     {
+      "id": "th-algae-north",
+      "of": "algae-north",
+      "region": "algae-film",
+      "sectionFaces": [
+       "+w"
+      ]
+     },
+     {
+      "id": "th-algae-east",
+      "of": "algae-east",
+      "region": "algae-film",
+      "sectionFaces": [
+       "-u"
+      ]
+     }
+    ],
+    "structure": [
+     {
+      "id": "m-block",
+      "of": "block",
+      "member": "block",
+      "part": "member"
+     },
+     {
+      "id": "m-batten",
+      "of": "batten",
+      "member": "battens",
+      "part": "member"
+     },
+     {
+      "id": "j-screws-1",
+      "kind": "capsule",
+      "bone": "battens",
+      "material": "stainless-a4",
+      "role": "detail",
+      "tone": 0.2,
+      "p0": [
+       0.1,
+       -0.035,
+       -0.184
+      ],
+      "p1": [
+       0.1,
+       0.0375,
+       -0.184
+      ],
+      "r0": 0.0075,
+      "r1": 0.0075,
+      "member": "battens",
+      "part": "joint",
+      "repeat": {
+       "count": 5,
+       "translation": [
+        0,
+        0,
+        0.092
+       ]
+      }
+     },
+     {
+      "id": "j-screws-2",
+      "kind": "capsule",
+      "bone": "battens",
+      "material": "stainless-a4",
+      "role": "detail",
+      "tone": 0.2,
+      "p0": [
+       0.8,
+       -0.035,
+       -0.184
+      ],
+      "p1": [
+       0.8,
+       0.0375,
+       -0.184
+      ],
+      "r0": 0.0075,
+      "r1": 0.0075,
+      "member": "battens",
+      "part": "joint",
+      "repeat": {
+       "count": 5,
+       "translation": [
+        0,
+        0,
+        0.092
+       ]
+      }
+     },
+     {
+      "id": "j-screws-3",
+      "kind": "capsule",
+      "bone": "battens",
+      "material": "stainless-a4",
+      "role": "detail",
+      "tone": 0.2,
+      "p0": [
+       1.5,
+       -0.035,
+       -0.184
+      ],
+      "p1": [
+       1.5,
+       0.0375,
+       -0.184
+      ],
+      "r0": 0.0075,
+      "r1": 0.0075,
+      "member": "battens",
+      "part": "joint",
+      "repeat": {
+       "count": 5,
+       "translation": [
+        0,
+        0,
+        0.092
+       ]
+      }
+     },
+     {
+      "id": "j-socket-west",
+      "kind": "capsule",
+      "bone": "block",
+      "material": "steel-galvanised",
+      "role": "detail",
+      "tone": 0.2,
+      "p0": [
+       0.1,
+       0.305,
+       0
+      ],
+      "p1": [
+       0.1,
+       0.389,
+       0
+      ],
+      "r0": 0.016,
+      "r1": 0.016,
+      "member": "block",
+      "part": "joint"
+     },
+     {
+      "id": "j-socket-east",
+      "kind": "capsule",
+      "bone": "block",
+      "material": "steel-galvanised",
+      "role": "detail",
+      "tone": 0.2,
+      "p0": [
+       1.9,
+       0.305,
+       0
+      ],
+      "p1": [
+       1.9,
+       0.389,
+       0
+      ],
+      "r0": 0.016,
+      "r1": 0.016,
+      "member": "block",
+      "part": "joint"
+     },
+     {
+      "id": "mass-block",
+      "kind": "ellipsoid",
+      "bone": "block",
+      "material": "concrete-weathered",
+      "role": "detail",
+      "tone": 0.3,
+      "radii": [
+       0.03,
+       0.03,
+       0.03
+      ],
+      "transform": {
+       "translation": [
+        1.0,
+        0.20239,
+        0.0
+       ]
+      },
+      "member": "block",
+      "part": "mass"
+     },
+     {
+      "id": "mass-battens",
+      "kind": "ellipsoid",
+      "bone": "battens",
+      "material": "robinia-greyed",
+      "role": "detail",
+      "tone": 0.3,
+      "radii": [
+       0.02,
+       0.02,
+       0.02
+      ],
+      "transform": {
+       "translation": [
+        0.8,
+        0.0225,
+        0.0
+       ]
+      },
+      "member": "battens",
+      "part": "mass"
+     }
+    ],
+    "decisions": [
+     {
+      "en": "Body, authored anew for 15 mm: the block polyhedron keeps its 15 mm chamfers (one feature) but the arris wear is generalised to one 28 mm round over 1.3 m with short ramps (8 stations instead of 15; the two chips merged into it); the five battens square-edged (the 5 mm easing is below the feature) with their 12 mm gaps, which stay open to air (more than half a feature); algae sheets with generalised outlines; socket heads as texture because the plan still draws them.",
+      "de": "Körper, neu für 15 mm gebaut: das Blockpolyeder behält seine 15-mm-Fasen (ein Merkmal), der Kantenverschleiß ist zu einer 28-mm-Rundung über 1,3 m mit kurzen Übergängen verallgemeinert (8 statt 15 Stationen; die zwei Abplatzungen gehen darin auf); die fünf Leisten rechtwinklig (die 5-mm-Kantenbrechung liegt unter dem Merkmal) mit ihren 12-mm-Fugen, die für Luft offen bleiben (mehr als ein halbes Merkmal); Algenhäute mit verallgemeinerten Umrissen; Hülsenköpfe als Textur, weil die Draufsicht sie noch zeichnet."
+     },
+     {
+      "en": "Thermal: one surface per region as at 1:50. Structure: block and battens members; the screw lines as 15 mm joints, the sockets as 32 mm joints; masses at the centres.",
+      "de": "Thermik: eine Fläche je Region wie bei 1:50. Tragwerk: Block und Leisten als Glieder; die Schraubenreihen als 15-mm-Gelenke, die Hülsen als 32-mm-Gelenke; Massen in den Schwerpunkten."
+     }
+    ]
+   },
+   "200": {
+    "status": "authored",
+    "denominator": 200,
+    "body": [
+     {
+      "id": "block",
+      "kind": "box",
+      "bone": "block",
+      "material": "concrete-weathered",
+      "role": "body",
+      "tone": 0.58,
+      "size": [
+       2.0,
+       0.405,
+       0.5
+      ],
+      "transform": {
+       "translation": [
+        1.0,
+        0.2025,
+        0.0
+       ]
+      }
+     },
+     {
+      "id": "deck",
+      "kind": "extrude",
+      "bone": "battens",
+      "material": "robinia-greyed",
+      "role": "body",
+      "tone": 0.66,
+      "profile": [
+       [
+        0.0,
+        -0.224
+       ],
+       [
+        0.0,
+        0.224
+       ],
+       [
+        0.045,
+        0.224
+       ],
+       [
+        0.045,
+        -0.224
+       ]
+      ],
+      "plane": "yz",
+      "from": 0.0,
+      "to": 1.6
+     },
+     {
+      "id": "algae-north",
+      "kind": "extrude",
+      "bone": "block",
+      "material": "algae-biofilm",
+      "role": "body",
+      "tone": 0.36,
+      "profile": [
+       [
+        0.06,
+        0.016
+       ],
+       [
+        1.94,
+        0.016
+       ],
+       [
+        1.94,
+        0.22
+       ],
+       [
+        1.4,
+        0.29
+       ],
+       [
+        0.7,
+        0.28
+       ],
+       [
+        0.06,
+        0.2
+       ]
+      ],
+      "plane": "xy",
+      "from": -0.252,
+      "to": -0.25,
+      "sheet": true
+     },
+     {
+      "id": "algae-east",
+      "kind": "extrude",
+      "bone": "block",
+      "material": "algae-biofilm",
+      "role": "body",
+      "tone": 0.36,
+      "profile": [
+       [
+        0.02,
+        -0.225
+       ],
+       [
+        0.02,
+        -0.03
+       ],
+       [
+        0.17,
+        -0.06
+       ],
+       [
+        0.27,
+        -0.14
+       ],
+       [
+        0.27,
+        -0.225
+       ]
+      ],
+      "plane": "yz",
+      "from": 2.0,
+      "to": 2.002,
+      "sheet": true
+     }
+    ],
+    "thermal": [
+     {
+      "id": "th-block",
+      "of": "block",
+      "region": "concrete-block"
+     },
+     {
+      "id": "th-deck",
+      "of": "deck",
+      "region": "seat-battens"
+     },
+     {
+      "id": "th-algae-north",
+      "of": "algae-north",
+      "region": "algae-film",
+      "sectionFaces": [
+       "+w"
+      ]
+     },
+     {
+      "id": "th-algae-east",
+      "of": "algae-east",
+      "region": "algae-film",
+      "sectionFaces": [
+       "-u"
+      ]
+     }
+    ],
+    "structure": [
+     {
+      "id": "m-block",
+      "of": "block",
+      "member": "block",
+      "part": "member"
+     },
+     {
+      "id": "m-deck",
+      "of": "deck",
+      "member": "battens",
+      "part": "member"
+     },
+     {
+      "id": "j-screws-1",
+      "kind": "box",
+      "bone": "battens",
+      "material": "stainless-a4",
+      "role": "detail",
+      "tone": 0.2,
+      "size": [
+       0.03,
+       0.07,
+       0.408
+      ],
+      "transform": {
+       "translation": [
+        0.1,
+        0.01,
+        0.0
+       ]
+      },
+      "member": "battens",
+      "part": "joint"
+     },
+     {
+      "id": "j-screws-2",
+      "kind": "box",
+      "bone": "battens",
+      "material": "stainless-a4",
+      "role": "detail",
+      "tone": 0.2,
+      "size": [
+       0.03,
+       0.07,
+       0.408
+      ],
+      "transform": {
+       "translation": [
+        0.8,
+        0.01,
+        0.0
+       ]
+      },
+      "member": "battens",
+      "part": "joint"
+     },
+     {
+      "id": "j-screws-3",
+      "kind": "box",
+      "bone": "battens",
+      "material": "stainless-a4",
+      "role": "detail",
+      "tone": 0.2,
+      "size": [
+       0.03,
+       0.07,
+       0.408
+      ],
+      "transform": {
+       "translation": [
+        1.5,
+        0.01,
+        0.0
+       ]
+      },
+      "member": "battens",
+      "part": "joint"
+     },
+     {
+      "id": "j-socket-west",
+      "kind": "capsule",
+      "bone": "block",
+      "material": "steel-galvanised",
+      "role": "detail",
+      "tone": 0.2,
+      "p0": [
+       0.1,
+       0.305,
+       0
+      ],
+      "p1": [
+       0.1,
+       0.389,
+       0
+      ],
+      "r0": 0.016,
+      "r1": 0.016,
+      "member": "block",
+      "part": "joint"
+     },
+     {
+      "id": "j-socket-east",
+      "kind": "capsule",
+      "bone": "block",
+      "material": "steel-galvanised",
+      "role": "detail",
+      "tone": 0.2,
+      "p0": [
+       1.9,
+       0.305,
+       0
+      ],
+      "p1": [
+       1.9,
+       0.389,
+       0
+      ],
+      "r0": 0.016,
+      "r1": 0.016,
+      "member": "block",
+      "part": "joint"
+     },
+     {
+      "id": "mass-block",
+      "kind": "ellipsoid",
+      "bone": "block",
+      "material": "concrete-weathered",
+      "role": "detail",
+      "tone": 0.3,
+      "radii": [
+       0.035,
+       0.035,
+       0.035
+      ],
+      "transform": {
+       "translation": [
+        1.0,
+        0.20239,
+        0.0
+       ]
+      },
+      "member": "block",
+      "part": "mass"
+     },
+     {
+      "id": "mass-battens",
+      "kind": "ellipsoid",
+      "bone": "battens",
+      "material": "robinia-greyed",
+      "role": "detail",
+      "tone": 0.3,
+      "radii": [
+       0.02,
+       0.02,
+       0.02
+      ],
+      "transform": {
+       "translation": [
+        0.8,
+        0.0225,
+        0.0
+       ]
+      },
+      "member": "battens",
+      "part": "mass"
+     }
+    ],
+    "decisions": [
+     {
+      "en": "Body, authored anew for 30 mm: the block as a plain box 2.0 x 0.405 x 0.5 m (the 15 mm chamfers and the 28 mm arris wear are below the feature), the five battens as one 45 mm seat deck 1.6 x 0.448 m (the 12 mm gaps are below half a feature and are drawn as joint lines in 2D), the algae sheets with generalised outlines; sockets left out.",
+      "de": "Körper, neu für 30 mm gebaut: der Block als einfacher Quader 2,0 x 0,405 x 0,5 m (die 15-mm-Fasen und der 28-mm-Kantenverschleiß liegen unter dem Merkmal), die fünf Leisten als ein 45-mm-Sitzdeck 1,6 x 0,448 m (die 12-mm-Fugen liegen unter einem halben Merkmal und sind in 2D als Fugenlinien gezeichnet), die Algenhäute mit verallgemeinerten Umrissen; Hülsen weggelassen."
+     },
+     {
+      "en": "Thermal: one surface per region. Structure: block and deck members; each screw line as one 30 mm joint bar across the deck, the sockets as 32 mm joints; masses at the centres.",
+      "de": "Thermik: eine Fläche je Region. Tragwerk: Block und Deck als Glieder; jede Schraubenreihe als ein 30-mm-Gelenkriegel quer zum Deck, die Hülsen als 32-mm-Gelenke; Massen in den Schwerpunkten."
+     }
+    ]
+   },
+   "500": {
+    "status": "authored",
+    "denominator": 500,
+    "body": [
+     {
+      "id": "block",
+      "kind": "box",
+      "bone": "block",
+      "material": "concrete-weathered",
+      "role": "body",
+      "tone": 0.58,
+      "size": [
+       2.0,
+       0.375,
+       0.5
+      ],
+      "transform": {
+       "translation": [
+        1.0,
+        0.1875,
+        0.0
+       ]
+      }
+     },
+     {
+      "id": "seat",
+      "kind": "extrude",
+      "bone": "battens",
+      "material": "robinia-greyed",
+      "role": "body",
+      "tone": 0.66,
+      "profile": [
+       [
+        -0.03,
+        -0.25
+       ],
+       [
+        -0.03,
+        0.25
+       ],
+       [
+        0.045,
+        0.25
+       ],
+       [
+        0.045,
+        -0.25
+       ]
+      ],
+      "plane": "yz",
+      "from": 0.0,
+      "to": 1.6
+     },
+     {
+      "id": "algae-north",
+      "kind": "extrude",
+      "bone": "block",
+      "material": "algae-biofilm",
+      "role": "body",
+      "tone": 0.36,
+      "profile": [
+       [
+        0.06,
+        0.016
+       ],
+       [
+        1.94,
+        0.016
+       ],
+       [
+        1.94,
+        0.26
+       ],
+       [
+        0.06,
+        0.26
+       ]
+      ],
+      "plane": "xy",
+      "from": -0.252,
+      "to": -0.25,
+      "sheet": true
+     },
+     {
+      "id": "algae-east",
+      "kind": "extrude",
+      "bone": "block",
+      "material": "algae-biofilm",
+      "role": "body",
+      "tone": 0.36,
+      "profile": [
+       [
+        0.02,
+        -0.225
+       ],
+       [
+        0.02,
+        -0.02
+       ],
+       [
+        0.27,
+        -0.02
+       ],
+       [
+        0.27,
+        -0.225
+       ]
+      ],
+      "plane": "yz",
+      "from": 2.0,
+      "to": 2.002,
+      "sheet": true
+     }
+    ],
+    "thermal": [
+     {
+      "id": "th-block",
+      "of": "block",
+      "region": "concrete-block"
+     },
+     {
+      "id": "th-seat",
+      "of": "seat",
+      "region": "seat-battens"
+     },
+     {
+      "id": "th-algae-north",
+      "of": "algae-north",
+      "region": "algae-film",
+      "sectionFaces": [
+       "+w"
+      ]
+     },
+     {
+      "id": "th-algae-east",
+      "of": "algae-east",
+      "region": "algae-film",
+      "sectionFaces": [
+       "-u"
+      ]
+     }
+    ],
+    "structure": [
+     {
+      "id": "m-block",
+      "of": "block",
+      "member": "block",
+      "part": "member"
+     },
+     {
+      "id": "m-seat",
+      "of": "seat",
+      "member": "battens",
+      "part": "member"
+     },
+     {
+      "id": "j-screws",
+      "kind": "box",
+      "bone": "battens",
+      "material": "stainless-a4",
+      "role": "detail",
+      "tone": 0.2,
+      "size": [
+       0.075,
+       0.075,
+       0.3
+      ],
+      "transform": {
+       "translation": [
+        0.8,
+        0.0075,
+        0.0
+       ]
+      },
+      "member": "battens",
+      "part": "joint"
+     },
+     {
+      "id": "j-socket-west",
+      "kind": "capsule",
+      "bone": "block",
+      "material": "steel-galvanised",
+      "role": "detail",
+      "tone": 0.2,
+      "p0": [
+       0.1,
+       0.255,
+       0
+      ],
+      "p1": [
+       0.1,
+       0.3675,
+       0
+      ],
+      "r0": 0.0375,
+      "r1": 0.0375,
+      "member": "block",
+      "part": "joint"
+     },
+     {
+      "id": "j-socket-east",
+      "kind": "capsule",
+      "bone": "block",
+      "material": "steel-galvanised",
+      "role": "detail",
+      "tone": 0.2,
+      "p0": [
+       1.9,
+       0.255,
+       0
+      ],
+      "p1": [
+       1.9,
+       0.3675,
+       0
+      ],
+      "r0": 0.0375,
+      "r1": 0.0375,
+      "member": "block",
+      "part": "joint"
+     },
+     {
+      "id": "mass-block",
+      "kind": "ellipsoid",
+      "bone": "block",
+      "material": "concrete-weathered",
+      "role": "detail",
+      "tone": 0.3,
+      "radii": [
+       0.04,
+       0.04,
+       0.04
+      ],
+      "transform": {
+       "translation": [
+        1.0,
+        0.20239,
+        0.0
+       ]
+      },
+      "member": "block",
+      "part": "mass"
+     }
+    ],
+    "decisions": [
+     {
+      "en": "Body, authored anew for 75 mm: the concrete as a box 2.0 x 0.375 x 0.5 m and the seat as one 75 mm course 1.6 x 0.5 m over it (battens, gaps and the 26 mm side bands merged; the 45 mm seat would be below the feature, so the seat step over the bare ends is generalised from 45 to 75 mm while the seat height 0.45 m stays true); the algae sheets as two rectangles; nothing else remains above 75 mm.",
+      "de": "Körper, neu für 75 mm gebaut: der Beton als Quader 2,0 x 0,375 x 0,5 m und der Sitz als eine 75-mm-Lage 1,6 x 0,5 m darüber (Leisten, Fugen und die 26-mm-Randstreifen zusammengefasst; der 45-mm-Sitz läge unter dem Merkmal, daher ist die Sitzstufe über den freien Enden von 45 auf 75 mm verallgemeinert, während die Sitzhöhe 0,45 m stimmt); die Algenhäute als zwei Rechtecke; sonst bleibt nichts über 75 mm."
+     },
+     {
+      "en": "Thermal: one surface per region (only the total area is compared at this scale). Structure: block and seat members; the screw lines as one 75 mm joint, the sockets as 75 mm joints; the block mass marker (the 22 kg seat mass is below what this scale shows apart and is carried by its member).",
+      "de": "Thermik: eine Fläche je Region (bei diesem Maßstab wird nur die Gesamtfläche verglichen). Tragwerk: Block und Sitz als Glieder; die Schraubenreihen als ein 75-mm-Gelenk, die Hülsen als 75-mm-Gelenke; der Massenmarker des Blocks (die 22 kg des Sitzes liegen unter dem, was dieser Maßstab getrennt zeigt, und werden von seinem Glied getragen)."
+     }
+    ]
+   }
+  },
+  "presentation": {
+   "defaultPose": "in-service",
+   "defaultClip": "sitting-in-sun",
+   "defaultScale": 50
+  },
+  "exports": [
+   "svg",
+   "pdf",
+   "dxf",
+   "dwg",
+   "png-sequence",
+   "mp4",
+   "webm",
+   "component",
+   "glb",
+   "fbx",
+   "model",
+   "model-zip"
+  ],
+  "completion": "authored"
+ }
+}

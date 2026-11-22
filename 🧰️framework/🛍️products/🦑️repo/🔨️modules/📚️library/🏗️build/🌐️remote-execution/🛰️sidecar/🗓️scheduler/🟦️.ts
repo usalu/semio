@@ -37,6 +37,7 @@ export async function runScheduler(context:RemoteExecutionSidecarContextV1):Prom
  say(`serving ${endpoint}, worker api ${service.workerUrl}`);
  const publish=async():Promise<void>=>{if(storeRoot!==undefined)await setFleetExecutionV1(storeRoot,{endpoint,protocolVersion:1}).catch(error=>{say(`publishing the endpoint failed: ${(error as Error).message}`);});};
  await publish();
+ let lastSummary="";
  try{
   while(!context.signal.aborted){
    await sleep(60_000,context.signal);
@@ -44,6 +45,8 @@ export async function runScheduler(context:RemoteExecutionSidecarContextV1):Prom
    const again=resolveRemoteCacheV1(environment,{root:context.root});
    if(again!==undefined&&again.contract.endpoint!==cacheUrl){say("the cache moved, restarting");break;}
    await publish();
+   const counters=service.scheduler.status().counters,summary=`cancelled ${counters.cancelled} (before start ${counters.cancelledQueued}, running ${counters.cancelledExecuting}), workers re-registered ${counters.workersReused}, sweep stalls ${counters.sweepStalls}, queue wait p50/p90/max ${counters.queueWaitP50Milliseconds}/${counters.queueWaitP90Milliseconds}/${counters.queueWaitMaxMilliseconds} ms over ${counters.queueWaitSamples} assignments`;
+   if(summary!==lastSummary){lastSummary=summary;say(`scheduler summary: ${summary}`);}
   }
  }finally{
   await service.stop().catch(()=>{});

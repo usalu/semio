@@ -163,21 +163,15 @@ impl ShellDockState {
     }
 }
 
-/// 💧️ The box of an EMPTY anchor's drop zone while a tab drag is live — React's `PanelEmptyDockZone` (`min-w-[10rem]`, one control tall), aligned to the anchor's own corner or edge of the dock `body`.
-pub fn empty_anchor_drop_zone_rect(anchor: PanelAnchor, body: Rect, theme: &Theme) -> Rect {
+/// 💧️ The box of an EMPTY anchor's drop zone while a tab drag is live — React's `PanelEmptyDockZone` (`min-w-[10rem]`, one control tall), placed where the anchor's root tab row would sit: inside `panel` (the anchor's one-row panel box), inset by the row gap, on the flow's first row.
+pub fn empty_anchor_drop_zone_rect(anchor: PanelAnchor, panel: Rect, theme: &Theme) -> Rect {
     let constants = semio_renderer_wgpu_shell_chrome_state::chrome_parity_constants();
     let width = constants.panel_drop.empty_zone_min_width_rem * constants.status_stacks.rem_px;
     let height = theme.control_height;
-    let x = match anchor.horizontal() {
-        "left" => body.x,
-        "right" => body.x + body.w - width,
-        _ => body.x + (body.w - width) * 0.5,
-    };
-    let y = match anchor.vertical() {
-        "top" => body.y,
-        "bottom" => body.y + body.h - height,
-        _ => body.y + (body.h - height) * 0.5,
-    };
+    let (row_x, row_w) = (panel.x + theme.gap_standard, (panel.w - theme.gap_standard * 2.0).max(0.0));
+    let width = width.min(row_w);
+    let x = if anchor.horizontal() == "right" { row_x + row_w - width } else { row_x };
+    let y = if anchor.flow().block.is_reversed() { panel.y + panel.h - height } else { panel.y };
     Rect::new(x, y, width, height)
 }
 

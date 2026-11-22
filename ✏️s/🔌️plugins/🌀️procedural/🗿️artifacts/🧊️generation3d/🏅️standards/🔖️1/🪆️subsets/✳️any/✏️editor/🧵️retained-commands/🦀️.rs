@@ -37,7 +37,4 @@ mod retained_native_param_read_laws;
 mod retained_provisional_transform_laws;
 
 #[cfg(test)]
-type HostScratchFixtureMutation=Generation3dMutation;
-
-#[cfg(test)]
 fn host_scratch_test_original(source:&semio_framework_artifact_flow_flow::FlowHostSnapshot,wire:&serde_json::Value)->semio_framework_artifact_flow_flow::FlowHostSnapshot{let mut snapshot=semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot{host_snapshot:source.clone(),generation:Default::default()};let mutation:Generation3dMutation=semio_framework_pack_json::from_json_str(&wire.to_string(),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();let _=semio_s_artifact_procedural_3d_mutations::central_apply::apply_generation3d_mutation(&mut snapshot,&mutation);mutation.retire_cold();let result=std::mem::take(&mut snapshot.host_snapshot);snapshot.retire_cold();result}

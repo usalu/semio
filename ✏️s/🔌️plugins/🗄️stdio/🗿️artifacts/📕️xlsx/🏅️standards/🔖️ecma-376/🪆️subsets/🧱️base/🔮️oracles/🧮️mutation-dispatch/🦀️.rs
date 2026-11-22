@@ -45,6 +45,17 @@ pub fn oracle_apply_mutation(input: &[u8], spec: &Json) -> Result<Vec<u8>, Strin
             put_cell(&mut sheets, &sheet_name, row, col, Some(value))?;
             write_workbook_grid(&sheets)
         }
+        "insert-cell" => {
+            let (sheet_name, row, col) = cell_address::addressed_vacancy(input, params.get("address").ok_or("insert-cell: missing `address`")?)?;
+            let value = cell_value(params.get("value").ok_or("insert-cell: missing `value`")?)?;
+            let mut sheets = read_workbook_grid(input)?;
+            let (_, cells) = sheets.iter().find(|(name, _)| name == &sheet_name).ok_or_else(|| format!("insert-cell: no sheet named {sheet_name:?}"))?;
+            if cells.iter().any(|(r, c, _)| *r == row && *c == col) {
+                return Err(format!("insert-cell: ({row},{col}) of {sheet_name:?} is not vacant"));
+            }
+            put_cell(&mut sheets, &sheet_name, row, col, Some(value))?;
+            write_workbook_grid(&sheets)
+        }
         "remove-cell" => {
             let (sheet_name, row, col) = cell_address::addressed_cell(input, params.get("address").ok_or("remove-cell: missing `address`")?)?;
             let mut sheets = read_workbook_grid(input)?;
@@ -153,6 +164,11 @@ pub fn oracle_apply_inverse(original: &[u8], mutated: &[u8], forward: &Json) -> 
             write_workbook_grid(&sheets)
         }
         "set-cell" | "remove-cell" => cell_undo("address"),
+        "insert-cell" => {
+            let (sheet_name, row, col) = cell_address::addressed_vacancy(original, params.get("address").ok_or("insert-cell: missing `address`")?)?;
+            let sheets = applied(read_workbook_grid(mutated)?, |sheets| put_cell(sheets, &sheet_name, row, col, None))?;
+            write_workbook_grid(&sheets)
+        }
         "insert-shared-string" | "remove-shared-string" | "set-shared-string" => oracle_apply_mutation(mutated, &shared_string_inverse_spec(original, forward)?),
         "set-relationship" | "remove-relationship" | "set-content-type" | "remove-content-type" => plumbing::undo(original, mutated, &kind, &params),
         other => Err(format!("no inverse rule for kind {other:?}")),

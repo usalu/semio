@@ -122,4 +122,37 @@ describe("re-carve of a carved artifact", () => {
       expect(third.writes.map((write) => `${write.action} ${write.path}`)).toEqual([]);
     } finally { rmSync(root, { recursive: true, force: true }); }
   });
+  test("a new source edge between pinned crates becomes a manifest dependency when acyclic and leaves every other crate byte for byte", async () => {
+    const root = lay(corpus.files);
+    try {
+      const first = await carve(root, true);
+      applyCarveWrites(root, first.writes);
+      const before = crateFiles(root, first.plan);
+      put(root, corpus.edge.files);
+      const second = await carve(root);
+      expect(second.plan.problems).toEqual([]);
+      expect(second.plan.crates.map((crate) => crate.name).sort()).toEqual([...corpus.crates].sort());
+      applyCarveWrites(root, second.writes);
+      const graph = manifestsOf(root, second.plan.crates.map((crate) => crate.packageDir));
+      expect(graph.get(corpus.edge.crate)!.deps).toContain(corpus.edge.gains);
+      expect(acyclic(graph)).toBe(true);
+      const after = crateFiles(root, first.plan);
+      for (const name of corpus.edge.unchanged) for (const file of ["Cargo.toml", "🦀️.rs"]) expect(after.get(`${name}:${file}`), name).toBe(before.get(`${name}:${file}`));
+      expect((await carve(root)).writes.map((write) => `${write.action} ${write.path}`)).toEqual([]);
+    } finally { rmSync(root, { recursive: true, force: true }); }
+  });
+  test("a component nested in a root wrapper is re-exported by the re-carved facade, not mounted again", async () => {
+    const root = lay(corpus.nested.files);
+    try {
+      const first = await carve(root, true);
+      applyCarveWrites(root, first.writes);
+      const again = await carve(root);
+      expect(again.plan.problems).toEqual([]);
+      expect(again.writes.map((write) => `${write.action} ${write.path}`)).toEqual([]);
+      const facade = readFileSync(join(root, "🦀️.rs"), "utf8");
+      for (const needle of corpus.nested.forbidden) expect(facade, needle).not.toContain(needle);
+      expect(facade.match(/pub mod standards\b/gu)?.length).toBe(1);
+      expect(facade).toContain("pub use demo_weave_io::standards::io::*;");
+    } finally { rmSync(root, { recursive: true, force: true }); }
+  });
 });

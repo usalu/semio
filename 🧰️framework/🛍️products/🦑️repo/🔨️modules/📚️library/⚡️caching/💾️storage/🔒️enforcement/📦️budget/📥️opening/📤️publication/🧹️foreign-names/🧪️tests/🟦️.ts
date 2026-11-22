@@ -3,7 +3,7 @@ import{spawnSync}from"node:child_process";
 import{existsSync,lstatSync,mkdirSync,mkdtempSync,readdirSync,rmSync,symlinkSync,utimesSync,writeFileSync}from"node:fs";
 import{tmpdir}from"node:os";
 import{join}from"node:path";
-import{dependencyGenerationNamesV1,dependencyNameKindV1,settleDependencyForeignNamesV1}from"../🟦️.ts";
+import{dependencyContainerChangeV1,dependencyGenerationNamesV1,dependencyNameKindV1,settleDependencyForeignNamesV1}from"../🟦️.ts";
 import install from"../../../../../../../🚀️bootstrap/📦️dependencies/💾️storage/🧬️schema/📥️install.json"with{type:"json"};
 import{requireTestToolV1}from"../../../../../../../../../../../../🔨️modules/🏃️process/🧪️testing/🧰️toolchain/🟦️.ts";
 
@@ -73,4 +73,17 @@ print(json.dumps([n for n in names if re.search(p["generation"],n)]))`,JSON.stri
  expect(dependencyGenerationNamesV1(names,policy)).toEqual(JSON.parse(run.stdout));
  expect(dependencyGenerationNamesV1(names,policy)).toEqual([GEN,CAPSULE]);
  expect(dependencyGenerationNamesV1([],policy)).toEqual([]);
+});
+
+/** 🧭️ Contract: the container check of a retirement compares generation and capsule names and the identity of the folder, so tombstones, the quarantine folder and OS metadata (and a changed size or time of the folder) are no change, while a new or vanished generation, a swapped directory and a returned name are. The Python oracle recomputes the roster difference. */
+test("the container check ignores foreign names and times, and names a changed roster",()=>{
+ const plan={names:[GEN,CAPSULE].sort(),stamp:JSON.stringify(["1","2","16877","5","160","100","200"])},stamp=(mtime:string,ino="2")=>JSON.stringify(["1",ino,"16877","9","512",mtime,"300"]);
+ expect(dependencyContainerChangeV1([GEN,CAPSULE,".q",".x"+GEN,".DS_Store","stray"].sort(),stamp("999"),plan,policy)).toBeUndefined();
+ const grown=dependencyContainerChangeV1([GEN,CAPSULE,"fedcba9876543210fedc"].sort(),stamp("100"),plan,policy);
+ expect(grown).toEqual({kind:"roster",added:["fedcba9876543210fedc"],gone:[]});
+ const lost=dependencyContainerChangeV1([GEN],stamp("100"),plan,policy);
+ expect(lost).toEqual({kind:"roster",added:[],gone:[CAPSULE]});
+ expect(dependencyContainerChangeV1([GEN,CAPSULE].sort(),stamp("100","7"),plan,policy)).toEqual({kind:"identity"});
+ const oracle=spawnSync(requireTestToolV1("python"),["-c","import json,sys;a=set(json.loads(sys.argv[1]));b=set(json.loads(sys.argv[2]));print(json.dumps([sorted(b-a),sorted(a-b)]))",JSON.stringify(plan.names),JSON.stringify([GEN,CAPSULE,"fedcba9876543210fedc"])],{encoding:"utf8"});
+ expect(JSON.parse(oracle.stdout)).toEqual([grown && (grown as {added:string[]}).added,[]]);
 });

@@ -1,0 +1,7 @@
+[
+{"op":"region-set","id":"belt-bag","set":{"areaM2":0.1288}},
+{"op":"set","path":["poses",{"id":"waving"},"thermal","regions","belt-bag","exposedFraction"],"value":0.495},
+{"op":"set","path":["poses",{"id":"hailing"},"thermal","regions","belt-bag","exposedFraction"],"value":0.495},
+{"op":"set","path":["poses",{"id":"waving-both-arms"},"thermal","regions","belt-bag","exposedFraction"],"value":0.495},
+{"op":"set","path":["poses",{"id":"standing-relaxed"},"thermal","regions","belt-bag","exposedFraction"],"value":0.495}
+]

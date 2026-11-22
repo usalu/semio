@@ -335,6 +335,34 @@
      }
     },
     {
+     "id": "lug-bearer",
+     "bone": "chassis",
+     "material": "chassis-paint",
+     "role": "body",
+     "tone": 0.35,
+     "kind": "box",
+     "size": [
+      0.09,
+      0.08,
+      0.142
+     ],
+     "transform": {
+      "translation": [
+       -0.7275,
+       0.36,
+       0.271
+      ]
+     },
+     "repeat": {
+      "count": 2,
+      "translation": [
+       0,
+       0,
+       -0.542
+      ]
+     }
+    },
+    {
      "id": "axle-f",
      "bone": "chassis",
      "material": "chassis-paint",
@@ -367,6 +395,70 @@
        0,
        0,
        -0.54
+      ]
+     }
+    },
+    {
+     "id": "steer-yoke",
+     "bone": "chassis",
+     "material": "chassis-paint",
+     "role": "body",
+     "tone": 0.35,
+     "kind": "box",
+     "size": [
+      0.07,
+      0.17,
+      0.05
+     ],
+     "transform": {
+      "translation": [
+       0.66,
+       0.1525,
+       0.265
+      ]
+     },
+     "repeat": {
+      "count": 2,
+      "translation": [
+       0,
+       0,
+       -0.53
+      ]
+     }
+    },
+    {
+     "id": "kingpin-cap",
+     "bone": "chassis",
+     "material": "chassis-paint",
+     "role": "body",
+     "tone": 0.35,
+     "kind": "revolve",
+     "profile": [
+      [
+       0,
+       0.02
+      ],
+      [
+       0.012,
+       0.02
+      ]
+     ],
+     "axis": [
+      0,
+      1,
+      0
+     ],
+     "origin": [
+      0.66,
+      0.2375,
+      0.265
+     ],
+     "repeat": {
+      "count": 2,
+      "translation": [
+       0,
+       0,
+       -0.53
       ]
      }
     },
@@ -1712,13 +1804,13 @@
      "kind": "box",
      "size": [
       0.04,
-      1.11,
+      1.21,
       0.04
      ],
      "transform": {
       "translation": [
        -0.0675,
-       0.655,
+       0.605,
        0.35
       ]
      },
@@ -1740,13 +1832,13 @@
      "kind": "box",
      "size": [
       0.04,
-      1.11,
+      1.21,
       0.04
      ],
      "transform": {
       "translation": [
        0.7275,
-       0.655,
+       0.605,
        0.35
       ]
      },
@@ -1768,13 +1860,13 @@
      "kind": "box",
      "size": [
       0.04,
-      1.11,
+      1.21,
       0.04
      ],
      "transform": {
       "translation": [
        1.5225,
-       0.655,
+       0.605,
        0.35
       ]
      },
@@ -2000,6 +2092,54 @@
        0,
        0,
        -0.625
+      ]
+     }
+    },
+    {
+     "id": "gate-hinge",
+     "bone": "platform",
+     "material": "rail-steel",
+     "role": "body",
+     "tone": 0.3,
+     "kind": "box",
+     "size": [
+      0.025,
+      0.05,
+      0.015
+     ],
+     "transform": {
+      "translation": [
+       -0.07,
+       0.6,
+       0.33
+      ]
+     },
+     "repeat": {
+      "count": 2,
+      "translation": [
+       0,
+       -0.3,
+       0
+      ]
+     }
+    },
+    {
+     "id": "gate-latch",
+     "bone": "platform",
+     "material": "rail-steel",
+     "role": "body",
+     "tone": 0.3,
+     "kind": "box",
+     "size": [
+      0.03,
+      0.025,
+      0.015
+     ],
+     "transform": {
+      "translation": [
+       -0.07,
+       0.6,
+       -0.33
       ]
      }
     },
@@ -2301,6 +2441,26 @@
        -0.235,
        1.02,
        -0.21
+      ]
+     }
+    },
+    {
+     "id": "control-mount",
+     "bone": "deck-ext",
+     "material": "chassis-paint",
+     "role": "detail",
+     "tone": 0.15,
+     "kind": "box",
+     "size": [
+      0.16,
+      0.11,
+      0.01
+     ],
+     "transform": {
+      "translation": [
+       -0.235,
+       1.155,
+       -0.265
       ]
      }
     },
@@ -9401,11 +9561,11 @@
        0.025
       ],
       [
-       0.344,
+       0.43,
        0.025
       ],
       [
-       0.344,
+       0.43,
        0
       ]
      ],
@@ -9417,7 +9577,7 @@
      "origin": [
       0,
       0,
-      -0.172
+      -0.215
      ]
     },
     {
@@ -31033,8 +31193,23 @@
      "region": "chassis"
     },
     {
+     "id": "th-lug-bearer",
+     "of": "lug-bearer",
+     "region": "chassis"
+    },
+    {
      "id": "th-axle-f",
      "of": "axle-f",
+     "region": "chassis"
+    },
+    {
+     "id": "th-steer-yoke",
+     "of": "steer-yoke",
+     "region": "chassis"
+    },
+    {
+     "id": "th-kingpin-cap",
+     "of": "kingpin-cap",
      "region": "chassis"
     },
     {
@@ -31288,6 +31463,16 @@
      "region": "rails"
     },
     {
+     "id": "th-gate-hinge",
+     "of": "gate-hinge",
+     "region": "rails"
+    },
+    {
+     "id": "th-gate-latch",
+     "of": "gate-latch",
+     "region": "rails"
+    },
+    {
      "id": "th-gate-top",
      "of": "gate-top",
      "region": "rails"
@@ -31350,6 +31535,11 @@
     {
      "id": "th-control-box",
      "of": "control-box",
+     "region": "rails"
+    },
+    {
+     "id": "th-control-mount",
+     "of": "control-mount",
      "region": "rails"
     },
     {
@@ -32305,6 +32495,24 @@
      "part": "member"
     },
     {
+     "id": "member-gate-latch",
+     "of": "gate-latch",
+     "member": "platform",
+     "part": "member"
+    },
+    {
+     "id": "member-gate-hinge",
+     "of": "gate-hinge",
+     "member": "platform",
+     "part": "member"
+    },
+    {
+     "id": "member-lug-bearer",
+     "of": "lug-bearer",
+     "member": "chassis",
+     "part": "member"
+    },
+    {
      "id": "member-cylinder",
      "bone": "lift-cylinder",
      "material": "chassis-paint",
@@ -32343,6 +32551,18 @@
       0,
       0
      ],
+     "member": "lift-cylinder",
+     "part": "member"
+    },
+    {
+     "id": "member-cylinder-gland",
+     "of": "cylinder-gland",
+     "member": "lift-cylinder",
+     "part": "member"
+    },
+    {
+     "id": "member-cylinder-eye",
+     "of": "cylinder-eye",
      "member": "lift-cylinder",
      "part": "member"
     },
@@ -32403,6 +32623,12 @@
       0,
       0
      ],
+     "member": "lift-rod",
+     "part": "member"
+    },
+    {
+     "id": "member-rod-eye",
+     "of": "rod-eye",
      "member": "lift-rod",
      "part": "member"
     },
@@ -32481,13 +32707,13 @@
      "kind": "box",
      "size": [
       0.04,
-      0.04,
+      0.05,
       0.72
      ],
      "transform": {
       "translation": [
        0.1475,
-       0.07,
+       0.075,
        0
       ]
      },
@@ -32503,13 +32729,13 @@
      "kind": "box",
      "size": [
       0.04,
-      0.04,
+      0.05,
       0.72
      ],
      "transform": {
       "translation": [
        0.4475,
-       0.07,
+       0.075,
        0
       ]
      },
@@ -32525,13 +32751,13 @@
      "kind": "box",
      "size": [
       0.04,
-      0.04,
+      0.05,
       0.72
      ],
      "transform": {
       "translation": [
        0.7275,
-       0.07,
+       0.075,
        0
       ]
      },
@@ -32547,13 +32773,13 @@
      "kind": "box",
      "size": [
       0.04,
-      0.04,
+      0.05,
       0.72
      ],
      "transform": {
       "translation": [
        1.0075,
-       0.07,
+       0.075,
        0
       ]
      },
@@ -32569,13 +32795,13 @@
      "kind": "box",
      "size": [
       0.04,
-      0.04,
+      0.05,
       0.72
      ],
      "transform": {
       "translation": [
        1.3075,
-       0.07,
+       0.075,
        0
       ]
      },
@@ -33247,6 +33473,10 @@
     {
      "en": "Rework 10: pivot bushings have a 7.5 mm wall and the cross tubes are solid rods of their 50 mm diameter (their 4 mm wall is below the feature and their ends are closed by the bushings).",
      "de": "Überarbeitung 10: die Gelenkbuchsen haben 7,5 mm Wand und die Querrohre sind volle Stäbe ihres 50-mm-Durchmessers (ihre 4-mm-Wand liegt unter dem Merkmal, ihre Enden sind von den Buchsen verschlossen)."
+    },
+    {
+     "en": "Second round, pass 1: every part is joined to what carries it (pivot bearers under the base lugs, full-width roller axle, rail posts down to the deck channels, gate hinges and latch, controller bracket). New: the two steering knuckles between tub and front wheels with their kingpin caps. The front wheels roll but do not steer in the rig yet.",
+     "de": "Zweite Runde, Durchgang 1: Jedes Teil ist mit seinem Träger verbunden (Lagerböcke unter den Fußlaschen, durchgehende Rollenachse, Geländerpfosten bis auf die Bühnenträger, Torbänder und Riegel, Halter der Steuerung). Neu: die beiden Achsschenkel zwischen Wanne und Vorderrädern mit ihren Bolzenkappen. Die Vorderräder rollen, lenken im Rig aber noch nicht."
     }
    ]
   },
@@ -33308,6 +33538,34 @@
        0,
        0.2225,
        0.315
+      ]
+     }
+    },
+    {
+     "id": "lug-bearer",
+     "bone": "chassis",
+     "material": "chassis-paint",
+     "role": "body",
+     "tone": 0.45,
+     "kind": "box",
+     "size": [
+      0.09,
+      0.08,
+      0.145
+     ],
+     "transform": {
+      "translation": [
+       -0.7275,
+       0.36,
+       0.2725
+      ]
+     },
+     "repeat": {
+      "count": 2,
+      "translation": [
+       0,
+       0,
+       -0.545
       ]
      }
     },
@@ -33502,6 +33760,70 @@
      }
     },
     {
+     "id": "steer-yoke",
+     "bone": "chassis",
+     "material": "chassis-paint",
+     "role": "body",
+     "tone": 0.35,
+     "kind": "box",
+     "size": [
+      0.07,
+      0.17,
+      0.05
+     ],
+     "transform": {
+      "translation": [
+       0.66,
+       0.1525,
+       0.265
+      ]
+     },
+     "repeat": {
+      "count": 2,
+      "translation": [
+       0,
+       0,
+       -0.53
+      ]
+     }
+    },
+    {
+     "id": "kingpin-cap",
+     "bone": "chassis",
+     "material": "chassis-paint",
+     "role": "body",
+     "tone": 0.35,
+     "kind": "revolve",
+     "profile": [
+      [
+       0,
+       0.022
+      ],
+      [
+       0.015,
+       0.022
+      ]
+     ],
+     "axis": [
+      0,
+      1,
+      0
+     ],
+     "origin": [
+      0.66,
+      0.2375,
+      0.265
+     ],
+     "repeat": {
+      "count": 2,
+      "translation": [
+       0,
+       0,
+       -0.53
+      ]
+     }
+    },
+    {
      "id": "axle-r",
      "bone": "chassis",
      "material": "chassis-paint",
@@ -33618,6 +33940,34 @@
       "translation": [
        -0.89,
        0.485,
+       0.195
+      ]
+     },
+     "repeat": {
+      "count": 2,
+      "translation": [
+       0,
+       0,
+       -0.39
+      ]
+     }
+    },
+    {
+     "id": "ladder-bracket",
+     "bone": "chassis",
+     "material": "chassis-paint",
+     "role": "body",
+     "tone": 0.35,
+     "kind": "box",
+     "size": [
+      0.015,
+      0.16,
+      0.03
+     ],
+     "transform": {
+      "translation": [
+       -0.8625,
+       0.28,
        0.195
       ]
      },
@@ -34255,13 +34605,13 @@
      "kind": "box",
      "size": [
       0.04,
-      1.11,
+      1.21,
       0.04
      ],
      "transform": {
       "translation": [
        -0.0675,
-       0.655,
+       0.605,
        0.35
       ]
      },
@@ -34283,13 +34633,13 @@
      "kind": "box",
      "size": [
       0.04,
-      1.11,
+      1.21,
       0.04
      ],
      "transform": {
       "translation": [
        0.7275,
-       0.655,
+       0.605,
        0.35
       ]
      },
@@ -34311,13 +34661,13 @@
      "kind": "box",
      "size": [
       0.04,
-      1.11,
+      1.21,
       0.04
      ],
      "transform": {
       "translation": [
        1.5225,
-       0.655,
+       0.605,
        0.35
       ]
      },
@@ -34543,6 +34893,54 @@
        0,
        0,
        -0.625
+      ]
+     }
+    },
+    {
+     "id": "gate-hinge",
+     "bone": "platform",
+     "material": "rail-steel",
+     "role": "body",
+     "tone": 0.3,
+     "kind": "box",
+     "size": [
+      0.025,
+      0.05,
+      0.02
+     ],
+     "transform": {
+      "translation": [
+       -0.07,
+       0.6,
+       0.3275
+      ]
+     },
+     "repeat": {
+      "count": 2,
+      "translation": [
+       0,
+       -0.3,
+       0
+      ]
+     }
+    },
+    {
+     "id": "gate-latch",
+     "bone": "platform",
+     "material": "rail-steel",
+     "role": "body",
+     "tone": 0.3,
+     "kind": "box",
+     "size": [
+      0.03,
+      0.025,
+      0.02
+     ],
+     "transform": {
+      "translation": [
+       -0.07,
+       0.6,
+       -0.3275
       ]
      }
     },
@@ -34823,6 +35221,26 @@
        -0.235,
        1.02,
        -0.21
+      ]
+     }
+    },
+    {
+     "id": "control-mount",
+     "bone": "deck-ext",
+     "material": "chassis-paint",
+     "role": "detail",
+     "tone": 0.15,
+     "kind": "box",
+     "size": [
+      0.16,
+      0.11,
+      0.015
+     ],
+     "transform": {
+      "translation": [
+       -0.235,
+       1.155,
+       -0.2625
       ]
      }
     },
@@ -41891,11 +42309,11 @@
        0.025
       ],
       [
-       0.344,
+       0.43,
        0.025
       ],
       [
-       0.344,
+       0.43,
        0
       ]
      ],
@@ -41907,7 +42325,7 @@
      "origin": [
       0,
       0,
-      -0.172
+      -0.215
      ]
     },
     {
@@ -63535,6 +63953,11 @@
      "region": "chassis"
     },
     {
+     "id": "th-lug-bearer",
+     "of": "lug-bearer",
+     "region": "chassis"
+    },
+    {
      "id": "th-tray-right",
      "of": "tray-right",
      "region": "chassis"
@@ -63575,6 +63998,16 @@
      "region": "chassis"
     },
     {
+     "id": "th-steer-yoke",
+     "of": "steer-yoke",
+     "region": "chassis"
+    },
+    {
+     "id": "th-kingpin-cap",
+     "of": "kingpin-cap",
+     "region": "chassis"
+    },
+    {
      "id": "th-axle-r",
      "of": "axle-r",
      "region": "chassis"
@@ -63592,6 +64025,11 @@
     {
      "id": "th-ladder-stile",
      "of": "ladder-stile",
+     "region": "chassis"
+    },
+    {
+     "id": "th-ladder-bracket",
+     "of": "ladder-bracket",
      "region": "chassis"
     },
     {
@@ -63740,6 +64178,16 @@
      "region": "rails"
     },
     {
+     "id": "th-gate-hinge",
+     "of": "gate-hinge",
+     "region": "rails"
+    },
+    {
+     "id": "th-gate-latch",
+     "of": "gate-latch",
+     "region": "rails"
+    },
+    {
      "id": "th-gate-top",
      "of": "gate-top",
      "region": "rails"
@@ -63797,6 +64245,11 @@
     {
      "id": "th-control-box",
      "of": "control-box",
+     "region": "rails"
+    },
+    {
+     "id": "th-control-mount",
+     "of": "control-mount",
      "region": "rails"
     },
     {
@@ -64654,44 +65107,26 @@
      "part": "member"
     },
     {
+     "id": "member-base-lug",
+     "of": "base-lug",
+     "member": "chassis",
+     "part": "member"
+    },
+    {
+     "id": "member-track",
+     "of": "track",
+     "member": "chassis",
+     "part": "member"
+    },
+    {
+     "id": "member-lug-bearer",
+     "of": "lug-bearer",
+     "member": "chassis",
+     "part": "member"
+    },
+    {
      "id": "member-cylinder",
-     "bone": "lift-cylinder",
-     "material": "chassis-paint",
-     "role": "body",
-     "tone": 0.3,
-     "kind": "revolve",
-     "profile": [
-      [
-       0,
-       0.042
-      ],
-      [
-       0,
-       0.05
-      ],
-      [
-       0.47,
-       0.05
-      ],
-      [
-       0.47,
-       0.042
-      ],
-      [
-       0,
-       0.042
-      ]
-     ],
-     "axis": [
-      1,
-      0,
-      0
-     ],
-     "origin": [
-      0,
-      0,
-      0
-     ],
+     "of": "cylinder-barrel",
      "member": "lift-cylinder",
      "part": "member"
     },
@@ -64758,13 +65193,13 @@
      "kind": "box",
      "size": [
       0.04,
-      0.04,
+      0.05,
       0.72
      ],
      "transform": {
       "translation": [
        0.2975,
-       0.07,
+       0.075,
        0
       ]
      },
@@ -64780,13 +65215,13 @@
      "kind": "box",
      "size": [
       0.04,
-      0.04,
+      0.05,
       0.72
      ],
      "transform": {
       "translation": [
        0.7275,
-       0.07,
+       0.075,
        0
       ]
      },
@@ -64802,13 +65237,13 @@
      "kind": "box",
      "size": [
       0.04,
-      0.04,
+      0.05,
       0.72
      ],
      "transform": {
       "translation": [
        1.1575,
-       0.07,
+       0.075,
        0
       ]
      },
@@ -65362,6 +65797,18 @@
      "part": "member"
     },
     {
+     "id": "member-gate-latch",
+     "of": "gate-latch",
+     "member": "platform",
+     "part": "member"
+    },
+    {
+     "id": "member-gate-hinge",
+     "of": "gate-hinge",
+     "member": "platform",
+     "part": "member"
+    },
+    {
      "id": "member-gate-top",
      "of": "gate-top",
      "member": "platform",
@@ -65384,6 +65831,10 @@
     {
      "en": "Rework 10: bushings with 15 mm wall, pin heads 15 mm, cross tubes as solid rods.",
      "de": "Überarbeitung 10: Buchsen mit 15 mm Wand, Bolzenköpfe 15 mm, Querrohre als volle Stäbe."
+    },
+    {
+     "en": "Second round, pass 1: steering knuckles with 44 mm kingpin caps, two 20 mm gate hinges and the latch join the gate to the rear posts; ladder brackets, track and pivot bearers close the load path to the chassis.",
+     "de": "Zweite Runde, Durchgang 1: Achsschenkel mit 44-mm-Bolzenkappen, zwei 20-mm-Torbänder und der Riegel verbinden das Tor mit den hinteren Pfosten; Leiterhalter, Laufschiene und Lagerböcke schließen den Lastpfad zum Fahrgestell."
     }
    ]
   },
@@ -65453,6 +65904,90 @@
        0,
        0,
        -0.615
+      ]
+     }
+    },
+    {
+     "id": "track",
+     "bone": "chassis",
+     "material": "chassis-paint",
+     "role": "body",
+     "tone": 0.45,
+     "kind": "box",
+     "size": [
+      0.91,
+      0.03,
+      0.04
+     ],
+     "transform": {
+      "translation": [
+       0.3433,
+       0.415,
+       0.19
+      ]
+     },
+     "repeat": {
+      "count": 2,
+      "translation": [
+       0,
+       0,
+       -0.38
+      ]
+     }
+    },
+    {
+     "id": "base-lug",
+     "bone": "chassis",
+     "material": "chassis-paint",
+     "role": "body",
+     "tone": 0.45,
+     "kind": "box",
+     "size": [
+      0.09,
+      0.1,
+      0.03
+     ],
+     "transform": {
+      "translation": [
+       -0.7275,
+       0.45,
+       0.335
+      ]
+     },
+     "repeat": {
+      "count": 2,
+      "translation": [
+       0,
+       0,
+       -0.67
+      ]
+     }
+    },
+    {
+     "id": "lug-bearer",
+     "bone": "chassis",
+     "material": "chassis-paint",
+     "role": "body",
+     "tone": 0.45,
+     "kind": "box",
+     "size": [
+      0.09,
+      0.08,
+      0.15
+     ],
+     "transform": {
+      "translation": [
+       -0.7275,
+       0.36,
+       0.275
+      ]
+     },
+     "repeat": {
+      "count": 2,
+      "translation": [
+       0,
+       0,
+       -0.55
       ]
      }
     },
@@ -65589,6 +66124,34 @@
      }
     },
     {
+     "id": "steer-yoke",
+     "bone": "chassis",
+     "material": "chassis-paint",
+     "role": "body",
+     "tone": 0.35,
+     "kind": "box",
+     "size": [
+      0.07,
+      0.17,
+      0.05
+     ],
+     "transform": {
+      "translation": [
+       0.66,
+       0.1525,
+       0.265
+      ]
+     },
+     "repeat": {
+      "count": 2,
+      "translation": [
+       0,
+       0,
+       -0.53
+      ]
+     }
+    },
+    {
      "id": "tyre-fl",
      "bone": "wheel-f",
      "material": "rubber",
@@ -65610,6 +66173,14 @@
       ],
       [
        0.055,
+       0.105
+      ],
+      [
+       0.025,
+       0.105
+      ],
+      [
+       0.025,
        0
       ]
      ],
@@ -65646,6 +66217,14 @@
       ],
       [
        0.055,
+       0.105
+      ],
+      [
+       0.025,
+       0.105
+      ],
+      [
+       0.025,
        0
       ]
      ],
@@ -65718,6 +66297,14 @@
       ],
       [
        0.055,
+       0.105
+      ],
+      [
+       0.025,
+       0.105
+      ],
+      [
+       0.025,
        0
       ]
      ],
@@ -65754,6 +66341,14 @@
       ],
       [
        0.055,
+       0.105
+      ],
+      [
+       0.025,
+       0.105
+      ],
+      [
+       0.025,
        0
       ]
      ],
@@ -65778,11 +66373,19 @@
      "profile": [
       [
        0,
-       0.035
+       0
+      ],
+      [
+       0,
+       0.03
       ],
       [
        0.04,
-       0.035
+       0.03
+      ],
+      [
+       0.04,
+       0
       ]
      ],
      "axis": [
@@ -66293,6 +66896,26 @@
      }
     },
     {
+     "id": "control-mount",
+     "bone": "deck-ext",
+     "material": "chassis-paint",
+     "role": "detail",
+     "tone": 0.15,
+     "kind": "box",
+     "size": [
+      0.16,
+      0.11,
+      0.03
+     ],
+     "transform": {
+      "translation": [
+       -0.235,
+       1.155,
+       -0.275
+      ]
+     }
+    },
+    {
      "id": "arm-a1",
      "kind": "extrude",
      "bone": "a1",
@@ -66302,40 +66925,24 @@
      "profile": [
       [
        -0.045,
-       -0.02
+       0.27
       ],
       [
-       -0.02,
-       -0.045
+       0.045,
+       0.27
       ],
       [
-       1.48,
-       -0.045
-      ],
-      [
-       1.505,
-       -0.02
-      ],
-      [
-       1.505,
-       0.02
-      ],
-      [
-       1.48,
-       0.045
-      ],
-      [
-       -0.02,
-       0.045
+       0.045,
+       0.32
       ],
       [
        -0.045,
-       0.02
+       0.32
       ]
      ],
-     "plane": "xy",
-     "from": 0.27,
-     "to": 0.32,
+     "plane": "yz",
+     "from": -0.045,
+     "to": 1.505,
      "repeat": {
       "count": 2,
       "translation": [
@@ -66343,7 +66950,27 @@
        0,
        -0.59
       ]
-     }
+     },
+     "holes": [
+      [
+       [
+        -0.039,
+        0.276
+       ],
+       [
+        0.039,
+        0.276
+       ],
+       [
+        0.039,
+        0.314
+       ],
+       [
+        -0.039,
+        0.314
+       ]
+      ]
+     ]
     },
     {
      "id": "pin-shaft-a1-0",
@@ -66463,40 +67090,24 @@
      "profile": [
       [
        -0.045,
-       -0.02
+       0.215
       ],
       [
-       -0.02,
-       -0.045
+       0.045,
+       0.215
       ],
       [
-       1.48,
-       -0.045
-      ],
-      [
-       1.505,
-       -0.02
-      ],
-      [
-       1.505,
-       0.02
-      ],
-      [
-       1.48,
-       0.045
-      ],
-      [
-       -0.02,
-       0.045
+       0.045,
+       0.265
       ],
       [
        -0.045,
-       0.02
+       0.265
       ]
      ],
-     "plane": "xy",
-     "from": 0.215,
-     "to": 0.265,
+     "plane": "yz",
+     "from": -0.045,
+     "to": 1.505,
      "repeat": {
       "count": 2,
       "translation": [
@@ -66504,7 +67115,27 @@
        0,
        -0.48
       ]
-     }
+     },
+     "holes": [
+      [
+       [
+        -0.039,
+        0.221
+       ],
+       [
+        0.039,
+        0.221
+       ],
+       [
+        0.039,
+        0.259
+       ],
+       [
+        -0.039,
+        0.259
+       ]
+      ]
+     ]
     },
     {
      "id": "tube-b1-root",
@@ -66523,11 +67154,11 @@
        0.025
       ],
       [
-       0.344,
+       0.43,
        0.025
       ],
       [
-       0.344,
+       0.43,
        0
       ]
      ],
@@ -66539,7 +67170,7 @@
      "origin": [
       0,
       0,
-      -0.172
+      -0.215
      ]
     },
     {
@@ -66624,40 +67255,24 @@
      "profile": [
       [
        -0.045,
-       -0.02
+       0.27
       ],
       [
-       -0.02,
-       -0.045
+       0.045,
+       0.27
       ],
       [
-       1.48,
-       -0.045
-      ],
-      [
-       1.505,
-       -0.02
-      ],
-      [
-       1.505,
-       0.02
-      ],
-      [
-       1.48,
-       0.045
-      ],
-      [
-       -0.02,
-       0.045
+       0.045,
+       0.32
       ],
       [
        -0.045,
-       0.02
+       0.32
       ]
      ],
-     "plane": "xy",
-     "from": 0.27,
-     "to": 0.32,
+     "plane": "yz",
+     "from": -0.045,
+     "to": 1.505,
      "repeat": {
       "count": 2,
       "translation": [
@@ -66665,7 +67280,27 @@
        0,
        -0.59
       ]
-     }
+     },
+     "holes": [
+      [
+       [
+        -0.039,
+        0.276
+       ],
+       [
+        0.039,
+        0.276
+       ],
+       [
+        0.039,
+        0.314
+       ],
+       [
+        -0.039,
+        0.314
+       ]
+      ]
+     ]
     },
     {
      "id": "pin-shaft-a2-0",
@@ -66785,40 +67420,24 @@
      "profile": [
       [
        -0.045,
-       -0.02
+       0.215
       ],
       [
-       -0.02,
-       -0.045
+       0.045,
+       0.215
       ],
       [
-       1.48,
-       -0.045
-      ],
-      [
-       1.505,
-       -0.02
-      ],
-      [
-       1.505,
-       0.02
-      ],
-      [
-       1.48,
-       0.045
-      ],
-      [
-       -0.02,
-       0.045
+       0.045,
+       0.265
       ],
       [
        -0.045,
-       0.02
+       0.265
       ]
      ],
-     "plane": "xy",
-     "from": 0.215,
-     "to": 0.265,
+     "plane": "yz",
+     "from": -0.045,
+     "to": 1.505,
      "repeat": {
       "count": 2,
       "translation": [
@@ -66826,7 +67445,27 @@
        0,
        -0.48
       ]
-     }
+     },
+     "holes": [
+      [
+       [
+        -0.039,
+        0.221
+       ],
+       [
+        0.039,
+        0.221
+       ],
+       [
+        0.039,
+        0.259
+       ],
+       [
+        -0.039,
+        0.259
+       ]
+      ]
+     ]
     },
     {
      "id": "tube-b2-root",
@@ -66946,40 +67585,24 @@
      "profile": [
       [
        -0.045,
-       -0.02
+       0.27
       ],
       [
-       -0.02,
-       -0.045
+       0.045,
+       0.27
       ],
       [
-       1.48,
-       -0.045
-      ],
-      [
-       1.505,
-       -0.02
-      ],
-      [
-       1.505,
-       0.02
-      ],
-      [
-       1.48,
-       0.045
-      ],
-      [
-       -0.02,
-       0.045
+       0.045,
+       0.32
       ],
       [
        -0.045,
-       0.02
+       0.32
       ]
      ],
-     "plane": "xy",
-     "from": 0.27,
-     "to": 0.32,
+     "plane": "yz",
+     "from": -0.045,
+     "to": 1.505,
      "repeat": {
       "count": 2,
       "translation": [
@@ -66987,7 +67610,27 @@
        0,
        -0.59
       ]
-     }
+     },
+     "holes": [
+      [
+       [
+        -0.039,
+        0.276
+       ],
+       [
+        0.039,
+        0.276
+       ],
+       [
+        0.039,
+        0.314
+       ],
+       [
+        -0.039,
+        0.314
+       ]
+      ]
+     ]
     },
     {
      "id": "pin-shaft-a3-0",
@@ -67107,40 +67750,24 @@
      "profile": [
       [
        -0.045,
-       -0.02
+       0.215
       ],
       [
-       -0.02,
-       -0.045
+       0.045,
+       0.215
       ],
       [
-       1.48,
-       -0.045
-      ],
-      [
-       1.505,
-       -0.02
-      ],
-      [
-       1.505,
-       0.02
-      ],
-      [
-       1.48,
-       0.045
-      ],
-      [
-       -0.02,
-       0.045
+       0.045,
+       0.265
       ],
       [
        -0.045,
-       0.02
+       0.265
       ]
      ],
-     "plane": "xy",
-     "from": 0.215,
-     "to": 0.265,
+     "plane": "yz",
+     "from": -0.045,
+     "to": 1.505,
      "repeat": {
       "count": 2,
       "translation": [
@@ -67148,7 +67775,27 @@
        0,
        -0.48
       ]
-     }
+     },
+     "holes": [
+      [
+       [
+        -0.039,
+        0.221
+       ],
+       [
+        0.039,
+        0.221
+       ],
+       [
+        0.039,
+        0.259
+       ],
+       [
+        -0.039,
+        0.259
+       ]
+      ]
+     ]
     },
     {
      "id": "tube-b3-root",
@@ -67268,40 +67915,24 @@
      "profile": [
       [
        -0.045,
-       -0.02
+       0.27
       ],
       [
-       -0.02,
-       -0.045
+       0.045,
+       0.27
       ],
       [
-       1.48,
-       -0.045
-      ],
-      [
-       1.505,
-       -0.02
-      ],
-      [
-       1.505,
-       0.02
-      ],
-      [
-       1.48,
-       0.045
-      ],
-      [
-       -0.02,
-       0.045
+       0.045,
+       0.32
       ],
       [
        -0.045,
-       0.02
+       0.32
       ]
      ],
-     "plane": "xy",
-     "from": 0.27,
-     "to": 0.32,
+     "plane": "yz",
+     "from": -0.045,
+     "to": 1.505,
      "repeat": {
       "count": 2,
       "translation": [
@@ -67309,7 +67940,27 @@
        0,
        -0.59
       ]
-     }
+     },
+     "holes": [
+      [
+       [
+        -0.039,
+        0.276
+       ],
+       [
+        0.039,
+        0.276
+       ],
+       [
+        0.039,
+        0.314
+       ],
+       [
+        -0.039,
+        0.314
+       ]
+      ]
+     ]
     },
     {
      "id": "pin-shaft-a4-0",
@@ -67473,40 +68124,24 @@
      "profile": [
       [
        -0.045,
-       -0.02
+       0.215
       ],
       [
-       -0.02,
-       -0.045
+       0.045,
+       0.215
       ],
       [
-       1.48,
-       -0.045
-      ],
-      [
-       1.505,
-       -0.02
-      ],
-      [
-       1.505,
-       0.02
-      ],
-      [
-       1.48,
-       0.045
-      ],
-      [
-       -0.02,
-       0.045
+       0.045,
+       0.265
       ],
       [
        -0.045,
-       0.02
+       0.265
       ]
      ],
-     "plane": "xy",
-     "from": 0.215,
-     "to": 0.265,
+     "plane": "yz",
+     "from": -0.045,
+     "to": 1.505,
      "repeat": {
       "count": 2,
       "translation": [
@@ -67514,7 +68149,27 @@
        0,
        -0.48
       ]
-     }
+     },
+     "holes": [
+      [
+       [
+        -0.039,
+        0.221
+       ],
+       [
+        0.039,
+        0.221
+       ],
+       [
+        0.039,
+        0.259
+       ],
+       [
+        -0.039,
+        0.259
+       ]
+      ]
+     ]
     },
     {
      "id": "tube-b4-root",
@@ -67673,6 +68328,21 @@
      "region": "chassis"
     },
     {
+     "id": "th-track",
+     "of": "track",
+     "region": "chassis"
+    },
+    {
+     "id": "th-base-lug",
+     "of": "base-lug",
+     "region": "chassis"
+    },
+    {
+     "id": "th-lug-bearer",
+     "of": "lug-bearer",
+     "region": "chassis"
+    },
+    {
      "id": "th-battery-cover",
      "of": "battery-cover",
      "region": "battery-box"
@@ -67695,6 +68365,11 @@
     {
      "id": "th-axle-f",
      "of": "axle-f",
+     "region": "chassis"
+    },
+    {
+     "id": "th-steer-yoke",
+     "of": "steer-yoke",
      "region": "chassis"
     },
     {
@@ -67825,6 +68500,11 @@
     {
      "id": "th-control-box",
      "of": "control-box",
+     "region": "rails"
+    },
+    {
+     "id": "th-control-mount",
+     "of": "control-mount",
      "region": "rails"
     },
     {
@@ -68232,6 +68912,24 @@
      "part": "member"
     },
     {
+     "id": "member-lug-bearer",
+     "of": "lug-bearer",
+     "member": "chassis",
+     "part": "member"
+    },
+    {
+     "id": "member-base-lug",
+     "of": "base-lug",
+     "member": "chassis",
+     "part": "member"
+    },
+    {
+     "id": "member-track",
+     "of": "track",
+     "member": "chassis",
+     "part": "member"
+    },
+    {
      "id": "member-cylinder",
      "of": "cylinder",
      "member": "lift-cylinder",
@@ -68264,13 +68962,13 @@
      "kind": "box",
      "size": [
       1.63,
-      0.09,
+      0.14,
       0.04
      ],
      "transform": {
       "translation": [
        0.7275,
-       0.005,
+       0.03,
        0.35
       ]
      },
@@ -68778,6 +69476,10 @@
     {
      "en": "Rework 10: scissor stack modelled anew for the 30 mm feature: arms as 90 x 50 mm bars with chamfered ends, 40 mm pivot pins without bushings and heads, cross tubes as 50 mm rods, 30 mm platform roller.",
      "de": "Überarbeitung 10: Scherenpaket für das 30-mm-Merkmal neu modelliert: Arme als 90 x 50 mm Stäbe mit gefasten Enden, 40-mm-Gelenkbolzen ohne Buchsen und Köpfe, Querrohre als 50-mm-Stäbe, 30-mm-Plattformrolle."
+    },
+    {
+     "en": "Second round, pass 1: each wheel is a tyre with a 30 mm dished wheel face instead of a plain disc; the arms are the true 90 x 50 mm rectangular tubes with their 6 mm wall and open ends, so the thermal view counts the inner surface as the declared total area does; steering knuckles as blocks; track, base lugs and bearers carry the stack.",
+     "de": "Zweite Runde, Durchgang 1: Jedes Rad ist ein Reifen mit 30 mm eingezogener Radschüssel statt einer glatten Scheibe; die Arme sind die wahren Rechteckrohre 90 x 50 mm mit 6 mm Wand und offenen Enden, sodass die Thermik die Innenfläche mitzählt, wie es die deklarierte Gesamtfläche tut; Achsschenkel als Klötze; Laufschiene, Fußlaschen und Lagerböcke tragen das Paket."
     }
    ]
   },
@@ -68847,6 +69549,122 @@
        0,
        0,
        -0.645
+      ]
+     }
+    },
+    {
+     "id": "axle-f",
+     "bone": "chassis",
+     "material": "chassis-paint",
+     "role": "body",
+     "tone": 0.45,
+     "kind": "revolve",
+     "profile": [
+      [
+       0,
+       0
+      ],
+      [
+       0,
+       0.0375
+      ],
+      [
+       0.135,
+       0.0375
+      ],
+      [
+       0.135,
+       0
+      ]
+     ],
+     "axis": [
+      0,
+      0,
+      1
+     ],
+     "origin": [
+      0.66,
+      0.1525,
+      0.165
+     ],
+     "repeat": {
+      "count": 2,
+      "translation": [
+       0,
+       0,
+       -0.465
+      ]
+     }
+    },
+    {
+     "id": "axle-r",
+     "bone": "chassis",
+     "material": "chassis-paint",
+     "role": "body",
+     "tone": 0.45,
+     "kind": "revolve",
+     "profile": [
+      [
+       0,
+       0
+      ],
+      [
+       0,
+       0.0375
+      ],
+      [
+       0.135,
+       0.0375
+      ],
+      [
+       0.135,
+       0
+      ]
+     ],
+     "axis": [
+      0,
+      0,
+      1
+     ],
+     "origin": [
+      -0.66,
+      0.1525,
+      0.165
+     ],
+     "repeat": {
+      "count": 2,
+      "translation": [
+       0,
+       0,
+       -0.465
+      ]
+     }
+    },
+    {
+     "id": "lug-bearer",
+     "bone": "chassis",
+     "material": "chassis-paint",
+     "role": "body",
+     "tone": 0.45,
+     "kind": "box",
+     "size": [
+      0.09,
+      0.095,
+      0.145
+     ],
+     "transform": {
+      "translation": [
+       -0.7275,
+       0.3675,
+       0.2725
+      ]
+     },
+     "repeat": {
+      "count": 2,
+      "translation": [
+       0,
+       0,
+       -0.545
       ]
      }
     },
@@ -69625,11 +70443,11 @@
        0.0375
       ],
       [
-       0.344,
+       0.43,
        0.0375
       ],
       [
-       0.344,
+       0.43,
        0
       ]
      ],
@@ -69641,7 +70459,7 @@
      "origin": [
       0,
       0,
-      -0.172
+      -0.215
      ]
     },
     {
@@ -70355,6 +71173,21 @@
      "region": "chassis"
     },
     {
+     "id": "th-axle-f",
+     "of": "axle-f",
+     "region": "chassis"
+    },
+    {
+     "id": "th-axle-r",
+     "of": "axle-r",
+     "region": "chassis"
+    },
+    {
+     "id": "th-lug-bearer",
+     "of": "lug-bearer",
+     "region": "chassis"
+    },
+    {
      "id": "th-battery-cover",
      "region": "battery-box",
      "bone": "chassis",
@@ -70895,6 +71728,12 @@
      "part": "member"
     },
     {
+     "id": "member-lug-bearer",
+     "of": "lug-bearer",
+     "member": "chassis",
+     "part": "member"
+    },
+    {
      "id": "member-cylinder",
      "of": "cylinder",
      "member": "lift-cylinder",
@@ -70927,13 +71766,13 @@
      "kind": "box",
      "size": [
       1.63,
-      0.09,
+      0.14,
       0.04
      ],
      "transform": {
       "translation": [
        0.7275,
-       0.005,
+       0.03,
        0.35
       ]
      },
@@ -71503,16 +72342,12 @@
    ],
    "decisions": [
     {
-     "en": "The closed power compartments become two flush side pods. Each moving scissor stage keeps its crossed arms and centre pin. The extension and end gates continue to travel with their own platform frames.",
-     "de": "Die geschlossenen Aggregatefächer bilden zwei bündige Seitenkästen. Jede bewegliche Scherenstufe behält ihre gekreuzten Arme und den Mittelbolzen. Ausschub und Endgeländer bleiben ihren Plattformrahmen zugeordnet."
+     "en": "Body for a 75 mm feature: the chassis is the tub with one flush pod per side, stub axles and four plain wheel discs; the scissors are eight bars 90 x 75 mm on four stages with the three cross tubes of every inner arm at 75 mm, no pins or bosses, so the stowed stack reads as one layered block and the raised lift as crossing bars; cylinder and rod are two rounds; the platform is one slab with posts, top and mid rails, gate bar and toe boards at 75 mm in place of the real 40 mm tube and 8 mm board; the slide-out deck is a 75 mm plate with its own rail frame inside the main rails; the controller is a box. Ladder, doors, handles and steering knuckles are left out.",
+     "de": "Körper für 75 mm kleinstes Merkmal: Das Fahrgestell ist die Wanne mit je einem bündigen Seitenkasten, Achsstummeln und vier glatten Radscheiben; die Schere besteht aus acht Stäben 90 x 75 mm in vier Stufen mit den drei Querrohren jedes Innenarms in 75 mm, ohne Bolzen und Augen, sodass das eingefahrene Paket als geschichteter Block und die gehobene Bühne als kreuzende Stäbe lesbar ist; Zylinder und Stange sind zwei Rundstäbe; die Bühne ist eine Platte mit Pfosten, Hand- und Knieleisten, Torholm und Fußleisten in 75 mm anstelle des realen 40-mm-Rohrs und 8-mm-Blechs; die Ausschubbühne ist eine 75-mm-Platte mit eigenem Geländerrahmen innerhalb des Hauptgeländers; die Steuerung ist ein Kasten. Leiter, Türen, Griffe und Achsschenkel entfallen."
     },
     {
-     "en": "Three bored cross sections pierce the opposing 6 mm walls of each 90 by 50 mm arm. A welded sleeve clears the 40 mm transverse pin. Inner and outer links retain their separation when folded.",
-     "de": "Drei Querbohrungen durchdringen die gegenüberliegenden 6-mm-Wände jedes 90 × 50 mm großen Scherenarms. Eine eingeschweißte Hülse umschließt den 40-mm-Querbolzen. Innen- und Außenlenker bleiben auch eingefahren getrennt."
-    },
-    {
-     "en": "Rework 10: modelled anew for the 75 mm feature: arms as 90 x 75 mm bars, cross tubes, rollers and the cylinder rod at 75 mm, no separate pins; guardrail posts, rails, gate and toe boards at 75 mm instead of the real 40 mm tube and 30 mm board, the extension deck 75 mm deep.",
-     "de": "Überarbeitung 10: für das 75-mm-Merkmal neu modelliert: Arme als 90 x 75 mm Stäbe, Querrohre, Rollen und Kolbenstange mit 75 mm, keine einzelnen Bolzen; Geländerpfosten, Holme, Tor und Fußleisten mit 75 mm statt des realen 40-mm-Rohrs und 30-mm-Bretts, das Ausschubdeck 75 mm stark."
+     "en": "Thermal: the seven regions on these masses; battery, pump and controller covers and the two outlets (motor vent at the front end, battery plume on the right pod) are thermal-only patches because their body parts are below the feature. Structure: two frame rails and the stack rail with one cross member, pivot bearers, axle bars on four tyre contact supports, the eight arms as members with one joint disc per outer arm, deck beam with end member and the extension runner; battery and platform masses.",
+     "de": "Thermik: die sieben Regionen auf diesen Massen; Batterie-, Pumpen- und Steuerungsdeckel und die beiden Auslässe (Motorlüftung am vorderen Ende, Batteriefahne am rechten Kasten) sind rein thermische Flächen, weil ihre Körperteile unter dem Merkmal liegen. Tragwerk: zwei Rahmenlängsträger und die Paketschiene mit einem Querträger, Lagerböcke, Achsstäbe auf vier Reifenaufstandsflächen, die acht Arme als Stäbe mit je einer Gelenkscheibe pro Außenarm, Bühnenträger mit Endträger und die Ausschubschiene; Massen für Batterie und Bühne."
     }
    ]
   }

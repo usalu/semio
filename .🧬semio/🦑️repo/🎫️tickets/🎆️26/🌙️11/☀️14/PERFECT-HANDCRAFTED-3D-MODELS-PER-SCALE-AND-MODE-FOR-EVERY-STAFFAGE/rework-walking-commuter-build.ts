@@ -44,7 +44,7 @@ const SEG_TITLE: Record<string, [string, string]> = { proximal: ["proximal phala
 const FINGER_TITLE: Record<string, [string, string]> = { thumb: ["thumb", "Daumen"], index: ["index finger", "Zeigefinger"], middle: ["middle finger", "Mittelfinger"], ring: ["ring finger", "Ringfinger"], little: ["little finger", "Kleinfinger"] };
 /** 🤏 Curl of the three joints of each finger towards the palm, degrees: the hanging hand and the fist round the 36 mm strap. */
 const CURL = { relaxed: { index: [14, 22, 10], middle: [18, 26, 12], ring: [22, 30, 14], little: [26, 32, 16] }, grip: { index: [84, 96, 46], middle: [86, 98, 46], ring: [88, 98, 46], little: [90, 98, 46] } } as const;
-const THUMB = { relaxed: { angle: [38, -6, -4], curl: [22, 8, 10] }, grip: { angle: [34, -22, -24], curl: [48, 38, 30] } } as const;
+const THUMB = { relaxed: { angle: [38, -6, -4], curl: [22, 8, 10] }, grip: { angle: [20, -15, -10], curl: [25, 10, 25] } } as const;
 type Side = "l" | "r";
 const sign = (side: Side): number => (side === "l" ? 1 : -1);
 const stateOf = (side: Side): "relaxed" | "grip" => (side === "r" ? "grip" : "relaxed");
@@ -115,6 +115,18 @@ function carry(b: Json | undefined): void {
 }
 for (const p of asset.poses as Json[]) carry(p.bones);
 for (const c of asset.clips as Json[]) for (const key of c.keys as Json[]) carry(key.bones);
+/** ⌚ The watch is read on the far (left) wrist, so the near hand never lets go of the strap: far upper arm 19 degrees forward, elbow flexed 104 so that the forearm rises gently at the height of the chest (the drawings are flat shapes in the sagittal plane, so the forearm cannot be turned across the body), the wrist straight (a bent wrist leaves a sliver of the hand next to the cuff that does not print at 1:1000), the fingers closing a little, the far shoulder lifted 4 degrees on its clavicle. */
+{
+  const watch = (asset.poses as Json[]).find((p) => p.id === "check-watch")!;
+  const closing: Json = {};
+  for (const finger of Object.keys(FINGERS)) { closing[`${finger}-proximal-l`] = { angleDeg: 0, abductionDeg: -14 }; closing[`${finger}-middle-l`] = { angleDeg: 0, abductionDeg: -16 }; }
+  Object.assign(watch.bones, { "arm-r": { angleDeg: GRIP.arm }, "forearm-r": { angleDeg: GRIP.forearm }, "hand-r": { angleDeg: GRIP.hand }, "arm-l": { angleDeg: 22, abductionDeg: 0 }, "forearm-l": { angleDeg: 112 }, "hand-l": { angleDeg: 0 }, "clavicle-l": { angleDeg: 4 }, bag: { angleDeg: 0 }, ...closing });
+  watch.description = text("Standing still, the far forearm raised in front of the body to read the watch on the left wrist, the near hand staying on the bag strap, head and neck bowed towards the wrist.", "Ruhiger Stand, der ferne Unterarm vor dem Körper angehoben zum Ablesen der Uhr am linken Handgelenk, die nahe Hand bleibt am Taschenriemen, Kopf und Hals zum Handgelenk geneigt.");
+  const glance = (asset.clips as Json[]).find((c) => c.id === "glance-at-watch")!;
+  glance.description = text("Standing still with both feet flat: the far forearm rises in front of the body to read the watch on the left wrist, holds, and is lowered again while the head follows; the near hand keeps the bag strap.", "Ruhiger Stand mit beiden Füßen flach: Der ferne Unterarm hebt sich vor den Körper zum Ablesen der Uhr am linken Handgelenk, hält und wird wieder gesenkt, der Kopf folgt; die nahe Hand hält den Taschenriemen.");
+}
+/** 🫁 Breathing lifts both shoulders on their clavicles by a degree and a half at the top of the breath. */
+Object.assign(((asset.clips as Json[]).find((c) => c.id === "idle-breathing")!.keys as Json[]).find((k) => k.t === 2)!.bones, { "clavicle-l": { angleDeg: 1.5 }, "clavicle-r": { angleDeg: 1.5 } });
 Object.assign(asset.anchors.find((a: Json) => a.id === "strap-grip"), { x: 0.076, y: 0, z: 0.024 });
 
 asset.dimensions.widthM = 0.425;

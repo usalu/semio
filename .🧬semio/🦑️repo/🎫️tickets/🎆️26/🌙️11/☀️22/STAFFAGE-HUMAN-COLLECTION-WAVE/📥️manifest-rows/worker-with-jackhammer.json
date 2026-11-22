@@ -1,0 +1,53 @@
+{
+  "id": "worker-with-jackhammer",
+  "category": "humans",
+  "title": {
+    "en": "Worker with Jackhammer",
+    "de": "Arbeitende Person mit Abbruchhammer"
+  },
+  "heightM": 1.86,
+  "widthM": 0.949,
+  "powerW": 2776.3,
+  "poses": [
+    "breaking",
+    "pressing-down",
+    "rocking-out",
+    "standing-ready"
+  ],
+  "clips": [
+    "hammering",
+    "break-and-rock",
+    "idle-breathing"
+  ],
+  "representations": {
+    "50": "authored",
+    "100": "authored",
+    "200": "authored",
+    "500": "authored"
+  },
+  "symbols": [],
+  "analytics": [
+    "thermal",
+    "transport",
+    "structural"
+  ],
+  "exports": [
+    "svg",
+    "pdf",
+    "dxf",
+    "dwg",
+    "png-sequence",
+    "mp4",
+    "webm",
+    "component",
+    "glb",
+    "fbx",
+    "model",
+    "model-zip"
+  ],
+  "distinction": {
+    "en": "A road worker in hi-vis vest, hard hat with ear defenders and safety boots breaking concrete with a 31 kg electric demolition hammer, both fists on the T-handle in a braced, staggered stance: breaking, pressing down, rocking the chisel out and standing ready; the 2000 W nameplate of the breaker dominates the total power.",
+    "de": "Eine Straßenbauarbeiterin bzw. ein Straßenbauarbeiter in Warnweste, Schutzhelm mit Kapselgehörschutz und Sicherheitsstiefeln bricht mit einem 31 kg schweren Elektro-Abbruchhammer Beton auf, beide Fäuste am T-Griff, in versetzter, abgestützter Stellung: Brechen, Nachdrücken, Meißel herauswippen und Bereitstehen; die Nennleistung des Hammers von 2000 W bestimmt die Gesamtleistung."
+  },
+  "completion": "authored"
+}

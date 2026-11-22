@@ -8,11 +8,17 @@ pub struct NativeOpenedFile {
     pub source_instance: u32,
     pub instance: u32,
     pub document_id: String,
+    pub name: String,
     pub folder: PathBuf,
     published: bool,
 }
 
 impl NativeOpenedFile {
+    /// 🗂️ A fresh instance holding a kept document read back from its `folder`, to be published or destroyed.
+    pub fn kept(program: ProgramBridgeEntry, name: String, source_instance: u32, instance: u32, document_id: String, folder: PathBuf) -> Self {
+        Self { program, source_instance, instance, document_id, name, folder, published: false }
+    }
+
     pub fn publish(mut self) { self.published = true; }
 }
 
@@ -25,7 +31,7 @@ impl Drop for NativeOpenedFile {
 impl OpeningState {
     pub fn start_native_file_open(
         &mut self, program: ProgramBridgeEntry, app: String, source_instance: u32,
-        declaration: NativeMediaDeclaration, folder: PathBuf, label: String,
+        declaration: NativeMediaDeclaration, folder: PathBuf, label: String, source: Option<PathBuf>,
     ) -> bool {
         if self.document_opening.as_ref().is_some_and(ShellDocumentOpening::running) || self.native_media_save.is_some() {
             return false;
@@ -37,7 +43,7 @@ impl OpeningState {
         let progress = Arc::new(AtomicU8::new(0));
         let worker_progress = progress.clone();
         let pending = ShellDetached::spawn(async move {
-            open_native_file(program, app, source_instance, declaration, folder, worker_cancel, worker_progress).await
+            open_native_file(program, app, source_instance, declaration, folder, source, worker_cancel, worker_progress).await
                 .map(ShellDocumentOpenAnswer::NativeFile).map_err(ProgramFault::from)
         });
         let mut opening = ShellDocumentOpening::new(label, ShellDocumentOpenPhase::Instantiating, plugin_id, app_id, None, Some(pending));
@@ -50,13 +56,17 @@ impl OpeningState {
 
 async fn open_native_file(
     program: ProgramBridgeEntry, app: String, source_instance: u32, declaration: NativeMediaDeclaration,
-    folder: PathBuf, cancel: CancelToken, progress: Arc<AtomicU8>,
+    folder: PathBuf, source: Option<PathBuf>, cancel: CancelToken, progress: Arc<AtomicU8>,
 ) -> Result<Option<NativeOpenedFile>, String> {
     if cancel.is_cancelled_now() { return Ok(None); }
     let extension = declaration.extension().ok_or("Open File has no declared extension")?;
-    let Some(path) = ui_host::select_native_paths(ui_host::NativeFileDialogRequest::open([extension], false)).await
-        .into_iter().next() else { return Ok(None); };
+    let Some(path) = (match source {
+        Some(path) => Some(path),
+        None => ui_host::select_native_paths(ui_host::NativeFileDialogRequest::open([extension], false)).await.into_iter().next(),
+    }) else { return Ok(None); };
     if cancel.is_cancelled_now() { return Ok(None); }
+    if !route_native_pick(&path, &cancel)? { return Ok(None); }
+    let name = path.file_name().and_then(|name| name.to_str()).unwrap_or_default().to_owned();
     let mut opened = if declaration.natural_pdf_source().is_some() {
         let (file, extent) = open_selected_file(&path, u32::MAX as u64)?;
         let mut retained = None;
@@ -64,7 +74,7 @@ async fn open_native_file(
             &app, &declaration, file, extent as u32, &cancel,
             |done, total| progress.store((done * 100 / total) as u8 + 1, Ordering::Release),
             |instance| retained = Some(NativeOpenedFile {
-                program: program.clone(), source_instance, instance, document_id: String::new(),
+                program: program.clone(), source_instance, instance, document_id: String::new(), name: name.clone(),
                 folder: folder.clone(), published: false,
             }),
         ).await?;
@@ -74,7 +84,7 @@ async fn open_native_file(
         let maximum_bytes = declaration.natural_file_payload_limit().await?;
         let Some(bytes) = read_selected_file(&path, maximum_bytes, || cancel.is_cancelled_now()).await? else { return Ok(None); };
         let instance = program.create_app(&app).await.map_err(|error| error.to_string())?;
-        let opened = NativeOpenedFile { program, source_instance, instance, document_id: String::new(), folder, published: false };
+        let opened = NativeOpenedFile { program, source_instance, instance, document_id: String::new(), name, folder, published: false };
         if cancel.is_cancelled_now() || !wait_native_file_import(&cancel, opened.program.import_native_file(instance, &declaration, bytes)).await? {
             return Ok(None);
         }
@@ -99,6 +109,55 @@ async fn open_native_file(
     if !readback.map_err(|error| error.to_string())? { return Err("Open File could not verify the local document archive".into()); }
     opened.document_id = document.to_owned();
     Ok(Some(opened))
+}
+
+/// 🗣️ The refusal notice of the shared picked-file vocabulary with `{file}` filled, every language joined like React's unknown-locale rendering because this task holds no locale.
+fn native_refusal_text(reason: semio_os_io::PickedFileRefusal, file: &str) -> String {
+    picked_file_refusal_text(reason.as_str(), file, None)
+}
+
+/// 📖️ The picked file as a bounded random-access package source; a failed read is `None` and a cancel is the task's own token.
+struct NativePickSource<'a> {
+    path: &'a Path,
+    size: u64,
+    cancel: &'a CancelToken,
+}
+
+impl semio_os_io::PackageSource for NativePickSource<'_> {
+    fn size(&self) -> u64 { self.size }
+    fn read(&self, start: u64, end: u64) -> Option<Vec<u8>> {
+        use std::io::{Seek, SeekFrom};
+        let mut file = std::fs::File::open(self.path).ok()?;
+        file.seek(SeekFrom::Start(start)).ok()?;
+        let mut bytes = Vec::new();
+        file.take(end.saturating_sub(start)).read_to_end(&mut bytes).ok()?;
+        Some(bytes)
+    }
+    fn cancelled(&self) -> bool { self.cancel.is_cancelled_now() }
+}
+
+/// 🧭️ The registered global format catalog as the picked-file routing port: the editor is already chosen by the declaration, so the owner of a kind is the kind itself, and only the registered revision and package claims can refuse.
+struct GlobalFormatCatalog;
+
+impl semio_os_io::PickedFileCatalog for GlobalFormatCatalog {
+    fn descriptors(&self) -> Vec<semio_os_io::FormatDescriptor> {
+        semio_os_io::format_catalog().read().map(|catalog| catalog.values().cloned().collect()).unwrap_or_default()
+    }
+    fn artifact_ref_of(&self, kind_id: &str) -> Option<String> { Some(kind_id.to_string()) }
+}
+
+/// 📂️ Routes the picked file through the one resolution and content check React's Open file runs before any document is created. `Ok(false)` is a cancel; an ambiguous name or content that contradicts it is refused with the shared notice text. A name the catalog does not know proceeds, because here the declared editor, not the catalog, chose the extension the picker admitted.
+fn route_native_pick(path: &Path, cancel: &CancelToken) -> Result<bool, String> {
+    use semio_os_io::{PickedFileRefusal, PickedFileRoute};
+    let name = path.file_name().and_then(|name| name.to_str()).unwrap_or_default();
+    let size = std::fs::metadata(path).map_err(|error| error.to_string())?.len();
+    let source = NativePickSource { path, size, cancel };
+    let head = |bytes: usize| semio_os_io::PackageSource::read(&source, 0, (bytes as u64).min(size)).unwrap_or_default();
+    match semio_os_io::route_picked_file(Some(&GlobalFormatCatalog), name, None, &head, Some(&source)) {
+        Err(semio_os_io::PackageSniffCancelled) => Ok(false),
+        Ok(PickedFileRoute::Refused(reason @ (PickedFileRefusal::FormatAmbiguous | PickedFileRefusal::ContentMismatch))) => Err(native_refusal_text(reason, name)),
+        Ok(_) => Ok(true),
+    }
 }
 
 /// 🛑 Drops a cancelled import request so the kernel can retire its abandoned command.

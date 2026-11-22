@@ -4,10 +4,96 @@ use crate::standards::v1_7::subsets::base::schema::snapshot::*;
 use semio_framework_artifact_reference::{ArtifactRef,ArtifactDialect};
 use semio_framework_value::ToValue;
 
+#[path = "📖️dct-view.rs"]
+pub mod dct_view;
+
+#[path = "🔎️dct-lookup.rs"]
+pub mod dct_lookup;
+
+#[path = "🗃️install-pack.rs"]
+pub mod install_pack;
+
 const DCT_KIND: &str = "s.stdio.jpeg";
+pub const SAMPLED_IMAGE_KIND: &str = "s.stdio.samples";
+pub const INLINE_IMAGE_SAMPLES_MAXIMUM_BYTES: usize = 1 << 20;
 const RAW_KIND: &str = "s.stdio.binary";
 const RAW_STANDARD: &str = "raw";
 const RAW_SUBSET: &str = "*";
+
+/// 🎞️ Hashes an admitted large sampled image XObject over its borrowed native bytes.
+pub struct PdfSampledResourceIdentity {
+    hash: semio_framework_hash::Sha256,
+    cursor: usize,
+    filter_wire: [u8; 160],
+    filter_len: usize,
+}
+
+impl PdfSampledResourceIdentity {
+    /// 📐️ Bounds the four independently owned reference strings.
+    pub const REFERENCE_BYTES: usize = artifact_reference_bytes(SAMPLED_IMAGE_KIND);
+    /// 📄️ Native bytes hashed per controlled work unit.
+    pub const PAGE_BYTES: usize = 4_096;
+
+    /// 🎛️ Binds a raw or Flate-filtered sampled image stream's compact canonical filter wire.
+    pub fn new(filters: &[PdfStreamFilter]) -> Option<Self> {
+        use std::io::Write;
+        let mut filter_wire = [0u8; 160];
+        let filter_len = match filters {
+            [] => {
+                filter_wire[..2].copy_from_slice(b"[]");
+                2
+            }
+            [PdfStreamFilter::Flate { predictor: None }] => {
+                let wire = br#"[{"kind":"flate","predictor":null}]"#;
+                filter_wire[..wire.len()].copy_from_slice(wire);
+                wire.len()
+            }
+            [PdfStreamFilter::Flate { predictor: Some(p) }] => {
+                let mut cursor = std::io::Cursor::new(&mut filter_wire[..]);
+                write!(
+                    cursor,
+                    r#"[{{"kind":"flate","predictor":{{"predictor":{},"colors":{},"bitsPerComponent":{},"columns":{}}}}}]"#,
+                    p.predictor, p.colors, p.bits_per_component, p.columns,
+                ).ok()?;
+                cursor.position() as usize
+            }
+            _ => return None,
+        };
+        let mut hash = semio_framework_hash::Sha256::new();
+        hash.update(SAMPLED_IMAGE_KIND.as_bytes());
+        Some(Self { hash, cursor: 0, filter_wire, filter_len })
+    }
+
+    /// ▶️ Hashes at most `work` pages of native stream bytes and reports page work consumed.
+    pub fn advance(&mut self, data: &[u8], work: usize) -> usize {
+        let limit = work.saturating_mul(Self::PAGE_BYTES);
+        let end = self.cursor.saturating_add(limit).min(data.len());
+        let bytes = end - self.cursor;
+        self.append(&data[self.cursor..end]);
+        bytes.div_ceil(Self::PAGE_BYTES)
+    }
+
+    /// 🧮️ Hashes the next verified native bytes without requiring sample materialization.
+    pub fn append(&mut self, data: &[u8]) {
+        self.hash.update(data);
+        self.cursor += data.len();
+    }
+
+    /// ✅️ Indicates that the borrowed native sample stream was read completely.
+    pub fn complete(&self, length: usize) -> bool { self.cursor == length }
+
+    /// 🧾️ Materializes the bounded reference after all native sample bytes have been hashed.
+    pub fn reference(&self) -> ArtifactRef {
+        artifact_reference(SAMPLED_IMAGE_KIND, self.digest())
+    }
+
+    /// 🔑️ Computes the fixed-size native identity after hashing admitted input.
+    pub fn digest(&self) -> [u8; 32] {
+        let mut hash = self.hash.clone();
+        hash.update(&self.filter_wire[..self.filter_len]);
+        hash.finalize()
+    }
+}
 
 /// 🔐️ Hashes an admitted one-filter JPEG over its borrowed native bytes.
 pub struct PdfDctResourceIdentity {
@@ -37,10 +123,39 @@ impl PdfDctResourceIdentity {
     /// ▶️ Hashes at most the granted number of native stream bytes.
     pub fn advance(&mut self, data: &[u8], work: usize) -> usize {
         let end = self.cursor.saturating_add(work).min(data.len());
-        self.hash.update(&data[self.cursor..end]);
         let used = end - self.cursor;
-        self.cursor = end;
+        self.append(&data[self.cursor..end]);
         used
+    }
+
+    /// 🔑️ Reads the exact authored DCT identity without allocating reference strings.
+    pub fn parse_reference(reference: &ArtifactRef) -> Option<[u8; 32]> {
+        if reference.dialect.artifact_kind != RAW_KIND || reference.dialect.standard != RAW_STANDARD
+            || reference.dialect.subset != RAW_SUBSET
+        {
+            return None;
+        }
+        let hex = reference.artifact_id.strip_prefix("pdf:s.stdio.jpeg:sha256:")?.as_bytes();
+        let hex: &[u8; 64] = hex.try_into().ok()?;
+        let nibble = |byte| match byte {
+            b'0'..=b'9' => Some(byte - b'0'),
+            b'a'..=b'f' => Some(byte - b'a' + 10),
+            _ => None,
+        };
+        let mut digest = [0; 32];
+        for (value, pair) in digest.iter_mut().zip(hex.chunks_exact(2)) {
+            *value = nibble(pair[0])? << 4 | nibble(pair[1])?;
+        }
+        Some(digest)
+    }
+
+    /// 📍️ Gives the number of original bytes already hashed.
+    pub fn position(&self) -> usize { self.cursor }
+
+    /// 🧮️ Hashes the next verified native bytes without requiring a contiguous source.
+    pub fn append(&mut self, data: &[u8]) {
+        self.hash.update(data);
+        self.cursor += data.len();
     }
 
     /// ✅️ Indicates that the borrowed encoded stream was read completely.
@@ -48,9 +163,19 @@ impl PdfDctResourceIdentity {
 
     /// 🧾️ Materializes the bounded reference after all encoded bytes have been hashed.
     pub fn reference(&self) -> ArtifactRef {
+        Self::reference_for_digest(self.digest())
+    }
+
+    /// 🪪️ Materializes the native DCT reference from a completed external digest.
+    pub fn reference_for_digest(digest: [u8; 32]) -> ArtifactRef {
+        artifact_reference(DCT_KIND, digest)
+    }
+
+    /// 🔑️ Computes the fixed-size native identity after hashing admitted input.
+    pub fn digest(&self) -> [u8; 32] {
         let mut hash = self.hash.clone();
         hash.update(self.filter_wire);
-        artifact_reference(DCT_KIND, hash.finalize())
+        hash.finalize()
     }
 }
 
@@ -71,6 +196,21 @@ pub fn artifact_reference(kind: &str, digest: [u8; 32]) -> ArtifactRef {
         artifact_id.push(char::from(HEX[usize::from(byte & 15)]));
     }
     ArtifactRef { artifact_id, dialect: ArtifactDialect { artifact_kind: RAW_KIND.into(), standard: RAW_STANDARD.into(), subset: RAW_SUBSET.into() } }
+}
+
+pub fn qualified_image_dictionary(dict: &[PdfDictEntry]) -> bool {
+    use crate::standards::v1_7::subsets::base::modules::lexer::{dict_get, dict_name};
+    dict.len() <= 8 && dict.iter().enumerate().all(|(index, entry)| {
+        !dict[..index].iter().any(|previous| previous.key == entry.key) && match entry.key.as_str() {
+            "Type" => entry.value.as_name() == Some("XObject"),
+            "Subtype" => entry.value.as_name() == Some("Image"),
+            "BitsPerComponent" => entry.value == PdfObject::Int(8),
+            "ImageMask" => entry.value.as_bool() == Some(false),
+            "Interpolate" => entry.value.as_bool().is_some(),
+            "Width" | "Height" | "ColorSpace" => true,
+            _ => false,
+        }
+    }) && dict_name(dict, "Subtype") == Some("Image") && dict_get(dict, "BitsPerComponent").is_some()
 }
 
 /// 🛂️ Native admission and resolution are the only access to foreign encoded bodies.

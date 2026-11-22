@@ -157,8 +157,8 @@
     },
     "dependencies": {
       "type": "array",
-      "minItems": 34,
-      "maxItems": 34,
+      "minItems": 38,
+      "maxItems": 38,
       "items": {
         "type": "object",
         "additionalProperties": false,

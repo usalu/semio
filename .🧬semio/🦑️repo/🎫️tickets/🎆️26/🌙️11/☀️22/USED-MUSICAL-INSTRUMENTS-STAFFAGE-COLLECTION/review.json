@@ -1,0 +1,412 @@
+{
+ "used-accordion": {
+  "before": "candidate present, published (catalog file and manifest row), listed as `published` in the stub ledger; no author report.",
+  "after": "finished and proven: full proof `VALID` without finding, check CLI `✓`, catalog copy byte-equal to the candidate, manifest row equal to the row derived from the candidate, member of the collection `used-instruments`. No correction was needed, so the asset was not re-published.",
+  "powerW": "0",
+  "row": "prove-row.ts: OK used-accordion: catalog copy equal, manifest row equal, collection member; objects 0.545×0.503 m, 15.5 kg, 0 W, poses stored/case-closed/carried/played, clips carry/bellows-cycle, reps authored/authored/authored/unavailable",
+  "sheets": [
+   "`used-accordion.3d.png`, a contact sheet of four `r3-sheet.ts` sheets (six views each): 1:50 body in the poses `stored`, `carried` and `played`, and the 1:200 body in the default pose.",
+   "`used-accordion.2d.png`, a contact sheet of the `r3-2d.ts` drawings (elevation, front and plan, light-line and light-solid) of the authored scales 1:50, 1:100, 1:200 in the default pose."
+  ],
+  "findings": [
+   "No defect found on the opened sheets: every pose is closed, nothing floats except the instrument held by the absent player, the coarse scales keep the silhouette, the 2D drawings agree with the solids."
+  ],
+  "imperfect": [
+   "Reviewed on contact sheets at half resolution (1200 × 800 px per sheet); details under about 5 mm of model size were not inspected by eye and rest on the measured rules of the full proof alone.",
+   "The thermal and structure solid lists were not opened as sheets; they are covered by the measured rules of the full proof (`checkVolumes 0`) only.",
+   "Clip instants were not rendered as sheets; the check CLI walked every clip sample without a finding.",
+   "The catalog test suites and the site build were not run (reserved for the umbrella coordinator)."
+  ]
+ },
+ "used-baby-grand-piano": {
+  "before": "candidate present, published (catalog file and manifest row), listed as `published` in the stub ledger; no author report.",
+  "after": "finished and proven: full proof `VALID` without finding, check CLI `✓`, catalog copy byte-equal to the candidate, manifest row equal to the row derived from the candidate, member of the collection `used-instruments`. No correction was needed, so the asset was not re-published.",
+  "powerW": "0",
+  "row": "prove-row.ts: OK used-baby-grand-piano: catalog copy equal, manifest row equal, collection member; objects 1.536×1.651 m, 292.649437 kg, 0 W, poses stored/carried/played/played-short-prop/played-lid-closed, clips carry/lid-opening/sustain-pedal, reps authored/authored/authored/authored",
+  "sheets": [
+   "`used-baby-grand-piano.3d.png`, a contact sheet of four `r3-sheet.ts` sheets (six views each): 1:50 body in the poses `stored`, `carried` and `played`, and the 1:200 body in the default pose.",
+   "`used-baby-grand-piano.2d.png`, a contact sheet of the `r3-2d.ts` drawings (elevation, front and plan, light-line and light-solid) of the authored scales 1:50, 1:100, 1:200, 1:500 in the default pose."
+  ],
+  "findings": [
+   "No defect found on the opened sheets: every pose is closed, nothing floats except the instrument held by the absent player, the coarse scales keep the silhouette, the 2D drawings agree with the solids."
+  ],
+  "imperfect": [
+   "The 1:200 and 1:500 drawings dimension the stored piano at 1.51 m against 1.54 m at 1:50 and 1:100: the strap buckles above the rim are generalised away at the coarse scales.",
+   "Reviewed on contact sheets at half resolution (1200 × 800 px per sheet); details under about 5 mm of model size were not inspected by eye and rest on the measured rules of the full proof alone.",
+   "The thermal and structure solid lists were not opened as sheets; they are covered by the measured rules of the full proof (`checkVolumes 0`) only.",
+   "Clip instants were not rendered as sheets; the check CLI walked every clip sample without a finding.",
+   "The catalog test suites and the site build were not run (reserved for the umbrella coordinator)."
+  ]
+ },
+ "used-cello": {
+  "before": "candidate present, published (catalog file and manifest row), listed as `published` in the stub ledger; no author report.",
+  "after": "finished and proven: full proof `VALID` without finding, check CLI `✓`, catalog copy byte-equal to the candidate, manifest row equal to the row derived from the candidate, member of the collection `used-instruments`. No correction was needed, so the asset was not re-published.",
+  "powerW": "0",
+  "row": "prove-row.ts: OK used-cello: catalog copy equal, manifest row equal, collection member; objects 1.361×0.306 m, 8.071 kg, 0 W, poses stored/carried/played, clips carry/endpin-extend/bowing, reps authored/authored/authored/authored",
+  "sheets": [
+   "`used-cello.3d.png`, a contact sheet of four `r3-sheet.ts` sheets (six views each): 1:50 body in the poses `stored`, `carried` and `played`, and the 1:200 body in the default pose.",
+   "`used-cello.2d.png`, a contact sheet of the `r3-2d.ts` drawings (elevation, front and plan, light-line and light-solid) of the authored scales 1:50, 1:100, 1:200, 1:500 in the default pose."
+  ],
+  "findings": [
+   "No defect found on the opened sheets: every pose is closed, nothing floats except the instrument held by the absent player, the coarse scales keep the silhouette, the 2D drawings agree with the solids."
+  ],
+  "imperfect": [
+   "Reviewed on contact sheets at half resolution (1200 × 800 px per sheet); details under about 5 mm of model size were not inspected by eye and rest on the measured rules of the full proof alone.",
+   "The thermal and structure solid lists were not opened as sheets; they are covered by the measured rules of the full proof (`checkVolumes 0`) only.",
+   "Clip instants were not rendered as sheets; the check CLI walked every clip sample without a finding.",
+   "The catalog test suites and the site build were not run (reserved for the umbrella coordinator)."
+  ]
+ },
+ "used-classical-guitar": {
+  "before": "candidate present, published (catalog file and manifest row), listed as `published` in the stub ledger; no author report.",
+  "after": "finished and proven: full proof `VALID` without finding, check CLI `✓`, catalog copy byte-equal to the candidate, manifest row equal to the row derived from the candidate, member of the collection `used-instruments`. No correction was needed, so the asset was not re-published.",
+  "powerW": "0",
+  "row": "prove-row.ts: OK used-classical-guitar: catalog copy equal, manifest row equal, collection member; objects 1.02451×1.87788 m, 4.547 kg, 0 W, poses stored/carried/played, clips carry/play, reps authored/authored/authored/authored",
+  "sheets": [
+   "`used-classical-guitar.3d.png`, a contact sheet of four `r3-sheet.ts` sheets (six views each): 1:50 body in the poses `stored`, `carried` and `played`, and the 1:200 body in the default pose.",
+   "`used-classical-guitar.2d.png`, a contact sheet of the `r3-2d.ts` drawings (elevation, front and plan, light-line and light-solid) of the authored scales 1:50, 1:100, 1:200, 1:500 in the default pose."
+  ],
+  "findings": [
+   "No defect found on the opened sheets: every pose is closed, nothing floats except the instrument held by the absent player, the coarse scales keep the silhouette, the 2D drawings agree with the solids."
+  ],
+  "imperfect": [
+   "`dimensions.widthM` 1.878 m is the whole stored group (gig bag lying beside the stand and footstool), not the 0.99 m guitar.",
+   "Reviewed on contact sheets at half resolution (1200 × 800 px per sheet); details under about 5 mm of model size were not inspected by eye and rest on the measured rules of the full proof alone.",
+   "The thermal and structure solid lists were not opened as sheets; they are covered by the measured rules of the full proof (`checkVolumes 0`) only.",
+   "Clip instants were not rendered as sheets; the check CLI walked every clip sample without a finding.",
+   "The catalog test suites and the site build were not run (reserved for the umbrella coordinator)."
+  ]
+ },
+ "used-concert-harp": {
+  "before": "candidate present, published (catalog file and manifest row), listed as `published` in the stub ledger; no author report.",
+  "after": "finished and proven: full proof `VALID` without finding, check CLI `✓`, catalog copy byte-equal to the candidate, manifest row equal to the row derived from the candidate, member of the collection `used-instruments`. No correction was needed, so the asset was not re-published.",
+  "powerW": "0",
+  "row": "prove-row.ts: OK used-concert-harp: catalog copy equal, manifest row equal, collection member; objects 1.956×1.153 m, 44.79 kg, 0 W, poses stored/carried/upright/played, clips carry/tilt-to-shoulder/pedal-change, reps authored/authored/authored/authored",
+  "sheets": [
+   "`used-concert-harp.3d.png`, a contact sheet of four `r3-sheet.ts` sheets (six views each): 1:50 body in the poses `stored`, `carried` and `played`, and the 1:200 body in the default pose.",
+   "`used-concert-harp.2d.png`, a contact sheet of the `r3-2d.ts` drawings (elevation, front and plan, light-line and light-solid) of the authored scales 1:50, 1:100, 1:200, 1:500 in the default pose."
+  ],
+  "findings": [
+   "No defect found on the opened sheets: every pose is closed, nothing floats except the instrument held by the absent player, the coarse scales keep the silhouette, the 2D drawings agree with the solids."
+  ],
+  "imperfect": [
+   "`author_harp_texts.py` (16:52) is older than the document (16:55), `author-harp.py` and the geometry module are older still; consistent with a final regeneration.",
+   "Reviewed on contact sheets at half resolution (1200 × 800 px per sheet); details under about 5 mm of model size were not inspected by eye and rest on the measured rules of the full proof alone.",
+   "The thermal and structure solid lists were not opened as sheets; they are covered by the measured rules of the full proof (`checkVolumes 0`) only.",
+   "Clip instants were not rendered as sheets; the check CLI walked every clip sample without a finding.",
+   "The catalog test suites and the site build were not run (reserved for the umbrella coordinator)."
+  ]
+ },
+ "used-djembe-and-cajon": {
+  "before": "candidate present, published (catalog file and manifest row), listed as `published` in the stub ledger; no author report.",
+  "after": "finished and proven: full proof `VALID` without finding, check CLI `✓`, catalog copy byte-equal to the candidate, manifest row equal to the row derived from the candidate, member of the collection `used-instruments`. No correction was needed, so the asset was not re-published.",
+  "powerW": "0",
+  "row": "prove-row.ts: OK used-djembe-and-cajon: catalog copy equal, manifest row equal, collection member; objects 0.599×0.763 m, 11.74 kg, 0 W, poses stored/carried/played, clips carry/play, reps authored/authored/authored/unavailable",
+  "sheets": [
+   "`used-djembe-and-cajon.3d.png`, a contact sheet of four `r3-sheet.ts` sheets (six views each): 1:50 body in the poses `stored`, `carried` and `played`, and the 1:200 body in the default pose.",
+   "`used-djembe-and-cajon.2d.png`, a contact sheet of the `r3-2d.ts` drawings (elevation, front and plan, light-line and light-solid) of the authored scales 1:50, 1:100, 1:200 in the default pose."
+  ],
+  "findings": [
+   "No defect found on the opened sheets: every pose is closed, nothing floats except the instrument held by the absent player, the coarse scales keep the silhouette, the 2D drawings agree with the solids."
+  ],
+  "imperfect": [
+   "The authoritative script `author-djembe-cajon.py` is two minutes newer (16:23:02) than the document it wrote (16:21:09); the script was not re-run by the finisher, so a last edit of the script that never reached the document cannot be excluded. The document as it is passes the full proof and equals the catalog copy.",
+   "Reviewed on contact sheets at half resolution (1200 × 800 px per sheet); details under about 5 mm of model size were not inspected by eye and rest on the measured rules of the full proof alone.",
+   "The thermal and structure solid lists were not opened as sheets; they are covered by the measured rules of the full proof (`checkVolumes 0`) only.",
+   "Clip instants were not rendered as sheets; the check CLI walked every clip sample without a finding.",
+   "The catalog test suites and the site build were not run (reserved for the umbrella coordinator)."
+  ]
+ },
+ "used-double-bass": {
+  "before": "candidate present, published (catalog file and manifest row), listed as `published` in the stub ledger; no author report.",
+  "after": "finished and proven: full proof `VALID` without finding, check CLI `✓`, catalog copy byte-equal to the candidate, manifest row equal to the row derived from the candidate, member of the collection `used-instruments`. No correction was needed, so the asset was not re-published.",
+  "powerW": "0",
+  "row": "prove-row.ts: OK used-double-bass: catalog copy equal, manifest row equal, collection member; objects 0.745×3.206 m, 17.43 kg, 0 W, poses stored/zipped/carried/played, clips carry/bowing, reps authored/authored/authored/authored",
+  "sheets": [
+   "`used-double-bass.3d.png`, a contact sheet of four `r3-sheet.ts` sheets (six views each): 1:50 body in the poses `stored`, `carried` and `played`, and the 1:200 body in the default pose.",
+   "`used-double-bass.2d.png`, a contact sheet of the `r3-2d.ts` drawings (elevation, front and plan, light-line and light-solid) of the authored scales 1:50, 1:100, 1:200, 1:500 in the default pose."
+  ],
+  "findings": [
+   "No defect found on the opened sheets: every pose is closed, nothing floats except the instrument held by the absent player, the coarse scales keep the silhouette, the 2D drawings agree with the solids."
+  ],
+  "imperfect": [
+   "`dimensions.widthM` 3.206 m is the whole stored group (bass lying in its open cover with the stool beside it), not the 1.80 m bass.",
+   "Reviewed on contact sheets at half resolution (1200 × 800 px per sheet); details under about 5 mm of model size were not inspected by eye and rest on the measured rules of the full proof alone.",
+   "The thermal and structure solid lists were not opened as sheets; they are covered by the measured rules of the full proof (`checkVolumes 0`) only.",
+   "Clip instants were not rendered as sheets; the check CLI walked every clip sample without a finding.",
+   "The catalog test suites and the site build were not run (reserved for the umbrella coordinator)."
+  ]
+ },
+ "used-drum-kit": {
+  "before": "published at 17:18 but listed as `running` in the stub ledger; no author report.",
+  "after": "finished and proven: full proof `VALID` without finding, check CLI `✓`, catalog copy byte-equal to the candidate, manifest row equal to the row derived from the candidate, member of the collection `used-instruments`. No correction was needed, so the asset was not re-published.",
+  "powerW": "0",
+  "row": "prove-row.ts: OK used-drum-kit: catalog copy equal, manifest row equal, collection member; objects 1.265×1.913 m, 96.64 kg, 0 W, poses stored/carried/played, clips carry/groove, reps authored/authored/authored/authored",
+  "sheets": [
+   "`used-drum-kit.3d.png`, a contact sheet of four `r3-sheet.ts` sheets (six views each): 1:50 body in the poses `stored`, `carried` and `played`, and the 1:200 body in the default pose.",
+   "`used-drum-kit.2d.png`, a contact sheet of the `r3-2d.ts` drawings (elevation, front and plan, light-line and light-solid) of the authored scales 1:50, 1:100, 1:200, 1:500 in the default pose."
+  ],
+  "findings": [
+   "No defect found on the opened sheets: every pose is closed, nothing floats except the instrument held by the absent player, the coarse scales keep the silhouette, the 2D drawings agree with the solids."
+  ],
+  "imperfect": [
+   "The ledger of the interrupted wave listed this row as `running`; no trace of an unfinished correction was found (author script and document carry the same time stamp, catalog copy equal, full proof valid), but the author's own closing review of the sheets is not documented anywhere.",
+   "Reviewed on contact sheets at half resolution (1200 × 800 px per sheet); details under about 5 mm of model size were not inspected by eye and rest on the measured rules of the full proof alone.",
+   "The thermal and structure solid lists were not opened as sheets; they are covered by the measured rules of the full proof (`checkVolumes 0`) only.",
+   "Clip instants were not rendered as sheets; the check CLI walked every clip sample without a finding.",
+   "The catalog test suites and the site build were not run (reserved for the umbrella coordinator)."
+  ]
+ },
+ "used-electric-bass-and-cabinet": {
+  "before": "candidate present, published (catalog file and manifest row), listed as `published` in the stub ledger; no author report.",
+  "after": "finished and proven: full proof `VALID` without finding, check CLI `✓`, catalog copy byte-equal to the candidate, manifest row equal to the row derived from the candidate, member of the collection `used-instruments`. No correction was needed, so the asset was not re-published.",
+  "powerW": "450",
+  "row": "prove-row.ts: OK used-electric-bass-and-cabinet: catalog copy equal, manifest row equal, collection member; appliances 1.32×0.831 m, 54.75 kg, 450 W, poses stored/carried/played, clips carry/groove, reps authored/authored/authored/authored",
+  "sheets": [
+   "`used-electric-bass-and-cabinet.3d.png`, a contact sheet of four `r3-sheet.ts` sheets (six views each): 1:50 body in the poses `stored`, `carried` and `played`, and the 1:200 body in the default pose.",
+   "`used-electric-bass-and-cabinet.2d.png`, a contact sheet of the `r3-2d.ts` drawings (elevation, front and plan, light-line and light-solid) of the authored scales 1:50, 1:100, 1:200, 1:500 in the default pose."
+  ],
+  "findings": [
+   "No defect found on the opened sheets: every pose is closed, nothing floats except the instrument held by the absent player, the coarse scales keep the silhouette, the 2D drawings agree with the solids."
+  ],
+  "imperfect": [
+   "The 1:500 drawing dimensions 1.33 m against 1.32 m at the finer scales (rounding of the generalised headstock).",
+   "Reviewed on contact sheets at half resolution (1200 × 800 px per sheet); details under about 5 mm of model size were not inspected by eye and rest on the measured rules of the full proof alone.",
+   "The thermal and structure solid lists were not opened as sheets; they are covered by the measured rules of the full proof (`checkVolumes 0`) only.",
+   "Clip instants were not rendered as sheets; the check CLI walked every clip sample without a finding.",
+   "The catalog test suites and the site build were not run (reserved for the umbrella coordinator)."
+  ]
+ },
+ "used-electric-guitar-and-combo": {
+  "before": "candidate present, published (catalog file and manifest row), listed as `published` in the stub ledger; no author report.",
+  "after": "finished and proven: full proof `VALID` without finding, check CLI `✓`, catalog copy byte-equal to the candidate, manifest row equal to the row derived from the candidate, member of the collection `used-instruments`. No correction was needed, so the asset was not re-published.",
+  "powerW": "180",
+  "row": "prove-row.ts: OK used-electric-guitar-and-combo: catalog copy equal, manifest row equal, collection member; appliances 1.1375×1.1518 m, 27.3 kg, 180 W, poses stored/warming/carried/played, clips carry/valves-warm-up/strum, reps authored/authored/authored/authored",
+  "sheets": [
+   "`used-electric-guitar-and-combo.3d.png`, a contact sheet of four `r3-sheet.ts` sheets (six views each): 1:50 body in the poses `stored`, `carried` and `played`, and the 1:200 body in the default pose.",
+   "`used-electric-guitar-and-combo.2d.png`, a contact sheet of the `r3-2d.ts` drawings (elevation, front and plan, light-line and light-solid) of the authored scales 1:50, 1:100, 1:200, 1:500 in the default pose."
+  ],
+  "findings": [
+   "No defect found on the opened sheets: every pose is closed, nothing floats except the instrument held by the absent player, the coarse scales keep the silhouette, the 2D drawings agree with the solids."
+  ],
+  "imperfect": [
+   "Reviewed on contact sheets at half resolution (1200 × 800 px per sheet); details under about 5 mm of model size were not inspected by eye and rest on the measured rules of the full proof alone.",
+   "The thermal and structure solid lists were not opened as sheets; they are covered by the measured rules of the full proof (`checkVolumes 0`) only.",
+   "Clip instants were not rendered as sheets; the check CLI walked every clip sample without a finding.",
+   "The catalog test suites and the site build were not run (reserved for the umbrella coordinator)."
+  ]
+ },
+ "used-electronic-drum-kit": {
+  "before": "candidate present, published (catalog file and manifest row), listed as `published` in the stub ledger; no author report.",
+  "after": "finished and proven: full proof `VALID` without finding, check CLI `✓`, catalog copy byte-equal to the candidate, manifest row equal to the row derived from the candidate, member of the collection `used-instruments`. No correction was needed, so the asset was not re-published.",
+  "powerW": "6",
+  "row": "prove-row.ts: OK used-electronic-drum-kit: catalog copy equal, manifest row equal, collection member; appliances 1×1.451 m, 34.65 kg, 6 W, poses stored/carried/played, clips carry/kick-stroke/set-up, reps authored/authored/authored/authored",
+  "sheets": [
+   "`used-electronic-drum-kit.3d.png`, a contact sheet of four `r3-sheet.ts` sheets (six views each): 1:50 body in the poses `stored`, `carried` and `played`, and the 1:200 body in the default pose.",
+   "`used-electronic-drum-kit.2d.png`, a contact sheet of the `r3-2d.ts` drawings (elevation, front and plan, light-line and light-solid) of the authored scales 1:50, 1:100, 1:200, 1:500 in the default pose."
+  ],
+  "findings": [
+   "No defect found on the opened sheets: every pose is closed, nothing floats except the instrument held by the absent player, the coarse scales keep the silhouette, the 2D drawings agree with the solids."
+  ],
+  "imperfect": [
+   "Reviewed on contact sheets at half resolution (1200 × 800 px per sheet); details under about 5 mm of model size were not inspected by eye and rest on the measured rules of the full proof alone.",
+   "The thermal and structure solid lists were not opened as sheets; they are covered by the measured rules of the full proof (`checkVolumes 0`) only.",
+   "Clip instants were not rendered as sheets; the check CLI walked every clip sample without a finding.",
+   "The catalog test suites and the site build were not run (reserved for the umbrella coordinator)."
+  ]
+ },
+ "used-electronic-organ": {
+  "before": "candidate present, published (catalog file and manifest row), listed as `published` in the stub ledger; no author report.",
+  "after": "finished and proven: full proof `VALID` without finding, check CLI `✓`, catalog copy byte-equal to the candidate, manifest row equal to the row derived from the candidate, member of the collection `used-instruments`. No correction was needed, so the asset was not re-published.",
+  "powerW": "90",
+  "row": "prove-row.ts: OK used-electronic-organ: catalog copy equal, manifest row equal, collection member; appliances 1.117×0.995 m, 79.99 kg, 90 W, poses stored/on-show-warm/carried/played, clips carry/open-and-warm-up/phrase, reps authored/authored/authored/unavailable",
+  "sheets": [
+   "`used-electronic-organ.3d.png`, a contact sheet of four `r3-sheet.ts` sheets (six views each): 1:50 body in the poses `stored`, `carried` and `played`, and the 1:200 body in the default pose.",
+   "`used-electronic-organ.2d.png`, a contact sheet of the `r3-2d.ts` drawings (elevation, front and plan, light-line and light-solid) of the authored scales 1:50, 1:100, 1:200 in the default pose."
+  ],
+  "findings": [
+   "No defect found on the opened sheets: every pose is closed, nothing floats except the instrument held by the absent player, the coarse scales keep the silhouette, the 2D drawings agree with the solids."
+  ],
+  "imperfect": [
+   "Reviewed on contact sheets at half resolution (1200 × 800 px per sheet); details under about 5 mm of model size were not inspected by eye and rest on the measured rules of the full proof alone.",
+   "The thermal and structure solid lists were not opened as sheets; they are covered by the measured rules of the full proof (`checkVolumes 0`) only.",
+   "Clip instants were not rendered as sheets; the check CLI walked every clip sample without a finding.",
+   "The catalog test suites and the site build were not run (reserved for the umbrella coordinator)."
+  ]
+ },
+ "used-harmonium": {
+  "before": "candidate present, published (catalog file and manifest row), listed as `published` in the stub ledger; no author report.",
+  "after": "finished and proven: full proof `VALID` without finding, check CLI `✓`, catalog copy byte-equal to the candidate, manifest row equal to the row derived from the candidate, member of the collection `used-instruments`. No correction was needed, so the asset was not re-published.",
+  "powerW": "0",
+  "row": "prove-row.ts: OK used-harmonium: catalog copy equal, manifest row equal, collection member; objects 1.15×0.53 m, 83.6218 kg, 0 W, poses stored/carried/opened/played, clips carry/pumping/open-for-playing, reps authored/authored/authored/unavailable",
+  "sheets": [
+   "`used-harmonium.3d.png`, a contact sheet of four `r3-sheet.ts` sheets (six views each): 1:50 body in the poses `stored`, `carried` and `played`, and the 1:200 body in the default pose.",
+   "`used-harmonium.2d.png`, a contact sheet of the `r3-2d.ts` drawings (elevation, front and plan, light-line and light-solid) of the authored scales 1:50, 1:100, 1:200 in the default pose."
+  ],
+  "findings": [
+   "No defect found on the opened sheets: every pose is closed, nothing floats except the instrument held by the absent player, the coarse scales keep the silhouette, the 2D drawings agree with the solids."
+  ],
+  "imperfect": [
+   "`carried` lifts the whole instrument by two movers without any part moving; at 1:50 and 1:100 the side view is a section A-A and dimensions 1.13 m to the lid, the crest reaches 1.15 m.",
+   "Reviewed on contact sheets at half resolution (1200 × 800 px per sheet); details under about 5 mm of model size were not inspected by eye and rest on the measured rules of the full proof alone.",
+   "The thermal and structure solid lists were not opened as sheets; they are covered by the measured rules of the full proof (`checkVolumes 0`) only.",
+   "Clip instants were not rendered as sheets; the check CLI walked every clip sample without a finding.",
+   "The catalog test suites and the site build were not run (reserved for the umbrella coordinator)."
+  ]
+ },
+ "used-marching-snare-and-bass-drum": {
+  "before": "candidate present, published (catalog file and manifest row), listed as `published` in the stub ledger; no author report.",
+  "after": "finished and proven: full proof `VALID` without finding, check CLI `✓`, catalog copy byte-equal to the candidate, manifest row equal to the row derived from the candidate, member of the collection `used-instruments`. No correction was needed, so the asset was not re-published.",
+  "powerW": "0",
+  "row": "prove-row.ts: OK used-marching-snare-and-bass-drum: catalog copy equal, manifest row equal, collection member; objects 1.027×1.531 m, 20.36 kg, 0 W, poses stored/carried/played, clips carry/march/snares-on, reps authored/authored/authored/authored",
+  "sheets": [
+   "`used-marching-snare-and-bass-drum.3d.png`, a contact sheet of four `r3-sheet.ts` sheets (six views each): 1:50 body in the poses `stored`, `carried` and `played`, and the 1:200 body in the default pose.",
+   "`used-marching-snare-and-bass-drum.2d.png`, a contact sheet of the `r3-2d.ts` drawings (elevation, front and plan, light-line and light-solid) of the authored scales 1:50, 1:100, 1:200, 1:500 in the default pose."
+  ],
+  "findings": [
+   "No defect found on the opened sheets: every pose is closed, nothing floats except the instrument held by the absent player, the coarse scales keep the silhouette, the 2D drawings agree with the solids."
+  ],
+  "imperfect": [
+   "Reviewed on contact sheets at half resolution (1200 × 800 px per sheet); details under about 5 mm of model size were not inspected by eye and rest on the measured rules of the full proof alone.",
+   "The thermal and structure solid lists were not opened as sheets; they are covered by the measured rules of the full proof (`checkVolumes 0`) only.",
+   "Clip instants were not rendered as sheets; the check CLI walked every clip sample without a finding.",
+   "The catalog test suites and the site build were not run (reserved for the umbrella coordinator)."
+  ]
+ },
+ "used-stage-piano": {
+  "before": "candidate present, published (catalog file and manifest row), listed as `published` in the stub ledger; no author report.",
+  "after": "finished and proven: full proof `VALID` without finding, check CLI `✓`, catalog copy byte-equal to the candidate, manifest row equal to the row derived from the candidate, member of the collection `used-instruments`. No correction was needed, so the asset was not re-published.",
+  "powerW": "12",
+  "row": "prove-row.ts: OK used-stage-piano: catalog copy equal, manifest row equal, collection member; appliances 0.17×1.375 m, 25.71 kg, 12 W, poses stored/carried/played, clips carry/unfold-stand/sustain-pedal, reps authored/authored/authored/authored",
+  "sheets": [
+   "`used-stage-piano.3d.png`, a contact sheet of four `r3-sheet.ts` sheets (six views each): 1:50 body in the poses `stored`, `carried` and `played`, and the 1:200 body in the default pose.",
+   "`used-stage-piano.2d.png`, a contact sheet of the `r3-2d.ts` drawings (elevation, front and plan, light-line and light-solid) of the authored scales 1:50, 1:100, 1:200, 1:500 in the default pose."
+  ],
+  "findings": [
+   "No defect found on the opened sheets: every pose is closed, nothing floats except the instrument held by the absent player, the coarse scales keep the silhouette, the 2D drawings agree with the solids."
+  ],
+  "imperfect": [
+   "Reviewed on contact sheets at half resolution (1200 × 800 px per sheet); details under about 5 mm of model size were not inspected by eye and rest on the measured rules of the full proof alone.",
+   "The thermal and structure solid lists were not opened as sheets; they are covered by the measured rules of the full proof (`checkVolumes 0`) only.",
+   "Clip instants were not rendered as sheets; the check CLI walked every clip sample without a finding.",
+   "The catalog test suites and the site build were not run (reserved for the umbrella coordinator)."
+  ]
+ },
+ "used-steel-string-acoustic-guitar": {
+  "before": "candidate present, published (catalog file and manifest row), listed as `published` in the stub ledger; no author report.",
+  "after": "finished and proven: full proof `VALID` without finding, check CLI `✓`, catalog copy byte-equal to the candidate, manifest row equal to the row derived from the candidate, member of the collection `used-instruments`. No correction was needed, so the asset was not re-published.",
+  "powerW": "0",
+  "row": "prove-row.ts: OK used-steel-string-acoustic-guitar: catalog copy equal, manifest row equal, collection member; objects 0.183×0.487 m, 6.656 kg, 0 W, poses stored/case-open/carried/played, clips carry/case-opening/strumming, reps authored/authored/authored/unavailable",
+  "sheets": [
+   "`used-steel-string-acoustic-guitar.3d.png`, a contact sheet of four `r3-sheet.ts` sheets (six views each): 1:50 body in the poses `stored`, `carried` and `played`, and the 1:200 body in the default pose.",
+   "`used-steel-string-acoustic-guitar.2d.png`, a contact sheet of the `r3-2d.ts` drawings (elevation, front and plan, light-line and light-solid) of the authored scales 1:50, 1:100, 1:200 in the default pose."
+  ],
+  "findings": [
+   "No defect found on the opened sheets: every pose is closed, nothing floats except the instrument held by the absent player, the coarse scales keep the silhouette, the 2D drawings agree with the solids."
+  ],
+  "imperfect": [
+   "Reviewed on contact sheets at half resolution (1200 × 800 px per sheet); details under about 5 mm of model size were not inspected by eye and rest on the measured rules of the full proof alone.",
+   "The thermal and structure solid lists were not opened as sheets; they are covered by the measured rules of the full proof (`checkVolumes 0`) only.",
+   "Clip instants were not rendered as sheets; the check CLI walked every clip sample without a finding.",
+   "The catalog test suites and the site build were not run (reserved for the umbrella coordinator)."
+  ]
+ },
+ "used-timpani-pair": {
+  "before": "candidate present, published (catalog file and manifest row), listed as `published` in the stub ledger; no author report.",
+  "after": "finished and proven: full proof `VALID` without finding, check CLI `✓`, catalog copy byte-equal to the candidate, manifest row equal to the row derived from the candidate, member of the collection `used-instruments`. No correction was needed, so the asset was not re-published.",
+  "powerW": "0",
+  "row": "prove-row.ts: OK used-timpani-pair: catalog copy equal, manifest row equal, collection member; objects 0.928×0.991 m, 96.64 kg, 0 W, poses stored/carried/played, clips carry/strike/pedal-tuning, reps authored/authored/authored/authored",
+  "sheets": [
+   "`used-timpani-pair.3d.png`, a contact sheet of four `r3-sheet.ts` sheets (six views each): 1:50 body in the poses `stored`, `carried` and `played`, and the 1:200 body in the default pose.",
+   "`used-timpani-pair.2d.png`, a contact sheet of the `r3-2d.ts` drawings (elevation, front and plan, light-line and light-solid) of the authored scales 1:50, 1:100, 1:200, 1:500 in the default pose."
+  ],
+  "findings": [
+   "No defect found on the opened sheets: every pose is closed, nothing floats except the instrument held by the absent player, the coarse scales keep the silhouette, the 2D drawings agree with the solids."
+  ],
+  "imperfect": [
+   "`carried` has the same bounding box as `stored`: the pair is rolled with the covers on and the pose differs only by castor state and supports.",
+   "Reviewed on contact sheets at half resolution (1200 × 800 px per sheet); details under about 5 mm of model size were not inspected by eye and rest on the measured rules of the full proof alone.",
+   "The thermal and structure solid lists were not opened as sheets; they are covered by the measured rules of the full proof (`checkVolumes 0`) only.",
+   "Clip instants were not rendered as sheets; the check CLI walked every clip sample without a finding.",
+   "The catalog test suites and the site build were not run (reserved for the umbrella coordinator)."
+  ]
+ },
+ "used-trumpet": {
+  "before": "candidate present, published (catalog file and manifest row), listed as `published` in the stub ledger; no author report.",
+  "after": "finished and proven: full proof `VALID` without finding, check CLI `✓`, catalog copy byte-equal to the candidate, manifest row equal to the row derived from the candidate, member of the collection `used-instruments`. No correction was needed, so the asset was not re-published.",
+  "powerW": "0",
+  "row": "prove-row.ts: OK used-trumpet: catalog copy equal, manifest row equal, collection member; objects 0.45×0.642 m, 4.76 kg, 0 W, poses stored/closed/carried/played, clips carry/valves, reps authored/authored/authored/unavailable",
+  "sheets": [
+   "`used-trumpet.3d.png`, a contact sheet of four `r3-sheet.ts` sheets (six views each): 1:50 body in the poses `stored`, `carried` and `played`, and the 1:200 body in the default pose.",
+   "`used-trumpet.2d.png`, a contact sheet of the `r3-2d.ts` drawings (elevation, front and plan, light-line and light-solid) of the authored scales 1:50, 1:100, 1:200 in the default pose."
+  ],
+  "findings": [
+   "No defect found on the opened sheets: every pose is closed, nothing floats except the instrument held by the absent player, the coarse scales keep the silhouette, the 2D drawings agree with the solids."
+  ],
+  "imperfect": [
+   "Reviewed on contact sheets at half resolution (1200 × 800 px per sheet); details under about 5 mm of model size were not inspected by eye and rest on the measured rules of the full proof alone.",
+   "The thermal and structure solid lists were not opened as sheets; they are covered by the measured rules of the full proof (`checkVolumes 0`) only.",
+   "Clip instants were not rendered as sheets; the check CLI walked every clip sample without a finding.",
+   "The catalog test suites and the site build were not run (reserved for the umbrella coordinator)."
+  ]
+ },
+ "used-viola": {
+  "before": "candidate present, published (catalog file and manifest row), listed as `published` in the stub ledger; no author report.",
+  "after": "finished and proven: full proof `VALID` without finding, check CLI `✓`, catalog copy byte-equal to the candidate, manifest row equal to the row derived from the candidate, member of the collection `used-instruments`. No correction was needed, so the asset was not re-published.",
+  "powerW": "0",
+  "row": "prove-row.ts: OK used-viola: catalog copy equal, manifest row equal, collection member; objects 0.361×0.814 m, 2.872 kg, 0 W, poses stored/closed/carried/played, clips bowing/carry, reps authored/authored/authored/unavailable",
+  "sheets": [
+   "`used-viola.3d.png`, a contact sheet of four `r3-sheet.ts` sheets (six views each): 1:50 body in the poses `stored`, `carried` and `played`, and the 1:200 body in the default pose.",
+   "`used-viola.2d.png`, a contact sheet of the `r3-2d.ts` drawings (elevation, front and plan, light-line and light-solid) of the authored scales 1:50, 1:100, 1:200 in the default pose."
+  ],
+  "findings": [
+   "No defect found on the opened sheets: every pose is closed, nothing floats except the instrument held by the absent player, the coarse scales keep the silhouette, the 2D drawings agree with the solids."
+  ],
+  "imperfect": [
+   "Reviewed on contact sheets at half resolution (1200 × 800 px per sheet); details under about 5 mm of model size were not inspected by eye and rest on the measured rules of the full proof alone.",
+   "The thermal and structure solid lists were not opened as sheets; they are covered by the measured rules of the full proof (`checkVolumes 0`) only.",
+   "Clip instants were not rendered as sheets; the check CLI walked every clip sample without a finding.",
+   "The catalog test suites and the site build were not run (reserved for the umbrella coordinator)."
+  ]
+ },
+ "used-violin": {
+  "before": "candidate present, published (catalog file and manifest row), listed as `published` in the stub ledger; no author report.",
+  "after": "finished and proven: full proof `VALID` without finding, check CLI `✓`, catalog copy byte-equal to the candidate, manifest row equal to the row derived from the candidate, member of the collection `used-instruments`. No correction was needed, so the asset was not re-published.",
+  "powerW": "0",
+  "row": "prove-row.ts: OK used-violin: catalog copy equal, manifest row equal, collection member; objects 0.331×0.8 m, 3.427 kg, 0 W, poses stored/case-closed/carried/played, clips open-case/bowing/carry, reps authored/authored/authored/unavailable",
+  "sheets": [
+   "`used-violin.3d.png`, a contact sheet of four `r3-sheet.ts` sheets (six views each): 1:50 body in the poses `stored`, `carried` and `played`, and the 1:200 body in the default pose.",
+   "`used-violin.2d.png`, a contact sheet of the `r3-2d.ts` drawings (elevation, front and plan, light-line and light-solid) of the authored scales 1:50, 1:100, 1:200 in the default pose."
+  ],
+  "findings": [
+   "No defect found on the opened sheets: every pose is closed, nothing floats except the instrument held by the absent player, the coarse scales keep the silhouette, the 2D drawings agree with the solids."
+  ],
+  "imperfect": [
+   "The shoulder strap is modelled as two rigid straight bands meeting at the shoulder pad: stored it lies as a flat V 0.6 m beside the case (it makes the plan 0.89 m deep), carried it is a taut triangle. A real strap would lie slack; the schema has no flexible band, so this stays.",
+   "Reviewed on contact sheets at half resolution (1200 × 800 px per sheet); details under about 5 mm of model size were not inspected by eye and rest on the measured rules of the full proof alone.",
+   "The thermal and structure solid lists were not opened as sheets; they are covered by the measured rules of the full proof (`checkVolumes 0`) only.",
+   "Clip instants were not rendered as sheets; the check CLI walked every clip sample without a finding.",
+   "The catalog test suites and the site build were not run (reserved for the umbrella coordinator)."
+  ]
+ },
+ "used-xylophone": {
+  "before": "candidate present, published (catalog file and manifest row), listed as `published` in the stub ledger; no author report.",
+  "after": "finished and proven: full proof `VALID` without finding, check CLI `✓`, catalog copy byte-equal to the candidate, manifest row equal to the row derived from the candidate, member of the collection `used-instruments`. No correction was needed, so the asset was not re-published.",
+  "powerW": "0",
+  "row": "prove-row.ts: OK used-xylophone: catalog copy equal, manifest row equal, collection member; objects 0.9×1.4775 m, 34.08 kg, 0 W, poses stored/rolled/played/strike, clips carry/mallet-strokes, reps authored/authored/authored/authored",
+  "sheets": [
+   "`used-xylophone.3d.png`, a contact sheet of four `r3-sheet.ts` sheets (six views each): 1:50 body in the poses `stored`, `rolled` and `played`, and the 1:200 body in the default pose.",
+   "`used-xylophone.2d.png`, a contact sheet of the `r3-2d.ts` drawings (elevation, front and plan, light-line and light-solid) of the authored scales 1:50, 1:100, 1:200, 1:500 in the default pose."
+  ],
+  "findings": [
+   "No defect found on the opened sheets: every pose is closed, nothing floats except the instrument held by the absent player, the coarse scales keep the silhouette, the 2D drawings agree with the solids."
+  ],
+  "imperfect": [
+   "The carrying pose is called `rolled`, not `carried` (the instrument is rolled on its castors, which the ticket brief allows as the carried state); the clip is `carry`.",
+   "Reviewed on contact sheets at half resolution (1200 × 800 px per sheet); details under about 5 mm of model size were not inspected by eye and rest on the measured rules of the full proof alone.",
+   "The thermal and structure solid lists were not opened as sheets; they are covered by the measured rules of the full proof (`checkVolumes 0`) only.",
+   "Clip instants were not rendered as sheets; the check CLI walked every clip sample without a finding.",
+   "The catalog test suites and the site build were not run (reserved for the umbrella coordinator)."
+  ]
+ }
+}

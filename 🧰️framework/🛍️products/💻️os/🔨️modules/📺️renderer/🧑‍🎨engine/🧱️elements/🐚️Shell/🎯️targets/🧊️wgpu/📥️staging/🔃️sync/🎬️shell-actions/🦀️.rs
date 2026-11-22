@@ -6,11 +6,28 @@ use super::*;
 
 //#region ShellActions
 impl SyncState {
-    //#region 🔖️NativeBackboneSync
     pub fn mint_sync_binding_generation(&mut self) -> Result<u64, String> {
         let generation = self.next_sync_binding_generation;
         self.next_sync_binding_generation = generation.checked_add(1).ok_or("document-backbone binding generation exhausted")?;
         Ok(generation)
+    }
+
+    /// 💾️ React's `deriveSavedStateV1`: no status is unknown; saved only when the store acknowledged everything admitted (`persisted`, nothing pending, no write failure).
+    pub fn saved_state(&self) -> ShellSavedState {
+        match self.sync_status.as_ref() {
+            None => ShellSavedState::Unknown,
+            Some(status) if status.persisted && status.pending_mutations == 0 && status.write_failure.is_none() => ShellSavedState::Saved,
+            Some(status) => ShellSavedState::Unsaved { pending: status.pending_mutations, failure: status.write_failure.as_ref().map(|failure| (failure.code.clone(), failure.message.clone())) },
+        }
+    }
+
+    /// 🛑️ Whether the open document's edits are not acknowledged as saved. An attached document whose state is unknown counts as unsaved, as React's close flow reads it; a state `None` is nothing admitted.
+    pub fn document_unsaved(&self) -> bool {
+        match self.saved_state() {
+            ShellSavedState::Saved => false,
+            ShellSavedState::Unknown => self.sync_channel.is_some(),
+            ShellSavedState::Unsaved { .. } => true,
+        }
     }
 
     pub fn active_sync_owner(&self) -> Option<ShellSyncOwner> {
@@ -75,8 +92,6 @@ impl SyncState {
         shell_hub_connection_summary_v1(&self.hub_projection(directory)).state
     }
 
-    //#endregion 🔖️NativeBackboneSync
-    //#region 🔖️CheckIn
     /// 📌️ Arms one hub Check In of the mounted hub document; a running one for the same document is
     /// kept (its head is whatever the hub acknowledges once it is submitted).
     #[cfg(not(target_arch = "wasm32"))]
@@ -111,7 +126,6 @@ impl SyncState {
         hub
     }
 
-    //#endregion 🔖️CheckIn
     /// 🪢️ Hands the document's actor the canonical pair its guest was seeded from; nothing for a document bound to
     /// no hub.
     pub fn install_document_seed(&self, prepared: &ShellPreparedDocumentOpen, pair: Option<semio_os_kernel::os_directory::CanonicalCheckpointPairV1>) -> Result<(), String> {

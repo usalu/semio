@@ -75,16 +75,7 @@ fn fixed_kernel_request_queue_shutdown_releases_surface_and_rejected_events_in_f
         .try_push(
             KernelRequest::Exchange {
                 instance: 1,
-                event: QueuedKernelEvent {
-                    kind: Some(QueuedKernelEventKind::SurfaceVisible),
-                    surface: Some("surface".to_string()),
-                    surface_body_key: None,
-                    surface_view_state: None,
-                    staged_instance: None,
-                    staged_request: None,
-                    message_endpoint: None,
-                    message_payload: None,
-                },
+                event: QueuedKernelEvent::surface_only("surface".to_string()),
             },
             Arc::new(ResponseSlot::default()),
             None,
@@ -98,4 +89,35 @@ fn fixed_kernel_request_queue_shutdown_releases_surface_and_rejected_events_in_f
     assert_eq!(queue.shutdown_step(7), (false, 1, 7));
     assert_eq!(queue.shutdown_step(0), (false, 1, 0));
     assert_eq!(queue.shutdown_step(0), (true, 1, 0));
+}
+
+/// 🧩️ LAW (live extension activation, wire schema): `KernelRequest::ActivateExtension` carries the one `ExtensionActivation` schema (parent instance, parent plugin, the registry's own `ExtensionRecord`), is served between slices of its busy PARENT's turn like a new app (it never addresses an instance mid-turn), carries no command credit, and a queue shutdown drains its compile owner exactly as it drains a `CreateApp` of the same fields.
+#[test]
+fn a_live_extension_activation_is_interleavable_creditless_and_shut_down_like_its_create_owner() {
+    use semio_renderer_wgpu_kernel_protocol::{kernel_request_interleavable, ExtensionActivation, ExtensionRecord};
+    let owner = || CreateAppRequestOwner::new(PathBuf::from("path"), "ext".to_string(), "app".to_string(), "schema".to_string());
+    let activation = ExtensionActivation { parent_instance: 7, parent_plugin: "host".to_string(), extension: ExtensionRecord::installed("ext", &["flow.operator".to_string()]) };
+    assert_eq!((activation.extension.extension_id.as_str(), activation.extension.package.0.as_str()), ("ext", "ext"));
+    assert_eq!(activation.extension.capability_requests.iter().map(|grant| (grant.capability.as_str(), grant.scope.is_none())).collect::<Vec<_>>(), [("flow.operator", true)], "a manifest's capability names are unscoped REQUESTS");
+
+    let request = KernelRequest::ActivateExtension { owner: owner(), activation: activation.clone() };
+    assert!(kernel_request_interleavable(&request, 7), "served while the parent's own turn is mid-flight");
+    assert_eq!(request.command_credits(), (0, 0));
+
+    let drain = |request: KernelRequest| {
+        let queue = KernelRequestQueue::default();
+        queue.try_push(request, Arc::new(ResponseSlot::default()), None).unwrap_or_else(|_| panic!("fixture request queue admission"));
+        assert!(queue.begin_shutdown());
+        let mut steps = Vec::new();
+        for maximum in [3, 4, 6, 3, 6, 6, 6, 6] {
+            let step = queue.shutdown_step(maximum);
+            steps.push(step);
+            if step.0 {
+                return steps;
+            }
+        }
+        panic!("the shutdown never settled: {steps:?}");
+    };
+    let create = KernelRequest::CreateApp { owner: owner(), purpose: semio_framework::kernel::ActorInstanceOpenPurpose::Ordinary };
+    assert_eq!(drain(request), drain(create), "the extension request's owner closes like a create owner");
 }

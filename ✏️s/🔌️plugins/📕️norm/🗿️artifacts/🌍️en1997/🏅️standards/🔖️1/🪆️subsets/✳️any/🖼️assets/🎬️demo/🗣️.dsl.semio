@@ -1,5 +1,5 @@
 semio norm.en1997.dsl v1
-structure-id=geo-demo-compliant geotechnical-category=2 design-situation=persistent design-approach=da2 annex=de groundwater-level=4m investigation-depth=12m
+structure-id=geo-demo-compliant geotechnical-category=2 design-situation=persistent design-approach=da2 annex=de groundwater-level=4m investigation-depth=20m
 layers [id:TEXT soil-type:TEXT depth-top:QTY depth-bottom:QTY gamma:NUM gamma-prime:NUM phi-prime-deg:NUM cohesion-effective:QTY cohesion-undrained:QTY oedometric-modulus:QTY poisson-ratio:NUM cpt-qc:QTY spt-n:NUM cpt-nkt:NUM] {
   layer-sand sand 0m 8m 19000 10000 32 0Pa 0Pa 40000000Pa 0.3 8000000Pa 18 0
   layer-gravel gravel 8m 20m 20000 11000 35 0Pa 0Pa 60000000Pa 0.28 12000000Pa 28 0

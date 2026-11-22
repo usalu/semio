@@ -1,0 +1,152 @@
+[
+ {
+  "scale": "500",
+  "list": "body",
+  "id": "limb-t1e",
+  "minimumM": 0.07575
+ },
+ {
+  "scale": "500",
+  "list": "body",
+  "id": "limb-t1w",
+  "minimumM": 0.07575
+ },
+ {
+  "scale": "500",
+  "list": "body",
+  "id": "limb-t2e",
+  "minimumM": 0.07575
+ },
+ {
+  "scale": "500",
+  "list": "body",
+  "id": "limb-t2w",
+  "minimumM": 0.07575
+ },
+ {
+  "scale": "500",
+  "list": "body",
+  "id": "limb-t3e",
+  "minimumM": 0.07575
+ },
+ {
+  "scale": "500",
+  "list": "body",
+  "id": "limb-t3w",
+  "minimumM": 0.07575
+ },
+ {
+  "scale": "500",
+  "list": "structure",
+  "id": "mass-t1-f10",
+  "minimumM": 0.07575
+ },
+ {
+  "scale": "500",
+  "list": "structure",
+  "id": "mass-t1-f3",
+  "minimumM": 0.07575
+ },
+ {
+  "scale": "500",
+  "list": "structure",
+  "id": "mass-t1-f5",
+  "minimumM": 0.07575
+ },
+ {
+  "scale": "500",
+  "list": "structure",
+  "id": "mass-t1-f8",
+  "minimumM": 0.07575
+ },
+ {
+  "scale": "500",
+  "list": "structure",
+  "id": "mass-t2-f10",
+  "minimumM": 0.07575
+ },
+ {
+  "scale": "500",
+  "list": "structure",
+  "id": "mass-t2-f2",
+  "minimumM": 0.07575
+ },
+ {
+  "scale": "500",
+  "list": "structure",
+  "id": "mass-t2-f4",
+  "minimumM": 0.07575
+ },
+ {
+  "scale": "500",
+  "list": "structure",
+  "id": "mass-t2-f6",
+  "minimumM": 0.07575
+ },
+ {
+  "scale": "500",
+  "list": "structure",
+  "id": "mass-t2-f8",
+  "minimumM": 0.07575
+ },
+ {
+  "scale": "500",
+  "list": "structure",
+  "id": "mass-t3-f2",
+  "minimumM": 0.07575
+ },
+ {
+  "scale": "500",
+  "list": "structure",
+  "id": "mass-t3-f5",
+  "minimumM": 0.07575
+ },
+ {
+  "scale": "500",
+  "list": "structure",
+  "id": "mass-t3-f8",
+  "minimumM": 0.07575
+ },
+ {
+  "scale": "500",
+  "list": "structure",
+  "id": "mass-top-f1",
+  "minimumM": 0.07575
+ },
+ {
+  "scale": "500",
+  "list": "structure",
+  "id": "mass-top-f2",
+  "minimumM": 0.07575
+ },
+ {
+  "scale": "500",
+  "list": "structure",
+  "id": "mass-top-f3",
+  "minimumM": 0.07575
+ },
+ {
+  "scale": "500",
+  "list": "structure",
+  "id": "mass-top-f4",
+  "minimumM": 0.07575
+ },
+ {
+  "scale": "500",
+  "list": "structure",
+  "id": "mass-top-f5",
+  "minimumM": 0.07575
+ },
+ {
+  "scale": "500",
+  "list": "structure",
+  "id": "mass-top-f6",
+  "minimumM": 0.07575
+ },
+ {
+  "scale": "500",
+  "list": "structure",
+  "id": "support-base-support",
+  "minimumM": 0.07575
+ }
+]

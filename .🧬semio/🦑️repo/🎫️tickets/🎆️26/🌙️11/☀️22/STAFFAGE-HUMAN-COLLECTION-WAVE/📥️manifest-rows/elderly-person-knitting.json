@@ -1,0 +1,57 @@
+{
+  "id": "elderly-person-knitting",
+  "category": "humans",
+  "title": {
+    "en": "Elderly Person Knitting",
+    "de": "Strickende ältere Person"
+  },
+  "heightM": 1.291,
+  "widthM": 0.879,
+  "powerW": 116.1,
+  "poses": [
+    "knitting",
+    "inspecting-work",
+    "reaching-for-yarn",
+    "resting-hands-in-lap",
+    "standing"
+  ],
+  "clips": [
+    "knit-stitches",
+    "idle-breathing",
+    "stand-up",
+    "check-and-fetch-yarn"
+  ],
+  "representations": {
+    "50": "authored",
+    "100": "authored",
+    "200": "authored",
+    "500": "authored"
+  },
+  "symbols": [
+    "seated-person-marker"
+  ],
+  "analytics": [
+    "thermal",
+    "transport",
+    "structural"
+  ],
+  "exports": [
+    "svg",
+    "pdf",
+    "dxf",
+    "dwg",
+    "png-sequence",
+    "mp4",
+    "webm",
+    "component",
+    "glb",
+    "fbx",
+    "model",
+    "model-zip"
+  ],
+  "distinction": {
+    "en": "An 80-year-old woman in cardigan and reading glasses knitting on a timber park bench, two needles in her hands, the work over her lap and a ball of wool beside her; stitch-by-stitch loop, inspecting the work, reaching for the yarn and a slow stand-up, at 1.0 met the calmest activity of the people.",
+    "de": "Eine 80-jährige Frau in Strickjacke und mit Lesebrille strickt auf einer hölzernen Parkbank, zwei Nadeln in den Händen, das Strickstück über dem Schoß und ein Wollknäuel neben sich; Schleife Masche für Masche, Begutachten der Arbeit, Griff zum Garn und langsames Aufstehen, mit 1,0 met die ruhigste Tätigkeit unter den Menschen."
+  },
+  "completion": "authored"
+}

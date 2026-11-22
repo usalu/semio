@@ -9,6 +9,7 @@ import ts from"typescript";
 import{Database}from"bun:sqlite";
 import cases from"./🧫️cases.json";
 import{ownersOfAdmissionMemoV1,packAdmissionMemoV1,readAdmissionMemoV1,writeAdmissionMemoV1,type AdmissionMemoV1}from"../🟦️.ts";
+import{observeOwnerWithRetryV1}from"../../🛟️owner-isolation/🟦️.ts";
 import{graphAdmissionFormatHashV1,graphAdmissionFormatUrlsV1,graphSelfUrlsV1}from"../../../🔐️authority/🟦️.ts";
 
 const format="a".repeat(64);
@@ -79,7 +80,7 @@ test("a memo of another admission format misses after a format change and hits a
 test("facts lent by a memo that no longer holds re-derive only the owner whose own row changed",async()=>{
  const owners=Array.from({length:6},(_,index)=>"owner-"+index),tree=new Map<string,number>(owners.map(name=>["/w/"+name+"/src",1]));
  const memoOf=new Map<string,{facts:unknown;rows:readonly unknown[]}>(),limits={ownerFactsMemoEntries:100};
- const remember=Function("ownerFactsMemoV1","GRAPH_LIMITS_V1",extract("rememberOwnerFactsV1")+";"+extract("observeOwnerFactsMemoizedV1")+";return observeOwnerFactsMemoizedV1;")(memoOf,limits) as (input:unknown)=>Promise<unknown>;
+ const remember=Function("ownerFactsMemoV1","GRAPH_LIMITS_V1","observeOwnerWithRetryV1",extract("rememberOwnerFactsV1")+";"+extract("observeOwnerFactsMemoizedV1")+";return observeOwnerFactsMemoizedV1;")(memoOf,limits,observeOwnerWithRetryV1) as (input:unknown)=>Promise<unknown>;
  const hold=async(rows:readonly {path:string;fact:{version:number}}[])=>rows.every(each=>tree.get(each.path)===each.fact.version);
  const derived:string[]=[];
  const observation={captureObservedSourceInputsV1:async(observe:()=>Promise<unknown>)=>{const value=await observe();return{value,observations:[row("/w/"+(value as {name:string}).name+"/src",tree.get("/w/"+(value as {name:string}).name+"/src"))]};},retainObservedRowsV1:()=>{}};
@@ -96,7 +97,7 @@ test("facts lent by a memo that no longer holds re-derive only the owner whose o
 
 test("the selected inventory checks the registry scope, then asks the memo, derives only on a miss and remembers what it derived, keyed by the admission format",()=>{
  const source=readFileSync(process.env.R140_LOAD_SOURCE??join(import.meta.dir,"..","..","🟦️.ts"),"utf8"),inventory=source.indexOf("const inventory=async(");
- const scope=source.indexOf("buildGraphScopeKeyV1(options.selection,readBuildOwnerRegistryV1(",inventory),read=source.indexOf("readAdmissionMemoV1(memoPath,scope",inventory),derive=source.indexOf("captureObservedSourceInputsV1(",read),write=source.indexOf("writeAdmissionMemoV1(memoPath,",derive);
+ const scope=source.indexOf("ownerRegistryDigestV1(readBuildOwnerRegistryV1(",inventory),read=source.indexOf("readAdmissionMemoV1(memoPath,scope",inventory),derive=source.indexOf("captureObservedSourceInputsV1(",read),write=source.indexOf("writeAdmissionMemoV1(memoPath,",derive);
  expect(inventory).toBeGreaterThan(0);expect(scope).toBeGreaterThan(inventory);expect(read).toBeGreaterThan(scope);expect(derive).toBeGreaterThan(read);expect(write).toBeGreaterThan(derive);
  expect(source).toContain("remembered===undefined&&selected&&scope&&captured!==undefined");
  expect(source).toContain("value.format===loadedGraphAdmissionFormatV1");

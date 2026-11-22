@@ -72,16 +72,22 @@ export function remoteExecutionPlatformKeyV1(properties:readonly RemoteExecution
  return [...properties].map(row=>`${row.name}=${row.value}`).sort().join(";");
 }
 
-/** 🎚️ The properties an Execute request may carry for the scheduler itself: `semio-offload` (`if-idle`: answer RESOURCE_EXHAUSTED at once when no other machine has headroom) and `semio-origin` (the origin id of the requester, which never runs its own offload and whose platform key the action must match). They are never matched against workers. */
-export const REMOTE_EXECUTION_CONTROL_PROPERTIES_V1:readonly string[]=Object.freeze(["semio-offload","semio-origin"]);
+/** 🎚️ The properties an Execute request may carry for the scheduler itself: `semio-offload` (`if-idle`: answer RESOURCE_EXHAUSTED at once when no other machine has headroom; `queue`: wait in the queue for a machine, the action is only refused when no machine could ever take it), `semio-origin` (the origin id of the requester, which never runs its own offload and whose platform key the action must match) and `semio-peak-mb` (the megabytes the action is predicted to need at its peak: a worker whose machine reports less free memory than that, beside what the scheduler already placed on it, is not given the action). They are never matched against workers. */
+export const REMOTE_EXECUTION_CONTROL_PROPERTIES_V1:readonly string[]=Object.freeze(["semio-offload","semio-origin","semio-peak-mb"]);
 
 /** 🧹️ The properties of a request that workers are matched against: everything but the control properties. */
 export function remoteExecutionMatchPropertiesV1(properties:readonly RemoteExecutionPropertyV1[]):readonly RemoteExecutionPropertyV1[]{
  return properties.filter(row=>!REMOTE_EXECUTION_CONTROL_PROPERTIES_V1.includes(row.name));
 }
 
+/** 💾️ The peak megabytes an action declares in `semio-peak-mb`: a non-negative whole number, 0 when absent or malformed (no memory sizing). */
+export function remoteExecutionPeakMegabytesV1(properties:readonly RemoteExecutionPropertyV1[]):number{
+ const text=properties.find(row=>row.name==="semio-peak-mb")?.value;
+ return text!==undefined&&/^[0-9]{1,9}$/u.test(text)?Number(text):0;
+}
+
 /** 🎛️ The value of one control property of a request, if it carries it. */
-export function remoteExecutionControlV1(properties:readonly RemoteExecutionPropertyV1[],name:"semio-offload"|"semio-origin"):string|undefined{
+export function remoteExecutionControlV1(properties:readonly RemoteExecutionPropertyV1[],name:"semio-offload"|"semio-origin"|"semio-peak-mb"):string|undefined{
  return properties.find(row=>row.name===name)?.value;
 }
 

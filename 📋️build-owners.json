@@ -4350,6 +4350,12 @@
       "packages": []
     },
     {
+      "name": "@semio-tech/os-renderer-media-native-rs",
+      "root": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🎬️media-native/📦️packages/🦀️rust",
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🎬️media-native/📦️packages/🦀️rust/📋️project.json",
+      "packages": []
+    },
+    {
       "name": "@semio-tech/os-renderer-wgpu-agent-elements-rs",
       "root": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🙋️agent-elements/📦️packages/🦀️rust",
       "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🙋️agent-elements/📦️packages/🦀️rust/📋️project.json",
@@ -4563,6 +4569,12 @@
       "name": "@semio-tech/os-renderer-wgpu-mailbox-core-rs",
       "root": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📬️mailbox-core/📦️packages/🦀️rust",
       "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📬️mailbox-core/📦️packages/🦀️rust/📋️project.json",
+      "packages": []
+    },
+    {
+      "name": "@semio-tech/os-renderer-wgpu-media-presenter-rs",
+      "root": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🎛️media-presenter/📦️packages/🦀️rust",
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🎛️media-presenter/📦️packages/🦀️rust/📋️project.json",
       "packages": []
     },
     {
@@ -4923,6 +4935,12 @@
       "name": "@semio-tech/os-renderer-wgpu-ui-engine-tests-rs",
       "root": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧿️ui-engine-tests/📦️packages/🦀️rust",
       "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧿️ui-engine-tests/📦️packages/🦀️rust/📋️project.json",
+      "packages": []
+    },
+    {
+      "name": "@semio-tech/os-renderer-wgpu-video-render-host-rs",
+      "root": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🎥️video-render-host/📦️packages/🦀️rust",
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🎥️video-render-host/📦️packages/🦀️rust/📋️project.json",
       "packages": []
     },
     {
@@ -8154,6 +8172,12 @@
       ]
     },
     {
+      "name": "@semio-tech/stdio-pdf-editor-kit-rs",
+      "root": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/✏️editor/🧰️kit/📦️packages/🦀️rust",
+      "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/✏️editor/🧰️kit/📦️packages/🦀️rust/📋️project.json",
+      "packages": []
+    },
+    {
       "name": "@semio-tech/stdio-pdf-page-editor-authoring-rs",
       "root": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/✏️editor/🖼️page/✍️authoring/📦️packages/🦀️rust",
       "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/✏️editor/🖼️page/✍️authoring/📦️packages/🦀️rust/📋️project.json",
@@ -8190,12 +8214,30 @@
       "packages": []
     },
     {
+      "name": "@semio-tech/stdio-pdf-presence-lane-rs",
+      "root": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/✏️editor/👥️presence/📦️packages/🦀️rust",
+      "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/✏️editor/👥️presence/📦️packages/🦀️rust/📋️project.json",
+      "packages": []
+    },
+    {
       "name": "@semio-tech/stdio-pdf-rs",
       "root": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/📦️packages/🦀️rust",
       "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/📦️packages/🦀️rust/📋️project.json",
       "packages": [
         "@semio-tech/stdio-pdf-rs"
       ]
+    },
+    {
+      "name": "@semio-tech/stdio-pdf-view-lane-rs",
+      "root": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/✏️editor/🫧️transient/📦️packages/🦀️rust",
+      "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/✏️editor/🫧️transient/📦️packages/🦀️rust/📋️project.json",
+      "packages": []
+    },
+    {
+      "name": "@semio-tech/stdio-pdf14-canvas-rs",
+      "root": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🧱️base/✏️editor/🖼️page/🔭️canvas/📦️packages/🦀️rust",
+      "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🧱️base/✏️editor/🖼️page/🔭️canvas/📦️packages/🦀️rust/📋️project.json",
+      "packages": []
     },
     {
       "name": "@semio-tech/stdio-plugin",
@@ -8587,6 +8629,12 @@
       "name": "@semio-tech/ui-contract-identity-rs",
       "root": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🆔️identity/📦️packages/🦀️rust",
       "manifest": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🆔️identity/📦️packages/🦀️rust/📋️project.json",
+      "packages": []
+    },
+    {
+      "name": "@semio-tech/ui-contract-laws-rs",
+      "root": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧪️tests/🥣️companion/📦️packages/🦀️rust",
+      "manifest": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧪️tests/🥣️companion/📦️packages/🦀️rust/📋️project.json",
       "packages": []
     },
     {
@@ -9181,6 +9229,12 @@
       "name": "@semio-tech/ui-wgpu-paint-widgets-rs",
       "root": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖌️paint/📶️progress-celebrate-and-widget-painters/📦️packages/🦀️rust",
       "manifest": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖌️paint/📶️progress-celebrate-and-widget-painters/📦️packages/🦀️rust/📋️project.json",
+      "packages": []
+    },
+    {
+      "name": "@semio-tech/ui-wgpu-paint-overlay-rs",
+      "root": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖌️paint/🖼️ui-image-sources-skeleton-and-overlays/📦️packages/🦀️rust",
+      "manifest": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖌️paint/🖼️ui-image-sources-skeleton-and-overlays/📦️packages/🦀️rust/📋️project.json",
       "packages": []
     },
     {
@@ -11152,6 +11206,12 @@
       "packages": []
     },
     {
+      "name": "semio-plugin-runtime-ops-raw-media",
+      "root": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🏃️runtime/🧰️ops/🎞️raw-media/📦️packages/🦀️rust",
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🏃️runtime/🧰️ops/🎞️raw-media/📦️packages/🦀️rust/Cargo.toml",
+      "packages": []
+    },
+    {
       "name": "semio-plugin-runtime-ops-surface",
       "root": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🏃️runtime/🧰️ops/🖥️surface-render/📦️packages/🦀️rust",
       "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🏃️runtime/🧰️ops/🖥️surface-render/📦️packages/🦀️rust/Cargo.toml",
@@ -11733,6 +11793,12 @@
       "name": "semio-s-artifact-stdio-pdf-filters",
       "root": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🔨️modules/🗜️filters/📦️packages/🦀️rust",
       "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🔨️modules/🗜️filters/📦️packages/🦀️rust/Cargo.toml",
+      "packages": []
+    },
+    {
+      "name": "semio-s-artifact-stdio-pdf-image-route",
+      "root": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/✏️editor/🖼️image-route/📦️packages/🦀️rust",
+      "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/✏️editor/🖼️image-route/📦️packages/🦀️rust/Cargo.toml",
       "packages": []
     },
     {

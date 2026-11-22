@@ -19,7 +19,12 @@ No activation has reached task planning. Ten attempts since 02:00 all stalled or
 | 7 | `owner-isolation` import path mid-landing (peer E29) |
 | 8 | Killed at 2,359 owner checks to capture the `[graph-closure]` trace for the peer |
 | 9 | `BUILD_OWNER_FAILED`: framework-renderer-wgpu (new `🎓️HubFirstRun` wgpu crate without an owner row) and repo (`route-table-invalid`). Both transient; both infer cleanly afterwards |
-| 10 | Running; silent inventory reset at ~5,300 s, reported to the peer (E45) |
+| 10 | Silent inventory reset at ~5,300 s, reported to the peer (E45); at 13:30, `BUILD_OWNER_FAILED`: the `🚚️window-resource` crate was created mid-read at 12:34 |
+| 11 | Started 13:31 after the `HubFirstRun` owner row was written; healthy read (2,966 owner checks, 1,081 owners admitted at 14:20). Left running when the user halted the task at 14:20 |
+
+## Halted 2026-11-22 14:20
+
+The user halted the layout task on this machine. Running work was not interrupted, and no serve or journey was started. To resume, check whether `activate-11.txt` ended with `Activated layout wgpu prototype`, then continue at Next step 2.
 
 ## Fixes Made
 

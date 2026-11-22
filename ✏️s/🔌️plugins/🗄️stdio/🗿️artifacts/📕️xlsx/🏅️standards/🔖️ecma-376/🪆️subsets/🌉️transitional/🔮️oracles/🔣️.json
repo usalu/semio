@@ -423,6 +423,56 @@
       "reproducible": true,
       "family": "structural",
       "notes": "[Content_Types].xml's own Override for /xl/worksheets/sheet1.xml changed to a different real OOXML content-type value (application/vnd.openxmlformats-officedocument.spreadsheetml.chartsheet+xml), demonstrating the declared-content-type mutation this subset's vocabulary names -- not asserted to make the part a functional chartsheet."
+    },
+    {
+      "id": "set-relationship-base-applied",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.xlsx",
+        "standard": "ecma-376",
+        "subset": "transitional"
+      },
+      "mutation": "set-relationship-base",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before-xlsx",
+          "path": "../🧪️tests/🧫️fixtures/⚓️set-relationship-base-applied/⬅️before.xlsx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+          "sha256": "sha256:778757a6ae33d7bb87c0301a0611d328ea617e6cddb8b1445f9d502672f14b9b",
+          "bytes": 4835
+        },
+        {
+          "role": "expected-after-xlsx",
+          "path": "../🧪️tests/🧫️fixtures/⚓️set-relationship-base-applied/➡️after.xlsx",
+          "mediaType": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+          "sha256": "sha256:ede147457123029ce54746137161e35f2c925ab8ca0556bae0e85ea1e5976af7",
+          "bytes": 4854
+        }
+      ],
+      "generator": {
+        "oracle": "openpyxl-xlsx-ecma-376-transitional-mutate-reader",
+        "packageVersion": "openpyxl@3.1.5 + lxml@6.1.3",
+        "engineFamily": "openpyxl",
+        "engineVersion": "openpyxl@3.1.5",
+        "command": "repo tools exec uv -- run --frozen --no-dev --group test python ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🔮️oracles/🔭️third-party-generators/🐍️.py generate",
+        "platform": "any"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "MIT (openpyxl) + BSD-3-Clause (lxml)",
+        "attribution": "before written by openpyxl; after is the before with every *.rels relationship Type moved from the Transitional to the Strict officeDocument base by lxml",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "exact-bytes-v1",
+      "reproducible": true,
+      "family": "structural",
+      "notes": "Every relationship Type of every *.rels part moves from the Transitional officeDocument relationship base to the Strict one; no other part changes."
     }
   ],
   "oracleHostPackages": []

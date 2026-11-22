@@ -1,0 +1,17 @@
+{
+  "version": 2,
+  "description": "Language-neutral vectors of the offload gate: whether a unit is offered to the fleet and whether it queues there (`queue`) or is declined at once when no machine has headroom. Signals are asked in order (mode, round trip, door, slot queue, host, broker); `asked` lists the ones a correct gate reads.",
+  "queueThresholdMilliseconds": 1500,
+  "cases": [
+    {"name": "never stays local without asking", "mode": "never", "door": true, "worth": true, "slotQueueMilliseconds": 9999, "host": "wait", "broker": "wait", "offload": false, "queue": false, "reason": "never", "asked": []},
+    {"name": "pin offers and queues every unit without asking, even a cheap one on a calm machine", "mode": "pin", "door": false, "worth": false, "slotQueueMilliseconds": 0, "host": "admit", "broker": "admit", "offload": true, "queue": true, "reason": "pin", "asked": []},
+    {"name": "a unit cheaper than a round trip stays", "mode": "distribute", "door": true, "worth": false, "slotQueueMilliseconds": 9999, "host": "wait", "broker": "wait", "offload": false, "queue": false, "reason": "cheap", "asked": ["worth"]},
+    {"name": "the door that refused the build offers every unit and queues it on the fleet", "mode": "distribute", "door": true, "worth": true, "slotQueueMilliseconds": 0, "host": "admit", "broker": "admit", "offload": true, "queue": true, "reason": "door", "asked": ["worth"]},
+    {"name": "a slot queue past the threshold offers and queues", "mode": "distribute", "door": false, "worth": true, "slotQueueMilliseconds": 1500, "host": "admit", "broker": "admit", "offload": true, "queue": true, "reason": "slot-queue", "asked": ["worth", "slot"]},
+    {"name": "a slot queue below the threshold does not make this machine saturated: the unit goes where another machine has headroom, without queueing", "mode": "distribute", "door": false, "worth": true, "slotQueueMilliseconds": 1499, "host": "admit", "broker": "admit", "offload": true, "queue": false, "reason": "headroom", "asked": ["worth", "slot", "host", "broker"]},
+    {"name": "the host would make the unit wait: offers and queues", "mode": "distribute", "door": false, "worth": true, "slotQueueMilliseconds": 0, "host": "wait", "broker": "admit", "offload": true, "queue": true, "reason": "host-wait", "asked": ["worth", "slot", "host"]},
+    {"name": "the build's own memory budget would make the unit wait while the host is calm: offers and queues", "mode": "distribute", "door": false, "worth": true, "slotQueueMilliseconds": 0, "host": "admit", "broker": "wait", "offload": true, "queue": true, "reason": "broker-wait", "asked": ["worth", "slot", "host", "broker"]},
+    {"name": "a broker that does not answer counts as calm: offered without queueing", "mode": "distribute", "door": false, "worth": true, "slotQueueMilliseconds": 0, "host": "admit", "broker": "unknown", "offload": true, "queue": false, "reason": "headroom", "asked": ["worth", "slot", "host", "broker"]},
+    {"name": "a calm machine offers a worthy unit to any other machine with headroom and compiles it here when nobody has any", "mode": "distribute", "door": false, "worth": true, "slotQueueMilliseconds": 0, "host": "admit", "broker": "admit", "offload": true, "queue": false, "reason": "headroom", "asked": ["worth", "slot", "host", "broker"]}
+  ]
+}

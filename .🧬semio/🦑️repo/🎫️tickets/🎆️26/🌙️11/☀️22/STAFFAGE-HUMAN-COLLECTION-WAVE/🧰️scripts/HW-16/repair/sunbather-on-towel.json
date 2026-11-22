@@ -1,0 +1,9 @@
+[
+{"op":"region-set","id":"face-skin","set":{"areaM2":0.1523}},
+{"op":"region-set","id":"arm-skin","set":{"areaM2":0.2511}},
+{"op":"region-set","id":"hand-skin","set":{"areaM2":0.07647}},
+{"op":"region-set","id":"swimsuit","set":{"areaM2":0.592}},
+{"op":"region-set","id":"leg-skin","set":{"areaM2":0.5895}},
+{"op":"region-set","id":"feet-skin","set":{"areaM2":0.0675}},
+{"op":"region-set","id":"towel","set":{"areaM2":3.285}}
+]

@@ -11,11 +11,11 @@
           "material": "concrete",
           "role": "body",
           "tone": 0.65,
-          "size": [0.3, 0.1, 0.3],
-          "cornerRadius": 0.008,
+          "size": [0.5, 0.1, 0.5],
           "transform": {
             "translation": [0, 0.05, 0]
-          }
+          },
+          "cornerRadius": 0.015
         },
         {
           "id": "base-plate",
@@ -69,12 +69,30 @@
         {
           "id": "base-cover",
           "kind": "revolve",
-          "bone": "foundation",
+          "bone": "pole",
           "material": "galv-steel",
           "role": "body",
           "tone": 0.33,
-          "profile": [[0.12, 0.12], [0.13, 0.12], [0.155, 0.1105], [0.1775, 0.1005], [0.21, 0.092], [0.24, 0.0875], [0.27, 0.0852], [0.3, 0.0843], [0.3, 0.0813], [0.27, 0.0822], [0.24, 0.0845], [0.21, 0.089], [0.1775, 0.0975], [0.155, 0.1075], [0.13, 0.117], [0.12, 0.117], [0.12, 0.12]],
-          "axis": [0, 1, 0],
+          "profile": [
+            [-0.005, 0.12],
+            [0.01, 0.12],
+            [0.035, 0.1105],
+            [0.0575, 0.1005],
+            [0.09, 0.092],
+            [0.12, 0.0875],
+            [0.15, 0.0852],
+            [0.18, 0.0843],
+            [0.18, 0.0813],
+            [0.15, 0.0822],
+            [0.12, 0.0845],
+            [0.09, 0.089],
+            [0.0575, 0.0975],
+            [0.035, 0.1075],
+            [0.01, 0.117],
+            [-0.005, 0.117],
+            [-0.005, 0.12]
+          ],
+          "axis": [1, 0, 0],
           "origin": [0, 0, 0]
         },
         {
@@ -440,7 +458,19 @@
           "material": "aluminium-anodised",
           "role": "detail",
           "tone": 0.3,
-          "profile": [[0.015, 0.095], [0.050495, 0.095], [0.055744, 0.07125], [0.058604, 0.0475], [0.059922, 0.02375], [0.060222, 0.0], [0.059922, -0.02375], [0.058604, -0.0475], [0.055744, -0.07125], [0.050495, -0.095], [0.015, -0.095]],
+          "profile": [
+            [0.015, 0.095],
+            [0.050495, 0.095],
+            [0.055744, 0.07125],
+            [0.058604, 0.0475],
+            [0.059922, 0.02375],
+            [0.060222, 0.0],
+            [0.059922, -0.02375],
+            [0.058604, -0.0475],
+            [0.055744, -0.07125],
+            [0.050495, -0.095],
+            [0.015, -0.095]
+          ],
           "plane": "yz",
           "from": 0.198,
           "to": 0.202,
@@ -457,7 +487,35 @@
           "material": "aluminium-anodised",
           "role": "detail",
           "tone": 0.3,
-          "profile": [[-0.007235, 0.131555], [0.0018, 0.1325], [0.010835, 0.131555], [0.017784, 0.128727], [0.023942, 0.12404], [0.029469, 0.117533], [0.0344, 0.109254], [0.038733, 0.099263], [0.042451, 0.087617], [0.045531, 0.074363], [0.047952, 0.059509], [0.049696, 0.042958], [0.050748, 0.024283], [0.0511, 0.0], [0.050748, -0.024283], [0.049696, -0.042958], [0.047952, -0.059509], [0.045531, -0.074363], [0.042451, -0.087617], [0.038733, -0.099263], [0.0344, -0.109254], [0.029469, -0.117533], [0.023942, -0.12404], [0.017784, -0.128727], [0.010835, -0.131555], [0.0018, -0.1325], [-0.007235, -0.131555]],
+          "profile": [
+            [-0.007235, 0.131555],
+            [0.0018, 0.1325],
+            [0.010835, 0.131555],
+            [0.017784, 0.128727],
+            [0.023942, 0.12404],
+            [0.029469, 0.117533],
+            [0.0344, 0.109254],
+            [0.038733, 0.099263],
+            [0.042451, 0.087617],
+            [0.045531, 0.074363],
+            [0.047952, 0.059509],
+            [0.049696, 0.042958],
+            [0.050748, 0.024283],
+            [0.0511, 0.0],
+            [0.050748, -0.024283],
+            [0.049696, -0.042958],
+            [0.047952, -0.059509],
+            [0.045531, -0.074363],
+            [0.042451, -0.087617],
+            [0.038733, -0.099263],
+            [0.0344, -0.109254],
+            [0.029469, -0.117533],
+            [0.023942, -0.12404],
+            [0.017784, -0.128727],
+            [0.010835, -0.131555],
+            [0.0018, -0.1325],
+            [-0.007235, -0.131555]
+          ],
           "plane": "yz",
           "from": 0.168,
           "to": 0.172,
@@ -470,7 +528,28 @@
           "material": "polycarbonate",
           "role": "glazing",
           "tone": 0.85,
-          "profile": [[0.0675, 0.15], [0.075154, 0.151522], [0.081642, 0.155858], [0.085978, 0.162346], [0.0875, 0.17], [0.0875, 0.41], [0.085978, 0.417654], [0.081642, 0.424142], [0.075154, 0.428478], [0.0675, 0.43], [-0.0675, 0.43], [-0.075154, 0.428478], [-0.081642, 0.424142], [-0.085978, 0.417654], [-0.0875, 0.41], [-0.0875, 0.17], [-0.085978, 0.162346], [-0.081642, 0.155858], [-0.075154, 0.151522], [-0.0675, 0.15]],
+          "profile": [
+            [0.0675, 0.15],
+            [0.075154, 0.151522],
+            [0.081642, 0.155858],
+            [0.085978, 0.162346],
+            [0.0875, 0.17],
+            [0.0875, 0.41],
+            [0.085978, 0.417654],
+            [0.081642, 0.424142],
+            [0.075154, 0.428478],
+            [0.0675, 0.43],
+            [-0.0675, 0.43],
+            [-0.075154, 0.428478],
+            [-0.081642, 0.424142],
+            [-0.085978, 0.417654],
+            [-0.0875, 0.41],
+            [-0.0875, 0.17],
+            [-0.085978, 0.162346],
+            [-0.081642, 0.155858],
+            [-0.075154, 0.151522],
+            [-0.0675, 0.15]
+          ],
           "plane": "zx",
           "from": -0.0545,
           "to": -0.05,
@@ -507,7 +586,24 @@
           "role": "detail",
           "tone": 0.22,
           "plane": "xy",
-          "profile": [[0.995, 0.0], [0.9946194, 0.00191342], [0.99353553, 0.00353553], [0.99191342, 0.0046194], [0.99, 0.005], [0.98808658, 0.0046194], [0.98646447, 0.00353553], [0.9853806, 0.00191342], [0.985, 0.0], [0.9853806, -0.00191342], [0.98646447, -0.00353553], [0.98808658, -0.0046194], [0.99, -0.005], [0.99191342, -0.0046194], [0.99353553, -0.00353553], [0.9946194, -0.00191342]],
+          "profile": [
+            [0.995, 0.0],
+            [0.9946194, 0.00191342],
+            [0.99353553, 0.00353553],
+            [0.99191342, 0.0046194],
+            [0.99, 0.005],
+            [0.98808658, 0.0046194],
+            [0.98646447, 0.00353553],
+            [0.9853806, 0.00191342],
+            [0.985, 0.0],
+            [0.9853806, -0.00191342],
+            [0.98646447, -0.00353553],
+            [0.98808658, -0.0046194],
+            [0.99, -0.005],
+            [0.99191342, -0.0046194],
+            [0.99353553, -0.00353553],
+            [0.9946194, -0.00191342]
+          ],
           "holes": [
             [[0.988, -0.002], [0.988, 0.002], [0.992, 0.002], [0.992, -0.002]]
           ],
@@ -522,7 +618,22 @@
           "role": "detail",
           "tone": 0.26,
           "plane": "xy",
-          "profile": [[0.15, 0.0481], [0.156, 0.0481], [0.159, 0.0526], [0.166, 0.0556], [0.178, 0.0556], [0.181, 0.0526], [0.189, 0.0526], [0.189, 0.0546], [0.182, 0.0546], [0.179, 0.0576], [0.165, 0.0576], [0.157, 0.0536], [0.154, 0.0506], [0.15, 0.0506]],
+          "profile": [
+            [0.15, 0.0481],
+            [0.156, 0.0481],
+            [0.159, 0.0526],
+            [0.166, 0.0556],
+            [0.178, 0.0556],
+            [0.181, 0.0526],
+            [0.189, 0.0526],
+            [0.189, 0.0546],
+            [0.182, 0.0546],
+            [0.179, 0.0576],
+            [0.165, 0.0576],
+            [0.157, 0.0536],
+            [0.154, 0.0506],
+            [0.15, 0.0506]
+          ],
           "from": -0.006,
           "to": 0.006
         },
@@ -543,7 +654,26 @@
         {
           "id": "th-plinth",
           "of": "plinth",
-          "region": "plinth-concrete"
+          "region": "plinth-concrete",
+          "sectionFaces": ["-v", "+v"]
+        },
+        {
+          "id": "th-plinth-top",
+          "kind": "extrude",
+          "bone": "foundation",
+          "material": "concrete",
+          "role": "body",
+          "tone": 0.65,
+          "profile": [[0.235, 0.235], [-0.235, 0.235], [-0.235, -0.235], [0.235, -0.235]],
+          "holes": [
+            [[0.15, 0.15], [0.15, -0.15], [-0.15, -0.15], [-0.15, 0.15]]
+          ],
+          "plane": "zx",
+          "from": 0.097,
+          "to": 0.1,
+          "region": "plinth-concrete",
+          "sectionFaces": ["-v"],
+          "sheet": true
         },
         {
           "id": "th-base-plate",
@@ -563,12 +693,12 @@
         {
           "id": "th-base-cover",
           "kind": "revolve",
-          "bone": "foundation",
+          "bone": "pole",
           "material": "galv-steel",
           "role": "body",
           "tone": 0.33,
-          "profile": [[0.12, 0], [0.12, 0.12], [0.13, 0.12], [0.155, 0.1105], [0.1775, 0.1005], [0.21, 0.092], [0.24, 0.0875], [0.27, 0.0852], [0.3, 0.0843], [0.3, 0]],
-          "axis": [0, 1, 0],
+          "profile": [[-0.005, 0], [-0.005, 0.12], [0.01, 0.12], [0.035, 0.1105], [0.0575, 0.1005], [0.09, 0.092], [0.12, 0.0875], [0.15, 0.0852], [0.18, 0.0843], [0.18, 0]],
+          "axis": [1, 0, 0],
           "origin": [0, 0, 0],
           "region": "pole-galv"
         },
@@ -672,7 +802,26 @@
           "material": "aluminium-anodised",
           "role": "detail",
           "tone": 0.9,
-          "profile": [[0.049495, -0.095], [0.054744, -0.07125], [0.057604, -0.0475], [0.058922, -0.02375], [0.059222, 0.0], [0.058922, 0.02375], [0.057604, 0.0475], [0.054744, 0.07125], [0.049495, 0.095], [0.052495, 0.095], [0.057744, 0.07125], [0.060604, 0.0475], [0.061922, 0.02375], [0.062222, 0.0], [0.061922, -0.02375], [0.060604, -0.0475], [0.057744, -0.07125], [0.052495, -0.095]],
+          "profile": [
+            [0.049495, -0.095],
+            [0.054744, -0.07125],
+            [0.057604, -0.0475],
+            [0.058922, -0.02375],
+            [0.059222, 0.0],
+            [0.058922, 0.02375],
+            [0.057604, 0.0475],
+            [0.054744, 0.07125],
+            [0.049495, 0.095],
+            [0.052495, 0.095],
+            [0.057744, 0.07125],
+            [0.060604, 0.0475],
+            [0.061922, 0.02375],
+            [0.062222, 0.0],
+            [0.061922, -0.02375],
+            [0.060604, -0.0475],
+            [0.057744, -0.07125],
+            [0.052495, -0.095]
+          ],
           "plane": "yz",
           "from": 0.2005,
           "to": 0.3795,
@@ -714,13 +863,13 @@
           "material": "concrete",
           "role": "body",
           "tone": 0.65,
-          "size": [0.3, 0.085, 0.3],
-          "cornerRadius": 0.008,
+          "size": [0.5, 0.085, 0.5],
           "transform": {
             "translation": [0, 0.0575, 0]
           },
           "member": "foundation",
-          "part": "member"
+          "part": "member",
+          "cornerRadius": 0.015
         },
         {
           "id": "member-base-plate",
@@ -840,7 +989,7 @@
           "material": "concrete",
           "role": "body",
           "tone": 0.1,
-          "size": [0.3, 0.015, 0.3],
+          "size": [0.5, 0.015, 0.5],
           "transform": {
             "translation": [0, 0.0075, 0]
           },
@@ -909,44 +1058,20 @@
           "of": "head-spigot",
           "member": "head",
           "part": "joint"
-        },
-        {
-          "id": "joint-head-latch-pivot",
-          "of": "head-latch-pivot",
-          "member": "head",
-          "part": "joint"
-        },
-        {
-          "id": "joint-door-lock",
-          "of": "door-lock",
-          "member": "pole",
-          "part": "joint"
-        },
-        {
-          "id": "joint-head-latch",
-          "of": "head-latch",
-          "member": "head",
-          "part": "joint"
-        },
-        {
-          "id": "joint-head-keeper",
-          "of": "head-latch-keeper",
-          "member": "head",
-          "part": "joint"
         }
       ],
       "decisions": [
         {
-          "en": "Body: a 6 m galvanised conical column as built: concrete plinth 0.30 x 0.30 x 0.10 m with rounded arrises, 300 x 300 x 20 mm base plate with four M20 anchor bolts (hex nuts AF 30 with washer, bolt ends), a 3 mm flared base shroud, the straight cone 170 to 80 mm (15 mm per metre, 4 mm wall) closed by a push-in dome cap, a flush inspection door (500 x 90 mm, texture), a brace band at 5.35 m; the bracket arm is a 60 mm aluminium tube in a cast clamp sleeve with its bolting ear, two M10 bolts and socket, braced by a 27 mm strut between a foot lug welded to the band and a gusset lug under the arm; the luminaire is a compact side-entry LED head 0.505 x 0.274 x 0.10 m: a domed die-cast cover over a flat-bottomed tray (parting line 12 mm below the arm axis), the spigot collar at the rear, the raised joint of the gear hatch (texture, 1.5 mm), six transverse cooling fins over the LED board (texture, 4 mm) and a flat polycarbonate lens 0.28 x 0.175 m proud of the tray (texture).",
-          "de": "Körper: ein 6 m hoher verzinkter Kegelmast wie gebaut: Betonsockel 0,30 x 0,30 x 0,10 m mit gerundeten Kanten, Fußplatte 300 x 300 x 20 mm mit vier Ankerschrauben M20 (Sechskantmuttern SW 30 mit Scheibe, Schraubenenden), eine ausgestellte Fußmanschette von 3 mm, der gerade Kegel von 170 auf 80 mm (15 mm je Meter, 4 mm Wand) mit eingesteckter Kuppelkappe, eine bündige Revisionstür (500 x 90 mm, Textur), ein Strebenring auf 5,35 m; der Ausleger ist ein Aluminiumrohr von 60 mm in einer gegossenen Klemmhülse mit Schraublasche, zwei Schrauben M10 und Muffe, abgestützt durch eine Strebe von 27 mm zwischen einer am Ring angeschweißten Fußlasche und einem Knotenblech unter dem Arm; die Leuchte ist ein kompakter LED-Kopf mit seitlicher Einführung 0,505 x 0,274 x 0,10 m: eine gewölbte Druckgusshaube über einer flachen Wanne (Teilungsfuge 12 mm unter der Auslegerachse), der Zapfenkragen hinten, die erhabene Fuge der Geräteklappe (Textur, 1,5 mm), sechs quer liegende Kühlrippen über der LED-Platine (Textur, 4 mm) und eine flache Polycarbonat-Abdeckung 0,28 x 0,175 m unter der Wanne (Textur)."
+          "en": "Body: a 6 m galvanised conical column as built: the head of the concrete foundation block, 0.50 x 0.50 m and 0.10 m out of the ground with eased arrises (the block continues below ground and is cut there; the anchor bolts keep 130 mm to its edge), 300 x 300 x 20 mm base plate with four M20 anchor bolts (hex nuts AF 30 with washer, bolt ends), a 3 mm flared base shroud, the straight cone 170 to 80 mm (15 mm per metre, 4 mm wall) closed by a push-in dome cap, a flush inspection door (500 x 90 mm, texture), a brace band at 5.35 m; the bracket arm is a 60 mm aluminium tube in a cast clamp sleeve with its bolting ear, two M10 bolts and socket, braced by a 27 mm strut between a foot lug welded to the band and a gusset lug under the arm; the luminaire is a compact side-entry LED head 0.505 x 0.274 x 0.10 m: a domed die-cast cover over a flat-bottomed tray (parting line 12 mm below the arm axis), the spigot collar at the rear, the raised joint of the gear hatch (texture, 1.5 mm), six transverse cooling fins over the LED board (texture, 4 mm) and a flat polycarbonate lens 0.28 x 0.175 m proud of the tray (texture). The shroud is welded to the shaft, sways with it and reaches 5 mm into the plate.",
+          "de": "Körper: ein 6 m hoher verzinkter Kegelmast wie gebaut: der Kopf des Betonfundaments, 0,50 x 0,50 m und 0,10 m über dem Boden mit gebrochenen Kanten (der Block reicht in den Boden und ist dort geschnitten; die Ankerschrauben halten 130 mm Randabstand), Fußplatte 300 x 300 x 20 mm mit vier Ankerschrauben M20 (Sechskantmuttern SW 30 mit Scheibe, Schraubenenden), eine ausgestellte Fußmanschette von 3 mm, der gerade Kegel von 170 auf 80 mm (15 mm je Meter, 4 mm Wand) mit eingesteckter Kuppelkappe, eine bündige Revisionstür (500 x 90 mm, Textur), ein Strebenring auf 5,35 m; der Ausleger ist ein Aluminiumrohr von 60 mm in einer gegossenen Klemmhülse mit Schraublasche, zwei Schrauben M10 und Muffe, abgestützt durch eine Strebe von 27 mm zwischen einer am Ring angeschweißten Fußlasche und einem Knotenblech unter dem Arm; die Leuchte ist ein kompakter LED-Kopf mit seitlicher Einführung 0,505 x 0,274 x 0,10 m: eine gewölbte Druckgusshaube über einer flachen Wanne (Teilungsfuge 12 mm unter der Auslegerachse), der Zapfenkragen hinten, die erhabene Fuge der Geräteklappe (Textur, 1,5 mm), sechs quer liegende Kühlrippen über der LED-Platine (Textur, 4 mm) und eine flache Polycarbonat-Abdeckung 0,28 x 0,175 m unter der Wanne (Textur). Die Manschette ist mit dem Schaft verschweißt, schwingt mit ihm und greift 5 mm in die Platte."
         },
         {
           "en": "Thermal: the column and the base shroud are their closed outer envelopes (the sealed tube interior is not reachable by the air, C31), plate, nuts, bolt ends, cap and brace band reference the body; the arm region is the tube, socket, clamp sleeve with ear and bolts, strut and gusset lug (the steel foot lug belongs to the column region); the housing region is cover, tray, spigot collar, hatch joint and the fins; the lens is the body lens with its inner face against the tray as section face; the plume outlet is the fin field itself, a 2 mm curved plate 0.18 x 0.19 m lying on the fin tops (D2; the plume above it widens to the declared 0.30 m). The inspection door is flush in the tube envelope and not a separate thermal solid.",
           "de": "Thermik: Mast und Fußmanschette sind ihre geschlossenen Außenhüllen (das dichte Rohrinnere erreicht die Luft nicht, C31), Platte, Muttern, Schraubenenden, Kappe und Strebenring verweisen auf den Körper; die Region des Auslegers ist Rohr, Muffe, Klemmhülse mit Lasche und Schrauben, Strebe und Knotenblech (die stählerne Fußlasche gehört zur Mastregion); die Gehäuseregion ist Haube, Wanne, Zapfenkragen, Klappenfuge und die Rippen; die Abdeckung ist die Körperabdeckung mit ihrer Innenseite an der Wanne als Schnittfläche; der Fahnenaustritt ist das Rippenfeld selbst, eine gebogene Platte von 2 mm, 0,18 x 0,19 m, auf den Rippenoberkanten (D2; die Fahne darüber weitet sich auf die angegebenen 0,30 m). Die Revisionstür liegt bündig in der Rohrhülle und ist kein eigener Thermikkörper."
         },
         {
-          "en": "Structure: the load path from the luminaire to the ground: the die-cast tray as head chassis held by the spigot clamp (joint), the 60 x 3 mm arm tube and the 26.9 x 2.6 mm strut (both hollow), the clamp sleeve with its two bolts, the brace band with the foot lug and the gusset lug as joints, the 4 mm conical tube with its fillet weld to the base plate, the plate, four M20 anchor bolts down into the concrete plinth, the fixed support as a 15 mm bearing pad in the ground joint under the plinth; masses lumped at the declared centres of the four bones.",
-          "de": "Tragwerk: der Lastpfad von der Leuchte zum Boden: die Druckgusswanne als Kopfrahmen in der Zapfenklemme (Gelenk), das Auslegerrohr 60 x 3 mm und die Strebe 26,9 x 2,6 mm (beide hohl), Klemmhülse mit ihren zwei Schrauben, Strebenring mit Fußlasche und Knotenblech als Verbindungen, das 4 mm starke Kegelrohr mit seiner Kehlnaht an der Fußplatte, die Platte, vier Ankerschrauben M20 in den Betonsockel, das feste Auflager als Lagerplatte von 15 mm in der Bodenfuge unter dem Sockel; Massen an den angegebenen Schwerpunkten der vier Knochen."
+          "en": "Structure: the load path from the luminaire to the ground: the die-cast tray as head chassis held by the spigot clamp (joint), the 60 x 3 mm arm tube and the 26.9 x 2.6 mm strut (both hollow), the clamp sleeve with its two bolts, the brace band with the foot lug and the gusset lug as joints, the 4 mm conical tube with its fillet weld to the base plate, the plate, four M20 anchor bolts down into the concrete foundation head, the fixed support as a 15 mm bearing pad in the ground joint under the head; masses lumped at the declared centres of the four bones.",
+          "de": "Tragwerk: der Lastpfad von der Leuchte zum Boden: die Druckgusswanne als Kopfrahmen in der Zapfenklemme (Gelenk), das Auslegerrohr 60 x 3 mm und die Strebe 26,9 x 2,6 mm (beide hohl), Klemmhülse mit ihren zwei Schrauben, Strebenring mit Fußlasche und Knotenblech als Verbindungen, das 4 mm starke Kegelrohr mit seiner Kehlnaht an der Fußplatte, die Platte, vier Ankerschrauben M20 in den Fundamentkopf, das feste Auflager als Lagerplatte von 15 mm in der Bodenfuge unter dem Kopf; Massen an den angegebenen Schwerpunkten der vier Knochen."
         },
         {
           "en": "A 60.4 mm bracket with a 3 mm wall enters a 60.6 mm bored side-entry sleeve for 130 mm. A recessed square-drive lock secures the terminal door. A galvanised spring catch spans the gear-cover joint and engages its keeper.",
@@ -965,21 +1090,33 @@
           "material": "concrete",
           "role": "body",
           "tone": 0.65,
-          "size": [0.3, 0.12, 0.3],
-          "cornerRadius": 0.006,
+          "size": [0.5, 0.1, 0.5],
           "transform": {
-            "translation": [0, 0.06, 0]
+            "translation": [0, 0.05, 0]
+          },
+          "cornerRadius": 0.015
+        },
+        {
+          "id": "base-plate",
+          "kind": "box",
+          "bone": "foundation",
+          "material": "galv-steel",
+          "role": "body",
+          "tone": 0.35,
+          "size": [0.3, 0.02, 0.3],
+          "transform": {
+            "translation": [0, 0.11, 0]
           }
         },
         {
           "id": "base-cover",
           "kind": "revolve",
-          "bone": "foundation",
+          "bone": "pole",
           "material": "galv-steel",
           "role": "body",
           "tone": 0.33,
-          "profile": [[0.12, 0], [0.12, 0.12], [0.13, 0.12], [0.17, 0.1015], [0.21, 0.092], [0.3, 0.0843], [0.3, 0]],
-          "axis": [0, 1, 0],
+          "profile": [[-0.005, 0], [-0.005, 0.12], [0.01, 0.12], [0.05, 0.1015], [0.09, 0.092], [0.18, 0.0843], [0.18, 0]],
+          "axis": [1, 0, 0],
           "origin": [0, 0, 0]
         },
         {
@@ -1185,7 +1322,20 @@
           "material": "polycarbonate",
           "role": "glazing",
           "tone": 0.85,
-          "profile": [[0.0575, 0.15], [0.078713, 0.158787], [0.0875, 0.18], [0.0875, 0.4], [0.078713, 0.421213], [0.0575, 0.43], [-0.0575, 0.43], [-0.078713, 0.421213], [-0.0875, 0.4], [-0.0875, 0.18], [-0.078713, 0.158787], [-0.0575, 0.15]],
+          "profile": [
+            [0.0575, 0.15],
+            [0.078713, 0.158787],
+            [0.0875, 0.18],
+            [0.0875, 0.4],
+            [0.078713, 0.421213],
+            [0.0575, 0.43],
+            [-0.0575, 0.43],
+            [-0.078713, 0.421213],
+            [-0.0875, 0.4],
+            [-0.0875, 0.18],
+            [-0.078713, 0.158787],
+            [-0.0575, 0.15]
+          ],
           "plane": "zx",
           "from": -0.0545,
           "to": -0.05,
@@ -1225,69 +1375,70 @@
           "material": "aluminium-anodised",
           "role": "detail",
           "tone": 0.3,
-          "profile": [[-0.0074132, 0.1275381], [0.0014706, 0.1284542], [0.0103544, 0.1275381], [0.0171871, 0.1247964], [0.023242, 0.1202525], [0.0286765, 0.1139442], [0.033525, 0.105918], [0.0377855, 0.0962321], [0.0414412, 0.0849417], [0.0444697, 0.0720924], [0.0468502, 0.0576919], [0.048565, 0.0416463], [0.0495994, 0.0235415], [0.0499455, 0.0], [0.0495994, -0.0235415], [0.048565, -0.0416463], [0.0468502, -0.0576919], [0.0444697, -0.0720924], [0.0414412, -0.0849417], [0.0377855, -0.0962321], [0.033525, -0.105918], [0.0286765, -0.1139442], [0.023242, -0.1202525], [0.0171871, -0.1247964], [0.0103544, -0.1275381], [0.0014706, -0.1284542], [-0.0074132, -0.1275381]],
+          "profile": [
+            [-0.0074132, 0.1275381],
+            [0.0014706, 0.1284542],
+            [0.0103544, 0.1275381],
+            [0.0171871, 0.1247964],
+            [0.023242, 0.1202525],
+            [0.0286765, 0.1139442],
+            [0.033525, 0.105918],
+            [0.0377855, 0.0962321],
+            [0.0414412, 0.0849417],
+            [0.0444697, 0.0720924],
+            [0.0468502, 0.0576919],
+            [0.048565, 0.0416463],
+            [0.0495994, 0.0235415],
+            [0.0499455, 0.0],
+            [0.0495994, -0.0235415],
+            [0.048565, -0.0416463],
+            [0.0468502, -0.0576919],
+            [0.0444697, -0.0720924],
+            [0.0414412, -0.0849417],
+            [0.0377855, -0.0962321],
+            [0.033525, -0.105918],
+            [0.0286765, -0.1139442],
+            [0.023242, -0.1202525],
+            [0.0171871, -0.1247964],
+            [0.0103544, -0.1275381],
+            [0.0014706, -0.1284542],
+            [-0.0074132, -0.1275381]
+          ],
           "plane": "yz",
           "from": 0.168,
           "to": 0.172,
           "texture": true
-        },
-        {
-          "id": "head-latch-pivot",
-          "bone": "head",
-          "kind": "box",
-          "material": "aluminium-anodised",
-          "role": "detail",
-          "tone": 0.43,
-          "size": [0.009, 0.012, 0.016],
-          "transform": {
-            "translation": [0.153, 0.0446, 0]
-          }
-        },
-        {
-          "id": "door-lock",
-          "bone": "pole",
-          "kind": "extrude",
-          "material": "galv-steel",
-          "role": "detail",
-          "tone": 0.22,
-          "plane": "xy",
-          "profile": [[0.995, 0.0], [0.9946194, 0.00191342], [0.99353553, 0.00353553], [0.99191342, 0.0046194], [0.99, 0.005], [0.98808658, 0.0046194], [0.98646447, 0.00353553], [0.9853806, 0.00191342], [0.985, 0.0], [0.9853806, -0.00191342], [0.98646447, -0.00353553], [0.98808658, -0.0046194], [0.99, -0.005], [0.99191342, -0.0046194], [0.99353553, -0.00353553], [0.9946194, -0.00191342]],
-          "holes": [
-            [[0.988, -0.002], [0.988, 0.002], [0.992, 0.002], [0.992, -0.002]]
-          ],
-          "from": -0.0824235,
-          "to": -0.0744235
-        },
-        {
-          "id": "head-latch",
-          "bone": "head",
-          "kind": "extrude",
-          "material": "galv-steel",
-          "role": "detail",
-          "tone": 0.26,
-          "plane": "xy",
-          "profile": [[0.15, 0.0481], [0.156, 0.0481], [0.159, 0.0526], [0.166, 0.0556], [0.178, 0.0556], [0.181, 0.0526], [0.189, 0.0526], [0.189, 0.0546], [0.182, 0.0546], [0.179, 0.0576], [0.165, 0.0576], [0.157, 0.0536], [0.154, 0.0506], [0.15, 0.0506]],
-          "from": -0.006,
-          "to": 0.006
-        },
-        {
-          "id": "head-latch-keeper",
-          "bone": "head",
-          "kind": "box",
-          "material": "aluminium-anodised",
-          "role": "detail",
-          "tone": 0.44,
-          "size": [0.008, 0.009, 0.017],
-          "transform": {
-            "translation": [0.186, 0.0481, 0]
-          }
         }
       ],
       "thermal": [
         {
           "id": "th-plinth",
           "of": "plinth",
-          "region": "plinth-concrete"
+          "region": "plinth-concrete",
+          "sectionFaces": ["-v", "+v"]
+        },
+        {
+          "id": "th-plinth-top",
+          "kind": "extrude",
+          "bone": "foundation",
+          "material": "concrete",
+          "role": "body",
+          "tone": 0.65,
+          "profile": [[0.235, 0.235], [-0.235, 0.235], [-0.235, -0.235], [0.235, -0.235]],
+          "holes": [
+            [[0.15, 0.15], [0.15, -0.15], [-0.15, -0.15], [-0.15, 0.15]]
+          ],
+          "plane": "zx",
+          "from": 0.097,
+          "to": 0.1,
+          "region": "plinth-concrete",
+          "sectionFaces": ["-v"],
+          "sheet": true
+        },
+        {
+          "id": "th-base-plate",
+          "of": "base-plate",
+          "region": "pole-galv"
         },
         {
           "id": "th-base-cover",
@@ -1337,7 +1488,26 @@
           "material": "aluminium-anodised",
           "role": "detail",
           "tone": 0.9,
-          "profile": [[0.033143, -0.11], [0.041406, -0.0825], [0.045312, -0.055], [0.047026, -0.0275], [0.047353, 0.0], [0.047026, 0.0275], [0.045312, 0.055], [0.041406, 0.0825], [0.033143, 0.11], [0.037143, 0.11], [0.045406, 0.0825], [0.049312, 0.055], [0.051026, 0.0275], [0.051353, 0.0], [0.051026, -0.0275], [0.049312, -0.055], [0.045406, -0.0825], [0.037143, -0.11]],
+          "profile": [
+            [0.033143, -0.11],
+            [0.041406, -0.0825],
+            [0.045312, -0.055],
+            [0.047026, -0.0275],
+            [0.047353, 0.0],
+            [0.047026, 0.0275],
+            [0.045312, 0.055],
+            [0.041406, 0.0825],
+            [0.033143, 0.11],
+            [0.037143, 0.11],
+            [0.045406, 0.0825],
+            [0.049312, 0.055],
+            [0.051026, 0.0275],
+            [0.051353, 0.0],
+            [0.051026, -0.0275],
+            [0.049312, -0.055],
+            [0.045406, -0.0825],
+            [0.037143, -0.11]
+          ],
           "plane": "yz",
           "from": 0.19,
           "to": 0.39,
@@ -1359,26 +1529,6 @@
           "id": "th-head-hatch-joint",
           "of": "head-hatch-joint",
           "region": "lamp-housing"
-        },
-        {
-          "id": "th-head-latch-pivot",
-          "of": "head-latch-pivot",
-          "region": "lamp-housing"
-        },
-        {
-          "id": "th-door-lock",
-          "of": "door-lock",
-          "region": "pole-galv"
-        },
-        {
-          "id": "th-head-latch",
-          "of": "head-latch",
-          "region": "lamp-housing"
-        },
-        {
-          "id": "th-head-latch-keeper",
-          "of": "head-latch-keeper",
-          "region": "lamp-housing"
         }
       ],
       "structure": [
@@ -1389,11 +1539,17 @@
           "material": "concrete",
           "role": "body",
           "tone": 0.65,
-          "size": [0.3, 0.105, 0.3],
-          "cornerRadius": 0.006,
+          "size": [0.5, 0.085, 0.5],
           "transform": {
-            "translation": [0, 0.0675, 0]
+            "translation": [0, 0.0575, 0]
           },
+          "member": "foundation",
+          "part": "member",
+          "cornerRadius": 0.015
+        },
+        {
+          "id": "member-base-plate",
+          "of": "base-plate",
           "member": "foundation",
           "part": "member"
         },
@@ -1461,7 +1617,7 @@
           "material": "concrete",
           "role": "body",
           "tone": 0.1,
-          "size": [0.3, 0.015, 0.3],
+          "size": [0.5, 0.015, 0.5],
           "transform": {
             "translation": [0, 0.0075, 0]
           },
@@ -1530,48 +1686,20 @@
           "of": "head-spigot",
           "member": "head",
           "part": "joint"
-        },
-        {
-          "id": "joint-head-latch-pivot",
-          "of": "head-latch-pivot",
-          "member": "head",
-          "part": "joint"
-        },
-        {
-          "id": "joint-door-lock",
-          "of": "door-lock",
-          "member": "pole",
-          "part": "joint"
-        },
-        {
-          "id": "joint-head-latch",
-          "of": "head-latch",
-          "member": "head",
-          "part": "joint"
-        },
-        {
-          "id": "joint-head-keeper",
-          "of": "head-latch-keeper",
-          "member": "head",
-          "part": "joint"
         }
       ],
       "decisions": [
         {
-          "en": "Body at 1:100 (feature 15 mm): plinth and base plate are one 0.12 m block (nuts and bolt ends under the feature are omitted), the shroud is a solid flare on four stations, the column a solid cone with its dome merged (the 4 mm cap step and the flush door are below the feature), the clamp one sleeve without its ear, socket merged into the 60 mm arm, the strut slender as drawn (stroke), brace band and gusset lug omitted (8 and 12 mm), the luminaire as cover and tray lofts on nine stations without fins and spigot collar, the lens a texture plate.",
-          "de": "Körper 1:100 (Merkmal 15 mm): Sockel und Fußplatte sind ein Block von 0,12 m (Muttern und Schraubenenden unter dem Merkmal entfallen), die Manschette ein voller Kragen auf vier Stationen, der Mast ein voller Kegel mit eingeschmolzener Kuppel (Kappenstufe 4 mm und bündige Tür unter dem Merkmal), die Klemme eine Hülse ohne Lasche, die Muffe im Rohr von 60 mm aufgegangen, die Strebe schlank wie gezeichnet (Strich), Strebenring und Knotenblech entfallen (8 und 12 mm), die Leuchte als Haube und Wanne auf neun Stationen ohne Rippen und Zapfenkragen, die Abdeckung eine Texturplatte."
+          "en": "Body at 1:100 (feature 15 mm): the concrete foundation head 0.50 x 0.50 m stands 0.10 m out of the ground and carries the 300 x 300 x 20 mm base plate (nuts and bolt ends are below the feature and omitted); the shroud is a solid flare on four stations, the column a solid cone 170 to 80 mm with its dome merged, the flush inspection door a texture seam; the clamp is one sleeve without its ear, the socket is merged into the 60 mm arm, the stay is kept slender at its true 27 mm, brace band and gusset lug are omitted (8 and 12 mm); the luminaire is cover and tray on nine stations with the spigot collar and the gear hatch seam (texture), without fins, lock and catch. The shroud is welded to the shaft, sways with it and reaches 5 mm into the plate.",
+          "de": "Körper 1:100 (Merkmal 15 mm): der Fundamentkopf aus Beton 0,50 x 0,50 m steht 0,10 m aus dem Boden und trägt die Fußplatte 300 x 300 x 20 mm (Muttern und Schraubenenden liegen unter dem Merkmal und entfallen); die Manschette ist ein voller Kragen auf vier Stationen, der Mast ein voller Kegel 170 auf 80 mm mit eingeschmolzener Kuppel, die bündige Revisionstür eine Texturfuge; die Klemme ist eine Hülse ohne Lasche, die Muffe geht im Ausleger von 60 mm auf, die Strebe bleibt schlank mit ihren wahren 27 mm, Strebenring und Knotenblech entfallen (8 und 12 mm); die Leuchte ist Haube und Wanne auf neun Stationen mit Zapfenkragen und Klappenfuge (Textur), ohne Rippen, Verschluss und Riegel. Die Manschette ist mit dem Schaft verschweißt, schwingt mit ihm und greift 5 mm in die Platte."
         },
         {
-          "en": "Thermal at 1:100: every region references its body solids (the base plate's galvanised faces are merged into the plinth block); the lens with its inner face as section face; the plume outlet a curved plate 0.20 x 0.22 m on the crown of the cover (no fins at this scale).",
-          "de": "Thermik 1:100: jede Region verweist auf ihre Körper (die verzinkten Flächen der Fußplatte gehen im Sockelblock auf); die Abdeckung mit ihrer Innenseite als Schnittfläche; der Fahnenaustritt eine gebogene Platte 0,20 x 0,22 m auf dem Scheitel der Haube (keine Rippen in diesem Maßstab)."
+          "en": "Thermal at 1:100: every region references its body solids; the base plate belongs to the galvanised column region and the foundation head to the concrete region; the lens keeps its inner face as section face; the plume outlet is a curved plate 0.20 x 0.22 m on the crown of the cover (no fins at this scale).",
+          "de": "Thermik 1:100: jede Region verweist auf ihre Körper; die Fußplatte gehört zur verzinkten Mastregion und der Fundamentkopf zur Betonregion; die Abdeckung behält ihre Innenseite als Schnittfläche; der Fahnenaustritt ist eine gebogene Platte 0,20 x 0,22 m auf dem Scheitel der Haube (keine Rippen in diesem Maßstab)."
         },
         {
-          "en": "Structure at 1:100: foundation block, the 4 mm conical tube and the 60 x 3 mm arm tube kept hollow (their walls are real, C30), the strut slender, the tray as head chassis; joints at the base weld, the clamp sleeve and the spigot clamp; anchor bolts and brace lug are merged (below the feature); fixed support and four masses.",
-          "de": "Tragwerk 1:100: Fundamentblock, das 4 mm starke Kegelrohr und das Auslegerrohr 60 x 3 mm bleiben hohl (echte Wände, C30), die Strebe schlank, die Wanne als Kopfrahmen; Verbindungen an Fußnaht, Klemmhülse und Zapfenklemme; Ankerschrauben und Knotenblech gehen auf (unter dem Merkmal); festes Auflager und vier Massen."
-        },
-        {
-          "en": "A 60.4 mm bracket with a 3 mm wall enters a 60.6 mm bored side-entry sleeve for 130 mm. A recessed square-drive lock secures the terminal door. A galvanised spring catch spans the gear-cover joint and engages its keeper.",
-          "de": "Der 60,4-mm-Ausleger mit 3 mm Wandstärke greift 130 mm in eine seitliche Hülse mit 60,6 mm Bohrung. Ein versenkter Vierkantverschluss sichert die Masttür. Ein verzinkter Federverschluss überbrückt die Gehäusefuge und greift ins Gegenlager."
+          "en": "Structure at 1:100: the load path runs from the tray as head chassis through the spigot clamp into the 60 x 3 mm arm tube and the slender stay, through the clamp sleeve into the 4 mm conical tube (both tubes stay hollow, their walls are real), through the base weld into the plate and the foundation head, which bears on a 15 mm pad in the ground joint; anchor bolts and brace lugs are below the feature and merged; four masses at the centres of the bones.",
+          "de": "Tragwerk 1:100: der Lastpfad läuft von der Wanne als Kopfrahmen über die Zapfenklemme in das Auslegerrohr 60 x 3 mm und die schlanke Strebe, über die Klemmhülse in das 4 mm starke Kegelrohr (beide Rohre bleiben hohl, ihre Wände sind echt), über die Fußnaht in die Platte und den Fundamentkopf, der auf einem Lager von 15 mm in der Bodenfuge ruht; Ankerschrauben und Strebenlaschen liegen unter dem Merkmal und gehen auf; vier Massen an den Schwerpunkten der Knochen."
         }
       ]
     },
@@ -1586,9 +1714,21 @@
           "material": "concrete",
           "role": "body",
           "tone": 0.65,
-          "size": [0.3, 0.12, 0.3],
+          "size": [0.5, 0.1, 0.5],
           "transform": {
-            "translation": [0, 0.06, 0]
+            "translation": [0, 0.05, 0]
+          }
+        },
+        {
+          "id": "base-plate",
+          "kind": "box",
+          "bone": "foundation",
+          "material": "galv-steel",
+          "role": "body",
+          "tone": 0.35,
+          "size": [0.3, 0.03, 0.3],
+          "transform": {
+            "translation": [0, 0.115, 0]
           }
         },
         {
@@ -1719,77 +1859,37 @@
             "rotation": [0.959591, 0, 0, 0.2814]
           },
           "texture": true
-        },
-        {
-          "id": "head-hatch-joint",
-          "kind": "extrude",
-          "bone": "head",
-          "material": "aluminium-anodised",
-          "role": "detail",
-          "tone": 0.3,
-          "profile": [[-0.0098251, 0.1325592], [-0.0004615, 0.1335115], [0.0089021, 0.1325592], [0.0161038, 0.1297096], [0.0224858, 0.1249869], [0.0282138, 0.1184302], [0.0333241, 0.110088], [0.0378147, 0.1000207], [0.0416679, 0.0882858], [0.0448599, 0.0749307], [0.047369, 0.0599633], [0.0491764, 0.0432859], [0.0502667, 0.0244684], [0.0506315, 0.0], [0.0502667, -0.0244684], [0.0491764, -0.0432859], [0.047369, -0.0599633], [0.0448599, -0.0749307], [0.0416679, -0.0882858], [0.0378147, -0.1000207], [0.0333241, -0.110088], [0.0282138, -0.1184302], [0.0224858, -0.1249869], [0.0161038, -0.1297096], [0.0089021, -0.1325592], [-0.0004615, -0.1335115], [-0.0098251, -0.1325592]],
-          "plane": "yz",
-          "from": 0.168,
-          "to": 0.172,
-          "texture": true
-        },
-        {
-          "id": "head-latch-pivot",
-          "bone": "head",
-          "kind": "box",
-          "material": "aluminium-anodised",
-          "role": "detail",
-          "tone": 0.43,
-          "size": [0.009, 0.012, 0.016],
-          "transform": {
-            "translation": [0.153, 0.0446, 0]
-          }
-        },
-        {
-          "id": "door-lock",
-          "bone": "pole",
-          "kind": "extrude",
-          "material": "galv-steel",
-          "role": "detail",
-          "tone": 0.22,
-          "plane": "xy",
-          "profile": [[0.995, 0.0], [0.9946194, 0.00191342], [0.99353553, 0.00353553], [0.99191342, 0.0046194], [0.99, 0.005], [0.98808658, 0.0046194], [0.98646447, 0.00353553], [0.9853806, 0.00191342], [0.985, 0.0], [0.9853806, -0.00191342], [0.98646447, -0.00353553], [0.98808658, -0.0046194], [0.99, -0.005], [0.99191342, -0.0046194], [0.99353553, -0.00353553], [0.9946194, -0.00191342]],
-          "holes": [
-            [[0.988, -0.002], [0.988, 0.002], [0.992, 0.002], [0.992, -0.002]]
-          ],
-          "from": -0.0824235,
-          "to": -0.0744235
-        },
-        {
-          "id": "head-latch",
-          "bone": "head",
-          "kind": "extrude",
-          "material": "galv-steel",
-          "role": "detail",
-          "tone": 0.26,
-          "plane": "xy",
-          "profile": [[0.15, 0.0481], [0.156, 0.0481], [0.159, 0.0526], [0.166, 0.0556], [0.178, 0.0556], [0.181, 0.0526], [0.189, 0.0526], [0.189, 0.0546], [0.182, 0.0546], [0.179, 0.0576], [0.165, 0.0576], [0.157, 0.0536], [0.154, 0.0506], [0.15, 0.0506]],
-          "from": -0.006,
-          "to": 0.006
-        },
-        {
-          "id": "head-latch-keeper",
-          "bone": "head",
-          "kind": "box",
-          "material": "aluminium-anodised",
-          "role": "detail",
-          "tone": 0.44,
-          "size": [0.008, 0.009, 0.017],
-          "transform": {
-            "translation": [0.186, 0.0481, 0]
-          }
         }
       ],
       "thermal": [
         {
           "id": "th-plinth",
           "of": "plinth",
-          "region": "plinth-concrete"
+          "region": "plinth-concrete",
+          "sectionFaces": ["-v", "+v"]
+        },
+        {
+          "id": "th-plinth-top",
+          "kind": "extrude",
+          "bone": "foundation",
+          "material": "concrete",
+          "role": "body",
+          "tone": 0.65,
+          "profile": [[0.25, 0.25], [-0.25, 0.25], [-0.25, -0.25], [0.25, -0.25]],
+          "holes": [
+            [[0.15, 0.15], [0.15, -0.15], [-0.15, -0.15], [-0.15, 0.15]]
+          ],
+          "plane": "zx",
+          "from": 0.097,
+          "to": 0.1,
+          "region": "plinth-concrete",
+          "sectionFaces": ["-v"],
+          "sheet": true
+        },
+        {
+          "id": "th-base-plate",
+          "of": "base-plate",
+          "region": "pole-galv"
         },
         {
           "id": "th-pole",
@@ -1824,7 +1924,26 @@
           "material": "aluminium-anodised",
           "role": "detail",
           "tone": 0.9,
-          "profile": [[0.037183, -0.11], [0.043997, -0.0825], [0.046405, -0.055], [0.047084, -0.0275], [0.047154, 0.0], [0.047084, 0.0275], [0.046405, 0.055], [0.043997, 0.0825], [0.037183, 0.11], [0.042183, 0.11], [0.048997, 0.0825], [0.051405, 0.055], [0.052084, 0.0275], [0.052154, 0.0], [0.052084, -0.0275], [0.051405, -0.055], [0.048997, -0.0825], [0.042183, -0.11]],
+          "profile": [
+            [0.037183, -0.11],
+            [0.043997, -0.0825],
+            [0.046405, -0.055],
+            [0.047084, -0.0275],
+            [0.047154, 0.0],
+            [0.047084, 0.0275],
+            [0.046405, 0.055],
+            [0.043997, 0.0825],
+            [0.037183, 0.11],
+            [0.042183, 0.11],
+            [0.048997, 0.0825],
+            [0.051405, 0.055],
+            [0.052084, 0.0275],
+            [0.052154, 0.0],
+            [0.052084, -0.0275],
+            [0.051405, -0.055],
+            [0.048997, -0.0825],
+            [0.042183, -0.11]
+          ],
           "plane": "yz",
           "from": 0.19,
           "to": 0.39,
@@ -1841,31 +1960,6 @@
           "id": "th-pole-hatch",
           "of": "pole-hatch",
           "region": "pole-galv"
-        },
-        {
-          "id": "th-head-hatch-joint",
-          "of": "head-hatch-joint",
-          "region": "lamp-housing"
-        },
-        {
-          "id": "th-head-latch-pivot",
-          "of": "head-latch-pivot",
-          "region": "lamp-housing"
-        },
-        {
-          "id": "th-door-lock",
-          "of": "door-lock",
-          "region": "pole-galv"
-        },
-        {
-          "id": "th-head-latch",
-          "of": "head-latch",
-          "region": "lamp-housing"
-        },
-        {
-          "id": "th-head-latch-keeper",
-          "of": "head-latch-keeper",
-          "region": "lamp-housing"
         }
       ],
       "structure": [
@@ -1876,10 +1970,16 @@
           "material": "concrete",
           "role": "body",
           "tone": 0.65,
-          "size": [0.3, 0.09, 0.3],
+          "size": [0.5, 0.07, 0.5],
           "transform": {
-            "translation": [0, 0.075, 0]
+            "translation": [0, 0.065, 0]
           },
+          "member": "foundation",
+          "part": "member"
+        },
+        {
+          "id": "member-base-plate",
+          "of": "base-plate",
           "member": "foundation",
           "part": "member"
         },
@@ -1990,7 +2090,7 @@
           "material": "concrete",
           "role": "body",
           "tone": 0.1,
-          "size": [0.3, 0.03, 0.3],
+          "size": [0.5, 0.03, 0.5],
           "transform": {
             "translation": [0, 0.015, 0]
           },
@@ -2059,48 +2159,20 @@
           "of": "head-spigot",
           "member": "head",
           "part": "joint"
-        },
-        {
-          "id": "joint-head-latch-pivot",
-          "of": "head-latch-pivot",
-          "member": "head",
-          "part": "joint"
-        },
-        {
-          "id": "joint-door-lock",
-          "of": "door-lock",
-          "member": "pole",
-          "part": "joint"
-        },
-        {
-          "id": "joint-head-latch",
-          "of": "head-latch",
-          "member": "head",
-          "part": "joint"
-        },
-        {
-          "id": "joint-head-keeper",
-          "of": "head-latch-keeper",
-          "member": "head",
-          "part": "joint"
         }
       ],
       "decisions": [
         {
-          "en": "Body at 1:200 (feature 30 mm): the plinth block with the plate, the column one solid cone 170 to 80 mm with a rounded top (shroud 35 mm and clamp sleeve 9 mm proud are merged into it), the 60 mm arm from the column axis, the strut slender as drawn, the luminaire one superelliptic loft on six stations (cover and tray merged, flat underside kept by the exponent), the lens a texture plate.",
-          "de": "Körper 1:200 (Merkmal 30 mm): der Sockelblock mit der Platte, der Mast ein voller Kegel 170 auf 80 mm mit gerundetem Kopf (Manschette 35 mm und Klemmhülse 9 mm Überstand gehen in ihm auf), der Ausleger 60 mm ab Mastachse, die Strebe schlank wie gezeichnet, die Leuchte ein superelliptischer Loft auf sechs Stationen (Haube und Wanne vereint, die flache Unterseite durch den Exponenten), die Abdeckung eine Texturplatte."
+          "en": "Body at 1:200 (feature 30 mm): the foundation head 0.50 x 0.50 x 0.10 m, the base plate thickened to the feature (30 mm) so that it still reads between concrete and steel, the column one solid cone 170 to 80 mm with a rounded top (shroud and clamp sleeve are merged into it), the 60 mm arm from the column axis, the stay slender at its true section, the luminaire one superelliptic loft on six stations (cover and tray merged, flat underside kept by the exponent) with its spigot collar, the lens and the inspection door as texture; lock, catch and hatch seam are omitted.",
+          "de": "Körper 1:200 (Merkmal 30 mm): der Fundamentkopf 0,50 x 0,50 x 0,10 m, die Fußplatte auf das Merkmal verstärkt (30 mm), damit sie zwischen Beton und Stahl lesbar bleibt, der Mast ein voller Kegel 170 auf 80 mm mit gerundetem Kopf (Manschette und Klemmhülse gehen in ihm auf), der Ausleger 60 mm ab Mastachse, die Strebe schlank mit wahrem Querschnitt, die Leuchte ein superelliptischer Loft auf sechs Stationen (Haube und Wanne vereint, die flache Unterseite durch den Exponenten) mit Zapfenkragen, Abdeckung und Revisionstür als Textur; Verschluss, Riegel und Klappenfuge entfallen."
         },
         {
-          "en": "Thermal at 1:200: every region references its body solid; only the total area is compared at this scale (C15).",
-          "de": "Thermik 1:200: jede Region verweist auf ihren Körper; in diesem Maßstab wird nur die Gesamtfläche verglichen (C15)."
+          "en": "Thermal at 1:200: every region references its body solid, the plate counts to the column region; only the total area is compared at this scale.",
+          "de": "Thermik 1:200: jede Region verweist auf ihren Körper, die Platte zählt zur Mastregion; in diesem Maßstab wird nur die Gesamtfläche verglichen."
         },
         {
-          "en": "Structure at 1:200: foundation block, conical tube and arm tube hollow (cavities 72 to 162 mm and 54 mm exceed the feature), strut slender, the head chassis a flat ring loft inside the housing; joints as solid blocks at the base, the clamp and the spigot; fixed support and four masses.",
-          "de": "Tragwerk 1:200: Fundamentblock, Kegelrohr und Auslegerrohr hohl (Hohlräume 72 bis 162 mm und 54 mm über dem Merkmal), Strebe schlank, der Kopfrahmen ein flacher Loft im Gehäuse; Verbindungen als volle Körper an Fuß, Klemme und Zapfen; festes Auflager und vier Massen."
-        },
-        {
-          "en": "A 60.4 mm bracket with a 3 mm wall enters a 60.6 mm bored side-entry sleeve for 130 mm. A recessed square-drive lock secures the terminal door. A galvanised spring catch spans the gear-cover joint and engages its keeper.",
-          "de": "Der 60,4-mm-Ausleger mit 3 mm Wandstärke greift 130 mm in eine seitliche Hülse mit 60,6 mm Bohrung. Ein versenkter Vierkantverschluss sichert die Masttür. Ein verzinkter Federverschluss überbrückt die Gehäusefuge und greift ins Gegenlager."
+          "en": "Structure at 1:200: foundation head with the plate, conical tube and arm tube hollow (cavities of 72 to 162 mm and 54 mm exceed the feature), the stay slender, the head chassis a flat loft inside the housing; joints as solid blocks at the base, the clamp and the spigot; the support is a 30 mm pad under the head; four masses.",
+          "de": "Tragwerk 1:200: Fundamentkopf mit Platte, Kegelrohr und Auslegerrohr hohl (Hohlräume von 72 bis 162 mm und 54 mm über dem Merkmal), die Strebe schlank, der Kopfrahmen ein flacher Loft im Gehäuse; Verbindungen als volle Körper an Fuß, Klemme und Zapfen; das Auflager ist ein Lager von 30 mm unter dem Kopf; vier Massen."
         }
       ]
     },
@@ -2115,7 +2187,7 @@
           "material": "concrete",
           "role": "body",
           "tone": 0.65,
-          "size": [0.3, 0.12, 0.3],
+          "size": [0.5, 0.12, 0.5],
           "transform": {
             "translation": [0, 0.06, 0]
           }
@@ -2140,7 +2212,21 @@
           "tone": 0.5,
           "profile": [[0.035, 0.0272], [0.82, 0.0272], [0.82, 0.0302], [0.035, 0.0302], [0.035, 0.0272]],
           "axis": [1, 0, 0],
-          "origin": [0, 0, 0]
+          "origin": [0, 0, 0],
+          "slender": true
+        },
+        {
+          "id": "arm-brace",
+          "kind": "capsule",
+          "bone": "arm",
+          "material": "aluminium-anodised",
+          "role": "body",
+          "tone": 0.45,
+          "p0": [0.05, -0.455, 0.0],
+          "p1": [0.6, -0.028, 0.0],
+          "r0": 0.0135,
+          "r1": 0.0135,
+          "slender": true
         },
         {
           "id": "head",
@@ -2199,93 +2285,14 @@
           "profile": [[-0.03, 0.0303], [0.1, 0.0303], [0.1, 0.038], [-0.03, 0.038], [-0.03, 0.0303]],
           "axis": [1, 0, 0],
           "origin": [0, 0, 0]
-        },
-        {
-          "id": "pole-hatch",
-          "kind": "revolve",
-          "bone": "pole",
-          "material": "galv-steel",
-          "role": "detail",
-          "tone": 0.3,
-          "profile": [[0.55, 0.079791], [1.05, 0.075964], [1.05, 0.079964], [0.55, 0.083791], [0.55, 0.079791]],
-          "axis": [1, 0, 0],
-          "origin": [0, 0, 0],
-          "sweepRad": 1.141009,
-          "transform": {
-            "rotation": [0.959591, 0, 0, 0.2814]
-          },
-          "texture": true
-        },
-        {
-          "id": "head-hatch-joint",
-          "kind": "extrude",
-          "bone": "head",
-          "material": "aluminium-anodised",
-          "role": "detail",
-          "tone": 0.3,
-          "profile": [[-0.0108827, 0.1267849], [-0.0017656, 0.1276956], [0.0073515, 0.1267849], [0.0143636, 0.1240594], [0.0205776, 0.1195424], [0.0261548, 0.1132713], [0.0311306, 0.1052925], [0.035503, 0.0956638], [0.0392548, 0.08444], [0.0423628, 0.0716666], [0.0448058, 0.0573512], [0.0465656, 0.0414004], [0.0476272, 0.0234025], [0.0479824, 0.0], [0.0476272, -0.0234025], [0.0465656, -0.0414004], [0.0448058, -0.0573512], [0.0423628, -0.0716666], [0.0392548, -0.08444], [0.035503, -0.0956638], [0.0311306, -0.1052925], [0.0261548, -0.1132713], [0.0205776, -0.1195424], [0.0143636, -0.1240594], [0.0073515, -0.1267849], [-0.0017656, -0.1276956], [-0.0108827, -0.1267849]],
-          "plane": "yz",
-          "from": 0.168,
-          "to": 0.172,
-          "texture": true
-        },
-        {
-          "id": "head-latch-pivot",
-          "bone": "head",
-          "kind": "box",
-          "material": "aluminium-anodised",
-          "role": "detail",
-          "tone": 0.43,
-          "size": [0.009, 0.012, 0.016],
-          "transform": {
-            "translation": [0.153, 0.0446, 0]
-          }
-        },
-        {
-          "id": "door-lock",
-          "bone": "pole",
-          "kind": "extrude",
-          "material": "galv-steel",
-          "role": "detail",
-          "tone": 0.22,
-          "plane": "xy",
-          "profile": [[0.995, 0.0], [0.9946194, 0.00191342], [0.99353553, 0.00353553], [0.99191342, 0.0046194], [0.99, 0.005], [0.98808658, 0.0046194], [0.98646447, 0.00353553], [0.9853806, 0.00191342], [0.985, 0.0], [0.9853806, -0.00191342], [0.98646447, -0.00353553], [0.98808658, -0.0046194], [0.99, -0.005], [0.99191342, -0.0046194], [0.99353553, -0.00353553], [0.9946194, -0.00191342]],
-          "holes": [
-            [[0.988, -0.002], [0.988, 0.002], [0.992, 0.002], [0.992, -0.002]]
-          ],
-          "from": -0.0824235,
-          "to": -0.0744235
-        },
-        {
-          "id": "head-latch",
-          "bone": "head",
-          "kind": "extrude",
-          "material": "galv-steel",
-          "role": "detail",
-          "tone": 0.26,
-          "plane": "xy",
-          "profile": [[0.15, 0.0481], [0.156, 0.0481], [0.159, 0.0526], [0.166, 0.0556], [0.178, 0.0556], [0.181, 0.0526], [0.189, 0.0526], [0.189, 0.0546], [0.182, 0.0546], [0.179, 0.0576], [0.165, 0.0576], [0.157, 0.0536], [0.154, 0.0506], [0.15, 0.0506]],
-          "from": -0.006,
-          "to": 0.006
-        },
-        {
-          "id": "head-latch-keeper",
-          "bone": "head",
-          "kind": "box",
-          "material": "aluminium-anodised",
-          "role": "detail",
-          "tone": 0.44,
-          "size": [0.008, 0.009, 0.017],
-          "transform": {
-            "translation": [0.186, 0.0481, 0]
-          }
         }
       ],
       "thermal": [
         {
           "id": "th-plinth",
           "of": "plinth",
-          "region": "plinth-concrete"
+          "region": "plinth-concrete",
+          "sectionFaces": ["-v"]
         },
         {
           "id": "th-pole",
@@ -2295,6 +2302,11 @@
         {
           "id": "th-arm",
           "of": "arm",
+          "region": "arm-alu"
+        },
+        {
+          "id": "th-arm-brace",
+          "of": "arm-brace",
           "region": "arm-alu"
         },
         {
@@ -2324,7 +2336,26 @@
           "material": "aluminium-anodised",
           "role": "detail",
           "tone": 0.9,
-          "profile": [[0.031939, -0.11], [0.040727, -0.0825], [0.043845, -0.055], [0.044793, -0.0275], [0.044906, 0.0], [0.044793, 0.0275], [0.043845, 0.055], [0.040727, 0.0825], [0.031939, 0.11], [0.038939, 0.11], [0.047727, 0.0825], [0.050845, 0.055], [0.051793, 0.0275], [0.051906, 0.0], [0.051793, -0.0275], [0.050845, -0.055], [0.047727, -0.0825], [0.038939, -0.11]],
+          "profile": [
+            [0.031939, -0.11],
+            [0.040727, -0.0825],
+            [0.043845, -0.055],
+            [0.044793, -0.0275],
+            [0.044906, 0.0],
+            [0.044793, 0.0275],
+            [0.043845, 0.055],
+            [0.040727, 0.0825],
+            [0.031939, 0.11],
+            [0.038939, 0.11],
+            [0.047727, 0.0825],
+            [0.050845, 0.055],
+            [0.051793, 0.0275],
+            [0.051906, 0.0],
+            [0.051793, -0.0275],
+            [0.050845, -0.055],
+            [0.047727, -0.0825],
+            [0.038939, -0.11]
+          ],
           "plane": "yz",
           "from": 0.19,
           "to": 0.39,
@@ -2335,36 +2366,6 @@
         {
           "id": "th-head-spigot",
           "of": "head-spigot",
-          "region": "lamp-housing"
-        },
-        {
-          "id": "th-pole-hatch",
-          "of": "pole-hatch",
-          "region": "pole-galv"
-        },
-        {
-          "id": "th-head-hatch-joint",
-          "of": "head-hatch-joint",
-          "region": "lamp-housing"
-        },
-        {
-          "id": "th-head-latch-pivot",
-          "of": "head-latch-pivot",
-          "region": "lamp-housing"
-        },
-        {
-          "id": "th-door-lock",
-          "of": "door-lock",
-          "region": "pole-galv"
-        },
-        {
-          "id": "th-head-latch",
-          "of": "head-latch",
-          "region": "lamp-housing"
-        },
-        {
-          "id": "th-head-latch-keeper",
-          "of": "head-latch-keeper",
           "region": "lamp-housing"
         }
       ],
@@ -2392,40 +2393,18 @@
           "axis": [1, 0, 0],
           "origin": [0, 0, 0],
           "member": "arm",
+          "part": "member",
+          "slender": true
+        },
+        {
+          "id": "member-arm-brace",
+          "of": "arm-brace",
+          "member": "arm",
           "part": "member"
         },
         {
           "id": "member-head-chassis",
-          "kind": "loft",
-          "bone": "head",
-          "material": "aluminium-anodised",
-          "role": "body",
-          "tone": 0.5,
-          "sections": [
-            {
-              "at": [0.03, -0.012, 0.0],
-              "rx": 0.08,
-              "ry": 0.038,
-              "exponent": 4.0,
-              "rotation": [0.707107, 0.0, 0.707107, 0.0]
-            },
-            {
-              "at": [0.25, -0.012, 0.0],
-              "rx": 0.12,
-              "ry": 0.038,
-              "exponent": 4.0,
-              "rotation": [0.707107, 0.0, 0.707107, 0.0]
-            },
-            {
-              "at": [0.45, -0.012, 0.0],
-              "rx": 0.09,
-              "ry": 0.038,
-              "exponent": 4.0,
-              "rotation": [0.707107, 0.0, 0.707107, 0.0]
-            }
-          ],
-          "capStart": true,
-          "capEnd": true,
+          "of": "head",
           "member": "head",
           "part": "member"
         },
@@ -2462,7 +2441,7 @@
           "material": "concrete",
           "role": "body",
           "tone": 0.1,
-          "size": [0.33, 0.075, 0.33],
+          "size": [0.5, 0.075, 0.5],
           "transform": {
             "translation": [0, 0.0375, 0]
           },
@@ -2531,48 +2510,20 @@
           "of": "head-spigot",
           "member": "head",
           "part": "joint"
-        },
-        {
-          "id": "joint-head-latch-pivot",
-          "of": "head-latch-pivot",
-          "member": "head",
-          "part": "joint"
-        },
-        {
-          "id": "joint-door-lock",
-          "of": "door-lock",
-          "member": "pole",
-          "part": "joint"
-        },
-        {
-          "id": "joint-head-latch",
-          "of": "head-latch",
-          "member": "head",
-          "part": "joint"
-        },
-        {
-          "id": "joint-head-keeper",
-          "of": "head-latch-keeper",
-          "member": "head",
-          "part": "joint"
         }
       ],
       "decisions": [
         {
-          "en": "At 1:500 the tapered column carries a 60.4 mm tubular arm and a five-station luminaire. The access panel, lock, gear catch and sleeve remain at their installed dimensions.",
-          "de": "Bei 1:500 trägt der konische Mast ein 60,4-mm-Auslegerrohr und einen Leuchtenkopf mit fünf Querschnitten. Zugangstür, Verschluss, Federriegel und Hülse behalten ihre Einbaumaße."
+          "en": "Body at 1:500 (feature 75 mm): five parts carry the silhouette: the foundation head 0.50 x 0.50 m with the plate merged into its 0.12 m, the column as a plain cone 170 to 80 mm, the 60 mm arm and the diagonal stay as slender members at their true sections (the triangle of arm, stay and column is what identifies the bracket from afar), the luminaire as one loft on five stations with its spigot collar; door, lock, catch and seams are omitted.",
+          "de": "Körper 1:500 (Merkmal 75 mm): fünf Teile tragen die Silhouette: der Fundamentkopf 0,50 x 0,50 m mit der in seinen 0,12 m aufgegangenen Platte, der Mast als schlichter Kegel 170 auf 80 mm, der Ausleger 60 mm und die schräge Strebe als schlanke Stäbe mit wahrem Querschnitt (das Dreieck aus Ausleger, Strebe und Mast macht die Konsole von weitem kenntlich), die Leuchte als ein Loft auf fünf Stationen mit Zapfenkragen; Tür, Verschluss, Riegel und Fugen entfallen."
         },
         {
-          "en": "Thermal at 1:500: the four body solids carry their regions; the lens is a thin plate under the head (texture, inner face as section face) so that the region keeps its solid; only the total is compared (C15, C21).",
-          "de": "Thermik 1:500: die vier Körper tragen ihre Regionen; die Abdeckung ist eine dünne Platte unter dem Kopf (Textur, Innenseite als Schnittfläche), damit die Region ihren Körper behält; verglichen wird nur die Summe (C15, C21)."
+          "en": "Thermal at 1:500: the body solids carry their regions; the lens is a thin plate under the head (texture, inner face as section face) so that the region keeps its solid; only the total is compared.",
+          "de": "Thermik 1:500: die Körper tragen ihre Regionen; die Abdeckung ist eine dünne Platte unter dem Kopf (Textur, Innenseite als Schnittfläche), damit die Region ihren Körper behält; verglichen wird nur die Summe."
         },
         {
-          "en": "The hollow arm enters the bored sleeve at the head. The lumped masses remain at their authored centres and the foundation bears on the ground pad.",
-          "de": "Der Hohlausleger greift in die Hülse am Leuchtenkopf. Die konzentrierten Massen bleiben an ihren Schwerpunkten und das Fundament liegt auf dem Bodenlager."
-        },
-        {
-          "en": "A 60.4 mm bracket with a 3 mm wall enters a 60.6 mm bored side-entry sleeve for 130 mm. A recessed square-drive lock secures the terminal door. A galvanised spring catch spans the gear-cover joint and engages its keeper.",
-          "de": "Der 60,4-mm-Ausleger mit 3 mm Wandstärke greift 130 mm in eine seitliche Hülse mit 60,6 mm Bohrung. Ein versenkter Vierkantverschluss sichert die Masttür. Ein verzinkter Federverschluss überbrückt die Gehäusefuge und greift ins Gegenlager."
+          "en": "Structure at 1:500: foundation head, column, hollow arm, stay and the die-cast head itself as its member, joined by solid blocks at the base and the clamp and by the spigot collar; the masses sit at the centres of the bones and the head bears on the ground pad.",
+          "de": "Tragwerk 1:500: Fundamentkopf, Mast, hohler Ausleger, Strebe und der Druckgusskopf selbst als sein Stab, verbunden durch volle Körper an Fuß und Klemme und durch den Zapfenkragen; die Massen sitzen an den Schwerpunkten der Knochen und der Kopf ruht auf dem Bodenlager."
         }
       ]
     }

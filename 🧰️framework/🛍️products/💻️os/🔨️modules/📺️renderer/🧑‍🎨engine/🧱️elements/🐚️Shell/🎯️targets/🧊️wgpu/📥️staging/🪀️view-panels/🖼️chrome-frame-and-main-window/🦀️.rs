@@ -57,6 +57,8 @@ pub enum ShellChromeFramePhase {
     /// 📎️ The offer to reconnect the folder this device remembers for the session's document (`📎️local-folders`),
     /// stacked above the time-travel band like React's bottom bands.
     FolderReconnectBand,
+    /// 🗂️ React's "Files on this device" listing of the documents this device keeps, stacked above the folder offer.
+    LocalFilesBand,
     /// ⏪️ The persistent time-travel band (`HistoryPatch.timeTravel`) above the footer — under every overlay, so an
     /// open dialog's veil covers it exactly as it covers the rest of the workbench.
     TimeTravelBand,
@@ -158,6 +160,7 @@ impl ShellChromeFramePhase {
             Self::TutorialBar => "TutorialBar",
             Self::Footer => "Footer",
             Self::FolderReconnectBand => "FolderReconnectBand",
+            Self::LocalFilesBand => "LocalFilesBand",
             Self::TimeTravelBand => "TimeTravelBand",
             Self::HistoryReprojectionBand => "HistoryReprojectionBand",
             Self::Overlay => "Overlay",
@@ -212,6 +215,7 @@ impl<'ctx> PanelsViewCtx<'ctx> {
         cx:&mut semio_framework_job::StepContext<'_>,
     ) -> Result<bool,semio_framework_job::OriginalTurnFailure>{
         self.opening.advance_icon_export(cx)?;
+        self.opening.advance_video_render(&mut self.chrome, self.prefs.locale_id == "de");
         if cx.should_yield(){return Ok(false)}
         let reduced_motion = semio_renderer_wgpu_host_base::host_platform_prefs().prefers_reduced_motion;
         draw.set_reduced_motion(reduced_motion);
@@ -440,6 +444,12 @@ impl<'ctx> PanelsViewCtx<'ctx> {
                 if !self.as_overlays_view().render_folder_reconnect_band_step(&mut cursor.child, overlay, atlas, input, theme) {
                     return false;
                 }
+                cursor.advance(ShellChromeFramePhase::LocalFilesBand);
+            }
+            ShellChromeFramePhase::LocalFilesBand => {
+                if !self.as_overlays_view().render_local_files_band_step(&mut cursor.child, overlay, atlas, input, theme) {
+                    return false;
+                }
                 cursor.advance(ShellChromeFramePhase::TimeTravelBand);
             }
             ShellChromeFramePhase::TimeTravelBand => {
@@ -571,7 +581,8 @@ impl<'ctx> PanelsViewCtx<'ctx> {
         let presence_rows = self.footer_presence_rows();
         let presence_label = semio_ui_wgpu_light::presence_bar::presence_bar_chip_text(&presence_rows, None, self.prefs.active_locale());
         let presence_item = ChromeGroupItem { control_id: "s-presence-peers", icon_id: None, label: Some(presence_label.as_str()), active: false, disabled: false, kind: HitKind::Button };
-        let presence_width = (!mobile).then(|| retained_chrome_group_item_width(atlas, theme, &presence_item).unwrap_or(0.0));
+        let presence_cells = semio_ui_wgpu_light::presence_bar::presence_bar_cells(&presence_rows, None);
+        let presence_width = (!mobile).then(|| if presence_cells.is_empty() { retained_chrome_group_item_width(atlas, theme, &presence_item).unwrap_or(0.0) } else { presence_cells.len() as f32 * btn_h + theme.stroke_hairline * (presence_cells.len() + 1) as f32 });
         let bottom_right_left = width - theme.padding_standard - bottom_right;
         let trailing_right = bottom_right_left - if bottom_right > 0.0 { theme.gap_standard } else { 0.0 };
         let sign_in = sign_in_width.map(|sign_in_width| Rect::new((trailing_right - sign_in_width).max(theme.padding_standard), btn_y, sign_in_width, btn_h));

@@ -121,8 +121,8 @@ fn node_graph_window_attaches_the_flow_engine_and_paints_a_non_empty_draw_list()
         let map = cell.borrow();
         let entry = map.get(&host_id).expect("attach published the engine surface");
         match entry.node_graph.as_ref().expect("attach constructed the node-graph engine") {
-            NodeGraphEngine::Flow(host) => (host.dag.host_snapshot.nodes.len(), host.dag.host_snapshot.edges.len(), true),
-            NodeGraphEngine::Dag(host) => (host.dag.host_snapshot.nodes.len(), host.dag.host_snapshot.edges.len(), false),
+            NodeGraphEngine::Flow(host) => (host.dag.graph.host_snapshot.nodes.len(), host.dag.graph.host_snapshot.edges.len(), true),
+            NodeGraphEngine::Dag(host) => (host.dag.graph.host_snapshot.nodes.len(), host.dag.graph.host_snapshot.edges.len(), false),
         }
     });
     assert!(engine_is_flow, "a scene carrying hostSnapshotJson selects the flow engine, exactly as React's NodeGraphHost does");
@@ -337,7 +337,7 @@ fn fit_graph_answers_the_fitted_camera_not_the_scene_camera() {
         .with(|cell| {
             let map = cell.borrow();
             let Some(NodeGraphEngine::Flow(host)) = map.get(surface_id)?.node_graph.as_ref() else { return None };
-            Some((host.camera(), [host.dag.host_snapshot.camera.x, host.dag.host_snapshot.camera.y, host.dag.host_snapshot.camera.zoom], host.dag.camera_content_coverage()))
+            Some((host.camera(), [host.dag.graph.host_snapshot.camera.x, host.dag.graph.host_snapshot.camera.y, host.dag.graph.host_snapshot.camera.zoom], host.dag.camera_content_coverage()))
         })
         .expect("live flow host");
     assert_eq!(fitted, published, "the answer the control persists is the surface's own published camera");
@@ -457,7 +457,7 @@ fn graph_viewport_exit_preserves_newer_local_hover() {
         let live = ENGINE_SURFACES.with(|cell| {
             let registry = cell.borrow();
             let Some(NodeGraphEngine::Flow(host)) = registry.get(surface_id).unwrap().node_graph.as_ref() else { panic!("fixture uses Flow") };
-            semio_os_infinite_board_dag_graph::hovered_node_id(&host.dag.viewport, &host.dag.graph)
+            flow::dag::hovered_node_id(&host.dag.viewport, &host.dag.graph)
         });
         assert_eq!(live.as_deref(), step["live"].as_str(), "scene update {index}");
     }
@@ -488,7 +488,7 @@ fn graph_scene_uses_the_interaction_window_for_hover_arbitration() {
         let live = ENGINE_SURFACES.with(|cell| {
             let registry = cell.borrow();
             let Some(NodeGraphEngine::Flow(host)) = registry.get(surface_id).unwrap().node_graph.as_ref() else { panic!("fixture uses Flow") };
-            semio_os_infinite_board_dag_graph::hovered_node_id(&host.dag.viewport, &host.dag.graph)
+            flow::dag::hovered_node_id(&host.dag.viewport, &host.dag.graph)
         });
         assert_eq!(live.as_deref(), step["live"].as_str(), "scene update {index}");
     }
@@ -524,7 +524,7 @@ fn flow_canvas_restores_and_publishes_same_named_directional_channels() {
             let target = port["target"].as_str().unwrap();
             let graph = scene.node_graph.as_mut().unwrap();
             graph.selection = vec![target.into()];
-            graph.hover = Some(NodeGraphHover { node_id: Some(widget.into()), port_id: Some(semantic.into()), edge_id: None, hover_source_window_id: Some(None) });
+            graph.hover = Some(NodeGraphHover { node_id: Some(widget.into()), port_id: Some(semantic.into()), edge_id: None, port_ids: Vec::new(), hover_source_window_id: Some(None) });
             assert!(sync_node_graph_scene(&scene, "law-window", bounds, Theme::default().panel));
             let (x, y) = ENGINE_SURFACES.with(|cell| {
                 let map = cell.borrow();

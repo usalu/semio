@@ -4,7 +4,7 @@ async fn app_example_decodes_and_checks_part22_records() {
     use semio_s_artifact_norm_vdi3805_io::text::snapshot::decode_vdi3805_dsl;
     use semio_s_plugin_norm_compliance::CheckStatus;
 
-    let text = semio_s_artifact_norm_vdi3805_examples::blatt_22::PRIMARY_TEXT;
+    let text = super::PRIMARY_TEXT;
     let document = decode_vdi3805_dsl(text).expect("Blatt 22 app example");
     assert_eq!(document.catalog.products[0].sheet.0, 22);
     let report = evaluate(&document);

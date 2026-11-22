@@ -40,14 +40,26 @@ export function planRootItemWeaving({ tree, qualifyRootHeads, rootSource, unnest
 }
 
 /** 🧩 Merges slices that are coupled by coherence, import cycles and file chains into components. */
-export function mergeCoupledComponents({ infos, coherenceType, infoOf }: Pick<Awaited<ReturnType<typeof collectSliceInfos>>, "infos" | "coherenceType" | "infoOf">) {
+export function mergeCoupledComponents({ infos, coherenceType, infoOf, options }: Pick<Awaited<ReturnType<typeof collectSliceInfos>>, "infos" | "coherenceType" | "infoOf"> & { readonly options: PlanOptions }) {
   const mergeCauses: { a: string; b: string; kind: "coherence" | "cycle"; type?: string; ring?: string[] }[] = [];
-  const edgesOf = (info: SliceInfo): Set<string> => new Set([...info.libEdges, ...info.testEdges]);
+  const carved = (options.carved?.crates ?? []).filter((crate) => crate.signed);
+  const ownerOf = new Map(carved.flatMap((crate) => (crate.recorded ?? crate.owned).map((eff) => [eff, crate.name] as const)));
+  const pinOf = new Map(infos.map((info) => [info.slice.id, [...info.slice.attach, ...info.slice.decls].map((decl) => ownerOf.get(decl.eff.join("::"))).find((name) => name !== undefined)] as const));
+  const manifest = new Map(carved.map((crate) => [crate.name, crate.dependsOn] as const));
+  const reaches = (from: string, to: string, seen = new Set<string>()): boolean => from === to || (!seen.has(from) && (seen.add(from), (manifest.get(from) ?? []).some((next) => reaches(next, to, seen))));
+  const testOnly = (info: SliceInfo): boolean => info.slice.attach.length > 0 && info.slice.attach.every((decl) => decl.testOnly);
+  const edgesOf = (info: SliceInfo): Set<string> => {
+    const all = [...info.libEdges, ...info.testEdges];
+    const from = pinOf.get(info.slice.id);
+    if (!from) return new Set(all);
+    if (testOnly(info)) return new Set(all.filter((id) => pinOf.get(id) === from || pinOf.get(id) === undefined));
+    return new Set(all.filter((id) => { const to = pinOf.get(id); return !to || to === from || !reaches(to, from); }));
+  };
   const parentOf = new Map<string, string>();
   const find = (id: string): string => { let current = id; while (parentOf.has(current) && parentOf.get(current) !== current) current = parentOf.get(current)!; return current; };
   const merge = (a: string, b: string): void => { const left = find(a); const right = find(b); if (left !== right) parentOf.set(right, left); };
   for (const info of infos) parentOf.set(info.slice.id, info.slice.id);
-  for (const info of infos) for (const other of info.coherence) { merge(info.slice.id, other); mergeCauses.push({ a: info.slice.id, b: other, kind: "coherence", type: coherenceType.get(`${info.slice.id}>${other}`) }); }
+  for (const info of infos) for (const other of info.coherence) { if (pinOf.get(info.slice.id) && pinOf.get(other) && pinOf.get(info.slice.id) !== pinOf.get(other)) continue; merge(info.slice.id, other); mergeCauses.push({ a: info.slice.id, b: other, kind: "coherence", type: coherenceType.get(`${info.slice.id}>${other}`) }); }
   const mergeCycles = (): boolean => {
     const adjacency = new Map<string, Set<string>>();
     for (const info of infos) adjacency.set(find(info.slice.id), new Set());

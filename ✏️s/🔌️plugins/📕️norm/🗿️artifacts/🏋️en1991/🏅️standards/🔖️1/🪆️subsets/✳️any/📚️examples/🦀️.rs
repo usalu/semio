@@ -19,6 +19,9 @@ mod example_de_office_compliant;
 mod example_multi_fail_noncompliant;
 #[path = "🧬️subjects/🦀️.rs"]
 pub mod example_subjects;
+#[cfg(test)]
+#[path = "🧬️subjects/🧪️tests/🔬️unit/🦀️.rs"]
+mod example_subjects_unit;
 #[path = "⚠️multi-fail-noncompliant/🦀️.rs"]
 pub mod multi_fail_noncompliant;
 //#endregion 🪢️Mounts

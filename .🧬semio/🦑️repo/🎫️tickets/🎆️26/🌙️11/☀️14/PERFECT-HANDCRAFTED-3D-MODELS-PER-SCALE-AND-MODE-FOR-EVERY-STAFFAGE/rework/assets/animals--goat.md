@@ -66,3 +66,57 @@ Joint order was already right (scapula–humerus–radius/ulna–metacarpus–di
 - A pose offset with `abductionDeg`/`twistDeg` on a bone without `twistMinDeg`/`twistMaxDeg` produced bones 40–60° out of plane when I tried to re-solve the humerus offsets (candidate only, not applied); either my decomposition or the clamping of undeclared limits — not investigated.
 - `validator.md` has no section "Rule changes authors must know".
 - The Read tool (PreToolUse hook) timed out on every image from 02:25 on.
+
+## Pass 2 (second round), 2026-11-22
+
+Status: **partial**. Published; `r3-validate.ts animals/goat --catalog-only --volumes` ends `VALID animals/goat (catalog file as it is): schema 0, validateAsset 0, checkVolumes 0`. Girdles are on the lateral rest placement (pass 1, checked again with `rig-rest.ts`: scapula origin ±0.040 m, shoulder joint ±0.075 m, sacroiliac ±0.030 m, hip joint ±0.070 m).
+
+**How this pass could look.** The Read tool worked for the first seven images (1:50 body, structure, thermal in the default pose; `browsing-upright` and `climbing-ledge`; two close-ups) and then timed out on its PreToolUse hook for the rest of the session, as did the browser pane. Everything rendered after my changes was read only as a character raster (`rework-goat-ascii.py`, `sips` to BMP, 100–200 columns: silhouette, black outline, seams, shading in three steps). That shows outline, proportions and where a solid stands proud; it does not show surface quality. No picture after the changes was seen at full resolution.
+
+### Seen in the seven images (before changes)
+
+- 1:50 body: the shoulder was a narrow sausage with a knob at the point of the shoulder and a hook at the withers, standing proud of the trunk; the arm a second sausage; the breast stood 40 mm in front of the point of the shoulder with a faceted under line (pigeon breast); the top of the ham was a three-facet polygon that made the rump read as a box from behind; the belly lobe shows as a seam panel (seams of two solids are always drawn grey, the same as chest/loin); the poll has a sharp corner above the neck.
+- 1:50 structure: cervical column a nearly straight tube along the crest; thoracic spines one plate; ribs sloped bars with a long costal arch; pelvis, sacral wings, pubic rami and hip bones sit where they belong and meet; the udder masses hang under the pelvis.
+- 1:50 thermal: reads as the same object, regions follow the body solids.
+- Poses: both read naturally; fore limbs hang from the shoulder joints at the true breadth, no crack at any joint in the two sheets.
+
+### Rebuilt in this pass
+
+1. `rework-goat-shoulder.py` (new) — shoulder and arm at every scale from horizontal world stations, written into the abducted scapula frame and the humerus frame with the full 3D rest basis: the shoulder is the flat muscle sheet over the blade (0.065 m wide at the withers, 0.12 m at mid blade, outer face 0.106 m beside the plane at the point of the shoulder, i.e. 0.21 m between the points, reference 0.20–0.22 m), the arm the triceps wedge from the rear border of the blade to the olecranon (0.14 m fore-aft at mid arm, 0.064 m thick). 1:500 structural scapula bars thickened from 65.6 to 76 mm because the new, wider drawing of the blade lifted the feature limit of the bone to the true 75 mm.
+2. `rework-goat-trunk.py` (table changed) — chest front at seven stations instead of four, ending 0.782 m ahead of the hip joint (was 0.798), 25 mm in front of the point of the shoulder; under line of the brisket rounded.
+3. `rework-goat-hindleg.py` (table changed) — top of the ham at five stations instead of three (dome instead of facets), picks of the coarser scales re-mapped.
+4. `rework-goat-cervical.py` (new) — cervical column at every scale on its S-curve (up to 50 mm below the neck axis in the lower half, rising to the occiput); at 1:50 seven vertebrae with articular ends and waisted bodies, atlas wings 62 mm wide, axis crest 54 mm high; coarser scales keep the curve with one tube.
+5. `rework-goat-spines.py` (new) — 1:50: the thoracic plate became a column of bodies (28 × 26 mm) with thirteen spinous processes (T2–T5 64–68 mm above the bodies, swept 28–31 mm towards the loin, shortening to the upright T11–T13) tied by the supraspinous ligament; all stay at least 10 mm under the back line. 1:100 and coarser keep the plate (a process of 8 mm is below their feature).
+6. 2D: `rework-07-2d.py goat --replace thorax,thigh-hn,thigh-hf,scapula-fn,scapula-ff,humerus-fn,humerus-ff` at every scale and view (ruler outlines), and `rework-goat-limb2d.py` (new) for the four elevation profiles with an extruded span at 1:50 and 1:100 (shoulder span 0.035–0.107 m, arm 0.044–0.108 m beside the plane; it reads the ruler output `r3-project2d.ts animals/goat --scale N --view elevation > 🗑️generated/rework-goat/ruler-N.txt`, which is deleted with the generated folder).
+7. `rework-goat-texts.py` — `decisions` of 1:50 (legs, structure) say the new shoulder, breast, cervical column and spines, en and de.
+
+### Rig: humerus pose offsets (tried, measured, not applied)
+
+`rework-goat-resolve.ts` solves per pose the humerus `angleDeg`/`abductionDeg`/`twistDeg` that put elbow, carpus, fetlock and hoof tip back on the limb as authored (blade swinging in the paper plane). Measured drift before → after: walk phases 0.03–8.9 mm → ≤ 0.34 mm, `climbing-ledge` 13.8 / 24.8 mm → 1.7 / 1.3 mm, `browsing-upright` 40.5 / 49.4 mm → 2.4 / 3.4 mm (the rest is the shoulder joint itself moving with the blade on the rib wall). With these offsets `validateAsset` reports 8 × `lateral-ambiguous` (flat front and plan shapes of humerus, forearm, metacarpus and hoof at all scales, up to 5.4 mm on paper), whose remedy is to author 30-odd front/plan shapes as solids. I could not look at 2D sheets, so I restored the poses and kept the drift: the fore hooves on the ground move at most 8.9 mm sideways over the walk cycle (0.18 mm at 1:50), the 49 mm concern hooves in the air. The script is kept for the pass that redraws those shapes.
+
+### Reference table additions
+
+| measure | reference | model | verdict |
+|---|---|---|---|
+| breadth between the points of the shoulder | 0.20–0.22 m | 0.212 m | ok (was 0.21 m as a knob) |
+| prosternum ahead of the point of the shoulder | 0.01–0.03 m | 0.025 m | corrected (was 0.042 m) |
+| cervical vertebrae C3–C7 / axis / atlas | 45–55 / 65–70 / 35–40 mm | 46–56 / 70 / 40 mm (scaled to the 0.39 m path) | new |
+| atlas wings, breadth | 60–65 mm | 62 mm | new |
+| thoracic spinous processes at the withers | 60–75 mm | 64–68 mm | new |
+
+### Remaining (precise)
+
+- All scales, all lists: nothing rendered after the changes of this pass was seen as a picture (character rasters only: 1:50 body elevation, plan, front, three-quarter shoulder crop, structure neck and thorax crops, both poses in elevation; 1:100 and 1:500 body elevation; 1:500 structure elevation). Not read at all after the changes: thermal sheets, 1:200, the 2D sheets, the clip instants, cut sheets (26 sheets were rendered without `NOT DRAWN` or error and then deleted).
+- 1:50 body: hooks (tuber coxae) and the spine ridge not modelled; pin bones are one rounded end, not two points with the hollow under the tail; the poll corner above the neck; neck, head, jaw, horns, ears, tail, udder, forearm, carpus, cannons, pasterns and claws are still the earlier author's solids (judged in the first sheet as right in proportion, no close-up); the belly lobe remains a second solid with a visible seam.
+- 1:100, 1:200: forearm, head and neck lists still the earlier solids at fewer sections. 1:500: body and structure thickened to the feature by floors (shoulder and arm now from the station tables with a 38 mm floor).
+- 1:50 structure: ribs are still capsule chains; lumbar column a plain tube with one loft for the transverse processes; no individual lumbar vertebrae. 1:100 keeps the thoracic plate.
+- 2D: every replaced shape is a ruler outline, not an economical hand drawing; the scapula elevation profiles at 1:50 and 1:100 are the flattened projection reused as the profile of the extruded span (the ruler calls this "reference only" because the blade rests 11.3° out of the paper; up to about 4 mm real compression); no 2D sheet was viewed.
+- Rig: humerus pose offsets not re-solved (see above); no separate pastern bone; the neck is one bone; metacarpus 5 % long and digit 0.100 m kept.
+- Thermal: `areaM2` not checked by hand; no cut sheet looked at.
+
+### Fundamental issues (outside this asset)
+
+- Host: the Read tool and the browser pane time out on their PreToolUse hook ("host client may be unreachable") after a few images; `python3` has no PIL. A character raster is the only way left to look; `r3-sheet.ts` could offer a `--text` raster itself.
+- `lateral-ambiguous` and solved pose offsets: giving a child bone the `abductionDeg`/`twistDeg` that brings a limb back into the paper plane after its parent swings on an inclined rest axis is reported for every flat front/plan shape down the chain, although the limb is then closer to the paper plane than without the offset (the unsolved pose with 49 mm drift validates). The rule seems to measure the offset of the bone, not the resulting frame against its rest frame.
+- `volumes-feature` takes its limit from the thinnest drawing of the bone: redrawing a 2D shape changes which 3D solids of another list (here the 1:500 structural scapula) are valid.
+- `rework-07-2d.py` skips shapes that carry a `solid`; there is no tool path that redraws the profile of an extruded span on a bone resting out of the paper.

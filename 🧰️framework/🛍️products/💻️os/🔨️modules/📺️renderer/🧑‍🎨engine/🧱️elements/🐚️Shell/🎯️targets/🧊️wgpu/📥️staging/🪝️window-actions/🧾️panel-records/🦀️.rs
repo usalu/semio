@@ -22,6 +22,45 @@ pub fn tool_run_panel_reveals(seen: &mut std::collections::BTreeSet<u64>, docume
     Ok(!added.is_empty())
 }
 
+/// 🏃️ The live runs a rendered ToolRun panel `document` holds, oldest first — React's `toolRunPanelTasksV1`, read from the SAME
+/// panel the run's owner renders: the group's accessibility label, its `progress` node and whether it still offers Pause or Resume
+/// (a group offering neither is terminal and no task). A run offering Pause is running; one offering only Resume is paused.
+pub fn tool_run_panel_tasks(document: &UiDocumentLease, terminology: semio_ui_locale::Terminology, locale: semio_ui_locale::Locale) -> Result<Vec<TaskManagerToolRun>, String> {
+    use semio_framework_tool_run::{TOOL_RUN_ABORT_ACTION_ID, TOOL_RUN_PAUSE_ACTION_ID, TOOL_RUN_RESUME_ACTION_ID, tool_run_panel_group_run};
+    use std::collections::{BTreeMap, BTreeSet};
+    struct Node {
+        label: String,
+        progress: Option<(f64, Option<f64>, String)>,
+        activate: Option<ActionDescriptor>,
+    }
+    let header = document.header().map_err(|error| format!("the ToolRun panel header is unreadable: {error:?}"))?;
+    let mut nodes: BTreeMap<String, Node> = BTreeMap::new();
+    for index in 0..header.node_count {
+        let Some(page) = document.read_node_page(index).map_err(|error| format!("the ToolRun panel node {index} is unreadable: {error:?}"))? else { continue };
+        let record = page.record();
+        let progress = match &record.component {
+            ui_contract::Component::Progress(props) => Some((props.completed, props.total, props.value_text.resolve(terminology, locale).to_string())),
+            _ => None,
+        };
+        let label = record.accessibility.label.as_ref().map(|label| label.resolve(terminology, locale).to_string()).unwrap_or_default();
+        let activate = record.bindings.iter().find(|binding| binding.trigger == ui_contract::Trigger::Activate).map(|binding| ActionDescriptor { controller_id: binding.action.scope.as_str().to_string(), action: binding.action.name.as_str().to_string(), args: binding.args.as_ref().and_then(|args| serde_json::to_value(args).ok()).map(semio_framework::DslValue::from) });
+        nodes.insert(record.key.as_str().to_string(), Node { label, progress, activate });
+    }
+    let groups: BTreeSet<(u64, String)> = nodes.keys().filter_map(|key| tool_run_panel_group_run(key).map(|run| (run, key.clone()))).collect();
+    Ok(groups
+        .into_iter()
+        .filter_map(|(run, group)| {
+            let control = |action: &str| nodes.get(&format!("{group}.{action}")).and_then(|node| node.activate.clone());
+            let controls = TaskManagerToolRunControls { pause: control(TOOL_RUN_PAUSE_ACTION_ID), resume: control(TOOL_RUN_RESUME_ACTION_ID), abort: control(TOOL_RUN_ABORT_ACTION_ID) };
+            let (pause, resume) = (controls.pause.is_some(), controls.resume.is_some());
+            (pause || resume).then(|| {
+                let (completed, total, value_text) = nodes.get(&format!("{group}.progress")).and_then(|node| node.progress.clone()).unwrap_or((0.0, None, String::new()));
+                TaskManagerToolRun { run: run.to_string(), label: nodes.get(&group).map(|node| node.label.clone()).unwrap_or_default(), completed: completed.max(0.0) as u64, total: total.map(|total| total.max(0.0) as u64), value_text, paused: !pause, controls }
+            })
+        })
+        .collect())
+}
+
 //#endregion ⏯️ToolRunPanel
 //#endregion ShellLifecycle
 

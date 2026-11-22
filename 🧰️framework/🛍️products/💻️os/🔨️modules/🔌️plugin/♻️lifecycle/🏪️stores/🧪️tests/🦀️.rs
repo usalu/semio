@@ -5,6 +5,7 @@ extern crate semio_os_kernel as protocol;
 extern crate semio_os_kernel as store;
 extern crate semio_os_kernel as pack;
 use semio_framework_test_fixtures::fixture_text;
+use semio_framework_value_testing_allocator as _;
 
 #[cfg(any(test, feature = "artifact-app-testing"))]
 use std::sync::Arc;

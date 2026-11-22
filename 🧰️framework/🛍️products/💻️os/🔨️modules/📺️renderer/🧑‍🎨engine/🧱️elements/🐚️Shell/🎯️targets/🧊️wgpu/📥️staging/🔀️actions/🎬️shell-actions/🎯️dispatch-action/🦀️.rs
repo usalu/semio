@@ -21,6 +21,10 @@ mod plugins_chat;
 #[path = "📂️open.rs"]
 mod native_file_open;
 
+#[cfg(target_arch = "wasm32")]
+#[path = "🌐️open.rs"]
+mod browser_file_open;
+
 //#region ShellActions
 impl<'ctx> ActionsCtx<'ctx> {
     /** 🪪️ One action a live ENGINE SURFACE derived from raw pointer/wheel input — the world pane's
@@ -188,6 +192,10 @@ impl<'ctx> ActionsCtx<'ctx> {
             if action.action == semio_framework::FOCUS_ROW_CONTROL_ACTION_ID {
                 return self.framework_focus_row_control(&action);
             }
+            if action.controller_id == "framework" && action.action == semio_renderer_wgpu_shell_window_actions::CLOSE_DISCARD_ACTION_ID {
+                semio_renderer_wgpu_shell_window_actions::approve_host_close();
+                return Ok(());
+            }
             if action.action == semio_framework::NODE_GRAPH_FIT_ACTION_ID {
                 return self.framework_fit_node_graph(&action).await;
             }
@@ -207,6 +215,10 @@ impl<'ctx> ActionsCtx<'ctx> {
             #[cfg(not(target_arch = "wasm32"))]
             if action.action == semio_framework::OPEN_ARTIFACT_FILE_ACTION_ID {
                 return self.start_native_open(&action);
+            }
+            #[cfg(target_arch = "wasm32")]
+            if action.action == semio_framework::OPEN_ARTIFACT_FILE_ACTION_ID {
+                return self.start_browser_open(&action).await;
             }
             #[cfg(not(target_arch = "wasm32"))]
             if matches!(action.action.as_str(), semio_framework::manifest::EXPORT_MEDIA_FILE_ACTION_ID | semio_framework::manifest::EXPORT_SNAPSHOT_FILE_ACTION_ID | semio_framework::SAVE_ARTIFACT_FILE_ACTION_ID) {
@@ -248,8 +260,14 @@ impl<'ctx> ActionsCtx<'ctx> {
             if action.controller_id == TASK_MANAGER_CONTROLLER_ID {
                 if self.opening.queue_task_manager_request(&action) {
                     self.opening.forward_actor_requests();
+                    self.opening.take_video_render_cancel_requests();
                     if self.opening.take_install_cancel_requests() > 0 {
                         self.plugins.cancel_plugin_install();
+                    }
+                    self.settle.deferred_actions.extend(self.opening.take_tool_run_control_actions());
+                    #[cfg(not(target_arch = "wasm32"))]
+                    for key in self.opening.take_job_cancel_requests() {
+                        semio_renderer_wgpu_host_base::cancel_spawned_job(&key);
                     }
                 }
                 return Ok(());
@@ -306,11 +324,14 @@ impl<'ctx> ActionsCtx<'ctx> {
                     "resolveConflict" => return self.framework_resolve_conflict(&action).await,
                     "installPlugin" | "reloadPlugin" => return self.framework_install_or_reload_plugin(&action).await,
                     "uninstallPlugin" => return self.framework_uninstall_plugin(&action).await,
+                    "quarantinePlugin" => return self.framework_quarantine_plugin(&action).await,
                     "installExtensionUrl" => return self.framework_install_extension_url(&action).await,
-                    "installExtensionFile" => return self.framework_install_extension_file().await,
+                    "installExtensionFile" => return self.framework_install_extension_file(&action).await,
                     "setExtensionEnabled" => return self.framework_set_extension_enabled(&action).await,
                     "uninstallExtension" => return self.framework_uninstall_extension(&action).await,
                     semio_ui_declaration::ui::UiIconSelectNode::IMPORT_ACTION => return self.framework_import_icon_file(&action).await,
+                    semio_ui_declaration::ui::UiInputNode::PICK_FILE_ACTION => return self.framework_pick_input_file(&action).await,
+                    "openRowContextMenu" => return self.framework_open_row_context_menu(&action),
                     "setChatDraft" => return self.framework_set_chat_draft(&action).await,
                     "sendChatDraft" => return self.framework_send_chat_draft().await,
                     "cancelToolCall" => return self.framework_cancel_tool_call(&action).await,

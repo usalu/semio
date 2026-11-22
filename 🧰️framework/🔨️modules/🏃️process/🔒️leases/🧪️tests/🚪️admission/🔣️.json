@@ -12,10 +12,10 @@
       "projected": true
     },
     {
-      "name": "queued-timeout",
+      "name": "queued-outlives-deadline",
       "queued": true,
       "timeoutMs": 120,
-      "action": "timeout",
+      "action": "release-late",
       "operation": "queue-publish",
       "projected": false
     },

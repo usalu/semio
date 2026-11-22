@@ -13,10 +13,25 @@ use semio_ui_declaration::layout::ActionDescriptor;
 use semio_ui_theme::geometry::Rect;
 use semio_ui_theme::Theme;
 use semio_ui_declaration::ui::UiNode;
+pub use semio_renderer_wgpu_ui_engine_focus::text_and_table_focus::{queue_text_input_verb_at, queue_text_selection_verb_at, text_editor_selection_at, text_input_selection_at, TextSelectionVerb};
+
+/// 🖱️ Applies the parked retained text-field verbs: each focuses its field and answers the verb's own chord, and the clipboard commands it leaves reach the host like a typed chord's. `true` when any ran.
+fn apply_text_input_verbs(input: &mut semio_ui_wgpu_input::InputState<ActionDescriptor>) -> bool {
+    let verbs = semio_renderer_wgpu_ui_engine_focus::text_and_table_focus::take_text_input_verbs();
+    let ran = !verbs.is_empty();
+    for (window_id, node, key) in verbs {
+        let mut commands = UI_ENGINE.with(|cell| cell.borrow_mut().dispatch_text_selection_verb(&window_id, node, key));
+        crate::retained_ui_engine::apply_ui_commands(&mut commands, None, input);
+    }
+    ran
+}
 
 pub fn drive_scene_interaction_step(input: &mut semio_ui_wgpu_input::InputState<ActionDescriptor>) -> bool {
     semio_renderer_wgpu_scene_render::request_stale_canvas_authority_cancel(|window_id, generation| UI_ENGINE.with(|cell| cell.borrow().surface_generation(window_id) == Some(generation)));
     if semio_renderer_wgpu_scene_render::canvas_pointer_terminal_step(input) {
+        return true;
+    }
+    if apply_text_input_verbs(input) | semio_renderer_wgpu_ui_engine_focus::text_and_table_focus::drain_text_selection_verbs(input) {
         return true;
     }
     let Some(mut intent) = SCENE_INTENTS.with(|cell| cell.borrow_mut().pop_front()) else {
@@ -134,6 +149,17 @@ pub fn text_editor_claim_alt_completions(window_id: &str, x: f32, y: f32) -> boo
         })
         .unwrap_or(false)
 }
+
+/** 👆️ Selects the word under a WINDOW-LOCAL point of the text editor there — React's `session.selectSpanAtScreen` that a touch long press or double tap runs (`✏️TextEditor/👆️touch-selection`). `false` when no text editor is there. */
+pub fn text_editor_select_word_at(window_id: &str, x: f32, y: f32, input: &mut semio_ui_wgpu_input::InputState<ActionDescriptor>) -> Result<bool, semio_ui_action::BoundedActionFault> {
+    UI_ENGINE.with(|cell| {
+        let engine = cell.borrow();
+        let Some(hit) = engine.scene_at(window_id, x, y).filter(|hit| hit.kind == semio_ui_declaration::ui::SurfaceKind::TextEditor) else { return Ok(false) };
+        let Some(tree) = engine.tree(window_id) else { return Ok(false) };
+        let Some(UiNode::ComponentScene(scene)) = tree.node(hit.node).map(|retained| &retained.spec.0) else { return Ok(false) };
+        semio_renderer_wgpu_engine_text::text_editor::text_editor_select_span_into(scene, hit.rect, x, y, input)
+    })
+}
 //#endregion 🖱️SurfaceContextMenu
 
 enum SceneIntentProgress {
@@ -198,7 +224,10 @@ fn process_scene_interaction(intent: &mut SceneInteractionIntent, input: &mut se
                     }
                     semio_renderer_wgpu_engine_text::text_editor::text_editor_pointer_button_into(scene, rect, x, y, button, true, input)
                 }
-                SceneIntentEvent::PointerUp { x, y, button, .. } => semio_renderer_wgpu_engine_text::text_editor::text_editor_pointer_button_into(scene, rect, x, y, button, false, input),
+                SceneIntentEvent::PointerUp { x, y, button, click_count, .. } => {
+                    let released = semio_renderer_wgpu_engine_text::text_editor::text_editor_pointer_button_into(scene, rect, x, y, button, false, input);
+                    if released.is_ok() && button == 0 && click_count >= 2 { semio_renderer_wgpu_engine_text::text_editor::text_editor_select_span_into(scene, rect, x, y, input) } else { released }
+                }
                 SceneIntentEvent::PointerMove { x, y, .. } => semio_renderer_wgpu_engine_text::text_editor::text_editor_pointer_move_into(scene, rect, x, y, input),
                 SceneIntentEvent::Scroll { delta_y, .. } => Ok(semio_renderer_wgpu_engine_text::text_editor::text_editor_wheel_into(scene, delta_y)),
                 SceneIntentEvent::PointerLeave => Ok(false),

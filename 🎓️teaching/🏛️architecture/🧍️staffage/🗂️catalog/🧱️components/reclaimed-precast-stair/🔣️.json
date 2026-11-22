@@ -1,0 +1,8674 @@
+{
+ "$schema": "../../../🧬️schema/🔣️.json#/$defs/AssetDocument",
+ "version": "semio.staffage/v2",
+ "asset": {
+  "id": "reclaimed-precast-stair",
+  "category": "components",
+  "title": {
+   "en": "Reclaimed Precast Stair Flight",
+   "de": "Gebrauchter Betonfertigteil-Treppenlauf"
+  },
+  "summary": {
+   "en": "A dismantled precast reinforced-concrete stair flight of nine risers of 175 mm and goings of 280 mm (2 r + g = 630 mm, 32 degrees, DIN 18065), 1.10 m wide, waist 160 mm, 1.98 t, with a 30 mm terrazzo face on its treads whose nosings are worn round in the walking line, a spalled nosing on tread 3, an upper bearing nib sawn flush with seven cut bars, a lower nib broken out with bent bar stubs and mortar remnants under both bearings. It lies on its soffit on two 12/12 squared-timber bearers, hangs from four threaded lifting sockets at its 32 degree pitch, and is reinstalled between the ground-floor slab and a landing corbel under a C5 crowd load and a moving 4.5 kN point load.",
+   "de": "Ein ausgebauter Stahlbeton-Fertigteil-Treppenlauf mit neun Steigungen zu 175 mm und Auftritten zu 280 mm (2 s + a = 630 mm, 32 Grad, DIN 18065), 1,10 m breit, Laufplatte 160 mm, 1.98 t, mit 30 mm Terrazzovorsatz auf den Trittstufen, deren Kanten in der Gehlinie rund abgetreten sind, einer abgeplatzten Kante an Stufe 3, einer bündig gesägten oberen Auflagernase mit sieben angeschnittenen Stäben, einer herausgebrochenen unteren Nase mit abgebogenen Stabenden und Mörtelresten unter beiden Auflagern. Er liegt auf der Untersicht auf zwei Kanthölzern 12/12, hängt an vier Gewindehülsen in seiner Steigung von 32 Grad und wird zwischen Bodenplatte und Podestkonsole unter Menschengedränge C5 und einer wandernden Einzellast von 4,5 kN wieder eingebaut."
+  },
+  "tags": [
+   "component",
+   "reclaimed",
+   "structural",
+   "concrete",
+   "precast",
+   "terrazzo",
+   "stair",
+   "timber"
+  ],
+  "provenance": {
+   "author": "Semio staffage component authors",
+   "method": "handcrafted",
+   "created": "2026-11-22",
+   "references": [
+    {
+     "id": "din-18065",
+     "citation": "DIN 18065:2015-03 Building stairs, terms, measuring rules, main dimensions: step formula 2 r + g = 590 to 650 mm, rise 140 to 200 mm and going 230 to 370 mm for residential buildings, usable flight width of at least 1.00 m in buildings with more than two dwellings."
+    },
+    {
+     "id": "din-1045-1972",
+     "citation": "DIN 1045:1972-01 Concrete and reinforced concrete, design and construction: concrete grade B 25 (nominal cube strength 25 N/mm2), modulus of elasticity of B 25 = 30 000 N/mm2 (Table 11)."
+    },
+    {
+     "id": "din-488-1984",
+     "citation": "DIN 488-1:1984-09 Reinforcing steels, grades and properties: BSt 420 S ribbed bar, yield strength 420 N/mm2."
+    },
+    {
+     "id": "din-18500",
+     "citation": "DIN 18500:2006-12 Cast stone (Betonwerkstein), requirements and testing: terrazzo face mix of cement and crushed marble, ground and polished, face layer of at least 15 mm on precast stair treads."
+    },
+    {
+     "id": "vdi-bv-bs-6205",
+     "citation": "VDI/BV-BS 6205:2012-04 Lifting inserts and lifting insert systems for precast concrete elements: threaded lifting sockets cast flush into the element, lifted with screwed-in loops or ring clutches."
+    },
+    {
+     "id": "din-4070-1",
+     "citation": "DIN 4070-1:1958-01 Softwood, cross-section dimensions and static values of sawn timber, stock squared timber and battens: stock squared timber 12/12 cm."
+    },
+    {
+     "id": "en-338",
+     "citation": "EN 338:2016 Structural timber, strength classes: C24 mean density 420 kg/m3 at 12 % moisture, E0,mean = 11 GPa."
+    },
+    {
+     "id": "en-1991-1-1",
+     "citation": "EN 1991-1-1:2002 Eurocode 1, Part 1-1, Table A.1 (reinforced concrete 25 kN/m3) and Tables 6.1 and 6.2 (category C5, areas susceptible to large crowds: q_k = 5.0 kN/m2, Q_k = 4.5 kN)."
+    },
+    {
+     "id": "en-iso-10456",
+     "citation": "EN ISO 10456:2007 Building materials and products, hygrothermal properties: reinforced concrete (1 % steel) 2.3 W/mK and 1000 J/kgK, softwood 0.13 W/mK and 1600 J/kgK, cement mortar 1.0 W/mK, steel 50 W/mK and 450 J/kgK."
+    },
+    {
+     "id": "emissivity-literature",
+     "citation": "ASHRAE Handbook Fundamentals (2021), thermal radiation properties of building materials: weathered concrete, ground stone, weathered timber and rusted steel (typical rounded emissivity and solar absorptance, not table look-ups)."
+    },
+    {
+     "id": "en-iso-13786",
+     "citation": "EN ISO 13786:2017 Thermal performance of building components, dynamic thermal characteristics: periodic penetration depth delta = sqrt(lambda T / (pi rho c)); about half of it is taken as the effective storage depth of an exposed face."
+    },
+    {
+     "id": "bauteilboersen-practice",
+     "citation": "Bauteilnetz Deutschland and bauteilbörse basel, practice notes on the dismantling, storage and resale of used building components: precast stair flights are sawn or broken out along the landing joints and stored lying on squared-timber bearers."
+    },
+    {
+     "id": "din-1356-1",
+     "citation": "DIN 1356-1:1995 Building drawings, part 1: types of drawings, contents and basic principles of presentation (scales, line groups, stairs)."
+    }
+   ],
+   "notes": {
+    "en": "Installed geometry: lower landing floor at 0, first riser face at 0, nine risers to 1.575 m, top end at 2.54 m; bottom landing strip 250 mm and top landing strip 300 mm with dapped nibs of 100 x 100 mm; soffit length 2.899 m. Masses from the drawn profile: concrete 0.6449 m2 x 1.10 m x 2500 kg/m3, terrazzo pieces x 2400 kg/m3, bearers 0.12 x 0.12 x 1.40 m x 450 kg/m3.",
+    "de": "Einbaugeometrie: unteres Podest auf 0, erste Setzstufe bei 0, neun Steigungen bis 1,575 m, oberes Ende bei 2,54 m; unterer Podeststreifen 250 mm und oberer 300 mm mit Ausklinkungen von 100 x 100 mm; Länge der Untersicht 2.899 m. Massen aus dem gezeichneten Profil: Beton 0.6449 m² x 1,10 m x 2500 kg/m³, Terrazzostücke x 2400 kg/m³, Kanthölzer 0,12 x 0,12 x 1,40 m x 450 kg/m³."
+   }
+  },
+  "dimensions": {
+   "heightM": 0.4284,
+   "widthM": 3.2958,
+   "depthM": 1.4,
+   "massKg": 1992.72
+  },
+  "materials": [
+   {
+    "id": "reinforced-concrete",
+    "title": {
+     "en": "Reinforced concrete B 25, weathered formed faces",
+     "de": "Stahlbeton B 25, verwitterte Schalflächen"
+    },
+    "emissivity": 0.92,
+    "solarAbsorptivity": 0.7,
+    "densityKgM3": 2500,
+    "conductivityWmK": 2.3,
+    "specificHeatJKgK": 1000,
+    "elasticModulusPa": 30000000000,
+    "strengthPa": 25000000,
+    "source": "literature",
+    "reference": "din-1045-1972"
+   },
+   {
+    "id": "terrazzo",
+    "title": {
+     "en": "Terrazzo face layer, ground, worn and soiled",
+     "de": "Terrazzovorsatz, geschliffen, abgetreten und verschmutzt"
+    },
+    "emissivity": 0.9,
+    "solarAbsorptivity": 0.5,
+    "densityKgM3": 2400,
+    "conductivityWmK": 2.0,
+    "specificHeatJKgK": 1000,
+    "source": "authored-estimate",
+    "reference": "din-18500"
+   },
+   {
+    "id": "softwood",
+    "title": {
+     "en": "Squared spruce bearer C24, weathered grey",
+     "de": "Kantholz Fichte C24, vergraut"
+    },
+    "emissivity": 0.9,
+    "solarAbsorptivity": 0.7,
+    "densityKgM3": 450,
+    "conductivityWmK": 0.13,
+    "specificHeatJKgK": 1600,
+    "elasticModulusPa": 11000000000,
+    "strengthPa": 24000000,
+    "source": "literature",
+    "reference": "en-338"
+   },
+   {
+    "id": "cement-mortar",
+    "title": {
+     "en": "Bedding mortar remnant",
+     "de": "Mörtelbettreste"
+    },
+    "emissivity": 0.92,
+    "solarAbsorptivity": 0.6,
+    "densityKgM3": 1900,
+    "conductivityWmK": 1.0,
+    "specificHeatJKgK": 1000,
+    "source": "literature",
+    "reference": "en-iso-10456"
+   },
+   {
+    "id": "steel",
+    "title": {
+     "en": "Reinforcing and socket steel, rusted",
+     "de": "Betonstahl und Hülsenstahl, verrostet"
+    },
+    "emissivity": 0.8,
+    "solarAbsorptivity": 0.8,
+    "densityKgM3": 7850,
+    "conductivityWmK": 50,
+    "specificHeatJKgK": 450,
+    "elasticModulusPa": 200000000000,
+    "strengthPa": 420000000,
+    "source": "literature",
+    "reference": "din-488-1984"
+   }
+  ],
+  "rig": {
+   "kind": "structural",
+   "root": "yard",
+   "bones": [
+    {
+     "id": "yard",
+     "parent": null,
+     "title": {
+      "en": "Yard datum (ground, massless)",
+      "de": "Lagerplatz-Bezug (Boden, masselos)"
+     },
+     "x": 0,
+     "y": 0,
+     "angleDeg": 0,
+     "lengthM": 0,
+     "joint": {
+      "type": "fixed"
+     }
+    },
+    {
+     "id": "bearer-lower",
+     "parent": "yard",
+     "title": {
+      "en": "Lower squared-timber bearer 12/12",
+      "de": "Unteres Kantholz 12/12"
+     },
+     "x": 0.15864,
+     "y": 0,
+     "angleDeg": 0,
+     "lengthM": 0.12,
+     "joint": {
+      "type": "fixed"
+     },
+     "mass": {
+      "kg": 4.536,
+      "comX": 0.06,
+      "comY": 0.06,
+      "distribution": "point",
+      "source": "authored-estimate",
+      "reference": "en-338"
+     },
+     "section": {
+      "areaM2": 0.0144,
+      "secondMomentM4": 1.728e-05,
+      "extremeFibreM": 0.06,
+      "material": "softwood",
+      "title": {
+       "en": "Squared timber 120 x 120 mm",
+       "de": "Kantholz 120 x 120 mm"
+      }
+     }
+    },
+    {
+     "id": "bearer-upper",
+     "parent": "yard",
+     "title": {
+      "en": "Upper squared-timber bearer 12/12",
+      "de": "Oberes Kantholz 12/12"
+     },
+     "x": 2.41736,
+     "y": 0,
+     "angleDeg": 0,
+     "lengthM": 0.12,
+     "joint": {
+      "type": "fixed"
+     },
+     "mass": {
+      "kg": 4.536,
+      "comX": 0.06,
+      "comY": 0.06,
+      "distribution": "point",
+      "source": "authored-estimate",
+      "reference": "en-338"
+     },
+     "section": {
+      "areaM2": 0.0144,
+      "secondMomentM4": 1.728e-05,
+      "extremeFibreM": 0.06,
+      "material": "softwood",
+      "title": {
+       "en": "Squared timber 120 x 120 mm",
+       "de": "Kantholz 120 x 120 mm"
+      }
+     }
+    },
+    {
+     "id": "travel",
+     "parent": "yard",
+     "title": {
+      "en": "Crane travel (massless sling carrier, horizontal)",
+      "de": "Kranfahrt (masseloser Anschlagträger, waagerecht)"
+     },
+     "x": 0,
+     "y": 0,
+     "angleDeg": 0,
+     "lengthM": 0,
+     "joint": {
+      "type": "prismatic",
+      "axisDeg": 0,
+      "minM": -0.5,
+      "maxM": 2.0
+     }
+    },
+    {
+     "id": "hoist",
+     "parent": "travel",
+     "title": {
+      "en": "Crane hoist (massless sling carrier, vertical)",
+      "de": "Kranhub (masseloser Anschlagträger, senkrecht)"
+     },
+     "x": 0,
+     "y": 0,
+     "angleDeg": 0,
+     "lengthM": 0,
+     "joint": {
+      "type": "prismatic",
+      "axisDeg": 90,
+      "minM": -0.5,
+      "maxM": 1.5
+     }
+    },
+    {
+     "id": "flight",
+     "parent": "hoist",
+     "title": {
+      "en": "Flight (waist axis along the soffit)",
+      "de": "Lauf (Achse der Laufplatte entlang der Untersicht)"
+     },
+     "x": -0.02136,
+     "y": 0.2,
+     "angleDeg": 0,
+     "lengthM": 2.89872,
+     "joint": {
+      "type": "revolute",
+      "minDeg": 0,
+      "maxDeg": 35
+     },
+     "mass": {
+      "kg": 1983.65,
+      "comX": 1.44936,
+      "comY": 0.04158,
+      "distribution": "uniform",
+      "source": "literature",
+      "reference": "en-1991-1-1"
+     },
+     "section": {
+      "areaM2": 0.176,
+      "secondMomentM4": 0.0003754667,
+      "extremeFibreM": 0.08,
+      "material": "reinforced-concrete",
+      "title": {
+       "en": "Waist slab 1100 x 160 mm (steps not counted)",
+       "de": "Laufplatte 1100 x 160 mm (Stufen nicht angesetzt)"
+      }
+     }
+    },
+    {
+     "id": "load-carrier",
+     "parent": "flight",
+     "title": {
+      "en": "Point-load carrier on the nosing line (massless)",
+      "de": "Lastträger auf der Stufenkantenlinie (masselos)"
+     },
+     "x": 0.21411,
+     "y": 0.2284,
+     "angleDeg": 0,
+     "lengthM": 0,
+     "joint": {
+      "type": "prismatic",
+      "axisDeg": 0,
+      "minM": 0,
+      "maxM": 2.31133
+     }
+    }
+   ]
+  },
+  "anchors": [
+   {
+    "id": "rest-lower",
+    "bone": "flight",
+    "x": 0.24,
+    "y": -0.08,
+    "kind": "contact",
+    "title": {
+     "en": "Soffit on the lower bearer",
+     "de": "Untersicht auf dem unteren Kantholz"
+    },
+    "support": "contact",
+    "normalDeg": 90,
+    "footprintLengthM": 0.12,
+    "footprintWidthM": 1.1,
+    "frictionCoefficient": 0.5
+   },
+   {
+    "id": "rest-upper",
+    "bone": "flight",
+    "x": 2.49872,
+    "y": -0.08,
+    "kind": "contact",
+    "title": {
+     "en": "Soffit on the upper bearer",
+     "de": "Untersicht auf dem oberen Kantholz"
+    },
+    "support": "contact",
+    "normalDeg": 90,
+    "footprintLengthM": 0.12,
+    "footprintWidthM": 1.1,
+    "frictionCoefficient": 0.5
+   },
+   {
+    "id": "sling-1",
+    "bone": "flight",
+    "x": 0.6715,
+    "y": 0.1489,
+    "kind": "support",
+    "title": {
+     "en": "Lifting socket 1, tread 2 (right)",
+     "de": "Transportankerhülse 1, Stufe 2 (rechts)"
+    },
+    "support": "pin",
+    "z": -0.35
+   },
+   {
+    "id": "sling-2",
+    "bone": "flight",
+    "x": 0.6715,
+    "y": 0.1489,
+    "kind": "support",
+    "title": {
+     "en": "Lifting socket 2, tread 2 (left)",
+     "de": "Transportankerhülse 2, Stufe 2 (links)"
+    },
+    "support": "pin",
+    "z": 0.35
+   },
+   {
+    "id": "sling-3",
+    "bone": "flight",
+    "x": 2.32244,
+    "y": 0.1489,
+    "kind": "support",
+    "title": {
+     "en": "Lifting socket 3, tread 7 (right)",
+     "de": "Transportankerhülse 3, Stufe 7 (rechts)"
+    },
+    "support": "pin",
+    "z": -0.35
+   },
+   {
+    "id": "sling-4",
+    "bone": "flight",
+    "x": 2.32244,
+    "y": 0.1489,
+    "kind": "support",
+    "title": {
+     "en": "Lifting socket 4, tread 7 (left)",
+     "de": "Transportankerhülse 4, Stufe 7 (links)"
+    },
+    "support": "pin",
+    "z": 0.35
+   },
+   {
+    "id": "bearing-bottom",
+    "bone": "flight",
+    "x": -0.05587,
+    "y": -0.04508,
+    "kind": "support",
+    "title": {
+     "en": "Lower end bedded on the ground-floor slab (pin)",
+     "de": "Unteres Ende im Mörtelbett auf der Bodenplatte (Festlager)"
+    },
+    "support": "pin",
+    "footprintLengthM": 0.13,
+    "footprintWidthM": 1.1
+   },
+   {
+    "id": "bearing-top",
+    "bone": "flight",
+    "x": 3.01462,
+    "y": 0.0111,
+    "kind": "support",
+    "title": {
+     "en": "Sawn upper nib on the landing corbel, elastomer strip (roller)",
+     "de": "Gesägte obere Nase auf der Podestkonsole, Elastomerstreifen (Rollenlager)"
+    },
+    "support": "roller",
+    "normalDeg": 90,
+    "footprintLengthM": 0.08,
+    "footprintWidthM": 1.1
+   },
+   {
+    "id": "load-point",
+    "bone": "load-carrier",
+    "x": 0,
+    "y": 0,
+    "kind": "load",
+    "title": {
+     "en": "Concentrated load on the nosing line",
+     "de": "Einzellast auf der Stufenkantenlinie"
+    }
+   }
+  ],
+  "representations": {
+   "50": {
+    "status": "authored",
+    "denominator": 50,
+    "validRange": {
+     "minDenominator": 20,
+     "maxDenominator": 75
+    },
+    "pens": {
+     "body": 0.35,
+     "detail": 0.18,
+     "texture": 0.1,
+     "glazing": 0.13,
+     "ground": 0.5
+    },
+    "hatches": [],
+    "geometry": {
+     "elevation": [
+      {
+       "id": "core",
+       "bone": "flight",
+       "role": "body",
+       "z": 1,
+       "filled": true,
+       "tone": 0.58,
+       "region": "concrete-faces",
+       "material": "reinforced-concrete",
+       "kind": "poly",
+       "points": [
+        [
+         -0.10654,
+         0.18706
+        ],
+        [
+         -0.11449,
+         0.17434
+        ],
+        [
+         -0.11332,
+         0.15356
+        ],
+        [
+         -0.13696,
+         0.14593
+        ],
+        [
+         -0.13686,
+         0.12346
+        ],
+        [
+         -0.05884,
+         0.0747
+        ],
+        [
+         -0.11184,
+         -0.0101
+        ],
+        [
+         0.0,
+         -0.08
+        ],
+        [
+         2.89872,
+         -0.08
+        ],
+        [
+         2.97222,
+         0.0376
+        ],
+        [
+         3.05702,
+         -0.0154
+        ],
+        [
+         3.09412,
+         0.04396
+        ],
+        [
+         2.83972,
+         0.20296
+        ],
+        [
+         2.74697,
+         0.05456
+        ],
+        [
+         2.50953,
+         0.20296
+        ],
+        [
+         2.41678,
+         0.05456
+        ],
+        [
+         2.17935,
+         0.20296
+        ],
+        [
+         2.0866,
+         0.05456
+        ],
+        [
+         1.84916,
+         0.20296
+        ],
+        [
+         1.75641,
+         0.05456
+        ],
+        [
+         1.51897,
+         0.20296
+        ],
+        [
+         1.42622,
+         0.05456
+        ],
+        [
+         1.18878,
+         0.20296
+        ],
+        [
+         1.09603,
+         0.05456
+        ],
+        [
+         0.85859,
+         0.20296
+        ],
+        [
+         0.76584,
+         0.05456
+        ],
+        [
+         0.5284,
+         0.20296
+        ],
+        [
+         0.43565,
+         0.05456
+        ],
+        [
+         0.19821,
+         0.20296
+        ],
+        [
+         0.10546,
+         0.05456
+        ]
+       ],
+       "closed": true
+      },
+      {
+       "id": "terrazzo-00",
+       "bone": "flight",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.84,
+       "region": "terrazzo-treads",
+       "material": "terrazzo",
+       "kind": "poly",
+       "points": [
+        [
+         -0.10654,
+         0.18706
+        ],
+        [
+         0.10546,
+         0.05456
+        ],
+        [
+         0.12136,
+         0.08
+        ],
+        [
+         -0.09064,
+         0.2125
+        ]
+       ],
+       "closed": true
+      },
+      {
+       "id": "terrazzo-01",
+       "bone": "flight",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.84,
+       "region": "terrazzo-treads",
+       "material": "terrazzo",
+       "kind": "poly",
+       "points": [
+        [
+         0.19821,
+         0.20296
+        ],
+        [
+         0.43565,
+         0.05456
+        ],
+        [
+         0.45155,
+         0.08
+        ],
+        [
+         0.21411,
+         0.2284
+        ]
+       ],
+       "closed": true
+      },
+      {
+       "id": "terrazzo-02",
+       "bone": "flight",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.84,
+       "region": "terrazzo-treads",
+       "material": "terrazzo",
+       "kind": "poly",
+       "points": [
+        [
+         0.5284,
+         0.20296
+        ],
+        [
+         0.76584,
+         0.05456
+        ],
+        [
+         0.78174,
+         0.08
+        ],
+        [
+         0.5443,
+         0.2284
+        ]
+       ],
+       "closed": true
+      },
+      {
+       "id": "terrazzo-03",
+       "bone": "flight",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.84,
+       "region": "terrazzo-treads",
+       "material": "terrazzo",
+       "kind": "poly",
+       "points": [
+        [
+         0.85859,
+         0.20296
+        ],
+        [
+         1.09603,
+         0.05456
+        ],
+        [
+         1.11193,
+         0.08
+        ],
+        [
+         0.87449,
+         0.2284
+        ]
+       ],
+       "closed": true
+      },
+      {
+       "id": "terrazzo-04",
+       "bone": "flight",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.84,
+       "region": "terrazzo-treads",
+       "material": "terrazzo",
+       "kind": "poly",
+       "points": [
+        [
+         1.18878,
+         0.20296
+        ],
+        [
+         1.42622,
+         0.05456
+        ],
+        [
+         1.44212,
+         0.08
+        ],
+        [
+         1.20468,
+         0.2284
+        ]
+       ],
+       "closed": true
+      },
+      {
+       "id": "terrazzo-05",
+       "bone": "flight",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.84,
+       "region": "terrazzo-treads",
+       "material": "terrazzo",
+       "kind": "poly",
+       "points": [
+        [
+         1.51897,
+         0.20296
+        ],
+        [
+         1.75641,
+         0.05456
+        ],
+        [
+         1.77231,
+         0.08
+        ],
+        [
+         1.53487,
+         0.2284
+        ]
+       ],
+       "closed": true
+      },
+      {
+       "id": "terrazzo-06",
+       "bone": "flight",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.84,
+       "region": "terrazzo-treads",
+       "material": "terrazzo",
+       "kind": "poly",
+       "points": [
+        [
+         1.84916,
+         0.20296
+        ],
+        [
+         2.0866,
+         0.05456
+        ],
+        [
+         2.1025,
+         0.08
+        ],
+        [
+         1.86506,
+         0.2284
+        ]
+       ],
+       "closed": true
+      },
+      {
+       "id": "terrazzo-07",
+       "bone": "flight",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.84,
+       "region": "terrazzo-treads",
+       "material": "terrazzo",
+       "kind": "poly",
+       "points": [
+        [
+         2.17935,
+         0.20296
+        ],
+        [
+         2.41678,
+         0.05456
+        ],
+        [
+         2.43268,
+         0.08
+        ],
+        [
+         2.19525,
+         0.2284
+        ]
+       ],
+       "closed": true
+      },
+      {
+       "id": "terrazzo-08",
+       "bone": "flight",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.84,
+       "region": "terrazzo-treads",
+       "material": "terrazzo",
+       "kind": "poly",
+       "points": [
+        [
+         2.50953,
+         0.20296
+        ],
+        [
+         2.74697,
+         0.05456
+        ],
+        [
+         2.76287,
+         0.08
+        ],
+        [
+         2.52543,
+         0.2284
+        ]
+       ],
+       "closed": true
+      },
+      {
+       "id": "terrazzo-09",
+       "bone": "flight",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.84,
+       "region": "terrazzo-treads",
+       "material": "terrazzo",
+       "kind": "poly",
+       "points": [
+        [
+         2.83972,
+         0.20296
+        ],
+        [
+         3.09412,
+         0.04396
+        ],
+        [
+         3.11002,
+         0.0694
+        ],
+        [
+         2.85562,
+         0.2284
+        ]
+       ],
+       "closed": true
+      },
+      {
+       "id": "spall-nosing-03",
+       "bone": "flight",
+       "role": "detail",
+       "z": 3,
+       "filled": false,
+       "tone": 0.3,
+       "region": "terrazzo-treads",
+       "kind": "poly",
+       "points": [
+        [
+         0.86283,
+         0.20974
+        ],
+        [
+         0.88339,
+         0.20868
+        ],
+        [
+         0.91689,
+         0.2019
+        ]
+       ],
+       "closed": false
+      },
+      {
+       "id": "dowel-hole-1",
+       "bone": "flight",
+       "role": "texture",
+       "z": 3,
+       "filled": false,
+       "tone": 0.25,
+       "region": "concrete-faces",
+       "kind": "ellipse",
+       "cx": 0.43763,
+       "cy": 0.02,
+       "rx": 0.009,
+       "ry": 0.009
+      },
+      {
+       "id": "dowel-hole-2",
+       "bone": "flight",
+       "role": "texture",
+       "z": 3,
+       "filled": false,
+       "tone": 0.25,
+       "region": "concrete-faces",
+       "kind": "ellipse",
+       "cx": 1.26311,
+       "cy": 0.02,
+       "rx": 0.009,
+       "ry": 0.009
+      },
+      {
+       "id": "dowel-hole-3",
+       "bone": "flight",
+       "role": "texture",
+       "z": 3,
+       "filled": false,
+       "tone": 0.25,
+       "region": "concrete-faces",
+       "kind": "ellipse",
+       "cx": 2.08858,
+       "cy": 0.02,
+       "rx": 0.009,
+       "ry": 0.009
+      },
+      {
+       "id": "dowel-hole-4",
+       "bone": "flight",
+       "role": "texture",
+       "z": 3,
+       "filled": false,
+       "tone": 0.25,
+       "region": "concrete-faces",
+       "kind": "ellipse",
+       "cx": 2.91405,
+       "cy": 0.02,
+       "rx": 0.009,
+       "ry": 0.009
+      },
+      {
+       "id": "saw-kerf-top",
+       "bone": "flight",
+       "role": "texture",
+       "z": 3,
+       "filled": false,
+       "tone": 0.3,
+       "region": "concrete-faces",
+       "kind": "poly",
+       "points": [
+        [
+         3.05321,
+         0.00114
+        ],
+        [
+         3.07759,
+         0.04014
+        ]
+       ],
+       "closed": false
+      },
+      {
+       "id": "bar-stub",
+       "bone": "flight",
+       "role": "body",
+       "z": 2.5,
+       "filled": true,
+       "tone": 0.22,
+       "material": "steel",
+       "kind": "poly",
+       "points": [
+        [
+         -0.15094,
+         0.153
+        ],
+        [
+         -0.18151,
+         0.15774
+        ],
+        [
+         -0.17997,
+         0.16762
+        ],
+        [
+         -0.14941,
+         0.16289
+        ]
+       ],
+       "closed": true
+      },
+      {
+       "id": "mortar-top",
+       "bone": "flight",
+       "role": "body",
+       "z": 2.5,
+       "filled": true,
+       "tone": 0.7,
+       "material": "cement-mortar",
+       "kind": "poly",
+       "points": [
+        [
+         2.97858,
+         0.01947
+        ],
+        [
+         3.04558,
+         -0.0224
+        ],
+        [
+         3.05194,
+         -0.01222
+        ],
+        [
+         2.98494,
+         0.02965
+        ]
+       ],
+       "closed": true
+      },
+      {
+       "id": "mortar-bottom",
+       "bone": "flight",
+       "role": "body",
+       "z": 2.5,
+       "filled": true,
+       "tone": 0.7,
+       "material": "cement-mortar",
+       "kind": "poly",
+       "points": [
+        [
+         -0.11396,
+         -0.02293
+        ],
+        [
+         -0.01644,
+         -0.08388
+        ],
+        [
+         -0.01008,
+         -0.0737
+        ],
+        [
+         -0.1076,
+         -0.01275
+        ]
+       ],
+       "closed": true
+      },
+      {
+       "id": "bearer-lower",
+       "bone": "bearer-lower",
+       "role": "body",
+       "z": 0,
+       "filled": true,
+       "tone": 0.46,
+       "region": "timber-bearers",
+       "material": "softwood",
+       "kind": "rect",
+       "x": 0.0,
+       "y": 0.0,
+       "w": 0.12,
+       "h": 0.12
+      },
+      {
+       "id": "bearer-lower-check",
+       "bone": "bearer-lower",
+       "role": "detail",
+       "z": 0.5,
+       "filled": false,
+       "tone": 0.3,
+       "region": "timber-bearers",
+       "kind": "poly",
+       "points": [
+        [
+         0.06,
+         0.06
+        ],
+        [
+         0.02,
+         0.105
+        ]
+       ],
+       "closed": false
+      },
+      {
+       "id": "bearer-lower-rings",
+       "bone": "bearer-lower",
+       "role": "texture",
+       "z": 0.5,
+       "filled": false,
+       "tone": 0.3,
+       "region": "timber-bearers",
+       "kind": "ellipse",
+       "cx": 0.055,
+       "cy": 0.065,
+       "rx": 0.03,
+       "ry": 0.028
+      },
+      {
+       "id": "bearer-upper",
+       "bone": "bearer-upper",
+       "role": "body",
+       "z": 0,
+       "filled": true,
+       "tone": 0.46,
+       "region": "timber-bearers",
+       "material": "softwood",
+       "kind": "rect",
+       "x": 0.0,
+       "y": 0.0,
+       "w": 0.12,
+       "h": 0.12
+      },
+      {
+       "id": "bearer-upper-check",
+       "bone": "bearer-upper",
+       "role": "detail",
+       "z": 0.5,
+       "filled": false,
+       "tone": 0.3,
+       "region": "timber-bearers",
+       "kind": "poly",
+       "points": [
+        [
+         0.06,
+         0.06
+        ],
+        [
+         0.105,
+         0.025
+        ]
+       ],
+       "closed": false
+      },
+      {
+       "id": "bearer-upper-rings",
+       "bone": "bearer-upper",
+       "role": "texture",
+       "z": 0.5,
+       "filled": false,
+       "tone": 0.3,
+       "region": "timber-bearers",
+       "kind": "ellipse",
+       "cx": 0.055,
+       "cy": 0.065,
+       "rx": 0.03,
+       "ry": 0.028
+      }
+     ],
+     "front": [
+      {
+       "id": "core",
+       "bone": "flight",
+       "role": "body",
+       "z": 1,
+       "filled": true,
+       "tone": 0.58,
+       "region": "concrete-faces",
+       "material": "reinforced-concrete",
+       "kind": "rect",
+       "x": -0.55,
+       "y": 0.12,
+       "w": 1.1,
+       "h": 0.0646
+      },
+      {
+       "id": "nib-saw-cut",
+       "bone": "flight",
+       "role": "body",
+       "z": 1.2,
+       "filled": true,
+       "tone": 0.66,
+       "region": "concrete-faces",
+       "material": "reinforced-concrete",
+       "kind": "rect",
+       "x": -0.55,
+       "y": 0.1846,
+       "w": 1.1,
+       "h": 0.05936
+      },
+      {
+       "id": "terrazzo-09",
+       "bone": "flight",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.84,
+       "region": "terrazzo-treads",
+       "material": "terrazzo",
+       "kind": "poly",
+       "points": [
+        [
+         -0.55,
+         0.24396
+        ],
+        [
+         0.55,
+         0.24396
+        ],
+        [
+         0.55,
+         0.4284
+        ],
+        [
+         0.3,
+         0.4284
+        ],
+        [
+         0.3,
+         0.41554
+        ],
+        [
+         -0.3,
+         0.41554
+        ],
+        [
+         -0.3,
+         0.4284
+        ],
+        [
+         -0.55,
+         0.4284
+        ]
+       ],
+       "closed": true
+      },
+      {
+       "id": "cut-bar-1",
+       "bone": "flight",
+       "role": "texture",
+       "z": 3,
+       "filled": false,
+       "tone": 0.2,
+       "region": "concrete-faces",
+       "kind": "ellipse",
+       "cx": -0.45,
+       "cy": 0.21428,
+       "rx": 0.005,
+       "ry": 0.005
+      },
+      {
+       "id": "cut-bar-2",
+       "bone": "flight",
+       "role": "texture",
+       "z": 3,
+       "filled": false,
+       "tone": 0.2,
+       "region": "concrete-faces",
+       "kind": "ellipse",
+       "cx": -0.3,
+       "cy": 0.21428,
+       "rx": 0.005,
+       "ry": 0.005
+      },
+      {
+       "id": "cut-bar-3",
+       "bone": "flight",
+       "role": "texture",
+       "z": 3,
+       "filled": false,
+       "tone": 0.2,
+       "region": "concrete-faces",
+       "kind": "ellipse",
+       "cx": -0.15,
+       "cy": 0.21428,
+       "rx": 0.005,
+       "ry": 0.005
+      },
+      {
+       "id": "cut-bar-4",
+       "bone": "flight",
+       "role": "texture",
+       "z": 3,
+       "filled": false,
+       "tone": 0.2,
+       "region": "concrete-faces",
+       "kind": "ellipse",
+       "cx": 0.0,
+       "cy": 0.21428,
+       "rx": 0.005,
+       "ry": 0.005
+      },
+      {
+       "id": "cut-bar-5",
+       "bone": "flight",
+       "role": "texture",
+       "z": 3,
+       "filled": false,
+       "tone": 0.2,
+       "region": "concrete-faces",
+       "kind": "ellipse",
+       "cx": 0.15,
+       "cy": 0.21428,
+       "rx": 0.005,
+       "ry": 0.005
+      },
+      {
+       "id": "cut-bar-6",
+       "bone": "flight",
+       "role": "texture",
+       "z": 3,
+       "filled": false,
+       "tone": 0.2,
+       "region": "concrete-faces",
+       "kind": "ellipse",
+       "cx": 0.3,
+       "cy": 0.21428,
+       "rx": 0.005,
+       "ry": 0.005
+      },
+      {
+       "id": "cut-bar-7",
+       "bone": "flight",
+       "role": "texture",
+       "z": 3,
+       "filled": false,
+       "tone": 0.2,
+       "region": "concrete-faces",
+       "kind": "ellipse",
+       "cx": 0.45,
+       "cy": 0.21428,
+       "rx": 0.005,
+       "ry": 0.005
+      },
+      {
+       "id": "mortar-top",
+       "bone": "flight",
+       "role": "body",
+       "z": 1.5,
+       "filled": true,
+       "tone": 0.7,
+       "material": "cement-mortar",
+       "kind": "rect",
+       "x": -0.38,
+       "y": 0.1776,
+       "w": 0.65,
+       "h": 0.007
+      },
+      {
+       "id": "bearer-lower",
+       "bone": "bearer-lower",
+       "role": "body",
+       "z": 0,
+       "filled": true,
+       "tone": 0.46,
+       "region": "timber-bearers",
+       "material": "softwood",
+       "kind": "rect",
+       "x": -0.7,
+       "y": 0.0,
+       "w": 1.4,
+       "h": 0.12
+      },
+      {
+       "id": "bearer-upper",
+       "bone": "bearer-upper",
+       "role": "body",
+       "z": 0.2,
+       "filled": true,
+       "tone": 0.46,
+       "region": "timber-bearers",
+       "material": "softwood",
+       "kind": "rect",
+       "x": -0.7,
+       "y": 0.0,
+       "w": 1.4,
+       "h": 0.12
+      }
+     ],
+     "plan": [
+      {
+       "id": "bearer-lower",
+       "bone": "bearer-lower",
+       "role": "body",
+       "z": 0,
+       "filled": true,
+       "tone": 0.46,
+       "region": "timber-bearers",
+       "material": "softwood",
+       "kind": "rect",
+       "x": 0.15864,
+       "y": -0.7,
+       "w": 0.12,
+       "h": 1.4
+      },
+      {
+       "id": "bearer-upper",
+       "bone": "bearer-upper",
+       "role": "body",
+       "z": 0,
+       "filled": true,
+       "tone": 0.46,
+       "region": "timber-bearers",
+       "material": "softwood",
+       "kind": "rect",
+       "x": 2.41736,
+       "y": -0.7,
+       "w": 0.12,
+       "h": 1.4
+      },
+      {
+       "id": "core",
+       "bone": "flight",
+       "role": "body",
+       "z": 1,
+       "filled": true,
+       "tone": 0.58,
+       "region": "concrete-faces",
+       "material": "reinforced-concrete",
+       "kind": "rect",
+       "x": -0.15832,
+       "y": -0.55,
+       "w": 3.24699,
+       "h": 1.1
+      },
+      {
+       "id": "terrazzo-00",
+       "bone": "flight",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.84,
+       "region": "terrazzo-treads",
+       "material": "terrazzo",
+       "kind": "rect",
+       "x": -0.112,
+       "y": -0.55,
+       "w": 0.212,
+       "h": 1.1
+      },
+      {
+       "id": "terrazzo-01",
+       "bone": "flight",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.84,
+       "region": "terrazzo-treads",
+       "material": "terrazzo",
+       "kind": "rect",
+       "x": 0.17685,
+       "y": -0.55,
+       "w": 0.25334,
+       "h": 1.1
+      },
+      {
+       "id": "wear-01",
+       "bone": "flight",
+       "role": "texture",
+       "z": 3,
+       "filled": false,
+       "tone": 0.3,
+       "region": "terrazzo-treads",
+       "kind": "poly",
+       "points": [
+        [
+         0.21183,
+         -0.3
+        ],
+        [
+         0.21183,
+         0.3
+        ]
+       ],
+       "closed": false
+      },
+      {
+       "id": "terrazzo-02",
+       "bone": "flight",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.84,
+       "region": "terrazzo-treads",
+       "material": "terrazzo",
+       "kind": "rect",
+       "x": 0.50704,
+       "y": -0.55,
+       "w": 0.25334,
+       "h": 1.1
+      },
+      {
+       "id": "wear-02",
+       "bone": "flight",
+       "role": "texture",
+       "z": 3,
+       "filled": false,
+       "tone": 0.3,
+       "region": "terrazzo-treads",
+       "kind": "poly",
+       "points": [
+        [
+         0.54202,
+         -0.3
+        ],
+        [
+         0.54202,
+         0.3
+        ]
+       ],
+       "closed": false
+      },
+      {
+       "id": "terrazzo-03",
+       "bone": "flight",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.84,
+       "region": "terrazzo-treads",
+       "material": "terrazzo",
+       "kind": "rect",
+       "x": 0.83723,
+       "y": -0.55,
+       "w": 0.25334,
+       "h": 1.1
+      },
+      {
+       "id": "wear-03",
+       "bone": "flight",
+       "role": "texture",
+       "z": 3,
+       "filled": false,
+       "tone": 0.3,
+       "region": "terrazzo-treads",
+       "kind": "poly",
+       "points": [
+        [
+         0.87221,
+         -0.3
+        ],
+        [
+         0.87221,
+         0.3
+        ]
+       ],
+       "closed": false
+      },
+      {
+       "id": "terrazzo-04",
+       "bone": "flight",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.84,
+       "region": "terrazzo-treads",
+       "material": "terrazzo",
+       "kind": "rect",
+       "x": 1.16742,
+       "y": -0.55,
+       "w": 0.25334,
+       "h": 1.1
+      },
+      {
+       "id": "wear-04",
+       "bone": "flight",
+       "role": "texture",
+       "z": 3,
+       "filled": false,
+       "tone": 0.3,
+       "region": "terrazzo-treads",
+       "kind": "poly",
+       "points": [
+        [
+         1.2024,
+         -0.3
+        ],
+        [
+         1.2024,
+         0.3
+        ]
+       ],
+       "closed": false
+      },
+      {
+       "id": "terrazzo-05",
+       "bone": "flight",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.84,
+       "region": "terrazzo-treads",
+       "material": "terrazzo",
+       "kind": "rect",
+       "x": 1.49761,
+       "y": -0.55,
+       "w": 0.25334,
+       "h": 1.1
+      },
+      {
+       "id": "wear-05",
+       "bone": "flight",
+       "role": "texture",
+       "z": 3,
+       "filled": false,
+       "tone": 0.3,
+       "region": "terrazzo-treads",
+       "kind": "poly",
+       "points": [
+        [
+         1.53259,
+         -0.3
+        ],
+        [
+         1.53259,
+         0.3
+        ]
+       ],
+       "closed": false
+      },
+      {
+       "id": "terrazzo-06",
+       "bone": "flight",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.84,
+       "region": "terrazzo-treads",
+       "material": "terrazzo",
+       "kind": "rect",
+       "x": 1.8278,
+       "y": -0.55,
+       "w": 0.25334,
+       "h": 1.1
+      },
+      {
+       "id": "wear-06",
+       "bone": "flight",
+       "role": "texture",
+       "z": 3,
+       "filled": false,
+       "tone": 0.3,
+       "region": "terrazzo-treads",
+       "kind": "poly",
+       "points": [
+        [
+         1.86278,
+         -0.3
+        ],
+        [
+         1.86278,
+         0.3
+        ]
+       ],
+       "closed": false
+      },
+      {
+       "id": "terrazzo-07",
+       "bone": "flight",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.84,
+       "region": "terrazzo-treads",
+       "material": "terrazzo",
+       "kind": "rect",
+       "x": 2.15799,
+       "y": -0.55,
+       "w": 0.25334,
+       "h": 1.1
+      },
+      {
+       "id": "wear-07",
+       "bone": "flight",
+       "role": "texture",
+       "z": 3,
+       "filled": false,
+       "tone": 0.3,
+       "region": "terrazzo-treads",
+       "kind": "poly",
+       "points": [
+        [
+         2.19297,
+         -0.3
+        ],
+        [
+         2.19297,
+         0.3
+        ]
+       ],
+       "closed": false
+      },
+      {
+       "id": "terrazzo-08",
+       "bone": "flight",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.84,
+       "region": "terrazzo-treads",
+       "material": "terrazzo",
+       "kind": "rect",
+       "x": 2.48818,
+       "y": -0.55,
+       "w": 0.25334,
+       "h": 1.1
+      },
+      {
+       "id": "wear-08",
+       "bone": "flight",
+       "role": "texture",
+       "z": 3,
+       "filled": false,
+       "tone": 0.3,
+       "region": "terrazzo-treads",
+       "kind": "poly",
+       "points": [
+        [
+         2.52316,
+         -0.3
+        ],
+        [
+         2.52316,
+         0.3
+        ]
+       ],
+       "closed": false
+      },
+      {
+       "id": "terrazzo-09",
+       "bone": "flight",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.84,
+       "region": "terrazzo-treads",
+       "material": "terrazzo",
+       "kind": "rect",
+       "x": 2.81836,
+       "y": -0.55,
+       "w": 0.2703,
+       "h": 1.1
+      },
+      {
+       "id": "wear-09",
+       "bone": "flight",
+       "role": "texture",
+       "z": 3,
+       "filled": false,
+       "tone": 0.3,
+       "region": "terrazzo-treads",
+       "kind": "poly",
+       "points": [
+        [
+         2.85334,
+         -0.3
+        ],
+        [
+         2.85334,
+         0.3
+        ]
+       ],
+       "closed": false
+      },
+      {
+       "id": "spall-nosing-03",
+       "bone": "flight",
+       "role": "detail",
+       "z": 3,
+       "filled": false,
+       "tone": 0.3,
+       "region": "terrazzo-treads",
+       "kind": "poly",
+       "points": [
+        [
+         0.84147,
+         -0.55
+        ],
+        [
+         0.89553,
+         -0.53
+        ],
+        [
+         0.89553,
+         -0.47
+        ],
+        [
+         0.84147,
+         -0.47
+        ]
+       ],
+       "closed": false
+      },
+      {
+       "id": "socket-1",
+       "bone": "flight",
+       "role": "texture",
+       "z": 3,
+       "filled": false,
+       "tone": 0.2,
+       "region": "concrete-faces",
+       "kind": "ellipse",
+       "cx": 0.65014,
+       "cy": -0.35,
+       "rx": 0.01696,
+       "ry": 0.02
+      },
+      {
+       "id": "socket-2",
+       "bone": "flight",
+       "role": "texture",
+       "z": 3,
+       "filled": false,
+       "tone": 0.2,
+       "region": "concrete-faces",
+       "kind": "ellipse",
+       "cx": 0.65014,
+       "cy": 0.35,
+       "rx": 0.01696,
+       "ry": 0.02
+      },
+      {
+       "id": "socket-3",
+       "bone": "flight",
+       "role": "texture",
+       "z": 3,
+       "filled": false,
+       "tone": 0.2,
+       "region": "concrete-faces",
+       "kind": "ellipse",
+       "cx": 2.30109,
+       "cy": -0.35,
+       "rx": 0.01696,
+       "ry": 0.02
+      },
+      {
+       "id": "socket-4",
+       "bone": "flight",
+       "role": "texture",
+       "z": 3,
+       "filled": false,
+       "tone": 0.2,
+       "region": "concrete-faces",
+       "kind": "ellipse",
+       "cx": 2.30109,
+       "cy": 0.35,
+       "rx": 0.01696,
+       "ry": 0.02
+      },
+      {
+       "id": "bar-stub-1",
+       "bone": "flight",
+       "role": "body",
+       "z": 1.5,
+       "filled": true,
+       "tone": 0.22,
+       "material": "steel",
+       "kind": "rect",
+       "x": -0.2061,
+       "y": -0.405,
+       "w": 0.06421,
+       "h": 0.01
+      },
+      {
+       "id": "bar-stub-2",
+       "bone": "flight",
+       "role": "body",
+       "z": 1.5,
+       "filled": true,
+       "tone": 0.22,
+       "material": "steel",
+       "kind": "rect",
+       "x": -0.2061,
+       "y": -0.135,
+       "w": 0.06421,
+       "h": 0.01
+      },
+      {
+       "id": "bar-stub-3",
+       "bone": "flight",
+       "role": "body",
+       "z": 1.5,
+       "filled": true,
+       "tone": 0.22,
+       "material": "steel",
+       "kind": "rect",
+       "x": -0.2061,
+       "y": 0.125,
+       "w": 0.06421,
+       "h": 0.01
+      },
+      {
+       "id": "bar-stub-4",
+       "bone": "flight",
+       "role": "body",
+       "z": 1.5,
+       "filled": true,
+       "tone": 0.22,
+       "material": "steel",
+       "kind": "rect",
+       "x": -0.2061,
+       "y": 0.395,
+       "w": 0.06421,
+       "h": 0.01
+      }
+     ]
+    },
+    "decisions": {
+     "silhouette": {
+      "en": "Side elevation of the flight lying on its soffit on two 12/12 squared-timber bearers, treads tilted by the 32 degree pitch: the concrete side face with its nine risers of 175 mm and goings of 280 mm, the 30 mm terrazzo face layer of the eight treads and the two landing strips, the dapped upper nib sawn flush, the dapped lower nib broken out with a ragged end and a bent cut bar, and the mortar remnants under both bearings. Front: the flight seen from its upper end, the sawn nib face with its seven cut bars over the formed end face, the top landing strip with the worn walking zone of its nosing, the bearers below. Plan: the tilted treads and risers as alternating strips, worn nosings, the spalled nosing of tread 3, four lifting sockets and the four bar stubs at the lower end.",
+      "de": "Seitenansicht des auf der Untersicht auf zwei Kanthölzern 12/12 liegenden Laufs, die Stufen um die Steigung von 32 Grad geneigt: die Betonseitenfläche mit neun Steigungen zu 175 mm und Auftritten zu 280 mm, der 30-mm-Terrazzovorsatz der acht Trittstufen und der beiden Podeststreifen, die bündig gesägte obere Ausklinkung, die herausgebrochene untere Ausklinkung mit unregelmäßigem Ende und abgebogenem Stabende sowie die Mörtelreste unter beiden Auflagern. Vorderansicht: der Lauf vom oberen Ende gesehen, die gesägte Nasenfläche mit sieben angeschnittenen Stäben über der geschalten Stirnfläche, der obere Podeststreifen mit der abgetretenen Gehzone seiner Kante, darunter die Kanthölzer. Draufsicht: die geneigten Tritt- und Setzstufen als abwechselnde Streifen, abgetretene Kanten, die abgeplatzte Kante der Stufe 3, vier Transportankerhülsen und die vier Stabenden am unteren Ende."
+     },
+     "retained": {
+      "en": "Every riser and tread at its true size, the 30 mm terrazzo layer (0.6 mm), the 100 mm dapped nibs, the 12 mm mortar beds, the 10 mm bar stubs, the 40 mm lifting sockets, the four 18 mm dowel holes of the removed handrail on the right side face and the spall of 50 x 22 mm at the right end of nosing 3.",
+      "de": "Jede Steigung und jeder Auftritt in wahrer Größe, der 30-mm-Terrazzovorsatz (0,6 mm), die 100-mm-Ausklinkungen, die 12-mm-Mörtelbetten, die 10-mm-Stabenden, die 40-mm-Transportankerhülsen, die vier 18-mm-Dübellöcher des entfernten Handlaufs an der rechten Seitenfläche und die Abplatzung von 50 x 22 mm am rechten Ende der Kante 3."
+     },
+     "merged": {
+      "en": "Concrete side face, risers, soffit and end faces are one concrete shape per view; each terrazzo piece is one shape.",
+      "de": "Betonseitenfläche, Setzstufen, Untersicht und Stirnflächen sind je Ansicht eine Betonform; jedes Terrazzostück ist eine Form."
+     },
+     "omitted": {
+      "en": "The 4 mm dishing of the treads in the walking line (0.08 mm), the reinforcement inside the concrete and the plastic plugs of the sockets.",
+      "de": "Die 4-mm-Mulde der Trittflächen in der Gehlinie (0,08 mm), die Bewehrung im Beton und die Kunststoffstopfen der Hülsen."
+     },
+     "thinElements": {
+      "en": "Dowel holes, cut bars, sockets, the saw kerf and the tangent line of each rounded nosing in the walking zone are texture strokes at 0.1 mm; the spall and the timber checks are detail strokes at 0.18 mm.",
+      "de": "Dübellöcher, angeschnittene Stäbe, Hülsen, der Sägeschnitt und die Tangentenlinie jeder gerundeten Kante in der Gehzone sind Texturstriche zu 0,1 mm; Abplatzung und Holzrisse sind Detailstriche zu 0,18 mm."
+     },
+     "hatching": {
+      "en": "No hatch: no view is a section; materials read by tone (terrazzo light, concrete mid grey, sawn face a shade lighter, timber dark, steel darkest).",
+      "de": "Keine Schraffur: keine Ansicht ist ein Schnitt; die Werkstoffe lesen sich über den Ton (Terrazzo hell, Beton mittelgrau, Sägefläche eine Nuance heller, Holz dunkel, Stahl am dunkelsten)."
+     },
+     "styles": {
+      "en": "Body outline 0.35 mm, details 0.18 mm, texture 0.1 mm (DIN 1356-1 line group 0.35).",
+      "de": "Körperkontur 0,35 mm, Details 0,18 mm, Textur 0,1 mm (DIN 1356-1 Liniengruppe 0,35)."
+     },
+     "overlays": {
+      "en": "Thermal regions per shape (concrete, terrazzo, timber); structural views draw the waist member, the bearer contacts, the sling points and the landing bearings of the pose.",
+      "de": "Thermische Regionen je Form (Beton, Terrazzo, Holz); die Tragwerksansichten zeichnen das Laufplattenglied, die Kantholzkontakte, die Anschlagpunkte und die Podestauflager der Pose."
+     }
+    }
+   },
+   "100": {
+    "status": "authored",
+    "denominator": 100,
+    "validRange": {
+     "minDenominator": 75,
+     "maxDenominator": 150
+    },
+    "pens": {
+     "body": 0.25,
+     "detail": 0.13,
+     "texture": 0.1,
+     "glazing": 0.1,
+     "ground": 0.35
+    },
+    "hatches": [],
+    "geometry": {
+     "elevation": [
+      {
+       "id": "core",
+       "bone": "flight",
+       "role": "body",
+       "z": 1,
+       "filled": true,
+       "tone": 0.58,
+       "region": "concrete-faces",
+       "material": "reinforced-concrete",
+       "kind": "poly",
+       "points": [
+        [
+         -0.10654,
+         0.18706
+        ],
+        [
+         -0.11449,
+         0.17434
+        ],
+        [
+         -0.11332,
+         0.15356
+        ],
+        [
+         -0.13696,
+         0.14593
+        ],
+        [
+         -0.13686,
+         0.12346
+        ],
+        [
+         -0.05884,
+         0.0747
+        ],
+        [
+         -0.11184,
+         -0.0101
+        ],
+        [
+         0.0,
+         -0.08
+        ],
+        [
+         2.89872,
+         -0.08
+        ],
+        [
+         2.97222,
+         0.0376
+        ],
+        [
+         3.05702,
+         -0.0154
+        ],
+        [
+         3.09412,
+         0.04396
+        ],
+        [
+         2.83972,
+         0.20296
+        ],
+        [
+         2.74697,
+         0.05456
+        ],
+        [
+         2.50953,
+         0.20296
+        ],
+        [
+         2.41678,
+         0.05456
+        ],
+        [
+         2.17935,
+         0.20296
+        ],
+        [
+         2.0866,
+         0.05456
+        ],
+        [
+         1.84916,
+         0.20296
+        ],
+        [
+         1.75641,
+         0.05456
+        ],
+        [
+         1.51897,
+         0.20296
+        ],
+        [
+         1.42622,
+         0.05456
+        ],
+        [
+         1.18878,
+         0.20296
+        ],
+        [
+         1.09603,
+         0.05456
+        ],
+        [
+         0.85859,
+         0.20296
+        ],
+        [
+         0.76584,
+         0.05456
+        ],
+        [
+         0.5284,
+         0.20296
+        ],
+        [
+         0.43565,
+         0.05456
+        ],
+        [
+         0.19821,
+         0.20296
+        ],
+        [
+         0.10546,
+         0.05456
+        ]
+       ],
+       "closed": true
+      },
+      {
+       "id": "terrazzo-00",
+       "bone": "flight",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.84,
+       "region": "terrazzo-treads",
+       "material": "terrazzo",
+       "kind": "poly",
+       "points": [
+        [
+         -0.10654,
+         0.18706
+        ],
+        [
+         0.10546,
+         0.05456
+        ],
+        [
+         0.12136,
+         0.08
+        ],
+        [
+         -0.09064,
+         0.2125
+        ]
+       ],
+       "closed": true
+      },
+      {
+       "id": "terrazzo-01",
+       "bone": "flight",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.84,
+       "region": "terrazzo-treads",
+       "material": "terrazzo",
+       "kind": "poly",
+       "points": [
+        [
+         0.19821,
+         0.20296
+        ],
+        [
+         0.43565,
+         0.05456
+        ],
+        [
+         0.45155,
+         0.08
+        ],
+        [
+         0.21411,
+         0.2284
+        ]
+       ],
+       "closed": true
+      },
+      {
+       "id": "terrazzo-02",
+       "bone": "flight",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.84,
+       "region": "terrazzo-treads",
+       "material": "terrazzo",
+       "kind": "poly",
+       "points": [
+        [
+         0.5284,
+         0.20296
+        ],
+        [
+         0.76584,
+         0.05456
+        ],
+        [
+         0.78174,
+         0.08
+        ],
+        [
+         0.5443,
+         0.2284
+        ]
+       ],
+       "closed": true
+      },
+      {
+       "id": "terrazzo-03",
+       "bone": "flight",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.84,
+       "region": "terrazzo-treads",
+       "material": "terrazzo",
+       "kind": "poly",
+       "points": [
+        [
+         0.85859,
+         0.20296
+        ],
+        [
+         1.09603,
+         0.05456
+        ],
+        [
+         1.11193,
+         0.08
+        ],
+        [
+         0.87449,
+         0.2284
+        ]
+       ],
+       "closed": true
+      },
+      {
+       "id": "terrazzo-04",
+       "bone": "flight",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.84,
+       "region": "terrazzo-treads",
+       "material": "terrazzo",
+       "kind": "poly",
+       "points": [
+        [
+         1.18878,
+         0.20296
+        ],
+        [
+         1.42622,
+         0.05456
+        ],
+        [
+         1.44212,
+         0.08
+        ],
+        [
+         1.20468,
+         0.2284
+        ]
+       ],
+       "closed": true
+      },
+      {
+       "id": "terrazzo-05",
+       "bone": "flight",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.84,
+       "region": "terrazzo-treads",
+       "material": "terrazzo",
+       "kind": "poly",
+       "points": [
+        [
+         1.51897,
+         0.20296
+        ],
+        [
+         1.75641,
+         0.05456
+        ],
+        [
+         1.77231,
+         0.08
+        ],
+        [
+         1.53487,
+         0.2284
+        ]
+       ],
+       "closed": true
+      },
+      {
+       "id": "terrazzo-06",
+       "bone": "flight",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.84,
+       "region": "terrazzo-treads",
+       "material": "terrazzo",
+       "kind": "poly",
+       "points": [
+        [
+         1.84916,
+         0.20296
+        ],
+        [
+         2.0866,
+         0.05456
+        ],
+        [
+         2.1025,
+         0.08
+        ],
+        [
+         1.86506,
+         0.2284
+        ]
+       ],
+       "closed": true
+      },
+      {
+       "id": "terrazzo-07",
+       "bone": "flight",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.84,
+       "region": "terrazzo-treads",
+       "material": "terrazzo",
+       "kind": "poly",
+       "points": [
+        [
+         2.17935,
+         0.20296
+        ],
+        [
+         2.41678,
+         0.05456
+        ],
+        [
+         2.43268,
+         0.08
+        ],
+        [
+         2.19525,
+         0.2284
+        ]
+       ],
+       "closed": true
+      },
+      {
+       "id": "terrazzo-08",
+       "bone": "flight",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.84,
+       "region": "terrazzo-treads",
+       "material": "terrazzo",
+       "kind": "poly",
+       "points": [
+        [
+         2.50953,
+         0.20296
+        ],
+        [
+         2.74697,
+         0.05456
+        ],
+        [
+         2.76287,
+         0.08
+        ],
+        [
+         2.52543,
+         0.2284
+        ]
+       ],
+       "closed": true
+      },
+      {
+       "id": "terrazzo-09",
+       "bone": "flight",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.84,
+       "region": "terrazzo-treads",
+       "material": "terrazzo",
+       "kind": "poly",
+       "points": [
+        [
+         2.83972,
+         0.20296
+        ],
+        [
+         3.09412,
+         0.04396
+        ],
+        [
+         3.11002,
+         0.0694
+        ],
+        [
+         2.85562,
+         0.2284
+        ]
+       ],
+       "closed": true
+      },
+      {
+       "id": "spall-nosing-03",
+       "bone": "flight",
+       "role": "detail",
+       "z": 3,
+       "filled": false,
+       "tone": 0.3,
+       "region": "terrazzo-treads",
+       "kind": "poly",
+       "points": [
+        [
+         0.86283,
+         0.20974
+        ],
+        [
+         0.88339,
+         0.20868
+        ],
+        [
+         0.91689,
+         0.2019
+        ]
+       ],
+       "closed": false
+      },
+      {
+       "id": "dowel-hole-1",
+       "bone": "flight",
+       "role": "texture",
+       "z": 3,
+       "filled": false,
+       "tone": 0.25,
+       "region": "concrete-faces",
+       "kind": "ellipse",
+       "cx": 0.43763,
+       "cy": 0.02,
+       "rx": 0.012,
+       "ry": 0.012
+      },
+      {
+       "id": "dowel-hole-2",
+       "bone": "flight",
+       "role": "texture",
+       "z": 3,
+       "filled": false,
+       "tone": 0.25,
+       "region": "concrete-faces",
+       "kind": "ellipse",
+       "cx": 1.26311,
+       "cy": 0.02,
+       "rx": 0.012,
+       "ry": 0.012
+      },
+      {
+       "id": "dowel-hole-3",
+       "bone": "flight",
+       "role": "texture",
+       "z": 3,
+       "filled": false,
+       "tone": 0.25,
+       "region": "concrete-faces",
+       "kind": "ellipse",
+       "cx": 2.08858,
+       "cy": 0.02,
+       "rx": 0.012,
+       "ry": 0.012
+      },
+      {
+       "id": "dowel-hole-4",
+       "bone": "flight",
+       "role": "texture",
+       "z": 3,
+       "filled": false,
+       "tone": 0.25,
+       "region": "concrete-faces",
+       "kind": "ellipse",
+       "cx": 2.91405,
+       "cy": 0.02,
+       "rx": 0.012,
+       "ry": 0.012
+      },
+      {
+       "id": "saw-kerf-top",
+       "bone": "flight",
+       "role": "texture",
+       "z": 3,
+       "filled": false,
+       "tone": 0.3,
+       "region": "concrete-faces",
+       "kind": "poly",
+       "points": [
+        [
+         3.05321,
+         0.00114
+        ],
+        [
+         3.07759,
+         0.04014
+        ]
+       ],
+       "closed": false
+      },
+      {
+       "id": "bearer-lower",
+       "bone": "bearer-lower",
+       "role": "body",
+       "z": 0,
+       "filled": true,
+       "tone": 0.46,
+       "region": "timber-bearers",
+       "material": "softwood",
+       "kind": "rect",
+       "x": 0.0,
+       "y": 0.0,
+       "w": 0.12,
+       "h": 0.12
+      },
+      {
+       "id": "bearer-lower-check",
+       "bone": "bearer-lower",
+       "role": "texture",
+       "z": 0.5,
+       "filled": false,
+       "tone": 0.3,
+       "region": "timber-bearers",
+       "kind": "poly",
+       "points": [
+        [
+         0.06,
+         0.06
+        ],
+        [
+         0.02,
+         0.105
+        ]
+       ],
+       "closed": false
+      },
+      {
+       "id": "bearer-upper",
+       "bone": "bearer-upper",
+       "role": "body",
+       "z": 0,
+       "filled": true,
+       "tone": 0.46,
+       "region": "timber-bearers",
+       "material": "softwood",
+       "kind": "rect",
+       "x": 0.0,
+       "y": 0.0,
+       "w": 0.12,
+       "h": 0.12
+      },
+      {
+       "id": "bearer-upper-check",
+       "bone": "bearer-upper",
+       "role": "texture",
+       "z": 0.5,
+       "filled": false,
+       "tone": 0.3,
+       "region": "timber-bearers",
+       "kind": "poly",
+       "points": [
+        [
+         0.06,
+         0.06
+        ],
+        [
+         0.105,
+         0.025
+        ]
+       ],
+       "closed": false
+      }
+     ],
+     "front": [
+      {
+       "id": "core",
+       "bone": "flight",
+       "role": "body",
+       "z": 1,
+       "filled": true,
+       "tone": 0.58,
+       "region": "concrete-faces",
+       "material": "reinforced-concrete",
+       "kind": "rect",
+       "x": -0.55,
+       "y": 0.12,
+       "w": 1.1,
+       "h": 0.0646
+      },
+      {
+       "id": "nib-saw-cut",
+       "bone": "flight",
+       "role": "body",
+       "z": 1.2,
+       "filled": true,
+       "tone": 0.66,
+       "region": "concrete-faces",
+       "material": "reinforced-concrete",
+       "kind": "rect",
+       "x": -0.55,
+       "y": 0.1846,
+       "w": 1.1,
+       "h": 0.05936
+      },
+      {
+       "id": "terrazzo-09",
+       "bone": "flight",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.84,
+       "region": "terrazzo-treads",
+       "material": "terrazzo",
+       "kind": "poly",
+       "points": [
+        [
+         -0.55,
+         0.24396
+        ],
+        [
+         0.55,
+         0.24396
+        ],
+        [
+         0.55,
+         0.4284
+        ],
+        [
+         0.3,
+         0.4284
+        ],
+        [
+         -0.3,
+         0.4284
+        ],
+        [
+         -0.55,
+         0.4284
+        ]
+       ],
+       "closed": true
+      },
+      {
+       "id": "bearer-lower",
+       "bone": "bearer-lower",
+       "role": "body",
+       "z": 0,
+       "filled": true,
+       "tone": 0.46,
+       "region": "timber-bearers",
+       "material": "softwood",
+       "kind": "rect",
+       "x": -0.7,
+       "y": 0.0,
+       "w": 1.4,
+       "h": 0.12
+      },
+      {
+       "id": "bearer-upper",
+       "bone": "bearer-upper",
+       "role": "body",
+       "z": 0.2,
+       "filled": true,
+       "tone": 0.46,
+       "region": "timber-bearers",
+       "material": "softwood",
+       "kind": "rect",
+       "x": -0.7,
+       "y": 0.0,
+       "w": 1.4,
+       "h": 0.12
+      }
+     ],
+     "plan": [
+      {
+       "id": "bearer-lower",
+       "bone": "bearer-lower",
+       "role": "body",
+       "z": 0,
+       "filled": true,
+       "tone": 0.46,
+       "region": "timber-bearers",
+       "material": "softwood",
+       "kind": "rect",
+       "x": 0.15864,
+       "y": -0.7,
+       "w": 0.12,
+       "h": 1.4
+      },
+      {
+       "id": "bearer-upper",
+       "bone": "bearer-upper",
+       "role": "body",
+       "z": 0,
+       "filled": true,
+       "tone": 0.46,
+       "region": "timber-bearers",
+       "material": "softwood",
+       "kind": "rect",
+       "x": 2.41736,
+       "y": -0.7,
+       "w": 0.12,
+       "h": 1.4
+      },
+      {
+       "id": "core",
+       "bone": "flight",
+       "role": "body",
+       "z": 1,
+       "filled": true,
+       "tone": 0.58,
+       "region": "concrete-faces",
+       "material": "reinforced-concrete",
+       "kind": "rect",
+       "x": -0.15832,
+       "y": -0.55,
+       "w": 3.24699,
+       "h": 1.1
+      },
+      {
+       "id": "terrazzo-00",
+       "bone": "flight",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.84,
+       "region": "terrazzo-treads",
+       "material": "terrazzo",
+       "kind": "rect",
+       "x": -0.112,
+       "y": -0.55,
+       "w": 0.212,
+       "h": 1.1
+      },
+      {
+       "id": "terrazzo-01",
+       "bone": "flight",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.84,
+       "region": "terrazzo-treads",
+       "material": "terrazzo",
+       "kind": "rect",
+       "x": 0.17685,
+       "y": -0.55,
+       "w": 0.25334,
+       "h": 1.1
+      },
+      {
+       "id": "terrazzo-02",
+       "bone": "flight",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.84,
+       "region": "terrazzo-treads",
+       "material": "terrazzo",
+       "kind": "rect",
+       "x": 0.50704,
+       "y": -0.55,
+       "w": 0.25334,
+       "h": 1.1
+      },
+      {
+       "id": "terrazzo-03",
+       "bone": "flight",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.84,
+       "region": "terrazzo-treads",
+       "material": "terrazzo",
+       "kind": "rect",
+       "x": 0.83723,
+       "y": -0.55,
+       "w": 0.25334,
+       "h": 1.1
+      },
+      {
+       "id": "terrazzo-04",
+       "bone": "flight",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.84,
+       "region": "terrazzo-treads",
+       "material": "terrazzo",
+       "kind": "rect",
+       "x": 1.16742,
+       "y": -0.55,
+       "w": 0.25334,
+       "h": 1.1
+      },
+      {
+       "id": "terrazzo-05",
+       "bone": "flight",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.84,
+       "region": "terrazzo-treads",
+       "material": "terrazzo",
+       "kind": "rect",
+       "x": 1.49761,
+       "y": -0.55,
+       "w": 0.25334,
+       "h": 1.1
+      },
+      {
+       "id": "terrazzo-06",
+       "bone": "flight",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.84,
+       "region": "terrazzo-treads",
+       "material": "terrazzo",
+       "kind": "rect",
+       "x": 1.8278,
+       "y": -0.55,
+       "w": 0.25334,
+       "h": 1.1
+      },
+      {
+       "id": "terrazzo-07",
+       "bone": "flight",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.84,
+       "region": "terrazzo-treads",
+       "material": "terrazzo",
+       "kind": "rect",
+       "x": 2.15799,
+       "y": -0.55,
+       "w": 0.25334,
+       "h": 1.1
+      },
+      {
+       "id": "terrazzo-08",
+       "bone": "flight",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.84,
+       "region": "terrazzo-treads",
+       "material": "terrazzo",
+       "kind": "rect",
+       "x": 2.48818,
+       "y": -0.55,
+       "w": 0.25334,
+       "h": 1.1
+      },
+      {
+       "id": "terrazzo-09",
+       "bone": "flight",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.84,
+       "region": "terrazzo-treads",
+       "material": "terrazzo",
+       "kind": "rect",
+       "x": 2.81836,
+       "y": -0.55,
+       "w": 0.2703,
+       "h": 1.1
+      },
+      {
+       "id": "spall-nosing-03",
+       "bone": "flight",
+       "role": "detail",
+       "z": 3,
+       "filled": false,
+       "tone": 0.3,
+       "region": "terrazzo-treads",
+       "kind": "poly",
+       "points": [
+        [
+         0.84147,
+         -0.55
+        ],
+        [
+         0.89553,
+         -0.53
+        ],
+        [
+         0.89553,
+         -0.47
+        ],
+        [
+         0.84147,
+         -0.47
+        ]
+       ],
+       "closed": false
+      }
+     ]
+    },
+    "decisions": {
+     "silhouette": {
+      "en": "The same side, front and plan views with the true stepped profile, the terrazzo layer (0.3 mm), the dapped nibs, the ragged lower end and the bearers.",
+      "de": "Dieselben Seiten-, Vorder- und Draufsichten mit dem wahren Stufenprofil, dem Terrazzovorsatz (0,3 mm), den Ausklinkungen, dem unregelmäßigen unteren Ende und den Kanthölzern."
+     },
+     "retained": {
+      "en": "Risers, treads, terrazzo pieces, nibs, bearers, the spalled nosing as a stroke and the dowel holes as texture.",
+      "de": "Steigungen, Auftritte, Terrazzostücke, Ausklinkungen, Kanthölzer, die abgeplatzte Kante als Strich und die Dübellöcher als Textur."
+     },
+     "merged": {
+      "en": "The worn walking zone of the top strip is merged into its straight outline; the sawn nib face is a band of its own tone.",
+      "de": "Die abgetretene Gehzone des oberen Streifens geht in seinem geraden Umriss auf; die gesägte Nasenfläche ist ein Band in eigenem Ton."
+     },
+     "omitted": {
+      "en": "Bar stubs (10 mm), mortar beds (12 mm), lifting sockets, cut-bar dots and nosing wear lines: below the 15 mm smallest feature.",
+      "de": "Stabenden (10 mm), Mörtelbetten (12 mm), Transportankerhülsen, Stabpunkte und Kantenabnutzungslinien: unter der kleinsten Einzelheit von 15 mm."
+     },
+     "thinElements": {
+      "en": "The spall and timber checks as 0.1 mm texture or 0.13 mm detail strokes.",
+      "de": "Abplatzung und Holzrisse als Textur- zu 0,1 mm oder Detailstriche zu 0,13 mm."
+     },
+     "hatching": {
+      "en": "No hatch; tones as at 1:50.",
+      "de": "Keine Schraffur; Töne wie bei 1:50."
+     },
+     "styles": {
+      "en": "Body 0.25 mm, detail 0.13 mm, texture 0.1 mm.",
+      "de": "Körper 0,25 mm, Detail 0,13 mm, Textur 0,1 mm."
+     },
+     "overlays": {
+      "en": "As at 1:50.",
+      "de": "Wie bei 1:50."
+     }
+    }
+   },
+   "200": {
+    "status": "authored",
+    "denominator": 200,
+    "validRange": {
+     "minDenominator": 150,
+     "maxDenominator": 350
+    },
+    "pens": {
+     "body": 0.18,
+     "detail": 0.1,
+     "texture": null,
+     "glazing": 0.1,
+     "ground": 0.25
+    },
+    "hatches": [],
+    "geometry": {
+     "elevation": [
+      {
+       "id": "flight",
+       "bone": "flight",
+       "role": "body",
+       "z": 1,
+       "filled": true,
+       "tone": 0.66,
+       "regions": [
+        "concrete-faces",
+        "terrazzo-treads"
+       ],
+       "material": "reinforced-concrete",
+       "kind": "poly",
+       "points": [
+        [
+         0.19821,
+         0.20296
+        ],
+        [
+         0.21411,
+         0.2284
+        ],
+        [
+         0.45155,
+         0.08
+        ],
+        [
+         0.5284,
+         0.20296
+        ],
+        [
+         0.5443,
+         0.2284
+        ],
+        [
+         0.78174,
+         0.08
+        ],
+        [
+         0.85859,
+         0.20296
+        ],
+        [
+         0.87449,
+         0.2284
+        ],
+        [
+         1.11193,
+         0.08
+        ],
+        [
+         1.18878,
+         0.20296
+        ],
+        [
+         1.20468,
+         0.2284
+        ],
+        [
+         1.44212,
+         0.08
+        ],
+        [
+         1.51897,
+         0.20296
+        ],
+        [
+         1.53487,
+         0.2284
+        ],
+        [
+         1.77231,
+         0.08
+        ],
+        [
+         1.84916,
+         0.20296
+        ],
+        [
+         1.86506,
+         0.2284
+        ],
+        [
+         2.1025,
+         0.08
+        ],
+        [
+         2.17935,
+         0.20296
+        ],
+        [
+         2.19525,
+         0.2284
+        ],
+        [
+         2.43268,
+         0.08
+        ],
+        [
+         2.50953,
+         0.20296
+        ],
+        [
+         2.52543,
+         0.2284
+        ],
+        [
+         2.76287,
+         0.08
+        ],
+        [
+         2.83972,
+         0.20296
+        ],
+        [
+         2.85562,
+         0.2284
+        ],
+        [
+         3.11002,
+         0.0694
+        ],
+        [
+         3.09412,
+         0.04396
+        ],
+        [
+         3.05702,
+         -0.0154
+        ],
+        [
+         2.97222,
+         0.0376
+        ],
+        [
+         2.89872,
+         -0.08
+        ],
+        [
+         0.0,
+         -0.08
+        ],
+        [
+         -0.11184,
+         -0.0101
+        ],
+        [
+         -0.14364,
+         0.1277
+        ],
+        [
+         -0.10654,
+         0.18706
+        ],
+        [
+         -0.09064,
+         0.2125
+        ],
+        [
+         0.12136,
+         0.08
+        ]
+       ],
+       "closed": true
+      },
+      {
+       "id": "tread-line-01",
+       "bone": "flight",
+       "role": "detail",
+       "z": 2,
+       "filled": false,
+       "tone": 0.3,
+       "region": "terrazzo-treads",
+       "kind": "poly",
+       "points": [
+        [
+         0.19821,
+         0.20296
+        ],
+        [
+         0.43565,
+         0.05456
+        ]
+       ],
+       "closed": false
+      },
+      {
+       "id": "tread-line-02",
+       "bone": "flight",
+       "role": "detail",
+       "z": 2,
+       "filled": false,
+       "tone": 0.3,
+       "region": "terrazzo-treads",
+       "kind": "poly",
+       "points": [
+        [
+         0.5284,
+         0.20296
+        ],
+        [
+         0.76584,
+         0.05456
+        ]
+       ],
+       "closed": false
+      },
+      {
+       "id": "tread-line-03",
+       "bone": "flight",
+       "role": "detail",
+       "z": 2,
+       "filled": false,
+       "tone": 0.3,
+       "region": "terrazzo-treads",
+       "kind": "poly",
+       "points": [
+        [
+         0.85859,
+         0.20296
+        ],
+        [
+         1.09603,
+         0.05456
+        ]
+       ],
+       "closed": false
+      },
+      {
+       "id": "tread-line-04",
+       "bone": "flight",
+       "role": "detail",
+       "z": 2,
+       "filled": false,
+       "tone": 0.3,
+       "region": "terrazzo-treads",
+       "kind": "poly",
+       "points": [
+        [
+         1.18878,
+         0.20296
+        ],
+        [
+         1.42622,
+         0.05456
+        ]
+       ],
+       "closed": false
+      },
+      {
+       "id": "tread-line-05",
+       "bone": "flight",
+       "role": "detail",
+       "z": 2,
+       "filled": false,
+       "tone": 0.3,
+       "region": "terrazzo-treads",
+       "kind": "poly",
+       "points": [
+        [
+         1.51897,
+         0.20296
+        ],
+        [
+         1.75641,
+         0.05456
+        ]
+       ],
+       "closed": false
+      },
+      {
+       "id": "tread-line-06",
+       "bone": "flight",
+       "role": "detail",
+       "z": 2,
+       "filled": false,
+       "tone": 0.3,
+       "region": "terrazzo-treads",
+       "kind": "poly",
+       "points": [
+        [
+         1.84916,
+         0.20296
+        ],
+        [
+         2.0866,
+         0.05456
+        ]
+       ],
+       "closed": false
+      },
+      {
+       "id": "tread-line-07",
+       "bone": "flight",
+       "role": "detail",
+       "z": 2,
+       "filled": false,
+       "tone": 0.3,
+       "region": "terrazzo-treads",
+       "kind": "poly",
+       "points": [
+        [
+         2.17935,
+         0.20296
+        ],
+        [
+         2.41678,
+         0.05456
+        ]
+       ],
+       "closed": false
+      },
+      {
+       "id": "tread-line-08",
+       "bone": "flight",
+       "role": "detail",
+       "z": 2,
+       "filled": false,
+       "tone": 0.3,
+       "region": "terrazzo-treads",
+       "kind": "poly",
+       "points": [
+        [
+         2.50953,
+         0.20296
+        ],
+        [
+         2.74697,
+         0.05456
+        ]
+       ],
+       "closed": false
+      },
+      {
+       "id": "tread-line-09",
+       "bone": "flight",
+       "role": "detail",
+       "z": 2,
+       "filled": false,
+       "tone": 0.3,
+       "region": "terrazzo-treads",
+       "kind": "poly",
+       "points": [
+        [
+         2.83972,
+         0.20296
+        ],
+        [
+         3.09412,
+         0.04396
+        ]
+       ],
+       "closed": false
+      },
+      {
+       "id": "bearer-lower",
+       "bone": "bearer-lower",
+       "role": "body",
+       "z": 0,
+       "filled": true,
+       "tone": 0.46,
+       "region": "timber-bearers",
+       "material": "softwood",
+       "kind": "rect",
+       "x": 0.0,
+       "y": 0.0,
+       "w": 0.12,
+       "h": 0.12
+      },
+      {
+       "id": "bearer-upper",
+       "bone": "bearer-upper",
+       "role": "body",
+       "z": 0,
+       "filled": true,
+       "tone": 0.46,
+       "region": "timber-bearers",
+       "material": "softwood",
+       "kind": "rect",
+       "x": 0.0,
+       "y": 0.0,
+       "w": 0.12,
+       "h": 0.12
+      }
+     ],
+     "front": [
+      {
+       "id": "flight",
+       "bone": "flight",
+       "role": "body",
+       "z": 1,
+       "filled": true,
+       "tone": 0.66,
+       "regions": [
+        "concrete-faces",
+        "terrazzo-treads"
+       ],
+       "material": "reinforced-concrete",
+       "kind": "rect",
+       "x": -0.55,
+       "y": 0.12,
+       "w": 1.1,
+       "h": 0.3084
+      },
+      {
+       "id": "nib-line",
+       "bone": "flight",
+       "role": "detail",
+       "z": 2,
+       "filled": false,
+       "tone": 0.3,
+       "region": "concrete-faces",
+       "kind": "poly",
+       "points": [
+        [
+         -0.55,
+         0.24396
+        ],
+        [
+         0.55,
+         0.24396
+        ]
+       ],
+       "closed": false
+      },
+      {
+       "id": "bearer-lower",
+       "bone": "bearer-lower",
+       "role": "body",
+       "z": 0,
+       "filled": true,
+       "tone": 0.46,
+       "region": "timber-bearers",
+       "material": "softwood",
+       "kind": "rect",
+       "x": -0.7,
+       "y": 0.0,
+       "w": 1.4,
+       "h": 0.12
+      },
+      {
+       "id": "bearer-upper",
+       "bone": "bearer-upper",
+       "role": "body",
+       "z": 0.2,
+       "filled": true,
+       "tone": 0.46,
+       "region": "timber-bearers",
+       "material": "softwood",
+       "kind": "rect",
+       "x": -0.7,
+       "y": 0.0,
+       "w": 1.4,
+       "h": 0.12
+      }
+     ],
+     "plan": [
+      {
+       "id": "bearer-lower",
+       "bone": "bearer-lower",
+       "role": "body",
+       "z": 0,
+       "filled": true,
+       "tone": 0.46,
+       "region": "timber-bearers",
+       "material": "softwood",
+       "kind": "rect",
+       "x": 0.15864,
+       "y": -0.7,
+       "w": 0.12,
+       "h": 1.4
+      },
+      {
+       "id": "bearer-upper",
+       "bone": "bearer-upper",
+       "role": "body",
+       "z": 0,
+       "filled": true,
+       "tone": 0.46,
+       "region": "timber-bearers",
+       "material": "softwood",
+       "kind": "rect",
+       "x": 2.41736,
+       "y": -0.7,
+       "w": 0.12,
+       "h": 1.4
+      },
+      {
+       "id": "flight",
+       "bone": "flight",
+       "role": "body",
+       "z": 1,
+       "filled": true,
+       "tone": 0.66,
+       "regions": [
+        "concrete-faces",
+        "terrazzo-treads"
+       ],
+       "material": "reinforced-concrete",
+       "kind": "rect",
+       "x": -0.165,
+       "y": -0.55,
+       "w": 3.25366,
+       "h": 1.1
+      },
+      {
+       "id": "nosing-01",
+       "bone": "flight",
+       "role": "detail",
+       "z": 2,
+       "filled": false,
+       "tone": 0.3,
+       "region": "terrazzo-treads",
+       "kind": "poly",
+       "points": [
+        [
+         0.19275,
+         -0.55
+        ],
+        [
+         0.19275,
+         0.55
+        ]
+       ],
+       "closed": false
+      },
+      {
+       "id": "nosing-02",
+       "bone": "flight",
+       "role": "detail",
+       "z": 2,
+       "filled": false,
+       "tone": 0.3,
+       "region": "terrazzo-treads",
+       "kind": "poly",
+       "points": [
+        [
+         0.52294,
+         -0.55
+        ],
+        [
+         0.52294,
+         0.55
+        ]
+       ],
+       "closed": false
+      },
+      {
+       "id": "nosing-03",
+       "bone": "flight",
+       "role": "detail",
+       "z": 2,
+       "filled": false,
+       "tone": 0.3,
+       "region": "terrazzo-treads",
+       "kind": "poly",
+       "points": [
+        [
+         0.85313,
+         -0.55
+        ],
+        [
+         0.85313,
+         0.55
+        ]
+       ],
+       "closed": false
+      },
+      {
+       "id": "nosing-04",
+       "bone": "flight",
+       "role": "detail",
+       "z": 2,
+       "filled": false,
+       "tone": 0.3,
+       "region": "terrazzo-treads",
+       "kind": "poly",
+       "points": [
+        [
+         1.18332,
+         -0.55
+        ],
+        [
+         1.18332,
+         0.55
+        ]
+       ],
+       "closed": false
+      },
+      {
+       "id": "nosing-05",
+       "bone": "flight",
+       "role": "detail",
+       "z": 2,
+       "filled": false,
+       "tone": 0.3,
+       "region": "terrazzo-treads",
+       "kind": "poly",
+       "points": [
+        [
+         1.51351,
+         -0.55
+        ],
+        [
+         1.51351,
+         0.55
+        ]
+       ],
+       "closed": false
+      },
+      {
+       "id": "nosing-06",
+       "bone": "flight",
+       "role": "detail",
+       "z": 2,
+       "filled": false,
+       "tone": 0.3,
+       "region": "terrazzo-treads",
+       "kind": "poly",
+       "points": [
+        [
+         1.8437,
+         -0.55
+        ],
+        [
+         1.8437,
+         0.55
+        ]
+       ],
+       "closed": false
+      },
+      {
+       "id": "nosing-07",
+       "bone": "flight",
+       "role": "detail",
+       "z": 2,
+       "filled": false,
+       "tone": 0.3,
+       "region": "terrazzo-treads",
+       "kind": "poly",
+       "points": [
+        [
+         2.17389,
+         -0.55
+        ],
+        [
+         2.17389,
+         0.55
+        ]
+       ],
+       "closed": false
+      },
+      {
+       "id": "nosing-08",
+       "bone": "flight",
+       "role": "detail",
+       "z": 2,
+       "filled": false,
+       "tone": 0.3,
+       "region": "terrazzo-treads",
+       "kind": "poly",
+       "points": [
+        [
+         2.50408,
+         -0.55
+        ],
+        [
+         2.50408,
+         0.55
+        ]
+       ],
+       "closed": false
+      },
+      {
+       "id": "nosing-09",
+       "bone": "flight",
+       "role": "detail",
+       "z": 2,
+       "filled": false,
+       "tone": 0.3,
+       "region": "terrazzo-treads",
+       "kind": "poly",
+       "points": [
+        [
+         2.83426,
+         -0.55
+        ],
+        [
+         2.83426,
+         0.55
+        ]
+       ],
+       "closed": false
+      }
+     ]
+    },
+    "decisions": {
+     "silhouette": {
+      "en": "The flight as one stepped outline with the dapped nibs, lying on the two bearers; front as one band with the line of the sawn nib, plan as one rectangle with the nine nosings as lines.",
+      "de": "Der Lauf als ein gestufter Umriss mit den Ausklinkungen, auf den beiden Kanthölzern liegend; Vorderansicht als ein Band mit der Linie der gesägten Nase, Draufsicht als ein Rechteck mit den neun Kanten als Linien."
+     },
+     "retained": {
+      "en": "All nine risers (0.88 mm), the nibs (0.5 mm), the bearers (0.6 mm) and the terrazzo layer as a detail line under each tread.",
+      "de": "Alle neun Steigungen (0,88 mm), die Ausklinkungen (0,5 mm), die Kanthölzer (0,6 mm) und der Terrazzovorsatz als Detaillinie unter jedem Auftritt."
+     },
+     "merged": {
+      "en": "Terrazzo and concrete are one shape in the side and front views (the 30 mm layer would be 0.15 mm, under the 0.2 mm printable feature); the shape lists both regions.",
+      "de": "Terrazzo und Beton sind in Seiten- und Vorderansicht eine Form (die 30-mm-Schicht wäre 0,15 mm, unter der druckbaren Einzelheit von 0,2 mm); die Form führt beide Regionen."
+     },
+     "omitted": {
+      "en": "The ragged end of the lower nib, the spall, holes, sockets and timber checks.",
+      "de": "Das unregelmäßige Ende der unteren Nase, die Abplatzung, Löcher, Hülsen und Holzrisse."
+     },
+     "thinElements": {
+      "en": "Tread lines at 0.1 mm detail pen.",
+      "de": "Trittlinien mit der Detailfeder 0,1 mm."
+     },
+     "hatching": {
+      "en": "No hatch.",
+      "de": "Keine Schraffur."
+     },
+     "styles": {
+      "en": "Body 0.18 mm, detail 0.1 mm, no texture pen.",
+      "de": "Körper 0,18 mm, Detail 0,1 mm, keine Texturfeder."
+     },
+     "overlays": {
+      "en": "Merged regions are painted area-weighted.",
+      "de": "Zusammengefasste Regionen werden flächengewichtet eingefärbt."
+     }
+    }
+   },
+   "500": {
+    "status": "authored",
+    "denominator": 500,
+    "validRange": {
+     "minDenominator": 350,
+     "maxDenominator": 1000
+    },
+    "pens": {
+     "body": 0.13,
+     "detail": null,
+     "texture": null,
+     "glazing": null,
+     "ground": 0.18
+    },
+    "hatches": [],
+    "geometry": {
+     "elevation": [
+      {
+       "id": "flight",
+       "bone": "flight",
+       "role": "body",
+       "z": 1,
+       "filled": true,
+       "tone": 0.58,
+       "regions": [
+        "concrete-faces",
+        "terrazzo-treads"
+       ],
+       "material": "reinforced-concrete",
+       "kind": "poly",
+       "points": [
+        [
+         -0.09064,
+         0.2125
+        ],
+        [
+         -0.19664,
+         0.0429
+        ],
+        [
+         0.0,
+         -0.08
+        ],
+        [
+         3.01665,
+         -0.08
+        ],
+        [
+         3.11002,
+         0.0694
+        ],
+        [
+         2.85562,
+         0.2284
+        ],
+        [
+         2.76287,
+         0.08
+        ],
+        [
+         2.52543,
+         0.2284
+        ],
+        [
+         2.43268,
+         0.08
+        ],
+        [
+         2.19525,
+         0.2284
+        ],
+        [
+         2.1025,
+         0.08
+        ],
+        [
+         1.86506,
+         0.2284
+        ],
+        [
+         1.77231,
+         0.08
+        ],
+        [
+         1.53487,
+         0.2284
+        ],
+        [
+         1.44212,
+         0.08
+        ],
+        [
+         1.20468,
+         0.2284
+        ],
+        [
+         1.11193,
+         0.08
+        ],
+        [
+         0.87449,
+         0.2284
+        ],
+        [
+         0.78174,
+         0.08
+        ],
+        [
+         0.5443,
+         0.2284
+        ],
+        [
+         0.45155,
+         0.08
+        ],
+        [
+         0.21411,
+         0.2284
+        ],
+        [
+         0.12136,
+         0.08
+        ]
+       ],
+       "closed": true
+      },
+      {
+       "id": "bearer-lower",
+       "bone": "bearer-lower",
+       "role": "body",
+       "z": 0,
+       "filled": true,
+       "tone": 0.46,
+       "region": "timber-bearers",
+       "material": "softwood",
+       "kind": "rect",
+       "x": 0.0,
+       "y": 0.0,
+       "w": 0.12,
+       "h": 0.12
+      },
+      {
+       "id": "bearer-upper",
+       "bone": "bearer-upper",
+       "role": "body",
+       "z": 0,
+       "filled": true,
+       "tone": 0.46,
+       "region": "timber-bearers",
+       "material": "softwood",
+       "kind": "rect",
+       "x": 0.0,
+       "y": 0.0,
+       "w": 0.12,
+       "h": 0.12
+      }
+     ],
+     "front": [
+      {
+       "id": "flight",
+       "bone": "flight",
+       "role": "body",
+       "z": 1,
+       "filled": true,
+       "tone": 0.58,
+       "regions": [
+        "concrete-faces",
+        "terrazzo-treads"
+       ],
+       "material": "reinforced-concrete",
+       "kind": "rect",
+       "x": -0.55,
+       "y": 0.12,
+       "w": 1.1,
+       "h": 0.3084
+      },
+      {
+       "id": "bearer-lower",
+       "bone": "bearer-lower",
+       "role": "body",
+       "z": 0,
+       "filled": true,
+       "tone": 0.46,
+       "region": "timber-bearers",
+       "material": "softwood",
+       "kind": "rect",
+       "x": -0.7,
+       "y": 0.0,
+       "w": 1.4,
+       "h": 0.12
+      },
+      {
+       "id": "bearer-upper",
+       "bone": "bearer-upper",
+       "role": "body",
+       "z": 0.2,
+       "filled": true,
+       "tone": 0.46,
+       "region": "timber-bearers",
+       "material": "softwood",
+       "kind": "rect",
+       "x": -0.7,
+       "y": 0.0,
+       "w": 1.4,
+       "h": 0.12
+      }
+     ],
+     "plan": [
+      {
+       "id": "bearer-lower",
+       "bone": "bearer-lower",
+       "role": "body",
+       "z": 0,
+       "filled": true,
+       "tone": 0.46,
+       "region": "timber-bearers",
+       "material": "softwood",
+       "kind": "rect",
+       "x": 0.15864,
+       "y": -0.7,
+       "w": 0.12,
+       "h": 1.4
+      },
+      {
+       "id": "bearer-upper",
+       "bone": "bearer-upper",
+       "role": "body",
+       "z": 0,
+       "filled": true,
+       "tone": 0.46,
+       "region": "timber-bearers",
+       "material": "softwood",
+       "kind": "rect",
+       "x": 2.41736,
+       "y": -0.7,
+       "w": 0.12,
+       "h": 1.4
+      },
+      {
+       "id": "flight",
+       "bone": "flight",
+       "role": "body",
+       "z": 1,
+       "filled": true,
+       "tone": 0.58,
+       "regions": [
+        "concrete-faces",
+        "terrazzo-treads"
+       ],
+       "material": "reinforced-concrete",
+       "kind": "rect",
+       "x": -0.218,
+       "y": -0.55,
+       "w": 3.30666,
+       "h": 1.1
+      }
+     ]
+    },
+    "decisions": {
+     "silhouette": {
+      "en": "The flight as one stepped outline with square ends lying on the two bearers (6.5 x 0.6 mm on paper); front and plan each one rectangle over the bearers.",
+      "de": "Der Lauf als ein gestufter Umriss mit rechtwinkligen Enden auf den beiden Kanthölzern (6,5 x 0,6 mm auf Papier); Vorder- und Draufsicht je ein Rechteck über den Kanthölzern."
+     },
+     "retained": {
+      "en": "The nine steps (0.35 mm risers), the flight width and the bearer positions.",
+      "de": "Die neun Stufen (Steigungen 0,35 mm), die Laufbreite und die Lage der Kanthölzer."
+     },
+     "merged": {
+      "en": "Terrazzo and concrete one shape listing both regions; the dapped nibs are filled to square ends (0.2 mm notches).",
+      "de": "Terrazzo und Beton eine Form mit beiden Regionen; die Ausklinkungen sind zu rechtwinkligen Enden gefüllt (Kerben von 0,2 mm)."
+     },
+     "omitted": {
+      "en": "Every trace of use; the tread strips of the plan (0.47 mm and 0.19 mm alternating would merge in print).",
+      "de": "Jede Gebrauchsspur; die Trittstreifen der Draufsicht (abwechselnd 0,47 mm und 0,19 mm verliefen im Druck)."
+     },
+     "thinElements": {
+      "en": "None.",
+      "de": "Keine."
+     },
+     "hatching": {
+      "en": "No hatch.",
+      "de": "Keine Schraffur."
+     },
+     "styles": {
+      "en": "Body 0.13 mm only.",
+      "de": "Nur Körper 0,13 mm."
+     },
+     "overlays": {
+      "en": "Merged regions are painted area-weighted.",
+      "de": "Zusammengefasste Regionen werden flächengewichtet eingefärbt."
+     }
+    }
+   }
+  },
+  "symbols": [],
+  "poses": [
+   {
+    "id": "stored",
+    "title": {
+     "en": "Stored on bearers",
+     "de": "Auf Kanthölzern gelagert"
+    },
+    "description": {
+     "en": "As the component yard keeps it: lying on its soffit on two 12/12 squared-timber bearers, treads tilted by the 32 degree pitch, self-weight only.",
+     "de": "Wie das Bauteillager ihn aufbewahrt: auf der Untersicht auf zwei Kanthölzern 12/12 liegend, die Stufen um die Steigung von 32 Grad geneigt, nur Eigengewicht."
+    },
+    "bones": {},
+    "ground": "authored",
+    "contacts": [
+     "rest-lower",
+     "rest-upper"
+    ],
+    "thermal": {
+     "regions": {
+      "concrete-faces": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.3,
+       "contact": {
+        "fraction": 0.03,
+        "tempC": 20
+       }
+      },
+      "terrazzo-treads": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.8
+      },
+      "timber-bearers": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.4,
+       "contact": {
+        "fraction": 0.24,
+        "tempC": 18
+       }
+      }
+     },
+     "emitters": {}
+    },
+    "loads": []
+   },
+   {
+    "id": "lifted",
+    "title": {
+     "en": "Lifted on the four sockets",
+     "de": "An den vier Hülsen angehoben"
+    },
+    "description": {
+     "en": "Hanging from a four-leg chain sling screwed into the four threaded lifting sockets, legs set so the flight hangs at its 32 degree installation pitch 0.55 m clear of the ground; the bearers stay behind on the ground.",
+     "de": "Hängend an einem viersträngigen Kettengehänge, eingeschraubt in die vier Gewindehülsen, Stränge so eingestellt, dass der Lauf in seiner Einbausteigung von 32 Grad 0.55 m über dem Boden hängt; die Kanthölzer bleiben am Boden liegen."
+    },
+    "bones": {
+     "travel": {
+      "dx": 0
+     },
+     "hoist": {
+      "dy": 0.41784
+     },
+     "flight": {
+      "angleDeg": 32.00538
+     }
+    },
+    "ground": "authored",
+    "contacts": [
+     "sling-1",
+     "sling-2",
+     "sling-3",
+     "sling-4"
+    ],
+    "thermal": {
+     "regions": {
+      "concrete-faces": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.3
+      },
+      "terrazzo-treads": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.8
+      },
+      "timber-bearers": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.4,
+       "contact": {
+        "fraction": 0.24,
+        "tempC": 18
+       }
+      }
+     },
+     "emitters": {}
+    },
+    "loads": []
+   },
+   {
+    "id": "reinstalled",
+    "title": {
+     "en": "Reinstalled between landings",
+     "de": "Zwischen Podesten wieder eingebaut"
+    },
+    "description": {
+     "en": "Back in its role: the lower end bedded in mortar on the ground-floor slab (pin), the sawn upper nib on an elastomer strip on the landing corbel 1.775 m above (roller); self-weight only.",
+     "de": "Wieder in seiner Rolle: das untere Ende im Mörtelbett auf der Bodenplatte (Festlager), die gesägte obere Nase auf einem Elastomerstreifen auf der Podestkonsole 1,775 m darüber (Rollenlager); nur Eigengewicht."
+    },
+    "bones": {
+     "travel": {
+      "dx": 1.46085
+     },
+     "hoist": {
+      "dy": -0.13216
+     },
+     "flight": {
+      "angleDeg": 32.00538
+     }
+    },
+    "ground": "authored",
+    "contacts": [
+     "bearing-bottom",
+     "bearing-top"
+    ],
+    "thermal": {
+     "regions": {
+      "concrete-faces": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.1
+      },
+      "terrazzo-treads": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.1
+      },
+      "timber-bearers": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.4,
+       "contact": {
+        "fraction": 0.24,
+        "tempC": 18
+       }
+      }
+     },
+     "emitters": {}
+    },
+    "loads": []
+   },
+   {
+    "id": "reinstalled-crowd",
+    "title": {
+     "en": "Reinstalled, crowd load",
+     "de": "Wieder eingebaut, Menschengedränge"
+    },
+    "description": {
+     "en": "Category C5 crowd load 5.0 kN/m2 over the 1.10 x 2.79 m plan of the flight (15.3 kN), spread along the waist.",
+     "de": "Menschengedränge der Kategorie C5 mit 5,0 kN/m² über den Grundriss des Laufs von 1,10 x 2,79 m (15.3 kN), entlang der Laufplatte verteilt."
+    },
+    "bones": {
+     "travel": {
+      "dx": 1.46085
+     },
+     "hoist": {
+      "dy": -0.13216
+     },
+     "flight": {
+      "angleDeg": 32.00538
+     }
+    },
+    "ground": "authored",
+    "contacts": [
+     "bearing-bottom",
+     "bearing-top"
+    ],
+    "thermal": {
+     "regions": {
+      "concrete-faces": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.1
+      },
+      "terrazzo-treads": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.1
+      },
+      "timber-bearers": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.4,
+       "contact": {
+        "fraction": 0.24,
+        "tempC": 18
+       }
+      }
+     },
+     "emitters": {}
+    },
+    "loads": [
+     {
+      "id": "crowd",
+      "kind": "imposed",
+      "title": {
+       "en": "Crowd load 5.0 kN/m2 (category C5)",
+       "de": "Menschengedränge 5,0 kN/m² (Kategorie C5)"
+      },
+      "fxN": 0,
+      "fyN": 0,
+      "distributed": {
+       "bone": "flight",
+       "fromM": 0,
+       "toM": 2.89872,
+       "wxNPerM": 0,
+       "wyNPerM": -5293.7
+      },
+      "source": "literature",
+      "reference": "en-1991-1-1"
+     }
+    ]
+   },
+   {
+    "id": "reinstalled-point",
+    "title": {
+     "en": "Reinstalled, point load on tread 5",
+     "de": "Wieder eingebaut, Einzellast auf Stufe 5"
+    },
+    "description": {
+     "en": "Category C5 concentrated load of 4.5 kN on the nosing of the middle tread.",
+     "de": "Einzellast der Kategorie C5 von 4,5 kN auf der Kante der mittleren Stufe."
+    },
+    "bones": {
+     "travel": {
+      "dx": 1.46085
+     },
+     "hoist": {
+      "dy": -0.13216
+     },
+     "flight": {
+      "angleDeg": 32.00538
+     },
+     "load-carrier": {
+      "dx": 1.32076
+     }
+    },
+    "ground": "authored",
+    "contacts": [
+     "bearing-bottom",
+     "bearing-top"
+    ],
+    "thermal": {
+     "regions": {
+      "concrete-faces": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.1
+      },
+      "terrazzo-treads": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.1
+      },
+      "timber-bearers": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.4,
+       "contact": {
+        "fraction": 0.24,
+        "tempC": 18
+       }
+      }
+     },
+     "emitters": {}
+    },
+    "loads": [
+     {
+      "id": "point-tread",
+      "kind": "live",
+      "title": {
+       "en": "Concentrated load 4.5 kN (category C5)",
+       "de": "Einzellast 4,5 kN (Kategorie C5)"
+      },
+      "anchor": "load-point",
+      "fxN": 0,
+      "fyN": -4500,
+      "source": "literature",
+      "reference": "en-1991-1-1"
+     }
+    ]
+   }
+  ],
+  "clips": [
+   {
+    "id": "lift",
+    "title": {
+     "en": "Lift from the bearers",
+     "de": "Von den Kanthölzern abheben"
+    },
+    "description": {
+     "en": "The crane takes up the slack, the upper end rises first about the edge of the lower bearer until the flight hangs at its 32 degree pitch, then the hoist lifts it clear; the bearers stay on the ground.",
+     "de": "Der Kran strafft das Gehänge, das obere Ende hebt sich zuerst um die Kante des unteren Kantholzes, bis der Lauf in seiner Steigung von 32 Grad hängt, dann hebt der Hub ihn frei; die Kanthölzer bleiben am Boden."
+    },
+    "durationS": 7,
+    "fps": 30,
+    "loop": false,
+    "rootMotion": "none",
+    "keys": [
+     {
+      "t": 0,
+      "pose": "stored",
+      "ease": "linear"
+     },
+     {
+      "t": 1.0,
+      "pose": "stored",
+      "ease": "linear"
+     },
+     {
+      "t": 1.6,
+      "pose": "stored",
+      "ease": "linear",
+      "bones": {
+       "travel": {
+        "dx": -0.0078
+       },
+       "hoist": {
+        "dy": -0.02056
+       },
+       "flight": {
+        "angleDeg": 6.4
+       }
+      }
+     },
+     {
+      "t": 2.2,
+      "pose": "stored",
+      "ease": "linear",
+      "bones": {
+       "travel": {
+        "dx": -0.01325
+       },
+       "hoist": {
+        "dy": -0.04187
+       },
+       "flight": {
+        "angleDeg": 12.8
+       }
+      }
+     },
+     {
+      "t": 2.8,
+      "pose": "stored",
+      "ease": "linear",
+      "bones": {
+       "travel": {
+        "dx": -0.0163
+       },
+       "hoist": {
+        "dy": -0.06365
+       },
+       "flight": {
+        "angleDeg": 19.2
+       }
+      }
+     },
+     {
+      "t": 3.4,
+      "pose": "stored",
+      "ease": "linear",
+      "bones": {
+       "travel": {
+        "dx": -0.0169
+       },
+       "hoist": {
+        "dy": -0.08563
+       },
+       "flight": {
+        "angleDeg": 25.6
+       }
+      }
+     },
+     {
+      "t": 4.0,
+      "pose": "stored",
+      "ease": "smooth",
+      "bones": {
+       "travel": {
+        "dx": -0.01504
+       },
+       "hoist": {
+        "dy": -0.10756
+       },
+       "flight": {
+        "angleDeg": 32.00538
+       }
+      }
+     },
+     {
+      "t": 7.0,
+      "pose": "lifted",
+      "ease": "smooth"
+     }
+    ],
+    "contacts": [
+     {
+      "anchor": "rest-upper",
+      "fromS": 0,
+      "toS": 1.1
+     },
+     {
+      "anchor": "rest-lower",
+      "fromS": 0,
+      "toS": 4.0
+     },
+     {
+      "anchor": "sling-1",
+      "fromS": 0.8,
+      "toS": 7
+     },
+     {
+      "anchor": "sling-2",
+      "fromS": 0.8,
+      "toS": 7
+     },
+     {
+      "anchor": "sling-3",
+      "fromS": 0.8,
+      "toS": 7
+     },
+     {
+      "anchor": "sling-4",
+      "fromS": 0.8,
+      "toS": 7
+     }
+    ],
+    "phases": [
+     {
+      "id": "slack",
+      "fromS": 0,
+      "toS": 1.0,
+      "title": {
+       "en": "Taking up the slack",
+       "de": "Gehänge straffen"
+      }
+     },
+     {
+      "id": "tilt",
+      "fromS": 1.0,
+      "toS": 4.0,
+      "title": {
+       "en": "Upper end rising",
+       "de": "Oberes Ende hebt sich"
+      }
+     },
+     {
+      "id": "hoist",
+      "fromS": 4.0,
+      "toS": 7,
+      "title": {
+       "en": "Hoisting clear",
+       "de": "Freiheben"
+      }
+     }
+    ],
+    "events": [
+     {
+      "t": 1.1,
+      "kind": "contact-off",
+      "title": {
+       "en": "Soffit leaves the upper bearer",
+       "de": "Untersicht verlässt das obere Kantholz"
+      },
+      "target": "rest-upper"
+     },
+     {
+      "t": 4.0,
+      "kind": "contact-off",
+      "title": {
+       "en": "Flight hangs free",
+       "de": "Lauf hängt frei"
+      },
+      "target": "rest-lower"
+     }
+    ],
+    "tracks": []
+   },
+   {
+    "id": "set-in-place",
+    "title": {
+     "en": "Set in place between landings",
+     "de": "Zwischen die Podeste einsetzen"
+    },
+    "description": {
+     "en": "The hanging flight travels 1.5 m and is lowered onto the ground-floor slab and the landing corbel.",
+     "de": "Der hängende Lauf fährt 1,5 m und wird auf die Bodenplatte und die Podestkonsole abgesenkt."
+    },
+    "durationS": 6,
+    "fps": 30,
+    "loop": false,
+    "rootMotion": "none",
+    "keys": [
+     {
+      "t": 0,
+      "pose": "lifted",
+      "ease": "smooth"
+     },
+     {
+      "t": 3.0,
+      "pose": "lifted",
+      "ease": "smooth",
+      "bones": {
+       "travel": {
+        "dx": 1.46085
+       },
+       "hoist": {
+        "dy": 0.41784
+       },
+       "flight": {
+        "angleDeg": 32.00538
+       }
+      }
+     },
+     {
+      "t": 6.0,
+      "pose": "reinstalled",
+      "ease": "smooth"
+     }
+    ],
+    "contacts": [
+     {
+      "anchor": "sling-1",
+      "fromS": 0,
+      "toS": 6
+     },
+     {
+      "anchor": "sling-2",
+      "fromS": 0,
+      "toS": 6
+     },
+     {
+      "anchor": "sling-3",
+      "fromS": 0,
+      "toS": 6
+     },
+     {
+      "anchor": "sling-4",
+      "fromS": 0,
+      "toS": 6
+     },
+     {
+      "anchor": "bearing-bottom",
+      "fromS": 5.8,
+      "toS": 6
+     },
+     {
+      "anchor": "bearing-top",
+      "fromS": 5.8,
+      "toS": 6
+     }
+    ],
+    "phases": [
+     {
+      "id": "travel",
+      "fromS": 0,
+      "toS": 3.0,
+      "title": {
+       "en": "Crane travel",
+       "de": "Kranfahrt"
+      }
+     },
+     {
+      "id": "lower",
+      "fromS": 3.0,
+      "toS": 6.0,
+      "title": {
+       "en": "Lowering onto the bearings",
+       "de": "Absenken auf die Auflager"
+      }
+     }
+    ],
+    "events": [
+     {
+      "t": 5.8,
+      "kind": "contact-on",
+      "title": {
+       "en": "Flight bears on slab and corbel",
+       "de": "Lauf liegt auf Bodenplatte und Konsole auf"
+      },
+      "target": "bearing-top"
+     }
+    ],
+    "tracks": []
+   },
+   {
+    "id": "moving-point-load",
+    "title": {
+     "en": "Point load climbing the flight",
+     "de": "Einzellast steigt den Lauf hinauf"
+    },
+    "description": {
+     "en": "The 4.5 kN concentrated load moves from the nosing of tread 1 to the nosing of tread 8.",
+     "de": "Die Einzellast von 4,5 kN wandert von der Kante der Stufe 1 zur Kante der Stufe 8."
+    },
+    "durationS": 8,
+    "fps": 30,
+    "loop": false,
+    "rootMotion": "none",
+    "keys": [
+     {
+      "t": 0,
+      "pose": "reinstalled-point",
+      "ease": "linear",
+      "bones": {
+       "travel": {
+        "dx": 1.46085
+       },
+       "hoist": {
+        "dy": -0.13216
+       },
+       "flight": {
+        "angleDeg": 32.00538
+       },
+       "load-carrier": {
+        "dx": 0
+       }
+      }
+     },
+     {
+      "t": 8,
+      "pose": "reinstalled-point",
+      "ease": "linear",
+      "bones": {
+       "travel": {
+        "dx": 1.46085
+       },
+       "hoist": {
+        "dy": -0.13216
+       },
+       "flight": {
+        "angleDeg": 32.00538
+       },
+       "load-carrier": {
+        "dx": 2.31133
+       }
+      }
+     }
+    ],
+    "contacts": [
+     {
+      "anchor": "bearing-bottom",
+      "fromS": 0,
+      "toS": 8
+     },
+     {
+      "anchor": "bearing-top",
+      "fromS": 0,
+      "toS": 8
+     }
+    ],
+    "phases": [
+     {
+      "id": "climb",
+      "fromS": 0,
+      "toS": 8,
+      "title": {
+       "en": "Climb",
+       "de": "Aufstieg"
+      }
+     }
+    ],
+    "events": [
+     {
+      "t": 0,
+      "kind": "motion",
+      "title": {
+       "en": "Load on tread 1",
+       "de": "Last auf Stufe 1"
+      }
+     },
+     {
+      "t": 8,
+      "kind": "motion",
+      "title": {
+       "en": "Load on tread 8",
+       "de": "Last auf Stufe 8"
+      }
+     }
+    ],
+    "tracks": []
+   }
+  ],
+  "thermal": {
+   "environment": {
+    "airTempC": 20,
+    "meanRadiantTempC": 20,
+    "skyTempC": 8,
+    "groundTempC": 18,
+    "relativeHumidity": 0.5,
+    "windMS": 1,
+    "windDirectionDeg": 0,
+    "solarWM2": 500,
+    "diffuseFraction": 0.2,
+    "pressurePa": 101325
+   },
+   "operating": [],
+   "regions": [
+    {
+     "id": "concrete-faces",
+     "title": {
+      "en": "Weathered concrete faces (sides, risers, soffit, nib faces)",
+      "de": "Verwitterte Betonflächen (Seiten, Setzstufen, Untersicht, Nasenflächen)"
+     },
+     "kind": "surface",
+     "model": "passive",
+     "material": "reinforced-concrete",
+     "areaM2": 10.067,
+     "characteristicLengthM": 0.3,
+     "geometry": "vertical-plate",
+     "skyViewFactor": 0.5,
+     "layers": [],
+     "heatCapacityJM2K": 170000,
+     "source": "authored-estimate",
+     "reference": "en-iso-13786"
+    },
+    {
+     "id": "terrazzo-treads",
+     "title": {
+      "en": "Terrazzo treads and landing strips, worn",
+      "de": "Terrazzo-Trittstufen und Podeststreifen, abgetreten"
+     },
+     "kind": "surface",
+     "model": "passive",
+     "material": "terrazzo",
+     "areaM2": 6.901,
+     "characteristicLengthM": 0.28,
+     "geometry": "horizontal-plate-up",
+     "skyViewFactor": 0.9,
+     "layers": [],
+     "heatCapacityJM2K": 72000,
+     "source": "authored-estimate",
+     "reference": "en-iso-13786"
+    },
+    {
+     "id": "timber-bearers",
+     "title": {
+      "en": "Squared-timber bearers",
+      "de": "Kanthölzer"
+     },
+     "kind": "surface",
+     "model": "passive",
+     "material": "softwood",
+     "areaM2": 1.402,
+     "characteristicLengthM": 0.12,
+     "geometry": "horizontal-plate-up",
+     "skyViewFactor": 0.6,
+     "layers": [],
+     "heatCapacityJM2K": 26000,
+     "source": "authored-estimate",
+     "reference": "en-iso-13786"
+    }
+   ],
+   "emitters": [],
+   "assumptions": [
+    {
+     "en": "Passive faces store heat in an effective depth of half the 24 h penetration depth (EN ISO 13786): concrete about 68 mm (delta 136 mm for lambda 2.3 W/mK, rho 2500 kg/m3, c 1000 J/kgK, 170 kJ/m2K), the terrazzo face layer its own 30 mm (72 kJ/m2K), timber about 35 mm (26 kJ/m2K).",
+     "de": "Passive Flächen speichern Wärme in einer wirksamen Tiefe der halben 24-h-Eindringtiefe (EN ISO 13786): Beton etwa 68 mm (Delta 136 mm für Lambda 2,3 W/mK, Rho 2500 kg/m³, c 1000 J/kgK, 170 kJ/m²K), der Terrazzovorsatz seine eigenen 30 mm (72 kJ/m²K), Holz etwa 35 mm (26 kJ/m²K)."
+    },
+    {
+     "en": "Weathered faces differ from new ones: weathered grey concrete absorbs about 0.70 of the sun (new formed concrete 0.55 to 0.65), the soiled and worn terrazzo about 0.50 (freshly polished white terrazzo 0.30 to 0.40), weathered grey spruce about 0.70 (fresh 0.40 to 0.50); emissivities 0.92, 0.90 and 0.90, authored estimates guided by the ASHRAE Handbook.",
+     "de": "Verwitterte Flächen unterscheiden sich von neuen: vergrauter Beton absorbiert etwa 0,70 der Sonne (neuer Schalbeton 0,55 bis 0,65), der verschmutzte und abgetretene Terrazzo etwa 0,50 (frisch polierter weißer Terrazzo 0,30 bis 0,40), vergraute Fichte etwa 0,70 (frisch 0,40 bis 0,50); Emissionsgrade 0,92, 0,90 und 0,90, Schätzungen nach dem ASHRAE Handbook."
+    },
+    {
+     "en": "The rusted bar stubs, the flush socket rims and the mortar remnants are below 0.01 m2 together and counted with the concrete faces.",
+     "de": "Die verrosteten Stabenden, die bündigen Hülsenränder und die Mörtelreste haben zusammen unter 0,01 m² und zählen zu den Betonflächen."
+    },
+    {
+     "en": "The asset is a passive element: it has no nameplate power (0 W).",
+     "de": "Das Asset ist ein passives Bauteil: es hat keine Nennleistung (0 W)."
+    },
+    {
+     "en": "Reference case: a mild sunny day in the component yard; reinstalled in a stair hall the flight receives little sun (pose bindings).",
+     "de": "Referenzfall: ein milder sonniger Tag auf dem Bauteillager; im Treppenhaus wieder eingebaut erhält der Lauf wenig Sonne (Posenbindungen)."
+    }
+   ],
+   "passengers": []
+  },
+  "structure": {
+   "gravityMS2": 9.81,
+   "dynamics": "quasi-static",
+   "supports": [],
+   "assumptions": [
+    {
+     "en": "The supports belong to the pose: the soffit on the two bearers when stored (unilateral contacts with friction 0.5), the four sockets as pins when lifted, the bedded lower end (pin) and the sawn upper nib (roller) when reinstalled.",
+     "de": "Die Auflager gehören zur Pose: die Untersicht auf den beiden Kanthölzern im Lager (einseitige Kontakte mit Reibung 0,5), die vier Hülsen als Gelenke beim Heben, das gebettete untere Ende (Festlager) und die gesägte obere Nase (Rollenlager) im Einbau."
+    },
+    {
+     "en": "The flight is idealised as its waist slab 1100 x 160 mm (A = 0.176 m2, I = 3.75e-4 m4) along the soffit with E = 30 GPa (B 25, DIN 1045:1972); the steps add stiffness and mass but no counted section; uniform self-weight along the waist.",
+     "de": "Der Lauf ist als Laufplatte 1100 x 160 mm (A = 0,176 m², I = 3,75e-4 m⁴) entlang der Untersicht mit E = 30 GPa (B 25, DIN 1045:1972) idealisiert; die Stufen tragen Steifigkeit und Masse bei, aber keinen angesetzten Querschnitt; gleichmäßiges Eigengewicht entlang der Laufplatte."
+    },
+    {
+     "en": "The solver treats the asset as one rigid body: the 18 kg of the two bearers left on the ground are carried by the active supports of every pose (0.9 % of the weight).",
+     "de": "Der Löser behandelt das Asset als einen starren Körper: die 18 kg der beiden am Boden verbleibenden Kanthölzer werden von den aktiven Auflagern jeder Pose getragen (0,9 % des Gewichts)."
+    },
+    {
+     "en": "The reduced bearing of the sawn nib (80 mm of the original 100 mm) and the broken lower nib are why the lower end is bedded on the slab when reinstalled; the cut bars of the nibs carry nothing.",
+     "de": "Die verkürzte Auflagertiefe der gesägten Nase (80 mm der ursprünglichen 100 mm) und die gebrochene untere Nase sind der Grund, warum das untere Ende im Einbau auf der Bodenplatte gebettet wird; die angeschnittenen Stäbe der Nasen tragen nichts."
+    }
+   ],
+   "clinical": false
+  },
+  "volumes": {
+   "50": {
+    "status": "authored",
+    "denominator": 50,
+    "body": [
+     {
+      "id": "core",
+      "kind": "extrude",
+      "bone": "flight",
+      "material": "reinforced-concrete",
+      "role": "body",
+      "tone": 0.58,
+      "profile": [
+       [
+        -0.10654,
+        0.18706
+       ],
+       [
+        -0.11449,
+        0.17434
+       ],
+       [
+        -0.11332,
+        0.15356
+       ],
+       [
+        -0.13696,
+        0.14593
+       ],
+       [
+        -0.13686,
+        0.12346
+       ],
+       [
+        -0.05884,
+        0.0747
+       ],
+       [
+        -0.11184,
+        -0.0101
+       ],
+       [
+        0.0,
+        -0.08
+       ],
+       [
+        2.89872,
+        -0.08
+       ],
+       [
+        2.97222,
+        0.0376
+       ],
+       [
+        3.05702,
+        -0.0154
+       ],
+       [
+        3.09412,
+        0.04396
+       ],
+       [
+        2.83972,
+        0.20296
+       ],
+       [
+        2.74697,
+        0.05456
+       ],
+       [
+        2.50953,
+        0.20296
+       ],
+       [
+        2.41678,
+        0.05456
+       ],
+       [
+        2.17935,
+        0.20296
+       ],
+       [
+        2.0866,
+        0.05456
+       ],
+       [
+        1.84916,
+        0.20296
+       ],
+       [
+        1.75641,
+        0.05456
+       ],
+       [
+        1.51897,
+        0.20296
+       ],
+       [
+        1.42622,
+        0.05456
+       ],
+       [
+        1.18878,
+        0.20296
+       ],
+       [
+        1.09603,
+        0.05456
+       ],
+       [
+        0.85859,
+        0.20296
+       ],
+       [
+        0.76584,
+        0.05456
+       ],
+       [
+        0.5284,
+        0.20296
+       ],
+       [
+        0.43565,
+        0.05456
+       ],
+       [
+        0.19821,
+        0.20296
+       ],
+       [
+        0.10546,
+        0.05456
+       ]
+      ],
+      "plane": "xy",
+      "from": -0.55,
+      "to": 0.55
+     },
+     {
+      "id": "terrazzo-00",
+      "kind": "extrude",
+      "bone": "flight",
+      "material": "terrazzo",
+      "role": "body",
+      "tone": 0.84,
+      "profile": [
+       [
+        -0.10654,
+        0.18706
+       ],
+       [
+        0.10546,
+        0.05456
+       ],
+       [
+        0.12136,
+        0.08
+       ],
+       [
+        -0.09064,
+        0.2125
+       ]
+      ],
+      "plane": "xy",
+      "from": -0.55,
+      "to": 0.55
+     },
+     {
+      "id": "terrazzo-01-right",
+      "kind": "extrude",
+      "bone": "flight",
+      "material": "terrazzo",
+      "role": "body",
+      "tone": 0.83,
+      "profile": [
+       [
+        0.19821,
+        0.20296
+       ],
+       [
+        0.43565,
+        0.05456
+       ],
+       [
+        0.45155,
+        0.08
+       ],
+       [
+        0.21411,
+        0.2284
+       ]
+      ],
+      "plane": "xy",
+      "from": -0.55,
+      "to": -0.3
+     },
+     {
+      "id": "terrazzo-01-worn",
+      "kind": "extrude",
+      "bone": "flight",
+      "material": "terrazzo",
+      "role": "body",
+      "tone": 0.7899999999999999,
+      "profile": [
+       [
+        0.19821,
+        0.20296
+       ],
+       [
+        0.43565,
+        0.05456
+       ],
+       [
+        0.45155,
+        0.08
+       ],
+       [
+        0.34767,
+        0.14021
+       ],
+       [
+        0.23319,
+        0.21176
+       ],
+       [
+        0.22081,
+        0.21554
+       ],
+       [
+        0.2082,
+        0.21263
+       ],
+       [
+        0.19874,
+        0.20381
+       ]
+      ],
+      "plane": "xy",
+      "from": -0.3,
+      "to": 0.3
+     },
+     {
+      "id": "terrazzo-01-left",
+      "kind": "extrude",
+      "bone": "flight",
+      "material": "terrazzo",
+      "role": "body",
+      "tone": 0.83,
+      "profile": [
+       [
+        0.19821,
+        0.20296
+       ],
+       [
+        0.43565,
+        0.05456
+       ],
+       [
+        0.45155,
+        0.08
+       ],
+       [
+        0.21411,
+        0.2284
+       ]
+      ],
+      "plane": "xy",
+      "from": 0.3,
+      "to": 0.55
+     },
+     {
+      "id": "terrazzo-02-right",
+      "kind": "extrude",
+      "bone": "flight",
+      "material": "terrazzo",
+      "role": "body",
+      "tone": 0.84,
+      "profile": [
+       [
+        0.5284,
+        0.20296
+       ],
+       [
+        0.76584,
+        0.05456
+       ],
+       [
+        0.78174,
+        0.08
+       ],
+       [
+        0.5443,
+        0.2284
+       ]
+      ],
+      "plane": "xy",
+      "from": -0.55,
+      "to": -0.3
+     },
+     {
+      "id": "terrazzo-02-worn",
+      "kind": "extrude",
+      "bone": "flight",
+      "material": "terrazzo",
+      "role": "body",
+      "tone": 0.7999999999999999,
+      "profile": [
+       [
+        0.5284,
+        0.20296
+       ],
+       [
+        0.76584,
+        0.05456
+       ],
+       [
+        0.78174,
+        0.08
+       ],
+       [
+        0.67786,
+        0.14021
+       ],
+       [
+        0.56338,
+        0.21176
+       ],
+       [
+        0.551,
+        0.21554
+       ],
+       [
+        0.53839,
+        0.21263
+       ],
+       [
+        0.52893,
+        0.20381
+       ]
+      ],
+      "plane": "xy",
+      "from": -0.3,
+      "to": 0.3
+     },
+     {
+      "id": "terrazzo-02-left",
+      "kind": "extrude",
+      "bone": "flight",
+      "material": "terrazzo",
+      "role": "body",
+      "tone": 0.84,
+      "profile": [
+       [
+        0.5284,
+        0.20296
+       ],
+       [
+        0.76584,
+        0.05456
+       ],
+       [
+        0.78174,
+        0.08
+       ],
+       [
+        0.5443,
+        0.2284
+       ]
+      ],
+      "plane": "xy",
+      "from": 0.3,
+      "to": 0.55
+     },
+     {
+      "id": "terrazzo-03-spall",
+      "kind": "extrude",
+      "bone": "flight",
+      "material": "terrazzo",
+      "role": "body",
+      "tone": 0.83,
+      "profile": [
+       [
+        0.85859,
+        0.20296
+       ],
+       [
+        1.09603,
+        0.05456
+       ],
+       [
+        1.11193,
+        0.08
+       ],
+       [
+        0.91689,
+        0.2019
+       ],
+       [
+        0.88339,
+        0.20868
+       ],
+       [
+        0.86283,
+        0.20974
+       ]
+      ],
+      "plane": "xy",
+      "from": -0.55,
+      "to": -0.47
+     },
+     {
+      "id": "terrazzo-03-right",
+      "kind": "extrude",
+      "bone": "flight",
+      "material": "terrazzo",
+      "role": "body",
+      "tone": 0.83,
+      "profile": [
+       [
+        0.85859,
+        0.20296
+       ],
+       [
+        1.09603,
+        0.05456
+       ],
+       [
+        1.11193,
+        0.08
+       ],
+       [
+        0.87449,
+        0.2284
+       ]
+      ],
+      "plane": "xy",
+      "from": -0.47,
+      "to": -0.3
+     },
+     {
+      "id": "terrazzo-03-worn",
+      "kind": "extrude",
+      "bone": "flight",
+      "material": "terrazzo",
+      "role": "body",
+      "tone": 0.7899999999999999,
+      "profile": [
+       [
+        0.85859,
+        0.20296
+       ],
+       [
+        1.09603,
+        0.05456
+       ],
+       [
+        1.11193,
+        0.08
+       ],
+       [
+        1.00805,
+        0.14021
+       ],
+       [
+        0.89357,
+        0.21176
+       ],
+       [
+        0.88119,
+        0.21554
+       ],
+       [
+        0.86858,
+        0.21263
+       ],
+       [
+        0.85912,
+        0.20381
+       ]
+      ],
+      "plane": "xy",
+      "from": -0.3,
+      "to": 0.3
+     },
+     {
+      "id": "terrazzo-03-left",
+      "kind": "extrude",
+      "bone": "flight",
+      "material": "terrazzo",
+      "role": "body",
+      "tone": 0.83,
+      "profile": [
+       [
+        0.85859,
+        0.20296
+       ],
+       [
+        1.09603,
+        0.05456
+       ],
+       [
+        1.11193,
+        0.08
+       ],
+       [
+        0.87449,
+        0.2284
+       ]
+      ],
+      "plane": "xy",
+      "from": 0.3,
+      "to": 0.55
+     },
+     {
+      "id": "terrazzo-04-right",
+      "kind": "extrude",
+      "bone": "flight",
+      "material": "terrazzo",
+      "role": "body",
+      "tone": 0.84,
+      "profile": [
+       [
+        1.18878,
+        0.20296
+       ],
+       [
+        1.42622,
+        0.05456
+       ],
+       [
+        1.44212,
+        0.08
+       ],
+       [
+        1.20468,
+        0.2284
+       ]
+      ],
+      "plane": "xy",
+      "from": -0.55,
+      "to": -0.3
+     },
+     {
+      "id": "terrazzo-04-worn",
+      "kind": "extrude",
+      "bone": "flight",
+      "material": "terrazzo",
+      "role": "body",
+      "tone": 0.7999999999999999,
+      "profile": [
+       [
+        1.18878,
+        0.20296
+       ],
+       [
+        1.42622,
+        0.05456
+       ],
+       [
+        1.44212,
+        0.08
+       ],
+       [
+        1.33824,
+        0.14021
+       ],
+       [
+        1.22376,
+        0.21176
+       ],
+       [
+        1.21138,
+        0.21554
+       ],
+       [
+        1.19877,
+        0.21263
+       ],
+       [
+        1.18931,
+        0.20381
+       ]
+      ],
+      "plane": "xy",
+      "from": -0.3,
+      "to": 0.3
+     },
+     {
+      "id": "terrazzo-04-left",
+      "kind": "extrude",
+      "bone": "flight",
+      "material": "terrazzo",
+      "role": "body",
+      "tone": 0.84,
+      "profile": [
+       [
+        1.18878,
+        0.20296
+       ],
+       [
+        1.42622,
+        0.05456
+       ],
+       [
+        1.44212,
+        0.08
+       ],
+       [
+        1.20468,
+        0.2284
+       ]
+      ],
+      "plane": "xy",
+      "from": 0.3,
+      "to": 0.55
+     },
+     {
+      "id": "terrazzo-05-right",
+      "kind": "extrude",
+      "bone": "flight",
+      "material": "terrazzo",
+      "role": "body",
+      "tone": 0.83,
+      "profile": [
+       [
+        1.51897,
+        0.20296
+       ],
+       [
+        1.75641,
+        0.05456
+       ],
+       [
+        1.77231,
+        0.08
+       ],
+       [
+        1.53487,
+        0.2284
+       ]
+      ],
+      "plane": "xy",
+      "from": -0.55,
+      "to": -0.3
+     },
+     {
+      "id": "terrazzo-05-worn",
+      "kind": "extrude",
+      "bone": "flight",
+      "material": "terrazzo",
+      "role": "body",
+      "tone": 0.7899999999999999,
+      "profile": [
+       [
+        1.51897,
+        0.20296
+       ],
+       [
+        1.75641,
+        0.05456
+       ],
+       [
+        1.77231,
+        0.08
+       ],
+       [
+        1.66843,
+        0.14021
+       ],
+       [
+        1.55395,
+        0.21176
+       ],
+       [
+        1.54157,
+        0.21554
+       ],
+       [
+        1.52896,
+        0.21263
+       ],
+       [
+        1.5195,
+        0.20381
+       ]
+      ],
+      "plane": "xy",
+      "from": -0.3,
+      "to": 0.3
+     },
+     {
+      "id": "terrazzo-05-left",
+      "kind": "extrude",
+      "bone": "flight",
+      "material": "terrazzo",
+      "role": "body",
+      "tone": 0.83,
+      "profile": [
+       [
+        1.51897,
+        0.20296
+       ],
+       [
+        1.75641,
+        0.05456
+       ],
+       [
+        1.77231,
+        0.08
+       ],
+       [
+        1.53487,
+        0.2284
+       ]
+      ],
+      "plane": "xy",
+      "from": 0.3,
+      "to": 0.55
+     },
+     {
+      "id": "terrazzo-06-right",
+      "kind": "extrude",
+      "bone": "flight",
+      "material": "terrazzo",
+      "role": "body",
+      "tone": 0.84,
+      "profile": [
+       [
+        1.84916,
+        0.20296
+       ],
+       [
+        2.0866,
+        0.05456
+       ],
+       [
+        2.1025,
+        0.08
+       ],
+       [
+        1.86506,
+        0.2284
+       ]
+      ],
+      "plane": "xy",
+      "from": -0.55,
+      "to": -0.3
+     },
+     {
+      "id": "terrazzo-06-worn",
+      "kind": "extrude",
+      "bone": "flight",
+      "material": "terrazzo",
+      "role": "body",
+      "tone": 0.7999999999999999,
+      "profile": [
+       [
+        1.84916,
+        0.20296
+       ],
+       [
+        2.0866,
+        0.05456
+       ],
+       [
+        2.1025,
+        0.08
+       ],
+       [
+        1.99862,
+        0.14021
+       ],
+       [
+        1.88414,
+        0.21176
+       ],
+       [
+        1.87176,
+        0.21554
+       ],
+       [
+        1.85915,
+        0.21263
+       ],
+       [
+        1.84969,
+        0.20381
+       ]
+      ],
+      "plane": "xy",
+      "from": -0.3,
+      "to": 0.3
+     },
+     {
+      "id": "terrazzo-06-left",
+      "kind": "extrude",
+      "bone": "flight",
+      "material": "terrazzo",
+      "role": "body",
+      "tone": 0.84,
+      "profile": [
+       [
+        1.84916,
+        0.20296
+       ],
+       [
+        2.0866,
+        0.05456
+       ],
+       [
+        2.1025,
+        0.08
+       ],
+       [
+        1.86506,
+        0.2284
+       ]
+      ],
+      "plane": "xy",
+      "from": 0.3,
+      "to": 0.55
+     },
+     {
+      "id": "terrazzo-07-right",
+      "kind": "extrude",
+      "bone": "flight",
+      "material": "terrazzo",
+      "role": "body",
+      "tone": 0.83,
+      "profile": [
+       [
+        2.17935,
+        0.20296
+       ],
+       [
+        2.41678,
+        0.05456
+       ],
+       [
+        2.43268,
+        0.08
+       ],
+       [
+        2.19525,
+        0.2284
+       ]
+      ],
+      "plane": "xy",
+      "from": -0.55,
+      "to": -0.3
+     },
+     {
+      "id": "terrazzo-07-worn",
+      "kind": "extrude",
+      "bone": "flight",
+      "material": "terrazzo",
+      "role": "body",
+      "tone": 0.7899999999999999,
+      "profile": [
+       [
+        2.17935,
+        0.20296
+       ],
+       [
+        2.41678,
+        0.05456
+       ],
+       [
+        2.43268,
+        0.08
+       ],
+       [
+        2.3288,
+        0.14021
+       ],
+       [
+        2.21433,
+        0.21176
+       ],
+       [
+        2.20195,
+        0.21554
+       ],
+       [
+        2.18934,
+        0.21263
+       ],
+       [
+        2.17988,
+        0.20381
+       ]
+      ],
+      "plane": "xy",
+      "from": -0.3,
+      "to": 0.3
+     },
+     {
+      "id": "terrazzo-07-left",
+      "kind": "extrude",
+      "bone": "flight",
+      "material": "terrazzo",
+      "role": "body",
+      "tone": 0.83,
+      "profile": [
+       [
+        2.17935,
+        0.20296
+       ],
+       [
+        2.41678,
+        0.05456
+       ],
+       [
+        2.43268,
+        0.08
+       ],
+       [
+        2.19525,
+        0.2284
+       ]
+      ],
+      "plane": "xy",
+      "from": 0.3,
+      "to": 0.55
+     },
+     {
+      "id": "terrazzo-08-right",
+      "kind": "extrude",
+      "bone": "flight",
+      "material": "terrazzo",
+      "role": "body",
+      "tone": 0.84,
+      "profile": [
+       [
+        2.50953,
+        0.20296
+       ],
+       [
+        2.74697,
+        0.05456
+       ],
+       [
+        2.76287,
+        0.08
+       ],
+       [
+        2.52543,
+        0.2284
+       ]
+      ],
+      "plane": "xy",
+      "from": -0.55,
+      "to": -0.3
+     },
+     {
+      "id": "terrazzo-08-worn",
+      "kind": "extrude",
+      "bone": "flight",
+      "material": "terrazzo",
+      "role": "body",
+      "tone": 0.7999999999999999,
+      "profile": [
+       [
+        2.50953,
+        0.20296
+       ],
+       [
+        2.74697,
+        0.05456
+       ],
+       [
+        2.76287,
+        0.08
+       ],
+       [
+        2.65899,
+        0.14021
+       ],
+       [
+        2.54451,
+        0.21176
+       ],
+       [
+        2.53214,
+        0.21554
+       ],
+       [
+        2.51953,
+        0.21263
+       ],
+       [
+        2.51006,
+        0.20381
+       ]
+      ],
+      "plane": "xy",
+      "from": -0.3,
+      "to": 0.3
+     },
+     {
+      "id": "terrazzo-08-left",
+      "kind": "extrude",
+      "bone": "flight",
+      "material": "terrazzo",
+      "role": "body",
+      "tone": 0.84,
+      "profile": [
+       [
+        2.50953,
+        0.20296
+       ],
+       [
+        2.74697,
+        0.05456
+       ],
+       [
+        2.76287,
+        0.08
+       ],
+       [
+        2.52543,
+        0.2284
+       ]
+      ],
+      "plane": "xy",
+      "from": 0.3,
+      "to": 0.55
+     },
+     {
+      "id": "terrazzo-09-right",
+      "kind": "extrude",
+      "bone": "flight",
+      "material": "terrazzo",
+      "role": "body",
+      "tone": 0.83,
+      "profile": [
+       [
+        2.83972,
+        0.20296
+       ],
+       [
+        3.09412,
+        0.04396
+       ],
+       [
+        3.11002,
+        0.0694
+       ],
+       [
+        2.85562,
+        0.2284
+       ]
+      ],
+      "plane": "xy",
+      "from": -0.55,
+      "to": -0.3
+     },
+     {
+      "id": "terrazzo-09-worn",
+      "kind": "extrude",
+      "bone": "flight",
+      "material": "terrazzo",
+      "role": "body",
+      "tone": 0.7899999999999999,
+      "profile": [
+       [
+        2.83972,
+        0.20296
+       ],
+       [
+        3.09412,
+        0.04396
+       ],
+       [
+        3.11002,
+        0.0694
+       ],
+       [
+        2.98918,
+        0.14021
+       ],
+       [
+        2.8747,
+        0.21176
+       ],
+       [
+        2.86233,
+        0.21554
+       ],
+       [
+        2.84972,
+        0.21263
+       ],
+       [
+        2.84025,
+        0.20381
+       ]
+      ],
+      "plane": "xy",
+      "from": -0.3,
+      "to": 0.3
+     },
+     {
+      "id": "terrazzo-09-left",
+      "kind": "extrude",
+      "bone": "flight",
+      "material": "terrazzo",
+      "role": "body",
+      "tone": 0.83,
+      "profile": [
+       [
+        2.83972,
+        0.20296
+       ],
+       [
+        3.09412,
+        0.04396
+       ],
+       [
+        3.11002,
+        0.0694
+       ],
+       [
+        2.85562,
+        0.2284
+       ]
+      ],
+      "plane": "xy",
+      "from": 0.3,
+      "to": 0.55
+     },
+     {
+      "id": "bar-stub-1",
+      "kind": "capsule",
+      "bone": "flight",
+      "material": "steel",
+      "role": "body",
+      "tone": 0.22,
+      "p0": [
+       -0.10053,
+       0.15735,
+       -0.4
+      ],
+      "p1": [
+       -0.18074,
+       0.16268,
+       -0.4
+      ],
+      "r0": 0.005,
+      "r1": 0.005
+     },
+     {
+      "id": "bar-stub-2",
+      "kind": "capsule",
+      "bone": "flight",
+      "material": "steel",
+      "role": "body",
+      "tone": 0.22,
+      "p0": [
+       -0.10053,
+       0.15735,
+       -0.13
+      ],
+      "p1": [
+       -0.18074,
+       0.16268,
+       -0.13
+      ],
+      "r0": 0.005,
+      "r1": 0.005
+     },
+     {
+      "id": "bar-stub-3",
+      "kind": "capsule",
+      "bone": "flight",
+      "material": "steel",
+      "role": "body",
+      "tone": 0.22,
+      "p0": [
+       -0.10053,
+       0.15735,
+       0.13
+      ],
+      "p1": [
+       -0.18074,
+       0.16268,
+       0.13
+      ],
+      "r0": 0.005,
+      "r1": 0.005
+     },
+     {
+      "id": "bar-stub-4",
+      "kind": "capsule",
+      "bone": "flight",
+      "material": "steel",
+      "role": "body",
+      "tone": 0.22,
+      "p0": [
+       -0.10053,
+       0.15735,
+       0.4
+      ],
+      "p1": [
+       -0.18074,
+       0.16268,
+       0.4
+      ],
+      "r0": 0.005,
+      "r1": 0.005
+     },
+     {
+      "id": "mortar-top",
+      "kind": "extrude",
+      "bone": "flight",
+      "material": "cement-mortar",
+      "role": "body",
+      "tone": 0.7,
+      "profile": [
+       [
+        2.97858,
+        0.01947
+       ],
+       [
+        3.04558,
+        -0.0224
+       ],
+       [
+        3.05194,
+        -0.01222
+       ],
+       [
+        2.98494,
+        0.02965
+       ]
+      ],
+      "plane": "xy",
+      "from": -0.38,
+      "to": 0.27
+     },
+     {
+      "id": "mortar-bottom",
+      "kind": "extrude",
+      "bone": "flight",
+      "material": "cement-mortar",
+      "role": "body",
+      "tone": 0.7,
+      "profile": [
+       [
+        -0.11396,
+        -0.02293
+       ],
+       [
+        -0.01644,
+        -0.08388
+       ],
+       [
+        -0.01008,
+        -0.0737
+       ],
+       [
+        -0.1076,
+        -0.01275
+       ]
+      ],
+      "plane": "xy",
+      "from": -0.2,
+      "to": 0.46
+     },
+     {
+      "id": "socket-1",
+      "kind": "revolve",
+      "bone": "flight",
+      "material": "steel",
+      "role": "texture",
+      "tone": 0.22,
+      "texture": true,
+      "profile": [
+       [
+        -0.002,
+        0.0
+       ],
+       [
+        -0.002,
+        0.02
+       ],
+       [
+        0.002,
+        0.02
+       ],
+       [
+        0.002,
+        0.0
+       ]
+      ],
+      "axis": [
+       0.53,
+       0.848,
+       0.0
+      ],
+      "origin": [
+       0.6715,
+       0.1489,
+       -0.35
+      ]
+     },
+     {
+      "id": "socket-2",
+      "kind": "revolve",
+      "bone": "flight",
+      "material": "steel",
+      "role": "texture",
+      "tone": 0.22,
+      "texture": true,
+      "profile": [
+       [
+        -0.002,
+        0.0
+       ],
+       [
+        -0.002,
+        0.02
+       ],
+       [
+        0.002,
+        0.02
+       ],
+       [
+        0.002,
+        0.0
+       ]
+      ],
+      "axis": [
+       0.53,
+       0.848,
+       0.0
+      ],
+      "origin": [
+       0.6715,
+       0.1489,
+       0.35
+      ]
+     },
+     {
+      "id": "socket-3",
+      "kind": "revolve",
+      "bone": "flight",
+      "material": "steel",
+      "role": "texture",
+      "tone": 0.22,
+      "texture": true,
+      "profile": [
+       [
+        -0.002,
+        0.0
+       ],
+       [
+        -0.002,
+        0.02
+       ],
+       [
+        0.002,
+        0.02
+       ],
+       [
+        0.002,
+        0.0
+       ]
+      ],
+      "axis": [
+       0.53,
+       0.848,
+       0.0
+      ],
+      "origin": [
+       2.32244,
+       0.1489,
+       -0.35
+      ]
+     },
+     {
+      "id": "socket-4",
+      "kind": "revolve",
+      "bone": "flight",
+      "material": "steel",
+      "role": "texture",
+      "tone": 0.22,
+      "texture": true,
+      "profile": [
+       [
+        -0.002,
+        0.0
+       ],
+       [
+        -0.002,
+        0.02
+       ],
+       [
+        0.002,
+        0.02
+       ],
+       [
+        0.002,
+        0.0
+       ]
+      ],
+      "axis": [
+       0.53,
+       0.848,
+       0.0
+      ],
+      "origin": [
+       2.32244,
+       0.1489,
+       0.35
+      ]
+     },
+     {
+      "id": "bearer-lower",
+      "kind": "box",
+      "bone": "bearer-lower",
+      "material": "softwood",
+      "role": "body",
+      "tone": 0.46,
+      "size": [
+       0.12,
+       0.12,
+       1.4
+      ],
+      "transform": {
+       "translation": [
+        0.06,
+        0.06,
+        0.0
+       ]
+      },
+      "cornerRadius": 0.006
+     },
+     {
+      "id": "bearer-upper",
+      "kind": "box",
+      "bone": "bearer-upper",
+      "material": "softwood",
+      "role": "body",
+      "tone": 0.46,
+      "size": [
+       0.12,
+       0.12,
+       1.4
+      ],
+      "transform": {
+       "translation": [
+        0.06,
+        0.06,
+        0.0
+       ]
+      },
+      "cornerRadius": 0.006
+     }
+    ],
+    "thermal": [
+     {
+      "id": "th-core",
+      "of": "core",
+      "region": "concrete-faces"
+     },
+     {
+      "id": "th-terrazzo-00",
+      "of": "terrazzo-00",
+      "region": "terrazzo-treads"
+     },
+     {
+      "id": "th-terrazzo-01-right",
+      "of": "terrazzo-01-right",
+      "region": "terrazzo-treads"
+     },
+     {
+      "id": "th-terrazzo-01-worn",
+      "of": "terrazzo-01-worn",
+      "region": "terrazzo-treads"
+     },
+     {
+      "id": "th-terrazzo-01-left",
+      "of": "terrazzo-01-left",
+      "region": "terrazzo-treads"
+     },
+     {
+      "id": "th-terrazzo-02-right",
+      "of": "terrazzo-02-right",
+      "region": "terrazzo-treads"
+     },
+     {
+      "id": "th-terrazzo-02-worn",
+      "of": "terrazzo-02-worn",
+      "region": "terrazzo-treads"
+     },
+     {
+      "id": "th-terrazzo-02-left",
+      "of": "terrazzo-02-left",
+      "region": "terrazzo-treads"
+     },
+     {
+      "id": "th-terrazzo-03-spall",
+      "of": "terrazzo-03-spall",
+      "region": "terrazzo-treads"
+     },
+     {
+      "id": "th-terrazzo-03-right",
+      "of": "terrazzo-03-right",
+      "region": "terrazzo-treads"
+     },
+     {
+      "id": "th-terrazzo-03-worn",
+      "of": "terrazzo-03-worn",
+      "region": "terrazzo-treads"
+     },
+     {
+      "id": "th-terrazzo-03-left",
+      "of": "terrazzo-03-left",
+      "region": "terrazzo-treads"
+     },
+     {
+      "id": "th-terrazzo-04-right",
+      "of": "terrazzo-04-right",
+      "region": "terrazzo-treads"
+     },
+     {
+      "id": "th-terrazzo-04-worn",
+      "of": "terrazzo-04-worn",
+      "region": "terrazzo-treads"
+     },
+     {
+      "id": "th-terrazzo-04-left",
+      "of": "terrazzo-04-left",
+      "region": "terrazzo-treads"
+     },
+     {
+      "id": "th-terrazzo-05-right",
+      "of": "terrazzo-05-right",
+      "region": "terrazzo-treads"
+     },
+     {
+      "id": "th-terrazzo-05-worn",
+      "of": "terrazzo-05-worn",
+      "region": "terrazzo-treads"
+     },
+     {
+      "id": "th-terrazzo-05-left",
+      "of": "terrazzo-05-left",
+      "region": "terrazzo-treads"
+     },
+     {
+      "id": "th-terrazzo-06-right",
+      "of": "terrazzo-06-right",
+      "region": "terrazzo-treads"
+     },
+     {
+      "id": "th-terrazzo-06-worn",
+      "of": "terrazzo-06-worn",
+      "region": "terrazzo-treads"
+     },
+     {
+      "id": "th-terrazzo-06-left",
+      "of": "terrazzo-06-left",
+      "region": "terrazzo-treads"
+     },
+     {
+      "id": "th-terrazzo-07-right",
+      "of": "terrazzo-07-right",
+      "region": "terrazzo-treads"
+     },
+     {
+      "id": "th-terrazzo-07-worn",
+      "of": "terrazzo-07-worn",
+      "region": "terrazzo-treads"
+     },
+     {
+      "id": "th-terrazzo-07-left",
+      "of": "terrazzo-07-left",
+      "region": "terrazzo-treads"
+     },
+     {
+      "id": "th-terrazzo-08-right",
+      "of": "terrazzo-08-right",
+      "region": "terrazzo-treads"
+     },
+     {
+      "id": "th-terrazzo-08-worn",
+      "of": "terrazzo-08-worn",
+      "region": "terrazzo-treads"
+     },
+     {
+      "id": "th-terrazzo-08-left",
+      "of": "terrazzo-08-left",
+      "region": "terrazzo-treads"
+     },
+     {
+      "id": "th-terrazzo-09-right",
+      "of": "terrazzo-09-right",
+      "region": "terrazzo-treads"
+     },
+     {
+      "id": "th-terrazzo-09-worn",
+      "of": "terrazzo-09-worn",
+      "region": "terrazzo-treads"
+     },
+     {
+      "id": "th-terrazzo-09-left",
+      "of": "terrazzo-09-left",
+      "region": "terrazzo-treads"
+     },
+     {
+      "id": "th-bearer-lower",
+      "of": "bearer-lower",
+      "region": "timber-bearers"
+     },
+     {
+      "id": "th-bearer-upper",
+      "of": "bearer-upper",
+      "region": "timber-bearers"
+     }
+    ],
+    "structure": [
+     {
+      "id": "flight-member",
+      "kind": "box",
+      "bone": "flight",
+      "material": "reinforced-concrete",
+      "role": "body",
+      "tone": 0.6,
+      "size": [
+       2.89872,
+       0.16,
+       1.1
+      ],
+      "transform": {
+       "translation": [
+        1.44936,
+        0.0,
+        0.0
+       ]
+      },
+      "member": "flight",
+      "part": "member"
+     },
+     {
+      "id": "bearer-lower-member",
+      "kind": "box",
+      "bone": "bearer-lower",
+      "material": "softwood",
+      "role": "body",
+      "tone": 0.5,
+      "size": [
+       0.12,
+       0.12,
+       1.4
+      ],
+      "transform": {
+       "translation": [
+        0.06,
+        0.06,
+        0.0
+       ]
+      },
+      "member": "bearer-lower",
+      "part": "member"
+     },
+     {
+      "id": "bearer-upper-member",
+      "kind": "box",
+      "bone": "bearer-upper",
+      "material": "softwood",
+      "role": "body",
+      "tone": 0.5,
+      "size": [
+       0.12,
+       0.12,
+       1.4
+      ],
+      "transform": {
+       "translation": [
+        0.06,
+        0.06,
+        0.0
+       ]
+      },
+      "member": "bearer-upper",
+      "part": "member"
+     },
+     {
+      "id": "joint-load-carrier",
+      "kind": "box",
+      "bone": "load-carrier",
+      "material": "steel",
+      "role": "body",
+      "tone": 0.3,
+      "size": [
+       0.20894,
+       0.05,
+       0.15
+      ],
+      "transform": {
+       "translation": [
+        0.04797,
+        -0.1234,
+        0.0
+       ]
+      },
+      "member": "load-carrier",
+      "part": "joint"
+     }
+    ],
+    "decisions": [
+     {
+      "en": "Body: the concrete flight as one prism of its true side profile (nine risers 175 mm, goings 280 mm, waist 160 mm, dapped nibs of 100 mm, the upper one sawn flush, the lower one broken out with a ragged end); the terrazzo face layer as 30 mm pieces on the eight treads and the two landing strips, each nosing split into the worn walking zone of 600 mm (rounded by 25 mm and dished by 4 mm) and two sharp edge zones; tread 3 carries a spall of 50 x 22 mm at its right end. Four bent bar stubs of 10 mm leave the broken lower nib, 12 mm mortar beds cling under both bearings, and four 40 mm lifting sockets sit flush in treads 2 and 7 (texture). The two 12/12 bearers carry the soffit.",
+      "de": "Körper: der Betonlauf als ein Prisma seines wahren Seitenprofils (neun Steigungen 175 mm, Auftritte 280 mm, Laufplatte 160 mm, Ausklinkungen von 100 mm, die obere bündig gesägt, die untere mit unregelmäßigem Ende herausgebrochen); der Terrazzovorsatz als 30-mm-Stücke auf den acht Auftritten und den beiden Podeststreifen, jede Kante geteilt in die abgetretene Gehzone von 600 mm (um 25 mm gerundet und 4 mm ausgemuldet) und zwei scharfe Randzonen; Stufe 3 trägt an ihrem rechten Ende eine Abplatzung von 50 x 22 mm. Vier abgebogene 10-mm-Stabenden treten aus der gebrochenen unteren Nase, 12-mm-Mörtelbetten haften unter beiden Auflagern, vier 40-mm-Transportankerhülsen sitzen bündig in den Stufen 2 und 7 (Textur). Die beiden Kanthölzer 12/12 tragen die Untersicht."
+     },
+     {
+      "en": "Thermal: every concrete, terrazzo and timber body solid is its own thermal surface (references); bar stubs, mortar remnants and sockets are below 0.01 m2 and merged into the concrete region.",
+      "de": "Thermisch: jeder Beton-, Terrazzo- und Holzkörper ist seine eigene thermische Oberfläche (Verweise); Stabenden, Mörtelreste und Hülsen liegen unter 0,01 m2 und gehen in der Betonregion auf."
+     },
+     {
+      "en": "Structure: the waist slab 1100 x 160 mm along the flight bone, the two bearers as members, and the load carrier joined to the waist by a 50 mm block inside the step under its nosing.",
+      "de": "Tragwerk: die Laufplatte 1100 x 160 mm entlang des Laufknochens, die beiden Kanthölzer als Glieder und der Lastträger, mit einem 50-mm-Block in der Stufe unter ihrer Kante an die Laufplatte angeschlossen."
+     }
+    ]
+   },
+   "100": {
+    "status": "authored",
+    "denominator": 100,
+    "body": [
+     {
+      "id": "core",
+      "kind": "extrude",
+      "bone": "flight",
+      "material": "reinforced-concrete",
+      "role": "body",
+      "tone": 0.58,
+      "profile": [
+       [
+        -0.10654,
+        0.18706
+       ],
+       [
+        -0.11449,
+        0.17434
+       ],
+       [
+        -0.11332,
+        0.15356
+       ],
+       [
+        -0.13696,
+        0.14593
+       ],
+       [
+        -0.13686,
+        0.12346
+       ],
+       [
+        -0.05884,
+        0.0747
+       ],
+       [
+        -0.11184,
+        -0.0101
+       ],
+       [
+        0.0,
+        -0.08
+       ],
+       [
+        2.89872,
+        -0.08
+       ],
+       [
+        2.97222,
+        0.0376
+       ],
+       [
+        3.05702,
+        -0.0154
+       ],
+       [
+        3.09412,
+        0.04396
+       ],
+       [
+        2.83972,
+        0.20296
+       ],
+       [
+        2.74697,
+        0.05456
+       ],
+       [
+        2.50953,
+        0.20296
+       ],
+       [
+        2.41678,
+        0.05456
+       ],
+       [
+        2.17935,
+        0.20296
+       ],
+       [
+        2.0866,
+        0.05456
+       ],
+       [
+        1.84916,
+        0.20296
+       ],
+       [
+        1.75641,
+        0.05456
+       ],
+       [
+        1.51897,
+        0.20296
+       ],
+       [
+        1.42622,
+        0.05456
+       ],
+       [
+        1.18878,
+        0.20296
+       ],
+       [
+        1.09603,
+        0.05456
+       ],
+       [
+        0.85859,
+        0.20296
+       ],
+       [
+        0.76584,
+        0.05456
+       ],
+       [
+        0.5284,
+        0.20296
+       ],
+       [
+        0.43565,
+        0.05456
+       ],
+       [
+        0.19821,
+        0.20296
+       ],
+       [
+        0.10546,
+        0.05456
+       ]
+      ],
+      "plane": "xy",
+      "from": -0.55,
+      "to": 0.55
+     },
+     {
+      "id": "terrazzo-00",
+      "kind": "extrude",
+      "bone": "flight",
+      "material": "terrazzo",
+      "role": "body",
+      "tone": 0.84,
+      "profile": [
+       [
+        -0.10654,
+        0.18706
+       ],
+       [
+        0.10546,
+        0.05456
+       ],
+       [
+        0.12136,
+        0.08
+       ],
+       [
+        -0.09064,
+        0.2125
+       ]
+      ],
+      "plane": "xy",
+      "from": -0.55,
+      "to": 0.55
+     },
+     {
+      "id": "terrazzo-01",
+      "kind": "extrude",
+      "bone": "flight",
+      "material": "terrazzo",
+      "role": "body",
+      "tone": 0.83,
+      "profile": [
+       [
+        0.19821,
+        0.20296
+       ],
+       [
+        0.43565,
+        0.05456
+       ],
+       [
+        0.45155,
+        0.08
+       ],
+       [
+        0.21411,
+        0.2284
+       ]
+      ],
+      "plane": "xy",
+      "from": -0.55,
+      "to": 0.55
+     },
+     {
+      "id": "terrazzo-02",
+      "kind": "extrude",
+      "bone": "flight",
+      "material": "terrazzo",
+      "role": "body",
+      "tone": 0.84,
+      "profile": [
+       [
+        0.5284,
+        0.20296
+       ],
+       [
+        0.76584,
+        0.05456
+       ],
+       [
+        0.78174,
+        0.08
+       ],
+       [
+        0.5443,
+        0.2284
+       ]
+      ],
+      "plane": "xy",
+      "from": -0.55,
+      "to": 0.55
+     },
+     {
+      "id": "terrazzo-03-spall",
+      "kind": "extrude",
+      "bone": "flight",
+      "material": "terrazzo",
+      "role": "body",
+      "tone": 0.83,
+      "profile": [
+       [
+        0.85859,
+        0.20296
+       ],
+       [
+        1.09603,
+        0.05456
+       ],
+       [
+        1.11193,
+        0.08
+       ],
+       [
+        0.91689,
+        0.2019
+       ],
+       [
+        0.88339,
+        0.20868
+       ],
+       [
+        0.86283,
+        0.20974
+       ]
+      ],
+      "plane": "xy",
+      "from": -0.55,
+      "to": -0.47
+     },
+     {
+      "id": "terrazzo-03-rest",
+      "kind": "extrude",
+      "bone": "flight",
+      "material": "terrazzo",
+      "role": "body",
+      "tone": 0.83,
+      "profile": [
+       [
+        0.85859,
+        0.20296
+       ],
+       [
+        1.09603,
+        0.05456
+       ],
+       [
+        1.11193,
+        0.08
+       ],
+       [
+        0.87449,
+        0.2284
+       ]
+      ],
+      "plane": "xy",
+      "from": -0.47,
+      "to": 0.55
+     },
+     {
+      "id": "terrazzo-04",
+      "kind": "extrude",
+      "bone": "flight",
+      "material": "terrazzo",
+      "role": "body",
+      "tone": 0.84,
+      "profile": [
+       [
+        1.18878,
+        0.20296
+       ],
+       [
+        1.42622,
+        0.05456
+       ],
+       [
+        1.44212,
+        0.08
+       ],
+       [
+        1.20468,
+        0.2284
+       ]
+      ],
+      "plane": "xy",
+      "from": -0.55,
+      "to": 0.55
+     },
+     {
+      "id": "terrazzo-05",
+      "kind": "extrude",
+      "bone": "flight",
+      "material": "terrazzo",
+      "role": "body",
+      "tone": 0.83,
+      "profile": [
+       [
+        1.51897,
+        0.20296
+       ],
+       [
+        1.75641,
+        0.05456
+       ],
+       [
+        1.77231,
+        0.08
+       ],
+       [
+        1.53487,
+        0.2284
+       ]
+      ],
+      "plane": "xy",
+      "from": -0.55,
+      "to": 0.55
+     },
+     {
+      "id": "terrazzo-06",
+      "kind": "extrude",
+      "bone": "flight",
+      "material": "terrazzo",
+      "role": "body",
+      "tone": 0.84,
+      "profile": [
+       [
+        1.84916,
+        0.20296
+       ],
+       [
+        2.0866,
+        0.05456
+       ],
+       [
+        2.1025,
+        0.08
+       ],
+       [
+        1.86506,
+        0.2284
+       ]
+      ],
+      "plane": "xy",
+      "from": -0.55,
+      "to": 0.55
+     },
+     {
+      "id": "terrazzo-07",
+      "kind": "extrude",
+      "bone": "flight",
+      "material": "terrazzo",
+      "role": "body",
+      "tone": 0.83,
+      "profile": [
+       [
+        2.17935,
+        0.20296
+       ],
+       [
+        2.41678,
+        0.05456
+       ],
+       [
+        2.43268,
+        0.08
+       ],
+       [
+        2.19525,
+        0.2284
+       ]
+      ],
+      "plane": "xy",
+      "from": -0.55,
+      "to": 0.55
+     },
+     {
+      "id": "terrazzo-08",
+      "kind": "extrude",
+      "bone": "flight",
+      "material": "terrazzo",
+      "role": "body",
+      "tone": 0.84,
+      "profile": [
+       [
+        2.50953,
+        0.20296
+       ],
+       [
+        2.74697,
+        0.05456
+       ],
+       [
+        2.76287,
+        0.08
+       ],
+       [
+        2.52543,
+        0.2284
+       ]
+      ],
+      "plane": "xy",
+      "from": -0.55,
+      "to": 0.55
+     },
+     {
+      "id": "terrazzo-09",
+      "kind": "extrude",
+      "bone": "flight",
+      "material": "terrazzo",
+      "role": "body",
+      "tone": 0.83,
+      "profile": [
+       [
+        2.83972,
+        0.20296
+       ],
+       [
+        3.09412,
+        0.04396
+       ],
+       [
+        3.11002,
+        0.0694
+       ],
+       [
+        2.85562,
+        0.2284
+       ]
+      ],
+      "plane": "xy",
+      "from": -0.55,
+      "to": 0.55
+     },
+     {
+      "id": "bearer-lower",
+      "kind": "box",
+      "bone": "bearer-lower",
+      "material": "softwood",
+      "role": "body",
+      "tone": 0.46,
+      "size": [
+       0.12,
+       0.12,
+       1.4
+      ],
+      "transform": {
+       "translation": [
+        0.06,
+        0.06,
+        0.0
+       ]
+      }
+     },
+     {
+      "id": "bearer-upper",
+      "kind": "box",
+      "bone": "bearer-upper",
+      "material": "softwood",
+      "role": "body",
+      "tone": 0.46,
+      "size": [
+       0.12,
+       0.12,
+       1.4
+      ],
+      "transform": {
+       "translation": [
+        0.06,
+        0.06,
+        0.0
+       ]
+      }
+     }
+    ],
+    "thermal": [
+     {
+      "id": "th-core",
+      "of": "core",
+      "region": "concrete-faces"
+     },
+     {
+      "id": "th-terrazzo-00",
+      "of": "terrazzo-00",
+      "region": "terrazzo-treads"
+     },
+     {
+      "id": "th-terrazzo-01",
+      "of": "terrazzo-01",
+      "region": "terrazzo-treads"
+     },
+     {
+      "id": "th-terrazzo-02",
+      "of": "terrazzo-02",
+      "region": "terrazzo-treads"
+     },
+     {
+      "id": "th-terrazzo-03-spall",
+      "of": "terrazzo-03-spall",
+      "region": "terrazzo-treads"
+     },
+     {
+      "id": "th-terrazzo-03-rest",
+      "of": "terrazzo-03-rest",
+      "region": "terrazzo-treads"
+     },
+     {
+      "id": "th-terrazzo-04",
+      "of": "terrazzo-04",
+      "region": "terrazzo-treads"
+     },
+     {
+      "id": "th-terrazzo-05",
+      "of": "terrazzo-05",
+      "region": "terrazzo-treads"
+     },
+     {
+      "id": "th-terrazzo-06",
+      "of": "terrazzo-06",
+      "region": "terrazzo-treads"
+     },
+     {
+      "id": "th-terrazzo-07",
+      "of": "terrazzo-07",
+      "region": "terrazzo-treads"
+     },
+     {
+      "id": "th-terrazzo-08",
+      "of": "terrazzo-08",
+      "region": "terrazzo-treads"
+     },
+     {
+      "id": "th-terrazzo-09",
+      "of": "terrazzo-09",
+      "region": "terrazzo-treads"
+     },
+     {
+      "id": "th-bearer-lower",
+      "of": "bearer-lower",
+      "region": "timber-bearers"
+     },
+     {
+      "id": "th-bearer-upper",
+      "of": "bearer-upper",
+      "region": "timber-bearers"
+     }
+    ],
+    "structure": [
+     {
+      "id": "flight-member",
+      "kind": "box",
+      "bone": "flight",
+      "material": "reinforced-concrete",
+      "role": "body",
+      "tone": 0.6,
+      "size": [
+       2.89872,
+       0.16,
+       1.1
+      ],
+      "transform": {
+       "translation": [
+        1.44936,
+        0.0,
+        0.0
+       ]
+      },
+      "member": "flight",
+      "part": "member"
+     },
+     {
+      "id": "bearer-lower-member",
+      "kind": "box",
+      "bone": "bearer-lower",
+      "material": "softwood",
+      "role": "body",
+      "tone": 0.5,
+      "size": [
+       0.12,
+       0.12,
+       1.4
+      ],
+      "transform": {
+       "translation": [
+        0.06,
+        0.06,
+        0.0
+       ]
+      },
+      "member": "bearer-lower",
+      "part": "member"
+     },
+     {
+      "id": "bearer-upper-member",
+      "kind": "box",
+      "bone": "bearer-upper",
+      "material": "softwood",
+      "role": "body",
+      "tone": 0.5,
+      "size": [
+       0.12,
+       0.12,
+       1.4
+      ],
+      "transform": {
+       "translation": [
+        0.06,
+        0.06,
+        0.0
+       ]
+      },
+      "member": "bearer-upper",
+      "part": "member"
+     },
+     {
+      "id": "joint-load-carrier",
+      "kind": "box",
+      "bone": "load-carrier",
+      "material": "steel",
+      "role": "body",
+      "tone": 0.3,
+      "size": [
+       0.18669,
+       0.06,
+       0.3
+      ],
+      "transform": {
+       "translation": [
+        0.04309,
+        -0.1184,
+        0.0
+       ]
+      },
+      "member": "load-carrier",
+      "part": "joint"
+     }
+    ],
+    "decisions": [
+     {
+      "en": "Body: concrete prism with the ragged lower end and both dapped nibs, ten terrazzo pieces at their sharp profile (the 25 mm nosing wear and the 4 mm dishing merged), tread 3 split into its 80 mm spalled end and the rest, bearers as plain boxes. Bar stubs (10 mm), mortar beds (12 mm) and sockets are below the 15 mm feature and left out.",
+      "de": "Körper: Betonprisma mit dem unregelmäßigen unteren Ende und beiden Ausklinkungen, zehn Terrazzostücke in ihrem scharfen Profil (die 25-mm-Kantenabnutzung und die 4-mm-Mulde aufgegangen), Stufe 3 geteilt in ihr 80-mm-Ende mit Abplatzung und den Rest, Kanthölzer als einfache Quader. Stabenden (10 mm), Mörtelbetten (12 mm) und Hülsen liegen unter der Einzelheit von 15 mm und entfallen."
+     },
+     {
+      "en": "Thermal: references to the body solids by region.",
+      "de": "Thermisch: Verweise auf die Körper nach Region."
+     },
+     {
+      "en": "Minimal: the structure list keeps waist member, two bearer members and the load-carrier joint, the least that carries the flight; only the joint is resized to the 15 mm feature.",
+      "de": "Minimal: die Tragwerksliste behält Laufplattenglied, zwei Kantholzglieder und das Lastträgergelenk, das Wenigste, das den Lauf trägt; nur das Gelenk wird auf die Einzelheit von 15 mm angepasst."
+     }
+    ]
+   },
+   "200": {
+    "status": "authored",
+    "denominator": 200,
+    "body": [
+     {
+      "id": "flight",
+      "kind": "extrude",
+      "bone": "flight",
+      "material": "reinforced-concrete",
+      "role": "body",
+      "tone": 0.58,
+      "profile": [
+       [
+        0.19821,
+        0.20296
+       ],
+       [
+        0.21411,
+        0.2284
+       ],
+       [
+        0.45155,
+        0.08
+       ],
+       [
+        0.5284,
+        0.20296
+       ],
+       [
+        0.5443,
+        0.2284
+       ],
+       [
+        0.78174,
+        0.08
+       ],
+       [
+        0.85859,
+        0.20296
+       ],
+       [
+        0.87449,
+        0.2284
+       ],
+       [
+        1.11193,
+        0.08
+       ],
+       [
+        1.18878,
+        0.20296
+       ],
+       [
+        1.20468,
+        0.2284
+       ],
+       [
+        1.44212,
+        0.08
+       ],
+       [
+        1.51897,
+        0.20296
+       ],
+       [
+        1.53487,
+        0.2284
+       ],
+       [
+        1.77231,
+        0.08
+       ],
+       [
+        1.84916,
+        0.20296
+       ],
+       [
+        1.86506,
+        0.2284
+       ],
+       [
+        2.1025,
+        0.08
+       ],
+       [
+        2.17935,
+        0.20296
+       ],
+       [
+        2.19525,
+        0.2284
+       ],
+       [
+        2.43268,
+        0.08
+       ],
+       [
+        2.50953,
+        0.20296
+       ],
+       [
+        2.52543,
+        0.2284
+       ],
+       [
+        2.76287,
+        0.08
+       ],
+       [
+        2.83972,
+        0.20296
+       ],
+       [
+        2.85562,
+        0.2284
+       ],
+       [
+        3.11002,
+        0.0694
+       ],
+       [
+        3.09412,
+        0.04396
+       ],
+       [
+        3.05702,
+        -0.0154
+       ],
+       [
+        2.97222,
+        0.0376
+       ],
+       [
+        2.89872,
+        -0.08
+       ],
+       [
+        0.0,
+        -0.08
+       ],
+       [
+        -0.11184,
+        -0.0101
+       ],
+       [
+        -0.14364,
+        0.1277
+       ],
+       [
+        -0.10654,
+        0.18706
+       ],
+       [
+        -0.09064,
+        0.2125
+       ],
+       [
+        0.12136,
+        0.08
+       ]
+      ],
+      "plane": "xy",
+      "from": -0.55,
+      "to": 0.55
+     },
+     {
+      "id": "bearer-lower",
+      "kind": "box",
+      "bone": "bearer-lower",
+      "material": "softwood",
+      "role": "body",
+      "tone": 0.46,
+      "size": [
+       0.12,
+       0.12,
+       1.4
+      ],
+      "transform": {
+       "translation": [
+        0.06,
+        0.06,
+        0.0
+       ]
+      }
+     },
+     {
+      "id": "bearer-upper",
+      "kind": "box",
+      "bone": "bearer-upper",
+      "material": "softwood",
+      "role": "body",
+      "tone": 0.46,
+      "size": [
+       0.12,
+       0.12,
+       1.4
+      ],
+      "transform": {
+       "translation": [
+        0.06,
+        0.06,
+        0.0
+       ]
+      }
+     }
+    ],
+    "thermal": [
+     {
+      "id": "th-concrete",
+      "kind": "extrude",
+      "bone": "flight",
+      "material": "reinforced-concrete",
+      "role": "body",
+      "tone": 0.58,
+      "profile": [
+       [
+        -0.10654,
+        0.18706
+       ],
+       [
+        -0.14364,
+        0.1277
+       ],
+       [
+        -0.11184,
+        -0.0101
+       ],
+       [
+        0.0,
+        -0.08
+       ],
+       [
+        2.89872,
+        -0.08
+       ],
+       [
+        2.97222,
+        0.0376
+       ],
+       [
+        3.05702,
+        -0.0154
+       ],
+       [
+        3.09412,
+        0.04396
+       ],
+       [
+        2.83972,
+        0.20296
+       ],
+       [
+        2.74697,
+        0.05456
+       ],
+       [
+        2.50953,
+        0.20296
+       ],
+       [
+        2.41678,
+        0.05456
+       ],
+       [
+        2.17935,
+        0.20296
+       ],
+       [
+        2.0866,
+        0.05456
+       ],
+       [
+        1.84916,
+        0.20296
+       ],
+       [
+        1.75641,
+        0.05456
+       ],
+       [
+        1.51897,
+        0.20296
+       ],
+       [
+        1.42622,
+        0.05456
+       ],
+       [
+        1.18878,
+        0.20296
+       ],
+       [
+        1.09603,
+        0.05456
+       ],
+       [
+        0.85859,
+        0.20296
+       ],
+       [
+        0.76584,
+        0.05456
+       ],
+       [
+        0.5284,
+        0.20296
+       ],
+       [
+        0.43565,
+        0.05456
+       ],
+       [
+        0.19821,
+        0.20296
+       ],
+       [
+        0.10546,
+        0.05456
+       ]
+      ],
+      "plane": "xy",
+      "from": -0.55,
+      "to": 0.55,
+      "region": "concrete-faces"
+     },
+     {
+      "id": "th-terrazzo-00",
+      "kind": "extrude",
+      "bone": "flight",
+      "material": "terrazzo",
+      "role": "body",
+      "tone": 0.84,
+      "profile": [
+       [
+        -0.10654,
+        0.18706
+       ],
+       [
+        0.10546,
+        0.05456
+       ],
+       [
+        0.12136,
+        0.08
+       ],
+       [
+        -0.09064,
+        0.2125
+       ]
+      ],
+      "plane": "xy",
+      "from": -0.55,
+      "to": 0.55,
+      "region": "terrazzo-treads"
+     },
+     {
+      "id": "th-terrazzo-01",
+      "kind": "extrude",
+      "bone": "flight",
+      "material": "terrazzo",
+      "role": "body",
+      "tone": 0.84,
+      "profile": [
+       [
+        0.19821,
+        0.20296
+       ],
+       [
+        0.43565,
+        0.05456
+       ],
+       [
+        0.45155,
+        0.08
+       ],
+       [
+        0.21411,
+        0.2284
+       ]
+      ],
+      "plane": "xy",
+      "from": -0.55,
+      "to": 0.55,
+      "region": "terrazzo-treads"
+     },
+     {
+      "id": "th-terrazzo-02",
+      "kind": "extrude",
+      "bone": "flight",
+      "material": "terrazzo",
+      "role": "body",
+      "tone": 0.84,
+      "profile": [
+       [
+        0.5284,
+        0.20296
+       ],
+       [
+        0.76584,
+        0.05456
+       ],
+       [
+        0.78174,
+        0.08
+       ],
+       [
+        0.5443,
+        0.2284
+       ]
+      ],
+      "plane": "xy",
+      "from": -0.55,
+      "to": 0.55,
+      "region": "terrazzo-treads"
+     },
+     {
+      "id": "th-terrazzo-03",
+      "kind": "extrude",
+      "bone": "flight",
+      "material": "terrazzo",
+      "role": "body",
+      "tone": 0.84,
+      "profile": [
+       [
+        0.85859,
+        0.20296
+       ],
+       [
+        1.09603,
+        0.05456
+       ],
+       [
+        1.11193,
+        0.08
+       ],
+       [
+        0.87449,
+        0.2284
+       ]
+      ],
+      "plane": "xy",
+      "from": -0.55,
+      "to": 0.55,
+      "region": "terrazzo-treads"
+     },
+     {
+      "id": "th-terrazzo-04",
+      "kind": "extrude",
+      "bone": "flight",
+      "material": "terrazzo",
+      "role": "body",
+      "tone": 0.84,
+      "profile": [
+       [
+        1.18878,
+        0.20296
+       ],
+       [
+        1.42622,
+        0.05456
+       ],
+       [
+        1.44212,
+        0.08
+       ],
+       [
+        1.20468,
+        0.2284
+       ]
+      ],
+      "plane": "xy",
+      "from": -0.55,
+      "to": 0.55,
+      "region": "terrazzo-treads"
+     },
+     {
+      "id": "th-terrazzo-05",
+      "kind": "extrude",
+      "bone": "flight",
+      "material": "terrazzo",
+      "role": "body",
+      "tone": 0.84,
+      "profile": [
+       [
+        1.51897,
+        0.20296
+       ],
+       [
+        1.75641,
+        0.05456
+       ],
+       [
+        1.77231,
+        0.08
+       ],
+       [
+        1.53487,
+        0.2284
+       ]
+      ],
+      "plane": "xy",
+      "from": -0.55,
+      "to": 0.55,
+      "region": "terrazzo-treads"
+     },
+     {
+      "id": "th-terrazzo-06",
+      "kind": "extrude",
+      "bone": "flight",
+      "material": "terrazzo",
+      "role": "body",
+      "tone": 0.84,
+      "profile": [
+       [
+        1.84916,
+        0.20296
+       ],
+       [
+        2.0866,
+        0.05456
+       ],
+       [
+        2.1025,
+        0.08
+       ],
+       [
+        1.86506,
+        0.2284
+       ]
+      ],
+      "plane": "xy",
+      "from": -0.55,
+      "to": 0.55,
+      "region": "terrazzo-treads"
+     },
+     {
+      "id": "th-terrazzo-07",
+      "kind": "extrude",
+      "bone": "flight",
+      "material": "terrazzo",
+      "role": "body",
+      "tone": 0.84,
+      "profile": [
+       [
+        2.17935,
+        0.20296
+       ],
+       [
+        2.41678,
+        0.05456
+       ],
+       [
+        2.43268,
+        0.08
+       ],
+       [
+        2.19525,
+        0.2284
+       ]
+      ],
+      "plane": "xy",
+      "from": -0.55,
+      "to": 0.55,
+      "region": "terrazzo-treads"
+     },
+     {
+      "id": "th-terrazzo-08",
+      "kind": "extrude",
+      "bone": "flight",
+      "material": "terrazzo",
+      "role": "body",
+      "tone": 0.84,
+      "profile": [
+       [
+        2.50953,
+        0.20296
+       ],
+       [
+        2.74697,
+        0.05456
+       ],
+       [
+        2.76287,
+        0.08
+       ],
+       [
+        2.52543,
+        0.2284
+       ]
+      ],
+      "plane": "xy",
+      "from": -0.55,
+      "to": 0.55,
+      "region": "terrazzo-treads"
+     },
+     {
+      "id": "th-terrazzo-09",
+      "kind": "extrude",
+      "bone": "flight",
+      "material": "terrazzo",
+      "role": "body",
+      "tone": 0.84,
+      "profile": [
+       [
+        2.83972,
+        0.20296
+       ],
+       [
+        3.09412,
+        0.04396
+       ],
+       [
+        3.11002,
+        0.0694
+       ],
+       [
+        2.85562,
+        0.2284
+       ]
+      ],
+      "plane": "xy",
+      "from": -0.55,
+      "to": 0.55,
+      "region": "terrazzo-treads"
+     },
+     {
+      "id": "th-bearer-lower",
+      "of": "bearer-lower",
+      "region": "timber-bearers"
+     },
+     {
+      "id": "th-bearer-upper",
+      "of": "bearer-upper",
+      "region": "timber-bearers"
+     }
+    ],
+    "structure": [
+     {
+      "id": "flight-member",
+      "kind": "box",
+      "bone": "flight",
+      "material": "reinforced-concrete",
+      "role": "body",
+      "tone": 0.6,
+      "size": [
+       2.89872,
+       0.16,
+       1.1
+      ],
+      "transform": {
+       "translation": [
+        1.44936,
+        0.0,
+        0.0
+       ]
+      },
+      "member": "flight",
+      "part": "member"
+     },
+     {
+      "id": "bearer-lower-member",
+      "kind": "box",
+      "bone": "bearer-lower",
+      "material": "softwood",
+      "role": "body",
+      "tone": 0.5,
+      "size": [
+       0.12,
+       0.12,
+       1.4
+      ],
+      "transform": {
+       "translation": [
+        0.06,
+        0.06,
+        0.0
+       ]
+      },
+      "member": "bearer-lower",
+      "part": "member"
+     },
+     {
+      "id": "bearer-upper-member",
+      "kind": "box",
+      "bone": "bearer-upper",
+      "material": "softwood",
+      "role": "body",
+      "tone": 0.5,
+      "size": [
+       0.12,
+       0.12,
+       1.4
+      ],
+      "transform": {
+       "translation": [
+        0.06,
+        0.06,
+        0.0
+       ]
+      },
+      "member": "bearer-upper",
+      "part": "member"
+     },
+     {
+      "id": "joint-load-carrier",
+      "kind": "box",
+      "bone": "load-carrier",
+      "material": "steel",
+      "role": "body",
+      "tone": 0.3,
+      "size": [
+       0.16444,
+       0.07,
+       0.6
+      ],
+      "transform": {
+       "translation": [
+        0.03822,
+        -0.1134,
+        0.0
+       ]
+      },
+      "member": "load-carrier",
+      "part": "joint"
+     }
+    ],
+    "decisions": [
+     {
+      "en": "Body: the flight as one prism of the union of concrete and terrazzo with the dapped nibs and a straight lower end (the ragged end of 12 to 20 mm is below the 30 mm feature); the bearers as boxes.",
+      "de": "Körper: der Lauf als ein Prisma der Vereinigung aus Beton und Terrazzo mit den Ausklinkungen und einem geraden unteren Ende (das unregelmäßige Ende von 12 bis 20 mm liegt unter der Einzelheit von 30 mm); die Kanthölzer als Quader."
+     },
+     {
+      "en": "Thermal: the concrete as the body profile less the 30 mm terrazzo layer, the terrazzo as ten full-width 30 mm slabs, so both regions keep their faces; bearers by reference.",
+      "de": "Thermisch: der Beton als Körperprofil ohne den 30-mm-Terrazzovorsatz, der Terrazzo als zehn durchgehende 30-mm-Platten, sodass beide Regionen ihre Flächen behalten; Kanthölzer per Verweis."
+     },
+     {
+      "en": "Minimal: the structure list is the same least load path as at 1:100 with the joint at the 30 mm feature.",
+      "de": "Minimal: die Tragwerksliste ist derselbe geringste Lastweg wie bei 1:100 mit dem Gelenk auf der Einzelheit von 30 mm."
+     }
+    ]
+   },
+   "500": {
+    "status": "authored",
+    "denominator": 500,
+    "body": [
+     {
+      "id": "flight",
+      "kind": "extrude",
+      "bone": "flight",
+      "material": "reinforced-concrete",
+      "role": "body",
+      "tone": 0.58,
+      "profile": [
+       [
+        -0.09064,
+        0.2125
+       ],
+       [
+        -0.19664,
+        0.0429
+       ],
+       [
+        0.0,
+        -0.08
+       ],
+       [
+        3.01665,
+        -0.08
+       ],
+       [
+        3.11002,
+        0.0694
+       ],
+       [
+        2.85562,
+        0.2284
+       ],
+       [
+        2.76287,
+        0.08
+       ],
+       [
+        2.52543,
+        0.2284
+       ],
+       [
+        2.43268,
+        0.08
+       ],
+       [
+        2.19525,
+        0.2284
+       ],
+       [
+        2.1025,
+        0.08
+       ],
+       [
+        1.86506,
+        0.2284
+       ],
+       [
+        1.77231,
+        0.08
+       ],
+       [
+        1.53487,
+        0.2284
+       ],
+       [
+        1.44212,
+        0.08
+       ],
+       [
+        1.20468,
+        0.2284
+       ],
+       [
+        1.11193,
+        0.08
+       ],
+       [
+        0.87449,
+        0.2284
+       ],
+       [
+        0.78174,
+        0.08
+       ],
+       [
+        0.5443,
+        0.2284
+       ],
+       [
+        0.45155,
+        0.08
+       ],
+       [
+        0.21411,
+        0.2284
+       ],
+       [
+        0.12136,
+        0.08
+       ]
+      ],
+      "plane": "xy",
+      "from": -0.55,
+      "to": 0.55
+     },
+     {
+      "id": "bearer-lower",
+      "kind": "box",
+      "bone": "bearer-lower",
+      "material": "softwood",
+      "role": "body",
+      "tone": 0.46,
+      "size": [
+       0.12,
+       0.12,
+       1.4
+      ],
+      "transform": {
+       "translation": [
+        0.06,
+        0.06,
+        0.0
+       ]
+      }
+     },
+     {
+      "id": "bearer-upper",
+      "kind": "box",
+      "bone": "bearer-upper",
+      "material": "softwood",
+      "role": "body",
+      "tone": 0.46,
+      "size": [
+       0.12,
+       0.12,
+       1.4
+      ],
+      "transform": {
+       "translation": [
+        0.06,
+        0.06,
+        0.0
+       ]
+      }
+     }
+    ],
+    "thermal": [
+     {
+      "id": "th-concrete",
+      "kind": "extrude",
+      "bone": "flight",
+      "material": "reinforced-concrete",
+      "role": "body",
+      "tone": 0.58,
+      "profile": [
+       [
+        -0.13039,
+        0.1489
+       ],
+       [
+        -0.19664,
+        0.0429
+       ],
+       [
+        0.0,
+        -0.08
+       ],
+       [
+        3.01665,
+        -0.08
+       ],
+       [
+        3.07027,
+        0.0058
+       ],
+       [
+        2.81587,
+        0.1648
+       ],
+       [
+        2.72312,
+        0.0164
+       ],
+       [
+        2.48568,
+        0.1648
+       ],
+       [
+        2.39293,
+        0.0164
+       ],
+       [
+        2.1555,
+        0.1648
+       ],
+       [
+        2.06275,
+        0.0164
+       ],
+       [
+        1.82531,
+        0.1648
+       ],
+       [
+        1.73256,
+        0.0164
+       ],
+       [
+        1.49512,
+        0.1648
+       ],
+       [
+        1.40237,
+        0.0164
+       ],
+       [
+        1.16493,
+        0.1648
+       ],
+       [
+        1.07218,
+        0.0164
+       ],
+       [
+        0.83474,
+        0.1648
+       ],
+       [
+        0.74199,
+        0.0164
+       ],
+       [
+        0.50455,
+        0.1648
+       ],
+       [
+        0.4118,
+        0.0164
+       ],
+       [
+        0.17436,
+        0.1648
+       ],
+       [
+        0.08161,
+        0.0164
+       ]
+      ],
+      "plane": "xy",
+      "from": -0.55,
+      "to": 0.55,
+      "region": "concrete-faces"
+     },
+     {
+      "id": "th-terrazzo-00",
+      "kind": "extrude",
+      "bone": "flight",
+      "material": "terrazzo",
+      "role": "body",
+      "tone": 0.84,
+      "profile": [
+       [
+        -0.13039,
+        0.1489
+       ],
+       [
+        0.08161,
+        0.0164
+       ],
+       [
+        0.12136,
+        0.08
+       ],
+       [
+        -0.09064,
+        0.2125
+       ]
+      ],
+      "plane": "xy",
+      "from": -0.55,
+      "to": 0.55,
+      "region": "terrazzo-treads"
+     },
+     {
+      "id": "th-terrazzo-01",
+      "kind": "extrude",
+      "bone": "flight",
+      "material": "terrazzo",
+      "role": "body",
+      "tone": 0.84,
+      "profile": [
+       [
+        0.17436,
+        0.1648
+       ],
+       [
+        0.4118,
+        0.0164
+       ],
+       [
+        0.45155,
+        0.08
+       ],
+       [
+        0.21411,
+        0.2284
+       ]
+      ],
+      "plane": "xy",
+      "from": -0.55,
+      "to": 0.55,
+      "region": "terrazzo-treads"
+     },
+     {
+      "id": "th-terrazzo-02",
+      "kind": "extrude",
+      "bone": "flight",
+      "material": "terrazzo",
+      "role": "body",
+      "tone": 0.84,
+      "profile": [
+       [
+        0.50455,
+        0.1648
+       ],
+       [
+        0.74199,
+        0.0164
+       ],
+       [
+        0.78174,
+        0.08
+       ],
+       [
+        0.5443,
+        0.2284
+       ]
+      ],
+      "plane": "xy",
+      "from": -0.55,
+      "to": 0.55,
+      "region": "terrazzo-treads"
+     },
+     {
+      "id": "th-terrazzo-03",
+      "kind": "extrude",
+      "bone": "flight",
+      "material": "terrazzo",
+      "role": "body",
+      "tone": 0.84,
+      "profile": [
+       [
+        0.83474,
+        0.1648
+       ],
+       [
+        1.07218,
+        0.0164
+       ],
+       [
+        1.11193,
+        0.08
+       ],
+       [
+        0.87449,
+        0.2284
+       ]
+      ],
+      "plane": "xy",
+      "from": -0.55,
+      "to": 0.55,
+      "region": "terrazzo-treads"
+     },
+     {
+      "id": "th-terrazzo-04",
+      "kind": "extrude",
+      "bone": "flight",
+      "material": "terrazzo",
+      "role": "body",
+      "tone": 0.84,
+      "profile": [
+       [
+        1.16493,
+        0.1648
+       ],
+       [
+        1.40237,
+        0.0164
+       ],
+       [
+        1.44212,
+        0.08
+       ],
+       [
+        1.20468,
+        0.2284
+       ]
+      ],
+      "plane": "xy",
+      "from": -0.55,
+      "to": 0.55,
+      "region": "terrazzo-treads"
+     },
+     {
+      "id": "th-terrazzo-05",
+      "kind": "extrude",
+      "bone": "flight",
+      "material": "terrazzo",
+      "role": "body",
+      "tone": 0.84,
+      "profile": [
+       [
+        1.49512,
+        0.1648
+       ],
+       [
+        1.73256,
+        0.0164
+       ],
+       [
+        1.77231,
+        0.08
+       ],
+       [
+        1.53487,
+        0.2284
+       ]
+      ],
+      "plane": "xy",
+      "from": -0.55,
+      "to": 0.55,
+      "region": "terrazzo-treads"
+     },
+     {
+      "id": "th-terrazzo-06",
+      "kind": "extrude",
+      "bone": "flight",
+      "material": "terrazzo",
+      "role": "body",
+      "tone": 0.84,
+      "profile": [
+       [
+        1.82531,
+        0.1648
+       ],
+       [
+        2.06275,
+        0.0164
+       ],
+       [
+        2.1025,
+        0.08
+       ],
+       [
+        1.86506,
+        0.2284
+       ]
+      ],
+      "plane": "xy",
+      "from": -0.55,
+      "to": 0.55,
+      "region": "terrazzo-treads"
+     },
+     {
+      "id": "th-terrazzo-07",
+      "kind": "extrude",
+      "bone": "flight",
+      "material": "terrazzo",
+      "role": "body",
+      "tone": 0.84,
+      "profile": [
+       [
+        2.1555,
+        0.1648
+       ],
+       [
+        2.39293,
+        0.0164
+       ],
+       [
+        2.43268,
+        0.08
+       ],
+       [
+        2.19525,
+        0.2284
+       ]
+      ],
+      "plane": "xy",
+      "from": -0.55,
+      "to": 0.55,
+      "region": "terrazzo-treads"
+     },
+     {
+      "id": "th-terrazzo-08",
+      "kind": "extrude",
+      "bone": "flight",
+      "material": "terrazzo",
+      "role": "body",
+      "tone": 0.84,
+      "profile": [
+       [
+        2.48568,
+        0.1648
+       ],
+       [
+        2.72312,
+        0.0164
+       ],
+       [
+        2.76287,
+        0.08
+       ],
+       [
+        2.52543,
+        0.2284
+       ]
+      ],
+      "plane": "xy",
+      "from": -0.55,
+      "to": 0.55,
+      "region": "terrazzo-treads"
+     },
+     {
+      "id": "th-terrazzo-09",
+      "kind": "extrude",
+      "bone": "flight",
+      "material": "terrazzo",
+      "role": "body",
+      "tone": 0.84,
+      "profile": [
+       [
+        2.81587,
+        0.1648
+       ],
+       [
+        3.07027,
+        0.0058
+       ],
+       [
+        3.11002,
+        0.0694
+       ],
+       [
+        2.85562,
+        0.2284
+       ]
+      ],
+      "plane": "xy",
+      "from": -0.55,
+      "to": 0.55,
+      "region": "terrazzo-treads"
+     },
+     {
+      "id": "th-bearer-lower",
+      "of": "bearer-lower",
+      "region": "timber-bearers"
+     },
+     {
+      "id": "th-bearer-upper",
+      "of": "bearer-upper",
+      "region": "timber-bearers"
+     }
+    ],
+    "structure": [
+     {
+      "id": "flight-member",
+      "kind": "box",
+      "bone": "flight",
+      "material": "reinforced-concrete",
+      "role": "body",
+      "tone": 0.6,
+      "size": [
+       2.89872,
+       0.16,
+       1.1
+      ],
+      "transform": {
+       "translation": [
+        1.44936,
+        0.0,
+        0.0
+       ]
+      },
+      "member": "flight",
+      "part": "member"
+     },
+     {
+      "id": "bearer-lower-member",
+      "kind": "box",
+      "bone": "bearer-lower",
+      "material": "softwood",
+      "role": "body",
+      "tone": 0.5,
+      "size": [
+       0.12,
+       0.12,
+       1.4
+      ],
+      "transform": {
+       "translation": [
+        0.06,
+        0.06,
+        0.0
+       ]
+      },
+      "member": "bearer-lower",
+      "part": "member"
+     },
+     {
+      "id": "bearer-upper-member",
+      "kind": "box",
+      "bone": "bearer-upper",
+      "material": "softwood",
+      "role": "body",
+      "tone": 0.5,
+      "size": [
+       0.12,
+       0.12,
+       1.4
+      ],
+      "transform": {
+       "translation": [
+        0.06,
+        0.06,
+        0.0
+       ]
+      },
+      "member": "bearer-upper",
+      "part": "member"
+     },
+     {
+      "id": "joint-load-carrier",
+      "kind": "box",
+      "bone": "load-carrier",
+      "material": "steel",
+      "role": "body",
+      "tone": 0.3,
+      "size": [
+       0.14219,
+       0.08,
+       1.1
+      ],
+      "transform": {
+       "translation": [
+        0.03334,
+        -0.1084,
+        0.0
+       ]
+      },
+      "member": "load-carrier",
+      "part": "joint"
+     }
+    ],
+    "decisions": [
+     {
+      "en": "Body: one prism of the stepped outline with square ends (the 100 mm dapped notches are filled, they would be single features at 75 mm) and the two bearers.",
+      "de": "Körper: ein Prisma des gestuften Umrisses mit rechtwinkligen Enden (die 100-mm-Ausklinkungen sind gefüllt, sie wären bei 75 mm einzelne Einzelheiten) und die beiden Kanthölzer."
+     },
+     {
+      "en": "Thermal: the concrete prism lowered by 75 mm under every tread and strip and ten 75 mm terrazzo slabs on it, the smallest feature of the scale standing for the 30 mm layer; bearers by reference.",
+      "de": "Thermisch: das Betonprisma unter jedem Auftritt und Streifen um 75 mm abgesenkt und darauf zehn 75-mm-Terrazzoplatten, die kleinste Einzelheit des Maßstabs steht für die 30-mm-Schicht; Kanthölzer per Verweis."
+     },
+     {
+      "en": "Minimal: the structure list is the least load path, waist member, two bearer members and the 75 mm load-carrier joint.",
+      "de": "Minimal: die Tragwerksliste ist der geringste Lastweg, Laufplattenglied, zwei Kantholzglieder und das 75-mm-Lastträgergelenk."
+     }
+    ]
+   }
+  },
+  "presentation": {
+   "defaultPose": "stored",
+   "defaultClip": "lift",
+   "defaultScale": 50
+  },
+  "exports": [
+   "svg",
+   "pdf",
+   "dxf",
+   "dwg",
+   "png-sequence",
+   "mp4",
+   "webm",
+   "component",
+   "glb",
+   "fbx",
+   "model",
+   "model-zip"
+  ],
+  "completion": "authored"
+ }
+}

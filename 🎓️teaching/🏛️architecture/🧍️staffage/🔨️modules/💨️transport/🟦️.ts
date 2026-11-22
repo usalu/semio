@@ -1,18 +1,18 @@
-/** 💨️ Air transport of the staffage archive: world-space Lagrangian parcels released by category-specific sources, pathlines, instantaneous streamlines and modelled visible condensation.
+/** 💨️ Air transport of the staffage archive: world-space Lagrangian parcels released by category-specific sources, their pathlines, modelled condensation and the flow field every drawing of the air reads.
  *
  * `solveTransport(asset, query, environment, options)` returns the {@link TransportField} at the query's absolute time. The result is a pure function of that time: parcels are born on a global
  * emission grid at the emitter's world position, direction and speed of the instant they are born (the asset is evaluated at that time), then integrated on a global 1/120 s step grid with
  * ambient wind from the environment timeline, their own decaying jet momentum, buoyancy and entrainment; once emitted a parcel never moves with the emitter again, never resets at a clip loop
  * boundary, and playing at any frame rate or scrubbing yields bit-identical parcels (the cache only skips repeated work). It is an integral-model illustration, not CFD.
  *
- * Models and sources: see `🧮️parcels` (parcel equations), `🔥️sources` (breath, exhaust/vent/flue/fan, plume, transpiration), `🫁️respiration`, `〰️streamlines`, `🌬️ambient`, `🌫️air`.
+ * Models and sources: see `🧮️parcels` (parcel equations), `🔥️sources` (breath, exhaust/vent/flue/fan, plume, transpiration), `🫁️respiration`, `🌊️flow` (the Eulerian field, its streams, tracers and paths), `🌊️flow/🪨️obstacles` (the body of the asset as obstacles the air and the parcels go around), `🌬️ambient`, `🌫️air`.
  *
  * @see ../../🧬️schema/🟦️.ts — `Emitter`, `Respiration`
  * @see ../🔗️contracts/🟦️.ts — `TransportField`
  * @see ./🧮️parcels/🟦️.ts — the parcel model and its literature
  */
 import type { Asset, Environment, Text } from "../../🧬️schema/🟦️.ts";
-import type { EnvironmentTimeline, EvaluatedState, EvaluationQuery, JobControl, Parcel, ThermalField, TransportField } from "../🔗️contracts/🟦️.ts";
+import type { EnvironmentTimeline, EvaluatedState, EvaluationQuery, JobControl, ThermalField, TransportField } from "../🔗️contracts/🟦️.ts";
 import { evaluate } from "../🧮️evaluation/🟦️.ts";
 import { solveThermal, solveThermalAt, thermalSession } from "../🌡️thermal/🟦️.ts";
 import { type BoundaryLayer, type Turbulence } from "./🌬️ambient/🟦️.ts";
@@ -20,19 +20,23 @@ import { ambientAt } from "./🌬️ambient/🟦️.ts";
 import { type Resolved, type Track, createTrack, parcelsAt } from "./🧮️parcels/🟦️.ts";
 import { STEPS_PER_S, emitterStates } from "./🔥️sources/🟦️.ts";
 import { breathPatternAt, respirationState, respirationSubjects, routeShares } from "./🫁️respiration/🟦️.ts";
-import { type Sink, streamlineSeeds, streamlinesAt } from "./〰️streamlines/🟦️.ts";
-import { type FlowOptions, flowAt, flowDomainOf } from "./🌊️flow/🟦️.ts";
+import { type FlowOptions, type Sink, flowAt, flowDomainOf } from "./🌊️flow/🟦️.ts";
 import { queryKey } from "./🫁️respiration/🟦️.ts";
+import { obstaclesOf } from "./🌊️flow/🪨️obstacles/🟦️.ts";
 
 export { breathAt, breathPatternAt, exhaledAir, exhaledVolumeM3, respirationOffsets, respirationState, respirationSubjects, respiratoryHeat, routeShares, emitterOwner } from "./🫁️respiration/🟦️.ts";
 export { environmentAt } from "../🌡️thermal/🌤️environment/🟦️.ts";
 export { STEPS_PER_S } from "./🔥️sources/🟦️.ts";
-export { ENTRAINMENT_SEED_RADII, INTERIOR_SEED_RADII, PASSIVE_SPEED_MS, FAR_RADII, FLOW_MIN_SPEED_MS, GROUP_SLICES, TRACER_EXPOSURE_S, TRACER_GAP_STREAKS, TRACER_PERIOD_S, entrainmentOf, flowAt, flowDetailOf, flowDomainOf, flowMarks, flowSampler, flowSeeds, streamAt, streamFrom, streamOf, thinPuffs, thinStreams, traceStream } from "./🌊️flow/🟦️.ts";
-export type { FlowDetail, FlowDomain, FlowOptions, FlowSample } from "./🌊️flow/🟦️.ts";
+export { ENTRAINMENT_SEED_RADII, INTERIOR_SEED_RADII, PASSIVE_SPEED_MS, PUFF_KEPT_RADII, PUFF_MIN_SPACING, PUFF_OWN_RADII, FAR_RADII, FLOW_MIN_SPEED_MS, GROUP_SLICES, TRACER_EXPOSURE_S, TRACER_GAP_STREAKS, TRACER_PERIOD_S, entrainmentOf, flowAt, flowDetailOf, flowDomainOf, flowMarks, moveFlow, flowSampler, flowSeeds, flowTrails, streamAt, streamFrom, streamOf, thinPuffs, thinStreams, traceStream, trailOf, FLOW_SPACING_MM } from "./🌊️flow/🟦️.ts";
+export type { FlowDetail, FlowDomain, FlowOptions, FlowSample, Sink } from "./🌊️flow/🟦️.ts";
 export { dewPointC } from "./🌫️air/🟦️.ts";
+export { FOLIAGE_AREA_DENSITY_M, FOLIAGE_DRAG, LATTICE_COVER, OBSTACLE_CAP, OBSTACLE_REACH, OBSTACLE_SHELL, OBSTACLE_SKIN, OBSTACLE_SPEED_UP, OBSTACLE_VEIL, OCCLUSION_MARGIN, blendObstacles, bodyClusters, deflect, flowVisibility, insideWall, obstacleLevel, obstaclesOf, openingsOf, packWalls, pushOut } from "./🌊️flow/🪨️obstacles/🟦️.ts";
+export type { BodyCluster, Opening, Walls } from "./🌊️flow/🪨️obstacles/🟦️.ts";
+export { WIND_RAKE_ACROSS } from "./🌊️flow/🟦️.ts";
 
-/** 🎛️ Options of {@link solveTransport}. Defaults: parcels live 30 s, no period (`periodS`: the length of a looping clip; the random walk and the exhale spread then repeat with it, so the field is periodic and a loop wraps without a jump), seed 1, uniform wind, turbulence intensity 0.1 with a 0.03 m/s floor and T_L = 1 s, pathlines and streamlines on.
- * `flow` (off by default) adds the thermodynamic flow field of the instant (`true` or its {@link FlowOptions}).
+/** 🎛️ Options of {@link solveTransport}. Defaults: parcels live 30 s, no period (`periodS`: the length of a looping clip; the random walk and the exhale spread then repeat with it, so the field is periodic and a loop wraps without a jump), seed 1, uniform wind, turbulence intensity 0.1 with a 0.03 m/s floor and T_L = 1 s, pathlines on.
+ * `flow` (off by default) adds the thermodynamic flow field of the instant (`true` or its {@link FlowOptions}; without a `domain` the flow is shown in the domain around the evaluated body, {@link flowDomainOf}; without `obstacles` the air flows around the body of the evaluated asset, {@link obstaclesOf}).
+ * `bodyScale` names the authored volume the body is taken from, for the parcels and the flow (default: the finest authored scale, so the air meets one body whatever scale is drawn; an asset without an authored volume has no obstacles).
  * `evaluate` and `thermal` replace the asset evaluation and the thermal solver (the plume and transpiration strengths come from `thermal`). */
 export type TransportOptions = JobControl & {
   readonly maxAgeS?: number;
@@ -41,8 +45,8 @@ export type TransportOptions = JobControl & {
   readonly boundaryLayer?: BoundaryLayer;
   readonly turbulence?: Turbulence;
   readonly pathlines?: boolean;
-  readonly streamlines?: boolean;
   readonly flow?: boolean | FlowOptions;
+  readonly bodyScale?: number;
   readonly evaluate?: (asset: Asset, query: EvaluationQuery) => EvaluatedState;
   readonly thermal?: (state: EvaluatedState, environment: Environment) => ThermalField;
 };
@@ -94,7 +98,7 @@ function trackOf(asset: Asset, query: EvaluationQuery, environment: Environment 
 /** 🚰️ The transport field at the query's absolute time (`timeS`, 0 for poses without one) in the environment (constant or timeline). Cancellable and progress-reporting through `options`. */
 export function solveTransport(asset: Asset, query: EvaluationQuery, environment: Environment | EnvironmentTimeline, options: TransportOptions = {}): TransportField {
   const timeS = Math.max(0, query.timeS ?? 0);
-  const settings: Resolved = { maxAgeS: options.maxAgeS ?? 30, seed: options.seed ?? 1, layer: options.boundaryLayer ?? null, turbulence: options.turbulence ?? DEFAULT_TURBULENCE, periodSteps: Math.round((options.periodS ?? 0) * STEPS_PER_S) };
+  const settings: Resolved = { maxAgeS: options.maxAgeS ?? 30, seed: options.seed ?? 1, layer: options.boundaryLayer ?? null, turbulence: options.turbulence ?? DEFAULT_TURBULENCE, periodSteps: Math.round((options.periodS ?? 0) * STEPS_PER_S), ...(options.bodyScale === undefined ? {} : { bodyScale: options.bodyScale }) };
   const track = trackOf(asset, query, environment, options, settings);
   const label = note("Solving air transport", "Luftbewegung wird berechnet");
   const { parcels, pathlines } = parcelsAt(track, timeS, options.pathlines !== false, options.signal, (done, total) => options.progress?.(done, total, label));
@@ -113,16 +117,13 @@ export function solveTransport(asset: Asset, query: EvaluationQuery, environment
       if (share > 0) sinks.push({ at: state.at, diameterM: asset.thermal.emitters[i]!.diameterM, flowM3S: -rs.flowM3S * share });
     });
   }
-  const streamlines = options.streamlines === false ? [] : streamlinesAt(streamlineSeeds(emitters, asset.thermal.emitters, ambient, sinks), ambient, parcels, sinks);
-  const condensation = parcels.filter((p: Parcel) => p.condensateKgPerKg > 0).map((p) => ({ at: p.at, radiusM: p.radiusM, condensateKgPerKg: p.condensateKgPerKg }));
-  const flow = options.flow === undefined || options.flow === false ? null : flowAt(timeS, parcels, emitters, asset.thermal.emitters, ambient, sinks, { domain: flowDomainOf(track.world.stateAt(timeS).bounds, asset.dimensions.widthM / 2), ...(options.flow === true ? {} : options.flow) });
+  const flowOptions = options.flow === undefined || options.flow === false ? null : options.flow === true ? {} : options.flow;
+  const flow = flowOptions === null ? null : flowAt(timeS, parcels, emitters, asset.thermal.emitters, ambient, sinks, { ...flowOptions, domain: flowOptions.domain ?? flowDomainOf(track.world.stateAt(timeS).bounds, asset.dimensions.widthM / 2), obstacles: flowOptions.obstacles ?? obstaclesOf(track.world.stateAt(timeS), settings.bodyScale) }, pathlines);
   return {
     timeS,
     emitters,
     parcels,
     pathlines,
-    streamlines,
-    condensation,
     flow,
     respiration,
     model: { stepS: 1 / STEPS_PER_S, maxAgeS: settings.maxAgeS, seed: settings.seed },
@@ -132,8 +133,8 @@ export function solveTransport(asset: Asset, query: EvaluationQuery, environment
         "Integrales Lagrange-Modell: Teilchen sind Scheiben von Strahlen und Fahnen, die Umgebungsluft einmischen (Morton–Taylor–Turner), vom Windverlauf sowie eigenem Impuls und Auftrieb getragen; die Teilchenorte sind eine reine Funktion der absoluten Zeit. Keine CFD, nicht an Messungen validiert.",
       ),
       note(
-        "Condensation is modelled: parcels whose mixed state is supersaturated (mixing line of the exhaled air with the ambient air); it is not the analytical parcel field.",
-        "Kondensation ist modelliert: Teilchen, deren Mischzustand übersättigt ist (Mischgerade der Ausatemluft mit der Umgebungsluft); sie ist nicht das analytische Teilchenfeld.",
+        "Condensation is modelled: a parcel whose mixed state is supersaturated (mixing line of the emitted air with the ambient air) carries condensate; the flow view draws it as fog.",
+        "Kondensation ist modelliert: ein Teilchen, dessen Mischzustand übersättigt ist (Mischgerade der abgegebenen Luft mit der Umgebungsluft), trägt Kondensat; die Strömungsansicht zeichnet es als Nebel.",
       ),
     ],
   };
@@ -158,7 +159,7 @@ export async function developTransport(asset: Asset, query: EvaluationQuery, env
   const label = note("Developing the air flow", "Luftströmung wird entwickelt");
   for (let i = 1; i < total; i++) {
     if (signal?.aborted) throw signal.reason ?? new DOMException("transport solve cancelled", "AbortError");
-    solveTransport(asset, { ...query, timeS: from + i * sliceS } as EvaluationQuery, environment, { ...solver, pathlines: false, streamlines: false, flow: false });
+    solveTransport(asset, { ...query, timeS: from + i * sliceS } as EvaluationQuery, environment, { ...solver, pathlines: false, flow: false });
     progress?.(i, total, label);
     await pause();
   }

@@ -1,0 +1,67 @@
+"""🗒️ Per-scale drawing and volume decisions of person-drinking-coffee."""
+from hw10lib import *
+
+D = {
+    "50": dict(
+        silhouette=text("The three views are the true orthographic views of the 1:50 body holding the cup, 35 mm tall: head with jaw, nose and chin under the cap of short hair, ear and eye, neck, hooded jacket with collar rib, hem rib, the hood on the upper back and its rolled edge, sleeves, forearms and rib cuffs, hands with thumb and three-jointed fingers, the right fingers wrapped round the paper cup, corduroy trousers with seat, thighs, kneecaps and shanks, socks, sneakers with sole, toe cap and toe sole. The cup is drawn with its rolled rim and the corrugated sleeve; in the plan the dark coffee shows inside the rim. Front view (the figure's left is on the right of the sheet): the cup in front of the right hip with the fingers across it. Every part is bound to its own bone, the cup and the forearms as solids of revolution, so the three views follow every pose.",
+                        "Die drei Ansichten sind die wahren orthogonalen Ansichten des 1:50-Körpers, der den Becher hält, 35 mm hoch: Kopf mit Kiefer, Nase und Kinn unter der Kappe des kurzen Haars, Ohr und Auge, Hals, Kapuzenjacke mit Kragenbund, Saumbund, der Kapuze auf dem oberen Rücken und ihrem Rollrand, Ärmel, Unterarme und Bündchen, Hände mit Daumen und dreigliedrigen Fingern, die rechten Finger um den Pappbecher gelegt, Cordhose mit Gesäß, Oberschenkeln, Kniescheiben und Unterschenkeln, Socken, Sneaker mit Sohle, Zehenkappe und Zehensohle. Der Becher ist mit Rollrand und Wellpapphülle gezeichnet; im Grundriss zeigt sich der dunkle Kaffee im Rand. Vorderansicht (die linke Körperseite liegt rechts im Blatt): der Becher vor der rechten Hüfte mit den Fingern darüber. Jedes Teil ist an seinen eigenen Knochen gebunden, Becher und Unterarme als Drehkörper, sodass die drei Ansichten jeder Pose folgen."),
+        retained=text("Everything of the 1:100 drawing plus the small construction details still wider than 0.1 mm: eye, brow, mouth, finger joints, laces, the rolled rim of the cup.", "Alles aus der 1:100-Zeichnung und zusätzlich die kleinen Konstruktionsdetails, die noch breiter als 0,1 mm sind: Auge, Braue, Mund, Fingerglieder, Schnürung, der Rollrand des Bechers."),
+        merged=text("Eyelets merge into the lace strokes; hair strands are three strokes; lips, chin and brows merge into the head outline; the corrugation of the sleeve is one band.", "Ösen gehen in den Schnürstrichen auf; Haarsträhnen sind drei Striche; Lippen, Kinn und Brauen gehen im Kopfumriss auf; die Wellung der Hülle ist ein Band."),
+        omitted=text("Pores, individual hairs, stitching holes, fabric fibres, the print on the cup and the steam itself, which the thermal view draws as air flow.", "Poren, einzelne Haare, Stichlöcher, Stofffasern, der Aufdruck des Bechers und der Dampf selbst, den die Thermikansicht als Luftströmung zeichnet."),
+        thinElements=text("Laces and seams are 0.10 mm texture lines; the 0.5 mm paper wall is not thickened: the cup is drawn as its outer form.", "Schnürung und Nähte sind 0,10-mm-Texturlinien; die 0,5 mm dicke Pappwand wird nicht verdickt: Der Becher ist als seine äußere Form gezeichnet."),
+        hatching=text("Jacket and sleeves: vertical knit lines at 0.6 mm; corduroy: vertical wale lines at 0.5 mm.", "Jacke und Ärmel: senkrechte Strickstriche mit 0,6 mm; Cord: senkrechte Rippenlinien mit 0,5 mm."),
+        styles=text("Body 0.25 mm, detail 0.13 mm, texture 0.10 mm; cup and skin light, sleeve mid, jacket mid-grey, trousers darker, coffee nearly black in plan.", "Körper 0,25 mm, Detail 0,13 mm, Textur 0,10 mm; Becher und Haut hell, Hülle mittel, Jacke mittelgrau, Hose dunkler, Kaffee im Grundriss fast schwarz."),
+        overlays=text("One region per shape: cup and sleeve carry the coupled cup wall, the coffee disc the hot coffee, so the thermal view shows the warm cup and the hot surface apart. Front and plan: every filled shape carries the region it depicts.", "Eine Region je Form: Becher und Hülle tragen die gekoppelte Becherwand, die Kaffeescheibe den heißen Kaffee, sodass die Thermikansicht den warmen Becher und die heiße Oberfläche getrennt zeigt. Vorderansicht und Grundriss: Jede gefüllte Form trägt die Region, die sie zeigt.")),
+    "100": dict(
+        silhouette=text("The three views are the true orthographic views of the 1:100 body holding the cup, 17 mm tall: head with nose and ears under the hair cap, neck, jacket with the hood on the upper back, sleeves, forearms, hands with thumb and finger groups, the cup with its sleeve, trousers, shoes. Inner lines: pocket, collar, hem, sole. Plan: the coffee inside the rim.", "Die drei Ansichten sind die wahren orthogonalen Ansichten des 1:100-Körpers, der den Becher hält, 17 mm hoch: Kopf mit Nase und Ohren unter der Haarkappe, Hals, Jacke mit der Kapuze auf dem oberen Rücken, Ärmel, Unterarme, Hände mit Daumen und Fingergruppen, der Becher mit Hülle, Hose, Schuhe. Innenlinien: Tasche, Kragen, Saum, Sohle. Grundriss: der Kaffee im Rand."),
+        retained=text("Hair cap and ear, face profile, the cup at its true size with its sleeve band, the coffee in the plan.", "Haarkappe und Ohr, Gesichtsprofil, der Becher in wahrer Größe mit dem Hüllenband, der Kaffee im Grundriss."),
+        merged=text("Eye, brow and mouth are not drawn; laces merge into the sneaker; the rolled rim merges into the cup outline.", "Auge, Braue und Mund werden nicht gezeichnet; die Schnürung geht im Sneaker auf; der Rollrand geht im Becherumriss auf."),
+        omitted=text("Eye, laces, knee folds, drawstrings, stitching.", "Auge, Schnürung, Kniefalten, Kordeln, Nähte."),
+        thinElements=text("None thickened; the sleeve band is 50 mm (0.5 mm on paper).", "Nichts wird verdickt; das Hüllenband misst 50 mm (0,5 mm auf dem Papier)."),
+        hatching=text("Trousers only: vertical wale lines at 0.7 mm, 0.10 mm pen; the jacket stays plain tone.", "Nur Hose: senkrechte Rippenlinien mit 0,7 mm, 0,10-mm-Stift; die Jacke bleibt reiner Ton."),
+        styles=text("Body pen 0.20 mm, detail 0.10 mm; jacket mid-grey, trousers darker, cup and skin light.", "Körperstift 0,20 mm, Detail 0,10 mm; Jacke mittelgrau, Hose dunkler, Becher und Haut hell."),
+        overlays=text("Regions as at 1:50; cup and sleeve share the cup wall, the coffee disc the coffee. Front and plan: regions as in the side view.", "Regionen wie bei 1:50; Becher und Hülle teilen die Becherwand, die Kaffeescheibe den Kaffee. Vorderansicht und Grundriss: Regionen wie in der Seitenansicht.")),
+    "200": dict(
+        silhouette=text("The three views are the true orthographic views of the 1:200 body, 8.7 mm tall, one mass per part: head, hair, neck, jacket with hood, sleeves, forearms, one mass per hand, the cup as one tapered form, trousers, shoes; the pocket is the only inner line. Plan: the masses in the order of their height, the coffee disc in the cup.", "Die drei Ansichten sind die wahren orthogonalen Ansichten des 1:200-Körpers, 8,7 mm hoch, eine Masse je Teil: Kopf, Haar, Hals, Jacke mit Kapuze, Ärmel, Unterarme, eine Masse je Hand, der Becher als eine konische Form, Hose, Schuhe; die Tasche ist die einzige Innenlinie. Grundriss: die Massen in der Reihenfolge ihrer Höhe, die Kaffeescheibe im Becher."),
+        retained=text("Elbows and knees as separate masses, the cup (0.56 by 0.46 mm) in front of the waist, the hood on the upper back.", "Ellbogen und Knie als getrennte Massen, der Becher (0,56 mal 0,46 mm) vor der Taille, die Kapuze auf dem oberen Rücken."),
+        merged=text("Fingers and thumb into the hand, sleeve band and rim into the cup, sock into the sneaker.", "Finger und Daumen in die Hand, Hüllenband und Rand in den Becher, Socke in den Sneaker."),
+        omitted=text("Ear, nose, eye, cuffs, laces, seams, knee folds.", "Ohr, Nase, Auge, Bündchen, Schnürung, Nähte, Kniefalten."),
+        thinElements=text("None below the print minimum.", "Keine unter dem Druckminimum."),
+        hatching=text("None; fill tones carry the materials.", "Keine; die Füllungstöne tragen die Materialien."),
+        styles=text("Body pen 0.18 mm, detail pen 0.10 mm for the pocket; light cup and skin, mid jacket, dark trousers and hair.", "Körperstift 0,18 mm, Detailstift 0,10 mm für die Tasche; heller Becher und helle Haut, mittlere Jacke, dunkle Hose und dunkles Haar."),
+        overlays=text("One region per mass; the cup carries the cup wall, the plan disc the coffee.", "Eine Region je Masse; der Becher trägt die Becherwand, die Grundrissscheibe den Kaffee.")),
+    "500": dict(
+        silhouette=text("An upright figure of 1.72 m (3.5 mm) with the right forearm bent forward: head with hair as one mass, neck, jacket with the hood merged into the upper back, trousers seat, and per side sleeve, forearm, hand, thigh, shank, shoe and toe box, and the cup as one small block at the floor size of 75 mm in front of the waist.", "Eine aufrechte Figur von 1,72 m (3,5 mm) mit nach vorn gebeugtem rechtem Unterarm: Kopf mit Haar als eine Masse, Hals, Jacke mit im oberen Rücken aufgegangener Kapuze, Hosengesäß und je Seite Ärmel, Unterarm, Hand, Oberschenkel, Unterschenkel, Schuh und Zehenkappe sowie der Becher als ein kleiner Block in der Mindestgröße von 75 mm vor der Taille."),
+        retained=text("The bent right forearm with the cup, which carries the pose, and the exact stature and extent.", "Der gebeugte rechte Unterarm mit dem Becher, der die Pose trägt, sowie genaue Körpergröße und Ausdehnung."),
+        merged=text("Face and hair; hood into the jacket; coffee into the cup shape, which lists both regions.", "Gesicht und Haar; Kapuze in die Jacke; Kaffee in die Becherform, die beide Regionen nennt."),
+        omitted=text("Cuffs, hood fold, laces, sole line, digits, the sleeve band of the cup.", "Bündchen, Kapuzenfalte, Schnürung, Sohlenlinie, Finger, das Hüllenband des Bechers."),
+        thinElements=text("The cup bottom (60 mm) is widened to the 75 mm floor so that the cup prints as one block; nothing else is thickened.", "Der Becherboden (60 mm) ist auf die Mindestgröße von 75 mm verbreitert, damit der Becher als ein Block druckt; sonst wird nichts verdickt."),
+        hatching=text("None.", "Keine."),
+        styles=text("Mid-grey torso, darker legs, light shoes and cup; line pen 0.13 mm only.", "Mittelgrauer Rumpf, dunklere Beine, helle Schuhe und heller Becher; nur Strichstärke 0,13 mm."),
+        overlays=text("The cup shape is painted with the area-weighted value of cup wall and coffee (labelled merged); every other mass keeps its own region.", "Die Becherform wird mit dem flächengewichteten Wert von Becherwand und Kaffee gefärbt (als zusammengefasst bezeichnet); jede andere Masse behält ihre eigene Region.")),
+}
+CUP_VOL = {
+    "50": text("The cup at 1:50: a paperboard wall of revolution 1.5 mm thick with its rolled rim and the corrugated sleeve as a 2.7 mm thickening between 30 and 80 mm, a flat bottom declared as a sheet, and the coffee as a body of revolution filling the cup to 11 mm below the rim, so its surface is open to the air and the wall is hollow above it.", "Der Becher bei 1:50: eine Pappwand als Drehkörper von 1,5 mm mit Rollrand und der Wellpapphülle als Verdickung um 2,7 mm zwischen 30 und 80 mm, ein flacher Boden als Platte deklariert und der Kaffee als Drehkörper, der den Becher bis 11 mm unter den Rand füllt, sodass seine Oberfläche zur Luft offen und die Wand darüber hohl ist."),
+    "100": text("The cup at 1:100 as at 1:50: hollow wall with the sleeve thickening, bottom sheet and the coffee filling up to 11 mm below the rim.", "Der Becher bei 1:100 wie bei 1:50: hohle Wand mit der Verdickung der Hülle, Bodenplatte und der Kaffee bis 11 mm unter den Rand."),
+    "200": text("The cup at 1:200: the hollow wall without the sleeve, the bottom sheet and the coffee up to 11 mm below the rim.", "Der Becher bei 1:200: die hohle Wand ohne Hülle, die Bodenplatte und der Kaffee bis 11 mm unter den Rand."),
+    "500": text("The cup at 1:500 is one tapered block from 75 to 92 mm across, the floor size of the scale, with the coffee as a 1.5 mm sheet on its top so that both regions stay in the model.", "Der Becher bei 1:500 ist ein konischer Block von 75 bis 92 mm Durchmesser, die Mindestgröße des Maßstabs, mit dem Kaffee als 1,5 mm dicke Platte darauf, damit beide Regionen im Modell bleiben."),
+}
+
+
+def swap(t):
+    for a_, b_ in [("hooded sweatshirt", "hooded jacket"), ("sweatshirt", "jacket"), ("Kapuzensweatshirt", "Kapuzenjacke"), ("Sweatshirt", "Jacke"), ("denim", "corduroy"), ("Denim", "Cord"), ("jeans", "trousers"), ("Jeans", "Hose"), ("1.69 m, 58 kg adult", "1.72 m, 64 kg woman"), ("1,69 m und 58 kg", "1,72 m und 64 kg")]:
+        t = t.replace(a_, b_)
+    return t
+
+
+def apply(a):
+    for sc in SCALES:
+        a["representations"][sc]["decisions"] = D[sc]
+        a["volumes"][sc]["decisions"] = [{"en": swap(d["en"]), "de": swap(d["de"])} for d in a["volumes"][sc]["decisions"]] + [CUP_VOL[sc]]
+        for h in a["representations"][sc].get("hatches", []):
+            if h["id"] == "denim":
+                h.update({"id": "corduroy", "title": text("Corduroy wales", "Cordrippen"), "angleDeg": 90})
+        for v in VIEWS:
+            for sh in a["representations"][sc]["geometry"][v]:
+                if sh.get("hatch") == "denim":
+                    sh["hatch"] = "corduroy"

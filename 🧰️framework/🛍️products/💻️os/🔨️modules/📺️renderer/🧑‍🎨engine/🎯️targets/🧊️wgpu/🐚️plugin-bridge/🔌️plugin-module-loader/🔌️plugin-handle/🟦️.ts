@@ -128,6 +128,12 @@ export function buildPluginHandle({ pluginId, manifest, packageId, componentSha2
       const failed = frames.find((frame) => "Error" in frame);
       if (failed && "Error" in failed) throw new Error(faultDisplayMessage(failed.Error.fault, decodePackValue));
     },
+    importAppMedia: async (instanceId, port, descriptor, data) => {
+      const frames = await requireChannel(instanceId).mediaIn(port, descriptor, data);
+      const failed = frames.find((frame): frame is Extract<AppFrameValue, { readonly Error: unknown }> => "Error" in frame);
+      if (failed) throw new Error(`importAppMedia failed: ${faultDisplayMessage(failed.Error.fault, decodePackValue)}`);
+      if (!frames.some((frame) => "Done" in frame)) throw new Error("importAppMedia failed: missing completion receipt");
+    },
     loadAppDocumentArchive: (instanceId, archive) => requireChannel(instanceId).loadDocumentArchive(decodeDocumentArchiveBytes(archive)),
     readAppDocumentArchive: async (instanceId) => encodeDocumentArchiveBytes(await requireChannel(instanceId).readDocumentArchive()),
     readHistory: async (instanceId) => {

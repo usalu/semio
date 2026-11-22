@@ -34,7 +34,7 @@ test("Nx delegates the unchanged static owner command while literal argv stays o
   const projects={"literal-owner":{name:"literal-owner",root:".",targets:{probe:{executor:"@semio-tech/repo-lib:owner-command",options:{command:options.command,cwd:options.cwd,forwardAllArgs:true,nativeOwnerCommand:structuredClone(native.command)}}}}};
   const projectGraph={nodes:{"literal-owner":{name:"literal-owner",type:"lib",data:projects["literal-owner"]}},dependencies:{"literal-owner":[]}};
   const taskGraph=createTaskGraph(projectGraph,{},["literal-owner"],["probe"],undefined,{__overrides_unparsed__:row.arguments,E:"parsed-duplicate"},false);
-  const capabilities={buildMode:native.buildMode,workspaceRoot:root,arguments:["nx","run",native.selected,"--",...row.arguments],selection:["nx","run",native.selected,"--",...row.arguments],native:structuredClone(native.resources)};
+  const capabilities={buildMode:native.buildMode,workspaceRoot:root,codeRoot:root,arguments:["nx","run",native.selected,"--",...row.arguments],selection:["nx","run",native.selected,"--",...row.arguments],native:structuredClone(native.resources)};
   const original={version:1,policy:{version:1,owner:native.owner,maximumElapsedMilliseconds:native.maximumElapsedMilliseconds},deadlineEpochMilliseconds:Date.now()+native.maximumElapsedMilliseconds,capabilities};
   const callerSchema=JSON.parse(readFileSync(new URL("../🧬️schema/📥️native-caller.json",import.meta.url),"utf8"));
   const nativeSchema=JSON.parse(readFileSync(new URL("../../../../📦️artifacts/📋️native-orchestration/📥️invocation/🧬️schema/🔣️.json",import.meta.url),"utf8"));

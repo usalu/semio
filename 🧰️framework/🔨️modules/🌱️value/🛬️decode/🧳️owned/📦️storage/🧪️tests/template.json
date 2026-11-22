@@ -11,7 +11,7 @@
   "typedBeforeComplete": false,
   "partialDestructorCalls": 0,
   "completeDestructorCalls": 1,
-  "foreignWorkAccepted": false,
+  "rebindWorkAccepted": true,
   "foreignTemplateAccepted": false,
   "zeroWorkMutation": false,
   "stock": {
@@ -32,6 +32,7 @@
       4,
       9
     ],
-    "typedBeforeAllParts": false
+    "typedBeforeAllParts": false,
+    "worksAcrossParts": 2
   }
 }

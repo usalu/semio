@@ -466,6 +466,7 @@ fn label_camera_setup_centres_the_fixture_tile() {
 }
 
 fn labelled_path_counts(style: &str) -> (usize, usize) {
+    semio_framework_canvas_assets::testkit::install_repository_assets();
     let mut host = gis_host();
     host.set_render_mode("vector");
     host.set_vector_style(style);

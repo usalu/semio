@@ -6,7 +6,7 @@
     "Policy": {
       "const": {
         "version": 1,
-        "namespace": "semio.cargo.unit-cache/v1",
+        "namespace": "semio.cargo.unit-cache/v2",
         "layout": {
           "objects": "o",
           "entries": "e",
@@ -42,7 +42,7 @@
         "slot": {
           "heartbeatMilliseconds": 2000,
           "staleMilliseconds": 20000,
-          "pollMilliseconds": 25
+          "fallbackMilliseconds": 500
         },
         "key": {
           "environmentPrefixes": [
@@ -76,8 +76,13 @@
           "maximumVariants": 8,
           "maximumOutputBytes": 1073741824,
           "maximumDependencyFiles": 65536,
+          "compilerWrittenFiles": [
+            "(^|/)semio-compiler-resources/[0-9]+-[0-9]+-[0-9]+/observation\\.json$"
+          ],
           "outputToken": "@@semio-out@@",
-          "laneToken": "@@semio-lane@@"
+          "laneToken": "@@semio-lane@@",
+          "extraToken": "@@semio-extra@@",
+          "metadataCharacters": 16
         },
         "seal": {
           "directory": "sealed",
@@ -157,6 +162,11 @@
           "admissionTemporaryMilliseconds": 3600000,
           "highWaterShare": 0.875,
           "lowWaterShare": 0.75,
+          "staleness": {
+            "mode": "dry-run",
+            "intervalMilliseconds": 300000,
+            "examples": 8
+          },
           "collectorIntervalMilliseconds": 300000,
           "maintenanceIntervalMilliseconds": 600000,
           "collectorClaim": "gc",
@@ -191,6 +201,7 @@
           "pollMaximumMilliseconds": 1000,
           "pollBackoffBasisPoints": 15000,
           "listedCrates": 16,
+          "listedHolders": 4,
           "machineStore": "rust",
           "reserved": [
             "d"
@@ -199,7 +210,8 @@
             "prefix": "q",
             "digestDigits": 6,
             "receipt": "product.json",
-            "maximumReceiptBytes": 512
+            "maximumReceiptBytes": 512,
+            "retainMilliseconds": 43200000
           },
           "catalogClaim": "pool-catalog"
         },
@@ -227,8 +239,12 @@
           "de": "[repo cargo] Lane-Pool auf seine Grenze gekürzt ({count} Lanes, {quotaMib} MiB): {removed} ruhende Lane(s) entfernt"
         },
         "poolBusy": {
-          "en": "[repo cargo] all {live} live lanes are in use (maximum {maximum}); waiting for a free lane",
-          "de": "[repo cargo] Alle {live} aktiven Lanes sind belegt (Maximum {maximum}); warte auf eine freie Lane"
+          "en": "[repo cargo] all {live} live lanes are claimed (maximum {maximum}); held by {holders}; waiting for a free lane",
+          "de": "[repo cargo] Alle {live} aktiven Lanes sind beansprucht (Maximum {maximum}); gehalten von {holders}; warte auf eine freie Lane"
+        },
+        "productLaneHeld": {
+          "en": "[repo cargo] the product lane {lane} is exclusive and held by {holders} ({live} of at most {maximum} lanes are in use, so the limit is this one lane and not the pool); waiting for its holder",
+          "de": "[repo cargo] Die Produkt-Lane {lane} ist exklusiv und gehalten von {holders} ({live} von höchstens {maximum} Lanes sind belegt, die Grenze ist also diese eine Lane und nicht der Pool); warte auf ihren Halter"
         },
         "collected": {
           "en": "[repo cargo] unit cache cleanup removed {lanes} lane(s), {incremental} incremental set(s), {sessions} incremental session(s) and {units} build unit(s)",
@@ -538,6 +554,14 @@
         "slot": {
           "$ref": "#/definitions/Digest"
         },
+        "session": {
+          "description": "True when rustc compiled the unit inside an incremental session: its object names differ on every run, so the entry stays on this machine and is never offered or uploaded to the fleet.",
+          "const": true
+        },
+        "retention": {
+          "description": "What the unit was built from, so retention can judge it against the synchronized tree (a Declaration of the slot schema, checked by the code that writes it): toolchain identity, workspace sources with digests, digests of the files of other units it consumed.",
+          "type": "object"
+        },
         "crate": {
           "type": "string",
           "minLength": 1
@@ -808,7 +832,7 @@
           "type": "integer",
           "minimum": 0
         },
-        "superseded": {
+        "retired": {
           "type": "integer",
           "minimum": 0
         },

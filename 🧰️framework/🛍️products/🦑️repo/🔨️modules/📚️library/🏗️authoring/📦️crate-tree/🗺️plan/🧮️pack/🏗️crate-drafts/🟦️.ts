@@ -39,7 +39,7 @@ export function draftCrates({ groups, carvable, unitsOf }: Pick<ReturnType<typeo
     const familyDir = isMutationCrateLabel(dominant) && familySlices.length > 1 ? lcaDirectory(familySlices.flatMap((slice) => slice.decls.map((decl) => decl.file ?? "")).filter(Boolean)) : "";
     const dirOf = familyDir || (anchorFile ? dirname(anchorFile) : lcaDirectory(slices.flatMap((slice) => slice.decls.map((decl) => decl.file ?? "")).filter(Boolean)));
     const named = biggest.attach[0]!.eff;
-    return { i, slices, attach, label: dominant, dir: dirOf, anchor, eff: named, pin: groups[i]!.pin ?? null };
+    return { i, slices, attach, label: dominant, dir: dirOf, anchor, eff: named, pin: groups[i]!.pin ?? null, supersedes: (groups[i]!.supersedes ?? []).map((crate) => crate.name) };
   });
   const sharedLabels = new Map<string, number>();
   for (const entry of draft) sharedLabels.set(entry.label, (sharedLabels.get(entry.label) ?? 0) + 1);
@@ -132,7 +132,7 @@ export function nameAndPlaceCrates({ repoRoot, packageDirRel, draft, lib, crateD
     const shimCopies = [...[...libShims].sort().map((name) => shims.get(name)!.text), ...[...testShims].sort().map((name) => `#[cfg(test)]\n${shims.get(name)!.text}`)];
     const takenNames = new Set<string>([...importedFrom.values()].flatMap((names) => [...names]).concat(hosted.flatMap((unit) => [...unit.exports])));
     const testOnlyUses = [...new Set(entry.slices.flatMap((slice) => [...infoOf.get(slice.id)!.testRootRefs]).filter((n) => !copiedNames.has(n) && !takenNames.has(n) && rootNames.get(n)?.kind === "use").map((n) => { const item = rootNames.get(n)!; return `#[cfg(test)]\n${prunedUse(rootSource.slice(item.declStart, item.end), [n])}`; }))];
-    crates.push({ id: String(entry.i), name, packageDir: relativePosix(repoRoot, join(dir, "📦️packages/🦀️rust")), description: entry.pin?.description || `Component crate of ${lib.name}: ${entry.label}`, doc: "", slices: entry.slices, attach: entry.attach, dependsOn: [...deps].sort((a, b) => a - b).map(String), imports: pruned, itemImportLines: [...copiedUses, ...testOnlyUses, ...shimCopies, ...unitImports], externLines: [], innerAttributes, movedItemsText: "", lib: null, test: null });
+    crates.push({ supersedes: entry.supersedes, id: String(entry.i), name, packageDir: relativePosix(repoRoot, join(dir, "📦️packages/🦀️rust")), description: entry.pin?.description || `Component crate of ${lib.name}: ${entry.label}`, doc: "", slices: entry.slices, attach: entry.attach, dependsOn: [...deps].sort((a, b) => a - b).map(String), imports: pruned, itemImportLines: [...copiedUses, ...testOnlyUses, ...shimCopies, ...unitImports], externLines: [], innerAttributes, movedItemsText: "", lib: null, test: null });
   }
   return { crates };
 }

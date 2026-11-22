@@ -8,7 +8,7 @@ import { POLICY_SPLIT_SOURCE_ROOTS, policyModuleTreeFiles, policyReadFileSafe, p
 import { isAbsolute, posix, sep } from "node:path";
 import { listSourceFamily } from "../../../../../../../🔨️modules/📚️compiler/📦️packages/🟦️typescript/📖️syntax/🌳️module-tree/🟦️.ts";
 import { WORKSPACE_ROOT } from "../../../🗂️workspaces/📍️checkout-root/🟦️.ts";
-import { INTERACTIVITY_AUDIT_UI_RECONCILE_CURSOR_FILE, INTERACTIVITY_AUDIT_UI_RECONCILE_FILE, INTERACTIVITY_AUDIT_UI_RECONCILE_PRIMITIVES_FILE } from "../../../⚖️laws/🔬️interactivity-audit/🗂️files/🟦️.ts";
+import { INTERACTIVITY_AUDIT_SHELL_FILE, INTERACTIVITY_AUDIT_UI_RECONCILE_CURSOR_FILE, INTERACTIVITY_AUDIT_UI_RECONCILE_FILE, INTERACTIVITY_AUDIT_UI_RECONCILE_PRIMITIVES_FILE } from "../../../⚖️laws/🔬️interactivity-audit/🗂️files/🟦️.ts";
 
 type PolicyRustSourceEntry = Readonly<{ path: string; source: string }>;
 export type PolicyRustSourceEvidence = Readonly<{ production: PolicyRustSourceEntry; tests: readonly PolicyRustSourceEntry[] }>;
@@ -86,7 +86,11 @@ export function policyReadRustSourceEvidence(repoRoot: string, sourcePath: strin
       tests.push({ path: target, source: POLICY_SPLIT_SOURCE_ROOTS.includes(target) ? policyReadModuleTreeSource(repoRoot, target) : targetSource });
     }
   }
-  return { production: { path: normalizedSourcePath, source: split ? policyReadModuleTreeSource(repoRoot, normalizedSourcePath) : source }, tests };
+  const partitionCrates = normalizedSourcePath === INTERACTIVITY_AUDIT_SHELL_FILE ? { crates: true } : {};
+  const shellChromeOverlays = "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🪧️shell-view-chrome-overlays/🦀️.rs";
+  const production = split ? policyReadModuleTreeSource(repoRoot, normalizedSourcePath, partitionCrates) : source;
+  const withOverlays = normalizedSourcePath === INTERACTIVITY_AUDIT_SHELL_FILE ? `${production}\n${policyReadModuleTreeSource(repoRoot, shellChromeOverlays, { crates: true })}` : production;
+  return { production: { path: normalizedSourcePath, source: withOverlays }, tests };
 }
 
 export function policyMutateRustSourceEvidence(evidence: PolicyRustSourceEvidence, from: string, to: string, last = false): PolicyRustSourceEvidence {

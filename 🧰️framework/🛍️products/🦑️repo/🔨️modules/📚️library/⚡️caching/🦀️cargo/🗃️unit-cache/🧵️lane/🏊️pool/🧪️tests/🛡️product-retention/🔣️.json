@@ -1,0 +1,79 @@
+{
+ "version": 1,
+ "policy": {"productPrefix": "q", "retainMilliseconds": 43200000},
+ "retained": [
+  {"id": "q1a2b3", "lastUsedMs": 99000000, "nowMs": 100000000, "expect": true},
+  {"id": "q1a2b3", "lastUsedMs": 56800001, "nowMs": 100000000, "expect": true},
+  {"id": "q1a2b3", "lastUsedMs": 56800000, "nowMs": 100000000, "expect": false},
+  {"id": "q1a2b3", "lastUsedMs": 0, "nowMs": 100000000, "expect": false},
+  {"id": "p1a2b3c", "lastUsedMs": 99000000, "nowMs": 100000000, "expect": false},
+  {"id": "d", "lastUsedMs": 99000000, "nowMs": 100000000, "expect": false}
+ ],
+ "trim": [
+  {
+   "id": "retained product lanes neither count nor are victims, the pool lanes are trimmed least recently used first",
+   "nowMs": 100000000,
+   "bounds": {"maximumLanes": 1, "maximumLiveLanes": 5, "quotaBytes": 100},
+   "lanes": [
+    {"id": "q000001", "claimed": false, "lastUsedMs": 10, "crateKey": "", "bytes": 5000},
+    {"id": "q000002", "claimed": false, "lastUsedMs": 99000000, "crateKey": "", "bytes": 5000},
+    {"id": "p000001", "claimed": false, "lastUsedMs": 20, "crateKey": "a", "bytes": 60},
+    {"id": "p000002", "claimed": false, "lastUsedMs": 30, "crateKey": "b", "bytes": 60}
+   ],
+   "expect": ["q000001", "p000001"]
+  },
+  {
+   "id": "a pool within its bounds trims nothing however large the retained product lanes are",
+   "nowMs": 100000000,
+   "bounds": {"maximumLanes": 2, "maximumLiveLanes": 5, "quotaBytes": 100},
+   "lanes": [
+    {"id": "q000003", "claimed": false, "lastUsedMs": 99999999, "crateKey": "", "bytes": 900000},
+    {"id": "q000004", "claimed": false, "lastUsedMs": 99999998, "crateKey": "", "bytes": 900000},
+    {"id": "p000003", "claimed": false, "lastUsedMs": 20, "crateKey": "a", "bytes": 60}
+   ],
+   "expect": []
+  }
+ ],
+ "gc": [
+  {
+   "id": "a retained lane above the lane share is kept",
+   "input": {"capacityBytes": 1000, "volumeBytes": 1000, "freeBytes": 1000, "nowMs": 1000000000, "lanes": [
+    {"id": "n1", "bytes": 100, "incrementalBytes": 0, "lastUsedMs": 999999000, "live": false, "retained": false},
+    {"id": "r1", "bytes": 500, "incrementalBytes": 0, "lastUsedMs": 999998000, "live": false, "retained": true}
+   ]},
+   "expect": {"removeLanes": [], "removeIncremental": []}
+  },
+  {
+   "id": "the same lane without the retention is removed by the lane share",
+   "input": {"capacityBytes": 1000, "volumeBytes": 1000, "freeBytes": 1000, "nowMs": 1000000000, "lanes": [
+    {"id": "n1", "bytes": 100, "incrementalBytes": 0, "lastUsedMs": 999999000, "live": false, "retained": false},
+    {"id": "r1", "bytes": 500, "incrementalBytes": 0, "lastUsedMs": 999998000, "live": false, "retained": false}
+   ]},
+   "expect": {"removeLanes": ["r1"], "removeIncremental": []}
+  },
+  {
+   "id": "a retained lane idle longer than the idle age is kept, an unretained one is removed",
+   "input": {"capacityBytes": 1000, "volumeBytes": 1000, "freeBytes": 1000, "nowMs": 1000000000, "lanes": [
+    {"id": "n1", "bytes": 10, "incrementalBytes": 0, "lastUsedMs": 1000, "live": false, "retained": false},
+    {"id": "r1", "bytes": 10, "incrementalBytes": 0, "lastUsedMs": 2000, "live": false, "retained": true}
+   ]},
+   "expect": {"removeLanes": ["n1"], "removeIncremental": []}
+  },
+  {
+   "id": "free-space pressure that the unretained lanes can relieve leaves the retained lane",
+   "input": {"capacityBytes": 1000, "volumeBytes": 1000, "freeBytes": 100, "nowMs": 1000000000, "lanes": [
+    {"id": "n1", "bytes": 150, "incrementalBytes": 0, "lastUsedMs": 999999000, "live": false, "retained": false},
+    {"id": "r1", "bytes": 300, "incrementalBytes": 0, "lastUsedMs": 999990000, "live": false, "retained": true}
+   ]},
+   "expect": {"removeLanes": ["n1"], "removeIncremental": []}
+  },
+  {
+   "id": "free-space pressure beyond the unretained lanes removes the retained lane last",
+   "input": {"capacityBytes": 1000, "volumeBytes": 1000, "freeBytes": 50, "nowMs": 1000000000, "lanes": [
+    {"id": "n1", "bytes": 150, "incrementalBytes": 0, "lastUsedMs": 999999000, "live": false, "retained": false},
+    {"id": "r1", "bytes": 300, "incrementalBytes": 0, "lastUsedMs": 999990000, "live": false, "retained": true}
+   ]},
+   "expect": {"removeLanes": ["n1", "r1"], "removeIncremental": []}
+  }
+ ]
+}

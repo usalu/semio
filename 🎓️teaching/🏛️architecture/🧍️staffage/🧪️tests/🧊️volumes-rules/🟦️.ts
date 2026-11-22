@@ -580,7 +580,7 @@ describe("🧊️ C20 and the defects of the tool owner", () => {
     expect(place.limit).toBeCloseTo(v.limitM, 9);
     const findings = checkVolumes(moved, options).filter((f) => (f.data as { axis?: string } | undefined)?.axis === v.axis);
     expect(findings.length).toBe(c.finding ? 1 : 0);
-    if (c.finding) expect((findings[0]!.data as { firstM: number[]; secondM: number[] }).secondM[0]! - (findings[0]!.data as { firstM: number[] }).firstM[0]!).toBeCloseTo(c.shiftM, 3);
+    if (c.finding) expect((findings[0]!.data as unknown as { firstM: number[]; secondM: number[] }).secondM[0]! - (findings[0]!.data as unknown as { firstM: number[] }).firstM[0]!).toBeCloseTo(c.shiftM, 3);
     const state = evaluate(moved, { kind: "pose", pose: moved.presentation.defaultPose }, { kind: "scale", scale: { denominator: v.scale } } as never);
     const points = (view: "elevation" | "plan") => (state.shapes[view] as readonly { shape: { role: string }; rings: readonly (readonly { x: number; y: number }[])[] }[]).filter((item) => ["body", "detail", "glazing"].includes(item.shape.role)).flatMap((item) => item.rings.flat().map((q) => [q.x, q.y]));
     const directory = mkdtempSync(join(tmpdir(), "staffage-volumes-"));

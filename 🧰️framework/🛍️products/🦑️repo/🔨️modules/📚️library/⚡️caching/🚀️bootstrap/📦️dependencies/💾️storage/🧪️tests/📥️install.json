@@ -1316,8 +1316,8 @@
     },
     {
       "mode": "missing-parent",
-      "accepted": false,
-      "children": 0
+      "accepted": true,
+      "children": 2
     },
     {
       "mode": "wrong-stage",

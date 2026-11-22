@@ -1,24 +1,19 @@
 cargo-features = ["trim-paths"]
 
 [package]
+workspace = "../../../../../../../.."
 name = "semio-plugin-mounted-owner"
 version = "0.1.0"
 edition = "2021"
-rust-version = "1.95"
+rust-version.workspace = true
 description = "Explicit mounted physical ownership under original job scheduling authority"
-
-[workspace]
-resolver = "2"
-members = ["."]
-
-[workspace.metadata.semio.repository]
-schema-version = 1
-member-manifests = ["Cargo.toml"]
-exclude-patterns = []
 
 [package.metadata.semio]
 role = "framework"
 id = "plugin-mounted-owner"
+
+[lints]
+workspace = true
 
 [lib]
 path = "../../🦀️.rs"
@@ -30,7 +25,5 @@ semio-framework-value = { path = "../../../../../../../🔨️modules/🌱️val
 [dev-dependencies]
 serde_json = "1.0.149"
 semio-framework-trace = { path = "../../../../../../../🔨️modules/⏱️trace/📦️packages/🦀️rust" }
-
-
 semio-framework-value-testing-allocator = { path = "../../../../../../../🔨️modules/🌱️value/🧪️testing/💾️allocator/📦️packages/🦀️rust" }
 semio-framework-value-testing-effect-bank = { path = "../../../../../../../🔨️modules/🌱️value/🧪️testing/📥️admission/🎟️effect/📦️packages/🦀️rust" }

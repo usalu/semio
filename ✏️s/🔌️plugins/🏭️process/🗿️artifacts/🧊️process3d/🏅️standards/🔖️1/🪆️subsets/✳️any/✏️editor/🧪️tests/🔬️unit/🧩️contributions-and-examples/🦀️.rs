@@ -116,6 +116,34 @@ fn the_real_contributions_push_passes_the_host_configuration_output_gate() {
     let mut app = context::unseeded_app_with_registry();
     let receipt = context::install_contributions(&mut app, pack);
     assert!(receipt.lanes.contains(&semio_plugin::app::TypedOperationResultLane::Config));
+    assert!(app.0.tools.original_scrub_dispatch.is_none(), "the host-action ingress takes its tool dispatch shell on re-entry");
+    assert!(app.0.tools.original_emission_receipt.is_none() && app.0.tools.original_emission_construction.as_ref().is_none_or(|construction| construction.terminal_is_empty()), "the host emission hands back its receipt with its construction retired");
+    assert!(PluginApp::maintenance_terminal_is_empty(&app.0), "no host-action owner lingers for maintenance after the command settled");
+}
+
+/// 🧊️ LAW (browser hang 2026-11-22): a scrub-tagged host-configuration press reached while a history edit freezes the
+/// document answers `timeTravel.frozen` and retires its tool dispatch shell with the refusal. No shell, emission receipt or
+/// held result lingers, maintenance turns terminal once the edit exits, and the next host command still installs.
+#[test]
+fn a_frozen_scrub_tagged_host_configuration_press_retires_its_dispatch_shell() {
+    let mut app = context::app();
+    let (_, receipt) = context::settled_dispatch(&mut app, Process3dCommand::AddStep(add_step::AddStep { measure: Some("drill".into()), machine_id: None, capability_id: None, position: None }));
+    assert!(context::published_a_document_mutation(&receipt), "the history edit needs one committed document mutation");
+    let target = app.0.stores.store.mutation_ops().expect("committed mutation log").last().expect("the committed step").mutation_id.0.clone();
+    action(&mut app, semio_framework::history_edit::HISTORY_EDIT_BEGIN_ACTION_ID, Some(&DslValue::object([(semio_framework::history_edit::HISTORY_EDIT_ARG_MUTATION_ID.into(), DslValue::String(target))])));
+    assert!(app.0.time_travel.editor().is_some(), "the history edit freezes the document");
+    let pack = context::demonstrator_contributions_pack();
+    let press = DslValue::object([("json".into(), DslValue::String(installable_contributions(&pack, PROCESS3D_CONFIG_CONTRIBUTIONS_BYTES))), (semio_plugin::SCRUB_GESTURE_ARG.into(), DslValue::String("frozen-press".into()))]);
+    let failure = context::contributions_command(&mut app, press).expect_err("a frozen document refuses the scrub-tagged host press");
+    assert!(format!("{failure:?}").contains("timeTravel.frozen"), "the refusal is the frozen-press fault: {failure:?}");
+    app.1.retire_failure(failure);
+    assert!(app.0.tools.original_scrub_dispatch.is_none(), "the frozen tool dispatch shell retires with its refusal");
+    assert!(app.0.tools.original_emission_receipt.is_none() && app.0.tools.original_emission_result.is_none(), "the refused press leaves no emission handoff behind");
+    action(&mut app, semio_framework::history_edit::HISTORY_EDIT_EXIT_ACTION_ID, None);
+    assert!(app.0.time_travel.editor().is_none(), "the history edit exits");
+    let installed = context::install_contributions(&mut app, pack);
+    assert!(installed.lanes.contains(&semio_plugin::app::TypedOperationResultLane::Config), "the next host command still installs after the frozen press");
+    assert!(app.0.tools.original_scrub_dispatch.is_none() && PluginApp::maintenance_terminal_is_empty(&app.0), "no host-action owner lingers for maintenance");
 }
 //#endregion 🧩️HostContributionsOutputCap
 
@@ -126,14 +154,11 @@ fn settle_member_less_archive(app: &mut context::Process3dApp, operation: u64, p
     let fuel = OriginalFixtureCaller::turn_fuel();
     let grant = app.1.cx().retained_grant();
     admit_document_archive_load(&mut app.0, operation, protocol::DocumentArchivePack { parent_pack, parent_spr, members: Vec::new() }, app.1.cx()).expect("archive admission");
-    let mut turns=0usize;
-    for _ in 0..OriginalFixtureCaller::maximum_turns() {
-        turns+=1;
+    for _ in 0..1_000_000 {
         fixture_renew_turn(app.1.cx(), fuel, grant).expect("archive caller renewal");
         let polled = ::semio_framework_async::poll::resolve_ready(PluginApp::poll_document_archive_load(&mut app.0, operation, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx())).expect("archive status");
         if matches!(polled.state, protocol::DocumentArchiveLoadState::Ready | protocol::DocumentArchiveLoadState::Cancelled | protocol::DocumentArchiveLoadState::Fault) {
             PluginApp::acknowledge_document_archive_load(&mut app.0, operation).expect("archive acknowledgement");
-            eprintln!("[DEBUG] archive {operation} settled after {turns} turns");
             return polled;
         }
         let _ = PluginApp::maintenance_step(&mut app.0, app.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.maintenance).expect("archive maintenance step");

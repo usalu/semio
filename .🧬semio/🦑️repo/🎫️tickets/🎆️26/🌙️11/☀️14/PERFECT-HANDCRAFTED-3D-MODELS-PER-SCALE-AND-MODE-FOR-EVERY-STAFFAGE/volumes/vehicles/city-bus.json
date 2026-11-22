@@ -8294,9 +8294,9 @@
      "tone": 0.18,
      "kind": "capsule",
      "p0": [
-      11.42,
+      11.47,
       2.58,
-      -1.225
+      -1.245
      ],
      "p1": [
       11.8,
@@ -8305,6 +8305,26 @@
      ],
      "r0": 0.017,
      "r1": 0.017
+    },
+    {
+     "id": "mirror-base-r",
+     "bone": "body",
+     "material": "paint",
+     "role": "detail",
+     "tone": 0.18,
+     "kind": "box",
+     "size": [
+      0.06,
+      0.06,
+      0.04
+     ],
+     "transform": {
+      "translation": [
+       11.445,
+       2.58,
+       -1.222
+      ]
+     }
     },
     {
      "id": "mirror-l",
@@ -8551,13 +8571,13 @@
      "size": [
       3.075,
       0.06,
-      0.0575
+      0.0355
      ],
      "transform": {
       "translation": [
        6.5875,
        2.415,
-       -1.27125
+       -1.26025
       ]
      }
     },
@@ -8571,13 +8591,13 @@
      "size": [
       1.82,
       0.06,
-      0.0575
+      0.0355
      ],
      "transform": {
       "translation": [
        10.56,
        2.415,
-       -1.27125
+       -1.26025
       ]
      }
     },
@@ -31854,8 +31874,8 @@
    ],
    "decisions": [
     {
-     "en": "Body: a real shell instead of a block. Each side is a flat lower panel with the two wheel arches (and, on the kerb side, the door notches) and an upper window frame that leans in by 35 mm from the belt at 1.10 m to the cant rail at 2.62 m, cut with one opening per bay; the roof is one arched skin with 0.3 m cant radius and a 3 cm crown; nose and tail are curved walls on the plan outline (bowed front, tight rear corners) with their own floors, a rounded header whose lower edge stands 25 mm proud of the windscreen as a lip, and a tail cap. The windscreen is one curved pane raked by 7 degrees between the A-pillars, every side window is a 20 mm unit set 6 mm into its opening with a hopper transom, the rear window, lamp clusters, number plates, wipers, destination display, rub rails, arch trims, charging flap and both mirrors on their arms are parts of their own. The four sliding leaves hang 3 mm outside the wall, kinked at the belt like the wall, with two panes and edge seals each, so that they slide clear of the wall in every pose. Inside are the floor with its wheel-well cut-outs, the four wheelhouses, seats, grab rails, stanchions, the driver's seat, partition, dashboard and steering wheel. Running gear: 275/70 R 22.5 tyres with grooves on 22.5 x 8.25 disc wheels (front convex, rear twins dished against each other, ten hand holes and ten nuts), brake discs, the dropped front beam with stub axles and air springs, the portal drive axle with its two hub motor housings, the stub spindles that carry the twin wheels, drop arms, spring carriers and four air springs. Roof: battery fairing with six module lids and the heat pump housing with its fan and louvres. Every part is carried: each hub has a pilot through the wheel disc, a bolting flange behind it and a barrel that runs on the stub axle or spindle and carries the brake disc; the door leaves hang under a guide rail on the wall over each doorway that spans their travel; the console stands on a plinth, the driver's seat on its pedestal, the steering wheel on a dished hub, the kerb-side mirror arm is fixed in the cant rail.",
-     "de": "Körper: eine echte Schale statt eines Blocks. Jede Seite besteht aus einem ebenen unteren Blech mit den beiden Radausschnitten (und auf der Bordsteinseite den Türausschnitten) und einem oberen Fensterrahmen, der vom Gürtel auf 1,10 m bis zum Dachlängsträger auf 2,62 m um 35 mm einzieht und je Feld eine Öffnung hat; das Dach ist eine gewölbte Haut mit 0,3 m Kantenradius und 3 cm Stich; Bug und Heck sind gebogene Wände auf dem Grundrissumriss (gewölbte Front, enge Heckecken) mit eigenen Böden, gerundetem Frontdom, dessen Unterkante als Lippe 25 mm vor der Windschutzscheibe steht, und Heckkappe. Die Windschutzscheibe ist eine gebogene, um 7 Grad geneigte Scheibe zwischen den A-Säulen, jedes Seitenfenster eine 20 mm starke Einheit, 6 mm in ihre Öffnung gesetzt, mit Kämpfer für das Klappfenster; Heckscheibe, Leuchten, Kennzeichen, Wischer, Zielanzeige, Scheuerleisten, Radlaufblenden, Ladeklappe und beide Spiegel an ihren Armen sind eigene Teile. Die vier Schiebeflügel hängen 3 mm vor der Wand, am Gürtel geknickt wie die Wand, mit je zwei Scheiben und Dichtkanten, sodass sie in jeder Pose frei vor der Wand laufen. Innen liegen der Boden mit den Radkastenausschnitten, die vier Radkästen, Sitze, Haltestangen, Stützen, Fahrersitz, Trennwand, Armaturenbrett und Lenkrad. Fahrwerk: Reifen 275/70 R 22,5 mit Rillen auf Scheibenrädern 22,5 x 8,25 (vorn gewölbt, hinten Zwillinge gegeneinander geschüsselt, zehn Handlöcher und zehn Muttern), Bremsscheiben, die gekröpfte Vorderachse mit Achsschenkeln und Luftfedern, die Portalantriebsachse mit zwei Radnabenmotorgehäusen, den Achsstummeln, die die Zwillingsräder tragen, Abtriebsarmen, Federträgern und vier Luftfedern. Dach: Batterieverkleidung mit sechs Moduldeckeln und Wärmepumpengehäuse mit Lüfter und Lamellen. Jedes Teil ist getragen: jede Nabe hat einen Zentrierbund durch die Radscheibe, dahinter einen Anschraubflansch und einen Nabenkörper, der auf dem Achsschenkel oder Achsstummel läuft und die Bremsscheibe trägt; die Türflügel hängen unter einer Führungsschiene an der Wand über jeder Türöffnung, die ihren Laufweg überspannt; die Konsole steht auf einem Sockel, der Fahrersitz auf seinem Fuß, das Lenkrad auf einer geschüsselten Nabe, der bordsteinseitige Spiegelarm sitzt im Dachlängsträger."
+     "en": "Body: a real shell instead of a block. Each side is a flat lower panel with the two wheel arches (and, on the kerb side, the door notches) and an upper window frame that leans in by 35 mm from the belt at 1.10 m to the cant rail at 2.62 m, cut with one opening per bay; the roof is one arched skin with 0.3 m cant radius and a 3 cm crown; nose and tail are curved walls on the plan outline (bowed front, tight rear corners) with their own floors, a rounded header whose lower edge stands 25 mm proud of the windscreen as a lip, and a tail cap. The windscreen is one curved pane raked by 7 degrees between the A-pillars, every side window is a 20 mm unit set 6 mm into its opening with a hopper transom, the rear window, lamp clusters, number plates, wipers, destination display, rub rails, arch trims, charging flap and both mirrors on their arms are parts of their own. The four sliding leaves hang 3 mm outside the wall, kinked at the belt like the wall, with two panes and edge seals each, so that they slide clear of the wall in every pose. Inside are the floor with its wheel-well cut-outs, the four wheelhouses, seats, grab rails, stanchions, the driver's seat, partition, dashboard and steering wheel. Running gear: 275/70 R 22.5 tyres with grooves on 22.5 x 8.25 disc wheels (front convex, rear twins dished against each other, ten hand holes and ten nuts), brake discs, the dropped front beam with stub axles and air springs, the portal drive axle with its two hub motor housings, the stub spindles that carry the twin wheels, drop arms, spring carriers and four air springs. Roof: battery fairing with six module lids and the heat pump housing with its fan and louvres. Every part is carried: each hub has a pilot through the wheel disc, a bolting flange behind it and a barrel that runs on the stub axle or spindle and carries the brake disc; the door leaves hang under a guide rail on the wall over each doorway that spans their travel; the console stands on a plinth, the driver's seat on its pedestal, the steering wheel on a dished hub, the kerb-side mirror arm is fixed on a base block in the window frame.",
+     "de": "Körper: eine echte Schale statt eines Blocks. Jede Seite besteht aus einem ebenen unteren Blech mit den beiden Radausschnitten (und auf der Bordsteinseite den Türausschnitten) und einem oberen Fensterrahmen, der vom Gürtel auf 1,10 m bis zum Dachlängsträger auf 2,62 m um 35 mm einzieht und je Feld eine Öffnung hat; das Dach ist eine gewölbte Haut mit 0,3 m Kantenradius und 3 cm Stich; Bug und Heck sind gebogene Wände auf dem Grundrissumriss (gewölbte Front, enge Heckecken) mit eigenen Böden, gerundetem Frontdom, dessen Unterkante als Lippe 25 mm vor der Windschutzscheibe steht, und Heckkappe. Die Windschutzscheibe ist eine gebogene, um 7 Grad geneigte Scheibe zwischen den A-Säulen, jedes Seitenfenster eine 20 mm starke Einheit, 6 mm in ihre Öffnung gesetzt, mit Kämpfer für das Klappfenster; Heckscheibe, Leuchten, Kennzeichen, Wischer, Zielanzeige, Scheuerleisten, Radlaufblenden, Ladeklappe und beide Spiegel an ihren Armen sind eigene Teile. Die vier Schiebeflügel hängen 3 mm vor der Wand, am Gürtel geknickt wie die Wand, mit je zwei Scheiben und Dichtkanten, sodass sie in jeder Pose frei vor der Wand laufen. Innen liegen der Boden mit den Radkastenausschnitten, die vier Radkästen, Sitze, Haltestangen, Stützen, Fahrersitz, Trennwand, Armaturenbrett und Lenkrad. Fahrwerk: Reifen 275/70 R 22,5 mit Rillen auf Scheibenrädern 22,5 x 8,25 (vorn gewölbt, hinten Zwillinge gegeneinander geschüsselt, zehn Handlöcher und zehn Muttern), Bremsscheiben, die gekröpfte Vorderachse mit Achsschenkeln und Luftfedern, die Portalantriebsachse mit zwei Radnabenmotorgehäusen, den Achsstummeln, die die Zwillingsräder tragen, Abtriebsarmen, Federträgern und vier Luftfedern. Dach: Batterieverkleidung mit sechs Moduldeckeln und Wärmepumpengehäuse mit Lüfter und Lamellen. Jedes Teil ist getragen: jede Nabe hat einen Zentrierbund durch die Radscheibe, dahinter einen Anschraubflansch und einen Nabenkörper, der auf dem Achsschenkel oder Achsstummel läuft und die Bremsscheibe trägt; die Türflügel hängen unter einer Führungsschiene an der Wand über jeder Türöffnung, die ihren Laufweg überspannt; die Konsole steht auf einem Sockel, der Fahrersitz auf seinem Fuß, das Lenkrad auf einer geschüsselten Nabe, der bordsteinseitige Spiegelarm sitzt auf einem Sockel im Fensterrahmen."
     },
     {
      "en": "Thermal: the conditioned envelope is modelled as its layers. Side panels, window frames, nose, tail and floor are a 1.5 mm skin plate with the 40 mm lining plate behind it; the roof skin is cut into two cant strips and the crown so that only its outer face counts, with its lining underneath; header and tail cap belong to the roof. Every pane, the windscreen and the rear window are a 4 mm outer pane, a 12 mm gap and a 4 mm inner pane. The door region is the whole outward face of the four leaves (skin and lining, the glazed part included, as its area is declared), the door glass also belongs to the glazing. Faces towards the cabin are marked as built-in faces. Wheelhouse liners and interior are not part of the painted panel region. Battery fairing with lids, heat pump housing with the fan disc as the outlet patch of the exhaust air, the drive axle beam, motor housings and drop arms, six tyres as tread and sidewalls down to the rim flange and the four brake discs are the operating regions.",

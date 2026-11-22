@@ -20,8 +20,8 @@ test("workspace build entry loads without the audit monolith under the independe
   const compiled = await build({ absWorkingDir: root, entryPoints: [fixture.entry], bundle: true, write: false, platform: "node", format: "esm", packages: "external", metafile: true, logLevel: "silent" });
   for (const input of Object.keys(compiled.metafile!.inputs)) for (const forbidden of fixture.forbiddenInputs) expect(forbidden.endsWith(".ts") ? input === forbidden : input.includes(forbidden), input).toBe(false);
   const project = JSON.parse(readFileSync(resolve(root, "📋️project.json"), "utf8"));
-  for (const [name, args] of Object.entries(fixture.targets)) expect(project.targets[name].options.command).toBe(`repo ./${fixture.entry} ${args}`);
-  expect(project.targets.build.executor).toBe("repo:noop");expect(project.targets.build.dependsOn).toContain("build-storybook");
+  for (const [name, row] of Object.entries(fixture.targets)) expect(JSON.parse(readFileSync(resolve(root, row.project, "📋️project.json"), "utf8")).targets[name].options.command).toBe(`repo ./${fixture.entry} ${row.arguments}`);
+  expect(project.targets.build.executor).toBe("repo:noop");expect(project.targets.build.dependsOn).toContain("repo-storybook:build-storybook");
 });
 
 test("workspace build gate requires compiler intent and emits the completed graph mode", () => withScriptProcessEnvelope(createScriptProcessEnvelope({ version: 1, owner: "workspace-build-test", maximumElapsedMilliseconds: 0 }, {}, Date.now()), async invocation => {
@@ -49,7 +49,7 @@ test("workspace build gate requires compiler intent and emits the completed grap
 
 
 
-test("actual lease admission refusal retains bounded context and genuine continuation",async()=>repository.invoke(async original=>withRepositoryTestArtifactsV1(repository.root,original,createIssuedResourceControlV1(original,"test:artifact-entry",0),async()=>testResourceLeaseAdmissionTimeoutV1(repositoryTestArtifactRootV1(repository.root),scriptCompilerAdmissionControlV1(original,"test:resource-leases",30000)))));
+test("actual lease admission refusal retains bounded context and genuine continuation",async()=>repository.invoke(async original=>withRepositoryTestArtifactsV1(repository.root,original,createIssuedResourceControlV1(original,"test:artifact-entry",0),async()=>testResourceLeaseAdmissionTimeoutV1(repositoryTestArtifactRootV1(repository.root),scriptCompilerAdmissionControlV1(original,"test:resource-leases",30000))),{maximumElapsedMilliseconds:120000}),150000);
 
 test("rooted ticket lifecycle neutral vectors preserve independent repository projections",()=>ticketScopeVectorLawV1());
 

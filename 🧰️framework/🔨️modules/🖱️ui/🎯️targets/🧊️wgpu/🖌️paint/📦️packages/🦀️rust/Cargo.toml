@@ -34,6 +34,7 @@ semio-ui-retained-tree = { path = "../../../../../🌳️retained/🌳️tree/�
 semio-ui-select-behavior = { path = "../../../../../🧱️elements/🔽️Select/🧭️behavior/📦️packages/🦀️rust" }
 semio-ui-text = { path = "../../../../../🔤️typography/📦️packages/🦀️rust" }
 semio-ui-theme = { path = "../../../../../🎨️styling/🎭️theme/📦️packages/🦀️rust" }
+semio-ui-wgpu-paint-overlay = { path = "../../🖼️ui-image-sources-skeleton-and-overlays/📦️packages/🦀️rust" }
 semio-ui-wgpu-paint-sync = { path = "../../🔄️interactive-state-sync/📦️packages/🦀️rust" }
 semio-ui-wgpu-paint-widgets = { path = "../../📶️progress-celebrate-and-widget-painters/📦️packages/🦀️rust" }
 semio-ui-wgpu-controls = { path = "../../../🔘️controls/📦️packages/🦀️rust" }

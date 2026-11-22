@@ -9,6 +9,7 @@ import {hostCapacityDirectoryV1,readHostCapacityStatusV1,type HostCapacityStatus
 import {readHostAsksV1,type HostAskV1} from "../../../../../../../🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🙋️asks/🟦️.ts";
 import {BUILD_HOST_CAPACITY_POLICY_V1} from "../../🌡️host-capacity/🎛️control/🟦️.ts";
 import {remoteExecutionWorkerWhyV1,type RemoteExecutionWorkerWhyV1} from "./🔎️why/🟦️.ts";
+import {readReadyStageClaimV1,withReadyStageV1,type ReadyStageClaimV1} from "./🪑️stage-claim/🟦️.ts";
 import {requireRemoteExecutionShapeV1,type RemoteExecutionConfinementV1,type RemoteExecutionNetworkV1,type RemoteExecutionRefusalV1,type RemoteExecutionSandboxV1} from "../🟦️.ts";
 
 /** 🧬️ The platform key of a machine: operating system, architecture and the build id of its Rust toolchain; units are shared and offloaded only between machines with an equal key. */
@@ -29,7 +30,7 @@ export type RemoteExecutionLoadReportV1=Readonly<{version:1;origin:string;platfo
 export type RemoteExecutionAdmissionV1=Readonly<{admit:true}>|Readonly<{admit:false;reason:RemoteExecutionRefusalV1}>;
 
 /** 🔭️ What the admission looks at: the host sample, the local ledger and queue of the host capacity gate. */
-export type RemoteExecutionHostViewV1=Pick<HostCapacityStatusV1,"host"|"grants"|"waiters">&Readonly<{asks?:readonly HostAskV1[]}>;
+export type RemoteExecutionHostViewV1=Pick<HostCapacityStatusV1,"host"|"grants"|"waiters">&Readonly<{asks?:readonly HostAskV1[];stage?:ReadyStageClaimV1}>;
 
 const sha256=(data:string):string=>createHash("sha256").update(data).digest("hex");
 
@@ -87,12 +88,13 @@ export function remoteExecutionOriginV1(root:string,environment:Readonly<Record<
 /** 💾️ The megabytes the admission reserves for one remote action: the host capacity policy's build kind. */
 export const remoteExecutionActionMegabytesV1=(policy:HostCapacityPolicyV1=BUILD_HOST_CAPACITY_POLICY_V1):number=>policy.kinds.build.megabytes;
 
-/** 🎚️ Decides whether this machine takes one more remote action: it asks the single admission decision of the host (`evaluateHostCapacityV1`) as a request of the lent class (served after every request of this machine, admitted only while none of them waits) for one build job beside the grants of its local builds and the `running` remote actions (each reserved like a build job). A worker with all its slots busy refuses with `slots`. Pure. */
+/** 🎚️ Decides whether this machine takes one more remote action: it asks the single admission decision of the host (`evaluateHostCapacityV1`) as a request of the lent class (served after every request of this machine, admitted only while none of them waits) for one build job beside the grants of its local builds and the `running` remote actions (each reserved like a build job). A worker with all its slots busy refuses with `slots`. The running remote actions are part of the ledger the unmanaged memory is measured against: what they hold is already in the sample, so measuring it before adding their reservations counted every running action twice and a 16 GB machine with free memory refused after its first one. While the readiness stage of the machine runs (`view.stage`, see {@link withReadyStageV1}) its growth room is already taken from the available memory and any pressure above normal refuses the offload: a worker that is not Ready yet does its own work first. Pure. */
 export function admitRemoteExecutionActionV1(input:Readonly<{view:RemoteExecutionHostViewV1;running:number;concurrency:number;nowMs:number;policy?:HostCapacityPolicyV1}>):RemoteExecutionAdmissionV1{
  const policy=input.policy??BUILD_HOST_CAPACITY_POLICY_V1;
  if(input.running>=input.concurrency)return {admit:false,reason:"slots"};
- const megabytes=remoteExecutionActionMegabytesV1(policy),host:HostSampleV1=withUnmanagedHostV1(input.view.host,input.view.grants);
- const remote:HostGrantV1[]=Array.from({length:input.running},(_,index)=>({id:`remote-${index}`,operation:"remote-execution",jobs:1,cpu:1,reservedMegabytes:megabytes,admittedAtMs:input.nowMs-3_600_000,observedMegabytes:null,pid:process.pid,bootAtMs:0}));
+ if(input.view.stage!==undefined&&input.view.host.pressure!=="normal")return {admit:false,reason:input.view.host.pressure==="critical"?"pressure-critical":"pressure-warn"};
+ const megabytes=remoteExecutionActionMegabytesV1(policy);
+ const remote:HostGrantV1[]=Array.from({length:input.running},(_,index)=>({id:`remote-${index}`,operation:"remote-execution",jobs:1,cpu:1,reservedMegabytes:megabytes,admittedAtMs:input.nowMs-3_600_000,observedMegabytes:null,pid:process.pid,bootAtMs:0})),host:HostSampleV1=withUnmanagedHostV1(input.view.host,[...input.view.grants,...remote]);
  const waiter:HostWaiterV1={request:{id:"remote-candidate",operation:"remote-execution",priority:"lent",minimumJobs:1,preferredJobs:1,fixedMegabytes:megabytes,perJobMegabytes:0,cpuPerJob:1},arrivedAtMs:input.nowMs,pid:process.pid};
  const decision=evaluateHostCapacityV1(policy,host,[...input.view.grants,...remote],[...input.view.waiters,waiter],input.nowMs).decisions.find(row=>row.id==="remote-candidate");
  if(decision?.verdict==="admit")return {admit:true};
@@ -105,11 +107,11 @@ export async function readRemoteExecutionHostViewV1(environment:Readonly<Record<
  if(simulated!==undefined&&simulated!==""){
   const value=JSON.parse(readFileSync(simulated,"utf8")) as RemoteExecutionHostViewV1;
   requireHostCapacityV1<HostSampleV1>("Host",value.host);
-  return {host:value.host,grants:value.grants??[],waiters:value.waiters??[],asks:value.asks??[]};
+  return withReadyStageV1({host:value.host,grants:value.grants??[],waiters:value.waiters??[],asks:value.asks??[]},readReadyStageClaimV1(hostCapacityDirectoryV1(environment),Date.now()),Date.now());
  }
  const controller=new AbortController(),control={signal:controller.signal,remainingMilliseconds:()=>null,publish:()=>undefined,yieldContinuation:()=>new Promise<void>(done=>setImmediate(done))};
  const status=await readHostCapacityStatusV1({directory:hostCapacityDirectoryV1(environment),policy,control,environment});
- return {host:status.host,grants:status.grants,waiters:status.waiters,asks:readHostAsksV1(hostCapacityDirectoryV1(environment))};
+ return withReadyStageV1({host:status.host,grants:status.grants,waiters:status.waiters,asks:readHostAsksV1(hostCapacityDirectoryV1(environment))},readReadyStageClaimV1(hostCapacityDirectoryV1(environment),Date.now()),Date.now());
 }
 
 /** 📻️ Builds the load report of this machine from the host view: the pressure level and free memory are the sample's, `running` counts the local grants and the remote actions, `queued` the local waiters, and `headroom` is this machine's own admission verdict for one more remote action (slots are the scheduler's business, so a full worker still has headroom). */

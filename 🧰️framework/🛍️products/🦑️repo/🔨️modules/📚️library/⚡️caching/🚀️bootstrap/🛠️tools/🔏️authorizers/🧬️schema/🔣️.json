@@ -465,8 +465,13 @@
           "roots": []
         },
         {
-          "owner": "🧰️framework/🔨️modules/⚙️runtime/🟢️node/🧲️native/🟦️.ts",
+          "owner": "🧰️framework/🔨️modules/⚙️runtime/🟢️node/🧲️native/🏗️addon/🟦️.ts",
           "count": 1,
+          "roots": []
+        },
+        {
+          "owner": "🧰️framework/🔨️modules/⚙️runtime/🟢️node/🧲️native/🟦️.ts",
+          "count": 3,
           "roots": []
         },
         {
@@ -485,6 +490,21 @@
           "roots": [
             "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/👷️closure-read-worker/🟨️.mjs"
           ]
+        },
+        {
+          "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️typescript/🟦️.ts",
+          "count": 3,
+          "roots": []
+        },
+        {
+          "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️typescript/🧬️declarations/🟦️.ts",
+          "count": 1,
+          "roots": []
+        },
+        {
+          "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️bundle/🟦️.ts",
+          "count": 1,
+          "roots": []
         },
         {
           "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📜️script.ts",
@@ -507,6 +527,11 @@
           "roots": []
         },
         {
+          "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌐️remote-execution/🛰️sidecar/🧰️shared/🟦️.ts",
+          "count": 1,
+          "roots": []
+        },
+        {
           "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🟨️.mjs",
           "count": 4,
           "roots": []
@@ -519,11 +544,6 @@
         {
           "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📐️conformance/⌨️command/🟦️.ts",
           "count": 1,
-          "roots": []
-        },
-        {
-          "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📖️storybook/🏃️execution/🟦️.ts",
-          "count": 4,
           "roots": []
         },
         {
@@ -547,6 +567,13 @@
             "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🔌️backend/🟦️.ts",
             "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🐙️semio/🔌️backend/🟦️.ts",
             "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🧶️nx/🔌️backend/🟦️.ts"
+          ]
+        },
+        {
+          "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/📦️project-nodes/🏊️project-farm/👷️worker/🟨️.mjs",
+          "count": 1,
+          "roots": [
+            "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/📦️project-nodes/🏊️project-farm/👷️service/🟨️.mjs"
           ]
         },
         {
@@ -577,17 +604,32 @@
           "roots": []
         },
         {
+          "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🚀️bootstrap/🔷️typescript-compiler/🟨️.mjs",
+          "count": 1,
+          "roots": []
+        },
+        {
+          "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧊️revision/🗂️fs/🧩️module-loader.ts",
+          "count": 1,
+          "roots": []
+        },
+        {
+          "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧠️memory/🦶️footprint/🟨️.mjs",
+          "count": 2,
+          "roots": []
+        },
+        {
           "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧩️units/⌨️command/🟦️.ts",
           "count": 3,
           "roots": []
         },
         {
-          "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🩺️doctor/🔌️ports/🟦️.ts",
+          "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/🏗️builder/📥️inputs/🔌️nx/🟦️.ts",
           "count": 1,
           "roots": []
         },
         {
-          "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/🏗️builder/📥️inputs/🔌️nx/🟦️.ts",
+          "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🛡️resilience/🟦️.ts",
           "count": 1,
           "roots": []
         },

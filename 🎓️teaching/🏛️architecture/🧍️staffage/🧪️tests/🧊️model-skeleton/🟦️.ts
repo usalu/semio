@@ -8,7 +8,8 @@
 import { AnimationMixer, Matrix4, Ray, Vector3 } from "three";
 import { describe, expect, it } from "vitest";
 import { poseModel, type ModelDocument } from "../../../../../🧰️framework/🔨️modules/🧊️3d/🗿️model/🟦️.ts";
-import type { Asset } from "../../🧬️schema/🟦️.ts";
+import type { Asset, VolumeSolid } from "../../🧬️schema/🟦️.ts";
+import { VOLUME_LIMITS, featureOf, isSheet, sortedExtents } from "../../🔨️modules/🗂️catalog/🧊️volumes/🧱️rules/🟦️.ts";
 import { writeFbx } from "../../🔨️modules/📤️export/🎬️fbx/🟦️.ts";
 import { evaluate } from "../../🔨️modules/🧮️evaluation/🟦️.ts";
 import { frameTimes, modelOf } from "../../🔨️modules/🧊️volume/🟦️.ts";
@@ -43,6 +44,29 @@ const vectors = fixture<Vectors>("🧊️model-skeleton");
 const OPTIONS = { scale: 50, view: "light-solid" } as const;
 const near = (a: readonly number[], b: readonly number[], eps: number, what = ""): void => void a.forEach((v, i) => expect(Math.abs(v - b[i]!), `${what} ${a} vs ${b}`).toBeLessThanOrEqual(eps));
 
+/** 🔬️ The authored 1:50 volume of an asset, the scale at which every pinned part is measured. */
+const fineOf = (asset: Asset) => {
+  const volume = asset.volumes?.["50"];
+  if (volume?.status !== "authored") throw new Error(asset.id);
+  return volume;
+};
+
+/** 📏️ Whether `volumes-feature` admits a part, measured on its 1:50 solid, at a scale: always at 1:50, coarser when it is at least one smallest feature of that scale in every dimension, a thin sheet, a texture or a thin role, or long enough over its largest cross extent to be declared `slender` (a structure `member` from the member ratio and two features of length). A part that is missing at 1:50 is demanded everywhere.
+ * @see ../../🔨️modules/🗂️catalog/🧊️volumes/🧱️rules/🟦️.ts — `featureOf`, `isSheet`, `sortedExtents`, `VOLUME_LIMITS` */
+const admits = (part: object | undefined, scale: string, member = false): boolean => {
+  if (scale === "50" || part === undefined || !("kind" in part)) return true;
+  const solid = part as VolumeSolid, feature = featureOf(Number(scale)), [thin, wide, long] = sortedExtents(solid);
+  if (thin >= feature - 1e-9 || solid.texture === true || (VOLUME_LIMITS.thinRoles as readonly string[]).includes(solid.role) || isSheet(solid, feature)) return true;
+  const bar = member && long >= VOLUME_LIMITS.slenderMemberFeatures * feature - 1e-9;
+  return long >= (bar ? VOLUME_LIMITS.slenderMemberRatio : VOLUME_LIMITS.slenderRatio) * wide - 1e-9;
+};
+
+/** 🦴️ Whether a bone still has a `member` solid in a structure list: its own, or one that spans it and names it in `members`. */
+const carried = (structure: readonly object[], bone: string): boolean => structure.some((entry) => {
+  const solid = entry as { part?: string; member?: string; members?: readonly string[] };
+  return solid.part === "member" && (solid.member === bone || (solid.members ?? []).includes(bone));
+});
+
 const variantOf = (v: Vectors["variants"][number]): Asset => {
   const asset = structuredClone(sampleFigure()) as unknown as { rig: { bones: { id: string; joint: unknown }[] }; poses: { id: string; bones: Record<string, unknown> }[] };
   for (const [bone, joint] of Object.entries(v.jointPatch ?? {})) asset.rig.bones.find((b) => b.id === bone)!.joint = joint;
@@ -58,7 +82,7 @@ const expectedWorld = (frame: { o: { x: number; y: number; z: number }; u: { x: 
 const worldOf = (document: ModelDocument, pose: Parameters<typeof poseModel>[1]) => poseModel(document, pose);
 
 describe("🧊️ the rig as the neutral node tree", () => {
-  it("suspends the doe’s paired glands and exposes the bare skin at each scale", () => {
+  it("suspends the doe’s paired glands and exposes the bare skin at every scale whose feature admits them", () => {
     const f = vectors.doeSuspension, asset = catalogAsset(f.asset), id = "mammary-suspension";
     const suspension = asset.rig.bones.find(b => b.id === id)!;
     expect(suspension.parent).toBe("pelvis");
@@ -70,13 +94,21 @@ describe("🧊️ the rig as the neutral node tree", () => {
       const {u} = evaluate(asset, {kind:"pose",pose}).bones[id]!.frame;
       expect(new Vector3(u.x,u.y,u.z).angleTo(new Vector3(0,-1,0))*180/Math.PI).toBeCloseTo(degrees,2);
     }
-    for (const vol of Object.values(asset.volumes ?? {})) {
+    const high = fineOf(asset);
+    for (const [scale, vol] of Object.entries(asset.volumes ?? {})) {
       if (vol.status !== "authored") throw new Error(asset.id);
       for (const part of ["udder-near","udder-far","teat-near","teat-far"]) {
+        if (!admits(high.body.find(s => s.id === part), scale)) continue;
         const body = vol.body.find(s => s.id === part);
-        expect(body?.bone).toBe(id);
+        expect(body?.bone, scale+" "+part).toBe(id);
         expect(body?.material).toBe("bare-skin");
         expect(vol.thermal.some(s => "of" in s && s.of === part && s.region === skin.id)).toBe(true);
+      }
+      const glands = vol.body.filter(s => s.bone === id);
+      expect(glands.length, scale).toBeGreaterThan(0);
+      for (const gland of glands) {
+        expect(gland.material).toBe("bare-skin");
+        expect(vol.thermal.some(s => "of" in s && s.of === gland.id && s.region === skin.id), scale+" "+gland.id).toBe(true);
       }
     }
   });
@@ -104,20 +136,35 @@ describe("🧊️ the rig as the neutral node tree", () => {
     }
   });
 
-  it("keeps four distinct wheel centres coaxial with the tyres and binds metal and rubber separately", () => {
+  it("keeps four distinct wheel centres coaxial with the tyres and binds metal and rubber separately at every scale whose feature admits them", () => {
     for (const [name,f] of Object.entries(vectors.roadWheels)) {
-      const asset = catalogAsset(name);
-      for (const v of Object.values(asset.volumes ?? {})) {
+      const asset = catalogAsset(name), high = fineOf(asset);
+      for (const [scale,v] of Object.entries(asset.volumes ?? {})) {
         if (v.status !== "authored") throw new Error(name);
         for (const corner of ["fl","fr","rl","rr"]) {
           const id = (part:string) => f.style==="spoked"?part+"-"+corner:corner+"-"+part;
-          const tyre = v.body.find(q=>q.id===id("tyre")), rim = v.body.find(q=>q.id===id("rim"));
-          if (tyre?.kind!=="revolve"||rim?.kind!=="revolve") throw new Error(name+" "+corner);
+          const kept = (part:string) => admits(high.body.find(q=>q.id===id(part)), scale);
+          const tyre = v.body.find(q=>q.id===id("tyre"));
+          if (tyre?.kind!=="revolve") throw new Error(name+" "+corner+" 1:"+scale);
           expect(Math.max(...tyre.profile.map(p=>p[1]))*2).toBeCloseTo(f.diameterM,4);
           expect(Math.min(...tyre.profile.map(p=>p[1]))).toBeGreaterThan(.16);
-          expect(new Vector3(...tyre.origin!).distanceTo(new Vector3(...rim.origin!))).toBeLessThan(.00001);
-          const centre = v.body.find(q=>q.id===id(f.style==="spoked"?"spokes":f.style==="cast"?"spoke":"disc-wheel"));
-          if (!centre) throw new Error("Missing wheel centre");
+          expect(v.thermal.some(s=>"of" in s && s.of===tyre.id && s.region==="tyres")).toBe(true);
+          const metal = ["rim","hub"].filter(kept).map(id);
+          if (kept("rim")) {
+            const rim = v.body.find(q=>q.id===id("rim"));
+            if (rim?.kind!=="revolve") throw new Error(name+" "+corner+" 1:"+scale);
+            expect(new Vector3(...tyre.origin!).distanceTo(new Vector3(...rim.origin!))).toBeLessThan(.00001);
+          }
+          const web = f.style==="spoked"?"spokes":f.style==="cast"?"spoke":"disc-wheel";
+          if (!kept(web)) {
+            for (const part of metal) {
+              expect(v.structure.some(s=>"of" in s && s.of===part), part+" 1:"+scale).toBe(true);
+              expect(v.thermal.some(s=>"of" in s && s.of===part && s.region==="wheel-metal"), part+" 1:"+scale).toBe(true);
+            }
+            continue;
+          }
+          const centre = v.body.find(q=>q.id===id(web));
+          if (!centre) throw new Error("Missing wheel centre "+name+" "+corner+" 1:"+scale);
           if (f.style==="pressed") {
             if (centre.kind!=="polyhedron") throw new Error("Missing pressed web");
             const vertices = centre.vertices.map(p=>new Vector3(...p));
@@ -130,18 +177,17 @@ describe("🧊️ the rig as the neutral node tree", () => {
               expect(hits(.124,2*Math.PI*(i+.5)/f.slots)).toBe(true);
             }
           } else expect(centre.repeat?.count).toBe(f.slots);
-          for (const part of [centre.id,rim.id,id("hub")]) {
-            expect(v.structure.some(s=>"of" in s && s.of===part)).toBe(true);
-            expect(v.thermal.some(s=>"of" in s && s.of===part && s.region==="wheel-metal")).toBe(true);
+          for (const part of [centre.id,...metal]) {
+            expect(v.structure.some(s=>"of" in s && s.of===part), part+" 1:"+scale).toBe(true);
+            expect(v.thermal.some(s=>"of" in s && s.of===part && s.region==="wheel-metal"), part+" 1:"+scale).toBe(true);
           }
-          expect(v.thermal.some(s=>"of" in s && s.of===tyre.id && s.region==="tyres")).toBe(true);
         }
       }
     }
   });
 
-  it("keeps the squirrel's tapered caudal chain and articulated brush together", () => {
-    const f = vectors.squirrelBrush, asset = catalogAsset(f.asset);
+  it("keeps the squirrel's tapered caudal chain and articulated brush together at every scale whose feature admits the centra", () => {
+    const f = vectors.squirrelBrush, asset = catalogAsset(f.asset), high = fineOf(asset);
     const bones = asset.rig.bones.filter(b => /^tail-\d+$/.test(b.id));
     expect(bones).toHaveLength(f.segments);
     expect(bones.reduce((sum,b) => sum+b.lengthM,0)).toBeCloseTo(f.lengthM,6);
@@ -162,7 +208,9 @@ describe("🧊️ the rig as the neutral node tree", () => {
       expect(locks).toHaveLength(f.guardLocks[i]!);
       for (const lock of locks) expect(vol.thermal.some(s => "of" in s && s.of === lock.id && s.region === "tail-fur")).toBe(true);
       for (const [j,bone] of bones.entries()) {
-        expect(vol.structure.filter(s => s.member === bone.id && s.id.startsWith("caudal-centrum-"))).toHaveLength(f.centra[j]!);
+        const centra = (list: typeof vol.structure) => list.filter(s => s.member === bone.id && s.id.startsWith("caudal-centrum-"));
+        if (centra(high.structure).every(s => admits(s, scale, true))) expect(centra(vol.structure), scale+" "+bone.id).toHaveLength(f.centra[j]!);
+        expect(carried(vol.structure, bone.id), scale+" "+bone.id).toBe(true);
       }
     }
   });
@@ -191,14 +239,16 @@ describe("🧊️ the rig as the neutral node tree", () => {
     }
   });
 
-  it("seats two annular cartridges in the electric scooter rear hub", () => {
-    const f = vectors.scooterCartridges;
-    for (const volume of Object.values(catalogAsset(f.asset).volumes)) {
+  it("seats two annular cartridges in the electric scooter rear hub at every scale whose feature admits them", () => {
+    const f = vectors.scooterCartridges, asset = catalogAsset(f.asset), high = fineOf(asset);
+    for (const [scale, volume] of Object.entries(asset.volumes ?? {})) {
       if (volume.status !== "authored") throw new Error("Missing scooter");
+      expect(volume.body.some(s => s.bone === "wheel-r"), scale).toBe(true);
       const rim = volume.body.find(s => s.id === "web-r");
-      expect(rim?.kind === "extrude" && rim.holes?.length).toBe(f.windows);
+      if (admits(high.body.find(s => s.id === "web-r"), scale)) expect(rim?.kind === "extrude" && rim.holes?.length, scale).toBe(f.windows);
+      if (!high.body.filter(s => s.id.startsWith("bearing-r-")).every(s => admits(s, scale))) continue;
       const bearings = volume.body.filter(s => s.id.startsWith("bearing-r-"));
-      expect(bearings).toHaveLength(2);
+      expect(bearings, scale).toHaveLength(2);
       for (const bearing of bearings) {
         if (bearing.kind !== "revolve") throw new Error("Missing annular bearing");
         const radii = bearing.profile.map(p => p[1]);
@@ -209,11 +259,13 @@ describe("🧊️ the rig as the neutral node tree", () => {
     }
   });
 
-  it("bores every scissor arm for its cross pins", () => {
-    const f = vectors.scissorBearings;
-    for (const volume of Object.values(catalogAsset(f.asset).volumes)) {
+  it("bores every scissor arm for its cross pins at every scale whose feature admits the arm", () => {
+    const f = vectors.scissorBearings, asset = catalogAsset(f.asset), high = fineOf(asset);
+    for (const [scale, volume] of Object.entries(asset.volumes ?? {})) {
       if (volume.status !== "authored") throw new Error("Missing scissor volume");
       for (const side of ["a","b"]) for (const index of [1,2,3,4]) {
+        expect(volume.body.some(s => s.bone === side+index), scale+" "+side+index).toBe(true);
+        if (!admits(high.body.find(s => s.id === `arm-${side}${index}`), scale)) continue;
         const arm = volume.body.find(s => s.id === `arm-${side}${index}`);
         if (arm?.kind !== "polyhedron") throw new Error("Missing bored link");
         const vertices = arm.vertices.map(p => new Vector3(...p));
@@ -224,6 +276,7 @@ describe("🧊️ the rig as the neutral node tree", () => {
           };
           expect(rayHits(f.boreRadiusM)).toBe(false);
           expect(rayHits(f.sleeveRadiusM + 0.0025)).toBe(true);
+          if (!admits(high.body.find(s => s.id === `sleeve-${side}${index}-${station}`), scale)) continue;
           const sleeve = volume.body.find(s => s.id === `sleeve-${side}${index}-${station}`);
           if (sleeve?.kind !== "revolve") throw new Error("Missing sleeve");
           expect(Math.min(...sleeve.profile.map(p => p[1]))).toBeCloseTo(f.boreRadiusM,6);
@@ -233,21 +286,25 @@ describe("🧊️ the rig as the neutral node tree", () => {
     }
   });
 
-  it("passes each idler pin through its yoke and seats eight rollers per track", () => {
-    const f = vectors.crawler;
-    for (const volume of Object.values(catalogAsset(f.asset).volumes)) {
+  it("passes each idler pin through its yoke and seats eight rollers per track at every scale whose feature admits them", () => {
+    const f = vectors.crawler, asset = catalogAsset(f.asset), high = fineOf(asset);
+    const kept = (scale: string, prefix: string) => high.body.filter(s => s.id.startsWith(prefix)).every(s => admits(s, scale));
+    for (const [scale, volume] of Object.entries(asset.volumes ?? {})) {
       if (volume.status !== "authored") throw new Error("Missing crawler volume");
-      const pin = volume.body.find(s => s.id === "idler-cross-pin");
-      if (pin?.kind !== "revolve") throw new Error("Missing idler cross pin");
       const cheeks = volume.body.filter(s => s.id.startsWith("idler-yoke-"));
-      expect(cheeks).toHaveLength(2);
-      for (const cheek of cheeks) {
-        if (cheek.kind !== "extrude" || !cheek.holes?.[0]) throw new Error("Missing yoke bore");
-        for (const [x,y] of cheek.holes[0]) expect(Math.hypot(x-pin.origin[0],y-pin.origin[1])-pin.profile[0]![1]).toBeCloseTo(f.idlerClearanceM,4);
+      expect(cheeks, scale).toHaveLength(2);
+      if (kept(scale, "idler-cross-pin")) {
+        const pin = volume.body.find(s => s.id === "idler-cross-pin");
+        if (pin?.kind !== "revolve") throw new Error("Missing idler cross pin 1:"+scale);
+        if (kept(scale, "idler-yoke-")) for (const cheek of cheeks) {
+          if (cheek.kind !== "extrude" || !cheek.holes?.[0]) throw new Error("Missing yoke bore 1:"+scale);
+          for (const [x,y] of cheek.holes[0]) expect(Math.hypot(x-pin.origin[0],y-pin.origin[1])-pin.profile[0]![1], scale).toBeCloseTo(f.idlerClearanceM,4);
+        }
       }
       for (const side of ["l","r"]) {
+        if (!kept(scale, "roller-"+side)) continue;
         const roller = volume.body.find(s => s.id === "roller-"+side);
-        expect(roller?.repeat?.count).toBe(f.rollersPerSide);
+        expect(roller?.repeat?.count, scale).toBe(f.rollersPerSide);
         expect(volume.structure.some(s => "of" in s && s.of === roller?.id)).toBe(true);
       }
     }
@@ -265,15 +322,17 @@ describe("🧊️ the rig as the neutral node tree", () => {
     }
   });
 
-  it("runs four flanged trolley wheels on the crane rails and keeps two reeving grooves open", () => {
-    const f = vectors.craneCarriage, asset = catalogAsset(f.asset);
+  it("runs four flanged trolley wheels on the crane rails and keeps two reeving grooves open at every scale whose feature admits them", () => {
+    const f = vectors.craneCarriage, asset = catalogAsset(f.asset), high = fineOf(asset);
     const joint = asset.rig.bones.find(b => b.id === "trolley")!;
-    for (const vol of Object.values(asset.volumes ?? {})) {
+    for (const [scale, vol] of Object.entries(asset.volumes ?? {})) {
       if (vol.status !== "authored") throw new Error(asset.id);
       for (const side of ["r","l"]) {
         const rail = vol.body.find(s => s.id === "jib-rail-"+side);
         if (rail?.kind !== "box") throw new Error("Missing jib rail");
         const railTop = rail.transform!.translation![1]+rail.size[1]/2;
+        expect(vol.body.some(s => s.bone === "trolley"), scale).toBe(true);
+        if (![1,2].every(i => admits(high.body.find(s => s.id === "trolley-wheel-"+side+"-"+i), scale))) continue;
         const points = [1,2].map(i => {
           const wheel = vol.body.find(s => s.id === "trolley-wheel-"+side+"-"+i);
           if (wheel?.kind !== "revolve") throw new Error("Missing trolley wheel");
@@ -287,6 +346,7 @@ describe("🧊️ the rig as the neutral node tree", () => {
         expect(points[0]!.distanceTo(points[1]!)).toBeCloseTo(f.wheelbaseM,4);
       }
       for (const i of [1,2]) {
+        if (!admits(high.body.find(s => s.id === "trolley-sheave-"+i), scale)) continue;
         const sheave = vol.body.find(s => s.id === "trolley-sheave-"+i);
         if (sheave?.kind !== "revolve") throw new Error("Missing trolley sheave");
         const centre = sheave.profile.find(p => Math.abs(p[0]-.03)<1e-5)!;
@@ -295,16 +355,20 @@ describe("🧊️ the rig as the neutral node tree", () => {
     }
   });
 
-  it("carries the same maple deck stock and four ground-contact wheels at every scale", () => {
-    const f = vectors.skateboard, asset = catalogAsset(f.asset);
-    for (const vol of Object.values(asset.volumes ?? {})) {
+  it("carries the same maple deck stock and four ground-contact wheels at every scale whose feature admits them", () => {
+    const f = vectors.skateboard, asset = catalogAsset(f.asset), high = fineOf(asset);
+    for (const [scale, vol] of Object.entries(asset.volumes ?? {})) {
       if (vol.status !== "authored") throw new Error(asset.id);
+      expect(vol.thermal.some(s => s.region === "deck"), scale).toBe(true);
+      expect(vol.thermal.some(s => s.region === "wheels"), scale).toBe(true);
       for (const side of ["l","r"]) {
+        if (!admits(high.body.find(s => s.id === "deck-"+side), scale)) continue;
         const deck = vol.body.find(s => s.id === "deck-"+side);
         if (deck?.kind !== "loft") throw new Error("Missing concave deck half");
         for (const section of deck.sections) expect(section.ry*2).toBeCloseTo(f.deckGaugeM,5);
       }
       for (const end of ["f","r"]) {
+        if (!["l","r"].every(side => admits(high.body.find(q => q.id === "wheel-"+end+"-"+side), scale))) continue;
         const centres = ["l","r"].map(side => {
           const wheel = vol.body.find(q => q.id === "wheel-"+end+"-"+side);
           if (wheel?.kind !== "revolve") throw new Error("Missing road wheel");
@@ -319,10 +383,13 @@ describe("🧊️ the rig as the neutral node tree", () => {
     }
   });
 
-  it("keeps a patent spinal canal through seven distinct canine lumbar centra at every scale", () => {
-    const f = vectors.canineLumbar, asset = catalogAsset(f.asset);
-    for (const vol of Object.values(asset.volumes ?? {})) {
+  it("keeps a patent spinal canal through seven distinct canine lumbar centra at every scale whose feature admits them", () => {
+    const f = vectors.canineLumbar, asset = catalogAsset(f.asset), high = fineOf(asset);
+    const levels = Array.from({length:f.levels}, (_,i) => high.structure.find(s => s.id === "lumbar-l"+(i+1)));
+    for (const [scale, vol] of Object.entries(asset.volumes ?? {})) {
       if (vol.status !== "authored") throw new Error(asset.id);
+      expect(carried(vol.structure, "lumbar"), scale).toBe(true);
+      if (!levels.every(level => admits(level, scale, true))) continue;
       let previous = Infinity;
       for (let level=1; level<=f.levels; level++) {
         const body = vol.structure.find(s => s.id === "lumbar-l"+level);
@@ -389,8 +456,8 @@ describe("🧊️ the rig as the neutral node tree", () => {
     }
   });
 
-  it("folds and opens the gull’s remiges from their anatomical attachments at all four scales", () => {
-    const f = vectors.gullWing, asset = catalogAsset(f.asset);
+  it("folds and opens the gull’s remiges from their anatomical attachments at all four scales and carries each vane at every scale whose feature admits it", () => {
+    const f = vectors.gullWing, asset = catalogAsset(f.asset), high = fineOf(asset);
     const bones = new Map(asset.rig.bones.map(b => [b.id,b]));
     const vector = (p: { x: number; y: number; z: number }) => new Vector3(p.x,p.y,p.z);
     for (const [pose, degrees] of [["standing",f.foldDeg],["gliding",f.glideDeg]] as const) {
@@ -400,12 +467,13 @@ describe("🧊️ the rig as the neutral node tree", () => {
           for (let i = 1; i <= count; i++) {
             const id = series+i+"-"+side;
             expect(bones.get(id)?.parent).toBe(parent+"-"+side);
-            for (const vol of Object.values(asset.volumes ?? {})) {
+            for (const [scale, vol] of Object.entries(asset.volumes ?? {})) {
               if (vol.status !== "authored") throw new Error(id);
-              const solid = vol.body.find(q => q.bone === id);
-              expect(solid, id).toBeDefined();
-              expect(vol.thermal.some(q => "of" in q && q.of === solid!.id), id).toBe(true);
               expect(vol.structure.some(q => q.member === id), id).toBe(true);
+              if (!admits(high.body.find(q => q.bone === id), scale)) continue;
+              const solid = vol.body.find(q => q.bone === id);
+              expect(solid, id+" 1:"+scale).toBeDefined();
+              expect(vol.thermal.some(q => "of" in q && q.of === solid!.id), id).toBe(true);
             }
           }
         }
@@ -422,17 +490,18 @@ describe("🧊️ the rig as the neutral node tree", () => {
     }
   });
 
-  it.each(vectors.passengers)("keeps the $asset passenger’s joints and respiratory landmarks attached at all scales", (p) => {
-    const asset = catalogAsset(p.asset);
+  it.each(vectors.passengers)("keeps the $asset passenger’s joints attached at every scale whose feature admits them and the respiratory landmarks at all scales", (p) => {
+    const asset = catalogAsset(p.asset), high = fineOf(asset);
     const parentOf = (id: string) => asset.rig.bones.find(b => b.id === id)?.parent;
     expect(parentOf(p.head)).toBe(p.neck);
     expect(parentOf(p.neck)).toBe(p.root);
-    for (const volume of Object.values(asset.volumes ?? {})) {
+    for (const [scale, volume] of Object.entries(asset.volumes ?? {})) {
       expect(volume.status).toBe("authored");
       if (volume.status !== "authored") throw new Error(p.asset);
       for (const id of [p.neck, p.head, ...p.segments]) {
-        expect(volume.body.some(s => s.bone === id), id).toBe(true);
-        expect(volume.structure.some(s => s.member === id), id).toBe(true);
+        const flesh = high.body.filter(s => s.bone === id), bones = high.structure.filter(s => s.member === id);
+        if (flesh.length === 0 || flesh.some(s => admits(s, scale))) expect(volume.body.some(s => s.bone === id), id+" 1:"+scale).toBe(true);
+        if (bones.length === 0 || bones.some(s => admits(s, scale, s.part === "member"))) expect(volume.structure.some(s => s.member === id), id+" 1:"+scale).toBe(true);
       }
       for (const [landmark, id] of p.outlets) {
         const anchor = asset.anchors.find(q => q.id === landmark)!;

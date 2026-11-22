@@ -30,10 +30,10 @@ export function launchdPriorityKeysV1(name:ServicePriorityNameV1):readonly strin
  return [`<key>ProcessType</key><string>${darwin.processType}</string>`,...darwin.lowPriorityIo?["<key>LowPriorityIO</key><true/>"]:[],...nice>0?[`<key>Nice</key><integer>${nice}</integer>`]:[]];
 }
 
-/** 🐧️ The systemd `[Service]` lines of a class: `Nice`, `CPUSchedulingPolicy`, `IOSchedulingClass` and, for best effort, `IOSchedulingPriority`. See https://www.freedesktop.org/software/systemd/man/systemd.exec.html */
-export function systemdPriorityLinesV1(name:ServicePriorityNameV1):readonly string[]{
+/** 🐧️ The POSIX shell lines of a class for a launch script of the service (run by a system unit that grants `CAP_SYS_NICE` to the account, so the account owns the class and a change needs no privilege): `renice` of the script's own shell (every child inherits it), `chrt --idle` for the idle policy and `ionice`; each one is allowed to fail without stopping the service. See https://man7.org/linux/man-pages/man1/renice.1.html */
+export function shellPriorityLinesV1(name:ServicePriorityNameV1):readonly string[]{
  const {nice,linux}=servicePriorityV1.classes[name];
- return [`Nice=${nice}`,`CPUSchedulingPolicy=${linux.cpuSchedulingPolicy}`,`IOSchedulingClass=${linux.ioSchedulingClass}`,...linux.ioSchedulingPriority===undefined?[]:[`IOSchedulingPriority=${linux.ioSchedulingPriority}`]];
+ return [`renice -n ${nice} -p $$ >/dev/null 2>&1 || :`,...linux.cpuSchedulingPolicy==="idle"?["chrt --idle -p 0 $$ >/dev/null 2>&1 || :"]:[],`ionice -c ${linux.ioSchedulingClass==="idle"?3:2}${linux.ioSchedulingPriority===undefined?"":` -n ${linux.ioSchedulingPriority}`} -p $$ >/dev/null 2>&1 || :`];
 }
 
 /** 🪟️ The `Priority` element of a Windows Scheduled Task of a class (a task without it runs below normal, at 7). See https://learn.microsoft.com/windows/win32/taskschd/tasksettings-priority */

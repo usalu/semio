@@ -13,19 +13,22 @@ while it came and went. Its scratch workspaces and pristine Nx tree are already 
 
 The workspace walk, the membership hash and the observation probes already treat ENOENT/ENOTDIR as a membership change.
 A raw `lstat` ENOENT from any other reader in the inventory step still surfaced as an internal error.
-`vanishedMemberAsChangeV1(root, error)` (`🕸️graph/📥️load/🧲️membership-follow/🟦️.ts`) turns ENOENT/ENOTDIR of a path below the
-root into the typed `BUILD_MEMBERSHIP_CHANGED` refusal naming that path; `settledInventory` in `🕸️graph/📥️load/🟦️.ts` applies it,
-so the existing follow-up rounds treat the path as absent. Paths outside the root and other codes pass unchanged.
-Test: new case in `🕸️graph/📥️load/🧪️tests/🧲️membership-follow/🟦️.ts`.
+`vanishedMemberPathV1(root, error)` (`🕸️graph/📥️load/🧲️membership-follow/🟦️.ts`) names the absolute member path below the root
+for an ENOENT/ENOTDIR failure and answers nothing for the root itself, for paths outside the root and for other codes.
+`followedPathsV1` uses it on the failure chain, so `settledInventory` in `🕸️graph/📥️load/🟦️.ts` re-observes exactly the owners
+that read that path (path-moved follow-up). The earlier `BUILD_MEMBERSHIP_CHANGED` wrapper was dropped: `settledInventory` never
+read its code, and the wrapper let the root path through as a member. Test: `🕸️graph/📥️load/🧪️tests/🧲️membership-follow/🟦️.ts`.
 Caveat: I could not reproduce which exact reader threw; the fix is at the step boundary, not at one lstat.
 
 ## Fix 2: "still recorded as running"
 
-A service started through launchd (the macOS route) wrote a start row without a pid and never wrote its own start row, so
-a dead service fell through to "still recorded as running". The service now appends its own start row with its pid once it
-runs (`🏗️composition/🌐️host/🟨️.mjs`), and `explainServiceLossV1` (`🏡️resident/🧾️exit-log/🟨️.mjs`) treats a last start row without
-a pid like a dead pid (killed without exit record, oom count from the last known cgroup). "Still recorded as running" remains
-only for a start row whose pid is alive. Test: extended case in `🏡️resident/🧪️tests/🧾️exit-log/🟦️.ts`.
+Every start writes exactly one start row. The launcher writes it at spawn: with the pid for a direct child, or without a pid
+and with `via:"launchd"` for a launchd job. The service then completes that pidless row with its pid
+(`completeServiceStartRowV1` in `🏡️resident/🧾️exit-log/🟨️.mjs`, called from `🏗️composition/🌐️host/🟨️.mjs`); it never appends a
+second row. `explainServiceLossV1` reports "the service is still starting under launchd" for a pidless launchd row younger than
+120 s, and treats an older pidless row like a dead pid (killed without exit record, oom count from the last known cgroup).
+"Still recorded as running" remains only for a start row whose pid is alive.
+Test: `🏡️resident/🧪️tests/🧾️exit-log/🟦️.ts`.
 
 ## Validation
 

@@ -69,7 +69,7 @@ export type VolumeFinding = {
   readonly path: string;
   readonly code: string;
   readonly message: Text;
-  readonly data?: Readonly<Record<string, string | number | readonly string[]>>;
+  readonly data?: Readonly<Record<string, string | number | readonly string[] | readonly number[]>>;
   readonly rule: VolumeRule;
   readonly scale?: ScaleDenominator;
   readonly list?: VolumeList;

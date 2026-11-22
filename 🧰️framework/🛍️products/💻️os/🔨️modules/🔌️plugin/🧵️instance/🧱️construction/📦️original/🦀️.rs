@@ -31,6 +31,7 @@ impl<A:ArtifactApp,M:ReferenceSpaceMember+MemberFactory+Send+'static> PluginAppD
  fn close_diagnostic(&self)->String{self.original.as_deref().map_or_else(String::new,PluginApp::close_diagnostic)}
  fn maintenance_retirement_demands(&self,body:usize,maximum_work_units:u64)->Result<RetirementDemand,ValueError>{self.original.as_deref().map_or(Ok(Default::default()),|original|PluginApp::maintenance_retirement_demands(original,body,maximum_work_units))}
  fn maintenance_terminal_is_empty(&self)->bool{self.original.as_deref().is_none_or(PluginApp::maintenance_terminal_is_empty)}
+ fn maintenance_quiescent_under_live_preview(&self)->bool{self.original.as_deref().is_none_or(PluginApp::maintenance_quiescent_under_live_preview)}
  fn maintenance_under_pressure(&self)->bool{self.original.as_deref().is_some_and(PluginApp::maintenance_under_pressure)}
  fn maintenance_step(&mut self,cx:&mut StepContext<'_>,loan:RetainedCloneGrant)->Result<PluginLifecycleStep,PluginLifecycleFailure>{self.original.as_deref_mut().map_or(Ok(PluginLifecycleStep::Complete(Default::default())),|original|PluginApp::maintenance_step(original,cx,loan))}
  fn mounted_owner_maintenance_phase(&self)->Result<MountedOwnerPhaseV1,semio_framework::Fault>{self.original.as_deref().map_or(Ok(MountedOwnerPhaseV1::Maintenance),PluginApp::mounted_owner_maintenance_phase)}

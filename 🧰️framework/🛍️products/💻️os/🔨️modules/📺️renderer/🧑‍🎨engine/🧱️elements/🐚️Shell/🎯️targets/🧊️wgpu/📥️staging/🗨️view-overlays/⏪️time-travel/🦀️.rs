@@ -334,6 +334,52 @@ impl<'ctx> OverlaysViewCtx<'ctx> {
         cursor.scalar += 1;
         false
     }
+
+    /// 🔴️ One paint opportunity of ONE pane's unsaved marker — React's `CurrentDocumentUnsavedMarker`: a dot (with the typed save failure beside it) announced as a status "Unsaved changes", shown while the acknowledged saved state is unsaved. It sits at the bottom-middle anchor, one row above the time-travel indicator when that is shown, and dispatches nothing (React passes no retry).
+    #[allow(clippy::too_many_arguments, reason = "the chrome walk's own paint context, forwarded unchanged")]
+    pub fn paint_window_unsaved_marker_step(&mut self, cursor: &mut ShellChromeChildCursor, draw: &mut DrawList, atlas: &mut FontAtlas, icons: &IconAtlas, input: &mut InputState<ActionDescriptor>, theme: &Theme, window_id: &str, window_rect: Rect, index: usize) -> bool {
+        if cursor.scalar != index {
+            return true;
+        }
+        let semio_renderer_wgpu_shell_sync::ShellSavedState::Unsaved { failure, .. } = self.sync.saved_state() else { return true };
+        let is_de = self.prefs.locale_id == "de";
+        let unsaved = shell_chrome_string("closeGuard.unsaved", is_de);
+        let failure_text = failure.map(|(code, message)| semio_renderer_wgpu_shell_vocab::shell_save_failure_text(&code, message.as_deref(), is_de));
+        let visible = failure_text.as_ref().map_or_else(|| "●".to_string(), |text| format!("● {text}"));
+        let description = failure_text.map_or_else(|| unsaved.to_string(), |text| format!("{unsaved} {text}"));
+        let control_id = semio_framework::child_element_id(WINDOW_PANE_CHIP_PARENT, &[window_id, "unsaved", "marker"]);
+        let item = ChromeGroupItem { control_id: control_id.as_str(), icon_id: None, label: Some(visible.as_str()), active: true, disabled: false, kind: HitKind::Generic };
+        if cursor.rect.is_none() {
+            let Some(width) = retained_chrome_group_item_width(atlas, theme, &item) else {
+                self.chrome.error = Some("Shell unsaved marker exceeded the retained chrome boundary".to_string());
+                return true;
+            };
+            let mut rect = window_pane_chip_rect(theme, window_rect, PanelAnchor::BottomMiddle, width);
+            if self.history.history_time_travel.is_some() {
+                rect.y -= theme.control_height + theme.gap_standard;
+            }
+            cursor.rect = Some(rect);
+        }
+        let Some(rect) = cursor.rect else { return true };
+        if cursor.depth == 0 {
+            cursor.depth = draw.push_glass([rect.x, rect.y, rect.w, rect.h], 0.0, theme.glass(Level::Window)).saturating_add(1);
+        }
+        draw.begin_glass_content(cursor.depth - 1);
+        let step = render_retained_chrome_group_item_step(&mut cursor.group_phase, &mut cursor.glyph, draw, atlas, icons, input, theme, rect, &item, false);
+        draw.end_glass_content();
+        match step {
+            RetainedChromeGroupStep::Pending => return false,
+            RetainedChromeGroupStep::Complete => {}
+            RetainedChromeGroupStep::Fault => self.chrome.error = Some("Shell unsaved marker exceeded the retained glyph boundary".to_string()),
+        }
+        note_chrome_control_name(&control_id, Some(&description));
+        note_chrome_control_semantics(&control_id, &ChromeDialogSemantics { role: Some("status"), ..ChromeDialogSemantics::default() });
+        self.input.pane_overlay_hits.push(HitTarget { rect, event: None, control_id: Some(control_id), kind: HitKind::Generic, drag_axis: None, drag_data: None });
+        cursor.rect = None;
+        cursor.depth = 0;
+        cursor.scalar += 1;
+        false
+    }
 }
 
 //#region 🗣️TimeTravelCopy

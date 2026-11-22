@@ -1,14 +1,12 @@
 import { expect, test } from "bun:test";
 import { Database } from "bun:sqlite";
-import ts from "typescript";
+import {loadProductFunctionsSyncV1} from "../../../../../../../../../../🔨️modules/🏃️process/🧪️testing/🧩️extracted-function/🟦️.ts";
 import { closeSync, fstatSync, lstatSync, mkdirSync, mkdtempSync, openSync, readFileSync, renameSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import cases from "./🔣️.json" with {type:"json"};
 
-const source=readFileSync(new URL("../../🟨️.mjs",import.meta.url),"utf8"),tree=ts.createSourceFile("verdict.js",source,ts.ScriptTarget.Latest,true,ts.ScriptKind.JS);
 const names=["observeVerdictV1","sharedVerdictV1"];
-const implementation=tree.statements.filter(node=>ts.isFunctionDeclaration(node)&&names.includes(node.name?.text??"")).map(node=>node.getText(tree)).join("\n");
 
 for(const row of cases)test("shared layer verdict " + row.mode,async()=>{
  const root=mkdtempSync(join(tmpdir(),"sv-")),file=join(root,"verdict"),controller=new AbortController(),primary=Error("original verdict cancellation"),db=new Database(":memory:");
@@ -31,7 +29,7 @@ for(const row of cases)test("shared layer verdict " + row.mode,async()=>{
   writeVerdictV1:(path:string,value:boolean)=>{writeFileSync(path,value?"1":"0");},
   claimDelayV1:delay,setTimeout:(action:()=>void,ms:number)=>{void delay(ms).then(action,action);},
  };
- const run=new Function(...Object.keys(ports),implementation+";return sharedVerdictV1;")(...Object.values(ports));
+ const run=loadProductFunctionsSyncV1(new URL("../../🟨️.mjs",import.meta.url),names,ports).sharedVerdictV1;
  try{
   if(["peer-finishes","peer-disappears","cancel-wait","bounded-timeout"].includes(row.mode))writeFileSync(file,"");
   if(row.mode==="malformed")writeFileSync(file,"x");

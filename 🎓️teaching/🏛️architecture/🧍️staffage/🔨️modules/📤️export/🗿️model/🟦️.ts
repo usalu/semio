@@ -1,4 +1,5 @@
 /** 🗿️ The neutral model as a file: the `semio.model/v1` JSON document of one pose or one clip of an asset with every authored scale and mode as a scene, procedural (declarative solids, the exact data the GLB and FBX are made from) or, on request, resolved (tessellated meshes at the quality of each scene's scale, with feature edges).
+ * The thermal scenes carry the developed air flow of the static instant (the pose, or the first instant of the clip) as stream tubes, arrow heads and vapour and fog puffs (see ../../🧊️volume/🌊️flow); the ZIP and the batch hold these very files.
  *
  * The file set of an asset (one name rule for the library, the batch, the command line and the React downloads, see ./🏷️names):
  * `<asset>.<pose>.glb` (every authored scale and mode as glTF scenes, the seven views as material variants), `<asset>.<pose>.pose.json` and `<asset>.<clip>.clip.json` (the multi-scene model document of a pose and of a clip; a pose and a clip of one asset may share an id, so the file says which it holds),

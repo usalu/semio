@@ -11,7 +11,7 @@ afterAll(()=>{for(const path of scratch)rmSync(path,{recursive:true,force:true})
 const stage=(name:string):ReadyStageV1=>({name,kind:"repo",arguments:[name],timeoutMilliseconds:1000,inputs:[],bootstrapInput:false});
 const wrong={en:"Compiler EN: resolved /x/node_modules/typescript, found 7.0.2, wanted 5.9.3.",de:"Compiler DE: aufgelöst /x/node_modules/typescript, gefunden 7.0.2, verlangt 5.9.3."};
 
-function world(options:Readonly<{names:readonly string[];compiler?:()=>typeof wrong|null;done?:readonly string[]}>){
+function world(options:Readonly<{names:readonly string[];compiler?:()=>typeof wrong|null;done?:readonly string[];discard?:()=>{receipts:number;generations:number}}>){
  const lease=mkdtempSync(join(tmpdir(),"ready-tc-"));scratch.push(lease);
  const stages=options.names.map(stage),digest=readyDigestsV1({platform:"linux",hash:()=>"b".repeat(64),stages});
  const shared={state:{...emptyReadyStateV1(),stages:Object.fromEntries(digest.stages.filter(row=>options.done?.includes(row.name)).map(row=>[row.name,{digest:row.digest,doneMs:1}]))} as ReadyLocalStateV1,marker:false,now:1_000_000,calls:[] as string[]};
@@ -28,6 +28,7 @@ function world(options:Readonly<{names:readonly string[];compiler?:()=>typeof wr
   run:async row=>{shared.calls.push(row.name);return{exit:0,timedOut:false,spawnFailed:false,cancelled:false,stalled:false,detached:false,startedMs:shared.now,peakMegabytes:1,tail:["done"]};},
   status:{update:patch=>{updates.push(patch);}},say:()=>{},
   ...options.compiler===undefined?{}:{compiler:options.compiler},
+  ...options.discard===undefined?{}:{discardDependencies:options.discard},
  };
  return{ports,controller,shared,updates,last:()=>Object.assign({},...updates) as Partial<ReadyStatusV1>};
 }
@@ -66,4 +67,17 @@ test("a machine whose dependencies stage was recorded done before the check exis
 test("the real inspection of this checkout declares and finds the compiler, so the real port returns nothing to refuse",()=>{
  const seen=inspectTypescriptCompilerV1();
  expect(seen.ok).toBe(true);
+});
+
+test("after a compiler failure the dependency receipts are discarded once per digest so the next stage rebuilds instead of repeating the same verdict, on a fresh failure and on a stage recorded done",async()=>{
+ let discards=0;const discard=()=>{discards++;return{receipts:2,generations:6};};
+ const fresh=world({names:["dependencies"],compiler:()=>wrong,discard});
+ await runReadyV1(fresh.ports,fresh.controller.signal);
+ expect(discards).toBe(1);expect(fresh.shared.state.failure?.code).toBe("tooling-compiler");
+ const recorded=world({names:["dependencies"],done:["dependencies"],compiler:()=>wrong,discard});
+ await runReadyV1(recorded.ports,recorded.controller.signal);
+ expect(discards).toBe(2);
+ const healthy=world({names:["dependencies"],compiler:()=>null,discard});
+ await runReadyV1(healthy.ports,healthy.controller.signal);
+ expect(discards).toBe(2);
 });

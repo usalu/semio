@@ -8,7 +8,7 @@ import { checkResourceLeaseControl, watchResourceLeaseControlDeadlineV1, require
 import { spawn } from "node:child_process";
 import { randomBytes } from "node:crypto";
 import { existsSync, rmSync } from "node:fs";
-import { mkdir, readFile, readdir, rename, writeFile, rm } from "node:fs/promises";
+import { mkdir, open, readFile, readdir, rename, writeFile, rm } from "node:fs/promises";
 import { createServer, type Socket } from "node:net";
 import { availableParallelism, tmpdir, totalmem } from "node:os";
 import { basename, dirname, extname, join, posix, resolve } from "node:path";
@@ -105,11 +105,23 @@ export function quantileR7V1(values: readonly number[], q: number): number {
   return lower + 1 >= sorted.length ? sorted[lower]! : sorted[lower]! + (position - lower) * (sorted[lower + 1]! - sorted[lower]!);
 }
 
-/** 🔮️ Predicted peak resident bytes of a unit: `max(headroom × p95(last window peaks), floor)`; without history the cold-start model, and the component allowance for an unknown final component unit. */
-export function predictPeakBytesV1(peaks: readonly number[], cold: Readonly<{ kloc: number; componentFinal: boolean }>): number {
+/** 🧊️ Whether a history key names a component final (a non-host `cdylib`) of `profile`: the population the cold component model is derived from. */
+export function componentFinalKeyV1(key: string, profile: string): boolean {
+  const [, target = "host", keyProfile = "", types = ""] = key.split("|");
+  return target !== "host" && keyProfile === profile && types.split(",").includes("cdylib");
+}
+
+/** 🗂️ Every recorded peak of the component finals of `profile`: the evidence the cold component model reads. */
+export function componentFinalPeaksV1(history: ReadonlyMap<string, readonly UnitObservationV1[]>, profile: string): number[] {
+  return [...history].filter(([key]) => componentFinalKeyV1(key, profile)).flatMap(([, rows]) => rows.map((row) => row.peakRssBytes));
+}
+
+/** 🔮️ Predicted peak resident bytes of a unit: `max(headroom × p95(last window peaks), floor)`; without history the cold-start model. A component final (`component` = recorded peaks of its kind) without history is predicted from that evidence, `max(headroom × quantile(peaks, componentColdQuantile), floor)`, or the `componentFinalBytes` bound while fewer than `componentColdMinimumRows` were recorded. */
+export function predictPeakBytesV1(peaks: readonly number[], cold: Readonly<{ kloc: number; component: readonly number[] | null }>): number {
   const policy = ADMISSION_POLICY_V1;
   if (peaks.length) return Math.max(Math.ceil(policy.headroom * quantileR7V1(peaks.slice(-policy.window), policy.quantile)), policy.floorBytes);
-  return cold.componentFinal ? policy.componentFinalBytes : Math.max(Math.ceil(policy.coldBaseBytes + policy.coldBytesPerKloc * cold.kloc), policy.floorBytes);
+  if (cold.component === null) return Math.max(Math.ceil(policy.coldBaseBytes + policy.coldBytesPerKloc * cold.kloc), policy.floorBytes);
+  return cold.component.length < policy.componentColdMinimumRows ? policy.componentFinalBytes : Math.max(Math.ceil(policy.headroom * quantileR7V1(cold.component, policy.componentColdQuantile)), policy.floorBytes);
 }
 
 /** ⏳️ Expected wall time of a key: the median of its recorded walls in the window, rounded half up; `null` without history. */
@@ -151,6 +163,12 @@ export function admitWaitersV1(state: AdmissionStateV1, ordered: readonly Admiss
   return admitted;
 }
 
+/** 🔭️ Whether a unit that asked now would queue: the ordered decision law run once more with the candidate among the waiters, without changing any state. */
+export function admissionWouldWaitV1(state: AdmissionStateV1, waiting: readonly AdmissionWaiterV1[], candidate: AdmissionWaiterV1): boolean {
+  const ordered = admissionOrderV1([...waiting, candidate]);
+  return !admitWaitersV1(state, ordered).includes(ordered.indexOf(candidate));
+}
+
 /** 🧊️ Admission freeze with hysteresis: freeze when measured rustc memory exceeds the budget or swap-out exceeds its rate; resume below the resume fraction. */
 export function admissionFrozenV1(wasFrozen: boolean, sample: Readonly<{ actualBytes: number; budgetBytes: number; swapOutBytesPerSecond: number | null }>): boolean {
   const policy = ADMISSION_POLICY_V1, swapping = (sample.swapOutBytesPerSecond ?? 0) > policy.swapOutBytesPerSecond;
@@ -163,23 +181,19 @@ export function unitHistoryPathV1(cacheRoot: string): string {
   return join(cacheRoot, ADMISSION_POLICY_V1.storeDirectory, ADMISSION_POLICY_V1.storeFile);
 }
 
-/** 🗜️ Keeps the newest `window` observations of every key, ordered by time. */
+/** 🗜️ Keeps the newest `window` observations of every key, ordered by time. An observation is identified by its key and time: a later row of the same identity (the refinement of an incrementally recorded one) replaces the earlier. */
 export function compactUnitHistoryV1(rows: readonly UnitObservationV1[]): Map<string, UnitObservationV1[]> {
-  const history = new Map<string, UnitObservationV1[]>();
-  for (const row of [...rows].sort((left, right) => left.atMs - right.atMs)) history.set(row.key, [...(history.get(row.key) ?? []), row].slice(-ADMISSION_POLICY_V1.window));
+  const identities = new Map<string, UnitObservationV1>(), history = new Map<string, UnitObservationV1[]>();
+  for (const row of rows) identities.set(`${row.atMs}|${row.key}`, row);
+  for (const row of [...identities.values()].sort((left, right) => left.atMs - right.atMs)) history.set(row.key, [...(history.get(row.key) ?? []), row].slice(-ADMISSION_POLICY_V1.window));
   return history;
 }
 
-/** 📖️ Reads the store; a torn trailing line from an interrupted append is skipped, every other row must satisfy `ObservationV1`. */
+/** 📖️ Reads the store. A record is complete exactly when its line is newline-terminated: the unterminated tail of an interrupted append is dropped, every terminated line must satisfy `ObservationV1`. */
 export async function readUnitHistoryV1(path: string): Promise<Map<string, UnitObservationV1[]>> {
   if (!existsSync(path)) return new Map();
-  const lines = (await readFile(path, "utf8")).split("\n").filter(Boolean), rows: UnitObservationV1[] = [];
-  for (const [index, line] of lines.entries()) {
-    let value: unknown;
-    try { value = JSON.parse(line); } catch (error) { if (index === lines.length - 1) continue; throw error; }
-    rows.push(admitDefinition<UnitObservationV1>("ObservationV1", value));
-  }
-  return compactUnitHistoryV1(rows);
+  const text = await readFile(path, "utf8");
+  return compactUnitHistoryV1(text.slice(0, text.lastIndexOf("\n") + 1).split("\n").filter(Boolean).map((line) => admitDefinition<UnitObservationV1>("ObservationV1", JSON.parse(line))));
 }
 
 /** ✍️ Merges new observations into the store under its exclusive lease and rewrites it compacted, atomically. */
@@ -199,6 +213,32 @@ export async function recordUnitHistoryV1(path: string, rows: readonly UnitObser
     await rename(temporary, path);
     checkResourceLeaseControl(options.control);
   } finally { try { await rm(temporary, { force: true }); } finally { lease.release(); } }
+}
+
+/** 🪵️ Appends observations durably as units complete: under the store's exclusive lease it cuts an unterminated tail left by a killed writer, writes whole newline-terminated records with one append and syncs them, so a crash loses at most the record being written and concurrent writers never interleave. Rows are refined later by recording the same key and time again; `recordUnitHistoryV1` compacts the store. */
+export async function appendUnitHistoryV1(path: string, rows: readonly UnitObservationV1[], options: Readonly<{ leaseDirectory: string; control: CompilerAdmissionControl }>): Promise<void> {
+  checkResourceLeaseControl(options.control);
+  path = requireMaterializedPathV1(path);
+  for (const row of rows) admitDefinition<UnitObservationV1>("ObservationV1", row);
+  if (!rows.length) return;
+  const lease = await acquireQueuedResourceLease({ directory: options.leaseDirectory, resource: JSON.stringify([ADMISSION_POLICY_V1.storeNamespace, resolve(path)]), mode: "exclusive", owner: randomBytes(16).toString("base64url"), signal: options.control.signal, control: options.control });
+  try {
+    checkResourceLeaseControl(options.control);
+    await mkdir(dirname(path), { recursive: true });
+    const handle = await open(path, "a+");
+    try {
+      const { size } = await handle.stat(), block = Buffer.alloc(Math.min(size, 65536));
+      let end = size;
+      while (end > 0) {
+        const start = Math.max(0, end - block.length), { bytesRead } = await handle.read(block, 0, end - start, start), cut = block.subarray(0, bytesRead).lastIndexOf(10);
+        if (cut >= 0) { end = start + cut + 1; break; }
+        end = start;
+      }
+      if (end < size) await handle.truncate(end);
+      await handle.appendFile(rows.map((row) => `${JSON.stringify(row)}\n`).join(""));
+      await handle.sync();
+    } finally { await handle.close(); }
+  } finally { lease.release(); }
 }
 
 const klocCache = new Map<string, Promise<number>>();
@@ -254,7 +294,7 @@ type Entry = { request: AdmitRequestV1; key: string; profile: string; predictedB
 
 /** ▶️ Starts the admission broker: wrappers connect, ask for admission, stream resident memory and report completion.
  * The budget is `physical − reserve − rolling maximum of the driver's other children`; measured overshoot or swap-out freezes admission. */
-export async function startAdmissionBrokerV1(options: Readonly<{ physicalBytes: number; history: ReadonlyMap<string, readonly UnitObservationV1[]>; endpoint?: string; now?: () => number }>): Promise<AdmissionBrokerV1> {
+export async function startAdmissionBrokerV1(options: Readonly<{ physicalBytes: number; history: ReadonlyMap<string, readonly UnitObservationV1[]>; endpoint?: string; now?: () => number; onCompleted?: (unit: UnitRecordV1) => void }>): Promise<AdmissionBrokerV1> {
   const now = options.now ?? Date.now, endpoint = options.endpoint ?? brokerEndpointV1(), passes = new Map<string, BrokerPassV1>();
   const waiting: Entry[] = [], running = new Set<Entry>(), completed: UnitRecordV1[] = [], nonRustc: { atMs: number; bytes: number }[] = [];
   let frozen = false, swapOutBytesPerSecond: number | null = null, arrivals = 0, lastActivityMs = now();
@@ -262,10 +302,10 @@ export async function startAdmissionBrokerV1(options: Readonly<{ physicalBytes: 
   const budget = (): number => options.physicalBytes - reserve - Math.max(0, ...nonRustc.map((row) => row.bytes));
   const verdict = (socket: Socket, admitted: boolean): void => { if (!socket.destroyed) socket.write(`{"v":1,"op":"verdict","admitted":${admitted}}\n`); };
   const charged = (): number => [...running].reduce((sum, entry) => sum + entry.chargedBytes, 0);
+  const stateNow = (isFrozen: boolean): AdmissionStateV1 => ({ budgetBytes: budget(), frozen: isFrozen, nowMs: now(), running: [...running].map((entry) => ({ predictedBytes: Math.max(entry.predictedBytes, entry.chargedBytes), expectedEndMs: entry.expectedWallMs === null ? null : entry.admittedMs + entry.expectedWallMs })) });
   const schedule = (): void => {
-    const budgetBytes = budget();
-    frozen = admissionFrozenV1(frozen, { actualBytes: charged(), budgetBytes, swapOutBytesPerSecond });
-    const ordered = admissionOrderV1(waiting), state = { budgetBytes, frozen, nowMs: now(), running: [...running].map((entry) => ({ predictedBytes: Math.max(entry.predictedBytes, entry.chargedBytes), expectedEndMs: entry.expectedWallMs === null ? null : entry.admittedMs + entry.expectedWallMs })) };
+    frozen = admissionFrozenV1(frozen, { actualBytes: charged(), budgetBytes: budget(), swapOutBytesPerSecond });
+    const ordered = admissionOrderV1(waiting), state = stateNow(frozen);
     for (const index of admitWaitersV1(state, ordered)) {
       const entry = ordered[index]!;
       waiting.splice(waiting.indexOf(entry), 1);
@@ -281,6 +321,12 @@ export async function startAdmissionBrokerV1(options: Readonly<{ physicalBytes: 
     if (index >= 0) waiting.splice(index, 1);
     running.delete(entry);
     schedule();
+  };
+  const componentPeaks = new Map<string, readonly number[]>();
+  const predict = async (request: AdmitRequestV1, pass: BrokerPassV1): Promise<Readonly<{ key: string; history: readonly UnitObservationV1[]; predictedBytes: number }>> => {
+    const key = unitKeyV1(request, pass.profile), history = options.history.get(key) ?? [], componentFinal = request.crateTypes.includes("cdylib") && request.target !== "host";
+    if (componentFinal && !componentPeaks.has(pass.profile)) componentPeaks.set(pass.profile, componentFinalPeaksV1(options.history, pass.profile));
+    return { key, history, predictedBytes: predictPeakBytesV1(history.map((row) => row.peakRssBytes), { kloc: history.length || componentFinal ? 0 : await sourceKlocV1(request.source), component: componentFinal ? componentPeaks.get(pass.profile)! : null }) };
   };
   const server = createServer((socket) => {
     let entry: Entry | undefined, finished = false, chain = Promise.resolve();
@@ -310,12 +356,18 @@ export async function startAdmissionBrokerV1(options: Readonly<{ physicalBytes: 
           finished = true;
           return;
         }
+        if (message.op === "probe" && !entry) {
+          const request = admitDefinition<AdmitRequestV1>("AdmitRequestV1", { ...message, op: "admit" }), pass = passes.get(request.pass);
+          if (!pass) throw Error(`Unknown build pass ${request.pass}`);
+          const { history, predictedBytes } = await predict(request, pass), wait = admissionWouldWaitV1(stateNow(admissionFrozenV1(frozen, { actualBytes: charged(), budgetBytes: budget(), swapOutBytesPerSecond })), waiting, { predictedBytes, expectedWallMs: expectedWallMsV1(history), remainingMs: history.at(-1)?.remainingMs ?? 0, arrival: arrivals });
+          if (!socket.destroyed) socket.end(`{"v":1,"op":"headroom","wait":${wait}}\n`);
+          finished = true;
+          return;
+        }
         if (message.op === "admit" && !entry) {
           const request = admitDefinition<AdmitRequestV1>("AdmitRequestV1", message), pass = passes.get(request.pass);
           if (!pass) throw Error(`Unknown build pass ${request.pass}`);
-          const key = unitKeyV1(request, pass.profile), history = options.history.get(key) ?? [];
-          const componentFinal = request.crateTypes.includes("cdylib") && request.target !== "host";
-          const predictedBytes = predictPeakBytesV1(history.map((row) => row.peakRssBytes), { kloc: history.length || componentFinal ? 0 : await sourceKlocV1(request.source), componentFinal });
+          const { key, history, predictedBytes } = await predict(request, pass);
           entry = { request, key, profile: pass.profile, predictedBytes, expectedWallMs: expectedWallMsV1(history), remainingMs: history.at(-1)?.remainingMs ?? 0, arrival: arrivals++, requestMs: now(), admittedMs: 0, rssBytes: 0, chargedBytes: 0, socket };
           waiting.push(entry);
           lastActivityMs = entry.requestMs;
@@ -333,6 +385,7 @@ export async function startAdmissionBrokerV1(options: Readonly<{ physicalBytes: 
           lastActivityMs = now();
           socket.end();
           completed.push(Object.freeze({ key: entry.key, pass: request.pass, profile: entry.profile, target: request.target, crate: request.crate, package: request.package, version: request.version, crateTypes: request.crateTypes, primary: request.primary, artifact: unitArtifactV1(request), dependencies: request.externs.map((path) => { const extern = externArtifactsV1(path); return { artifacts: extern.candidates, edge: extern.edge }; }), buildScriptOutDir: request.buildScriptOutDir, predictedBytes: entry.predictedBytes, requestMs: entry.requestMs, admittedMs: entry.admittedMs, startMs: done.startMs, endMs: done.endMs, rmetaMs: done.rmetaMs, peakRssBytes: done.peakRssBytes, userMs: done.userMs, sysMs: done.sysMs, exit: done.exit }));
+          try { options.onCompleted?.(completed[completed.length - 1]!); } catch (error) { console.error(`[admission] ${error instanceof Error ? error.message : String(error)}`); }
           schedule();
         } else throw Error(`Unexpected broker message ${line.slice(0, 200)}`);
       }).catch((error) => { console.error(`[admission] ${error instanceof Error ? error.message : String(error)}`); socket.destroy(); });
@@ -360,13 +413,17 @@ export async function startAdmissionBrokerV1(options: Readonly<{ physicalBytes: 
 export function compilerWrapperEnvironmentV1(scheduler: string, laneRoot: string, environment: Readonly<Record<string, string | undefined>>): Record<string, string> {
   const root = environment.SEMIO_UNIT_CACHE_ROOT, wrapper = environment.SEMIO_UNIT_CACHE_WRAPPER;
   if (!root || !wrapper || environment.SEMIO_UNIT_CACHE === "off") return {};
-  return { RUSTC_WRAPPER: wrapper, SEMIO_UNIT_CACHE_ROOT: root, SEMIO_UNIT_CACHE_LANE: "g", SEMIO_UNIT_CACHE_LANE_ROOT: laneRoot, SEMIO_UNIT_CACHE_INNER: JSON.stringify([scheduler, environment.RUSTC ?? "rustc"]), SEMIO_UNIT_CACHE_SLOTS: environment.SEMIO_UNIT_CACHE_SLOTS ?? String(availableParallelism()), SEMIO_UNIT_CACHE_FOCUS: "", SEMIO_UNIT_CACHE_BUILD_SCRIPTS: "on", SEMIO_UNIT_CACHE_BROKER_REPLAY: "on", ...(environment.SEMIO_UNIT_CACHE_TOOLCHAIN ? { SEMIO_UNIT_CACHE_TOOLCHAIN: environment.SEMIO_UNIT_CACHE_TOOLCHAIN } : {}) };
+  return { RUSTC_WRAPPER: wrapper, SEMIO_UNIT_CACHE_ROOT: root, SEMIO_UNIT_CACHE_LANE: "g", SEMIO_UNIT_CACHE_LANE_ROOT: laneRoot, SEMIO_UNIT_CACHE_INNER: JSON.stringify([scheduler, environment.RUSTC ?? "rustc"]), SEMIO_UNIT_CACHE_SLOTS: environment.SEMIO_UNIT_CACHE_SLOTS ?? String(availableParallelism()), ...(environment.SEMIO_UNIT_CACHE_LIGHT_SLOTS ? { SEMIO_UNIT_CACHE_LIGHT_SLOTS: environment.SEMIO_UNIT_CACHE_LIGHT_SLOTS } : {}), SEMIO_UNIT_CACHE_FOCUS: "", SEMIO_UNIT_CACHE_BUILD_SCRIPTS: "on", SEMIO_UNIT_CACHE_BROKER_REPLAY: "on", ...(environment.SEMIO_UNIT_CACHE_TOOLCHAIN ? { SEMIO_UNIT_CACHE_TOOLCHAIN: environment.SEMIO_UNIT_CACHE_TOOLCHAIN } : {}) };
 }
 
-/** 🪜️ Recorded observations of a finished build: every successful unit's peak, measured output footprint (`outputBytes` by unit artifact), wall, CPU and
- * remaining critical path. */
-export function unitObservationsV1(units: readonly UnitRecordV1[], remainingMs: ReadonlyMap<string, number>, outputBytes: ReadonlyMap<string, number>, atMs: number): UnitObservationV1[] {
-  return units.filter((unit) => unit.exit === 0 && !unit.cache).map((unit) => { const bytes = outputBytes.get(unit.artifact); if (bytes === undefined) throw Error(`Unit output footprint was never measured: ${unit.key}`); return { v: 1 as const, key: unit.key, peakRssBytes: unit.peakRssBytes, outputBytes: bytes, wallMs: Math.max(0, unit.endMs - unit.startMs), cpuMs: unit.userMs + unit.sysMs, remainingMs: Math.max(0, Math.round(remainingMs.get(unit.artifact) ?? 0)), atMs }; });
+/** 🪜️ The observation of one successful compiled unit, `null` for a failed or cached one: peak, measured output footprint, wall, CPU and remaining critical path, at the time the unit ended. */
+export function unitObservationV1(unit: UnitRecordV1, remainingMs: number, outputBytes: number): UnitObservationV1 | null {
+  return unit.exit === 0 && !unit.cache ? { v: 1, key: unit.key, peakRssBytes: unit.peakRssBytes, outputBytes, wallMs: Math.max(0, unit.endMs - unit.startMs), cpuMs: unit.userMs + unit.sysMs, remainingMs: Math.max(0, Math.round(remainingMs)), atMs: unit.endMs } : null;
+}
+
+/** 🪜️ Recorded observations of a finished build: every successful unit's observation with its remaining critical path by unit artifact; they refine the rows recorded as the units completed (same key and time). */
+export function unitObservationsV1(units: readonly UnitRecordV1[], remainingMs: ReadonlyMap<string, number>, outputBytes: ReadonlyMap<string, number>): UnitObservationV1[] {
+  return units.filter((unit) => unit.exit === 0 && !unit.cache).map((unit) => { const bytes = outputBytes.get(unit.artifact); if (bytes === undefined) throw Error(`Unit output footprint was never measured: ${unit.key}`); return unitObservationV1(unit, remainingMs.get(unit.artifact) ?? 0, bytes)!; });
 }
 
 /** 🖨️ The bytes every output of one unit occupies: the files of its output directory named by its artifact stem (`<stem>.*` or `lib<stem>.*`). */

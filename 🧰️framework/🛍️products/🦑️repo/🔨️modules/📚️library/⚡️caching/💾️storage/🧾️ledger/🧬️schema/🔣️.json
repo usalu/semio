@@ -56,6 +56,9 @@
       "items": {
         "$ref": "#/$defs/retirement"
       }
+    },
+    "strays": {
+      "$ref": "#/$defs/strays"
     }
   },
   "$defs": {
@@ -318,6 +321,9 @@
         "reclaim": {
           "$ref": "#/$defs/reclaim"
         },
+        "reclaimShare": {
+          "$ref": "#/$defs/reclaimShare"
+        },
         "collect": {
           "$ref": "#/$defs/collect"
         },
@@ -349,6 +355,34 @@
           "$ref": "#/$defs/bytes"
         },
         "targetAvailableBytes": {
+          "$ref": "#/$defs/bytes"
+        }
+      }
+    },
+    "reclaimShare": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "softBasisPoints",
+        "targetBasisPoints",
+        "softFloorBytes",
+        "targetFloorBytes"
+      ],
+      "properties": {
+        "softBasisPoints": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 5000
+        },
+        "targetBasisPoints": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 5000
+        },
+        "softFloorBytes": {
+          "$ref": "#/$defs/bytes"
+        },
+        "targetFloorBytes": {
           "$ref": "#/$defs/bytes"
         }
       }
@@ -441,6 +475,45 @@
         },
         "quietMs": {
           "$ref": "#/$defs/milliseconds"
+        },
+        "reason": {
+          "$ref": "#/$defs/bilingual"
+        }
+      }
+    },
+    "strays": {
+      "description": "Directories below the checkout that carry the name of a cache root (the directory names of the loose roots) but are not that root: tools run from a member directory leave them. They hold nothing anyone reads, so the collector removes their entries once they have been quiet and nothing holds them. Directories inside an ignored segment or an excluded directory are not looked at.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "quietMs",
+        "ignoredSegments",
+        "excludedDirectories",
+        "reason"
+      ],
+      "properties": {
+        "quietMs": {
+          "$ref": "#/$defs/milliseconds"
+        },
+        "ignoredSegments": {
+          "type": "array",
+          "maxItems": 16,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 64
+          }
+        },
+        "excludedDirectories": {
+          "type": "array",
+          "maxItems": 16,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 64
+          }
         },
         "reason": {
           "$ref": "#/$defs/bilingual"

@@ -9,6 +9,15 @@ description = "Component crate of semio-s-artifact-stdio-pdf: mut-family"
 [package.metadata.semio]
 role = "library"
 
+[package.metadata.semio.carve]
+owned = [
+  "standards::v1_7::subsets::e::schema::mutations",
+  "standards::v1_7::subsets::ua::schema::mutations",
+  "standards::v1_7::subsets::vt::io::text::mutations::remove_dpart_root::tests",
+  "standards::v1_7::subsets::vt::io::text::mutations::set_output_intent::tests",
+  "standards::v1_7::subsets::x::io::text::mutations::insert_launch_action::tests",
+]
+
 [lints]
 workspace = true
 

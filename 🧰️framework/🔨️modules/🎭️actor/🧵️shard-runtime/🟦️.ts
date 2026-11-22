@@ -17,6 +17,7 @@ import { type ShardBudget } from "../📮️shard-client/📜️wire/🟦️.ts"
 import { type ShardClientOptions } from "../📮️shard-client/⚙️options/🟦️.ts";
 import { type ShardWorkerLike } from "../📮️shard-client/🚨️quota/🟦️.ts";
 import { stampShardWorkerDiagnostics } from "../🩺️diagnostics/🟦️.ts";
+import { publishedPageUrl } from "../../🖼️assets/🌐️published-page/🟦️.ts";
 // #endregion 🔌️Imports
 
 //#region 🔖️Defaults
@@ -34,7 +35,7 @@ export { SHARD_RUNTIME_DIAGNOSTICS_KEY, SHARD_WORKER_DIAGNOSTICS_PARAM, shardRun
  * `new Worker(...)` in the repo goes through this so the guest's own `[TRACE]` trace sites are
  * reachable from a browser session without a second build. */
 export function shardWorkerUrl(): string {
-  return stampShardWorkerDiagnostics(SHARD_WORKER_URL);
+  return stampShardWorkerDiagnostics(publishedPageUrl(SHARD_WORKER_URL));
 }
 
 /** ⛽️ Provisional constant turn budget — same honestly-flagged gap `🌉️ProgramBridge/🎯️targets/🧊️wgpu/🦀️.rs`'s

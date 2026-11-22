@@ -25,7 +25,7 @@ use check_in_and_palette::shell_chrome_check_in_and_palette;
 #[path = "🧵️task-manager-and-route-vocab/🦀️.rs"]
 mod task_manager_and_route;
 use task_manager_and_route::shell_chrome_task_manager_and_route;
-pub use task_manager_and_route::shell_chrome_format;
+pub use task_manager_and_route::{shell_chrome_format, shell_save_failure_text};
 
 //#region 🗣️ChromeI18n
 /// 🗣️ EN/DE lookup for a curated subset of previously-hardcoded chrome strings, byte-identical to

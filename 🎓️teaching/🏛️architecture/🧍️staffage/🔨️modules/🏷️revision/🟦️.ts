@@ -63,7 +63,7 @@ export const presetRevision = (preset: EnvironmentPreset): Revision => `sha256:$
  * @see ../📤️export/🎭️cast/🧬️schema/🟦️.ts — `CastProvenance` */
 export function castProvenance(cast: Cast, asset: Asset, revision: Revision, presets: ReadonlyMap<string, EnvironmentPreset>, clock: { readonly fps: number; readonly durationS: number; readonly loop: boolean; readonly frames: number }, lod: { readonly id: LodId; readonly revision: string }): CastProvenance {
   const revisionOf = (slug: string): Revision => presetRevision(presets.get(slug)!);
-  const thermal = { spanK: cast.thermalSpanK ?? null, transport: cast.transport ?? [] };
+  const thermal = { spanK: cast.thermalSpanK ?? null, flow: cast.flow ?? [] };
   const scenario: CastScenario =
     cast.view === "thermal"
       ? cast.timeline
@@ -78,7 +78,7 @@ export function castProvenance(cast: Cast, asset: Asset, revision: Revision, pre
     view: { style: cast.view, viewpoint: cast.viewpoint, theme: cast.theme, mirror: cast.mirror === true },
     scale: { denominator: cast.scale },
     state: cast.clip !== undefined ? { kind: "clip", id: cast.clip } : { kind: "pose", id: cast.pose! },
-    clock: { ...clock, offsetS: cast.clip !== undefined ? cast.transportAgeS ?? 0 : 0 },
+    clock: { ...clock, offsetS: 0 },
     lod: { id: lod.id, revision: lod.revision },
     scenario,
   };

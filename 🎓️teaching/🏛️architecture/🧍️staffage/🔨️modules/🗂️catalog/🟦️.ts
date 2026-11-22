@@ -26,7 +26,7 @@ import * as portable from "../../../../../🧰️framework/🔨️modules/🧊�
 
 /** 🚨️ One validation finding. */
 /** 🛑️ One validation finding; `data` carries the measured values of findings that have them (the tilt and paper error of `lateral-ambiguous`, the scale and measurement of range and symbol suitability). */
-export type Issue = { readonly path: string; readonly code: string; readonly message: Text; readonly data?: Readonly<Record<string, string | number | readonly string[]>> };
+export type Issue = { readonly path: string; readonly code: string; readonly message: Text; readonly data?: Readonly<Record<string, string | number | readonly string[] | readonly number[]>> };
 
 /** 📏️ Relative tolerance of the default-pose extent of every authored representation against `dimensions` (2 %). */
 export const EXTENT_TOLERANCE = 0.02;

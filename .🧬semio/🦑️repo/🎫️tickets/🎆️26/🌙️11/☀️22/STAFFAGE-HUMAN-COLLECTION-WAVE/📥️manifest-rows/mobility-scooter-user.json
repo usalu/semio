@@ -1,0 +1,56 @@
+{
+  "id": "mobility-scooter-user",
+  "category": "humans",
+  "title": {
+    "en": "Mobility Scooter User",
+    "de": "Person auf einem Elektromobil"
+  },
+  "heightM": 1.485,
+  "widthM": 1.345,
+  "powerW": 542.9,
+  "poses": [
+    "driving",
+    "parked",
+    "greeting",
+    "reaching-into-basket"
+  ],
+  "clips": [
+    "drive-cruise",
+    "idle-breathing",
+    "stop-and-wave",
+    "reach-into-basket"
+  ],
+  "representations": {
+    "50": "authored",
+    "100": "authored",
+    "200": "authored",
+    "500": "authored"
+  },
+  "symbols": [
+    "scooter-position-marker"
+  ],
+  "analytics": [
+    "thermal",
+    "transport",
+    "structural"
+  ],
+  "exports": [
+    "svg",
+    "pdf",
+    "dxf",
+    "dwg",
+    "png-sequence",
+    "mp4",
+    "webm",
+    "component",
+    "glb",
+    "fbx",
+    "model",
+    "model-zip"
+  ],
+  "distinction": {
+    "en": "A 78-year-old man in knitted cap and quilted jacket driving a four-wheel mobility scooter with a front basket: the chassis is the root, the wheels roll with the distance, a 400 W transaxle motor and the batteries warm under load; poses for driving, parking, greeting and reaching into the basket.",
+    "de": "Ein 78-jähriger Mann mit Strickmütze und Steppjacke fährt ein vierrädriges Elektromobil mit Frontkorb: Das Fahrgestell ist die Wurzel, die Räder rollen mit der Strecke, ein Achsantrieb von 400 W und die Akkus erwärmen sich unter Last; Posen für Fahren, Parken, Grüßen und den Griff in den Korb."
+  },
+  "completion": "authored"
+}

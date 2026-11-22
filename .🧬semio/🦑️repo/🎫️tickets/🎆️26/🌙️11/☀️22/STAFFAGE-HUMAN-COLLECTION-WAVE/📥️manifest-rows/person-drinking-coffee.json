@@ -1,0 +1,52 @@
+{
+  "id": "person-drinking-coffee",
+  "category": "humans",
+  "title": {
+    "en": "Person Drinking Coffee",
+    "de": "Kaffee trinkende Person"
+  },
+  "heightM": 1.75,
+  "widthM": 0.547,
+  "powerW": 122.6,
+  "poses": [
+    "holding-cup",
+    "sipping",
+    "blowing-on-coffee",
+    "warming-hands"
+  ],
+  "clips": [
+    "sip-cycle",
+    "idle-breathing"
+  ],
+  "representations": {
+    "50": "authored",
+    "100": "authored",
+    "200": "authored",
+    "500": "authored"
+  },
+  "symbols": [],
+  "analytics": [
+    "thermal",
+    "transport",
+    "structural"
+  ],
+  "exports": [
+    "svg",
+    "pdf",
+    "dxf",
+    "dwg",
+    "png-sequence",
+    "mp4",
+    "webm",
+    "component",
+    "glb",
+    "fbx",
+    "model",
+    "model-zip"
+  ],
+  "distinction": {
+    "en": "A woman of 1.72 m on a cold morning with a steaming paper cup of coffee, in a hooded wool-blend jacket, corduroy trousers and suede sneakers: holding the cup, blowing on the coffee, sipping and warming both hands round the cup, with a sip cycle and idle breathing; the hot cup is a thermal source of its own.",
+    "de": "Eine Frau von 1,72 m an einem kalten Morgen mit einem dampfenden Pappbecher Kaffee, in Kapuzenjacke aus Wollmischung, Cordhose und Wildledersneakern: den Becher haltend, auf den Kaffee pustend, nippend und beide Hände am Becher wärmend, mit einem Trinkzyklus und ruhigem Atmen; der heiße Becher ist eine eigene Wärmequelle."
+  },
+  "completion": "authored"
+}

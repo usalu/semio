@@ -2,7 +2,7 @@
 
 The GIS plugin registers the `s.gis.gisterrain@1/*` artifact with the normal s editor and viewer. The registered Liège example loads as a Semio document with a persisted WGS84 elevation grid plus a map containing positions, a route, and a region.
 
-The native document format supports an elevation source with ordered west, south, east and north bounds and 33 rows of 33 signed integer heights in meters. Rows run south to north and samples run west to east. The Rust and TypeScript schemas define the source, mutation, diff and SQLite projection. The editor's source-clear action goes through the artifact store. Map and elevation workflow inputs produce undoable semantic mutations with independent ownership.
+The native document format supports an elevation source with ordered west, south, east and north bounds and a rectangular grid of 2 to 65 samples per axis, stored as signed integer heights in millimetres (`rowsMillimetres`) with optional canonical missing samples. Rows run south to north and samples run west to east. The Rust and TypeScript schemas define the source, mutation, diff and SQLite projection. The editor's source-clear action goes through the artifact store. Map and elevation workflow inputs produce undoable semantic mutations with independent ownership.
 
 The viewport receives the artifact's grid through the Semio World3d scene lane. The React/WASM and native hosts consume the same mesh and drape code. The mesh workflow output uses the `mesh.document` transfer and the LAS, PLY, STL, glTF and OBJ exporters use the corresponding Semio mesh snapshot. Feature geometry is clipped to the elevation grid. A terrain whose elevation source is missing displays a localized notice.
 

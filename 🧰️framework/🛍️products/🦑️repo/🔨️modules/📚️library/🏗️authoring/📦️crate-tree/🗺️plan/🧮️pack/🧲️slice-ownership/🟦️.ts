@@ -109,6 +109,7 @@ export function defineChainOwnership({ infos, declTree, readText, measureRoot, b
     memberVisibility.set(decl.id, out);
     return out;
   };
+  const widenings = new Map<string, Set<string>>();
   const restrictedTarget = (owner: SliceInfo, chain: readonly string[]): string | null => {
     if (chain.includes("component")) return `${chain.join("::")} (private component module)`;
     const decls = owner.slice.decls.filter((decl) => decl.eff.length <= chain.length && decl.eff.every((segment, index) => segment === chain[index]));
@@ -119,7 +120,10 @@ export function defineChainOwnership({ infos, declTree, readText, measureRoot, b
       if (!decl.isComponent && decl.node.visibility !== "pub" && deepest > 0) return `${chain.join("::")} (module ${decl.node.visibility})`;
       const first = chain[decl.eff.length];
       const visibility = first === undefined ? undefined : membersOf(decl).get(first);
-      if (visibility !== undefined && visibility !== "pub") return `${chain.slice(0, decl.eff.length + 1).join("::")} (${visibility})`;
+      if (visibility !== undefined && visibility !== "pub") {
+        if (visibility.startsWith("pub(") && decl.file !== null && !decl.node.inline) widenings.set(decl.file, new Set([...(widenings.get(decl.file) ?? []), first!]));
+        return `${chain.slice(0, decl.eff.length + 1).join("::")} (${visibility})`;
+      }
     }
     return null;
   };
@@ -134,5 +138,5 @@ export function defineChainOwnership({ infos, declTree, readText, measureRoot, b
     return texts;
   };
   const noteWhy = (info: SliceInfo, target: SliceInfo, chain: readonly string[], file: string): void => { if (!info.why.has(target.slice.id)) info.why.set(target.slice.id, `${chain.join("::")} @ ${file.split("/").slice(-4).join("/")}`); };
-  return { ownerOfChain, noteWhy, restrictedTarget, sourcesOf, ownerOfReachedChain, membersOf, underPath };
+  return { ownerOfChain, noteWhy, restrictedTarget, sourcesOf, ownerOfReachedChain, membersOf, underPath, widenings };
 }

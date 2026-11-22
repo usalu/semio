@@ -346,3 +346,44 @@ fn a_row_paints_the_stem_and_elbow_guides_that_hang_it_from_its_parent_or_sectio
     assert!(stems(&nested) >= 4, "the section stem, the parent's branch stem and one parent guide per child");
     assert_eq!(elbows(&flat, leaf_elbow), 1, "a top-level row hangs from the section's stem: rows sit one level under their header");
 }
+
+fn catalogue_tree(payload: &str) -> UiNode {
+    let mut source = UiTreeItemNode::base("source", Label::data("source"));
+    source.draggable = Some(true);
+    source.drag_data = Some([(semio_ui_wgpu_engine::TREE_CATALOGUE_DRAG_MIME.to_string(), payload.to_string())].into_iter().collect());
+    let mut target = UiTreeItemNode::base("target", Label::data("target"));
+    target.action = Some(activation("target"));
+    tree_node(vec![source, target], "Section", true, false)
+}
+
+fn drag_source_onto_target(m: &mut Mounted) -> Vec<UiCommand> {
+    let mut draw = DrawList::default();
+    drive_frame(&mut m.ui, &mut m.atlas, None, &mut draw);
+    let centre = |m: &Mounted, id: &str| {
+        let rect = m.ui.window_hit_targets("fixture").iter().find(|hit| hit.control_id == id).unwrap_or_else(|| panic!("hit {id}")).rect;
+        (rect.x + rect.w * 0.5, rect.y + rect.h * 0.5)
+    };
+    let (from, to) = (centre(m, "tree.label.source"), centre(m, "tree.label.target"));
+    let modifiers = EventModifiers::default();
+    let mut commands = m.ui.dispatch_event("fixture", UiEvent::PointerDown { x: from.0, y: from.1, button: PointerButton::Primary, modifiers });
+    commands.extend(m.ui.dispatch_event("fixture", UiEvent::PointerMove { x: from.0, y: from.1 + 5.0, modifiers }));
+    commands.extend(m.ui.dispatch_event("fixture", UiEvent::PointerMove { x: to.0, y: to.1, modifiers }));
+    commands.extend(m.ui.dispatch_event("fixture", UiEvent::PointerUp { x: to.0, y: to.1, button: PointerButton::Primary, modifiers }));
+    commands
+}
+
+#[test]
+fn a_catalogue_drop_on_an_activatable_row_of_a_tree_without_a_drop_binding_clicks_the_row_like_react() {
+    let mut m = mount(&catalogue_tree("{\"id\":\"a\"}"));
+    let commands = drag_source_onto_target(&mut m);
+    assert_eq!(activated(&commands), vec!["target".to_string()], "the row's own activation fires once, as the synthetic onClick of catalogueTreeDragController.handleDrop");
+    assert!(!commands.iter().any(|command| matches!(command, UiCommand::DropCommitted { .. } | UiCommand::DropCancelled { .. })), "a row click is not a committed drop");
+    assert!(m.ui.windows.get("fixture").expect("window").router.focus.tree_anchor.is_empty(), "the fallback click records no range anchor: React's synthetic onClick never reaches handleSelectItem");
+}
+
+#[test]
+fn a_catalogue_payload_that_is_not_json_emits_nothing_like_react_whose_json_parse_throws() {
+    let mut m = mount(&catalogue_tree("{not json"));
+    let commands = drag_source_onto_target(&mut m);
+    assert!(activated(&commands).is_empty(), "an undecodable payload clicks nothing");
+}

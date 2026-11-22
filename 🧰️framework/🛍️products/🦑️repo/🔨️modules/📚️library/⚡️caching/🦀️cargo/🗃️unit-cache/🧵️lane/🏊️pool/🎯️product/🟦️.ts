@@ -3,7 +3,7 @@ import {join} from "node:path";
 import {UNIT_CACHE_POLICY_V1} from "../../../🔏️key/🟦️.ts";
 import {sleepV1,tryClaimV1} from "../../../🔒️lock/🟦️.ts";
 import {enterLaneV1,lanePathsV1,type LaneOwnerV1} from "../../🟦️.ts";
-import {poolBoundsV1,readPoolV1,trimPoolV1,type PoolReportV1} from "../🟦️.ts";
+import {laneHoldersV1,poolBoundsV1,readPoolV1,trimPoolV1,type PoolReportV1} from "../🟦️.ts";
 
 const policy=UNIT_CACHE_POLICY_V1.pool,layout=UNIT_CACHE_POLICY_V1.layout;
 /** 🎯️ A stable product workspace remains exclusively held by its current caller, never by a waiter's authority. */
@@ -18,7 +18,7 @@ export async function acquireProductLaneV1(root:string,request:Readonly<{key:str
   let lanes=readPoolV1(root,Date.now());
   if(!lanes.some(lane=>lane.id===id)&&lanes.length>=bounds.maximumLiveLanes){trimPoolV1(root,bounds,Date.now(),options.report);lanes=readPoolV1(root,Date.now());if(lanes.length>=bounds.maximumLiveLanes)return undefined;}
   const claim=tryClaimV1(locks,"lane-"+id);
-  if(!claim){if(!reported){reported=true;options.report?.("poolBusy",{live:lanes.filter(row=>row.claimed).length,maximum:bounds.maximumLiveLanes});}return undefined;}
+  if(!claim){if(!reported){reported=true;options.report?.("productLaneHeld",{lane:id,live:lanes.filter(row=>row.claimed).length,maximum:bounds.maximumLiveLanes,holders:laneHoldersV1(root,[id],Date.now())});}return undefined;}
   try{
    options.signal.throwIfAborted();const receipt=join(paths.base,policy.product.receipt);
    if(existsSync(paths.base)&&!existsSync(receipt)){const directory=lstatSync(paths.base);if(!directory.isDirectory()||directory.isSymbolicLink())throw Error("Actual Cargo product namespace directory required");}

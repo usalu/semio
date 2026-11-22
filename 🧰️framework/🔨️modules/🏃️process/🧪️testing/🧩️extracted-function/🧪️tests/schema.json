@@ -1,0 +1,13 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "ceilings"],
+  "properties": {
+    "version": { "const": 1 },
+    "ceilings": {
+      "type": "object",
+      "minProperties": 0,
+      "additionalProperties": { "type": "integer", "minimum": 1 }
+    }
+  }
+}

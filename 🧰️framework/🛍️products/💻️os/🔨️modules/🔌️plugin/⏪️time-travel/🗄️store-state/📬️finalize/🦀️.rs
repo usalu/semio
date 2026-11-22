@@ -9,9 +9,6 @@ impl<P,Mu> TimeTravelStoreState<P,Mu>where P: store::os_store::serialization::Ar
  pub fn commit_request_demands()->RetirementDemand{RetirementDemand{copy_bytes:2*std::mem::size_of::<store::HistoryFinalization>()+std::mem::size_of::<bool>(),depth:1,..Default::default()}}
  /// 👁️ The actual Store must remain available while any original publisher or request continuation is retained.
  pub fn finalizing(&self)->bool{self.commit_request.is_some()||self.commit_publisher.is_some()||!self.commit_resident.terminal_is_empty()||self.commit_receipt.is_some()||self.commit_outcome.is_some()||self.commit_failure.is_some()||!self.commit_request_close.is_empty()}
- #[cfg(any(test, feature = "artifact-app-testing"))]
- #[doc(hidden)]
- pub fn commit_debug(&self)->String{format!("request={} publisher={} publisherEmpty={:?} resident={} receipt={} outcome={} failure={:?} requestClose={} stage={} closing={}",self.commit_request.is_some(),self.commit_publisher.is_some(),self.commit_publisher.as_ref().map(|o|o.terminal_is_empty()),!self.commit_resident.terminal_is_empty(),self.commit_receipt.is_some(),self.commit_outcome.is_some(),self.commit_failure.as_ref().map(|f|format!("{f:?}")),!self.commit_request_close.is_empty(),self.commit_stage,self.commit_closing)}
  /// 🎟️ Captures the original effect request under the original caller; expensive semantic birth waits for maintenance.
  pub fn commit_finished(&mut self,store:&mut ArtifactStore<P,Mu>,request:&mut Option<store::HistoryFinalization>,actor:Option<&str>,cx:&mut StepContext<'_>)->Result<TimeTravelCommit,Fault>{
   if self.finalizing()||request.is_none(){return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"completed replay finalization request destination is occupied").into_fault())}let invalid_actor=actor.is_some_and(|actor|actor!=store.local_actor_id().0.as_str());let cancelled=cx.is_cancelled();let d=Self::commit_request_demands();let step=cx.with_original_retirement(|cx|close_original_retained_step(cx,d,|_|{self.commit_request=request.take();self.commit_stage=0;self.commit_closing=cancelled||invalid_actor;self.commit_outcome=invalid_actor.then_some(TimeTravelCommit::Failed);work(Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()})))})).map_err(|failure|{self.commit_failure=Some(failure);self.commit_closing=true;ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original finalization request retained its complete admission failure").into_fault()})?;if step.progress().copied_items==0{return Ok(TimeTravelCommit::Pending)}Ok(TimeTravelCommit::Pending)
@@ -27,8 +24,6 @@ impl<P,Mu> TimeTravelStoreState<P,Mu>where P: store::os_store::serialization::Ar
  /// 🪡️ Every preparation, visible decision, acknowledgement and physical return uses the actual current original Job context.
  pub fn step_commit(&mut self,store:&mut ArtifactStore<P,Mu>,cx:&mut StepContext<'_>)->Result<TimeTravelCommit,semio_framework_job::OriginalTurnFailure>{
   if self.commit_publisher.as_ref().is_some_and(|owner|!owner.matches_caller(cx)){return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit,"native finalization requires its same original caller and decoder recipient").into())}
-  #[cfg(any(test, feature = "artifact-app-testing"))]
-  {static N:std::sync::atomic::AtomicUsize=std::sync::atomic::AtomicUsize::new(0);let n=N.fetch_add(1,std::sync::atomic::Ordering::Relaxed);if n<12||n%2000==0{eprintln!("[DEBUG] step_commit n={n} cancelled={} {}",cx.is_cancelled(),self.commit_debug());}}
   let result=(||->Result<TimeTravelCommit,semio_framework_job::OriginalTurnFailure>{
    if !self.finalizing(){return Ok(TimeTravelCommit::Pending)}if cx.is_cancelled(){self.commit_closing=true;}
    if self.commit_closing{return cx.with_original_retirement(|cx|self.close_commit(store,cx))}
@@ -40,7 +35,7 @@ impl<P,Mu> TimeTravelStoreState<P,Mu>where P: store::os_store::serialization::Ar
     4=>{if self.commit_publisher.as_mut().unwrap().acknowledge(cx)?{self.commit_stage=5;self.commit_closing=true;}},
     _=>return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"completed replay original driver phase changed").into()),
    }Ok(TimeTravelCommit::Pending)
-  })();match result{Ok(outcome)=>Ok(outcome),Err(failure)=>{self.commit_failure=Some(failure);self.commit_closing=true;self.commit_outcome=Some(TimeTravelCommit::Failed);Ok(TimeTravelCommit::Pending)}}
+  })();match result{Ok(outcome)=>Ok(outcome),Err(failure)=>{self.retain_commit_failure(failure)?;Ok(TimeTravelCommit::Pending)}}
  }
  fn close_commit(&mut self,store:&mut ArtifactStore<P,Mu>,cx:&mut StepContext<'_>)->Result<TimeTravelCommit,semio_framework_job::OriginalTurnFailure>{
   if let Some(owner)=self.commit_publisher.as_mut(){if !owner.terminal_is_empty(){owner.close_step(store,cx)?;}else{let d=OriginalReplayPublication::<P,Mu>::boxed_release_demands();close_original_retained_step(cx,d,|_|{self.commit_publisher=None;work(Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,released_bytes:d.release_bytes,..Default::default()})))})?;}return Ok(TimeTravelCommit::Pending)}

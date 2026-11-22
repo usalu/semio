@@ -1,0 +1,55 @@
+{
+ "id": "potted-monstera",
+ "category": "vegetation",
+ "title": {
+  "en": "Potted Monstera",
+  "de": "Monstera im Topf"
+ },
+ "heightM": 1.61,
+ "widthM": 1.247,
+ "powerW": 0,
+ "poses": [
+  "still-air",
+  "ventilation-draught",
+  "freshly-watered",
+  "drought-wilted"
+ ],
+ "clips": [
+  "wind-sway",
+  "gust",
+  "diurnal-transpiration"
+ ],
+ "representations": {
+  "50": "authored",
+  "100": "authored",
+  "200": "authored",
+  "500": "unavailable"
+ },
+ "symbols": [
+  "potted-monstera-plan-symbol"
+ ],
+ "analytics": [
+  "thermal",
+  "transport",
+  "structural"
+ ],
+ "exports": [
+  "svg",
+  "pdf",
+  "dxf",
+  "dwg",
+  "png-sequence",
+  "mp4",
+  "webm",
+  "component",
+  "glb",
+  "fbx",
+  "model",
+  "model-zip"
+ ],
+ "distinction": {
+  "en": "A potted Swiss cheese plant (Monstera deliciosa) 1.6 m high on a coir moss pole: nine glossy leaves in two ranks, the older ones deeply split and perforated, in a 0.36 m cream-glazed pot on a saucer.",
+  "de": "Ein Fensterblatt (Monstera deliciosa) im Topf, 1,6 m hoch an einem Kokos-Moosstab: neun glänzende Blätter in zwei Zeilen, die älteren tief geschlitzt und gelocht, in einem cremeweiß glasierten Topf von 0,36 m auf einem Untersetzer."
+ },
+ "completion": "authored"
+}

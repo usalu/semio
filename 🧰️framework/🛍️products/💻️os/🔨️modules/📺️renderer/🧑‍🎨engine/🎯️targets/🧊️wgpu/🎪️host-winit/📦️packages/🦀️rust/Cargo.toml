@@ -62,6 +62,8 @@ serde_json = { workspace = true }
 semio-renderer-wgpu-ui-engine = { path = "../../../🖱️ui-engine/📦️packages/🦀️rust" }
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+semio-renderer-wgpu-media-presenter = { path = "../../../🎛️media-presenter/📦️packages/🦀️rust" }
+semio-renderer-wgpu-program-bridge = { path = "../../../🪢️program-bridge/📦️packages/🦀️rust" }
 semio-renderer-wgpu-kernel-pool = { path = "../../../🏊️kernel-pool/📦️packages/🦀️rust" }
 semio-renderer-wgpu-kernel-protocol = { path = "../../../📡️kernel-protocol/📦️packages/🦀️rust" }
 semio-renderer-wgpu-kernel-runtime = { path = "../../../🧠️kernel-runtime/📦️packages/🦀️rust" }

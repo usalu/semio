@@ -141,6 +141,8 @@ pub trait PluginApp: Send + 'static {
     fn maintenance_step(&mut self, cx:&mut semio_framework_job::StepContext<'_>, loan:RetainedCloneGrant) -> Result<PluginLifecycleStep, semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure>;
     /// 🪹️ Every live retirement frontier and its retained directory backing is empty.
     fn maintenance_terminal_is_empty(&self) -> bool;
+    /// 🫧️ [`Self::maintenance_terminal_is_empty`] except that a live transient press preview awaiting its returned foreground source does not count as outstanding work.
+    fn maintenance_quiescent_under_live_preview(&self) -> bool { self.maintenance_terminal_is_empty() }
     /// 🌡️ True while a displaced-owner queue of the document or a config-lane store sits at or
     /// above [`store::os_store::snapshot_read::ARTIFACT_STORE_DISPLACED_PRESSURE_OCCUPANCY`], or a child-root or child-member
     /// retirement registry at or above [`MAINTENANCE_CHILD_RETIREMENT_PRESSURE_OCCUPANCY`]. The runtime

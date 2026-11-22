@@ -49,7 +49,9 @@
       "role": "viewer",
       "appId": "s.norm.din16798@1/*#viewer",
       "bodyKeys": [
-        "framework.window.table",
+        "norm.din16798.view.viewport",
+        "norm.din16798.view.diagrams",
+        "norm.din16798.view.checks",
         "framework.body.history"
       ]
     },
@@ -398,7 +400,9 @@
       "role": "viewer",
       "appId": "s.norm.vdi3805@1/*#viewer",
       "bodyKeys": [
-        "framework.window.table",
+        "norm.vdi3805.view.viewport",
+        "norm.vdi3805.view.diagrams",
+        "norm.vdi3805.view.checks",
         "framework.body.history"
       ]
     }

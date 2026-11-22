@@ -19,6 +19,15 @@ export function dependencyNameKindV1(name:string,policy:DependencyForeignPolicyV
  * @see ./🧪️tests/🟦️.ts */
 export function dependencyGenerationNamesV1(names:readonly string[],policy:DependencyForeignPolicyV1):readonly string[]{return names.filter(name=>dependencyNameKindV1(name,policy)==="generation");}
 
+/** 🧭️ How the generation folder differs from its plan: `roster` when the generation and capsule names differ (what was added, what is gone), `identity` when it is another directory (device, inode or mode of the 7 field stamp), undefined when it holds the planned generations; a changed size or time of the folder alone (tombstones, the quarantine folder and OS metadata come and go) is no change. A pure function.
+ * @see ./🧪️tests/🟦️.ts */
+export function dependencyContainerChangeV1(names:readonly string[],stamp:string,plan:Readonly<{names:readonly string[];stamp:string}>,policy:DependencyForeignPolicyV1):Readonly<{kind:"roster";added:readonly string[];gone:readonly string[]}>|Readonly<{kind:"identity"}>|undefined{
+ const current=dependencyGenerationNamesV1(names,policy);
+ if(JSON.stringify(current)!==JSON.stringify(plan.names))return Object.freeze({kind:"roster" as const,added:Object.freeze(current.filter(name=>!plan.names.includes(name)).slice(0,8)),gone:Object.freeze(plan.names.filter(name=>!current.includes(name)).slice(0,8))});
+ const identity=(value:string)=>JSON.stringify((JSON.parse(value) as string[]).slice(0,3));
+ return identity(stamp)===identity(plan.stamp)?undefined:Object.freeze({kind:"identity" as const});
+}
+
 /** 🧹️ Makes the roster of the generation folder exact without a person: ignorable OS metadata is removed, any unknown name that stayed longer than `graceMilliseconds` (a younger one may be a writer's work in flight) is moved into the quarantine folder of the same folder as `<ms>-<name>` (the entry itself is moved, a link is never followed), and the quarantine is bounded to `maximum` entries and `retentionMilliseconds`, oldest collected first. Returns what it did, so the caller can tell it.
  * @see ./🧪️tests/🟦️.ts */
 export function settleDependencyForeignNamesV1(input:Readonly<{directory:string;nowMs:number;policy:DependencyForeignPolicyV1;check?:()=>void}>):Readonly<{removed:readonly string[];quarantined:readonly string[];collected:number}>{

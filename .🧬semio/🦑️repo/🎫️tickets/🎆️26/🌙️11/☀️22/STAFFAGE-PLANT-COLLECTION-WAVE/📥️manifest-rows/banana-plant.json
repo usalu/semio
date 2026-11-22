@@ -1,0 +1,55 @@
+{
+  "id": "banana-plant",
+  "category": "vegetation",
+  "title": {
+    "en": "Japanese Fibre Banana",
+    "de": "Japanische Faserbanane"
+  },
+  "heightM": 5.493,
+  "widthM": 4.399,
+  "powerW": 0,
+  "poses": [
+    "calm",
+    "windy",
+    "storm",
+    "midday-wilt"
+  ],
+  "clips": [
+    "wind-sway",
+    "gust",
+    "diurnal-transpiration"
+  ],
+  "representations": {
+    "50": "authored",
+    "100": "authored",
+    "200": "authored",
+    "500": "authored"
+  },
+  "symbols": [
+    "banana-plant-symbol"
+  ],
+  "analytics": [
+    "thermal",
+    "transport",
+    "structural"
+  ],
+  "exports": [
+    "svg",
+    "pdf",
+    "dxf",
+    "dwg",
+    "png-sequence",
+    "mp4",
+    "webm",
+    "component",
+    "glb",
+    "fbx",
+    "model",
+    "model-zip"
+  ],
+  "distinction": {
+    "en": "A herbaceous clump, not a tree: a soft pseudostem of rolled leaf sheaths with nine huge paddle leaves torn into strips by the wind, a furled cigar leaf, dead leaves and two suckers; the whole plant leans and streams in wind and its leaves fold in the midday heat.",
+    "de": "Ein krautiger Horst, kein Baum: ein weicher Scheinstamm aus gerollten Blattscheiden mit neun riesigen, vom Wind in Streifen gerissenen Paddelblättern, einem eingerollten Zigarrenblatt, toten Blättern und zwei Kindeln; die ganze Pflanze neigt sich und strömt im Wind, und ihre Blätter falten sich in der Mittagshitze."
+  },
+  "completion": "authored"
+}

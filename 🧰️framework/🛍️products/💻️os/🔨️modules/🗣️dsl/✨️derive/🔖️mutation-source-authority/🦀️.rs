@@ -65,7 +65,7 @@ pub struct MutationAggregateSourceAuthority {
     mutation_authority_no_follow(&workspace_root, &source_path, false)?;
     let taxonomy_path = mutation_authority_locator(&workspace_root, MUTATION_AUTHORITY_LOCATOR)?;
     mutation_authority_no_follow(&workspace_root, &taxonomy_path, false).map_err(|error| format!("mutation authority projection {MUTATION_AUTHORITY_LOCATOR}: {error}; run repo run @semio-tech/dsl-derive-rs:generate"))?;
-    let authority: serde_json::Value = serde_json::from_slice(&crate::compiler_resources::read(&taxonomy_path).map_err(|error| error.to_string())?).map_err(|error| error.to_string())?;
+    let authority: serde_json::Value = serde_json::from_slice(&crate::compiler_resources::read(&taxonomy_path).map_err(|error| mutation_authority_io_refusal(&error))?).map_err(|error| error.to_string())?;
     if authority.get("schema").and_then(serde_json::Value::as_str) != Some(MUTATION_AUTHORITY_SCHEMA) { return Err("mutation authority projection declares another schema".to_string()); }
     let source_filename = mutation_authority_segment(&authority, "sourceFilename")?;
     let descriptor_filename = mutation_authority_segment(&authority, "descriptorFilename")?;
@@ -102,7 +102,7 @@ pub struct MutationAggregateSourceAuthority {
     };
     let descriptor_path = owner_path.join(descriptor_filename);
     mutation_authority_no_follow(&workspace_root, &descriptor_path, false)?;
-    let descriptor = crate::compiler_resources::read(&descriptor_path).map_err(|error| error.to_string())?;
+    let descriptor = crate::compiler_resources::read(&descriptor_path).map_err(|error| mutation_authority_io_refusal(&error))?;
     let authority = MutationSourceAuthority { workspace_root, mutation_root, owner, expected_semantic_kind, source_path, descriptor_path, taxonomy_path };
     parse_mutation_leaf_descriptor(&descriptor, &authority)?;
     Ok(authority)
@@ -207,7 +207,13 @@ fn mutation_authority_normalize(source: &Path, compiler_cwd: &Path) -> Result<Pa
     Ok(normalized)
 }
 
-fn mutation_authority_raw_no_follow(path: &Path) -> Result<(), String> {
+/// 🧭️ Structured refusal text of a failed metadata read: the io error names the path component (see `compiler_resources::lstat_v1`) and the kind is appended, for example `/a/b: Operation not permitted (os error 1) [PermissionDenied]`.
+#[doc(hidden)] pub fn mutation_authority_io_refusal(error: &std::io::Error) -> String { format!("{error} [{:?}]", error.kind()) }
+
+/// 🪧 Refusal for one path component whose metadata or bytes could not be read: the component, its `ErrorKind`, and the io error, for example `/a/absent (NotFound): /a/absent: No such file or directory (os error 2) [NotFound]`.
+fn mutation_authority_io_at(path: &Path, error: &std::io::Error) -> String { format!("{} ({:?}): {error} [{:?}]", path.display(), error.kind(), error.kind()) }
+
+pub(super) fn mutation_authority_raw_no_follow(path: &Path) -> Result<(), String> {
     if !path.is_absolute() { return Err("raw source path is not absolute".to_string()); }
     mutation_authority_raw_lexical(path)?;
     let mut current = PathBuf::new();
@@ -215,11 +221,11 @@ fn mutation_authority_raw_no_follow(path: &Path) -> Result<(), String> {
     for (index, component) in components.iter().enumerate() {
         match component {
             Component::Prefix(prefix) => current.push(prefix.as_os_str()),
-            Component::RootDir => { current.push(component.as_os_str()); let metadata = fs::symlink_metadata(&current).map_err(|error| error.to_string())?; if metadata.file_type().is_symlink() || !metadata.file_type().is_dir() { return Err("raw source root is not a regular directory".to_string()); } },
+            Component::RootDir => { current.push(component.as_os_str()); let metadata = crate::compiler_resources::lstat_v1(&current).map_err(|error| mutation_authority_io_at(&current, &error))?; if metadata.file_type().is_symlink() || !metadata.file_type().is_dir() { return Err("raw source root is not a regular directory".to_string()); } },
             Component::CurDir => {},
             Component::Normal(segment) => {
                 current.push(segment);
-                let metadata = fs::symlink_metadata(&current).map_err(|error| error.to_string())?;
+                let metadata = crate::compiler_resources::lstat_v1(&current).map_err(|error| mutation_authority_io_at(&current, &error))?;
                 if metadata.file_type().is_symlink() { return Err("raw source symlink component rejected before normalization".to_string()); }
                 if components[index + 1..].iter().any(|next| matches!(next, Component::Normal(_) | Component::ParentDir)) && !metadata.file_type().is_dir() { return Err("raw source intermediate component is not a directory".to_string()); }
                 if !components[index + 1..].iter().any(|next| matches!(next, Component::Normal(_) | Component::ParentDir)) && !metadata.file_type().is_file() { return Err("raw source terminal component is not a regular file".to_string()); }
@@ -241,42 +247,42 @@ fn mutation_authority_raw_lexical(path: &Path) -> Result<(), String> {
     Ok(())
 }
 
-/// 🧭️ Exact package/project anchors may explicitly delegate only to an ancestor's genuine workspace authority.
-#[doc(hidden)] pub fn mutation_authority_workspace_root(source:&Path)->Result<PathBuf,String>{for ancestor in source.parent().into_iter().flat_map(Path::ancestors){if let Some(root)=mutation_authority_workspace_anchor(ancestor)?{return Ok(root);}}Err("source has no exact package workspace declaration and 📋️project.json pair".to_string())}
+/// 🧭️ Exact package/project anchors may explicitly delegate only to an ancestor's genuine workspace authority, and never above the input root of an offloaded compilation.
+#[doc(hidden)] pub fn mutation_authority_workspace_root(source:&Path)->Result<PathBuf,String>{for ancestor in source.parent().into_iter().flat_map(Path::ancestors).take_while(|ancestor|crate::compiler_resources::inside_input_root_v1(ancestor)){if let Some(root)=mutation_authority_workspace_anchor(ancestor)?{return Ok(root);}}Err("source has no exact package workspace declaration and 📋️project.json pair".to_string())}
 fn mutation_authority_workspace_anchor(ancestor:&Path)->Result<Option<PathBuf>,String>{
- let package=ancestor.join("package.json");match mutation_authority_node(&package){"missing"=>return Ok(None),"symlink"=>return Err("workspace package.json marker is a symlink".to_string()),"file"=>{},_=>return Err("workspace package.json marker is not a regular file".to_string())}
- let package:serde_json::Value=serde_json::from_slice(&fs::read(&package).map_err(|error|error.to_string())?).map_err(|error|error.to_string())?;
+ let package=ancestor.join("package.json");match mutation_authority_node(&package)?{"missing"=>return Ok(None),"symlink"=>return Err("workspace package.json marker is a symlink".to_string()),"file"=>{},_=>return Err("workspace package.json marker is not a regular file".to_string())}
+ let package:serde_json::Value=serde_json::from_slice(&fs::read(&package).map_err(|error| mutation_authority_io_at(&package, &error))?).map_err(|error|error.to_string())?;
  if !matches!(package.get("workspaces"),Some(serde_json::Value::Array(_)|serde_json::Value::Object(_))){return Ok(None);}
  if let Some(delegation)=package.pointer("/semio/mutationSourceAuthority/workspaceRoot"){
   let relative=delegation.as_str().filter(|s|!s.is_empty()).ok_or_else(||"mutation authority delegation must name an exact ancestor".to_string())?;let mut target=ancestor.to_path_buf();for part in relative.split('/'){if part!=".."||!target.pop(){return Err("mutation authority delegation must name an exact ancestor".to_string());}}
   return mutation_authority_workspace_anchor(&target)?.map(Some).ok_or_else(||"delegated mutation authority lacks an exact package workspace and project pair".to_string());
  }
- match mutation_authority_node(&ancestor.join("📋️project.json")){"file"=>Ok(Some(ancestor.to_path_buf())),"missing"=>Err("workspace package.json declaration lacks paired 📋️project.json".to_string()),"symlink"=>Err("workspace 📋️project.json marker is a symlink".to_string()),_=>Err("workspace 📋️project.json marker is not a regular file".to_string())}
+ match mutation_authority_node(&ancestor.join("📋️project.json"))?{"file"=>Ok(Some(ancestor.to_path_buf())),"missing"=>Err("workspace package.json declaration lacks paired 📋️project.json".to_string()),"symlink"=>Err("workspace 📋️project.json marker is a symlink".to_string()),_=>Err("workspace 📋️project.json marker is not a regular file".to_string())}
 }
 
-fn mutation_authority_node(path: &Path) -> &'static str {
+fn mutation_authority_node(path: &Path) -> Result<&'static str, String> {
     match fs::symlink_metadata(path) {
-        Ok(metadata) if metadata.file_type().is_symlink() => "symlink",
-        Ok(metadata) if metadata.file_type().is_file() => "file",
-        Ok(_) => "other",
-        Err(error) if error.kind() == std::io::ErrorKind::NotFound => "missing",
-        Err(_) => "other",
+        Ok(metadata) if metadata.file_type().is_symlink() => Ok("symlink"),
+        Ok(metadata) if metadata.file_type().is_file() => Ok("file"),
+        Ok(_) => Ok("other"),
+        Err(error) if error.kind() == std::io::ErrorKind::NotFound => Ok("missing"),
+        Err(error) => Err(mutation_authority_io_at(path, &error)),
     }
 }
 
 pub(super) fn mutation_authority_no_follow(root: &Path, target: &Path, directory: bool) -> Result<(), String> {
     let relative = target.strip_prefix(root).map_err(|_| "path escapes workspace root".to_string())?;
     let mut current = root.to_path_buf();
-    let root_metadata = fs::symlink_metadata(&current).map_err(|error| error.to_string())?;
+    let root_metadata = crate::compiler_resources::lstat_v1(&current).map_err(|error| mutation_authority_io_at(&current, &error))?;
     if root_metadata.file_type().is_symlink() || !root_metadata.file_type().is_dir() { return Err("workspace root is not a regular directory".to_string()); }
     for component in relative.components() {
         let Component::Normal(segment) = component else { return Err("path is not lexically normalized".to_string()); };
         if segment.to_str().is_some_and(|value| value.eq_ignore_ascii_case("compose")) { return Err("opaque compose path rejected before I/O".to_string()); }
         current.push(segment);
-        let metadata = fs::symlink_metadata(&current).map_err(|error| error.to_string())?;
+        let metadata = crate::compiler_resources::lstat_v1(&current).map_err(|error| mutation_authority_io_at(&current, &error))?;
         if metadata.file_type().is_symlink() { return Err("symlink path component rejected".to_string()); }
     }
-    let metadata = fs::symlink_metadata(target).map_err(|error| error.to_string())?;
+    let metadata = crate::compiler_resources::lstat_v1(target).map_err(|error| mutation_authority_io_at(target, &error))?;
     if directory && !metadata.file_type().is_dir() { return Err("expected regular directory".to_string()); }
     if !directory && !metadata.file_type().is_file() { return Err("expected regular file".to_string()); }
     Ok(())
@@ -309,3 +315,9 @@ pub(super) fn mutation_authority_no_follow(root: &Path, target: &Path, directory
     Ok(segments.join("/"))
 }
 //#endregion 🔖️MutationSourceAuthority
+
+/// 🩺️ Offloaded: `E0463`, which the offload client reads as incomplete inputs (local retry); else the compile error.
+#[doc(hidden)] pub fn mutation_authority_refusal(spanned:&impl quote::ToTokens,message:String)->TokenStream{
+    if crate::compiler_resources::input_root_v1().is_some() { return "extern crate semio_offload_inputs_incomplete;".parse().unwrap(); }
+    syn::Error::new_spanned(spanned,message).to_compile_error().into()
+}

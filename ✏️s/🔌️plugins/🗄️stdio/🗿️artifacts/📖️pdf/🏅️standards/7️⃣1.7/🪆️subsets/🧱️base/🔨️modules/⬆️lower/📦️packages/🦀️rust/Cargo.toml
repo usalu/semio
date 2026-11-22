@@ -9,6 +9,15 @@ description = "Component crate of semio-s-artifact-stdio-pdf: lower"
 [package.metadata.semio]
 role = "library"
 
+[package.metadata.semio.carve]
+owned = [
+  "standards::v1_7::subsets::base::modules::lower",
+  "standards::v1_7::subsets::base::modules::lower::catalog_and_info",
+  "standards::v1_7::subsets::base::modules::lower::fonts_and_resources",
+  "standards::v1_7::subsets::base::modules::lower::options_and_lowering",
+  "standards::v1_7::subsets::base::modules::lower::pages_and_navigation",
+]
+
 [lints]
 workspace = true
 

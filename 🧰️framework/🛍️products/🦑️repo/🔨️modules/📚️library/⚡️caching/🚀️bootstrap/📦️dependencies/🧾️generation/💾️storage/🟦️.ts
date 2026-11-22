@@ -1,4 +1,5 @@
 import {createHash} from "node:crypto";
+import {holdDependencyGenerationsV1} from "../../♻️collection/🟦️.ts";
 import {lstatSync,readFileSync,readdirSync,statSync,unlinkSync} from "node:fs";
 import {homedir} from "node:os";
 import {join,resolve} from "node:path";
@@ -97,7 +98,7 @@ export async function verifyJavascriptDependencyGenerationReceiptV1(workspace:st
   if(receipt.scope!==scope)continue;
   const vouch=options.vouch?await options.vouch(receipt.sha256):undefined,vouched=vouch?(paths:readonly string[])=>options.recheck===true?vouch.settled(paths,control.signal):Promise.resolve(vouch.skippable(paths)):undefined;
   const result=await verifyGenerationReceiptV1(portsOf(root,context,control,controlOf(context,control,"shared"),(evidence,maximum)=>{if(!evidenceName.test(evidence))throw Error("Sealed generation evidence required");try{return readBounded(join(context.root,protocol.directory,evidence),maximum);}catch{throw Error("Sealed generation evidence required");}},receipt,subject,options.recheck===true,vouched));
-  if(result.status==="match")return result;last=result;
+  if(result.status==="match"){holdDependencyGenerationsV1(context.root,receipt.ready.map(row=>row.generation.slice(0,20)));return result;}last=result;
  }
  return last;
 }
@@ -105,13 +106,15 @@ export async function verifyJavascriptDependencyGenerationReceiptV1(workspace:st
 const colon=(json:string|null):string|null=>json===null?null:(JSON.parse(json)as string[]).join(":");
 /** 🪪️ Derives the receipt profile of one retained manifest text from the file as it stands, only while the file still holds exactly the retained text. */
 const manifestTextProfileV1=(root:string,row:Readonly<{path:string;sha256:string}>):string|null=>{try{const bytes=readFileSync(join(root,row.path));return createHash("sha256").update(bytes).digest("hex")===row.sha256?manifestProfileSha256V1(row.path,bytes):null;}catch{return null;}};
+/** 🧭️ Reads the declared installation scope the ownership walk recorded for one retained manifest; a walk that recorded none cannot be sealed. */
+const manifestTextOwnerV1=(observed:BunWorkspaceObservedOwnershipV1,path:string):string=>{const owner=observed.textOwners[path];if(owner===undefined)throw Error("Retained manifest owner required");return owner;};
 /** 🗺️ Maps one completed walk onto the neutral capture input; nothing outside the walk's own results is consulted. */
 export async function captureJavascriptDependencyGenerationReceiptV1(workspace:string,store:Readonly<{root:string}>,control:GenerationControlV1,walk:JavascriptDependencyGenerationWalkV1,observed:BunWorkspaceObservedOwnershipV1,startedAtMs:number,subject:JavascriptDependencyGenerationSubjectV1=javascriptDependencyGenerationSubjectV1()){
  const root=resolve(workspace),evidence=walk.evidence,plans=new Map(walk.projection.plans.map(row=>[row.scope,row.plan]));
  return captureGenerationReceiptV1({
   workspace:root,storeRoot:store.root,scope:evidence.scope,startedAtMs,runtime:javascriptDependencyGenerationRuntimeV1(),producer:observeJavascriptDependencyGenerationProducerV1(root,store.root,walk.required,subject.ambient),recipeSha256:walk.projection.recipeSha256,ownershipSha256:walk.projection.owners.sha256,required:walk.required,
   inputs:walk.projection.plans.map(row=>({scope:row.scope,sources:row.plan.sources.map(source=>({path:source.path,kind:source.kind,dev:source.dev,ino:source.ino,mode:source.mode,bytes:source.bytes}))})),
-  membership:{...observed,texts:observed.texts.map(row=>({...row,profileSha256:manifestTextProfileV1(root,row)}))},
+  membership:{root:observed.root,paths:observed.paths,texts:observed.texts.map(row=>({...row,owner:manifestTextOwnerV1(observed,row.path),profileSha256:manifestTextProfileV1(root,row)}))},
   bindings:walk.required.map(name=>({scope:name,pairs:plans.get(name)!.bindings,observation:evidence.bindings.find(([scope])=>scope===name)![1]})),
   ready:walk.receipts.map(row=>({scope:row.scope,generation:row.generation,path:join(plans.get(row.scope)!.directory,"bindings.json"),fingerprint:row.fingerprint})),
   execution:{scopes:evidence.execution.scopes,runtimeSha256:evidence.execution.runtimeSha256,observations:evidence.execution.observations.map(row=>({path:row.path,stamp:colon(row.stamp),anchor:colon(row.anchor),kind:row.kind,target:row.target,full:row.full}))},

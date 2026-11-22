@@ -3693,8 +3693,8 @@
       ]
      ],
      "plane": "yz",
-     "from": 0.035,
-     "to": 2.965
+     "from": 0.02,
+     "to": 2.98
     },
     {
      "id": "base-plate",
@@ -3704,13 +3704,13 @@
      "role": "body",
      "tone": 0.4,
      "size": [
-      0.035,
+      0.02,
       0.3,
       0.26
      ],
      "transform": {
       "translation": [
-       0.0175,
+       0.01,
        0,
        0
       ]
@@ -3725,15 +3725,15 @@
      "tone": 0.4,
      "profile": [
       [
-       0.035,
+       0.02,
        0.1
       ],
       [
-       0.035,
+       0.02,
        0.15
       ],
       [
-       0.055,
+       0.045,
        0.15
       ],
       [
@@ -3746,8 +3746,8 @@
       ]
      ],
      "plane": "xy",
-     "from": -0.01,
-     "to": 0.01
+     "from": -0.008,
+     "to": 0.008
     },
     {
      "id": "stiffener-b",
@@ -3758,15 +3758,15 @@
      "tone": 0.4,
      "profile": [
       [
-       0.035,
+       0.02,
        -0.1
       ],
       [
-       0.035,
+       0.02,
        -0.15
       ],
       [
-       0.055,
+       0.045,
        -0.15
       ],
       [
@@ -3779,8 +3779,8 @@
       ]
      ],
      "plane": "xy",
-     "from": -0.01,
-     "to": 0.01
+     "from": -0.008,
+     "to": 0.008
     },
     {
      "id": "anchor-1",
@@ -3791,11 +3791,11 @@
      "tone": 0.3,
      "profile": [
       [
-       0.035,
+       0.02,
        0
       ],
       [
-       0.035,
+       0.02,
        0.012
       ],
       [
@@ -3827,11 +3827,11 @@
      "tone": 0.3,
      "profile": [
       [
-       0.035,
+       0.02,
        0
       ],
       [
-       0.035,
+       0.02,
        0.012
       ],
       [
@@ -3863,11 +3863,11 @@
      "tone": 0.3,
      "profile": [
       [
-       0.035,
+       0.02,
        0
       ],
       [
-       0.035,
+       0.02,
        0.012
       ],
       [
@@ -3899,11 +3899,11 @@
      "tone": 0.3,
      "profile": [
       [
-       0.035,
+       0.02,
        0
       ],
       [
-       0.035,
+       0.02,
        0.012
       ],
       [
@@ -3934,13 +3934,13 @@
      "role": "body",
      "tone": 0.4,
      "size": [
-      0.035,
+      0.02,
       0.24,
       0.22
      ],
      "transform": {
       "translation": [
-       2.9825,
+       2.99,
        0,
        0
       ]
@@ -3974,8 +3974,8 @@
       ]
      ],
      "plane": "yz",
-     "from": 0.035,
-     "to": 2.965,
+     "from": 0.02,
+     "to": 2.98,
      "sectionFaces": [
       "-v",
       "-u",
@@ -4009,8 +4009,8 @@
       ]
      ],
      "plane": "yz",
-     "from": 0.035,
-     "to": 2.965,
+     "from": 0.02,
+     "to": 2.98,
      "sectionFaces": [
       "+v",
       "-u",
@@ -4068,8 +4068,8 @@
       ]
      ],
      "plane": "yz",
-     "from": 0.035,
-     "to": 2.965,
+     "from": 0.02,
+     "to": 2.98,
      "sectionFaces": [
       "+v",
       "-u",
@@ -4127,8 +4127,8 @@
       ]
      ],
      "plane": "yz",
-     "from": 0.035,
-     "to": 2.965,
+     "from": 0.02,
+     "to": 2.98,
      "sectionFaces": [
       "-v",
       "-u",
@@ -4245,11 +4245,11 @@
      "tone": 0.3,
      "profile": [
       [
-       -0.035,
+       -0.02,
        0
       ],
       [
-       -0.035,
+       -0.02,
        0.018
       ],
       [
@@ -4299,8 +4299,8 @@
    ],
    "decisions": [
     {
-     "en": "At 1:100 the shaft is one H extrusion with the real 15 mm flanges and 9 mm web; each 18 mm root fillet is one 45 degree chamfer. The plates are the drawn 35 mm blocks (20 mm real, thickened by the drawing so that they print), without holes: an 18 mm hole is 0.18 mm on paper. The gussets are 20 mm trapezoids of the true 50 mm width up to the true height of 0.11 m, without snipe. Each anchor is one 24 mm stud of 40 mm (washer, nut and rod end merged). The welds (8.5 mm) are below the 15 mm feature and left out.",
-     "de": "Bei 1:100 ist der Schaft ein H-Strang mit den wirklichen 15-mm-Flanschen und dem 9-mm-Steg; jede 18-mm-Ausrundung ist eine 45-Grad-Fase. Die Platten sind die gezeichneten 35-mm-Blöcke (wirklich 20 mm, von der Zeichnung verdickt, damit sie drucken), ohne Löcher: ein 18-mm-Loch misst auf dem Papier 0,18 mm. Die Rippen sind 20-mm-Trapeze der wahren Breite von 50 mm bis zur wahren Höhe von 0,11 m, ohne Eckausschnitt. Jeder Anker ist ein 24-mm-Bolzen von 40 mm (Scheibe, Mutter und Stangenende zusammengefasst). Die Nähte (8,5 mm) liegen unter dem 15-mm-Merkmal und entfallen."
+     "en": "At 1:100 the shaft is one H extrusion with the real 15 mm flanges and 9 mm web; each 18 mm root fillet is one 45 degree chamfer. The plates keep their true 20 mm (above the 15 mm feature; only the drawing thickens them to 35 mm so that they still print at 1:150), without holes: an 18 mm hole is 0.18 mm on paper. The gussets are the true 16 mm plates, trapezoids of the true 50 mm width with the true 25 mm nose up to the true height of 0.11 m, the top widened from 10 to 15 mm, without snipe. Each anchor is one 24 mm stud from the plate to the true bolt end 75 mm above the footing (washer, nut and rod end merged). The welds (8.5 mm) are below the 15 mm feature and left out.",
+     "de": "Bei 1:100 ist der Schaft ein H-Strang mit den wirklichen 15-mm-Flanschen und dem 9-mm-Steg; jede 18-mm-Ausrundung ist eine 45-Grad-Fase. Die Platten behalten ihre wahren 20 mm (über dem 15-mm-Merkmal; nur die Zeichnung verdickt sie auf 35 mm, damit sie auch bei 1:150 drucken), ohne Löcher: ein 18-mm-Loch misst auf dem Papier 0,18 mm. Die Rippen sind die wahren 16-mm-Bleche, Trapeze der wahren Breite von 50 mm mit der wahren 25-mm-Nase bis zur wahren Höhe von 0,11 m, die Oberkante von 10 auf 15 mm verbreitert, ohne Eckausschnitt. Jeder Anker ist ein 24-mm-Bolzen von der Platte bis zum wahren Bolzenende 75 mm über dem Fundament (Scheibe, Mutter und Stangenende zusammengefasst). Die Nähte (8,5 mm) liegen unter dem 15-mm-Merkmal und entfallen."
     },
     {
      "en": "Thermal: the flange plates with outer face and edges, the chambers as two halves of the web with chamfered roots and a 2 mm skin on the inner flange face each (0.2 mm proud of the flange plate so that the two regions never share a face), the base plate (underside on the footing), gussets and studs by reference, the head plate by reference.",
@@ -4374,8 +4374,8 @@
       ]
      ],
      "plane": "yz",
-     "from": 0.05,
-     "to": 2.95
+     "from": 0.03,
+     "to": 2.97
     },
     {
      "id": "base-plate",
@@ -4385,13 +4385,13 @@
      "role": "body",
      "tone": 0.4,
      "size": [
-      0.05,
+      0.03,
       0.3,
       0.26
      ],
      "transform": {
       "translation": [
-       0.025,
+       0.015,
        0,
        0
       ]
@@ -4405,13 +4405,13 @@
      "role": "body",
      "tone": 0.4,
      "size": [
-      0.05,
+      0.03,
       0.24,
       0.22
      ],
      "transform": {
       "translation": [
-       2.975,
+       2.985,
        0,
        0
       ]
@@ -4445,8 +4445,8 @@
       ]
      ],
      "plane": "yz",
-     "from": 0.05,
-     "to": 2.95,
+     "from": 0.03,
+     "to": 2.97,
      "sectionFaces": [
       "-u",
       "+u"
@@ -4479,8 +4479,8 @@
       ]
      ],
      "plane": "yz",
-     "from": 0.05,
-     "to": 2.95,
+     "from": 0.03,
+     "to": 2.97,
      "sectionFaces": [
       "-u",
       "+u"
@@ -4513,8 +4513,8 @@
       ]
      ],
      "plane": "yz",
-     "from": 0.05,
-     "to": 2.95,
+     "from": 0.03,
+     "to": 2.97,
      "sectionFaces": [
       "-v",
       "+v",
@@ -4566,11 +4566,11 @@
      "tone": 0.3,
      "profile": [
       [
-       -0.05,
+       -0.03,
        0
       ],
       [
-       -0.05,
+       -0.03,
        0.018
       ],
       [
@@ -4620,8 +4620,8 @@
    ],
    "decisions": [
     {
-     "en": "At 1:200 the shaft is a plain H with 30 mm flanges and a 30 mm web (the feature; the real 15 and 9 mm are below it) and sharp roots, between the drawn 50 mm base and head plates of 300 x 260 and 240 x 220 mm. Gussets (16 mm), anchors and welds are below the feature and left out.",
-     "de": "Bei 1:200 ist der Schaft ein schlichtes H mit 30-mm-Flanschen und 30-mm-Steg (das Merkmal; die wirklichen 15 und 9 mm liegen darunter) und scharfen Wurzeln zwischen den gezeichneten 50-mm-Fuß- und Kopfplatten von 300 x 260 und 240 x 220 mm. Rippen (16 mm), Anker und Nähte liegen unter dem Merkmal und entfallen."
+     "en": "At 1:200 the shaft is a plain H with 30 mm flanges and a 30 mm web (the feature; the real 15 and 9 mm are below it) and sharp roots, between base and head plates of 300 x 260 and 240 x 220 mm that are 30 mm thick, the feature (20 mm real; only the drawing thickens them to 50 mm so that they print). Gussets (16 mm), anchors and welds are below the feature and left out.",
+     "de": "Bei 1:200 ist der Schaft ein schlichtes H mit 30-mm-Flanschen und 30-mm-Steg (das Merkmal; die wirklichen 15 und 9 mm liegen darunter) und scharfen Wurzeln zwischen Fuß- und Kopfplatte von 300 x 260 und 240 x 220 mm, die 30 mm dick sind, das Merkmal (wirklich 20 mm; nur die Zeichnung verdickt sie auf 50 mm, damit sie drucken). Rippen (16 mm), Anker und Nähte liegen unter dem Merkmal und entfallen."
     },
     {
      "en": "Thermal: the merged shaft as its three plates, the two flanges for the flange region and the web between them for the web region, and the two plates by reference (base underside on the footing); only the total is compared at this scale.",

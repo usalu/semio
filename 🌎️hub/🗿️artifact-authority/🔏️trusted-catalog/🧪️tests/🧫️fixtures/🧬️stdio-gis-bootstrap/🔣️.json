@@ -141,7 +141,7 @@
   "limits": {
     "descriptorBytes": 4194304,
     "descriptorBytesPlusOne": 4194305,
-    "componentBytes": 268435456,
+    "componentBytes": 1073741824,
     "ioChunkBytes": 65536,
     "packageCount": 2,
     "codecCount": 32,

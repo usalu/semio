@@ -54,7 +54,8 @@ pub(super) enum PreparationSection {
 pub enum DrawMeasureCursor {
     LayerHeader(usize),
     GroupBegin(usize),
-    GroupEnd(usize),
+    /// 🫥️ Closes one group after `layer`; the count is how many groups still close there (an inner group closing with its parent).
+    GroupEnd(usize, u8),
     LayerUi { layer: usize, item: usize, overlay: bool },
     LayerVector { layer: usize, item: usize, overlay: bool },
     LayerRaster { layer: usize, raster: usize, overlay: bool },

@@ -11,6 +11,9 @@ use crate::standards::v1_7::subsets::base::modules::xref::WRITER_TRAILER_KEYS;
 use crate::standards::v1_7::subsets::base::schema::snapshot::{ObjRef, PdfDictEntry, PdfEncryption, PdfIndirectObject, PdfObject};
 use std::collections::BTreeMap;
 
+#[path = "🌊️dct-object.rs"]
+pub mod dct_object;
+
 //#region 🔖️Options
 /// 🎛️ How the file structure is laid out.
 #[derive(Clone, Debug, Default, PartialEq, Eq)]

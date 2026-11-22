@@ -1,0 +1,34 @@
+[package]
+workspace = "../../../../../../../../../../.."
+name = "semio-renderer-wgpu-media-presenter"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "The wgpu shell's native media presenter: presented media slots to the native player, its audio output, its video pictures and its transport controls"
+
+[package.metadata.semio]
+role = "framework"
+id = "os-renderer-wgpu-media-presenter"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-value = { path = "../../../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
+semio-renderer-media-native = { path = "../../../🎬️media-native/📦️packages/🦀️rust" }
+semio-ui-wgpu-paint-overlay = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖌️paint/🖼️ui-image-sources-skeleton-and-overlays/📦️packages/🦀️rust" }
+ui_contract = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust", package = "semio-ui-contract" }
+semio-renderer-wgpu-media-slots = { path = "../../../🎥️media-slots/📦️packages/🦀️rust" }
+
+
+[dev-dependencies]
+semio-ui-theme = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🎨️styling/🎭️theme/📦️packages/🦀️rust" }
+serde_json = "1.0.140"

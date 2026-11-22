@@ -12,7 +12,7 @@ import { buildTestkitCrate, cfgFeatures, declaredNames, externalDependencies, op
 import { addWorkspaceMembers, removeWorkspaceMembers, manifestRowKey, rebaseManifestDirPaths, renderMirrorFiles, patchCargoLock, patchRouterPackages, readManifestDependencyRows, rebaseManifestRow, relativePosix, renderCrateManifest, renderMirrorRoot, type ManifestDependencyRows, type MirrorSpec, type MirrorUnit } from "./📝️render/🟦️.ts";
 import { demoteDanglingOuterDocs, parseRustSourceTree, rustOuterDocStart } from "./🌳️module-tree/🟦️.ts";
 import { FIXTURE_READER_CRATE, FIXTURE_READER_PACKAGE_DIR, resolveFixturePlaceholders } from "./🧪️test-closure/🟦️.ts";
-import { deltaWrites, supersededCrates } from "./♻️recarve-delta/🟦️.ts";
+import { deltaWrites, retainedCrates, supersededCrates } from "./♻️recarve-delta/🟦️.ts";
 import { runtimeParseTomlV1 } from "../../../../../../📦️packages/🟦️typescript/⚙️runtime/📄️parse/🟦️.ts";
 
 export { planArtifactCrates } from "./🗺️plan/🧮️pack/🟦️.ts";
@@ -203,6 +203,10 @@ export async function carveWrites(plan: ArtifactCratePlan): Promise<{ writes: Ca
     const base = fileTexts.get(file) ?? readFileSync(file, "utf8");
     fileTexts.set(file, applyEdits(base, cuts));
   }
+  for (const [file, names] of plan.widen) {
+    const text = fileTexts.get(file) ?? readFileSync(file, "utf8");
+    fileTexts.set(file, [...names].reduce((out, name) => out.replace(new RegExp(`\\bpub\\((?:crate|super|self)\\)(\\s+(?:unsafe\\s+|async\\s+|const\\s+)*(?:fn|struct|enum|union|const|static|type|trait|mod)\\s+${name}\\b)`, "u"), "pub$1"), text));
+  }
   for (const append of plan.movedAppends) fileTexts.set(append.file, (fileTexts.get(append.file) ?? readFileSync(append.file, "utf8")) + append.text);
   const overlayAbsolute = new Map<string, string>([...fileTexts, [rootAbsolute, rootText]]);
   const rootLib = await measureRustCrate(plan.repoRoot, rootAbsolute, false, overlayAbsolute, artifactPackageDir);
@@ -258,7 +262,7 @@ export async function carveWrites(plan: ArtifactCratePlan): Promise<{ writes: Ca
     }
   }
   for (const absolute of plan.overlay.deletes) writes.push({ path: relativePosix(plan.repoRoot, absolute), action: "delete", content: "" });
-  const carvedRows = plan.crates.map((crate) => `${crate.name} = { path = "${relativePosix(artifactPackageDir, resolve(plan.repoRoot, crate.packageDir))}" }`);
+  const carvedRows = [...plan.crates, ...retainedCrates(plan)].map((crate) => `${crate.name} = { path = "${relativePosix(artifactPackageDir, resolve(plan.repoRoot, crate.packageDir))}" }`);
   const dependenciesAt = originalManifest.search(/^\[dependencies\]\s*$/mu);
   if (dependenciesAt < 0) throw new Error("Artifact package manifest has no [dependencies]");
   const lineEnd = originalManifest.indexOf("\n", dependenciesAt) + 1;
@@ -267,7 +271,7 @@ export async function carveWrites(plan: ArtifactCratePlan): Promise<{ writes: Ca
     const names = new Set([...(featureNames.length ? featureNames : []), ...(facade.consumed.get(crate.name) ?? [])]);
     return names.size ? [`${crate.name} = { path = "${relativePosix(artifactPackageDir, resolve(plan.repoRoot, crate.packageDir))}", features = [${[...names].sort().map((feature) => JSON.stringify(feature)).join(", ")}] }`] : [];
   });
-  const forwardedFacade = forwardFeatures(originalManifest.slice(0, lineEnd) + carvedRows.join("\n") + "\n" + originalManifest.slice(lineEnd), features, plan.crates.map((crate) => crate.name));
+  const forwardedFacade = forwardFeatures(originalManifest.slice(0, lineEnd) + carvedRows.join("\n") + "\n" + originalManifest.slice(lineEnd), features, [...plan.crates, ...retainedCrates(plan)].map((crate) => crate.name));
   const facadeOptional = facade.optionalDependencies.map((key) => optionalDependencyRow(wiring.externals.find((entry) => entry.key === key)!.devRow!));
   const facadeText = withRequiredFeatures(withFeatureRows(withDevDependencyRows(facadeOptional.length ? insertDependencyRows(forwardedFacade, facadeOptional) : forwardedFacade, facadeDevRows), facade.features), wiring.requiredFeatures);
   writes.push({ path: join(plan.packageDir, "Cargo.toml"), action: "update", content: facadeText });

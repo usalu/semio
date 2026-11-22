@@ -94,6 +94,12 @@ def normalize(args, digests, root, policy):
             index += 1
             continue
         following = args[index + 1] if index + 1 < len(args) else ""
+        if argument in ("-C", "--codegen") and re.match(r"(metadata|extra-filename)=", following):
+            index += 2
+            continue
+        if (argument.startswith("--codegen=") and re.match(r"(metadata|extra-filename)=", argument[10:])) or (argument.startswith("-C") and len(argument) > 2 and not argument.startswith("--") and re.match(r"(metadata|extra-filename)=", argument[2:])):
+            index += 1
+            continue
         if argument == "-C" and following.startswith("incremental="):
             index += 2
             continue

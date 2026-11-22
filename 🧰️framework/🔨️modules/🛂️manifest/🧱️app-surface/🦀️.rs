@@ -114,6 +114,10 @@ mod app_label_tests;
 #[path = "../🧪️tests/🔬️example-picker/🦀️.rs"]
 mod example_picker_tests;
 
+#[cfg(test)]
+#[path = "../🧪️tests/🏷️app-labels-overlay/🦀️.rs"]
+mod app_labels_overlay_tests;
+
 //#region 🔖️Dialog
 #[cfg(test)]
 #[path = "../🧪️tests/🧪️dialog-choices/🦀️.rs"]

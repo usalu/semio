@@ -14,7 +14,7 @@ import { moduleRustSource, readHubBinSource } from "../../../🧪️testing/📖
 
 /** 🧬️ Independently validates the exact closed stdio+GIS profile and full-generation framing. */
 export async function proveDocumentBrowserActorIdentityFixture(repoRoot: string): Promise<void> {
-  const integerRoot = join(repoRoot, "🧰️framework/🔨️modules/🌱️value/🔁️codec/🧫️fixtures");
+  const integerRoot = join(repoRoot, "🧰️framework/🔨️modules/🌱️value/🔁️codec/🧪️tests/🧫️fixtures");
   const integerFixture = JSON.parse(readFileSync(join(integerRoot, "🔣️.json"), "utf8"));
   let integerAccepted = 0;
   for (const target of integerFixture.targets) {
@@ -29,8 +29,8 @@ export async function proveDocumentBrowserActorIdentityFixture(repoRoot: string)
     }
   }
   console.log(`exact-integer-value-oracle: targets=${integerFixture.targets.length} raw=${integerFixture.raw.length} admitted=${integerAccepted} arithmetic=BigInt; native production parity is a separate exact group`);
-  const root = join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🌐️browser-actor");
-  const fixture = JSON.parse(readFileSync(join(root, "🧪️tests/🧫️fixtures/🔣️.json"), "utf8"));
+  const root = join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory");
+  const fixture = JSON.parse(readFileSync(join(root, "🧪️tests/🧫️fixtures/🌐️browser-actor/🔣️.json"), "utf8"));
   const validators = {
     plan: hubSchemaExport(repoRoot, "schema://os.directory/DocumentBrowserActorPlan"),
     lease: hubSchemaExport(repoRoot, "schema://os.directory/DocumentBrowserActorLease"),

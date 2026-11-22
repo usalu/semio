@@ -1,0 +1,25 @@
+{
+  "title": "Get Staffage Running End to End and Finish All Staffage Tickets",
+  "emoji": "🧍",
+  "status": "open",
+  "description": "Get staffage running end to end. Many assets were interrupted while modeling, etc. Finish all existing tickets. Use Fable subagents.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2796"
+  },
+  "goal": "🎯runningproducts",
+  "sessions": [
+    "b698e14d-b212-45e7-bdb5-cfc78976fba7"
+  ],
+  "interactions": [
+    {
+      "kind": "ticket.open",
+      "date": "2026-11-22 20:22:49",
+      "author": "",
+      "system": "mac",
+      "client": "claude-code",
+      "checkpoint": "",
+      "prompt": "Get staffage running end to end. Many assets were interrupted while modeling, etc. Finish all existing tickets. Use Fable subagents.",
+      "llm": "fable-5-2"
+    }
+  ]
+}

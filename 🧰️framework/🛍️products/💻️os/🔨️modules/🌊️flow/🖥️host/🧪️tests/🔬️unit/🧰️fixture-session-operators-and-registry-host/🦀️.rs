@@ -103,7 +103,7 @@ impl FixtureRegistryHost {
         for _ in 0..1_000_000 {
             if self.retirement.terminal_is_empty(){return;}
             let copy=64;let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:self.retirement.next_capacity_byte_demand(copy).unwrap(),maximum_release_bytes:self.retirement.next_release_byte_demand().unwrap(),maximum_depth:self.retirement.next_depth_demand().unwrap()};
-            self.retirement.close_step(grant).unwrap();
+            if let semio_framework_value::RetainedWorkPoll::Complete(turn)=funded(grant,|effect|self.retirement.close_step(copy,effect)){turn.result.unwrap();}
         }
         panic!("original fixture registry did not close");
     }

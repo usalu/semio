@@ -92,7 +92,7 @@ describe("🏷️ cast provenance written by the exporter", { timeout: 60_000 },
       const [line, still, transient, thermal] = indexes;
       expect(line!.provenance.scenario).toEqual({ kind: "geometry" });
       expect(still!.provenance.scenario).toEqual({ kind: "geometry" });
-      expect(thermal!.provenance.scenario).toMatchObject({ kind: "thermal", environment: { id: "winter-overcast" }, spanK: null, transport: [] });
+      expect(thermal!.provenance.scenario).toMatchObject({ kind: "thermal", environment: { id: "winter-overcast" }, spanK: null, flow: [] });
       const timeline = (transient!.provenance.scenario as Extract<typeof transient.provenance.scenario, { kind: "thermal"; timeline: unknown }>).timeline;
       expect(timeline.map(({ t, id, ease }) => ({ t, id, ease }))).toEqual(exporting.manifest.casts["radiator-transient"]!.timeline!.map((key) => ({ t: key.t, id: key.environment, ease: key.ease })));
     });

@@ -26,9 +26,15 @@ pub struct ShellInputState {
     pub accessibility_focused_control_id: Option<String>,
     /// ✏️ The cell a `focusRowControl` verb chose and the pointer context focuses with the input state in hand (the action context has none): addressed the way an accessibility focus event addresses it.
     pub pending_row_control_focus: Option<PendingRowControlFocus>,
+    /// ⚓️ ⋯ The window-body-local anchor a table row's menu trigger asked a context menu at: the pointer context opens the menu with the press position in hand (the action context has none), as a right-click on the row would.
+    pub pending_row_menu: Option<(f32, f32)>,
     pub interaction_selection: HashMap<String, semio_framework::DomainSelection>,
     pub open_selects: HashMap<String, bool>,
     pub context_menu: Option<ContextMenuState>,
+    /// 🎣️ The suggestion search the open context menu started, released when the menu closes.
+    pub suggestion_search: Option<SuggestionSearch>,
+    /// 🎣️ Set when the floating suggestion popup was dismissed, until the guest's record shows closed, so the dismissed popup is not reopened by the record that still reads open.
+    pub suggestion_popup_suppressed: bool,
     pub right_click: RightClickState,
     pub tree_drag: Option<TreeDragState>,
     pub tree_hovered_id: Option<String>,

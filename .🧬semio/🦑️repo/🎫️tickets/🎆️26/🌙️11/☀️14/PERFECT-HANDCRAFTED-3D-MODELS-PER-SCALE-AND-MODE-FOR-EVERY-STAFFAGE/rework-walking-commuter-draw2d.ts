@@ -1,11 +1,11 @@
-/** ✏️ Redraws the filled shapes of the 2D drawings of `humans/walking-commuter` that the reworked body invalidates: each one becomes the orthographic outline, in the default pose, of the body solids it stands for, solved into the frame of its bone through the product's own placement. Layer, tone, region, hatch and pen of every shape stay as drawn; which solids one shape unites is stated below. Strokes and the slender strap keep their drawn geometry.
+/** ✏️ Redraws the filled shapes of the 2D drawings of `humans/walking-commuter` that the reworked body invalidates: each one becomes the orthographic outline, in the default pose, of the body solids it stands for, solved into the frame of its bone through the product's own placement. Layer, tone, region, hatch and pen of every shape stay as drawn; which solids one shape unites is stated below. Strokes keep their drawn geometry; the strap stroke is the centre line of the strap solid (front view: the run in front of the body only), thinned by the step of the scale.
  *
  * Usage: `bun rework-walking-commuter-draw2d.ts` reads and rewrites the candidate `🗑️generated/rework-walking-commuter/🔣️.json`.
  * @see ./rework-walking-commuter-build.ts */
 import { join } from "node:path";
 import { contours, inverse, projectMask } from "./r3-project2d.ts";
 import { meshesIn, rigAt } from "./r3-lib.ts";
-import { area, GENERATED, simplifyRing, type Json, type P2, type Ring, type View } from "./volumes-lib.ts";
+import { area, GENERATED, projectWorld, simplifyRing, type Json, type P2, type Ring, type View } from "./volumes-lib.ts";
 import { readJsonFile, writeJsonFile } from "./rework-04-kit.ts";
 
 const path = join(GENERATED, "rework-walking-commuter", "🔣️.json");
@@ -28,6 +28,8 @@ function groupOf(id: string, view: View, drawn: Set<string>): string | null {
   if (view !== "front" && /^(lapel-[lr]|scarf-front|coat-button-\d|coat-pocket-[lr])$/.test(id)) return "coat";
   return null;
 }
+/** 🎗️ Every how many stations of the strap centre line a point of its stroke is kept. */
+const STRAP_STEP: Record<number, number> = { 50: 1, 100: 1, 200: 2, 500: 3 };
 const TOL: Record<number, number> = { 50: 0.0009, 100: 0.0018, 200: 0.0035, 500: 0.007 };
 for (const scale of [50, 100, 200, 500]) {
   const frames = rigAt(asset, scale, { kind: "pose", pose: asset.presentation.defaultPose }).frames;
@@ -57,6 +59,20 @@ for (const scale of [50, 100, 200, 500]) {
       if (solved[k]!.residualM > 1e-5 || solved[k]!.edgeOn) console.log(`  [DEBUG] ${scale} ${view} ${j.meta.id}: residual ${(solved[k]!.residualM * 1000).toFixed(3)} mm edgeOn ${solved[k]!.edgeOn}`);
       j.shape.points = solved[k]!.points.map((p) => [r4(p.x), r4(p.y)]);
     });
+    const strapShape = shapes.find((s) => s.id === "bag-strap");
+    const strapSolid = body.find((s) => s.id === "bag-strap");
+    if (strapShape && strapSolid) {
+      const f = frames.bag!;
+      const centre = (strapSolid.sections as Json[]).map((q) => [0, 1, 2].map((k) => f.o[k]! + q.at[0] * f.u[k]! + q.at[1] * f.v[k]! + q.at[2] * f.w[k]!) as [number, number, number]);
+      const top = centre.reduce((best, p, i) => (p[1] > centre[best]![1] ? i : best), 0);
+      const run = view === "front" ? centre.slice(0, top + 1) : centre;
+      const step = STRAP_STEP[scale]!;
+      const picked = run.filter((_, i) => i % step === 0 || i === run.length - 1 || i === 2 || i === top);
+      const { kind: _k, points: _p, closed: _c, ...meta } = strapShape;
+      const [line] = inverse(asset, scale, view, [{ meta, target: picked.map((p) => projectWorld(view, p)) }]);
+      if (line!.residualM > 1e-5 || line!.edgeOn) console.log(`  [DEBUG] ${scale} ${view} bag-strap: residual ${(line!.residualM * 1000).toFixed(3)} mm edgeOn ${line!.edgeOn}`);
+      strapShape.points = line!.points.map((p) => [r4(p.x), r4(p.y)]);
+    }
     console.log(`[DEBUG] ${scale} ${view}: ${jobs.length} of ${shapes.length} shapes redrawn; kept ${shapes.filter((s) => !groups.has(s.id)).map((s) => s.id).join(" ")}`);
   }
 }

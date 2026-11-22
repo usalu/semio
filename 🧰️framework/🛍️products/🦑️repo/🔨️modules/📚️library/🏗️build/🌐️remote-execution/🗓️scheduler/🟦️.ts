@@ -8,7 +8,7 @@ import {OFFLOAD_REFUSAL_PREFIX_V1} from "../🚀️offload/🩺️failure/🟦�
 import {OFFLOAD_POLICY_V1} from "../🚀️offload/📐️policy/🟦️.ts";
 
 const withoutWhyV1=(state:RemoteExecutionWorkerStateV1):Omit<RemoteExecutionWorkerStateV1,"why">=>{const {why:_why,...rest}=state;return rest;};
-import {remoteExecutionControlV1,remoteExecutionDigestV1,remoteExecutionMatchPropertiesV1,remoteExecutionPlatformKeyV1,remoteExecutionPlatformMatchesV1,type RemoteExecutionDigestV1,type RemoteExecutionHeartbeatAnswerV1,type RemoteExecutionPollAnswerV1,type RemoteExecutionPropertyV1,type RemoteExecutionTaskResultV1,type RemoteExecutionTaskStatusV1,type RemoteExecutionTaskV1,type RemoteExecutionWorkerRegisteredV1,type RemoteExecutionWorkerRegistrationV1} from "../🟦️.ts";
+import {remoteExecutionControlV1,remoteExecutionPeakMegabytesV1,remoteExecutionDigestV1,remoteExecutionMatchPropertiesV1,remoteExecutionPlatformKeyV1,remoteExecutionPlatformMatchesV1,type RemoteExecutionDigestV1,type RemoteExecutionHeartbeatAnswerV1,type RemoteExecutionPollAnswerV1,type RemoteExecutionPropertyV1,type RemoteExecutionTaskResultV1,type RemoteExecutionTaskStatusV1,type RemoteExecutionTaskV1,type RemoteExecutionWorkerRegisteredV1,type RemoteExecutionWorkerRegistrationV1} from "../🟦️.ts";
 
 /** 🎞️ The stages an operation passes through, in the protocol's own words. */
 export type RemoteExecutionStageV1="CACHE_CHECK"|"QUEUED"|"EXECUTING"|"COMPLETED";
@@ -20,14 +20,14 @@ export type RemoteExecutionOutcomeV1=Readonly<{status:RemoteExecutionTaskStatusV
 export type RemoteExecutionSnapshotV1=Readonly<{name:string;instance:string;action:RemoteExecutionDigestV1;stage:RemoteExecutionStageV1;outcome?:RemoteExecutionOutcomeV1}>;
 
 /** 📣️ Something worth logging. */
-export type RemoteExecutionSchedulerEventV1=Readonly<{stage:"submitted"|"cached"|"assigned"|"completed"|"retried"|"cancelled"|"worker-joined"|"worker-left"|"worker-lost"|"unmatched"|"refused"|"declined";detail:string}>;
+export type RemoteExecutionSchedulerEventV1=Readonly<{stage:"submitted"|"cached"|"assigned"|"completed"|"retried"|"worker-joined"|"worker-left"|"worker-lost"|"unmatched"|"refused"|"declined";detail:string}>;
 
 /** ⚙️ Bounds of the scheduler; all durations are seconds. */
 export type RemoteExecutionSchedulerOptionsV1=Readonly<{content:RemoteExecutionContentV1;unmatchedSeconds:number;lingerSeconds:number;leaseSeconds:number;maximumAttempts:number;defaultActionSeconds:number;maximumActionSeconds:number;maximumQueued:number;heartbeatSeconds:number;pollSeconds:number;loadExpireSeconds:number;refusalCooldownSeconds:number;cache:Readonly<{url:string;relative:boolean}>;language:"en"|"de"|"none";sweepMilliseconds?:number;now?:()=>number;onEvent?:(event:RemoteExecutionSchedulerEventV1)=>void}>;
 
 type Operation={
  id:string;instance:string;action:RemoteExecutionDigestV1;key:string;platform:RemoteExecutionPropertyV1[];timeoutSeconds:number;stage:RemoteExecutionStageV1;version:number;createdAt:number;queuedAt:number;
- attempt:number;failures:number;tried:Set<string>;requester?:string;submittedBy?:string;offload:boolean;worker?:string;startedAt?:number;outcome?:RemoteExecutionOutcomeV1;subscribers:Set<()=>void>;cancelRequested:boolean;adopted?:true;lingerTimer?:ReturnType<typeof setTimeout>;
+ attempt:number;failures:number;tried:Set<string>;requester?:string;peakMegabytes?:number;submittedBy?:string;offload:boolean;worker?:string;startedAt?:number;outcome?:RemoteExecutionOutcomeV1;subscribers:Set<()=>void>;cancelRequested:boolean;adopted?:true;lingerTimer?:ReturnType<typeof setTimeout>;
 };
 
 type Worker={
@@ -45,7 +45,9 @@ export class RemoteExecutionSchedulerV1{
  private readonly queue:Operation[]=[];
  private readonly workers=new Map<string,Worker>();
  private readonly reserved=new Map<string,number>();
- private readonly counters={queued:0,executing:0,completed:0,cached:0,failed:0,cancelled:0,retried:0,deduplicated:0,refused:0,offloadRejected:0};
+ private readonly counters={queued:0,executing:0,completed:0,cached:0,failed:0,cancelled:0,retried:0,deduplicated:0,refused:0,offloadRejected:0,cancelledQueued:0,cancelledExecuting:0,workersReused:0,sweepStalls:0};
+ private readonly waits:number[]=[];
+ private lastTick=0;
  readonly load:RemoteExecutionLoadTableV1;
  private readonly clock:()=>number;
  private timer?:ReturnType<typeof setInterval>;
@@ -54,8 +56,12 @@ export class RemoteExecutionSchedulerV1{
  readonly options:RemoteExecutionSchedulerOptionsV1; constructor(options:RemoteExecutionSchedulerOptionsV1){this.options=options;
   this.clock=options.now??Date.now;this.startedAt=new Date(this.clock()).toISOString();this.load=new RemoteExecutionLoadTableV1(options.loadExpireSeconds*1000,this.clock);
   const every=options.sweepMilliseconds??1000;
-  if(every>0){this.timer=setInterval(()=>{this.sweep();},every);this.timer.unref();}
+  this.lastTick=this.clock();
+  if(every>0){this.timer=setInterval(()=>{this.tick(every);},every);this.timer.unref();}
  }
+
+ /** 🫀️ One beat of the sweep timer: when the timer came back much later than its interval, this process was stalled (the machine is starved), the heartbeats of the workers wait unread in the socket queue and their last-seen marks are stale through no fault of theirs, so that beat judges no worker and only counts the stall; the next beat judges on fresh marks. */
+ tick(every:number):void{const now=this.clock(),stalled=now-this.lastTick>every*5;this.lastTick=now;if(stalled)this.counters.sweepStalls++;this.sweep(stalled);}
 
  private emit(stage:RemoteExecutionSchedulerEventV1["stage"],detail:string):void{this.options.onEvent?.({stage,detail});}
  private touch(operation:Operation):void{operation.version++;for(const wake of operation.subscribers)wake();}
@@ -94,8 +100,8 @@ export class RemoteExecutionSchedulerV1{
    const requester=remoteExecutionControlV1(operation.platform,"semio-origin");
    if(operation.submittedBy!==undefined&&requester!==undefined&&requester!==operation.submittedBy)return this.finish(operation,{status:{code:7,message:"The origin property differs from the authenticated submitter"},actionResult:null,cached:false,worker:""});
    if(requester!==undefined)operation.requester=requester;
-   else if(operation.submittedBy!==undefined&&operation.offload)operation.requester=operation.submittedBy;
-   operation.offload=remoteExecutionControlV1(operation.platform,"semio-offload")==="if-idle";
+   else if(operation.submittedBy!==undefined&&remoteExecutionControlV1(operation.platform,"semio-offload")!==undefined)operation.requester=operation.submittedBy;
+   operation.offload=remoteExecutionControlV1(operation.platform,"semio-offload")==="if-idle";operation.peakMegabytes=remoteExecutionPeakMegabytesV1(operation.platform);
    const seconds=action.timeout?Math.ceil(Number(action.timeout.seconds)+Number(action.timeout.nanos)/1e9):0;
    operation.timeoutSeconds=seconds>0?Math.min(seconds,this.options.maximumActionSeconds):Math.min(this.options.defaultActionSeconds,this.options.maximumActionSeconds);
    if(!skipCache){
@@ -129,7 +135,7 @@ export class RemoteExecutionSchedulerV1{
 
  private cancel(operation:Operation):void{
   if(operation.stage==="COMPLETED"||operation.subscribers.size>0)return;
-  this.emit("cancelled",this.label(operation));
+  if(operation.stage==="EXECUTING")this.counters.cancelledExecuting++;else this.counters.cancelledQueued++;
   if(operation.stage==="EXECUTING"&&operation.worker){
    const worker=this.workers.get(operation.worker);
    if(worker){operation.cancelRequested=true;worker.cancel.add(`${operation.id}.${operation.attempt}`);worker.waiter?.({version:1,task:null,cancel:[...worker.cancel],known:true});delete worker.waiter;return;}
@@ -169,6 +175,8 @@ export class RemoteExecutionSchedulerV1{
 
  /** 👷️ Registers a worker. */
  register(registration:RemoteExecutionWorkerRegistrationV1):RemoteExecutionWorkerRegisteredV1{
+  const known=[...this.workers.values()].find(worker=>worker.registration.name===registration.name&&worker.registration.origin===registration.origin);
+  if(known){known.registration=registration;known.lastSeen=this.clock();this.counters.workersReused++;this.dispatch();return this.registered(known.id);}
   const id=randomUUID();
   this.workers.set(id,{id,registration,lastSeen:this.clock(),running:new Set(),cancel:new Set(),draining:false,refusedUntil:0,refused:0});
   for(const row of registration.resumed??[]){
@@ -187,6 +195,11 @@ export class RemoteExecutionSchedulerV1{
   }
   this.emit("worker-joined",`${registration.name} ${registration.platform} x${registration.concurrency} ${registration.confinement==="full"?registration.sandbox:"unconfined"}`);
   this.dispatch();
+  return this.registered(id);
+ }
+
+ /** 🪪️ The answer to a registration: a machine that registers again under the same name and origin (its heartbeat or its poll was told "unknown", or two of its loops raced) keeps its one entry and its id instead of leaving an orphan entry that nothing heartbeats and the lease then reports as lost. */
+ private registered(id:string):RemoteExecutionWorkerRegisteredV1{
   return {version:1,id,heartbeatSeconds:this.options.heartbeatSeconds,pollSeconds:this.options.pollSeconds,leaseSeconds:this.options.leaseSeconds,cache:this.options.cache,language:this.options.language};
  }
 
@@ -209,11 +222,17 @@ export class RemoteExecutionSchedulerV1{
  }
 
  private workerView(worker:Worker):PlacementWorkerV1{
-  return {id:worker.id,name:worker.registration.name,origin:worker.registration.origin,properties:worker.registration.properties,concurrency:worker.registration.concurrency,running:worker.running.size,waiting:worker.waiter!==undefined,draining:worker.draining,refusedUntilMs:worker.refusedUntil};
+  return {id:worker.id,name:worker.registration.name,origin:worker.registration.origin,properties:worker.registration.properties,concurrency:worker.registration.concurrency,running:worker.running.size,waiting:worker.waiter!==undefined,draining:worker.draining,refusedUntilMs:worker.refusedUntil,committedMegabytes:this.committedMegabytes(worker)};
  }
  private views():readonly PlacementWorkerV1[]{return [...this.workers.values()].map(worker=>this.workerView(worker));}
  private view(operation:Operation):PlacementOperationV1{
-  return {id:operation.id,platform:operation.platform,tried:operation.requester===undefined?new Set():operation.tried,requester:operation.requester};
+  return {id:operation.id,platform:operation.platform,tried:operation.requester===undefined?new Set():operation.tried,requester:operation.requester,peakMegabytes:operation.peakMegabytes??0};
+ }
+ /** 💾️ The peak megabytes of the actions this scheduler placed on a worker that are still running there (the machine's next load report may not show them yet). */
+ private committedMegabytes(worker:Worker):number{
+  let sum=0;
+  for(const task of worker.running)sum+=this.operations.get(task.slice(0,task.lastIndexOf(".")))?.peakMegabytes??0;
+  return sum;
  }
 
  private requeue(operation:Operation,reason:string,failure:boolean):void{
@@ -227,12 +246,13 @@ export class RemoteExecutionSchedulerV1{
  }
 
  private dispatch():void{
-  const plan=planDispatchV1(this.queue.map(operation=>this.view(operation)),this.views(),this.load,this.clock());
+  const plan=planDispatchV1(this.queue.filter(operation=>operation.lingerTimer===undefined).map(operation=>this.view(operation)),this.views(),this.load,this.clock());
   for(const step of plan){
    const operation=this.operations.get(step.operation),worker=this.workers.get(step.worker);
    if(!operation||!worker||!worker.waiter)continue;
    this.queue.splice(this.queue.indexOf(operation),1);
    const task:RemoteExecutionTaskV1={id:`${operation.id}.${operation.attempt}`,instance:operation.instance,action:operation.action,timeoutSeconds:operation.timeoutSeconds,attempt:operation.attempt};
+   const waited=this.clock()-operation.queuedAt;this.waits.push(waited);if(this.waits.length>512)this.waits.shift();
    operation.stage="EXECUTING";operation.worker=worker.id;operation.startedAt=this.clock();this.counters.executing++;worker.running.add(task.id);this.load.count(worker.registration.origin,"offloadedIn");
    this.emit("assigned",`${this.label(operation)} -> ${worker.registration.name}`);
    this.touch(operation);
@@ -303,9 +323,9 @@ export class RemoteExecutionSchedulerV1{
  }
 
  /** 🧹️ Applies timeouts: dead workers, tasks beyond their deadline, actions no worker can ever run. */
- sweep():void{
+ sweep(grace=false):void{
   const now=this.clock(),lease=this.options.leaseSeconds*1000;
-  for(const worker of [...this.workers.values()])if(!worker.waiter&&now-worker.lastSeen>lease||worker.waiter&&now-worker.lastSeen>lease*3)this.drop(worker,"worker-lost");
+  for(const worker of grace?[]:[...this.workers.values()])if(!worker.waiter&&now-worker.lastSeen>lease||worker.waiter&&now-worker.lastSeen>lease*3)this.drop(worker,"worker-lost");
   for(const operation of this.operations.values()){
    if(operation.stage==="EXECUTING"&&operation.startedAt!==undefined&&now-operation.startedAt>(operation.timeoutSeconds*1000+lease)){
     const worker=operation.worker?this.workers.get(operation.worker):undefined;worker?.cancel.add(`${operation.id}.${operation.attempt}`);
@@ -331,7 +351,13 @@ export class RemoteExecutionSchedulerV1{
    return {id:worker.id,name:worker.registration.name,host:worker.registration.host,platform:worker.registration.platform,properties:worker.registration.properties,concurrency:worker.registration.concurrency,running:worker.running.size,sandbox:worker.registration.sandbox,lastSeenSeconds:Math.max(0,Math.round((now-worker.lastSeen)/1000)),draining:worker.draining,origin:worker.registration.origin,confinement:worker.registration.confinement,network:worker.registration.network,headroom:placementHasHeadroomV1(this.workerView(worker),entry,now),offloadedIn:entry?.offloadedIn??0,refused:worker.refused};
   });
   let running=0;for(const worker of this.workers.values())running+=worker.running.size;
-  return {counters:{...this.counters,queued:this.queue.length,executing:running},workers,platforms:[...platforms.values()],queued:this.queue.length,running};
+  return {counters:{...this.counters,...this.waitStats(),queued:this.queue.length,executing:running},workers,platforms:[...platforms.values()],queued:this.queue.length,running};
+ }
+
+ /** 📏️ How long the actions that were placed waited in the queue: the last 512 assignments, as the number of samples and the median, the 90th percentile and the maximum in milliseconds (the measure the queue limit of the requesters is sized from). */
+ private waitStats():Readonly<{queueWaitSamples:number;queueWaitP50Milliseconds:number;queueWaitP90Milliseconds:number;queueWaitMaxMilliseconds:number}>{
+  const sorted=[...this.waits].sort((left,right)=>left-right),at=(share:number):number=>sorted.length===0?0:sorted[Math.min(sorted.length-1,Math.floor(sorted.length*share))]!;
+  return {queueWaitSamples:sorted.length,queueWaitP50Milliseconds:at(0.5),queueWaitP90Milliseconds:at(0.9),queueWaitMaxMilliseconds:sorted.at(-1)??0};
  }
 
  /** 🔢️ How the workers stand for a unit of `requester` right now, by the very counting the submission check uses, for the action format of this version: what the build door asks before it admits cargo without a grant. */

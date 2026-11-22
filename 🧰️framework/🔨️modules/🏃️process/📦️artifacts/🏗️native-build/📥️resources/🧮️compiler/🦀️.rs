@@ -41,6 +41,35 @@ fn operation(source: &str, line: u32, name: &str) -> String { format!("{{\"sourc
 fn require_capture() { if !cfg!(test) && std::env::var_os("SEMIO_COMPILER_RESOURCE_ROOT").is_some() { CURRENT.with(|current| assert!(current.borrow().is_some(), "actual compiler read requires its entry capture")); } }
 fn callsite(location: &Location<'_>) -> String { format!("{{\"source\":{},\"line\":{}}}", path_text(&absolute(location.file())), location.line()) }
 
+/// 🚧️ The variable with which a remote worker names the real private input root of an offloaded compilation.
+pub const INPUT_ROOT_ENV_V1: &str = "SEMIO_OFFLOAD_INPUT_ROOT";
+
+/// 🚧️ The private input root of an offloaded compilation, or none when the compiler runs in the original worktree.
+pub fn input_root_v1() -> Option<PathBuf> { std::env::var_os(INPUT_ROOT_ENV_V1).map(PathBuf::from) }
+
+/// 🚧️ Whether a path may be read: always in the original worktree, inside the input root of an offloaded compilation. Everything above that root is another machine's tree or refused by the worker's sandbox (`EPERM`).
+pub fn inside_input_root_v1(path: &Path) -> bool { inside_root_v1(path, input_root_v1().as_deref()) }
+
+fn inside_root_v1(path: &Path, root: Option<&Path>) -> bool { root.is_none_or(|root| path.starts_with(root)) }
+
+/// 🔁️ Runs a filesystem read again across the short window in which a replica daemon replaces a file (missing or refused for a moment), then fails with the path named. Other errors fail at once.
+fn settled_v1<T>(path: &Path, mut operation: impl FnMut() -> io::Result<T>) -> io::Result<T> {
+    for attempt in 1..=SETTLE_ATTEMPTS_V1 {
+        match operation() {
+            Err(error) if attempt < SETTLE_ATTEMPTS_V1 && matches!(error.kind(), io::ErrorKind::NotFound | io::ErrorKind::PermissionDenied) => std::thread::sleep(std::time::Duration::from_millis(SETTLE_PAUSE_MILLISECONDS_V1 * u64::from(attempt))),
+            Err(error) => return Err(io::Error::new(error.kind(), format!("{}: {error}", path.display()))),
+            done => return done,
+        }
+    }
+    unreachable!("the last attempt returns")
+}
+
+const SETTLE_ATTEMPTS_V1: u32 = 5;
+const SETTLE_PAUSE_MILLISECONDS_V1: u64 = 40;
+
+/// 🔎️ `symlink_metadata` that settles across an atomic replace and names the path on failure.
+pub fn lstat_v1(path: impl AsRef<Path>) -> io::Result<fs::Metadata> { let path = path.as_ref(); settled_v1(path, || fs::symlink_metadata(path)) }
+
 /// 🏭️ Records a completed actual proc-macro entry, including an explicit empty read roster.
 pub fn with_compiler_resources_v1<R>(producer_manifest: &str, producer_source: &str, caller_source: Option<PathBuf>, root: Option<String>, track: fn(&Path), run: impl FnOnce() -> R) -> R {
     let built_at = now();
@@ -68,7 +97,7 @@ pub fn with_compiler_resources_v1<R>(producer_manifest: &str, producer_source: &
 pub fn read(path: impl AsRef<Path>) -> io::Result<Vec<u8>> {
     let path = absolute(path);
     require_capture();
-    let read_operation = operation(file!(), line!(), "read"); let bytes = match fs::read(&path) { Ok(bytes) => bytes, Err(error) => { CURRENT.with(|current| { if let Some(capture) = current.borrow_mut().as_mut() { (capture.track)(&path); capture.complete = false; } }); return Err(error); } };
+    let read_operation = operation(file!(), line!(), "read"); let bytes = match settled_v1(&path, || fs::read(&path)) { Ok(bytes) => bytes, Err(error) => { CURRENT.with(|current| { if let Some(capture) = current.borrow_mut().as_mut() { (capture.track)(&path); capture.complete = false; } }); return Err(error); } };
     let location = Location::caller();
     CURRENT.with(|current| {
         if let Some(capture) = current.borrow_mut().as_mut() {
@@ -112,4 +141,39 @@ pub fn read_dir(path: impl AsRef<Path>) -> io::Result<std::vec::IntoIter<io::Res
         }
     });
     Ok(entries.into_iter())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn nothing_above_the_offloaded_input_root_may_be_read() {
+        let root = Path::new("/work/r");
+        assert!(inside_root_v1(Path::new("/work/r/crate/src"), Some(root)));
+        assert!(inside_root_v1(root, Some(root)));
+        assert!(!inside_root_v1(Path::new("/work"), Some(root)));
+        assert!(!inside_root_v1(Path::new("/Users/u/semio"), Some(root)));
+        assert!(inside_root_v1(Path::new("/Users/u/semio"), None));
+    }
+
+    #[test]
+    fn a_read_settles_across_an_atomic_replace_window_and_names_the_path_when_it_fails() {
+        let mut calls = 0;
+        let value = settled_v1(Path::new("/x"), || { calls += 1; if calls < 3 { Err(io::ErrorKind::NotFound.into()) } else { Ok(7) } }).unwrap();
+        assert_eq!((value, calls), (7, 3));
+        let mut other = 0;
+        let refused = settled_v1(Path::new("/x/y"), || -> io::Result<()> { other += 1; Err(io::ErrorKind::InvalidData.into()) }).unwrap_err();
+        assert_eq!((other, refused.kind()), (1, io::ErrorKind::InvalidData));
+        let missing = lstat_v1("/semio-no-such-root/descriptor.json").unwrap_err();
+        assert!(missing.kind() == io::ErrorKind::NotFound && missing.to_string().starts_with("/semio-no-such-root/descriptor.json: "));
+        let directory = std::env::temp_dir().join(format!("settle-{}", std::process::id()));
+        fs::create_dir_all(&directory).unwrap();
+        let file = directory.join("d.json");
+        let target = file.clone();
+        let writer = std::thread::spawn(move || { std::thread::sleep(std::time::Duration::from_millis(60)); fs::write(&target, b"ok").unwrap(); });
+        assert_eq!(read(&file).unwrap(), b"ok");
+        writer.join().unwrap();
+        fs::remove_dir_all(&directory).unwrap();
+    }
 }

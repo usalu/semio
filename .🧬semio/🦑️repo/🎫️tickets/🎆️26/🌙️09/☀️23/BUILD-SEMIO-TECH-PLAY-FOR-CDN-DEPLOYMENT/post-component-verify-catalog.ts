@@ -1,0 +1,10 @@
+import { existsSync, readFileSync } from "node:fs";
+import { join } from "node:path";
+import { specificCatalogPublicationV1 } from "../../../../../../../✏️s/🧑‍💻dev/🧩️catalog/📣️publication/🟦️.ts";
+import { renderCatalogFiles } from "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📽️projection/🟦️.ts";
+const repoRoot = process.argv[2]!, registry = join(repoRoot, "✏️s/🧑‍💻dev/🧩️catalog/🤖️generated");
+const publication = specificCatalogPublicationV1(path => readFileSync(join(repoRoot, path), "utf8"));
+const files = renderCatalogFiles(repoRoot, undefined, "refuse", publication).files;
+const findings = Object.entries(files).filter(([name, content]) => !existsSync(join(registry, name)) || readFileSync(join(registry, name), "utf8") !== content).map(([name]) => name);
+console.log(`rendered ${Object.keys(files).length} files, ${findings.length} differ`, findings.slice(0, 20));
+process.exit(findings.length ? 1 : 0);

@@ -1,0 +1,11 @@
+import { loadDoc, saveDoc, pruneBones, dropShapes, dropSolids, pruneUnused, validateAsset } from "./lib.ts";
+const doc = loadDoc("courier-with-hand-truck"); const a = doc.asset;
+a.id = "hiker-with-trekking-poles";
+pruneBones(a, ["truck-reach"]);
+dropShapes(a, (s) => s.id.startsWith("reflective-band"));
+dropSolids(a, (s) => s.id?.startsWith("reflective-band") || s.of?.startsWith("reflective-band"));
+pruneUnused(a);
+a.poses = a.poses.filter((p: any) => p.id !== "tilted-back");
+a.clips = a.clips.filter((c: any) => c.id === "push-walk");
+const issues = validateAsset(a);
+console.log(issues.length); for (const i of issues.slice(0, 40)) console.log(i.code, i.path, i.message.en.slice(0, 250));

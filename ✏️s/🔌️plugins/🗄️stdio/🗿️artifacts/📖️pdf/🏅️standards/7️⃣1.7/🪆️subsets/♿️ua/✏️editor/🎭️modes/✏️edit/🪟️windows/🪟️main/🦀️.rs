@@ -19,8 +19,8 @@ pub fn render(document: &PdfSnapshot) -> semio_plugin::UiAssemblyResult<BuiltNod
 }
 
 /// 🖼️ Paints the document through the ephemeral local view (zoom and anchored page) with search highlights on top.
-pub fn render_windowed(document: &PdfSnapshot, view: &page::ViewState, viewport: (f64, f64), highlights: Vec<page::OverlayLayer>) -> semio_plugin::UiAssemblyResult<BuiltNode> {
-    page::render_view(document, None, view, viewport, highlights)
+pub fn render_windowed(document: &PdfSnapshot, selected: Option<&str>, view: &page::ViewState, viewport: (f64, f64), highlights: Vec<page::OverlayLayer>) -> semio_plugin::UiAssemblyResult<BuiltNode> {
+    page::render_view(document, selected, view, viewport, highlights)
 }
 
 

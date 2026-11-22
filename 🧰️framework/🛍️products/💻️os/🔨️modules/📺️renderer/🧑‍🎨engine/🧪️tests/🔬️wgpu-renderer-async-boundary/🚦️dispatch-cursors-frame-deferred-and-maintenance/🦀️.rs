@@ -369,7 +369,7 @@ fn frame_maintenance_cancel_and_stale_each_close_one_populated_owner_per_grant()
     assert!(cancelled_actions.try_push(ActionDescriptor { controller_id: "cancelled".to_string(), action: "one".to_string(), args: None }).is_ok());
     let mut cancelled = FrameDeferredCursor::new(cancelled_actions, false, false, false, false, 81, caller.alias());
     caller.turn(|cx| cx.original_cancel_token().cancel_now());
-    assert_eq!(frame_maintenance_terminal_fault(cancelled.cancel.as_ref().is_some_and(|cancel| cancel.is_cancelled_now()), false, false), Some("frame maintenance cancelled"));
+    assert_eq!(frame_maintenance_terminal_fault(cancelled.cancel.as_ref().is_some_and(|cancel| cancel.is_cancelled_now()), false), Some("frame maintenance cancelled"));
     cancelled.begin_close();
     let before = cancelled.actions.len;
     assert!(!caller.turn(|cx| cancelled.close_step(cx)).unwrap());
@@ -383,7 +383,7 @@ fn frame_maintenance_cancel_and_stale_each_close_one_populated_owner_per_grant()
     let mut stale_actions = FrameActionOwners::default();
     assert!(stale_actions.try_push(ActionDescriptor { controller_id: "stale".to_string(), action: "one".to_string(), args: None }).is_ok());
     let mut stale = FrameDeferredCursor::new(stale_actions, false, false, false, false, 82, caller.alias());
-    assert_eq!(frame_maintenance_terminal_fault(false, !authority.is_live(stale.generation), false), Some("frame maintenance generation became stale"));
+    assert_eq!(frame_maintenance_terminal_fault(false, !authority.is_live(stale.generation)), Some("frame maintenance generation became stale"));
     stale.begin_close();
     let before = stale.actions.len;
     assert!(!caller.turn(|cx| stale.close_step(cx)).unwrap());
@@ -419,4 +419,40 @@ fn frame_maintenance_test_owner(generation: u64, actions: usize) -> FrameMainten
         last_sync_pump_ms: 0.0,
     };
     FrameMaintenanceOwner { interaction: Some(interaction), cursor: Some(FrameDeferredCursor::new(action_owners, true, true, true, false, generation, semio_framework_job::root_cancel_token())), deadline_ms: Some(u64::MAX), restart: true }
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+#[test]
+fn exhausted_interaction_credits_defer_the_deferred_apply_without_a_frame_fault() {
+    let runtime = native_reference_runtime();
+    let handle = runtime.downgrade();
+    let interaction = frame_maintenance_test_owner(131, 0).interaction.take().expect("interaction fixture");
+    {
+        let mut queue = runtime.0.completions.lock().expect("runtime completion mailbox lock");
+        while queue.reserve_interaction() {}
+    }
+    let mut original = OriginalRendererFixture::new();
+    let mut cursor = Some(FrameDeferredCursor::new(FrameActionOwners::default(), true, false, false, false, 131, semio_framework_job::root_cancel_token()));
+    let mut owner = runtime.try_lock().expect("runtime owner");
+    owner.interaction = Some(interaction);
+    let started = original.turn(|cx| RuntimeApply::start_frame_deferred(&mut cursor, &mut *owner, &handle, cx)).unwrap();
+    assert!(!started, "a full mailbox retries the apply on the next frame");
+    assert!(owner.interaction_available(), "the refused checkout is returned to the runtime");
+    assert!(owner.interaction.as_ref().is_some_and(|interaction| interaction.frame_fault.is_none()), "a capacity shortage is back-pressure, never a surface-closing frame fault");
+    assert!(cursor.is_some(), "the deferred cursor keeps its work for the retry");
+    drop(owner);
+    assert!(runtime.0.frame_fault.lock().expect("runtime frame fault lock").is_none());
+    cursor.take().expect("deferred cursor").begin_close();
+}
+
+#[test]
+fn capacity_refusals_and_maintenance_deadlines_never_publish_a_surface_closing_frame_fault() {
+    let apply = semio_renderer_wgpu_test_support::repo_text("🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧊️renderer/🛎️frame-actions/🔁️runtime-apply/🦀️.rs");
+    assert!(!apply.contains("runtime dispatch completion credits exhausted"));
+    assert!(!apply.contains("frame deferred completion credits exhausted"));
+    let deadlines = semio_renderer_wgpu_test_support::repo_text("🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧊️renderer/📮️mailbox-impl/⏳️pending-work-deadlines-and-spawns/🦀️.rs");
+    assert!(!deadlines.contains("frame maintenance bounded field exceeded its deadline"));
+    assert!(!deadlines.contains("frame maintenance deadline expired"));
+    let classifier = semio_renderer_wgpu_test_support::repo_text("🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧊️renderer/🛎️frame-actions/🦀️.rs");
+    assert!(!classifier.contains("frame maintenance deadline expired"));
 }

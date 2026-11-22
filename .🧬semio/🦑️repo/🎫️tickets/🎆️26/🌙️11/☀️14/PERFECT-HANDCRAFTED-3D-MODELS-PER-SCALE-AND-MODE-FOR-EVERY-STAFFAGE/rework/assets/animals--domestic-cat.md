@@ -69,3 +69,18 @@ Joint order is right on both sides and the sides are identical: scapula, humerus
 - `volumes-insert.py` and the catalog file use two different JSON layouts (its `dump` does not round-trip the catalog file), so every root fix outside `volumes` needs a text splice per author; a shared writer for the catalog layout is missing.
 - Light-solid 2D draws the outline of every filled shape, so every multi-bone body shows a seam line at each joint overlap in plan and elevation (cat trunk reads as segments); the product has no way to merge shapes of one region into one outline in solid mode.
 - `validateAsset` and the print rules accepted per-shape `penMm` up to 1.6 mm on a figure 3.8 mm long (1:200 side elevation was a blob and `VALID`); a rule that a pen may not exceed a fraction of the shape it draws is missing.
+
+## Pass 1 (second round), 2026-11-22 16:14–17:27, cut off; finished by the umbrella finisher 20:35–20:50
+
+The author of this pass was cut off at 17:27 without a report. What the scripts did (all applied, checked by their own "already applied" guards and by `volumes` source = catalog):
+
+- `rework-domestic-cat-girdle.py`: scapulae on the lateral rest placement (dorsal border 22 mm beside the median plane, shoulder joint 40 mm beside it, 66.5 mm, 15.7 degrees out of the sagittal plane), new hip bones `hip-hf` / `hip-hn` (sacroiliac joint 19 mm, hip joint 30 mm beside the plane); scapula solids re-expressed, ilia and ischia bound to the hip bones.
+- `rework-domestic-cat-neck-bones.py`: neck slimmed to 0.21 m girth behind the head at every scale (body, thermal); 1:200 skeleton with true `slender` long bones, spine and tail.
+- `rework-domestic-cat-sitting.py`: sitting pose solved on the inclined scapulae (forepaws 21 mm beside the plane, side by side); decisions texts.
+- `rework-domestic-cat-gait.py`, `rework-domestic-cat-gait-reach.py`: walk and stalk keys keep half of the scapular swing, limb solved in the sagittal plane; `walk-phase-3` and `walk-phase-7` keep the largest reduction that still reaches.
+
+Proof by the finisher (2026-11-22 20:36): `r3-validate.ts animals/domestic-cat --catalog-only --volumes` → `VALID animals/domestic-cat (catalog file as it is): schema 0, validateAsset 0, checkVolumes 0`; check CLI `✓ domestic-cat (1/1)` (1:500 unavailable by decision, 1:50 to 1:200 suitable).
+
+Sheets read at full size by the finisher: 1:50 body `standing-alert`, `sitting-tail-wrapped`, `walk-phase-3`; 1:50 structure; 1:200 body; 2D 1:50 `sitting-tail-wrapped`. Verdict: reads as a cat from all six sides; scapulae and hip bones sit where they belong, ribs hang on the thoracic spine, the sitting forepaws stand side by side, the planted paws of `walk-phase-3` are on the ground. Rendered but not read: 1:100 and 1:500 body, 1:50 thermal, 1:200 structure, `walk-phase-7`, `stalk-phase-3`, `play-bow`, 2D 1:50 default and 1:200.
+
+Remains imperfect: the 2D front elevation of the sitting pose is a stack of ovals (trunk segments) and does not show the forelegs; the 1:200 head is a wedge with block ears; toes are not separated at any scale; clips were not rendered.

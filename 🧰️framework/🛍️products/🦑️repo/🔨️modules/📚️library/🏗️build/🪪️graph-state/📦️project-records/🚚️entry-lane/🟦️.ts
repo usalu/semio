@@ -162,8 +162,7 @@ export function createClosureEntryLaneV1(input:Readonly<{root:string;environment
  });
 }
 
-const SOURCE_ANALYSES="../../../🕸️graph/📥️inference/🧬️source-analyses/🟨️.mjs",SCRIPT_INPUTS="../../../🕸️graph/📥️inference/🧭️script-inputs/🟨️.mjs";
 async function defaultProvidersV1():Promise<readonly string[]>{
- const loaded=await import(SOURCE_ANALYSES) as {prepareSourceAnalysesV1():Readonly<Record<string,{id:string}>>},own=await import(SCRIPT_INPUTS).then(module=>(module as {scriptProviderIdsV1():readonly string[]}).scriptProviderIdsV1(),()=>[] as readonly string[]);
+ const loaded=await import("../../../🕸️graph/📥️inference/🧬️source-analyses/🟨️.mjs") as {prepareSourceAnalysesV1():Readonly<Record<string,{id:string}>>},own=await import("../../../🕸️graph/📥️inference/🧭️script-inputs/🟨️.mjs").then(module=>(module as {scriptProviderIdsV1():readonly string[]}).scriptProviderIdsV1(),()=>[] as readonly string[]);
  return[...Object.values(loaded.prepareSourceAnalysesV1()).map(provider=>provider.id),...own];
 }

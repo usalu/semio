@@ -310,7 +310,12 @@ impl CaptureState {
 //#region 🔖️Focus
 /// 🔄️ Which `UiNode` variants participate in Tab-order focus cycling — every interactive kind but `Ring`, whose React twin is an unfocusable SVG.
 fn is_focusable(node: &UiNode) -> bool {
-    is_interactive_kind(node) && !matches!(node, UiNode::Ring(_)) && node.presence().state != UiState::Disabled
+    (is_interactive_kind(node) && !matches!(node, UiNode::Ring(_)) || is_media_transport_slot(node)) && node.presence().state != UiState::Disabled
+}
+
+/// 🎞️ The reserved media transport slot: one Tab stop of the page, as the browser overlay's controls are reached in DOM order; the host that paints its rows takes the focus from there.
+fn is_media_transport_slot(node: &UiNode) -> bool {
+    matches!(node, UiNode::ExternalSlot(slot) if slot.body_key == semio_ui_retained_tree::reconcile::MEDIA_TRANSPORT_EXTENSION_ID)
 }
 
 fn is_interactive_kind(node: &UiNode) -> bool {
@@ -415,6 +420,7 @@ impl FocusState {
                 next_node.flags.set(NodeFlags::FOCUS_VISIBLE, focus_visible);
                 if next_node.state.edit.is_none() {
                     if let Some(value) = editable_value(&next_node.spec.0) {
+                        let value = next_node.state.date_display.clone().filter(|_| matches!(&next_node.spec.0, UiNode::Input(input) if input.input_kind == "date")).unwrap_or(value);
                         let caret = value.len();
                         next_node.state.edit = Some(EditState { text: value.to_string(), caret, anchor: caret, composition: None, scroll_x: 0.0 });
                     }

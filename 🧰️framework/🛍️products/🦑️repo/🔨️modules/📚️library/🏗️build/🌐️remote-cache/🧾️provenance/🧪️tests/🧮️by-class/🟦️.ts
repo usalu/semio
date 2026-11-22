@@ -30,10 +30,10 @@ test("a divergence is counted under the kind of result that diverged and /status
  for(const [label,paths] of cases){
   const key=sha(label);
   expect((await put(a,key,named(paths,"first"))).status).toBe(200);
-  expect((await put(b,key,named(paths.filter(path=>path!=="unit.json"),"second"))).status,label).toBe(label.startsWith("record")?200:409);
+  expect((await put(b,key,named(paths.filter(path=>path!=="unit.json"),"second"))).status,label).toBe(label.startsWith("record")||label==="closure"?200:409);
  }
  const status=await (await fleetSignedFetchV1({root:a,audience:"cache"})(`http://127.0.0.1:${running.port}/status`)).json() as {divergences:{count:number;since:number;byClass:Record<string,number>;superseded:Record<string,number>}};
- expect(status.divergences.count).toBe(3);expect(status.divergences.byClass).toEqual({closure:1,other:1,unit:1});expect(status.divergences.superseded).toEqual({"project-inference":2});
+ expect(status.divergences.count).toBe(2);expect((status.divergences as unknown as {current:{count:number;byClass:Record<string,number>};lastHour:{count:number}}).current).toMatchObject({count:2,byClass:{other:1,unit:1}});expect((status.divergences as unknown as {lastHour:{count:number}}).lastHour.count).toBe(2);expect(status.divergences.byClass).toEqual({other:1,unit:1});expect(status.divergences.superseded).toEqual({closure:1,"project-inference":2});
  expect(status.divergences.since).toBeGreaterThan(0);
 });
 
@@ -60,10 +60,10 @@ test("a note two machines write differently is replaced by the newer one and cou
  expect((await fleetSignedFetchV1({root:a,audience:"cache"})(`http://127.0.0.1:${running.port}/evidence/${listed.evidence[0]!.id}/..%2Fmeta.json`)).status).toBe(404);
  await running.stop();servers.pop();
  const again=await startRemoteCacheServerV1(options);servers.push(again);
- const restarted=await ask(again.port);expect(restarted.divergences.count).toBe(1);expect(restarted.divergences.byClass).toEqual({unit:1});
+ const restarted=await ask(again.port);expect(restarted.divergences.count).toBe(1);expect((restarted.divergences as unknown as {current:{count:number}}).current.count).toBe(0);expect(restarted.divergences.byClass).toEqual({unit:1});
 });
 
-test("a graph record replaces the older record of its key and the replaced one is kept as evidence and counted as superseded, while a unit, a closure and an owner pool wave stay first-writer-wins",async()=>{
+test("a graph record replaces the older record of its key and the replaced one is kept as evidence and counted as superseded, a closure bundle is replaced the same way, while a unit and an owner pool wave stay first-writer-wins",async()=>{
  const store=directory("group3"),a=machine(store,"g1-m01"),b=machine(store,"g1-m02"),server=machine(store,"g1-server");
  for(const root of[a,b,server])expect((await syncFleetIdentityV1({root})).error).toBeUndefined();
  const running=await startRemoteCacheServerV1({directory:directory("cache3"),host:"127.0.0.1",port:0,maximumBytes:2**26,maximumEntryBytes:2**24,maximumAgeDays:30,defaultInstance:"semio",tokens:{},validation:"structure",fleet:{storeRoot:store,group:"g1",networks:["10.77.0.0/16"]}});servers.push(running);

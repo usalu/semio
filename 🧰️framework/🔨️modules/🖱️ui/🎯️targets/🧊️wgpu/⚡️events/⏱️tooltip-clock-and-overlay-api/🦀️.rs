@@ -5,7 +5,6 @@ use super::*;
 // #region events
 //#region 🔖️UiCommand
 impl EventRouter {
-    //#region 🔖️TooltipClock
     fn set_retained_caret_visible(tree: &mut UiTree, node: NodeId, visible: bool) -> bool {
         let Some(record) = tree.node_mut(node) else { return false };
         if record.state.caret_visible == visible {
@@ -94,6 +93,15 @@ impl EventRouter {
         deadline
     }
 
+    /// 💬️ Any focus change arms the same dwell reveal as hover, for the newly focused node, as React's `ChromeControlHint` reveals on `onFocusCapture`
+    /// (`🧱️elements/💡️ChromeControlHint/🟦️.tsx`). A node without a tooltip reveals nothing, so the dwell only hides a stale one.
+    pub(super) fn arm_focus_tooltip(&mut self, before: Option<NodeId>) {
+        if let Some(leaf) = self.focus.focused.filter(|leaf| Some(*leaf) != before) {
+            self.hover_since = Some((leaf, self.clock_seconds));
+            self.hover_revealed = None;
+        }
+    }
+
     pub fn suspend_clock(&mut self, tree: &mut UiTree) -> bool {
         let repeat = self.stepper_repeat.take().is_some();
         let hover = self.hover_since.take().is_some();
@@ -176,9 +184,7 @@ impl EventRouter {
         RouterClockStep { tooltip: TooltipStep::Reveal(leaf), caret, commands: Vec::new(), changed: true, next_deadline: self.next_clock_deadline() }
     }
 
-    //#endregion 🔖️TooltipClock
 
-    //#region 🔖️OverlayApi
     /// 🪟️ Opens an overlay: flags `root` `NodeFlags::OVERLAY` (hit-test priority — see 🔖️HitTest) and
     /// pushes it onto the z-ordered stack with `kind`'s default placement/dismissal policy.
     /// `Dialog`/`CommandPalette` become focus-trap scopes and, with `Popover`, move focus to their first focusable (React's `onOpenAutoFocus` default); a modal also makes everything outside it inert to the pointer.
@@ -274,6 +280,7 @@ impl EventRouter {
                 node.state.highlighted = None;
                 node.state.scroll_offset = (0.0, 0.0);
                 node.state.select_popup = None;
+                node.state.picker_day = None;
             }
         }
         if overlay.kind == OverlayKind::Tooltip {
@@ -354,7 +361,6 @@ impl EventRouter {
             None => self.close_topmost_overlay(tree),
         }
     }
-    //#endregion 🔖️OverlayApi
 
 }
 //#endregion 🔖️UiCommand

@@ -383,9 +383,9 @@ pub fn active_retained_drag_sessions() -> Vec<(String, f32, f32, std::collection
     UI_ENGINE.with(|cell| cell.borrow().active_drag_sessions())
 }
 
-/// 🧭️ The presented row insertion marker for the window under a retained drag.
-pub fn retained_tree_row_reorder_marker(window_id: &str) -> Option<Rect> {
-    UI_ENGINE.with(|cell| cell.borrow().tree_row_reorder_marker(window_id))
+/// 👁️ The presented tree drop preview (insert line or nest box) for the window under a retained drag.
+pub fn retained_tree_drop_preview(window_id: &str) -> Option<semio_ui_wgpu_engine::TreeDropShape> {
+    UI_ENGINE.with(|cell| cell.borrow().tree_drop_preview(window_id))
 }
 
 pub fn canvas_catalogue_drag_over(window_id: &str, x: f32, y: f32, drag_data: &std::collections::HashMap<String, String>, input: &mut semio_ui_wgpu_input::InputState<ActionDescriptor>) -> bool {

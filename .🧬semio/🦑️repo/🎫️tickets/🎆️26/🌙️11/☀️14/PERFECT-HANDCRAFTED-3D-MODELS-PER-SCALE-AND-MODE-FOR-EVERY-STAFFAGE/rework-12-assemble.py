@@ -78,6 +78,14 @@ def assemble(tree, cfg):
                 out[b["id"]] = offset
         return out
 
+    def peaked(id, frames):
+        """🎚️ The statements of one pose or clip scaled so that their largest turn is `cfg["peaks"][id]` degrees (stated by the author of the tree; the same on every rebuild)."""
+        peak = cfg.get("peaks", {}).get(id)
+        top = max((abs(v.get("angleDeg", 0)) for frame in frames for v in frame.values()), default=0.0)
+        if peak is None or top < 1e-9:
+            return frames
+        return [{bone: dict(v, angleDeg=v.get("angleDeg", 0) * peak / top) for bone, v in frame.items()} for frame in frames]
+
     reach = {b["id"]: 0.0 for b in rig}
 
     def note(offsets):
@@ -89,7 +97,7 @@ def assemble(tree, cfg):
     remap = cfg.get("old_to_new", {})
     for pose in asset["poses"]:
         mode = "droop" if pose["id"] in droop else "lee"
-        pose["bones"] = {} if pose["id"] == asset["presentation"]["defaultPose"] else offsets_of(pose.get("bones", {}), mode)
+        pose["bones"] = {} if pose["id"] == asset["presentation"]["defaultPose"] else offsets_of(peaked(pose["id"], [pose.get("bones", {})])[0], mode)
         note(pose["bones"])
         loads, kinds = [], {}
         for load in pose.get("loads", []):
@@ -139,10 +147,10 @@ def assemble(tree, cfg):
         if "tracks" in clip:
             clip["tracks"] = tracks
         mode = "droop" if clip["id"] in cfg.get("droop_clips", ()) else "lee"
-        for key in clip["keys"]:
-            if "bones" in key:
-                key["bones"] = offsets_of(key["bones"], mode)
-                note(key["bones"])
+        moving = [key for key in clip["keys"] if "bones" in key]
+        for key, frame in zip(moving, peaked(clip["id"], [key["bones"] for key in moving])):
+            key["bones"] = offsets_of(frame, mode)
+            note(key["bones"])
     # rig
     bones = []
     for b in rig:

@@ -1,3 +1,4 @@
+import { S_FORMAT_CATALOG_V1 } from "../../../🚀️entry/🧭️format-catalog/🟦️.ts";
 import { composeSpecificOsCatalogV1 } from "@semio-tech/s-dev-catalog-ts";
 import { bootFrameworkOsDev } from "@semio-tech/framework-os-dev";
 
@@ -16,7 +17,7 @@ const admission = {
   progress: (detail: { readonly completed: number; readonly total: number; readonly work: number }) =>
     window.dispatchEvent(new CustomEvent("semio:catalog-progress", { detail })),
 };
-const mounted = await bootFrameworkOsDev({
+const mounted = await bootFrameworkOsDev({ formatCatalog: S_FORMAT_CATALOG_V1,
   variant,
   admission,
   catalogRows: composeSpecificOsCatalogV1(window.location.href, admission).rows,

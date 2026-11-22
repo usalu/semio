@@ -1,7 +1,7 @@
 //! 📣️ Dispatch and overlay API: the layout queries, the paint census, the event, pointer and accessibility dispatch, the overlay API, the clock and the commands. See [`super`].
 
 use super::*;
-use semio_ui_wgpu_input::TreeDropPosition;
+use semio_ui_wgpu_light::tree_drop::{tree_drag_kind, tree_drop_position, tree_drop_preview, TreeDropShape};
 
 // #region engine
 //#region 🔖️Ui
@@ -40,6 +40,19 @@ impl Ui {
             Some(intrinsic)
         } else {
             Some(root_layout.height)
+        }
+    }
+
+    /// 🔦️ The document node id of the node that holds the Tab focus in `window_id`, `None` without a window or a focus.
+    pub fn focused_document_node(&self, window_id: &str) -> Option<u64> {
+        let window = self.windows.get(window_id)?;
+        window.tree.document_id(window.router.focus.focused?).map(|document| document.0)
+    }
+
+    /// 🎞️ Marks one window's retained paint dirty so its next frame repaints every node — what a host does when something it draws into a node (a playing video's picture) changed without the document changing. A missing window is a no-op.
+    pub fn request_paint(&mut self, window_id: &str) {
+        if let Some(window) = self.windows.get_mut(window_id) {
+            mark_window_paint_dirty(window);
         }
     }
 
@@ -124,6 +137,22 @@ impl Ui {
 
     pub fn draw_list(&self, window_id: &str) -> Option<&DrawList> {
         self.windows.get(window_id).map(|window| &window.draw)
+    }
+
+    /// 📋️ Runs one text-selection menu verb on the retained text field `node` (focus, then the field's own chord); the commands it leaves (clipboard copy, cut, paste request) are the caller's to apply.
+    pub fn dispatch_text_selection_verb(&mut self, window_id: &str, node: NodeId, key: &str) -> Vec<UiCommand> {
+        let Some(window) = self.windows.get_mut(window_id).filter(|window| window.closing.is_none()) else { return Vec::new() };
+        let presented = window.presented_ready;
+        let commands = {
+            let (tree, router) = if presented { (&mut window.presented_tree, &mut window.presented_router) } else { (&mut window.tree, &mut window.router) };
+            let commands = router.run_text_selection_verb(tree, node, key);
+            router.synchronize_retained_caret(tree, true);
+            commands
+        };
+        if presented {
+            window.advance_presented_interaction();
+        }
+        commands
     }
 
     /// 🕹️ Routes one event through the exact presented interaction revision. Synchronous commands
@@ -231,10 +260,13 @@ impl Ui {
             let virtual_slider_editor = record.key.as_str() != node_key && semio_ui_wgpu_hosting::accessibility::is_slider_accessibility_editor(record, node_key);
             let segmented_select = matches!(&record.component, ui_contract::Component::Select(select) if select.appearance == ui_contract::SelectAppearance::Segmented);
             let virtual_row_action = (record.key.as_str() != node_key).then(|| semio_ui_wgpu_hosting::accessibility::row_accessibility_action(record, node_key)).flatten();
-            if record.key.as_str() != node_key && virtual_select_value.is_none() && !virtual_slider_editor && virtual_row_action.is_none() {
+            let cell = (record.key.as_str() != node_key && matches!(record.component, ui_contract::Component::IconSelect(_) | ui_contract::Component::Extension(_) | ui_contract::Component::Input(_))).then(|| tree.document_node(document_id).and_then(|owner| semio_ui_wgpu_hosting::accessibility::accessibility_cell(tree, owner, node_key))).flatten();
+            if record.key.as_str() != node_key && virtual_select_value.is_none() && !virtual_slider_editor && virtual_row_action.is_none() && cell.is_none() {
                 return None;
             }
-            let target = tree.document_node(document_id)?;
+            let (cell_target, cell_option) = cell.unzip();
+            let target = cell_target.or_else(|| tree.document_node(document_id))?;
+            let virtual_select_value = virtual_select_value.or(cell_option.flatten());
             if virtual_select_value.is_some() && !segmented_select && !tree.node(target).is_some_and(|node| node.state.open) {
                 return None;
             }
@@ -268,7 +300,6 @@ impl Ui {
         Some(commands)
     }
 
-    //#region 🪟️OverlayApi
     /// 🔓️ Opens `root`'s subtree as a floating overlay of `kind`, anchored per `anchor` — the
     /// façade-level entry point for React's `Popover`/`Dialog`/`CommandPalette` portals
     /// (`🧱️elements/🗨️Popover/🟦️.tsx`, `🧱️elements/💬️Dialog/🟦️.tsx`). Placement, escape/outside-press
@@ -448,7 +479,6 @@ impl Ui {
     pub fn tooltip_label(&self, window_id: &str, node: NodeId) -> Option<String> {
         tooltip_label_in_tree(self.tree(window_id)?, node)
     }
-    //#endregion 🪟️OverlayApi
 
     /// 📥️ Drains every `UiCommand` queued by `dispatch_event` calls since the last drain.
     pub fn drain_commands(&mut self) -> Vec<UiCommand> {
@@ -472,35 +502,37 @@ impl Ui {
         sessions
     }
 
-    /// 📏️ The clipped insertion line in the presented surface's local coordinates.
-    pub fn tree_row_reorder_marker(&self, window_id: &str) -> Option<semio_ui_theme::geometry::Rect> {
-        use semio_ui_theme::geometry::Rect;
+    /// 👁️ The drop preview of the drag in flight, clipped to the target row's scroll viewport and in the presented surface's local coordinates — React's `TreeReorderDropPreview` and `handleDragOverItem` accept rule: a row-reorder drag previews an insert line on an accepting row edge; a plain tree drag previews the line or the nest box; a palette drag previews nothing.
+    pub fn tree_drop_preview(&self, window_id: &str) -> Option<TreeDropShape> {
         let window = self.windows.get(window_id).filter(|window| window.presented_ready && window.closing.is_none())?;
-        let drag = window.presented_router.drag_session().filter(|drag| drag.payload.contains_key(ui_contract::TREE_ROW_REORDER_MIME))?;
-        let target = drag.drop_target.filter(|target| *target != drag.source)?;
+        let drag = window.presented_router.drag_session()?;
+        let target = drag.drop_target?;
         let tree = &window.presented_tree;
-        let row = tree.absolute_rect(target)?;
-        let height = row.h.min(2.0);
-        let y = match tree_row_reorder_position(row, drag.pointer_y) {
-            TreeDropPosition::Before => row.y,
-            TreeDropPosition::After => row.y + row.h - height,
-            TreeDropPosition::Inside => return None,
+        let item = tree.authored_tree_item(target)?;
+        let frame = window.presented_router.tree_row_frame(tree, target)?;
+        let mime = ui_contract::TREE_ROW_REORDER_MIME;
+        let foreign = drag.payload.keys().any(|kind| kind != mime && kind.starts_with("application/"));
+        let kind = tree_drag_kind(drag.payload.contains_key(mime), !foreign, foreign);
+        let accepts = item.drag_data.as_ref().is_some_and(|data| data.contains_key(mime));
+        let shape = tree_drop_preview(kind, tree_drop_position(frame.y, frame.h, drag.pointer_y), accepts, target == drag.source, [frame.x, frame.y, frame.w, frame.h])?;
+        let clip = retained_node_clip(tree, target).unwrap_or(frame);
+        let clipped = |rect: [f32; 4]| {
+            let (left, top, right, bottom) = (rect[0].max(clip.x), rect[1].max(clip.y), (rect[0] + rect[2]).min(clip.x + clip.w), (rect[1] + rect[3]).min(clip.y + clip.h));
+            (left < right && top < bottom).then_some([left, top, right - left, bottom - top])
         };
-        let clip = retained_node_clip(tree, target).unwrap_or(row);
-        let (left, top) = (row.x.max(clip.x), y.max(clip.y));
-        let (right, bottom) = ((row.x + row.w).min(clip.x + clip.w), (y + height).min(clip.y + clip.h));
-        (left < right && top < bottom).then_some(Rect::new(left, top, right - left, bottom - top))
+        match shape {
+            TreeDropShape::Line(rect) => clipped(rect).map(TreeDropShape::Line),
+            TreeDropShape::Box(rect) => clipped(rect).map(TreeDropShape::Box),
+        }
+    }
+
+    /// 📏️ The band of tree row or section `node` a drop is resolved against, in `window_id`'s local coordinates.
+    pub fn tree_row_frame(&self, window_id: &str, node: NodeId) -> Option<semio_ui_theme::geometry::Rect> {
+        let window = self.windows.get(window_id)?;
+        let (tree, router) = if window.presented_ready { (&window.presented_tree, &window.presented_router) } else { (&window.tree, &window.router) };
+        router.tree_row_frame(tree, node)
     }
 }
 
-/// 🎯️ The physical row edge shared by drag feedback and release.
-pub fn tree_row_reorder_position(row: semio_ui_theme::geometry::Rect, y: f32) -> TreeDropPosition {
-    let fraction = (y - row.y) / row.h.max(1.0);
-    match fraction {
-        fraction if (0.0..0.25).contains(&fraction) => TreeDropPosition::Before,
-        fraction if fraction > 0.75 && fraction <= 1.0 => TreeDropPosition::After,
-        _ => TreeDropPosition::Inside,
-    }
-}
 //#endregion 🔖️Ui
 // #endregion engine

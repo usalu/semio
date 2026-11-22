@@ -71,7 +71,7 @@ pub fn expand_derive_mutations(input: TokenStream) -> TokenStream {
     };
     let authority = match mutation_aggregate_source_authority(&source, &compiler_cwd) {
         Ok(authority) => authority,
-        Err(error) => return syn::Error::new_spanned(&input, format!("Mutations source authority failed: {error}")).to_compile_error().into(),
+        Err(error) => return super::source_authority::mutation_authority_refusal(&input, format!("Mutations source authority failed: {error}")),
     };
     match expand_mutations(&input, &authority) {
         Ok(expanded) => expanded.into(),

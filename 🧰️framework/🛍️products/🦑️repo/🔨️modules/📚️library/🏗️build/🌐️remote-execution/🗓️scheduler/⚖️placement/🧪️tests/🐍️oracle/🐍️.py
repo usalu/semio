@@ -7,7 +7,7 @@ def matches(required,offered):
     return all(p["value"] in have.get(p["name"],set()) for p in required)
 
 def required_of(platform,entry):
-    own=[p for p in platform if p["name"] not in ("semio-offload","semio-origin")]
+    own=[p for p in platform if p["name"] not in ("semio-offload","semio-origin","semio-peak-mb")]
     if entry is None:
         return own
     ident=entry["report"]["platform"]
@@ -18,12 +18,19 @@ def required_of(platform,entry):
             out.append({"name":name,"value":value})
     return out
 
-def headroom(w,entry,now):
+def peak_of(platform):
+    for p in platform:
+        if p["name"]=="semio-peak-mb" and p["value"].isdigit() and len(p["value"])<=9:
+            return int(p["value"])
+    return 0
+
+def headroom(w,entry,now,peak=0):
     if w["draining"] or w["running"]>=w["concurrency"] or now<w["refusedUntilMs"]:
         return False
     if entry is None:
-        return True
-    return entry["report"]["pressure"]!="critical" and entry["report"]["headroom"]
+        return peak<=0
+    r=entry["report"]
+    return r["pressure"]!="critical" and r["headroom"] and (peak<=0 or r["freeMegabytes"]-w.get("committedMegabytes",0)>=peak)
 
 def score(w,entry):
     if entry is None:
@@ -51,7 +58,7 @@ def plan(scn):
             if not matches(req,w["properties"]):
                 continue
             e=table.get(w["origin"])
-            if not headroom(w,e,now):
+            if not headroom(w,e,now,peak_of(op["platform"])):
                 continue
             s=score(w,e)
             if best is None or s<best[0] or (s==best[0] and (w["running"]<best[1]["running"] or (w["running"]==best[1]["running"] and w["name"]<best[1]["name"]))):

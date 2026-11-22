@@ -3,7 +3,7 @@ import {Database} from "bun:sqlite";
 import Ajv from "ajv";
 import {mkdtempSync,rmSync,writeFileSync} from "node:fs";
 import {join} from "node:path";
-import {recheckCargoProfileSourceV1,requireLoadedCargoProfilePolicyV1} from "../../🟦️.ts";
+import {recheckCargoProfileSourceV1,requireLoadedCargoProfilePolicyV1,loadedCargoProfilePolicyDriftedV1} from "../../🟦️.ts";
 import {withBuildTestInvocationV1} from "../../../../../../../../../../../../🔨️modules/🏃️process/🧪️testing/📥️invocation/🟦️.ts";
 import {createIssuedResourceControlV1} from "../../../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {churnProtocolV1,concurrentEditOfV1,STALE_IMPLEMENTATION_CODE_V1,retryOnConcurrentEditV1} from "../../../../../../../../../../../../🔨️modules/📁️filesystem/🧾️observation/🔁️churn/🟦️.ts";
@@ -46,4 +46,11 @@ test("changed loaded Cargo profile requests a fresh process without snapshot ret
  expect(requireLoadedCargoProfilePolicyV1("profile.json",new TextEncoder().encode(equivalent),digest)).toBeUndefined();
  let attempts=0;const failure=await retryOnConcurrentEditV1("snapshot",async()=>{attempts++;requireLoadedCargoProfilePolicyV1("profile.json",new TextEncoder().encode(changed),digest);}).then(()=>null,error=>error);
  expect(attempts).toBe(1);expect(failure.code).toBe(STALE_IMPLEMENTATION_CODE_V1);expect(String(failure)).toContain("profile.json");
+});
+
+test("a pinned run keeps the policy it loaded: an edit after load is drift for the next run, never a restart; unpinned it still is refused",async()=>{
+ const{withImplementationPinV1}=await import("../../../../../../../../🏗️build/📥️inputs/🔏️revision/🟨️.mjs");
+ const prior='{"version":1,"rows":[1]}',changed='{"version":1,"rows":[2]}',torn='{"version":',encode=(text:string)=>new TextEncoder().encode(text),digest=new Bun.CryptoHasher("sha256").update(JSON.stringify(JSON.parse(prior))).digest("hex");
+ expect(loadedCargoProfilePolicyDriftedV1(encode(changed),digest)).toBe(false);
+ expect(await withImplementationPinV1(async()=>[loadedCargoProfilePolicyDriftedV1(encode(prior),digest),loadedCargoProfilePolicyDriftedV1(encode(changed),digest),loadedCargoProfilePolicyDriftedV1(encode(torn),digest)])).toEqual([false,true,true]);
 });

@@ -13,9 +13,18 @@ macro_rules! paid_close{
  (decode,$receipt:ident,$accepted:expr,$grant:expr,$work:expr,$operation:expr)=>{$receipt.retire::<_,ValueError>($grant,$accepted,$work,$operation)};
  (encode,$receipt:ident,$accepted:expr,$grant:expr,$work:expr,$operation:expr)=>{$receipt.encode($accepted,$operation)};
 }
+type Close=RetainedWorkOutcome<RetainedCloneStep,semio_framework_value_retirement::OriginalRetirementFailure>;
+fn close_with(effect:&mut RetainedAllocationEffect<'_>,call:impl FnOnce(usize,&mut RetainedAllocationEffect<'_>)->Close)->Close{
+ let body=effect.grant().maximum_copy_bytes;let mut call=Some(call);let mut result=None;
+ semio_framework_value_control_contract::with_original_invocation(None,effect,&mut |effect|result=Some(call.take().expect("fixture close invocation ran once")(body,effect))).unwrap();
+ result.expect("fixture close invocation ran")
+}
+fn close_encode(native:&mut native_encoding::NativeEncodeControl<'_>,effect:&mut RetainedAllocationEffect<'_>)->Close{
+ close_with(effect,|body,effect|{let mut slot=None;{let reply=semio_framework_value_control_contract::OriginalEffectReply::borrow(&mut slot).unwrap();drop(native.close_retirement_recipient_into(body,effect,reply).unwrap());}RetainedWorkOutcome{result:slot.expect("fixture close recorded its reply"),work:effect.performed_work()}})
+}
 macro_rules! close_turn{
- (decode,$native:ident,$grant:expr,$marker:ident)=>{if $native.requires_original_birth(){observe(||eff::settled($native.close_original_birth_step($grant)))}else{eff::observed($grant,1<<20,&mut $marker,|effect|eff::settled($native.close_retirement_recipient(effect)))}};
- (encode,$native:ident,$grant:expr,$marker:ident)=>{eff::observed($grant,1<<20,&mut $marker,|effect|eff::settled($native.close_retirement_recipient(effect)))};
+ (decode,$native:ident,$grant:expr,$marker:ident)=>{eff::observed($grant,1<<20,&mut $marker,|effect|close_with(effect,|body,effect|eff::settled($native.close_retirement_recipient(body,effect))))};
+ (encode,$native:ident,$grant:expr,$marker:ident)=>{eff::observed($grant,1<<20,&mut $marker,|effect|close_encode($native,effect))};
 }
 macro_rules! original_local_law{
  ($name:ident,$control:path,$recipient:path,$hop:ident)=>{
@@ -41,10 +50,11 @@ macro_rules! original_local_law{
 original_local_law!(native_local_original_decode_recipient_survives_detachment,native_decoding::NativeDecodeControl,native_decoding::NativeDecodeRetirementRecipient,decode);
 original_local_law!(native_local_original_encode_recipient_survives_detachment,native_encoding::NativeEncodeControl,native_encoding::NativeEncodeRetirementRecipient,encode);
 macro_rules! refused_work_kind{(decode,$error:ident)=>{$error.operation.as_ref().or($error.context.as_ref()).expect("native refusal retained").kind.as_str()};(encode,$error:ident)=>{$error.kind.as_str()};}
+macro_rules! hop{(decode,$receipt:ident,$accepted:ident,$operation:expr)=>{$receipt.decode(&mut $accepted,None,$operation)};(encode,$receipt:ident,$accepted:ident,$operation:expr)=>{$receipt.encode(&mut $accepted,$operation)};}
 macro_rules! refused_work_law{
  ($name:ident,$control:path,$recipient:path,$hop:ident)=>{
   #[test]fn $name(){
-   use $control as Control;use $recipient as Recipient;let law=fixture();let mut accepted=|_|true;let mut recipient=Recipient::new();let mut native=Control::new(law["maximumNativeBytes"].as_u64().unwrap()as usize,&mut accepted);native.install_retirement_recipient(&mut recipient).unwrap();native.charge(law["initialBytes"].as_u64().unwrap()as usize).unwrap();native.begin_stage(law["rejectedWork"]["declared"].as_u64().unwrap()as usize).unwrap();let(detached,_)=native.pause_with_retirement().unwrap().detach();let mut receipt=detached.bind(&mut recipient).map_err(|(error,_)|error).unwrap();let mut accepted=|_|true;let before=receipt.owned_bytes();let error=receipt.$hop(&mut accepted,|native|native.advance(law["rejectedWork"]["attempted"].as_u64().unwrap()as usize)).unwrap_err();assert_eq!(refused_work_kind!($hop,error),law["rejectedWork"]["kind"].as_str().unwrap());assert_eq!(receipt.owned_bytes(),before);receipt.$hop(&mut accepted,|native|native.advance(law["rejectedWork"]["declared"].as_u64().unwrap()as usize)).unwrap();let(detached,_)=receipt.detach();assert_eq!(detached.owned_bytes(),before);assert!(!recipient.has_owner());
+   use $control as Control;use $recipient as Recipient;let law=fixture();let mut accepted=|_|true;let mut recipient=Recipient::new();let mut native=Control::new(law["maximumNativeBytes"].as_u64().unwrap()as usize,&mut accepted);native.install_retirement_recipient(&mut recipient).unwrap();native.charge(law["initialBytes"].as_u64().unwrap()as usize).unwrap();native.begin_stage(law["rejectedWork"]["declared"].as_u64().unwrap()as usize).unwrap();let(detached,_)=native.pause_with_retirement().unwrap().detach();let mut receipt=detached.bind(&mut recipient).map_err(|(error,_)|error).unwrap();let mut accepted=|_|true;let before=receipt.owned_bytes();let error=hop!($hop,receipt,accepted,|native|native.advance(law["rejectedWork"]["attempted"].as_u64().unwrap()as usize)).unwrap_err();assert_eq!(refused_work_kind!($hop,error),law["rejectedWork"]["kind"].as_str().unwrap());assert_eq!(receipt.owned_bytes(),before);hop!($hop,receipt,accepted,|native|native.advance(law["rejectedWork"]["declared"].as_u64().unwrap()as usize)).unwrap();let(detached,_)=receipt.detach();assert_eq!(detached.owned_bytes(),before);assert!(!recipient.has_owner());
   }
  }
 }
@@ -55,9 +65,9 @@ fn original_decode_envelope_keeps_result_and_context_refusal(){
  let law=fixture();for fail in [true,false]{
   let mut recipient=NativeDecodeRetirementRecipient::new();let mut progress=|_|true;let receipt=NativeDecodeControl::new_retained(&mut progress).pause().unwrap();let mut continuation=receipt.with_retirement_recipient(&mut recipient).map_err(|(error,_)|error).unwrap();let mut progress=|_|true;let mut authority=OriginalWorkAuthority::new(OriginalCloseWork(1));
   let value=law["callEnvelope"][if fail{"operation"}else{"output"}].as_str().unwrap().to_owned();let pointer=value.as_ptr();
-  let result=authority.with_loan(&mut (),|loan|continuation.decode::<String,ValueError>(&mut progress,|control|control.with_work_recipient(loan,|original|{assert!(original.prepare_work(1)?);if fail{Err(ValueError::new(ValueRefusalKind::InvalidValue,value))}else{Ok(value)}}))).unwrap();
+  let result=authority.with_loan(&mut (),|loan|continuation.decode::<String,ValueError>(&mut progress,None,|control|control.with_work_recipient(loan,|original|{assert!(original.prepare_work(1)?);if fail{Err(ValueError::new(ValueRefusalKind::InvalidValue,value))}else{Ok(value)}}))).unwrap();
   assert_eq!(continuation.pending_work(),1);assert!(continuation.has_pending_work());
   let failure=result.unwrap_err();if fail{assert_eq!(failure.operation.as_ref().unwrap().message.as_ptr(),pointer);assert!(failure.output.is_none())}else{assert_eq!(failure.output.as_ref().unwrap().as_ptr(),pointer);assert!(failure.operation.is_none())}assert!(failure.context.is_some());
-  authority.with_loan(&mut (),|loan|continuation.decode::<(),ValueError>(&mut progress,|control|control.with_work_recipient(loan,|control|control.commit_work(1)))).unwrap().unwrap();assert!(!continuation.has_pending_work());let(_receipt,_recipient)=continuation.detach();assert!(authority.into_recipient().is_ok());
+  authority.with_loan(&mut (),|loan|continuation.decode::<(),ValueError>(&mut progress,None,|control|control.with_work_recipient(loan,|control|control.commit_work(1)))).unwrap().unwrap();assert!(!continuation.has_pending_work());let(_receipt,_recipient)=continuation.detach();assert!(authority.into_recipient().is_ok());
  }
 }

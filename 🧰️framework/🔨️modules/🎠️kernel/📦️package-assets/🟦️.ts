@@ -4,6 +4,7 @@
  * page fetches it from {@link PACKAGE_ASSET_ROUTE} when the name lies below a directory in {@link PACKAGE_ASSET_DIRECTORIES}, which
  * is exactly what a dev server mounts, so nothing outside those directories is ever requested or served. */
 import type { ShardAsset } from "@semio-tech/framework-actor/shard-client";
+import { publishedPageUrl } from "../../🖼️assets/🌐️published-page/🟦️.ts";
 import { RUNTIME_ASSET_CHANNELS } from "../../🖼️canvas/📦️packages/🟦️typescript/🔌️runtime-assets/🟦️.ts";
 
 /** 🚏️ The route package asset directories are served under; a directory is served at `${route}/${directory}`. */
@@ -36,7 +37,7 @@ export function packageAssetUrl(name: string, base: string): string | undefined 
   const segments = name.split("/");
   if (segments.some(segment => segment === "" || segment === "." || segment === "..")) return undefined;
   if (!PACKAGE_ASSET_DIRECTORIES.some(directory => name.startsWith(directory + "/"))) return undefined;
-  return new URL(`${PACKAGE_ASSET_ROUTE}/${segments.map(encodeURIComponent).join("/")}`, base).href;
+  return new URL(publishedPageUrl(`${PACKAGE_ASSET_ROUTE}/${segments.map(encodeURIComponent).join("/")}`), base).href;
 }
 
 /** #️⃣ Lowercase hex SHA-256 of `bytes`. */

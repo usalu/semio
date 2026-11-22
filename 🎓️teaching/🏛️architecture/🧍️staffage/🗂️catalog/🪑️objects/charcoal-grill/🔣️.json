@@ -44859,7 +44859,7 @@
             "tone": 0.3,
             "profile": [[-0.022, 0], [-0.022, 0.012], [0.026, 0.012], [0.026, 0]],
             "axis": [0, 0, 1],
-            "origin": [0.14278, -0.076, 0.282],
+            "origin": [0, 0.0, 0.282],
             "member": "wheels",
             "part": "joint"
           },
@@ -44872,7 +44872,7 @@
             "tone": 0.3,
             "profile": [[-0.022, 0], [-0.022, 0.012], [0.026, 0.012], [0.026, 0]],
             "axis": [0, 0, -1],
-            "origin": [0.14278, -0.076, -0.282],
+            "origin": [0, 0.0, -0.282],
             "member": "wheels",
             "part": "joint"
           },
@@ -44900,7 +44900,7 @@
             "tone": 0.3,
             "size": [0.03, 0.008, 0.03],
             "transform": {
-              "translation": [0.14278, -0.148, 0.282]
+              "translation": [0, -0.072, 0.282]
             },
             "member": "wheels",
             "part": "support",
@@ -44915,7 +44915,7 @@
             "tone": 0.3,
             "size": [0.03, 0.008, 0.03],
             "transform": {
-              "translation": [0.14278, -0.148, -0.282]
+              "translation": [0, -0.072, -0.282]
             },
             "member": "wheels",
             "part": "support",
@@ -65273,7 +65273,7 @@
             "tone": 0.3,
             "profile": [[-0.022, 0], [-0.022, 0.016], [0.022, 0.016], [0.022, 0]],
             "axis": [0, 0, 1],
-            "origin": [0.14278, -0.076, 0.282],
+            "origin": [0, 0.0, 0.282],
             "member": "wheels",
             "part": "joint"
           },
@@ -65286,7 +65286,7 @@
             "tone": 0.3,
             "profile": [[-0.022, 0], [-0.022, 0.016], [0.022, 0.016], [0.022, 0]],
             "axis": [0, 0, -1],
-            "origin": [0.14278, -0.076, -0.282],
+            "origin": [0, 0.0, -0.282],
             "member": "wheels",
             "part": "joint"
           },
@@ -65314,7 +65314,7 @@
             "tone": 0.3,
             "size": [0.03, 0.015, 0.03],
             "transform": {
-              "translation": [0.14278, -0.1445, 0.282]
+              "translation": [0, -0.0685, 0.282]
             },
             "member": "wheels",
             "part": "support",
@@ -65329,7 +65329,7 @@
             "tone": 0.3,
             "size": [0.03, 0.015, 0.03],
             "transform": {
-              "translation": [0.14278, -0.1445, -0.282]
+              "translation": [0, -0.0685, -0.282]
             },
             "member": "wheels",
             "part": "support",
@@ -77737,7 +77737,7 @@
             "tone": 0.3,
             "radii": [0.02, 0.02, 0.02],
             "transform": {
-              "translation": [0.14278, -0.076, 0.282]
+              "translation": [0, 0.0, 0.282]
             },
             "member": "wheels",
             "part": "joint"
@@ -77751,7 +77751,7 @@
             "tone": 0.3,
             "radii": [0.02, 0.02, 0.02],
             "transform": {
-              "translation": [0.14278, -0.076, -0.282]
+              "translation": [0, 0.0, -0.282]
             },
             "member": "wheels",
             "part": "joint"
@@ -77780,7 +77780,7 @@
             "tone": 0.3,
             "size": [0.04, 0.03, 0.04],
             "transform": {
-              "translation": [0.14278, -0.137, 0.282]
+              "translation": [0, -0.061, 0.282]
             },
             "member": "wheels",
             "part": "support",
@@ -77795,7 +77795,7 @@
             "tone": 0.3,
             "size": [0.04, 0.03, 0.04],
             "transform": {
-              "translation": [0.14278, -0.137, -0.282]
+              "translation": [0, -0.061, -0.282]
             },
             "member": "wheels",
             "part": "support",
@@ -84187,7 +84187,7 @@
             "tone": 0.3,
             "size": [0.075, 0.075, 0.075],
             "transform": {
-              "translation": [0.14278, -0.1145, 0.282]
+              "translation": [0, -0.0385, 0.282]
             },
             "member": "wheels",
             "part": "support",
@@ -84202,7 +84202,7 @@
             "tone": 0.3,
             "size": [0.075, 0.075, 0.075],
             "transform": {
-              "translation": [0.14278, -0.1145, -0.282]
+              "translation": [0, -0.0385, -0.282]
             },
             "member": "wheels",
             "part": "support",

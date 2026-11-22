@@ -1,4 +1,4 @@
-"""🦴 Rework 05, parent carrying a toddler: the corrected rig (lumbar and thoracic spine, lateral clavicles and hip bones on the 3D rest placement, finger and thumb chains, toddler hands), the re-authored poses and the anchors, written into the candidate document.
+"""🦴 Rework 05, parent carrying a toddler: the corrected rig (lumbar and thoracic spine, clavicles, scapulae and hip bones on the lateral 3D rest placement, finger and thumb chains, toddler hands), the re-authored poses and the anchors, written into the candidate document.
 
 Usage: python3 rework-05-parent-carrying-toddler-roots.py  (reads the catalog asset, writes `🗑️generated/r3-parent-carrying-toddler/🔣️.json`)
 @see ./rework-05-kit.py
@@ -86,6 +86,78 @@ def hip_bone(g):
     return round(n, 5), (round(a, 4), round(b, 4)), angles(rel)
 
 
+STERNOCLAVICULAR = (0.228, -0.10, 0.02)
+ACROMIOCLAVICULAR = (0.25, -0.035, 0.168)
+GLENOHUMERAL = (0.21492, -0.03, 0.17265)
+SUPERIOR_ANGLE = (0.238, 0.046, 0.07)
+INFERIOR_ANGLE = (0.09, 0.06, 0.088)
+LATERAL_ANGLE = (0.213, -0.008, 0.146)
+
+
+def sub(a, b):
+    """➖ Difference of two points."""
+    return [a[i] - b[i] for i in range(3)]
+
+
+def dot(a, b):
+    """⚫ Scalar product."""
+    return sum(a[i] * b[i] for i in range(3))
+
+
+def cross(a, b):
+    """✖️ Vector product."""
+    return [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]]
+
+
+def unit(a):
+    """📏 The direction of a vector."""
+    n = math.sqrt(dot(a, a))
+    return [c / n for c in a]
+
+
+def columns(u, v, w):
+    """🧱 A rotation from its columns u, v, w."""
+    return [[u[i], v[i], w[i]] for i in range(3)]
+
+
+def within(r, p):
+    """🦴 A vector of the parent frame in the frame with the rotation `r` (columns u, v, w)."""
+    return [sum(r[k][i] * p[k] for k in range(3)) for i in range(3)]
+
+
+def between(r, q):
+    """🔗 The rotation `q` as seen from the frame `r` (both given in the same parent frame)."""
+    return [[sum(r[k][i] * q[k][j] for k in range(3)) for j in range(3)] for i in range(3)]
+
+
+def pelvic_girdle():
+    """🦴 The rest frame of the left hip bone in the pelvis frame: origin at the sacroiliac joint, rotation columns u, v, w."""
+    return {"o": list(SACROILIAC), "r": turn(hip_bone(1)[1][0], hip_bone(1)[1][1], 0)}
+
+
+def shoulder_girdle():
+    """🦴 The left shoulder girdle in the thorax frame (up, back, left). Clavicle: from the sternoclavicular to the acromioclavicular joint, normal up and joint axis back, so `angleDeg` shrugs and `abductionDeg` retracts. Scapula: from the acromioclavicular joint along the blade to the inferior angle, joint axis the dorsal normal of the blade, so `angleDeg` rotates the blade on the ribcage. Upper arm: at the glenohumeral centre with the frame of a hanging sagittal arm."""
+    d = sub(ACROMIOCLAVICULAR, STERNOCLAVICULAR)
+    u = unit(d)
+    w = unit(sub((0, 1, 0), [c * u[1] for c in u]))
+    clavicle = columns(u, cross(w, u), w)
+    n = unit(cross(sub(SUPERIOR_ANGLE, INFERIOR_ANGLE), sub(LATERAL_ANGLE, INFERIOR_ANGLE)))
+    n = n if n[1] > 0 else [-c for c in n]
+    e = sub(INFERIOR_ANGLE, ACROMIOCLAVICULAR)
+    su = unit(sub(e, [c * dot(e, n) for c in n]))
+    scapula = columns(su, cross(n, su), n)
+    arm = turn(180, 0, 0)
+    out = {"clavicle": {"o": list(STERNOCLAVICULAR), "r": clavicle, "length": round(math.sqrt(dot(d, d)), 5), "angles": angles(clavicle)},
+           "scapula": {"o": list(ACROMIOCLAVICULAR), "r": scapula, "length": round(dot(e, su), 5), "angles": angles(between(clavicle, scapula))},
+           "arm": {"at": [round(c, 5) for c in within(scapula, sub(GLENOHUMERAL, ACROMIOCLAVICULAR))], "angles": angles(between(scapula, arm))}}
+    for key, parent in (("clavicle", None), ("scapula", clavicle), ("arm", scapula)):
+        want = out[key].get("r", arm)
+        got = turn(*out[key]["angles"])
+        got = got if parent is None else [[sum(parent[i][k] * got[k][j] for k in range(3)) for j in range(3)] for i in range(3)]
+        assert all(abs(got[i][j] - want[i][j]) < 1e-5 for i in range(3) for j in range(3)), key
+    return out
+
+
 def side(s, en, de):
     """↔️ Names and signs of one body side: suffix, English and German side word, lateral sign."""
     return ("-l", "Left", "Linke", 1) if s == "l" else ("-r", "Right", "Rechte", -1)
@@ -102,11 +174,12 @@ def rig():
         bone("head", "neck", "Head", "Kopf", 0.09732, -0.01972, 0, 0.14148, rev(-30, 35, (-58, 58)), m=mass(3.679, 0.0361649, 0.021109, **est)),
     ]
     for s in ("l", "r"):
+        sg = shoulder_girdle()
         x, en, de, g = side(s, "", "")
         bones += [
-            bone("clavicle" + x, "thorax", en + " clavicle (sternoclavicular to acromion)", de + "s Schlüsselbein (Brustbein bis Schulterhöhe)", 0.228, -0.10, 0, 0.155, rev(-15, 20), z=0.02 * g, abduction=80 * g),
-            bone("scapula" + x, "clavicle" + x, en + " scapula (acromion to the shoulder joint)", de + "s Schulterblatt (Schulterhöhe bis Schultergelenk)", 0.155, 0.07, 180, 0.04, rev(-10, 10), abduction=80 * g),
-            bone("upper-arm" + x, "scapula" + x, en + " upper arm", de + "r Oberarm", 0.04, 0, 0, 0.316, rev(-60, 180, (-90, 90)), m=mass(1.683, 0.182)),
+            bone("clavicle" + x, "thorax", en + " clavicle (sternoclavicular to acromioclavicular joint)", de + "s Schlüsselbein (Brustbein-Schlüsselbein-Gelenk bis Schultereckgelenk)", STERNOCLAVICULAR[0], STERNOCLAVICULAR[1], sg["clavicle"]["angles"][0], sg["clavicle"]["length"], rev(-8, 35, (-5, 40) if g < 0 else (-40, 5)), z=STERNOCLAVICULAR[2] * g, abduction=sg["clavicle"]["angles"][1] * g, twist=sg["clavicle"]["angles"][2] * g),
+            bone("scapula" + x, "clavicle" + x, en + " scapula (acromioclavicular joint to the inferior angle)", de + "s Schulterblatt (Schultereckgelenk bis unterer Schulterblattwinkel)", sg["clavicle"]["length"], 0, sg["scapula"]["angles"][0], sg["scapula"]["length"], rev(-10, 60), abduction=sg["scapula"]["angles"][1] * g, twist=sg["scapula"]["angles"][2] * g),
+            bone("upper-arm" + x, "scapula" + x, en + " upper arm", de + "r Oberarm", sg["arm"]["at"][0], sg["arm"]["at"][1], sg["arm"]["angles"][0], 0.316, rev(-60, 180, (-90, 90)), z=sg["arm"]["at"][2] * g, abduction=sg["arm"]["angles"][1] * g, twist=sg["arm"]["angles"][2] * g, m=mass(1.683, 0.182)),
             bone("forearm" + x, "upper-arm" + x, en + " forearm", de + "r Unterarm", 0.316, 0, 0, 0.248, rev(0, 150, (-90, 90)), z=0.01 * g, m=mass(0.911, 0.1134)),
             bone("hand" + x, "forearm" + x, en + " hand (carpus and metacarpus)", de + " Hand (Handwurzel und Mittelhand)", 0.248, 0, 0, 0.095, rev(-65, 75, (-95, 95)), m=mass(0.37, 0.069)),
             bone("fingers" + x, "hand" + x, en + " proximal phalanges of the four fingers", de + " Fingergrundglieder", 0.095, -0.004, 0, 0.045, rev(-20, 20)),
@@ -158,7 +231,7 @@ def gait(hip, knee, ankle, toe=0):
 
 
 CYCLE = [gait(21, 4, 2), gait(17, 15, -4), gait(5, 8, 4), gait(-6, 5, 9), gait(-11, 9, 2, 24), gait(4, 54, -10, 4), gait(15, 56, -3), gait(23, 24, 1)]
-ARM_SWING = [14, 10, 2, -7, -12, -8, 0, 9]
+ARM_SWING = [14, 10, 2, -7, -12, -8, 1, 9]
 BOB = [-0.6, 0.4, 1.0, 0.4, -0.6, 0.4, 1.0, 0.4]
 AREAS = {"coat-sleeves": 0.42, "gloves": 0.13, "toddler-boots": 0.136, "toddler-face": 0.055}
 ADVANCE = 1.1164

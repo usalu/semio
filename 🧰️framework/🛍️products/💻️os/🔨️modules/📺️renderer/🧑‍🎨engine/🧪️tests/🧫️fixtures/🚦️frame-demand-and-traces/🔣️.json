@@ -1,0 +1,23 @@
+{
+  "title": "wgpu frame demand and frame traces",
+  "why": "Frames are built on demand only: input, animation or deadline, resource arrival, or work still in flight. A browser tick that carries none of them must rebuild nothing, otherwise an idle shell admits and supersedes about twenty builds a second. The two [TRACE] lines are the observable half of the law: one `frame build admitted` per admitted build and one `frame input action` per materialized input action.",
+  "demand": [
+    { "id": "idle-tick-builds-nothing", "set": [], "demanded": false, "reasons": "none", "admittedLine": "[TRACE] frame build admitted generation=7 reason=none" },
+    { "id": "input-demands-a-build", "set": ["input-queued"], "demanded": true, "reasons": "input-queued", "admittedLine": "[TRACE] frame build admitted generation=7 reason=input-queued" },
+    { "id": "scheduler-invalidation-demands-a-build", "set": ["invalidated"], "demanded": true, "reasons": "invalidated", "admittedLine": "[TRACE] frame build admitted generation=7 reason=invalidated" },
+    { "id": "first-frame-demands-a-build", "set": ["first-frame"], "demanded": true, "reasons": "first-frame", "admittedLine": "[TRACE] frame build admitted generation=7 reason=first-frame" },
+    { "id": "resource-arrival-demands-a-build", "set": ["runtime-pending"], "demanded": true, "reasons": "runtime-pending", "admittedLine": "[TRACE] frame build admitted generation=7 reason=runtime-pending" },
+    { "id": "live-build-keeps-going", "set": ["live-build", "presentation-pending"], "demanded": true, "reasons": "live-build+presentation-pending", "admittedLine": "[TRACE] frame build admitted generation=7 reason=live-build+presentation-pending" },
+    { "id": "retained-owners-keep-going", "set": ["frame-ready", "surface-resize", "snapshot-retained", "component-close", "cursor-wake"], "demanded": true, "reasons": "frame-ready+surface-resize+snapshot-retained+component-close+cursor-wake", "admittedLine": "[TRACE] frame build admitted generation=7 reason=frame-ready+surface-resize+snapshot-retained+component-close+cursor-wake" }
+  ],
+  "actions": [
+    { "id": "interaction-select", "controller": "framework.panel.inspection", "action": "interactionSelect", "line": "[TRACE] frame input action controller=framework.panel.inspection action=interactionSelect" },
+    { "id": "rename-commit", "controller": "tree", "action": "renameGeneration", "line": "[TRACE] frame input action controller=tree action=renameGeneration" }
+  ],
+  "laws": [
+    "a tick with no demand flag set builds no frame",
+    "every single demand flag alone demands a build",
+    "the admitted line names the generation and every reason in a fixed order",
+    "the input action line names the controller and the action exactly once per action"
+  ]
+}

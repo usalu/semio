@@ -63,3 +63,4 @@ export function preflightToolClosuresV1(workspaceRoot: string, scripts: ScriptIn
 
 export function closureLayerListV1(log: unknown, view: { key: unknown; digest?: string; store?: unknown; rows?: unknown }): any;
 export function layerVerdictCountsV1(): { hits: number; joined: number; checked: number; indexed: number; milliseconds: number };
+export const scriptProviderIdsV1: () => readonly string[];

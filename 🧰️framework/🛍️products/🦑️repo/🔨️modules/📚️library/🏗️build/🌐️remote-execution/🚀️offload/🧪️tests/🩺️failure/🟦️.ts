@@ -31,6 +31,7 @@ test("a compiler result is a result: only typed signals make it infrastructure (
   [1,diagnostic(null),"compile-result"],
   [101,diagnostic(null),"compile-result"],
   [1,diagnostic("E0463"),"incomplete-inputs"],
+  [1,JSON.stringify({$message_type:"diagnostic",message:"can't find crate for `semio_offload_inputs_incomplete`",code:{code:"E0463",explanation:null},level:"error",spans:[],children:[],rendered:"r"}),"incomplete-inputs"],
   [1,diagnostic("E0583"),"incomplete-inputs"],
   [1,diagnostic("E0460"),"incomplete-inputs"],
   [1,diagnostic("E0308")+"\n"+diagnostic("E0463"),"incomplete-inputs"],

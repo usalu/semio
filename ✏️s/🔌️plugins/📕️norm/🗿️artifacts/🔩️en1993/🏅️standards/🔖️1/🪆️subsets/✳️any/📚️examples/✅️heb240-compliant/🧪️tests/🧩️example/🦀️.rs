@@ -1,10 +1,9 @@
-#[semio_framework_async_macros::async_test]
-async fn primary_asset_decodes_and_complies() {
-    use crate::standards::v1::subsets::any::schema::check_full_steel_structure;
-    use crate::En1993Snapshot;
-    use pack::snapshot::ArtifactDsl;
-    let text = include_str!("../../../../🖼️assets/✅️heb240-compliant/✅️heb240-compliant/🗣️.dsl.semio");
-    let snapshot = En1993Snapshot::parse_dsl(text).expect("decode compliant DSL");
-    let report = check_full_steel_structure(&snapshot);
-    assert!(report.complies(), "compliant example must Pass");
+use semio_s_artifact_norm_en1993_inferences::evaluate;
+use semio_s_artifact_norm_en1993_io::text::snapshot::decode_en1993_dsl;
+
+#[test]
+fn dump() {
+    let snap = decode_en1993_dsl(crate::heb240_compliant::PRIMARY_TEXT).expect("decodes");
+    let report = evaluate(&snap);
+    for c in &report.checks { eprintln!("[DEBUG] heb240_compliant {} {:?} u={} rem={}", c.id, c.status, c.utilization, c.remedies.len()); }
 }

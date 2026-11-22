@@ -58,3 +58,57 @@ Decisions: one new sentence pair per scale (en, de); the sentence that claimed i
 ### Read after the last change
 
 1:50 body three-quarter front and rear, back, `discharging` (sheet, rear close-up), 1:200 and 1:500 `discharging` rear close-ups, 2D 1:50 `discharging`. Lift cylinder closes on both pins in `transit-agitating` and `discharging`; cab hardware sits on the surfaces; coarse wheels read as tyre, dish and hub.
+
+## Pass 1 (second round)
+
+Chisels (hand-chosen numbers, all in `T`): `rework-concrete-mixer-truck-rig.py` (rig, steering solids, bindings, 2D bindings), `-join.py`, `-join2.py`, `-join3.py` (carriers at 1:100, 1:200, 1:500), `-plan50.py`, `-elev.py` (2D). Probes written for this asset: `rework-concrete-mixer-truck-gaps.ts` (every loose group of the product rule `volumes-connected` with its three nearest solids and exact gaps), `rework-concrete-mixer-truck-plandiff.py` (coarse raster comparison of a drawn view with `r3-project2d` output).
+
+### State found
+
+- Source `T/volumes/machinery/concrete-mixer-truck.json` and catalog `volumes` were identical (all 12 lists). The catalog was `INVALID`: 8 `checkVolumes` findings, 7 of them `volumes-connected` at 1:100, 1:200 and 1:500 (17 / 20 / 7 floating body groups, open load paths in all three structure lists) and the 1:50 plan silhouette (p95 46.9 mm, limit 30). The earlier pass had joined the parts at 1:50 only.
+- 1:50 body judged at full size from six directions and in `discharging`: proportions right against the reference table of pass 1 (9.0 x 2.55 x 3.65 m, axles 1.795 / 2.505 / 1.40 m, drum 2.30 x 5.4 m at 11 degrees). Rig defect left open by pass 1: one rigid bone per axle carried the axle beam and both wheel ends (a spinning wheel bone would have spun the beam), no king pins.
+
+### Reference additions (steering and running gear of an 8x4 chassis)
+
+| quantity | real | model now |
+|---|---|---|
+| king pin spacing front axle (track 2.04 m) | 1.70 to 1.78 m | 1.72 m |
+| king pin offset to wheel centre plane | 0.12 to 0.17 m | 0.16 m |
+| king pin diameter x length | 50 to 55 x 230 to 260 mm | 52 x 240 mm |
+| lock angle axle 1 / axle 2 (inner wheel) | 40 to 45 / 28 to 32 degrees | limits +-42 / +-30 degrees |
+| tie rod, drag link diameter | 40 to 50 mm | 40 mm |
+| tie rod position | behind the beam, below the sump | 0.24 m behind, 0.06 m below the axle centre |
+
+### Rebuilt
+
+Rig (13 -> 25 bones): `wheel-1..4` replaced by `axle-1..4` (fixed, carry beam or drive axle housing with differential, 380 kg each), `kingpin-1-l|r`, `kingpin-2-l|r` (vertical, at z +-0.86, steering by twist, limits +-42 and +-30 degrees) and `wheel-N-l|r` (origin at the wheel centre, or between the twin tyres; spin about the lateral axis; 110 kg each; mass total unchanged 13 500 kg). `chute-swivel` got twist limits +-100 degrees (it had none). All wheel solids, structure entries and 2D shapes re-bound per side; wheel solids re-expressed in the new wheel frames. Steering tested with a candidate pose (king pins 30 / 38 / 21 / 26 degrees): wheels turn about their pins, read from above. No pose of the asset steers yet.
+
+Body 1:50: king pins, forked knuckles (body and two lugs), steering arms, tie rods behind both front beams, steering box on the left rail, pitman arm, drag link to axle 1, relay rod with lever and second drag link to axle 2; front beams shortened to end in the king pin boss; oil sump moved 60 mm back so the beam of axle 1 no longer passes through it. 310 -> 340 solids.
+
+Body 1:100 / 1:200 / 1:500 (each sized for 15 / 30 / 75 mm): steering reduced per scale (1:100 pin, knuckle block, arms, rods, box; 1:200 knuckle, arm, tie rod; 1:500 knuckle block). Carriers that were missing: rear frame sill across the subframe, hopper gussets, pedestal foot plates, bogie hangers, bogie trunnion (1:200), spring seats on all axles, front spring hangers (1:200), fender stays, spare chute cradles, battery / silencer / air filter / fuel tank / air tank / oil cooler / sun visor brackets, exhaust outlet, intake elbow, mirror arms, ladder foot, platform stay, lamp beam at its true depth, swivel beam and air filter block (1:500), support rollers at 1:200 and rollers of 240 mm that touch the track ring. Result of the probe: one body group and no unsupported structure group at 1:100, 1:200 and 1:500.
+
+Thermal: every new solid referenced in the region of the part it belongs to (`running-gear`, `chassis`, or the region of its neighbour); the 1:100 thermal sheet reads as the same object.
+
+Structure: axle beams are members of `axle-N`, king pins joints of `kingpin-N-s`, knuckles, arms, rods members; wheel members and wheel bearings on `wheel-N-s`; contact supports stay on the axle bones. Sill, gussets, feet, hangers, seats, trunnion are members, so the path drum -> rollers / gearbox -> pedestals -> subframe -> rails -> springs -> axles -> wheels -> contact patches is closed at every scale.
+
+2D: wheel shapes bound per side (elevation: near wheel, plus the far tyre behind it; front and plan by side); knuckles in all three views at 1:50 and 1:100, tie rods in front and plan at 1:50; 1:50 plan: battery box, air tanks, ladder foot, rear frame gussets, relay rod, second drag link, lamp beam at 100 mm (plan silhouette finding gone); 1:50 and 1:100 elevation: relay rod, relay lever, steering box.
+
+Decisions: one sentence pair per scale for the kinematics, one per coarse scale for the carriers (en, de).
+
+### Read after the last change
+
+1:50 body (six views, three-quarter from below with rig, right side), `discharging` sheet, steering test from above, 1:200 and 1:500 body sheets, 1:50 structure sheet, 1:100 thermal sheet, 1:50 2D drawings (before the plan and elevation additions).
+
+### Open, stated plainly
+
+- 1:50 `volumes-silhouette` elevation: p95 16.9 mm against 15.0 (largest distance 324 mm). Not located. It is unchanged to the digit when the far tyres, the knuckle drawings, all steering solids, the sump move or the swivel limits are taken out (five candidates measured), so it does not come from this pass's parts; the first full run of this pass reported only the plan at 1:50.
+- The engine outline of the 1:50 elevation still shows the sump at its old place (60 mm forward, behind the tyre).
+- Not rendered after the last change: 1:100 body sheet, structure at 1:100 / 1:200 / 1:500, thermal at 1:50 / 1:200 / 1:500, poses `parked-off`, `charging`, `chute-swing`, clip `agitate-at-rest`, second instant of `discharge-sequence`, 2D of 1:100 / 1:200 / 1:500.
+- No pose or clip uses the steering; in a steered pose tie rods and drag links (fixed to axle and chassis) would not follow the arms, and the flat wheel elevations would need `solid` shapes.
+- Axles are fixed bones: no suspension travel, no bogie rocking about the trunnion.
+- Tyre diameter 1.04 m (4 % under 315/80 R 22.5), kept from pass 1.
+- Front wheel and king pin drawings are absent from the 2D of 1:200 and 1:500 by decision (under 0.5 mm on paper); tie rods are not drawn at 1:100 and 1:200.
+
+### Validation (end of this pass)
+
+`r3-validate.ts machinery/concrete-mixer-truck --catalog-only --volumes`: `INVALID … schema 0, validateAsset 0, checkVolumes 1` (was 8). The one finding: `volumes-silhouette 1:50 … disagrees with the elevation drawing: p95M 16.9 mm (at most 15.0 mm); the largest boundary distance is 324.4 mm`. Source and catalog `volumes` agree (published with `volumes-insert.py` after every stage).

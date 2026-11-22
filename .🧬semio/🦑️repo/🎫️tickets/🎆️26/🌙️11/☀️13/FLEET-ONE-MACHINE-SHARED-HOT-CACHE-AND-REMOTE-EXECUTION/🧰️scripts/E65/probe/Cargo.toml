@@ -1,0 +1,11 @@
+cargo-features = ["trim-paths"]
+[package]
+name = "e65probe"
+version = "0.1.0"
+edition = "2021"
+description = "probe crate"
+
+[workspace]
+
+[lib]
+path = "src/lib.rs"

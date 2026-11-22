@@ -4,7 +4,7 @@ import {tmpdir} from "node:os";
 import {join,resolve} from "node:path";
 import {evictOwnerFactsReferencingV1,selectedAdmissionFactsV1} from "../../🟦️.ts";
 import {buildGraphMembershipV1} from "../../../🟦️.ts";
-import {graphInventoryTextV1,graphRetryTextV1,membershipChangePathsV1,vanishedMemberAsChangeV1} from "../../🧲️membership-follow/🟦️.ts";
+import {followedPathsV1,graphInventoryTextV1,graphRetryTextV1,membershipChangePathsV1,vanishedMemberPathV1} from "../../🧲️membership-follow/🟦️.ts";
 import {independentGlobV1} from "../../../../🧪️tests/🕸️graph/🧰️support/🟦️.ts";
 
 const row=(kind:string,path:string)=>({kind,path,fact:kind==="readdir"?"digest":{version:1}});
@@ -63,18 +63,17 @@ test("a membership that moved names every moved member once, as an independent f
  }finally{await rm(root,{recursive:true,force:true});}
 });
 
-test("a path that vanished under the inventory walk is a named membership change, never an internal error",async()=>{
+test("a path that vanished under the inventory walk names a member below the root, never the root itself",async()=>{
  const root=await mkdtemp(join(resolve(process.env.SEMIO_TEST_ARTIFACT_DIR??tmpdir()),"membership-vanished-"));
  try{
   const gone=join(root,"modules","scratch");
   const raw=await lstat(gone).then(()=>undefined,error=>error);
-  const change=vanishedMemberAsChangeV1(root,raw) as {code:string;paths:string[]};
-  expect(change.code).toBe("BUILD_MEMBERSHIP_CHANGED");expect(change.paths).toEqual([gone]);
-  expect(membershipChangePathsV1(root,change)).toEqual([gone]);
+  expect(vanishedMemberPathV1(root,raw)).toBe(gone);
+  expect(vanishedMemberPathV1(root,Object.assign(new Error("gone"),{code:"ENOENT",path:root}))).toBeUndefined();
   const outside=await lstat(join(tmpdir(),"membership-vanished-"+Math.random())).then(()=>undefined,error=>error);
-  expect(vanishedMemberAsChangeV1(root,outside)).toBe(outside);
-  const other=Object.assign(new Error("denied"),{code:"EACCES",path:gone});
-  expect(vanishedMemberAsChangeV1(root,other)).toBe(other);
-  expect(vanishedMemberAsChangeV1(root,null)).toBeNull();
+  expect(vanishedMemberPathV1(root,outside)).toBeUndefined();
+  expect(vanishedMemberPathV1(root,Object.assign(new Error("denied"),{code:"EACCES",path:gone}))).toBeUndefined();
+  expect(vanishedMemberPathV1(root,null)).toBeUndefined();
+  expect(followedPathsV1(root,Object.assign(new Error("wrapped"),{cause:raw}))).toEqual([gone]);
  }finally{await rm(root,{recursive:true,force:true});}
 });

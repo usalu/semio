@@ -14,7 +14,7 @@
 //! Concretely: sheet/cell mutations (`InsertSheet`, `RemoveSheet`, `RenameSheet`, `SetCell`,
 //! `RemoveCell`) round-trip through "read the whole workbook into a
 //! grid, apply the change to the grid, rebuild the whole workbook from the grid" — a genuine second
-//! producer, hence `@mode-differential`. `InsertSharedString`/`RemoveSharedString`/`SetSharedString`
+//! producer, hence `@mode-differential`. `InsertCell` is the sixth grid kind: a revision-bound vacancy on a worksheet's `sheetData`. `InsertSharedString`/`RemoveSharedString`/`SetSharedString`
 //! address the shared-string pool by an INDEX that is independent of any cell reference — exactly the
 //! axis neither reference crate exposes — so this module cannot independently perform them; it
 //! reports that honestly (see `oracle_apply_mutation`'s dispatch below) rather than faking a
@@ -41,8 +41,20 @@ pub use shared_string_pool::*;
 mod plumbing_and_projection;
 pub use plumbing_and_projection::*;
 
+#[path = "🔭️third-party-witness/🦀️.rs"]
+mod third_party_witness;
+pub use third_party_witness::*;
+
 //#region 🧪️Tests
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
+
+#[cfg(test)]
+#[path = "🧪️tests/🔭️third-party-pairs/🦀️.rs"]
+mod third_party_pairs;
+
+#[cfg(test)]
+#[path = "🧪️tests/🔭️calamine-oracle-suite/🦀️.rs"]
+mod calamine_oracle_suite;
 //#endregion 🧪️Tests

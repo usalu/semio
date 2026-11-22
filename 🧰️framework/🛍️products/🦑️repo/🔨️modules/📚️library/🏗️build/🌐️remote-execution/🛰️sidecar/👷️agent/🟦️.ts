@@ -11,6 +11,7 @@ import {runRemoteExecutionAgentV1} from "../../🛰️agent/🟦️.ts";
 import {fleetFetchContextV1} from "../../../../⚡️caching/🚀️bootstrap/🛰️fleet-fetch/🟦️.ts";
 import {refreshFleetMirrorStateV1} from "../../../../⚡️caching/🚀️bootstrap/🛰️fleet-fetch/🪞️mirror/🟦️.ts";
 import {detectWorkerRustcV1} from "../../🚀️offload/🧰️toolchain/🟦️.ts";
+import {detectWorkerCommandsV1} from "../../🚀️offload/🧰️command/🛠️worker-tools/🟦️.ts";
 import {remoteExecutionWorkerWhyV1} from "../../🌡️load/🔎️why/🟦️.ts";
 import {checkRemoteExecutionAgentReadinessV1} from "../../🛰️agent/🩺️readiness/🟦️.ts";
 import {readRemoteExecutionPolicyV1} from "../../🟦️.ts";
@@ -70,7 +71,7 @@ export async function runAgent(context:RemoteExecutionSidecarContextV1):Promise<
     if(next!==undefined&&next!==endpoint){say("the scheduler moved, joining the new one");controller.abort();}
    });
   },30_000);
-  const rustc=detectWorkerRustcV1(context.root,{...environment,PATH:[environment.PATH,join(homedir(),".cargo","bin")].filter(Boolean).join(delimiter)});
+  const rustc=detectWorkerRustcV1(context.root,{...environment,PATH:[environment.PATH,join(homedir(),".cargo","bin")].filter(Boolean).join(delimiter)}),commands=await detectWorkerCommandsV1(context.root,environment);
   const directory=cacheAreaHomeV1(context.root,"remote-execution-worker").directory,why=checkRemoteExecutionAgentReadinessV1({root:context.root,policy:policy.worker})??(rustc===undefined?remoteExecutionWorkerWhyV1("no-toolchain","no rustc answers in the checkout"):undefined);
   say(`joining ${scheduler}${why!==undefined?` without a worker: ${why.en}`:` offering rustc for ${rustc!.toolchain.targets.length} target(s)`}`);
   const recheck=why===undefined?undefined:setTimeout(()=>{controller.abort();},15_000);
@@ -78,7 +79,7 @@ export async function runAgent(context:RemoteExecutionSidecarContextV1):Promise<
    await runRemoteExecutionAgentV1({
     root:context.root,environment,scheduler,token,cacheToken:token,fetch:schedulerCall,cacheFetch:cacheCall,actions:policy.worker.actions as "rustc"|"any"|"none",concurrency:policy.worker.concurrency===0?availableParallelism():policy.worker.concurrency,
     directory,sandbox:policy.worker.sandbox,materialize:policy.worker.materialize as "clone"|"copy",maximumBlobBytes:policy.worker.maximumBlobBytes,inlineOutputBytes:policy.worker.inlineOutputBytes,
-    network:policy.worker.network,confinement:policy.worker.confinement,loadIntervalSeconds:policy.worker.loadIntervalSeconds,extraProperties:rustc?.properties??[],...rustc?{tools:rustc.tools}:{},worker:why===undefined,ready:()=>rustc!==undefined&&rustc.toolchain.targets.length>0&&Object.values(rustc.tools).every(tool=>existsSync(tool.path)),disk:policy.worker.disk,...why===undefined?{retryWorkerSeconds:30}:{why},signal:controller.signal,...context.drain?{drain:context.drain}:{},...context.work?{onRunning:running=>{context.work!.busy=running>0;context.work!.running=running;}}:{},
+    network:policy.worker.network,confinement:policy.worker.confinement,loadIntervalSeconds:policy.worker.loadIntervalSeconds,extraProperties:[...rustc?.properties??[],...commands.properties],...rustc?{tools:rustc.tools}:{},commands:commands.tools,worker:why===undefined,ready:()=>rustc!==undefined&&rustc.toolchain.targets.length>0&&Object.values(rustc.tools).every(tool=>existsSync(tool.path)),disk:policy.worker.disk,...why===undefined?{retryWorkerSeconds:30}:{why},signal:controller.signal,...context.drain?{drain:context.drain}:{},...context.work?{onRunning:running=>{context.work!.busy=running>0;context.work!.running=running;}}:{},
     onEvent:event=>{say(`worker ${event.stage}: ${event.detail}`);},onReport:event=>{say(`load report ${event.stage}: ${event.detail}`);},
    });
   }finally{clearInterval(watch);if(recheck!==undefined)clearTimeout(recheck);context.signal.removeEventListener("abort",stop);}

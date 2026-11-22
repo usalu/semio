@@ -1,0 +1,8 @@
+[package]
+name = "k1app"
+version = "0.1.0"
+edition = "2021"
+[dependencies]
+k1dep = { path = "../dep" }
+[lib]
+path = "src/lib.rs"

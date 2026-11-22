@@ -120,7 +120,7 @@ impl ReplayOriginal{
  fn with_identity(operation:OperationId,generation:Generation)->Self{let stock=RetainedCloneGrant{maximum_items:1<<24,maximum_copy_bytes:1<<30,maximum_capacity_bytes:1<<30,maximum_release_bytes:1<<30,maximum_depth:4096};Self{caller:Some(semio_framework_job::OriginalJobFixtureCaller::admit(operation,generation,stock,||Some(1),u64::MAX,1<<24)),decoder:semio_framework_job::OriginalJobDecodeOwner::empty()}}
  fn turn<T>(&mut self,grant:RetainedCloneGrant,advance:impl FnOnce(&mut StepContext<'_>)->Result<T,semio_framework_job::OriginalTurnFailure>)->Result<T,semio_framework_job::OriginalTurnFailure>{self.caller.as_mut().expect("replay retains its initiating source until close").turn_with_decoder(grant,&mut self.decoder,advance)}
  fn receipt(&self)->RetainedCloneProgress{self.caller.as_ref().unwrap().receipt()}
- fn finish(&mut self){while !self.decoder.terminal_is_empty(){self.caller.as_mut().unwrap().turn(WIDE,|cx|{let turn=self.decoder.close_step(cx.retained_grant());let step=turn.result?;cx.consume_retained(step.progress())?;cx.consume_fuel(turn.work);Ok(())}).unwrap();}self.caller.take().unwrap().retire(WIDE);}
+ fn finish(&mut self){while !self.decoder.terminal_is_empty(){self.caller.as_mut().unwrap().turn(WIDE,|cx|{let grant=cx.retained_grant();let Some((poll,_))=cx.with_original_effect(grant,|_,effect|self.decoder.close_step(effect))? else{return Ok(())};if let semio_framework_value::RetainedWorkPoll::Complete(turn)=poll{let step=turn.result?;cx.consume_retained(step.progress())?;cx.consume_fuel(turn.work);}Ok(())}).unwrap();}self.caller.take().unwrap().retire(WIDE);}
 }
 
 fn turn(init:&mut Initializer,original:&mut ReplayOriginal,grant:RetainedCloneGrant) -> (Outcome, RetainedCloneProgress, bool) {

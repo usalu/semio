@@ -15,13 +15,15 @@ workspace = true
 path = "🦀️.rs"
 
 [dependencies]
+semio-s-artifact-stdio-pdf-image-route = { path = "../../../🖼️image-route/📦️packages/🦀️rust" }
+semio-framework-artifact-reference = { workspace = true }
+semio-s-artifact-stdio-pdf-inferences = { path = "../../../../🧬️schema/💡️inferences/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-jpg-inferences = { path = "../../../../../../../../../📸️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🧬️schema/💡️inferences/📦️packages/🦀️rust" }
 semio-s-artifact-stdio-contract = { workspace = true }
 semio-framework-pixels = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🔲️pixels/📦️packages/🦀️rust" }
 semio-os-kernel = { workspace = true }
 semio-plugin = { workspace = true }
 semio-framework-hash = { workspace = true }
 semio-framework-value = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
-semio-framework-artifact-reference = { workspace = true }
-semio-s-artifact-stdio-pdf-inferences = { path = "../../../../🧬️schema/💡️inferences/📦️packages/🦀️rust" }
 semio-s-artifact-stdio-pdf-snapshot-2 = { path = "../../../../🧬️schema/📸️snapshot/📦️packages/🦀️rust" }
 semio-s-artifact-stdio-pdf-mut-family-8 = { path = "../../../../🔨️modules/🖋️content/🧪️tests/🔬️unit/📦️packages/🦀️rust" }

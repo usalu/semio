@@ -2,16 +2,37 @@
  * @see ../../📦️packages/🦀️rust/📜️script.ts
  */
 import { type ExactCargoLawGroup } from "@semio-tech/process/cargo-laws";
-import { listModuleTree, readModuleTreeSource } from "@semio-tech/framework-compiler-ts/syntax/module-tree";
+import { inspectRustModuleChildren, listModuleTree, readModuleTreeSource } from "@semio-tech/framework-compiler-ts/syntax/module-tree";
 import { readFileSync, readdirSync } from "node:fs";
-import { join } from "node:path";
+import { dirname, join, relative, resolve } from "node:path";
+
+/** 🌲️ Reads one carved family's crate roots and every `#[path]` or `include!` child bounded inside `familyRoot`, each file once in declaration order. */
+function readCarvedFamilyRootsSource(familyRoot: string, roots: readonly string[]): string {
+  const scope = resolve(familyRoot), seen = new Set<string>(), chunks: string[] = [];
+  const visit = (file: string): void => {
+    const resolved = resolve(file);
+    if (seen.has(resolved)) return;
+    seen.add(resolved);
+    const text = readFileSync(resolved, "utf8");
+    chunks.push(text.endsWith("\n") ? text : `${text}\n`);
+    const dir = dirname(resolved);
+    for (const mount of inspectRustModuleChildren(text)) {
+      const target = mount.via === "include" ? resolve(dir, mount.path) : resolve(dir, ...mount.modules, mount.path);
+      const segments = relative(scope, target).split(/[\\/]/u);
+      if (segments[0] === ".." || segments.includes("🧪️tests")) continue;
+      visit(target);
+    }
+  };
+  for (const root of roots) visit(join(scope, root));
+  return chunks.join("");
+}
 
 /** 🌳️ The crate roots that carry the `os-hub` binary's code, in dependency order; the binary's own root closes the list. */
 const HUB_BIN_CRATE_ROOTS = ["⚙️runtime", "📒️ledgers", "🧱️models", "🧠️state", "🛰️session-routes", "📨️document-routes", "🛣️routes"] as const;
 
 /** 🌳️ The module trees of every crate that carries the `os-hub` binary's code, concatenated in dependency order. */
 export function readHubBinSource(repoRoot: string): string {
-  return [...HUB_BIN_CRATE_ROOTS.map((dir) => join(repoRoot, "🌎️hub/🏗️bootstrap", dir, "🦀️.rs")), join(repoRoot, "🌎️hub/🏗️bootstrap/🦀️.rs")].map((root) => readModuleTreeSource(root)).join("\n");
+  return readCarvedFamilyRootsSource(join(repoRoot, "🌎️hub/🏗️bootstrap"), [...HUB_BIN_CRATE_ROOTS.map((dir) => `${dir}/🦀️.rs`), "🦀️.rs"]);
 }
 
 /** 🧪️ Every hub package that owns tests: the `os-hub` verbs that run the whole suite select these. */
@@ -82,12 +103,12 @@ export function hubLawGroups(laws: ReadonlyArray<readonly [string, string]>, car
 
 /** 🔏️ The module trees of the trusted-catalog crate root and of the contract and descriptor roots it was carved into, each root followed by the children it mounts. */
 export function readTrustedCatalogSource(repoRoot: string): string {
-  return ["🦀️.rs", "📜️contract/🦀️.rs", "🧾️descriptor/🦀️.rs"].map((file) => readModuleTreeSource(join(repoRoot, "🌎️hub/🗿️artifact-authority/🔏️trusted-catalog", file))).join("\n");
+  return readCarvedFamilyRootsSource(join(repoRoot, "🌎️hub/🗿️artifact-authority/🔏️trusted-catalog"), ["🦀️.rs", "📜️contract/🦀️.rs", "🧾️descriptor/🦀️.rs"]);
 }
 
 /** 🏃️ The inference runtime module trees together with the committer and contract crates it was carved into. */
 export function readHubInferenceRuntimeSource(repoRoot: string): string {
-  return ["🦀️.rs", "🔐️committer/🦀️.rs", "📜️contract/🦀️.rs"].map((file) => readModuleTreeSource(join(repoRoot, "🌎️hub/💡️inference/🏃️runtime", file))).join("\n");
+  return readCarvedFamilyRootsSource(join(repoRoot, "🌎️hub/💡️inference/🏃️runtime"), ["🦀️.rs", "🔐️committer/🦀️.rs", "📜️contract/🦀️.rs"]);
 }
 
 /** 🗄️ One directory backend's production source the way the gates read it: the head of its root file (imports, the effect macro and the section mounts, without the testkit mount), then every section child in mount order with the section-only `pub(super)` visibility removed, and for neo4j the row decoders it was carved into. Every section child implements its capability traits directly, so each method reads once, exactly as it did in the unsplit file. */

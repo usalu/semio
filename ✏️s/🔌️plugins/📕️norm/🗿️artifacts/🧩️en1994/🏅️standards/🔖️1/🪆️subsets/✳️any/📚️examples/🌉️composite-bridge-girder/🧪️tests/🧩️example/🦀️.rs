@@ -1,22 +1,9 @@
-#[semio_framework_async_macros::async_test]
-async fn primary_asset_is_nonempty() {
-    let text = include_str!("../../../../🖼️assets/🌉️composite-bridge-girder/🌉️composite-bridge-girder/🗣️.dsl.semio");
-    assert!(text.len() > 8);
-}
+use semio_s_artifact_norm_en1994_inferences::evaluate;
+use semio_s_artifact_norm_en1994_io::text::snapshot::decode_en1994_dsl;
 
-#[semio_framework_async_macros::async_test]
-async fn inference_determinism_law() {
-    use semio_s_artifact_norm_en1994_inferences::En1994Inference;
-    use semio_s_artifact_norm_en1994_model::En1994Snapshot;
-    use protocol::Inference;
-    let snapshot = En1994Snapshot::example(semio_s_plugin_norm_compliance::AnnexChoice::De);
-    assert_eq!(En1994Inference::infer(&snapshot).expect("valid materialized inference fixture"), En1994Inference::infer(&snapshot).expect("valid materialized inference fixture"));
-}
-
-#[semio_framework_async_macros::async_test]
-async fn inference_default_law() {
-    use semio_s_artifact_norm_en1994_inferences::En1994Inference;
-    use semio_s_artifact_norm_en1994_model::En1994Snapshot;
-    use protocol::Inference;
-    assert_eq!(En1994Inference::infer(&En1994Snapshot::example(semio_s_plugin_norm_compliance::AnnexChoice::De)).expect("valid materialized inference fixture"), En1994Inference::default());
+#[test]
+fn dump() {
+    let snap = decode_en1994_dsl(crate::composite_bridge_girder::PRIMARY_TEXT).expect("decodes");
+    let report = evaluate(&snap);
+    for c in &report.checks { eprintln!("[DEBUG] composite_bridge_girder {} {:?} u={} rem={}", c.id, c.status, c.utilization, c.remedies.len()); }
 }

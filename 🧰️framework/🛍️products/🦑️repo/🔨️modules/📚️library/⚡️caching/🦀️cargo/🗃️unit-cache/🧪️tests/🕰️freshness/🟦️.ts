@@ -1,17 +1,17 @@
 import {expect,test} from "bun:test";
 import {spawn,spawnSync} from "node:child_process";
 import {existsSync,mkdirSync,mkdtempSync,readFileSync,readdirSync,statSync,writeFileSync} from "node:fs";
-import {tmpdir} from "node:os";
 import {join,resolve} from "node:path";
 import {fileURLToPath} from "node:url";
 import {testPythonV1} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";
+import {cargoScratchBaseV1} from "../🏖️scratch/🟦️.ts";
 import fixture from "./🔣️.json" with {type:"json"};
 
-const here=fileURLToPath(new URL(".",import.meta.url)),script=resolve(here,"../../📜️script.ts"),cargo=process.env.SEMIO_TEST_CARGO??"cargo",base=resolve(tmpdir());
+const here=fileURLToPath(new URL(".",import.meta.url)),script=resolve(here,"../../📜️script.ts"),cargo=process.env.SEMIO_TEST_CARGO??"cargo",base=cargoScratchBaseV1();
 type Row={kind:string;crate:string};
 const events=(cache:string,lane:string):Row[]=>{const path=join(cache,"x",lane+".jsonl");return existsSync(path)?readFileSync(path,"utf8").split("\n").filter(Boolean).map(line=>JSON.parse(line) as Row):[];};
 const settle=()=>new Promise(done=>setTimeout(done,fixture.settleMilliseconds));
-/** 🕰️ One verbose Cargo build of one package through the unit-cache wrapper in one lane (scratch workspace in the system temporary directory, outside every checkout, so no repository `.cargo/config.toml` reaches Cargo). */
+/** 🕰️ One verbose Cargo build of one package through the unit-cache wrapper in one lane (scratch workspace in the first temporary directory outside every checkout, so no repository `.cargo/config.toml` reaches Cargo). */
 function build(workspace:string,cache:string,lane:string,target:string,mode:Record<string,string>):Promise<{code:number;output:string}>{
  const laneRoot=join(cache,"l",lane);mkdirSync(laneRoot,{recursive:true});
  const environment:Record<string,string|undefined>={...process.env,RUSTC_WRAPPER:process.execPath,RUSTC:script,SEMIO_UNIT_CACHE_ROOT:cache,SEMIO_UNIT_CACHE_LANE:lane,SEMIO_UNIT_CACHE_LANE_ROOT:laneRoot,SEMIO_UNIT_CACHE_SLOTS:"4",SEMIO_UNIT_CACHE_FOCUS:fixture.focus,CARGO_TARGET_DIR:join(laneRoot,"t"),CARGO_TERM_COLOR:"never",...mode};

@@ -9,6 +9,48 @@ description = "Component crate of semio-s-artifact-stdio-pdf: conformance-suppor
 [package.metadata.semio]
 role = "library"
 
+[package.metadata.semio.carve]
+owned = [
+  "standards::v1_4::subsets::a::io",
+  "standards::v1_4::subsets::a::io::derived_analysis",
+  "standards::v1_4::subsets::a::io::derived_composition",
+  "standards::v1_4::subsets::a::io::derived_construction",
+  "standards::v1_4::subsets::a::io::mutation_bridge",
+  "standards::v1_4::subsets::a::schema::mutations::clear_page_text::tests",
+  "standards::v1_4::subsets::a::schema::mutations::set_page_text::tests",
+  "standards::v1_4::subsets::base::io::export::serializers::artifacts::binary",
+  "standards::v1_4::subsets::base::io::export::serializers::artifacts::binary::v_raw",
+  "standards::v1_4::subsets::base::io::export::serializers::artifacts::binary::v_raw::any",
+  "standards::v1_4::subsets::base::io::export::serializers::artifacts::deflate",
+  "standards::v1_4::subsets::base::io::export::serializers::artifacts::deflate::v_rfc1950",
+  "standards::v1_4::subsets::base::io::export::serializers::artifacts::deflate::v_rfc1950::any",
+  "standards::v1_4::subsets::base::io::import::deserializers::artifacts::binary",
+  "standards::v1_4::subsets::base::io::import::deserializers::artifacts::binary::v_raw",
+  "standards::v1_4::subsets::base::io::import::deserializers::artifacts::binary::v_raw::any",
+  "standards::v1_4::subsets::base::io::import::deserializers::artifacts::deflate",
+  "standards::v1_4::subsets::base::io::import::deserializers::artifacts::deflate::v_rfc1950",
+  "standards::v1_4::subsets::base::io::import::deserializers::artifacts::deflate::v_rfc1950::any",
+  "standards::v1_4::subsets::base::io::tests",
+  "standards::v1_4::subsets::base::io::tests::conformance_laws",
+  "standards::v1_4::subsets::x::io",
+  "standards::v1_4::subsets::x::io::derived_analysis",
+  "standards::v1_4::subsets::x::io::derived_composition",
+  "standards::v1_4::subsets::x::io::derived_construction",
+  "standards::v1_4::subsets::x::io::mutation_bridge",
+  "standards::v1_4::subsets::x::schema::mutations::collapse_page_size::tests",
+  "standards::v1_4::subsets::x::schema::mutations::set_page_size::tests",
+  "standards::v1_7::subsets::base::modules::colour",
+  "standards::v1_7::subsets::base::modules::writer",
+  "standards::v1_7::subsets::base::modules::writer::dct_object",
+  "standards::v1_7::subsets::base::schema::conformance_support",
+  "standards::v1_7::subsets::base::schema::mutations::insert_object",
+  "standards::v1_7::subsets::base::schema::mutations::remove_object",
+  "standards::v1_7::subsets::base::schema::mutations::set_info",
+  "standards::v1_7::subsets::base::schema::mutations::set_page_crop_box",
+  "standards::v1_7::subsets::base::schema::mutations::set_page_media_box",
+  "standards::v1_7::subsets::h::schema::mutations::set_info_title",
+]
+
 [lints]
 workspace = true
 

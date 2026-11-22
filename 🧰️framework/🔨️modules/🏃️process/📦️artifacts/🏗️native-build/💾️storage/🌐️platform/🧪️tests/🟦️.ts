@@ -5,6 +5,7 @@ import Ajv from"ajv";
 import{existsSync,lstatSync,mkdtempSync,mkdirSync,readFileSync,rmSync,rmdirSync}from"node:fs";
 import{join}from"node:path";
 import ts from"typescript";
+import{loadProductFunctionsV1}from"../../../../../🧪️testing/🧩️extracted-function/🟦️.ts";
 import * as routing from "../../../../../🧭️routing/📥️invocation/🏃️process/🟦️.ts";
 import fixture from"./🔣️.json";
 import schema from"./🧬️schema/🔣️.json";
@@ -12,7 +13,6 @@ const artifacts=process.env.SEMIO_TEST_ARTIFACT_DIR;
 if(!artifacts)throw Error("Original test artifact directory required");
 const path=new URL("../🟦️.ts",import.meta.url),source=readFileSync(path,"utf8"),tree=ts.createSourceFile(path.pathname,source,ts.ScriptTarget.ES2022,true),owner=tree.statements.find((node):node is ts.FunctionDeclaration=>ts.isFunctionDeclaration(node)&&node.name?.text==="retireNativePlatformFundedChildStorageV1");
 if(!owner)throw Error("Actual platform child retirement function required");
-const program=ts.transpileModule(owner.getText(tree).replace(/^export /,""),{compilerOptions:{target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.None}}).outputText;
 
 test("neutral current platform stops the accepted physical body before child settlement",async()=>{
  expect(new Ajv({strict:true,allowUnionTypes:true}).compile(schema)(fixture)).toBe(true);
@@ -58,7 +58,7 @@ test("neutral current platform stops the accepted physical body before child set
      },
      withNativeStorageCleanupV1:async()=>{throw Error("Unexpected retained-reader branch");},
     };
-    const retire=new Function(...Object.keys(ports),program+";return retireNativePlatformFundedChildStorageV1;")(...Object.values(ports))as(...args:unknown[])=>Promise<void>;
+    const retire=(await loadProductFunctionsV1(path,["retireNativePlatformFundedChildStorageV1"],ports)).retireNativePlatformFundedChildStorageV1 as(...args:unknown[])=>Promise<void>;
     try{await retire(parent,reservation,control,control,invocation);}catch(error){caught=error;}
     if(caught&&row.expectedFailure===null)throw caught;
    });

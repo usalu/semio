@@ -48,4 +48,4 @@ semio-ui-layout = { path = "../../../../../../../../🔨️modules/🖱️ui/�
 semio-plugin-child = { path = "../../../../🪆️child/📦️packages/🦀️rust", features = ["artifact-app-testing"] }
 
 [features]
-artifact-app-testing = []
+artifact-app-testing = ["semio-plugin-child/artifact-app-testing"]

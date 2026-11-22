@@ -86,6 +86,31 @@ def temporal(side):
     return member({"id": f"temporal-{side}", "kind": "ellipsoid", "radii": [0.018, 0.022, 0.012], "transform": {"translation": [0.012, -0.022, s * 0.05]}}, "head")
 
 
+ILIUM_CENTRE = (0.07, 0.016, 0.084)
+ILIUM_HALF = (0.062, 0.07)
+ILIUM_YAW_DEG, ILIUM_FLARE_DEG = 38, 12
+ILIUM_THICKNESS = {"50": 0.006, "100": 0.008, "200": 0.0152}
+
+
+def ilium(R, rest, side, scale):
+    """The iliac wing as a blade from the acetabulum to the crest: oblique in plan (anterior superior spine outside, posterior spine at the sacroiliac joint), flared outwards; authored in the pelvis frame, written in the hip-bone frame."""
+    s = 1 if side == "l" else -1
+    flare, yaw = math.radians(ILIUM_FLARE_DEG), math.radians(ILIUM_YAW_DEG)
+    up = [math.cos(flare), 0.0, s * math.sin(flare)]
+    along = [0.0, math.cos(yaw), -s * math.sin(yaw)]
+    k = sum(a * b for a, b in zip(up, along))
+    along = [a - k * b for a, b in zip(along, up)]
+    n = math.sqrt(sum(c * c for c in along))
+    along = [c / n for c in along]
+    normal = [up[1] * along[2] - up[2] * along[1], up[2] * along[0] - up[0] * along[2], up[0] * along[1] - up[1] * along[0]]
+    blade = [[up[i], along[i], normal[i]] for i in range(3)]
+    pelvis, frame = rest["pelvis"], rest[f"hip-bone-{side}"]
+    centre = [pelvis[0][i] + R.apply(pelvis[1], [ILIUM_CENTRE[0], ILIUM_CENTRE[1], s * ILIUM_CENTRE[2]])[i] for i in range(3)]
+    turn = R.mul(R.transpose(frame[1]), R.mul(pelvis[1], blade))
+    return member({"id": f"ilium-{side}", "kind": "ellipsoid", "radii": [ILIUM_HALF[0], ILIUM_HALF[1], ILIUM_THICKNESS[scale]],
+                   "transform": {"translation": R.r5(R.apply(R.transpose(frame[1]), [centre[i] - frame[0][i] for i in range(3)])), "rotation": R.r5(R.quaternion(turn))}}, f"hip-bone-{side}")
+
+
 def ellipse(cx, cy, rx, ry, count=12):
     return [[round(cx + rx * math.cos(2 * math.pi * i / count), 4), round(cy + ry * math.sin(2 * math.pi * i / count), 4)] for i in range(count)]
 
@@ -109,8 +134,18 @@ def fit(asset):
             structure += [temporal("l"), temporal("r")]
             for side in ("l", "r"):
                 structure.append(member({"id": f"acetabulum-{side}", "kind": "ellipsoid", "radii": [0.032, 0.032, 0.032], "transform": {"translation": [length, 0, 0]}}, f"hip-bone-{side}"))
+        for solid in structure:
+            if re.match(r"fibula-[lr]$", solid["id"]) and scale in ("50", "100"):
+                at = solid["sections"][0]["at"]
+                solid["sections"][0]["at"] = [0.024, -0.01, 0.03 if at[2] > 0 else -0.03]
+            if re.match(r"metacarpal-\d-[lr]$", solid["id"]):
+                solid["sections"][0]["at"][0] = 0.02
         if scale != "500":
             structure[next(i for i, s in enumerate(structure) if s["id"] == "sacrum")] = sacrum(scale)
+        if scale != "500":
+            for side, s in (("l", 1), ("r", -1)):
+                structure[next(i for i, x in enumerate(structure) if x["id"] == f"ilium-{side}")] = ilium(R, rest, side, scale)
+                structure.append(member({"id": f"sacral-ala-{side}", "kind": "ellipsoid", "radii": [0.022, 0.016, 0.026], "transform": {"translation": [0.075, 0.052, s * 0.028]}}, "pelvis"))
         if scale == "200":
             structure[:] = [s for s in structure if s["id"] not in ("hip-bar-l", "hip-bar-r")]
             for side, s in (("l", 1), ("r", -1)):

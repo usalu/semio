@@ -108,7 +108,7 @@ describe("🧊️ every course cast at every level", { timeout: 300_000 }, () =>
     for (const id of ids) {
       const cast = manifest.casts[id]!;
       const asset = assets.get(cast.asset)!;
-      const query = cast.clip === undefined ? ({ kind: "pose", pose: poseOf(asset, cast.pose!).id, timeS: 0 } as const) : ({ kind: "clip", clip: cast.clip, timeS: cast.transportAgeS ?? 0 } as const);
+      const query = cast.clip === undefined ? ({ kind: "pose", pose: poseOf(asset, cast.pose!).id, timeS: 0 } as const) : ({ kind: "clip", clip: cast.clip, timeS: 0 } as const);
       const state = evaluate(asset, query, { kind: "scale", scale: { denominator: cast.scale } });
       if (cast.viewpoint === "axonometric") continue;
       const all = prepare(state, cast.viewpoint, sourceOf(state), 1000 / cast.scale);

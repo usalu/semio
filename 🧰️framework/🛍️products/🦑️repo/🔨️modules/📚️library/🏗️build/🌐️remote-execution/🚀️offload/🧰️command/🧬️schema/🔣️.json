@@ -1,0 +1,319 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/command-offload/v1",
+  "title": "Command offload",
+  "description": "A machine hands one non-rustc build step (wasm-opt, a native transpile, a module probe, a build script run) to an idle machine of the fleet: the closed policy (program placeholder, platform properties, limits, environment, the tool allow-list with where each tool comes from) and the texts in English and German.",
+  "definitions": {
+    "Policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "program",
+        "property",
+        "limits",
+        "timeouts",
+        "root",
+        "environment",
+        "tools"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "program": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "placeholder",
+            "separator"
+          ],
+          "properties": {
+            "placeholder": {
+              "type": "string"
+            },
+            "separator": {
+              "type": "string"
+            }
+          }
+        },
+        "property": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "format",
+            "formatValue",
+            "tool"
+          ],
+          "properties": {
+            "format": {
+              "type": "string"
+            },
+            "formatValue": {
+              "type": "string"
+            },
+            "tool": {
+              "type": "string"
+            }
+          }
+        },
+        "limits": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "maximumInputFiles",
+            "maximumInputBytes",
+            "maximumUploadBytes",
+            "maximumOutputFiles",
+            "maximumArguments"
+          ],
+          "properties": {
+            "maximumInputFiles": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "maximumInputBytes": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "maximumUploadBytes": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "maximumOutputFiles": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "maximumArguments": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        },
+        "timeouts": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "actionSeconds",
+            "uploadMilliseconds",
+            "downloadMilliseconds"
+          ],
+          "properties": {
+            "actionSeconds": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "uploadMilliseconds": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "downloadMilliseconds": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        },
+        "root": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "tool",
+            "output"
+          ],
+          "properties": {
+            "tool": {
+              "type": "string"
+            },
+            "output": {
+              "type": "string"
+            }
+          }
+        },
+        "environment": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "allowedNames",
+            "allowedPrefixes",
+            "pathNames",
+            "path"
+          ],
+          "properties": {
+            "allowedNames": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "allowedPrefixes": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "pathNames": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "path": {
+              "type": "string"
+            }
+          }
+        },
+        "tools": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "source",
+              "peakMegabytes"
+            ],
+            "properties": {
+              "source": {
+                "enum": [
+                  "resolved",
+                  "shipped"
+                ]
+              },
+              "peakMegabytes": {
+                "type": "integer",
+                "minimum": 0
+              }
+            }
+          }
+        }
+      }
+    },
+    "Messages": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "en",
+        "de"
+      ],
+      "properties": {
+        "en": {
+          "$ref": "#/definitions/Texts"
+        },
+        "de": {
+          "$ref": "#/definitions/Texts"
+        }
+      }
+    },
+    "Texts": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string"
+      }
+    }
+  },
+  "policy": {
+    "version": 1,
+    "program": {
+      "placeholder": "@command",
+      "separator": "/"
+    },
+    "property": {
+      "format": "semio-offload-format",
+      "formatValue": "command-1",
+      "tool": "semio-command-"
+    },
+    "limits": {
+      "maximumInputFiles": 8192,
+      "maximumInputBytes": 1073741824,
+      "maximumUploadBytes": 1073741824,
+      "maximumOutputFiles": 4096,
+      "maximumArguments": 4096
+    },
+    "timeouts": {
+      "actionSeconds": 1800,
+      "uploadMilliseconds": 120000,
+      "downloadMilliseconds": 120000
+    },
+    "root": {
+      "tool": "tool",
+      "output": "out"
+    },
+    "environment": {
+      "allowedNames": [
+        "BINARYEN_CORES",
+        "UV_THREADPOOL_SIZE",
+        "TARGET",
+        "HOST",
+        "PROFILE",
+        "OPT_LEVEL",
+        "DEBUG",
+        "NUM_JOBS",
+        "RUST_BACKTRACE",
+        "PATH"
+      ],
+      "allowedPrefixes": [
+        "CARGO_PKG_",
+        "CARGO_CFG_",
+        "CARGO_FEATURE_"
+      ],
+      "pathNames": [
+        "OUT_DIR",
+        "CARGO_MANIFEST_DIR"
+      ],
+      "path": "/usr/bin:/bin:/usr/sbin:/sbin"
+    },
+    "tools": {
+      "wasm-opt": {
+        "source": "resolved",
+        "peakMegabytes": 2048
+      },
+      "node": {
+        "source": "resolved",
+        "peakMegabytes": 2048
+      },
+      "native-transpile": {
+        "source": "shipped",
+        "peakMegabytes": 4096
+      },
+      "descriptor-emitter": {
+        "source": "shipped",
+        "peakMegabytes": 2048
+      },
+      "build-script": {
+        "source": "shipped",
+        "peakMegabytes": 0
+      }
+    }
+  },
+  "messages": {
+    "en": {
+      "offloaded": "Step {crate} ran on {origin} ({milliseconds} ms).",
+      "declined": "Step {crate} stays here: {reason}.",
+      "fallback": "Step {crate} runs here after the offload failed: {reason}.",
+      "stage.queued": "Step {crate} waits for a machine.",
+      "stage.executing": "Step {crate} is running on another machine.",
+      "refusal.tool": "the tool {tool} is not on the allow-list",
+      "refusal.digest": "this worker does not offer the tool {tool} with that digest",
+      "refusal.confinement": "commands run only on a confining sandbox without network",
+      "refusal.argument": "argument not allowed: {detail}",
+      "refusal.environment": "environment not allowed: {detail}",
+      "refusal.output": "output path not allowed: {detail}",
+      "refusal.shape": "command shape not allowed: {detail}",
+      "refusal.shipped": "the shipped tool does not have its declared digest"
+    },
+    "de": {
+      "offloaded": "Schritt {crate} lief auf {origin} ({milliseconds} ms).",
+      "declined": "Schritt {crate} bleibt hier: {reason}.",
+      "fallback": "Schritt {crate} läuft hier, nachdem das Auslagern fehlschlug: {reason}.",
+      "stage.queued": "Schritt {crate} wartet auf eine Maschine.",
+      "stage.executing": "Schritt {crate} läuft auf einer anderen Maschine.",
+      "refusal.tool": "das Werkzeug {tool} steht nicht auf der Positivliste",
+      "refusal.digest": "dieser Worker bietet das Werkzeug {tool} mit diesem Digest nicht an",
+      "refusal.confinement": "Befehle laufen nur in einer einschliessenden Sandbox ohne Netz",
+      "refusal.argument": "Argument nicht erlaubt: {detail}",
+      "refusal.environment": "Umgebung nicht erlaubt: {detail}",
+      "refusal.output": "Ausgabepfad nicht erlaubt: {detail}",
+      "refusal.shape": "Befehlsform nicht erlaubt: {detail}",
+      "refusal.shipped": "das mitgelieferte Werkzeug hat nicht seinen deklarierten Digest"
+    }
+  }
+}

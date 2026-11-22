@@ -27,7 +27,7 @@ pub const fn empty()->Self{Self{credit:None,witness:None,identity:None,destinati
  fn admit_sized_inner(&mut self,cx:&mut StepContext<'_>,destination:usize,copy_bytes:usize,watermark:Option<(&mut u64,u64)>)->Result<bool,OriginalTurnFailure>{
   if destination==0{return Err(ValueError::invariant("sized return requires its exact nonzero preborn destination and extent").into())}
   if let Some(credit)=self.credit.as_ref(){crate::original_job_continuation::source::qualify_original_return_source(credit,cx,self.identity.ok_or_else(||ValueError::invariant("identity absent"))?)?;if self.destination!=Some((destination,copy_bytes)){return Err(ValueError::invariant("sized return destination changed").into())}return Ok(credit.has_unused_capture()&&self.witness.is_none())}
-  if !cx.admit_original_return_table()?{return Ok(false)}
+  if !cx.admit_original_return_origin()?{return Ok(false)}
   let identity=OriginalSourceBinding::borrow(cx);let result=claim_original_sized_return(cx,&mut self.credit,destination,copy_bytes,size_of::<Option<OriginalSourceBinding>>()+size_of::<Option<(usize,usize)>>() + if watermark.is_some(){size_of::<u64>()}else{0});
   if self.credit.is_some(){self.identity=Some(identity);self.destination=Some((destination,copy_bytes));if let Some((watermark,epoch))=watermark{*watermark=epoch}}result
  }

@@ -14,6 +14,9 @@ extern crate semio_framework_value_derive as value_derive;
 mod example;
 #[path = "✅️heb240-compliant/🦀️.rs"]
 pub mod heb240_compliant;
+#[cfg(test)]
+#[path = "✅️heb240-compliant/🧪️tests/🧩️example/🦀️.rs"]
+mod example_heb240_compliant;
 #[path = "🔩️high-strength-connection/🦀️.rs"]
 pub mod high_strength_connection;
 //#endregion 🪢️Mounts

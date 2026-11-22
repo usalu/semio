@@ -8,10 +8,9 @@ import { fileURLToPath } from "node:url";
 import plugin from "../../../🏗️build/🕸️graph/📥️inference/🟨️.mjs";
 import { getWorkspaceRoot } from "../../../🗂️workspaces/🟦️.ts";
 import { createTestScratchRootV1, disposeTestScratchRootV1 } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎛️execution/🟦️.ts";
-import { ticketOutput } from "../../🎫️output/🟦️.ts";
 
 test("artifact verification reruns for semantic provider, fixture, DDL and shared control edits", async () => {
-  const workspace = getWorkspaceRoot(); const output = ticketOutput(workspace, []);
+  const workspace = getWorkspaceRoot(); const output = process.env.SEMIO_TEST_ARTIFACT_DIR ?? ""; expect(output).not.toBe("");
   const fixture = await Bun.file(new URL("../🧫️fixtures/🗿️artifact-source/🔣️.json", import.meta.url)).json();
   const root = createTestScratchRootV1(output, "artifact-source-");
   try {

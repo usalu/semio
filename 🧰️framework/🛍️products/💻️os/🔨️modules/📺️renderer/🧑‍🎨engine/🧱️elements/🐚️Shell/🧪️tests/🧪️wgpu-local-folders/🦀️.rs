@@ -188,7 +188,7 @@ fn a_remembered_folder_comes_back_after_a_restart_and_a_detach_forgets_it() {
 //#endregion 🖥️NativeLifecycle
 
 //#region 🌐️ReconnectBand
-fn paint_folder_band(shell: &mut ShellState) -> Vec<HitTarget<ActionDescriptor>> {
+fn paint_folder_band(mut shell: &mut ShellState) -> Vec<HitTarget<ActionDescriptor>> {
     let mut cursor = ShellChromeChildCursor::default();
     let (mut overlay, mut atlas, mut input, theme) = (DrawList::default(), FontAtlas::builtin(), InputState::<ActionDescriptor>::default(), Theme::light());
     for _ in 0..100_000 {
@@ -359,3 +359,91 @@ fn a_plain_document_load_is_the_stepped_archive_load_without_members() {
     assert_eq!(LOADED.with(|loaded| loaded.borrow().clone()), vec![protocol::DocumentArchivePack { parent_pack: vec![1, 2], parent_spr: vec![3], members: Vec::new() }]);
 }
 //#endregion 🗃️HostRouteFolder
+
+//#region 🗂️LocalFilesBand
+fn kept_json(rows: &[(&str, u64, bool)]) -> String {
+    let documents: Vec<Value> = rows.iter().map(|(id, admitted, surface)| {
+        let mut row = serde_json::json!({ "documentId": id, "schema": "s.draw/v1", "name": format!("{id}.draw"), "storage": "folder", "target": format!("/data/{id}"), "admittedAtMs": admitted });
+        if *surface { row["surface"] = serde_json::json!({ "pluginId": "draw", "appId": "draw@1/any#editor" }); }
+        row
+    }).collect();
+    serde_json::json!({ "documents": documents }).to_string()
+}
+
+fn paint_local_files(shell: &mut ShellState) -> Vec<HitTarget<ActionDescriptor>> {
+    let mut cursor = ShellChromeChildCursor::default();
+    let (mut overlay, mut atlas, mut input, theme) = (DrawList::default(), FontAtlas::builtin(), InputState::<ActionDescriptor>::default(), Theme::light());
+    for _ in 0..100_000 {
+        if OverlaysViewCtx::of(shell).render_local_files_band_step(&mut cursor, &mut overlay, &mut atlas, &mut input, &theme) {
+            return input.staged_hits().to_vec();
+        }
+    }
+    panic!("the local files band step never completed");
+}
+
+fn listed_ids(hits: &[HitTarget<ActionDescriptor>]) -> Vec<String> {
+    hits.iter().filter(|hit| hit.kind == semio_ui_wgpu_input::HitKind::Button).filter_map(|hit| hit.event.as_ref()?.args.as_ref()?.get("documentId")?.as_str().map(str::to_string)).collect()
+}
+
+/// ⚖️ LAW (React's `LocalFilesV1`): the page's facet snapshot and the native local catalog list the same documents in the same order: only those that name a surface, newest admitted first, the id breaking a tie; and a native admission or retirement moves the listing.
+#[test]
+fn both_stores_list_the_documents_react_lists_in_react_s_order() {
+    let rows = [("b", 20, true), ("a", 20, true), ("old", 5, true), ("plain", 99, false), ("new", 30, true)];
+    let from_page = semio_renderer_wgpu_shell_history::local_file_rows_of_json(&kept_json(&rows));
+    assert_eq!(from_page.iter().map(|row| row.document_id.as_str()).collect::<Vec<_>>(), ["new", "a", "b", "old"]);
+    let mut shell = booted_shell(None);
+    for (id, admitted, surface) in rows.iter().filter(|row| row.2) {
+        assert!(shell.history.record_local_document(id, "s.draw/v1", &format!("{id}.draw"), &format!("/data/{id}"), "draw", "draw@1/any#editor", *admitted), "{surface}");
+    }
+    assert_eq!(shell.history.local_files, from_page, "the native catalog lists what the page's facet lists");
+    assert!(shell.history.unlist_local_document("new"));
+    assert_eq!(shell.history.local_files.iter().map(|row| row.document_id.as_str()).collect::<Vec<_>>(), ["a", "b", "old"]);
+}
+
+/// ⚖️ LAW (React mounts `LocalFilesV1` only in host mode and lists every kept document): outside host mode nothing is painted or projected; in host mode every document is one button dispatching `openKeptFile` on the sync controller, in React's order and without a limit, while the section is named by its title in both locales; when rows do not fit above the footer the wheel's offset moves the first row and the largest first row is never passed.
+#[test]
+fn the_listing_is_host_mode_only_lists_every_document_and_scrolls_when_it_overflows() {
+    let mut shell = booted_shell(None);
+    let ids: Vec<String> = (0..8).map(|index| format!("d{index}")).collect();
+    shell.history.set_local_files_from_json(&kept_json(&ids.iter().enumerate().map(|(index, id)| (id.as_str(), index as u64, true)).collect::<Vec<_>>()));
+    shell.chrome.screen_w = 1280.0;
+    shell.chrome.screen_h = 720.0;
+    let host = shell.plugins.host_capability.take();
+    assert!(paint_local_files(&mut shell).is_empty(), "no listing outside host mode");
+    assert!(PanelsViewCtx::of(&mut shell).chrome_accessibility_nodes(&[]).iter().all(|node| node.key != semio_renderer_wgpu_shell_prefs::LOCAL_FILES_STATUS_ID));
+    shell.plugins.host_capability = host;
+    let hits = paint_local_files(&mut shell);
+    assert_eq!(listed_ids(&hits), ["d7", "d6", "d5", "d4", "d3", "d2", "d1", "d0"], "every document, newest first");
+    assert!(hits.iter().filter(|hit| hit.kind == semio_ui_wgpu_input::HitKind::Button).all(|hit| hit.event.as_ref().is_some_and(|event| event.controller_id == "framework.sync" && event.action == semio_renderer_wgpu_shell_prefs::LOCAL_FILE_OPEN_ACTION)));
+    for (locale, title) in [("en", "Files on this device"), ("de", "Dateien auf diesem Gerät")] {
+        shell.prefs.locale_id = locale.into();
+        let nodes = PanelsViewCtx::of(&mut shell).chrome_accessibility_nodes(&[]);
+        let section = nodes.iter().find(|node| node.key == semio_renderer_wgpu_shell_prefs::LOCAL_FILES_STATUS_ID).expect("the section's node");
+        assert_eq!(section.label.as_deref(), Some(title), "{locale}");
+    }
+    let many: Vec<String> = (0..60).map(|index| format!("m{index:02}")).collect();
+    shell.history.set_local_files_from_json(&kept_json(&many.iter().enumerate().map(|(index, id)| (id.as_str(), index as u64, true)).collect::<Vec<_>>()));
+    shell.chrome.screen_h = 320.0;
+    let first = listed_ids(&paint_local_files(&mut shell));
+    assert!(!first.is_empty() && first.len() < many.len() && first[0] == "m59", "a window of the newest rows: {first:?}");
+    shell.input.scroll_offsets.insert(semio_renderer_wgpu_shell_prefs::LOCAL_FILES_SCROLL_ID.into(), 1.0e6);
+    let last = listed_ids(&paint_local_files(&mut shell));
+    assert_eq!(last.last().map(String::as_str), Some("m00"), "the wheel reaches the oldest row and no further: {last:?}");
+    assert_eq!(last.len(), first.len(), "the window keeps its size at the end");
+}
+
+/// ⚖️ LAW (React shows "Opening {name}…" with Cancel while the reopen runs): a kept reopen is the shell's cancellable open, its band reads React's status in both locales, and Cancel stops it through the open's token.
+#[test]
+fn a_kept_reopen_is_a_cancellable_open_that_reads_opening_name() {
+    let mut opening = ShellDocumentOpening::new("a.draw".into(), ShellDocumentOpenPhase::Instantiating, "draw".into(), "draw@1/any#editor".into(), None, None);
+    opening.kept = true;
+    opening.cancel = Some(CancelToken::root_now());
+    assert_eq!(document_opening_banner_text(&opening, chrome_now_ms(), false), "Opening a.draw…");
+    assert_eq!(document_opening_banner_text(&opening, chrome_now_ms(), true), "a.draw wird geöffnet…");
+    let token = opening.cancel.clone().expect("token");
+    let mut shell = booted_shell(None);
+    shell.opening.document_opening = Some(opening);
+    shell.opening.cancel_document_opening();
+    assert!(shell.opening.document_opening.as_ref().is_some_and(|opening| opening.cancel_requested) && token.is_cancelled_now());
+}
+//#endregion 🗂️LocalFilesBand

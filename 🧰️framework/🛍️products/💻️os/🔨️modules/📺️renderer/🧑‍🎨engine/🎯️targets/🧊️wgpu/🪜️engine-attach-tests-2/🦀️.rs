@@ -20,7 +20,7 @@ mod engine_canvas {
         board_drain_into_buffer, board_set_pointer_inside, board2d_pointer_down_into, board2d_pointer_up_into, board2d_wheel_into, coalesce_owned_board_events, drive_board_authority_step, publish_board_pointer_step, with_board_host,
         with_board_host_mut,
     };
-    use semio_renderer_wgpu_engine_board::paint2d::{paint2d_marquee_overlay, paint2d_navigator_overlay_rect, paint2d_pick_layer, paint2d_pointer_button_into, paint2d_pointer_move_into, paint2d_wheel_into, with_raster_host_mut};
+    use semio_renderer_wgpu_engine_board::paint2d::{paint2d_marquee_overlay, paint2d_navigator_overlay_rect, paint2d_pick_layer, paint2d_pointer_button_into, paint2d_pointer_cancel_into, paint2d_pointer_move_into, paint2d_wheel_into, with_raster_host_mut};
     use semio_renderer_wgpu_engine_board::tiled_map::{map_local_pointer, tiled_map_wheel_into, with_map_host};
     use semio_renderer_wgpu_engine_graph::node_graph;
     use semio_renderer_wgpu_engine_graph::node_graph::{

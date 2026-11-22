@@ -1,0 +1,55 @@
+{
+ "id": "hydrangea",
+ "category": "vegetation",
+ "title": {
+  "en": "Bigleaf Hydrangea, Mophead",
+  "de": "Bauernhortensie, Ballhortensie"
+ },
+ "heightM": 1.598,
+ "widthM": 1.879,
+ "powerW": 0,
+ "poses": [
+  "flowering-calm",
+  "flowering-breeze",
+  "storm",
+  "rain-laden"
+ ],
+ "clips": [
+  "wind-sway",
+  "gust",
+  "diurnal-transpiration"
+ ],
+ "representations": {
+  "50": "authored",
+  "100": "authored",
+  "200": "authored",
+  "500": "authored"
+ },
+ "symbols": [
+  "hydrangea-symbol"
+ ],
+ "analytics": [
+  "thermal",
+  "transport",
+  "structural"
+ ],
+ "exports": [
+  "svg",
+  "pdf",
+  "dxf",
+  "dwg",
+  "png-sequence",
+  "mp4",
+  "webm",
+  "component",
+  "glb",
+  "fbx",
+  "model",
+  "model-zip"
+ ],
+ "distinction": {
+  "en": "A low mound shrub clothed to the ground whose ball-shaped mopheads soak up rain and pull the arching canes outwards in the rain pose.",
+  "de": "Ein niedriger, bis zum Boden belaubter Hügelstrauch, dessen ballförmige Blütenstände Regen aufsaugen und in der Regenpose die gewölbten Ruten nach außen ziehen."
+ },
+ "completion": "authored"
+}

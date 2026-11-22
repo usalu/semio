@@ -1,0 +1,6 @@
+[
+{"op":"region-set","id":"harness","set":{"areaM2":0.1884}},
+{"op":"set","path":["poses",{"id":"standing-with-guide-dog"},"thermal","regions","harness","exposedFraction"],"value":0.3399},
+{"op":"set","path":["poses",{"id":"walking-with-guide-dog"},"thermal","regions","harness","exposedFraction"],"value":0.3399},
+{"op":"set","path":["poses",{"id":"waiting-dog-sitting"},"thermal","regions","harness","exposedFraction"],"value":0.3399}
+]

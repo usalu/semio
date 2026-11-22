@@ -1,6 +1,7 @@
 //! 🧩️ App lifecycle and realm close: the captured job progress, the app creation, the extension activation and the app destroy and realm close steps. See [`super`].
 
 use super::*;
+use semio_renderer_wgpu_kernel_protocol::ExtensionActivation;
 
 //#region 🎠️KernelRuntime
 //#region 🔖️KernelPoolState
@@ -266,6 +267,53 @@ impl KernelPoolState {
         }
     }
 
+    /// 🧩️ LIVE extension activation: the runtime counterpart of [`Self::activate_extensions_of`] for an extension installed after its parent was created. Compiles the extension's wasm through the request's own bounded intake, activates it as `ActorKind::Extension` on the background lane with capabilities scoped to the live parent's grants, links it to the parent (closing the parent still cascades). Like the web registry's `activateExtensionsOf` and the startup cascade it sends NO `InstanceOpen` (an extension declares no app, so it never gets a `createApp` instance; `Event::Request` needs none); the returned id only addresses the actor for its close. The parent must be an instance of the declared host plugin. A second activation of an already-live extension id is refused; retiring is the ordinary `DestroyApp` of the returned instance.
+    pub(super) async fn activate_extension_live(&mut self, owner: CreateAppRequestOwner, activation: ExtensionActivation) -> Result<u32, ProgramFault> {
+        let ExtensionActivation { parent_instance, parent_plugin, extension } = activation;
+        let parent = *self.instances.get(&parent_instance).ok_or_else(|| format!("kernel: extension {} has no live parent instance {parent_instance}", extension.extension_id))?;
+        let declared_host = self.runtime.kernel().actor_record(parent).await.map(|record| matches!(&record.kind, ActorKind::PluginApp { plugin, .. } if plugin.0 == parent_plugin)).unwrap_or(false);
+        if !declared_host {
+            return Err(format!("kernel: instance {parent_instance} is no instance of {parent_plugin}, the declared host of extension {}", extension.extension_id).into());
+        }
+        if self.live_extensions.contains_key(&extension.extension_id) {
+            return Err(format!("kernel: extension {} is already active", extension.extension_id).into());
+        }
+        let replay_route_index = self.replay_routes.iter().position(Option::is_none).ok_or_else(|| "kernel: fixed replay route registry is full".to_string())?;
+        let parent_route = self.replay_routes.iter().flatten().find(|route| route.actor == parent).copied().ok_or_else(|| "kernel: parent replay route disappeared before extension activation".to_string())?;
+        let wasm_path = owner.path();
+        let component = read_native_component(&wasm_path).await.map_err(|error| error.to_string())?;
+        let hash = PackageHash(*semio_framework_hash::hash(component.bytes()).as_bytes());
+        let compiled = match self.compile_serving_others(&owner, hash, component).await {
+            Ok(compiled) => compiled,
+            Err(kind) => return Err(owner.into_failure(kind).into()),
+        };
+        let activation_budget = match owner.activation_budget().await {
+            Ok(budget) => budget,
+            Err(kind) => return Err(owner.into_failure(kind).into()),
+        };
+        let instance_id = self.next_instance_id;
+        self.next_instance_id += 1;
+        let ordinal = self.plugin_ordinal(&extension.extension_id);
+        let kind = ActorKind::Extension { plugin: PackageId(parent_plugin.clone()), extension_id: extension.extension_id.clone() };
+        let actor = self
+            .runtime
+            .activate(extension.package.clone(), ordinal, kind, Lane::Background, None, ActivationEvent::Manual, &compiled, &[] as &[BrokerCapabilityGrant], &activation_budget)
+            .await
+            .map_err(|refusal| refusal.reason)?;
+        self.replay_routes[replay_route_index] = Some(MountedReplayRouteSeed { actor, plugin: JobReplayRequest::from_spawn(&extension.extension_id, &[]).tool, package: hash.0, window: u64::from(instance_id), artifact: parent_route.artifact });
+        self.instances.insert(instance_id, actor);
+        self.live_extensions.insert(extension.extension_id.clone(), instance_id);
+        let parent_grants = self.runtime.kernel().actor_record(parent).await.map(|record| record.capabilities).unwrap_or_default();
+        let scoped_grants = intersect_capabilities(&parent_grants, &extension.capability_requests).await;
+        if let Err(error) = self.runtime.kernel_mut().set_capabilities(actor, scoped_grants).await {
+            crate::log_debug(&format!("kernel: set_capabilities({actor:?}) failed: {error}"));
+        }
+        if let Err(error) = self.runtime.kernel_mut().link_extension(parent, actor).await {
+            crate::log_debug(&format!("kernel: link_extension({parent:?}, {actor:?}) failed: {error}"));
+        }
+        Ok(instance_id)
+    }
+
     pub(super) async fn destroy_app_step(&mut self, instance: u32) -> bool {
         if let Some(index) = self.product_replay_claims.iter().position(|claim| claim.as_ref().is_some_and(|claim| claim.instance() == instance)) {
             self.product_replay_claims[index].take().expect("destroyed app product replay claim remains exact").retire();
@@ -291,7 +339,11 @@ impl KernelPoolState {
             Some(index) => index,
             None => {
                 let Some(actor) = self.instances.remove(&instance) else { return true };
+                self.live_extensions.retain(|_, live| *live != instance);
                 let removed = self.runtime.kernel_mut().deactivate(actor).await.unwrap_or_else(|_| vec![actor]);
+                self.instances.retain(|_, live| !removed.contains(live));
+                let instances = &self.instances;
+                self.live_extensions.retain(|_, live| instances.contains_key(live));
                 for slot in &mut self.reserved_jobs {
                     if slot.as_ref().is_some_and(|job| removed.contains(&job.actor)) {
                         *slot = None;

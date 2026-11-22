@@ -1,63 +1,212 @@
 {
  "type": "object",
  "additionalProperties": false,
- "required": ["version", "packageDir", "budget", "files", "virtualRoot", "crates", "addition", "cycle"],
+ "required": [
+  "version",
+  "packageDir",
+  "budget",
+  "files",
+  "virtualRoot",
+  "crates",
+  "addition",
+  "cycle",
+  "edge",
+  "nested"
+ ],
  "properties": {
-  "version": { "const": 1 },
-  "packageDir": { "type": "string" },
+  "version": {
+   "const": 1
+  },
+  "packageDir": {
+   "type": "string"
+  },
   "budget": {
    "type": "object",
    "additionalProperties": false,
-   "required": ["target", "hard"],
+   "required": [
+    "target",
+    "hard"
+   ],
    "properties": {
-    "target": { "$ref": "#/$defs/budget" },
-    "hard": { "$ref": "#/$defs/budget" }
+    "target": {
+     "$ref": "#/$defs/budget"
+    },
+    "hard": {
+     "$ref": "#/$defs/budget"
+    }
    }
   },
-  "files": { "$ref": "#/$defs/files" },
+  "files": {
+   "$ref": "#/$defs/files"
+  },
   "virtualRoot": {
    "type": "object",
    "additionalProperties": false,
-   "required": ["modules", "files", "items"],
+   "required": [
+    "modules",
+    "files",
+    "items"
+   ],
    "properties": {
-    "modules": { "type": "array", "items": { "type": "string" } },
-    "files": { "type": "object", "additionalProperties": { "type": "array", "items": { "type": "string" } } },
-    "items": { "type": "array", "items": { "type": "string" } }
+    "modules": {
+     "type": "array",
+     "items": {
+      "type": "string"
+     }
+    },
+    "files": {
+     "type": "object",
+     "additionalProperties": {
+      "type": "array",
+      "items": {
+       "type": "string"
+      }
+     }
+    },
+    "items": {
+     "type": "array",
+     "items": {
+      "type": "string"
+     }
+    }
    }
   },
-  "crates": { "type": "array", "items": { "type": "string" } },
+  "crates": {
+   "type": "array",
+   "items": {
+    "type": "string"
+   }
+  },
   "addition": {
    "type": "object",
    "additionalProperties": false,
-   "required": ["description", "files", "crate", "dependsOn", "unchanged"],
+   "required": [
+    "description",
+    "files",
+    "crate",
+    "dependsOn",
+    "unchanged"
+   ],
    "properties": {
-    "description": { "type": "string" },
-    "files": { "$ref": "#/$defs/files" },
-    "crate": { "type": "string" },
-    "dependsOn": { "type": "array", "items": { "type": "string" } },
-    "unchanged": { "type": "array", "items": { "type": "string" } }
+    "description": {
+     "type": "string"
+    },
+    "files": {
+     "$ref": "#/$defs/files"
+    },
+    "crate": {
+     "type": "string"
+    },
+    "dependsOn": {
+     "type": "array",
+     "items": {
+      "type": "string"
+     }
+    },
+    "unchanged": {
+     "type": "array",
+     "items": {
+      "type": "string"
+     }
+    }
    }
   },
   "cycle": {
    "type": "object",
    "additionalProperties": false,
-   "required": ["description", "files"],
+   "required": [
+    "description",
+    "files"
+   ],
    "properties": {
-    "description": { "type": "string" },
-    "files": { "$ref": "#/$defs/files" }
+    "description": {
+     "type": "string"
+    },
+    "files": {
+     "$ref": "#/$defs/files"
+    }
+   }
+  },
+  "edge": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "description",
+    "files",
+    "crate",
+    "gains",
+    "unchanged"
+   ],
+   "properties": {
+    "description": {
+     "type": "string"
+    },
+    "files": {
+     "$ref": "#/$defs/files"
+    },
+    "crate": {
+     "type": "string"
+    },
+    "gains": {
+     "type": "string"
+    },
+    "unchanged": {
+     "type": "array",
+     "items": {
+      "type": "string"
+     }
+    }
+   }
+  },
+  "nested": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "description",
+    "files",
+    "forbidden"
+   ],
+   "properties": {
+    "description": {
+     "type": "string"
+    },
+    "files": {
+     "$ref": "#/$defs/files"
+    },
+    "forbidden": {
+     "type": "array",
+     "items": {
+      "type": "string"
+     }
+    }
    }
   }
  },
  "$defs": {
-  "files": { "type": "object", "additionalProperties": { "type": "string" } },
+  "files": {
+   "type": "object",
+   "additionalProperties": {
+    "type": "string"
+   }
+  },
   "budget": {
    "type": "object",
    "additionalProperties": false,
-   "required": ["files", "bytes", "lines"],
+   "required": [
+    "files",
+    "bytes",
+    "lines"
+   ],
    "properties": {
-    "files": { "type": "integer" },
-    "bytes": { "type": "integer" },
-    "lines": { "type": "integer" }
+    "files": {
+     "type": "integer"
+    },
+    "bytes": {
+     "type": "integer"
+    },
+    "lines": {
+     "type": "integer"
+    }
    }
   }
  }

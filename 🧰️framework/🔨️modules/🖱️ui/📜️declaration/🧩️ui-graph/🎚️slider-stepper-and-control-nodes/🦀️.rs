@@ -404,4 +404,19 @@ impl UiInputNode {
     pub fn uses_mono_face(&self) -> bool {
         self.icon_mode().is_some()
     }
+
+    /// 📎️ The shell verb (on the `framework` controller) a `file` input's press fires: it carries this input's own change action as `controllerId`/`action`/`args`, so the shell can open its file picker and answer with `{value}` — the picked file's NAME, as React's `InputView` commits `files[0].name` — on that action.
+    pub const PICK_FILE_ACTION: &'static str = "pickInputFile";
+
+    /// 📎️ [`Self::PICK_FILE_ACTION`] wrapping this input's change action and its `accept` filter; `None` for any kind but `file`.
+    pub fn pick_file_action(&self) -> Option<ActionDescriptor> {
+        if self.input_kind != "file" {
+            return None;
+        }
+        let mut fields = vec![("controllerId".to_string(), DslValue::String(self.on_change.controller_id.clone())), ("action".to_string(), DslValue::String(self.on_change.action.clone())), ("accept".to_string(), DslValue::String(self.accept.clone().unwrap_or_default()))];
+        if let Some(args) = &self.on_change.args {
+            fields.push(("args".to_string(), args.clone()));
+        }
+        Some(ActionDescriptor { controller_id: "framework".into(), action: Self::PICK_FILE_ACTION.into(), args: Some(DslValue::Object(fields)) })
+    }
 }

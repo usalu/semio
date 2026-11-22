@@ -1,0 +1,86 @@
+[
+ {
+  "scale": "50",
+  "view": "plan",
+  "op": "shape-add",
+  "after": "hand-r",
+  "shape": {
+   "id": "fingers-r-grip",
+   "bone": "forearm-r",
+   "role": "body",
+   "z": 6.21,
+   "filled": true,
+   "tone": 0.71,
+   "region": "hand-skin",
+   "material": "skin",
+   "kind": "poly",
+   "points": [
+    [
+     0.322,
+     -0.05
+    ],
+    [
+     0.378,
+     -0.05
+    ],
+    [
+     0.378,
+     0.02
+    ],
+    [
+     0.322,
+     0.02
+    ]
+   ],
+   "closed": true,
+   "solid": {
+    "kind": "extruded",
+    "sweep": "w",
+    "z0": -0.236,
+    "z1": -0.176
+   }
+  }
+ },
+ {
+  "scale": "50",
+  "view": "plan",
+  "op": "shape-add",
+  "after": "hand-r",
+  "shape": {
+   "id": "palm-r-grip",
+   "bone": "forearm-r",
+   "role": "body",
+   "z": 6.2,
+   "filled": true,
+   "tone": 0.71,
+   "region": "hand-skin",
+   "material": "skin",
+   "kind": "poly",
+   "points": [
+    [
+     0.292,
+     -0.05
+    ],
+    [
+     0.324,
+     -0.05
+    ],
+    [
+     0.324,
+     0.02
+    ],
+    [
+     0.292,
+     0.02
+    ]
+   ],
+   "closed": true,
+   "solid": {
+    "kind": "extruded",
+    "sweep": "w",
+    "z0": -0.242,
+    "z1": -0.206
+   }
+  }
+ }
+]

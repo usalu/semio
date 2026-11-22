@@ -14,6 +14,8 @@ schedule(sample());
 try{
 const{useProcessWideImplementationPinV1,withImplementationPinV1}=await import("../../../../📥️inputs/🔏️revision/🟨️.mjs");
 useProcessWideImplementationPinV1();
+const{finishOnLoadedImplementationV1}=await import("../../../../👁️observation/🟨️.mjs");
+finishOnLoadedImplementationV1();
 const routing=await import("../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts");
 const{loadBuildInvocationGraphV1}=await import("../../../../🧭️invocation/🕸️graph/🟦️.ts");
 const{withRepositoryCompilerRuntimeEntriesV1}=await import("../../../../📥️source/🔏️closure/🚪️command/🔌️runtime/🟦️.ts");

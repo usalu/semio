@@ -66,7 +66,9 @@ semio-framework-actor = { workspace = true }
 semio-framework-async = { workspace = true, features = ["entrypoint"] }
 semio-os-kernel = { path = "../../../../../../../../📦️packages/🦀️rust", features = ["sync", "ureq"] }
 semio-os-services = { workspace = true }
+semio-os-io = { path = "../../../../../../../🚪️io/📦️packages/🦀️rust" }
 semio-plugin-host = { path = "../../../../../../../🔌️plugin/🖥️host/📦️packages/🦀️rust" }
+semio-renderer-wgpu-video-render-host = { path = "../../../🎥️video-render-host/📦️packages/🦀️rust" }
 tokio = { version = "1", default-features = false, features = ["sync", "rt", "net", "time"] }
 
 [target.'cfg(all(target_arch = "wasm32", target_os = "unknown"))'.dependencies]

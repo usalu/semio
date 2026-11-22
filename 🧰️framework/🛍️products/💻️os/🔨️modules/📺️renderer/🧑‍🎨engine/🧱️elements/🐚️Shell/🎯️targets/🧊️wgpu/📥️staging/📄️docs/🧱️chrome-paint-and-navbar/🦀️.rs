@@ -25,10 +25,23 @@ pub fn shell_offered_examples<'a>(examples: &'a [semio_framework::manifest::Exam
     semio_framework::manifest::examples_for_app(examples, app)
 }
 
+/// 🔑️ The control-id prefix of one example row; the example id follows it.
+pub const SHELL_EXAMPLE_CONTROL_PREFIX: &str = "shell.example.";
+
+/// 🏷️ Each row's label as React's `resolveAppLabel(appLabelsOverlay, "example", id, manifestLabel)` resolves it: the overlay's label for the example id, else the manifest label the row already carries.
+pub fn shell_overlay_example_rows(rows: Vec<ShellExampleRow>, overlay: &semio_framework::manifest::AppLabelsOverlay) -> Vec<ShellExampleRow> {
+    rows.into_iter()
+        .map(|row| {
+            let id = row.control_id.strip_prefix(SHELL_EXAMPLE_CONTROL_PREFIX).unwrap_or_default();
+            ShellExampleRow { label: overlay.resolve(semio_framework::manifest::AppLabelKind::Example, id, &row.label), ..row }
+        })
+        .collect()
+}
+
 pub fn shell_example_rows(examples: &[semio_framework::manifest::ExampleDefinition], app: &AppDefinition, active_example_id: Option<&str>, terminology: Terminology, locale: Locale) -> Vec<ShellExampleRow> {
     shell_offered_examples(examples, app)
         .into_iter()
-        .map(|example| ShellExampleRow { control_id: format!("shell.example.{}", example.id), label: example.label.resolve(terminology, locale).to_string(), selected: active_example_id == Some(example.id.as_str()) })
+        .map(|example| ShellExampleRow { control_id: format!("{SHELL_EXAMPLE_CONTROL_PREFIX}{}", example.id), label: example.label.resolve(terminology, locale).to_string(), selected: active_example_id == Some(example.id.as_str()) })
         .collect()
 }
 

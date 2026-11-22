@@ -12,6 +12,7 @@ import Ajv from "ajv";
 import { JSDOM } from "jsdom";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { castManifestIssues, type CastIndex, type CastManifest } from "../../🔨️modules/📤️export/🎭️cast/🧬️schema/🟦️.ts";
+import { FLOW_STYLE } from "../../🔨️modules/🎨️depiction/🌊️flow-view/🟦️.ts";
 import { exportCast, isEntry, parseArguments, processAlive, watchParent } from "../../🔨️modules/📤️export/🎭️cast/🟦️.ts";
 import { loadCatalogFromFiles, loadEnvironments } from "../../🔨️modules/🗂️catalog/📥️files/🟦️.ts";
 import { STAFFAGE_ROOT, fixture, withScratch } from "../🧰️support/🧰️.ts";
@@ -200,38 +201,68 @@ describe("🎭️ cast export", { timeout: 60_000 }, () => {
     expect(light).not.toContain(`stroke="${inks.dark}"`);
   });
 
-  it("draws breathing plumes figure-only: more parcels, no emitter markers, labels or text", () => {
-    const count = (svg: string): number => new JSDOM(svg, { contentType: "image/svg+xml" }).window.document.querySelectorAll("path").length;
+  it("draws the air of a breathing figure with the flow view only: more paths, every one a flow mark, no emitter markers, labels or text", () => {
+    const paths = (svg: string): Element[] => [...new JSDOM(svg, { contentType: "image/svg+xml" }).window.document.querySelectorAll("path")];
     const frames = read(root, "breather-plume").frames;
-    const plain = frames.map((name) => count(svgOf(root, "breather-plain", name)));
-    const plume = frames.map((name) => count(svgOf(root, "breather-plume", name)));
-    expect(Math.max(...plume)).toBeGreaterThan(Math.max(...plain));
+    const plain = frames.map((name) => paths(svgOf(root, "breather-plain", name)).length);
+    const plume = frames.map((name) => paths(svgOf(root, "breather-plume", name)).length);
+    expect(Math.min(...plume)).toBeGreaterThan(Math.max(...plain));
     for (const name of frames) {
       const svg = svgOf(root, "breather-plume", name);
-      expect(svg).not.toContain('id="emitter');
-      expect(svg).not.toContain("<text");
+      for (const layer of ["flow-stream-", "flow-vapour-", "flow-path-"]) expect(svg, `${name} ${layer}`).toContain(`id="${layer}`);
+      for (const retired of ['id="emitter', 'id="parcel-', 'id="pathline-', 'id="streamline', 'id="condensation-', "<text"]) expect(svg, `${name} ${retired}`).not.toContain(retired);
+      expect(svg).not.toContain('id="flow-tracer');
+      expect(svg).not.toContain('id="flow-fog');
     }
+    expect(read(root, "breather-plume").provenance.scenario).toMatchObject({ kind: "thermal", flow: ["streams", "moisture", "pathlines"] });
+    expect(read(root, "breather-plain").provenance.scenario).toMatchObject({ kind: "thermal", flow: [] });
+    expect(read(root, "breather-plume").provenance.clock.offsetS).toBe(0);
+    expect(read(root, "breather-plume").logical.maxPaths).toBe(Math.max(...plume));
+    expect(read(root, "breather-plume").logical.figureBoundsM).toEqual(read(root, "breather-plain").logical.figureBoundsM);
+    expect(read(root, "breather-plume").logical.partsM).toEqual(read(root, "breather-plain").logical.partsM);
+    expect(read(root, "breather-plume").logical.heightM).toBe(read(root, "breather-plain").logical.heightM);
   });
 
-  it("develops the air before the first frame of a looping transport cast, bounds the figure alone and thickens the pathlines", async () => {
+  it("develops the air before the first frame, of a looping clip and of a pose, bounds the figure alone, and applies the stroke, the trail and the spacing of the flow marks", async () => {
     const out = mkdtempSync(join(tmpdir(), "staffage-air-"));
     try {
-      const base = { asset: "standing-adult", clip: "idle-breathing", view: "thermal", environment: "office-still", theme: "dark", viewpoint: "elevation", transport: ["pathlines"], fps: 2, scale: 50 };
-      const manifest = { version: 1, casts: { cold: { ...base, transportAgeS: 0.001, transportStrokeMm: 0.3 }, warm: { ...base, transportAgeS: 5, transportStrokeMm: 0.3 } } } as unknown as CastManifest;
-      await expect(exportCast({ version: 1, casts: { undeveloped: base } } as unknown as CastManifest, ["undeveloped"], out)).rejects.toThrow("transport layers need transportAgeS");
-      await exportCast(manifest, ["cold", "warm"], out);
-      const lines = (id: string, frame: number): string[] => [...new JSDOM(svgOf(out, id, read(out, id).frames[frame]!), { contentType: "image/svg+xml" }).window.document.querySelectorAll("g[id^='pathline']")].map((g) => g.querySelector("path")?.getAttribute("stroke-width") ?? "");
-      expect(lines("cold", 0)).toHaveLength(0);
-      expect(lines("warm", 0).length).toBeGreaterThan(20);
-      expect(new Set(lines("warm", 0))).toEqual(new Set(["0.3"]));
-      const warm = read(out, "warm");
-      expect(warm.logical.figureBoundsM.maxY).toBeLessThan(warm.boundsM.maxY - 0.3);
-      expect(warm.logical.figureBoundsM.maxY).toBeCloseTo(warm.logical.heightM, 1);
-      expect(read(out, "cold").logical.figureBoundsM).toBeDefined();
+      const base = { asset: "standing-adult", clip: "idle-breathing", view: "thermal", environment: "office-still", theme: "dark", viewpoint: "elevation", flow: ["pathlines"], fps: 2, scale: 50 };
+      const still = { asset: "standing-adult", pose: "relaxed", view: "thermal", environment: "office-still", theme: "dark", viewpoint: "elevation", flow: ["streams", "pathlines"], flowDevelopS: 5, scale: 50 };
+      const manifest = { version: 1, casts: { cold: { ...base, flowDevelopS: 0.001, flowStrokeMm: 0.75 }, warm: { ...base, flowDevelopS: 5, flowStrokeMm: 0.75, flowSpacingMm: 0.2 }, sparse: { ...base, flowDevelopS: 5, flowSpacingMm: 6 }, trail: { ...base, flowDevelopS: 5, flowSpacingMm: 0.2, flowTrailS: 1 }, still } } as unknown as CastManifest;
+      await expect(exportCast({ version: 1, casts: { undeveloped: base } } as unknown as CastManifest, ["undeveloped"], out)).rejects.toThrow("flow layers need flowDevelopS");
+      await exportCast(manifest, ["cold", "warm", "sparse", "trail", "still"], out);
+      const strokes = (id: string, frame: number, prefix = "flow-path"): { width: number; opacity: number; parcel: string }[] => [...new JSDOM(svgOf(out, id, read(out, id).frames[frame]!), { contentType: "image/svg+xml" }).window.document.querySelectorAll(`g[id^='${prefix}']`)].map((g) => ({ width: Number(g.querySelector("path")?.getAttribute("stroke-width")), opacity: Number(g.querySelector("path")?.getAttribute("stroke-opacity") ?? 1), parcel: g.id.replace(/-\d+$/u, "") }));
+      expect(strokes("cold", 0)).toHaveLength(0);
+      const warm = strokes("warm", 0);
+      expect(new Set(warm.map((line) => line.parcel)).size).toBeGreaterThan(20);
+      for (const line of warm) expect(line.width).toBeCloseTo((FLOW_STYLE.pathMm * 0.75) / FLOW_STYLE.streamMaxMm, 4);
+      expect(new Set(warm.map((line) => line.opacity))).toEqual(new Set([0.9]));
+      const sparse = strokes("sparse", 0);
+      expect(sparse.length).toBeGreaterThan(0);
+      expect(sparse.length).toBeLessThan(warm.length / 2);
+      for (const line of sparse) expect(line.width).toBeCloseTo(FLOW_STYLE.pathMm, 4);
+      expect(new Set(sparse.map((line) => line.parcel)).size).toBe(sparse.length);
+      const trail = strokes("trail", 0);
+      expect(new Set(trail.map((line) => line.opacity)).size).toBe(FLOW_STYLE.trailBands);
+      expect(Math.max(...trail.map((line) => line.opacity))).toBeCloseTo(0.9, 6);
+      expect(Math.min(...trail.map((line) => line.opacity))).toBeCloseTo(0.9 / FLOW_STYLE.trailBands, 6);
+      const index = read(out, "warm");
+      expect(index.logical.figureBoundsM.maxY).toBeLessThan(index.boundsM.maxY - 0.3);
+      expect(index.logical.figureBoundsM.maxY).toBeCloseTo(index.logical.heightM, 1);
+      expect(read(out, "cold").logical.figureBoundsM).toEqual(index.logical.figureBoundsM);
+      expect(read(out, "trail").logical.figureBoundsM).toEqual(index.logical.figureBoundsM);
+      expect(index.frames.length).toBe(10);
+      expect(new Set(index.frames).size).toBeGreaterThan(1);
+      const posed = read(out, "still");
+      expect(posed.frames).toEqual(["0000.svg"]);
+      expect(strokes("still", 0, "flow-stream").length).toBeGreaterThan(0);
+      expect(strokes("still", 0).length).toBeGreaterThan(0);
+      expect(posed.provenance).toMatchObject({ state: { kind: "pose", id: "relaxed" }, clock: { offsetS: 0, frames: 1 }, scenario: { flow: ["streams", "pathlines"] } });
+      expect(posed.logical.figureBoundsM.maxY).toBeLessThan(posed.boundsM.maxY - 0.3);
     } finally {
       rmSync(out, { recursive: true, force: true });
     }
-  }, 120_000);
+  }, 240_000);
 
   it("is language-independent: no frame of any cast contains text", () => {
     for (const id of ids) for (const name of new Set(read(root, id).frames)) {

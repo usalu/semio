@@ -1,7 +1,7 @@
 import {test,expect} from "bun:test";
 import Ajv from "ajv";
 import {Database} from "bun:sqlite";
-import ts from "typescript";
+import {loadProductFunctionsSyncV1} from "../../../../../../../🧪️testing/🧩️extracted-function/🟦️.ts";
 import {spawnSync} from "node:child_process";
 import {existsSync,lstatSync,mkdirSync,mkdtempSync,readFileSync,realpathSync,rmSync,writeFileSync} from "node:fs";
 import {dirname,join} from "node:path";
@@ -21,17 +21,10 @@ import corpus from "./🔣️.json" with {type:"json"};
 import schema from "./🧬️schema.json" with {type:"json"};
 import work from "./🔣️work.json" with {type:"json"};
 
-declareBuildTestEnvelopeV1({owner:"test:native-maintenance-proof-cost",maximumElapsedMilliseconds:180000,capabilities:{artifacts:true}});
+declareBuildTestEnvelopeV1({owner:"test:native-maintenance-proof-cost",maximumElapsedMilliseconds:180000,capabilities:{}});
 
-const source=readFileSync(new URL("../../../../🧱️fixed/🟦️.ts",import.meta.url),"utf8"),tree=ts.createSourceFile("physical.ts",source,ts.ScriptTarget.Latest,true);
-function compile(name:string,helpers:readonly string[],ports:Record<string,unknown>){
- const text=[...helpers,name].map(name=>{
-  const fn=tree.statements.find((node):node is ts.FunctionDeclaration=>ts.isFunctionDeclaration(node)&&node.name?.text===name);
-  if(!fn)throw Error("Actual physical declaration required: "+name);
-  return fn.getText(tree).replace(/^export /u,"");
- }).join("\n");
- const js=ts.transpileModule(text,{compilerOptions:{target:ts.ScriptTarget.ES2022}}).outputText;
- return new Function(...Object.keys(ports),js+";return "+name+";")(...Object.values(ports));
+function compile(name:string,_helpers:readonly string[],ports:Record<string,unknown>){
+ return loadProductFunctionsSyncV1(new URL("../../../../🧱️fixed/🟦️.ts",import.meta.url),[name],ports)[name];
 }
 const healthyBytes=8588886016;
 

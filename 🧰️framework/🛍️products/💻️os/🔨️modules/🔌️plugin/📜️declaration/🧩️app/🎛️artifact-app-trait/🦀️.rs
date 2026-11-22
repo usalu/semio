@@ -583,6 +583,21 @@ pub trait ArtifactApp: Default + Send + 'static {
     ) -> semio_plugin_ownership::sdk_fault::OriginalRenderResult<ComponentTree> {
         Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "artifact did not implement retained render work").into())
     }
+    /// 👥️ [`Self::render_with_request_context`] plus every other collaborator's typed presence, as last broadcast. Renders that draw collaborators override this; the default ignores the peers, so existing renders are unchanged.
+    async fn render_with_peers(
+        owner: &ArtifactInstanceOperationOwnerHandle,
+        body_key: &str,
+        doc: &ArtifactView<'_, Self::Snapshot>,
+        cfg: &ConfigView<'_, Self::Config>,
+        view_state: &ViewModel,
+        transient: &TransientView<'_, Self::Transient>,
+        interaction: &InteractionView<'_>,
+        peers: &PresencePeersView<'_, Self::Presence>,
+        cx:&mut semio_framework_job::StepContext<'_>,
+    ) -> semio_plugin_ownership::sdk_fault::OriginalRenderResult<ComponentTree> {
+        let _ = peers;
+        Self::render_with_request_context(owner, body_key, doc, cfg, view_state, transient, interaction, cx).await
+    }
     async fn render_with_request_context(
         owner: &ArtifactInstanceOperationOwnerHandle,
         body_key: &str,

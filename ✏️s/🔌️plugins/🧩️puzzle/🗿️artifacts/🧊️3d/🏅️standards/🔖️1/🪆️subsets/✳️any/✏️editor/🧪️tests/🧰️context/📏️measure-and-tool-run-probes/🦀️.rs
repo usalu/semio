@@ -242,16 +242,27 @@ pub fn dispatchable_actions(definition: &semio_plugin::AppDefinition) -> Vec<&Ac
         .collect()
 }
 
-/// 📚️ The editor lib root and every module mounted below it, read as the one text the unsplit root held: the children first, the root last.
+/// 📚️ The editor lib root and every production module mounted below it, read as the one text the unsplit root held: the children first (sorted), the root last.
 pub fn editor_source() -> String {
-    let editor = concat!(env!("CARGO_MANIFEST_DIR"), "/../..");
-    ["🧰️retained-commands", "📬️store-preparation", "✂️clipboard-job", "🧩️play-app", "📋️manifest"]
-        .iter()
-        .map(|child| format!("{editor}/{child}/🦀️.rs"))
-        .chain([format!("{editor}/🦀️.rs")])
-        .map(|path| std::fs::read_to_string(path).expect("committed test data reads"))
-        .collect::<Vec<_>>()
-        .join("\n")
+    fn collect(dir: &std::path::Path, root: bool, out: &mut Vec<std::path::PathBuf>) {
+        let mut entries = std::fs::read_dir(dir).expect("committed test data reads").map(|entry| entry.expect("entry").path()).collect::<Vec<_>>();
+        entries.sort();
+        for path in entries {
+            let name = path.file_name().and_then(|name| name.to_str()).unwrap_or_default();
+            if path.is_dir() {
+                if !matches!(name, "🧪️tests" | "📦️packages" | "node_modules" | "🌉️wasm") {
+                    collect(&path, false, out);
+                }
+            } else if name == "🦀️.rs" && !root {
+                out.push(path);
+            }
+        }
+    }
+    let editor = std::path::PathBuf::from(concat!(env!("CARGO_MANIFEST_DIR"), "/../.."));
+    let mut files = Vec::new();
+    collect(&editor, true, &mut files);
+    files.push(editor.join("🦀️.rs"));
+    files.iter().map(|path| std::fs::read_to_string(path).expect("committed test data reads")).collect::<Vec<_>>().join("\n")
 }
 
 /// 🔒️ Whether the `match` arm that lists `tool_id` in its pattern alternation routes to the one-grant `BoundedFirstStepCommandWork` reducer instead of its staged cursorized work.

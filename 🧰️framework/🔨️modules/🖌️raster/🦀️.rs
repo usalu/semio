@@ -38,10 +38,22 @@ pub struct StrokeOp {
     pub width: f64,
 }
 
+/// 🖼️ A straight-alpha RGBA8 picture drawn onto the unit square `transform` places in device pixels: `crop`
+/// (`[x, y, width, height]`, normalised to the picture) selects the part shown, `opacity` scales its alpha.
+pub struct ImageOp {
+    pub pixels: std::sync::Arc<Vec<u8>>,
+    pub width: u32,
+    pub height: u32,
+    pub crop: [f64; 4],
+    pub transform: Affine,
+    pub opacity: f32,
+}
+
 /// 🎨️ One paint operation, in the order it must be composited.
 pub enum DrawOp {
     Fill(FillOp),
     Stroke(StrokeOp),
+    Image(ImageOp),
 }
 
 /// 🖼️ An ordered, first-party description of a 2D vector scene — the only input `SceneRasterizer`
@@ -67,6 +79,10 @@ impl VectorScene {
 
     pub fn stroke(&mut self, path: BezPath, transform: Affine, color: [f32; 4], width: f64) {
         self.push(DrawOp::Stroke(StrokeOp { path, transform, color, width }));
+    }
+
+    pub fn image(&mut self, op: ImageOp) {
+        self.push(DrawOp::Image(op));
     }
 }
 
@@ -201,6 +217,14 @@ fn build_vello_scene(scene: &VectorScene) -> vello::Scene {
             DrawOp::Stroke(stroke) => {
                 let stroke_style = vello::kurbo::Stroke::new(stroke.width);
                 vello_scene.stroke(&stroke_style, affine_to_vello(stroke.transform), vello::peniko::Color::new(stroke.color), None, &path_to_vello(&stroke.path));
+            }
+            DrawOp::Image(image) => {
+                let (width, height) = (f64::from(image.width), f64::from(image.height));
+                let data = vello::peniko::ImageData { data: vello::peniko::Blob::new(image.pixels.clone()), format: vello::peniko::ImageFormat::Rgba8, alpha_type: vello::peniko::ImageAlphaType::Alpha, width: image.width, height: image.height };
+                let brush = vello::peniko::ImageBrush::new(data).with_quality(vello::peniko::ImageQuality::Medium).with_alpha(image.opacity);
+                let [crop_x, crop_y, crop_width, crop_height] = image.crop;
+                let fit = vello::kurbo::Affine::scale_non_uniform(1.0 / (crop_width * width), 1.0 / (crop_height * height)) * vello::kurbo::Affine::translate((-crop_x * width, -crop_y * height));
+                vello_scene.fill(vello::peniko::Fill::NonZero, affine_to_vello(image.transform), brush.as_ref(), Some(fit), &vello::kurbo::Rect::new(0.0, 0.0, 1.0, 1.0));
             }
         }
     }

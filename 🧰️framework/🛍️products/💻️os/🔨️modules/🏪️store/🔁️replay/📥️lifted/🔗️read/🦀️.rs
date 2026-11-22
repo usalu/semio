@@ -25,6 +25,7 @@ impl ErasedSnapshotRetirement for ArtifactStoreSupersessionRetirement {
     fn next_release_byte_demand(&self)->Result<usize,ValueError>{self.owner.next_release_byte_demand()}
     fn next_depth_demand(&self)->Result<usize,ValueError>{self.owner.next_depth_demand()}
     fn terminal_is_empty(&self)->bool{self.owner.terminal_is_empty()}
+    fn native_header_release(&self)->Option<semio_framework_value::RetirementHeaderRelease>{self.terminal_is_empty().then(||unsafe{semio_framework_value::RetirementHeaderRelease::native(self,0,0)})}
 }
 
 pub struct ArtifactStoreStringVectorRetirement {
@@ -91,6 +92,7 @@ impl ErasedSnapshotRetirement for ArtifactStoreStringVectorRetirement {
     fn terminal_is_empty(&self) -> bool {
         self.values.is_none() && self.active.is_none()
     }
+    fn native_header_release(&self) -> Option<semio_framework_value::RetirementHeaderRelease> { self.terminal_is_empty().then(|| unsafe { semio_framework_value::RetirementHeaderRelease::native(self, 0, 0) }) }
 }
 
 impl Drop for ArtifactStoreStringVectorRetirement {

@@ -22,5 +22,5 @@ test("document driver range contract preserves indexed pages and explicit nonzer
  const indexed=Buffer.from(Array.from({length:range[1]-range[0]},(_,i)=>pages[Math.floor((range[0]+i)/plan.pageBytes)][(range[0]+i)%plan.pageBytes]));
  expect(indexed.equals(original.subarray(...range))).toBe(true);expect(indexed.toString()).toBe(fixture.text);
  const db=new Database(":memory:");try{expect(db.query("select substr(?1,?2+1,?3-?2) as selected").get(original,...range)).toEqual({selected:indexed});}finally{db.close();}
- const driver=read("../../🎮️driver/🦀️.rs");expect(driver).toContain("fn one<S:RetainedWireByteSource+?Sized>(&mut self,input:&S,range:(usize,usize),maximum:usize)");
+ const driver=read("../../🎮️driver/🦀️.rs");expect(driver).toContain("fn one<S:RetainedWireByteSource+?Sized>(&mut self,input:&S,range:(usize,usize),maximum:usize,effect:&mut RetainedAllocationEffect<'_>)");
 });

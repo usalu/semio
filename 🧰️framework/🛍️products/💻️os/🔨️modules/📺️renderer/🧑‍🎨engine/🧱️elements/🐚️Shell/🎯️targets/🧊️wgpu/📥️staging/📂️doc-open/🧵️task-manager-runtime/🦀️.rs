@@ -396,6 +396,16 @@ pub struct TaskManagerToolRun {
     pub total: Option<u64>,
     pub value_text: String,
     pub paused: bool,
+    #[serde(skip)]
+    pub controls: TaskManagerToolRunControls,
+}
+
+/// ⏯️ The pause, resume and abort actions a run's panel group offers — React's `toolRunControlsRef` entry; `None` while the panel does not offer that control.
+#[derive(Clone, Debug, Default)]
+pub struct TaskManagerToolRunControls {
+    pub pause: Option<ActionDescriptor>,
+    pub resume: Option<ActionDescriptor>,
+    pub abort: Option<ActionDescriptor>,
 }
 
 fn plain_task(id: String, lane: TaskManagerTaskLane, title: String, owner: String, started_at_ms: u64, state: TaskManagerTaskState) -> TaskManagerTask {
@@ -534,7 +544,45 @@ impl OpeningState {
     pub fn sync_runtime_install_tasks(&mut self, installing: Option<&str>, now_ms: u64) {
         let ids: Vec<String> = installing.map(str::to_string).into_iter().collect();
         let started: HashMap<String, u64> = self.runtime_tasks.iter().map(|task| (task.id.clone(), task.started_at_ms)).collect();
-        self.runtime_tasks = install_tasks(&ids, &started, now_ms);
+        #[cfg(not(target_arch = "wasm32"))]
+        let jobs: Vec<SpawnedJobRow> = {
+            let plugin_of: HashMap<String, String> = semio_renderer_wgpu_host_base::observed_actors().unwrap_or_default().into_iter().map(|actor| (actor.actor_id, actor.plugin_id)).collect();
+            semio_renderer_wgpu_host_base::spawned_jobs_snapshot().into_iter().map(|row| SpawnedJobRow { plugin_id: plugin_of.get(&row.job.actor_id).cloned().unwrap_or(row.job.plugin_id), key: row.job.key, kind: row.job.kind, steps: row.steps, started_at_ms: row.job.started_at_ms, cancelling: row.cancelling }).collect()
+        };
+        #[cfg(target_arch = "wasm32")]
+        let jobs: Vec<SpawnedJobRow> = Vec::new();
+        self.runtime_tasks = install_tasks(&ids, &started, now_ms).into_iter().chain(spawned_job_tasks(&jobs)).chain(tool_run_tasks(&self.tool_runs, &self.tool_run_owner, "", &started, now_ms)).collect();
+    }
+
+    /// ⏯️ Replaces the focused program's live tool runs, read from its ToolRun panel (React's `toolRunPanelTasksV1` feed). `true` when the listing changed.
+    pub fn set_tool_runs(&mut self, owner: &str, runs: Vec<TaskManagerToolRun>) -> bool {
+        let changed = self.tool_run_owner != owner || self.tool_runs.len() != runs.len() || self.tool_runs.iter().zip(&runs).any(|(a, b)| (&a.run, &a.label, a.completed, a.total, &a.value_text, a.paused) != (&b.run, &b.label, b.completed, b.total, &b.value_text, b.paused));
+        self.tool_run_owner = owner.to_string();
+        self.tool_runs = runs;
+        changed
+    }
+
+    /// 💼️ Takes the queued Cancel presses of spawned plugin jobs as their ledger keys; the press reaches the job's own owner through the ledger, which only marks the row cancelling.
+    pub fn take_job_cancel_requests(&mut self) -> Vec<String> {
+        let (jobs, kept): (Vec<_>, Vec<_>) = core::mem::take(&mut self.runtime_requests).into_iter().partition(|request| request.kind == TaskManagerActionKind::Cancel && request.task_id.as_deref().is_some_and(|id| id.starts_with("job:")));
+        self.runtime_requests = kept;
+        jobs.into_iter().filter_map(|request| request.task_id?.strip_prefix("job:").map(str::to_string)).collect()
+    }
+
+    /// ⏯️ Takes the queued task presses that name a live tool run and answers each with the panel action its run offers — React's `taskManagerSuspendRef` and the run's abort: Suspend presses `pause`, Resume `resume`, Cancel `abort`. A press whose run no longer offers that control is dropped, as React drops a press on an ended run; every other task press stays queued.
+    pub fn take_tool_run_control_actions(&mut self) -> Vec<ActionDescriptor> {
+        let (runs, kept): (Vec<_>, Vec<_>) = core::mem::take(&mut self.runtime_requests).into_iter().partition(|request| request.task_id.as_deref().is_some_and(|id| id.starts_with("toolRun:")));
+        self.runtime_requests = kept;
+        runs.into_iter()
+            .filter_map(|request| {
+                let run = self.tool_runs.iter().find(|run| Some(task_manager_tool_run_id("", &run.run).as_str()) == request.task_id.as_deref())?;
+                match request.kind {
+                    TaskManagerActionKind::Suspend => run.controls.pause.clone(),
+                    TaskManagerActionKind::Resume => run.controls.resume.clone(),
+                    TaskManagerActionKind::Cancel => run.controls.abort.clone(),
+                }
+            })
+            .collect()
     }
 
     /// 🎛️ Takes the queued Cancel presses of plugin installations — the one runtime the shell serves itself — leaving every other press queued for the runtime bridge. The result is how many install cancels were taken.

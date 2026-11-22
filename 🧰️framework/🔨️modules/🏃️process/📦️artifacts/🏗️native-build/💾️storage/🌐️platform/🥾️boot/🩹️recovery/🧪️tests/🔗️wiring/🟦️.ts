@@ -1,5 +1,4 @@
-import ts from"typescript";
-import{evaluateExtractedFunctionV1}from"../../../../../../../../🧪️testing/🧩️extracted-function/🟦️.ts";
+import{loadProductFunctionsSyncV1}from"../../../../../../../../🧪️testing/🧩️extracted-function/🟦️.ts";
 import{nativeStorageSchemaV1,readNativeStorageDataV1 as admit}from"../../../../../📜️journal/🟦️.ts";
 import{bindNativeIdentitiesV1}from"../../📋️plan/🟦️.ts";
 import{expect,test}from"bun:test";
@@ -10,7 +9,7 @@ import{createNativeStorageNamespaceEntryV1,removeNativeStorageNamespaceEntryV1,t
 import{stable}from"../../../../../🌱️birth/🧾️claim-records/🟦️.ts";
 
 /** 🔬️ Checks the actual private namespace observer with its owned schema and real filesystem. */
-function namespaceVerifier(){const origin=((import.meta as ImportMeta&{semioPhysicalSourceURL?:string}).semioPhysicalSourceURL??import.meta.url),text=readFileSync(new URL("../../../../../🟦️.ts",origin),"utf8"),tree=ts.createSourceFile("storage.ts",text,ts.ScriptTarget.Latest,true),body=["namespaceIdentityV1","verifyNativeStorageNamespaceV1"].map(name=>{const node=tree.statements.find((row):row is ts.FunctionDeclaration=>ts.isFunctionDeclaration(row)&&row.name?.text===name);expect(node,name).toBeDefined();return node!.getText(tree);}).join("\n"),code=ts.transpileModule(body,{compilerOptions:{target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.None}}).outputText;return evaluateExtractedFunctionV1(code,"verifyNativeStorageNamespaceV1",{admit,bindNativeIdentitiesV1,dirname,lstatSync,namespaceProtocol:nativeStorageSchemaV1.definitions.NamespaceProtocol.const});}
+function namespaceVerifier(){const origin=((import.meta as ImportMeta&{semioPhysicalSourceURL?:string}).semioPhysicalSourceURL??import.meta.url);return loadProductFunctionsSyncV1(new URL("../../../../../🟦️.ts",origin),["verifyNativeStorageNamespaceV1"],{admit,bindNativeIdentitiesV1,dirname,lstatSync,namespaceProtocol:nativeStorageSchemaV1.definitions.NamespaceProtocol.const}).verifyNativeStorageNamespaceV1;}
 const verifyNativeStorageNamespaceV1=namespaceVerifier();
 
 const scratch=()=>{const base=process.env.SEMIO_TEST_ARTIFACT_DIR?resolve(process.env.SEMIO_TEST_ARTIFACT_DIR):tmpdir();mkdirSync(base,{recursive:true});return realpathSync(mkdtempSync(join(base,"wr-")));};

@@ -147,9 +147,9 @@ fn flow_eval_session_seeds_its_retained_neural_cache() {
     let session = FlowEvalSession::new();
     let expected = Dictionary::with_schema("number").insert("value", NeuralValue::Atom(Atom::Decimal(42.0)));
     session.seed_node_cache(17, expected.clone());
-    let seeded = session.neural_cache().get(17);
+    let seeded = session.neural_cache().get().get(17);
     assert_eq!(seeded.as_ref(), Some(&expected));
-    seeded.retire_cold();
+    seeded.expect("seeded entry").retire_cold();
     expected.retire_cold();
     session.retire_cold();
 }

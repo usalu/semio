@@ -1,0 +1,7 @@
+import{readFileSync,writeFileSync}from"node:fs";import{resolve}from"node:path";import{createHash}from"node:crypto";import Parser from"web-tree-sitter";
+const root=resolve(import.meta.dir,"../../../../../../..");const jf=resolve(root,"🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/📦️units/📋️surface-fixture.json");const rec=JSON.parse(readFileSync(jf,"utf8"));
+await Parser.init({wasmBinary:readFileSync(Bun.resolveSync("web-tree-sitter/tree-sitter.wasm",root))});const p=new Parser();p.setLanguage(await Parser.Language.load(Bun.resolveSync("tree-sitter-wasms/out/tree-sitter-rust.wasm",root)));
+const target=process.argv[2];const t=p.parse(readFileSync(resolve(root,target),"utf8"));const m=t.rootNode.descendantsOfType("macro_definition").find(n=>n.childForFieldName("name")?.text==="bounded_first_step_tool_proofs")!;
+const n=(m.text.match(/\$crate::tool_contract::ArtifactBoundedFirstStepProof/g)??[]).length,h=createHash("sha256").update(m.text.replaceAll("$crate::tool_contract::ArtifactBoundedFirstStepProof","$crate::ArtifactBoundedFirstStepProof")).digest("hex");
+console.log("scope replacements",rec.macro.scopeReplacements,"->",n,"sha same",h===rec.macro.sha256,"crate refs",(m.text.match(/\$crate::\w+/g)??[]).slice(0,5));
+if(process.argv.includes("--write")){rec.macro.target=target;rec.macro.scopeReplacements=n;rec.macro.sha256=h;writeFileSync(jf,JSON.stringify(rec,null,2)+"\n")}

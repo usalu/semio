@@ -1,0 +1,55 @@
+{
+ "id": "common-lilac",
+ "category": "vegetation",
+ "title": {
+  "en": "Common Lilac, Multi-Stem",
+  "de": "Gewöhnlicher Flieder, mehrstämmig"
+ },
+ "heightM": 4.094,
+ "widthM": 3.614,
+ "powerW": 0,
+ "poses": [
+  "flowering-calm",
+  "flowering-breeze",
+  "storm",
+  "rain-laden"
+ ],
+ "clips": [
+  "wind-sway",
+  "gust",
+  "diurnal-transpiration"
+ ],
+ "representations": {
+  "50": "authored",
+  "100": "authored",
+  "200": "authored",
+  "500": "authored"
+ },
+ "symbols": [
+  "common-lilac-symbol"
+ ],
+ "analytics": [
+  "thermal",
+  "transport",
+  "structural"
+ ],
+ "exports": [
+  "svg",
+  "pdf",
+  "dxf",
+  "dwg",
+  "png-sequence",
+  "mp4",
+  "webm",
+  "component",
+  "glb",
+  "fbx",
+  "model",
+  "model-zip"
+ ],
+ "distinction": {
+  "en": "A suckering multi-stem flowering shrub with a bare-legged vase of seven stems and upright panicles at the shoot tips, whose rain pose bows the stems under soaked flower heads.",
+  "de": "Ein ausläufertreibender, mehrstämmiger Blütenstrauch mit kahler Stammvase aus sieben Stämmen und aufrechten Rispen an den Triebspitzen; in der Regenpose biegen die vollgesogenen Blütenstände die Stämme nach außen."
+ },
+ "completion": "authored"
+}

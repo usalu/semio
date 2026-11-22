@@ -211,6 +211,8 @@ pub struct ToolOperations<A: ArtifactApp> {
     pub original_emission_admission:std::mem::ManuallyDrop<Option<Box<semio_plugin_retained_command::typed_operation::original_emission::OriginalEmissionAdmission<A>>>>,
     pub original_emission_receipt:Option<semio_plugin_job::original_emission::OriginalEmissionReceipt>,
     pub original_emission_construction:Option<semio_framework_job::OriginalConstructionAdmission>,
+    /// 🧾️ The receipt result, built once and held across turns until the emission construction it was built under has retired.
+    pub original_emission_result:Option<InvocationResult>,
     #[cfg(test)]
     pub test_tool_clock: Option<fn() -> Option<u64>>,
     pub typed_operation_reservations: [Option<u64>; ARTIFACT_LIVE_OUTPUT_SLOTS],
@@ -251,7 +253,7 @@ impl<A: ArtifactApp> ToolOperations<A> {
     /// 📋️ Every enabled runtime field has one retained cursor entry.
     const LATEST_WINS_KEY_FIELD:usize=36;
     const AFTER_LATEST_WINS_KEYS:usize=Self::LATEST_WINS_KEY_FIELD+ToolLatestWinsRegistry::INITIAL_FIELDS;
-    pub const INITIAL_FIELDS:usize=38+ToolLatestWinsRegistry::INITIAL_FIELDS+(if cfg!(test){1}else{0});
+    pub const INITIAL_FIELDS:usize=39+ToolLatestWinsRegistry::INITIAL_FIELDS+(if cfg!(test){1}else{0});
     /// 📏️ Quotes one bounded absent chunk or one atomic live field and its actual backing.
     pub fn initial_field_demands(field:usize,byte:usize,body:usize,backing:bool)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{if (Self::LATEST_WINS_KEY_FIELD..Self::AFTER_LATEST_WINS_KEYS).contains(&field){return ToolLatestWinsRegistry::initial_field_demands(field-Self::LATEST_WINS_KEY_FIELD,byte,body)}
      let field=if field>=Self::AFTER_LATEST_WINS_KEYS{field-(ToolLatestWinsRegistry::INITIAL_FIELDS-1)}else{field};
@@ -294,8 +296,9 @@ impl<A: ArtifactApp> ToolOperations<A> {
   35=>semio_framework_value::RetirementDemand{copy_bytes:2*initial_field_bytes::<Self,_>(|owner|&owner.latest_wins_order),capacity_bytes:if backing{semio_plugin_ownership::bounded_ownership::original_queue_backing::<Self,_>(|owner|&owner.latest_wins_order,ARTIFACT_LIVE_OUTPUT_SLOTS)?}else{0},depth:1,..Default::default()},
   37=>semio_framework_value::RetirementDemand{copy_bytes:2*initial_field_bytes::<Self,_>(|owner|&owner.latest_wins_turn),capacity_bytes:if backing{0}else{0},depth:1,..Default::default()},
   38=>{let extent=initial_field_bytes::<Self,_>(|owner|&owner.original_emission_construction);if byte>extent{return Err(semio_framework_value::ValueError::invariant("absent field cursor exceeds its extent"))}semio_framework_value::RetirementDemand{copy_bytes:if byte==extent{0}else{body.max(1).min(extent-byte)},depth:1,..Default::default()}},
+  39=>{let extent=initial_field_bytes::<Self,_>(|owner|&owner.original_emission_result);if byte>extent{return Err(semio_framework_value::ValueError::invariant("absent field cursor exceeds its extent"))}semio_framework_value::RetirementDemand{copy_bytes:if byte==extent{0}else{body.max(1).min(extent-byte)},depth:1,..Default::default()}},
   #[cfg(test)]
-  39=>{let extent=initial_field_bytes::<Self,_>(|owner|&owner.test_tool_clock);if byte>extent{return Err(semio_framework_value::ValueError::invariant("absent field cursor exceeds its extent"))}semio_framework_value::RetirementDemand{copy_bytes:if byte==extent{0}else{body.max(1).min(extent-byte)},depth:1,..Default::default()}},
+  40=>{let extent=initial_field_bytes::<Self,_>(|owner|&owner.test_tool_clock);if byte>extent{return Err(semio_framework_value::ValueError::invariant("absent field cursor exceeds its extent"))}semio_framework_value::RetirementDemand{copy_bytes:if byte==extent{0}else{body.max(1).min(extent-byte)},depth:1,..Default::default()}},
   _=>return Err(semio_framework_value::ValueError::invariant("initial field cursor exceeds its inventory")),
  })}
     /// 🖋️ Copies one funded static absent chunk or initializes one selected live field in place.
@@ -344,8 +347,9 @@ impl<A: ArtifactApp> ToolOperations<A> {
   35=>{if byte!=0||count!=2*initial_field_bytes::<Self,_>(|owner|&owner.latest_wins_order){return Err(semio_framework_value::ValueError::invariant("live initial field requires its full atomic copy extent"))}unsafe{std::ptr::addr_of_mut!((*target).latest_wins_order).write(if backing{ArtifactFixedQueue::new(ARTIFACT_LIVE_OUTPUT_SLOTS)}else{ArtifactFixedQueue::unallocated(ARTIFACT_LIVE_OUTPUT_SLOTS)});}Ok(true)},
   37=>{if byte!=0||count!=2*initial_field_bytes::<Self,_>(|owner|&owner.latest_wins_turn){return Err(semio_framework_value::ValueError::invariant("live initial field requires its full atomic copy extent"))}unsafe{std::ptr::addr_of_mut!((*target).latest_wins_turn).write(true);}Ok(true)},
   38=>unsafe{semio_framework_value::initialization::initialize_absent_field_at(std::ptr::addr_of_mut!((*target).original_emission_construction),byte,count)},
+  39=>unsafe{semio_framework_value::initialization::initialize_absent_field_at(std::ptr::addr_of_mut!((*target).original_emission_result),byte,count)},
   #[cfg(test)]
-  39=>unsafe{semio_framework_value::initialization::initialize_absent_field_at(std::ptr::addr_of_mut!((*target).test_tool_clock),byte,count)},
+  40=>unsafe{semio_framework_value::initialization::initialize_absent_field_at(std::ptr::addr_of_mut!((*target).test_tool_clock),byte,count)},
   _=>Err(semio_framework_value::ValueError::invariant("initial field cursor exceeds its inventory")),
  }}
 
@@ -396,7 +400,7 @@ impl<A: ArtifactApp> ToolOperations<A> {
             tool_cancellations: semio_plugin_operation::ToolCancellationIssuer::empty(),
             live_runtime_instance_id: None,
             tool_operations: ArtifactFixedRegistry::new(),
-            original_emission_admission:std::mem::ManuallyDrop::new(None),original_emission_receipt:None,original_emission_construction:None,
+            original_emission_admission:std::mem::ManuallyDrop::new(None),original_emission_receipt:None,original_emission_construction:None,original_emission_result:None,
             #[cfg(test)]
             test_tool_clock: None,
             typed_operation_reservations: [None; ARTIFACT_LIVE_OUTPUT_SLOTS],

@@ -3,16 +3,16 @@ import type {ScriptInvocation} from "../../../../../../🔨️modules/🏃️pro
 import {readArtifactBytesV1} from "../../🌐️browser-bundle/📦️distribution/📋️inventory/🟦️.ts";
 import { scriptCompilerAdmissionControlV1, type CompilerAdmissionControl } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
 import { buildModePolicy, readBuildMode } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
-import { existsSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, renameSync, rmSync, writeFileSync } from "node:fs";
+import { copyFileSync, existsSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, renameSync, rmSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
-import { dirname, join, relative, resolve } from "node:path";
+import { basename, dirname, join, relative, resolve } from "node:path";
 import { isDeepStrictEqual } from "node:util";
 import { NATIVE_BUILD_DRIVER_POLICY_V1 } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🧩️component-pass/🟦️.ts";
 import { BundleScript } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { DESCRIPTOR_JSON_REL_PATH, findPluginCargoFiles, parseComponentSourceOwnerV1, type ComponentSourceOwnerV1 } from "../../📇️registry/🔎️discovery/🟦️.ts";
 import { COMPONENT_PROFILE_POLICIES, COMPONENT_RECEIPT_SCHEMA_ID, COMPONENT_TARGET, SHIPPED_COMPONENT_PROFILE, componentDeliverableV1, componentProfileV1, componentProvenanceDigestsV1, rustToolchainIdentityV1, writeComponentReceiptV1, type ComponentDeliverableV1, type ComponentProfileV1, type ComponentReceiptV1 } from "../🏷️component-receipt/🟦️.ts";
 import { decodeCargoProvenanceV1 } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🧾️receipt/🟦️.ts";
-import { fileSha256V1, STAGE_CACHE_POLICY_V1, stageCacheV1, type StageCacheV1 } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🗃️stage-cache/🟦️.ts";
+import { fileSha256V1, STAGE_CACHE_POLICY_V1, stageCacheV1, type StageCacheV1, type StageRemoteV1 } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🗃️stage-cache/🟦️.ts";
 import { CATALOG_DESCRIPTOR_MAX_BYTES } from "../../📇️registry/✅️catalog-verification/🟦️.ts";
 import { verifySemanticDescriptorPairBytesV1 } from "../../📇️registry/✅️catalog-verification/🧬️descriptor-pair/🟦️.ts";
 import { DESCRIPTOR_JSON_FILENAME, DESCRIPTOR_PACK_FILENAME } from "../🏗️component-build/🟦️.ts";
@@ -83,6 +83,23 @@ function publishSemanticPair(ownerRoot: string, emission: Pick<SemanticDescripto
   }
 }
 
+/** ☁️ The remote producer of one describe stage: the emitter executable is shipped as an input pinned by the digest in the key (the worker checks it after placing the inputs), the component is the only other input and the files the emitter writes below `out/d` are strict-decoded here before the pair (and the actor image of a preparing describe) lands in the stage directory exactly as a local emission writes it. It answers `false` (the stage runs here) when offloading is switched off (`SEMIO_OFFLOAD=never`), the digest is no SHA-256, the pair does not verify or the fleet cannot take it, and never fails a stage.
+ * @see ../../../../../🦑️repo/🔨️modules/📚️library/🏗️build/🌐️remote-execution/🚀️offload/🟦️.ts */
+export function describeStageRemoteV1(cache: StageCacheV1, deliverable: ComponentDeliverableV1, control: DescriptorEmissionControlV1, emitter: string, digest: string): StageRemoteV1 {
+  return async (directory, signal) => {
+    const environment = control.environment ?? process.env, scratch = mkdtempSync(join(dirname(deliverable.directory), ".describe-remote-"));
+    try {
+      const { offloadCommandV1, offloadModeV1 } = await import("../../../../../🦑️repo/🔨️modules/📚️library/🏗️build/🌐️remote-execution/🚀️offload/🟦️.ts");
+      if (offloadModeV1(environment) === "never" || !/^[0-9a-f]{64}$/u.test(digest)) return false;
+      const landed = join(scratch, "landed"), outcome = await offloadCommandV1({ tool: { name: "descriptor-emitter", digest, file: emitter }, arguments: ["describe", "@root/in/component.wasm", "--out", "@root/out/d", ...(control.prepareActor ? ["--prepare-actor"] : [])], inputs: new Map([["in/component.wasm", deliverable.wasm]]), outputs: new Map(), directories: new Map([["out/d", landed]]), root: environment.SEMIO_UNIT_CACHE_ROOT ?? join(cache.root, ".offload"), environment, label: `describe ${basename(deliverable.wasm)}`, key: null, signal });
+      if (outcome.kind !== "done") return false;
+      verifySemanticDescriptorPairBytesV1(readFileSync(join(landed, DESCRIPTOR_JSON_FILENAME)), readFileSync(join(landed, DESCRIPTOR_PACK_FILENAME)));
+      for (const name of [DESCRIPTOR_PACK_FILENAME, DESCRIPTOR_JSON_FILENAME, ...(control.prepareActor && existsSync(join(landed, actorPreparationPolicyV1.image)) ? [actorPreparationPolicyV1.image] : [])]) copyFileSync(join(landed, name), join(directory, name));
+      return true;
+    } catch { return false; } finally { rmSync(scratch, { recursive: true, force: true }); }
+  };
+}
+
 /** 🛂️ The cached describe stage over one staged deliverable: the semantic descriptor pair exactly these bytes answer, keyed by the component's digest and the
  * emitter binary's digest, strict-decoded and refused when it names another component. */
 export async function describeComponentStageV1(repoRoot: string, target: ComponentStageTargetV1, deliverable: ComponentDeliverableV1, cache: StageCacheV1, control: DescriptorEmissionControlV1): Promise<SemanticDescriptorEmissionV1> {
@@ -95,7 +112,7 @@ export async function describeComponentStageV1(repoRoot: string, target: Compone
       writeFileSync(join(directory, DESCRIPTOR_PACK_FILENAME), emission.packBytes);
       writeFileSync(join(directory, DESCRIPTOR_JSON_FILENAME), emission.jsonBytes);
       if (emission.actorImage) writeFileSync(join(directory, actorPreparationPolicyV1.image), emission.actorImage);
-    }, control.compiler.signal, target.packageName);
+    }, control.compiler.signal, target.packageName, describeStageRemoteV1(cache, deliverable, control, actualTool.path, tool));
     const packBytes = await readArtifactBytesV1(join(output, DESCRIPTOR_PACK_FILENAME),CATALOG_DESCRIPTOR_MAX_BYTES,control.compiler.signal), jsonBytes = await readArtifactBytesV1(join(output, DESCRIPTOR_JSON_FILENAME),CATALOG_DESCRIPTOR_MAX_BYTES,control.compiler.signal), pair = verifySemanticDescriptorPairBytesV1(jsonBytes, packBytes);
     if (pair.pluginId !== target.pluginId || pair.packageId !== target.packageId || pair.role !== target.role) throw new Error(`${target.pluginId}: the component describes ${pair.pluginId} (${pair.packageId}, ${pair.role})`);
     const actorImage = control.prepareActor ? await readOptionalActorImageV1(join(output, actorPreparationPolicyV1.image), control.compiler.signal) : undefined;

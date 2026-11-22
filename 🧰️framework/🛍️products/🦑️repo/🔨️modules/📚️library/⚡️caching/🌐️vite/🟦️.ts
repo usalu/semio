@@ -9,7 +9,7 @@ import { runOwnedCommand } from "../../../../../../🔨️modules/🏃️process
 import { buildModeEnvironment, readBuildMode, type BuildMode } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
 import { withCompilerState } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🗃️state/🟦️.ts";
 import {withViteStorageV1,viteWriterResourceV1} from "./💾️storage/🟦️.ts";
-import {acquireResourceLease,checkResourceLeaseControl} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
+import {acquireResourceLease,checkResourceLeaseControl,type ResourceLeaseControl} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 import {withRepositoryCacheStoreV1} from "../💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🟦️.ts";
 import {requireNativeStoragePathV1} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts";
 import storageSchema from "./💾️storage/🧬️schema/🔣️.json" with {type:"json"};

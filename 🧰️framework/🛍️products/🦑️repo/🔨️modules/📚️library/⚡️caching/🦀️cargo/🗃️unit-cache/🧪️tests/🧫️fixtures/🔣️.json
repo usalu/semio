@@ -13,7 +13,7 @@
       "outDir": "/lane/b/deps",
       "source": "/ws/foo/src/lib.rs",
       "externs": ["bar"],
-      "normalized": ["--crate-name", "foo", "--edition=2021", "/ws/foo/src/lib.rs", "--error-format=json", "--json=artifacts,future-incompat", "--crate-type", "lib", "--emit=dep-info,metadata,link", "-C", "embed-bitcode=no", "-C", "metadata=abc", "-C", "extra-filename=-abc", "--extern", "bar=#1111111111111111111111111111111111111111111111111111111111111111", "--remap-path-prefix=@@semio-lane@@/b=x"]
+      "normalized": ["--crate-name", "foo", "--edition=2021", "/ws/foo/src/lib.rs", "--error-format=json", "--json=artifacts,future-incompat", "--crate-type", "lib", "--emit=dep-info,metadata,link", "-C", "embed-bitcode=no", "--extern", "bar=#1111111111111111111111111111111111111111111111111111111111111111", "--remap-path-prefix=@@semio-lane@@/b=x"]
     },
     {
       "name": "the builtin proc_macro extern carries no path",

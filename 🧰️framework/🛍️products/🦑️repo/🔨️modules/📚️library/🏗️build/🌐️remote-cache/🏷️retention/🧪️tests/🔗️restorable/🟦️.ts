@@ -1,6 +1,6 @@
 import {afterAll,expect,test} from "bun:test";
 import {createHash} from "node:crypto";
-import {existsSync,mkdtempSync,rmSync} from "node:fs";
+import {existsSync,mkdtempSync,rmSync,writeFileSync} from "node:fs";
 import {tmpdir} from "node:os";
 import {join} from "node:path";
 import {CAS_POLICY_V1} from "../../../../🗄️cas/🧬️schema/🟦️.ts";
@@ -10,6 +10,7 @@ import {parseRemoteCacheActionResultV1} from "../../../🔬️action-result/🟦
 import {createClaimTableV1} from "../../../🎟️claims/🟦️.ts";
 import {collectRemoteCacheDirectoryV1} from "../../../🧹️collector/🟦️.ts";
 import {RemoteCacheStoreV1} from "../../../💾️store/🟦️.ts";
+import {declareV1,openTreeDigestsV1} from "../../🍂️staleness/🟦️.ts";
 import {REAPI_V1,encodeProtobufV1} from "../../../../🌐️remote-execution/📡️wire/📦️protobuf/🟦️.ts";
 
 const scratch:string[]=[];
@@ -33,18 +34,19 @@ const result=(blobs:readonly Uint8Array[]):Uint8Array=>{
  return new Uint8Array(parts);
 };
 
-type Rig={store:RemoteCacheStoreV1;host:CasStoreV1;folder:string};
+type Rig={store:RemoteCacheStoreV1;host:CasStoreV1;folder:string;tree:string};
 async function rig(label:string,options:{grace?:number;minAge?:number;claimed?:(namespace:string,kind:"ac"|"cas"|"nx",key:string)=>boolean}={}):Promise<Rig>{
- const folder=directory(label),host=createCasStoreV1({root:directory(label+"-cas"),policy:quiet(options.minAge??0)});
- const store=await RemoteCacheStoreV1.open({directory:folder,host,maximumBytes:2**30,maximumEntryBytes:2**22,maximumAgeMilliseconds:0,graceMilliseconds:options.grace??80,...options.claimed?{claimed:options.claimed}:{}});
- return {store,host,folder};
+ const folder=directory(label),tree=directory(label+"-tree"),host=createCasStoreV1({root:directory(label+"-cas"),policy:quiet(options.minAge??0)});
+ const store=await RemoteCacheStoreV1.open({directory:folder,host,staleness:{mode:"enforce",tree:await openTreeDigestsV1(tree),examples:3,recheckMilliseconds:0,manifestNames:["unit.json"]},maximumBytes:2**30,maximumEntryBytes:2**22,maximumAgeMilliseconds:0,graceMilliseconds:options.grace??80,...options.claimed?{claimed:options.claimed}:{}});
+ return {store,host,folder,tree};
 }
 const blob=async(r:Rig,bytes:Uint8Array)=>{expect(["created","exists"]).toContain(await r.store.put("main","cas",sha(bytes),body(bytes),{mode:"content",verify:true,declaredLength:bytes.length}));return sha(bytes);};
+const built=(r:Rig,key:string,name:string)=>{const file=`${name.replace(/[^a-z0-9]/gu,"-")}.rs`;writeFileSync(join(r.tree,file),key);return {slot:slot(name),declaration:declareV1({kind:"rust-unit",toolchain:sha("t1"),sources:[{path:file,sha256:sha(key)}],externs:[]})};};
 const action=async(r:Rig,key:string,blobs:readonly Uint8Array[],name:string|null)=>{
  for(const bytes of blobs)await blob(r,bytes);
- expect(await r.store.put("main","ac",key,body(result(blobs)),{mode:"replace",...name===null?{}:{slot:{slot:slot(name)}}})).toMatch(/created|replaced/u);
+ expect(await r.store.put("main","ac",key,body(result(blobs)),{mode:"replace",...name===null?{}:{slot:built(r,key,name)}})).toMatch(/created|replaced/u);
 };
-const archive=async(r:Rig,key:string,bytes:Uint8Array,name:string|null)=>{expect(await r.store.put("main","nx",key,body(bytes),{mode:"keep",declaredLength:bytes.length,...name===null?{}:{slot:{slot:slot(name)}}})).toBe("created");};
+const archive=async(r:Rig,key:string,bytes:Uint8Array,name:string|null)=>{expect(await r.store.put("main","nx",key,body(bytes),{mode:"keep",declaredLength:bytes.length,...name===null?{}:{slot:built(r,key,name)}})).toBe("created");};
 const restorable=async(r:Rig,kind:"ac"|"nx",key:string,expected:readonly Uint8Array[]):Promise<boolean>=>{
  if(kind==="nx"){const entry=await r.store.read("main","nx",key);if(!entry)return false;const bytes=await r.host.read(sha(expected[0]!));return bytes!==undefined&&Buffer.from(bytes).equals(Buffer.from(expected[0]!));}
  const bytes=await r.store.readBytes("main","ac",key,2**20);if(!bytes)return false;
@@ -54,7 +56,7 @@ const restorable=async(r:Rig,kind:"ac"|"nx",key:string,expected:readonly Uint8Ar
 };
 const gone=(r:Rig,bytes:Uint8Array)=>!existsSync(r.host.objectPath(sha(bytes)));
 
-test("unit outputs: the current action result restores whole after the older state went, shared outputs stay, outputs only the old state used go",async()=>{
+test("unit outputs: the current action result restores whole after the stale state went, shared outputs stay, outputs only the old state used go",async()=>{
  const r=await rig("unit"),shared=text("rlib-shared".repeat(30)),oldOnly=text("rmeta-old".repeat(30)),newOnly=text("rmeta-new".repeat(30)),dep=text("dep-info".repeat(30));
  await action(r,"a".repeat(64),[shared,oldOnly,dep],"unit:x");await action(r,"b".repeat(64),[shared,newOnly,dep],"unit:x");
  await sleep(150);await r.store.collect();
@@ -62,7 +64,7 @@ test("unit outputs: the current action result restores whole after the older sta
  expect(gone(r,oldOnly)).toBe(true);expect(gone(r,shared)).toBe(false);expect(gone(r,dep)).toBe(false);await r.store.close();
 });
 
-test("Nx archives: the current archive restores, the superseded body is reclaimed, an unslotted archive and a second slot are untouched",async()=>{
+test("Nx archives: the current archive restores, the stale body is reclaimed, an undeclared archive and a second crate are untouched",async()=>{
  const r=await rig("nx"),one=text("archive-1".repeat(40)),two=text("archive-2".repeat(40)),other=text("archive-other".repeat(40)),plain=text("archive-plain".repeat(40));
  await archive(r,"n1",one,"task:a");await archive(r,"n2",two,"task:a");await archive(r,"o1",other,"task:b");await archive(r,"p1",plain,null);
  await sleep(150);await r.store.collect();await r.store.collect();
@@ -70,7 +72,7 @@ test("Nx archives: the current archive restores, the superseded body is reclaime
  expect(await r.store.read("main","nx","n1")).toBeUndefined();expect(gone(r,one)).toBe(true);await r.store.close();
 });
 
-test("graph documents (package F): a result with a large document blob and a stdout note; only the superseded state's document goes",async()=>{
+test("graph documents (package F): a result with a large document blob and a stdout note; only the stale state's document goes",async()=>{
  const r=await rig("graph"),doc1=text("graph-document-1".repeat(2000)),doc2=text("graph-document-2".repeat(2000)),note=text("Note: root neutral");
  await action(r,"c".repeat(64),[doc1,note],"graph-state:linux");await action(r,"d".repeat(64),[doc2,note],"graph-state:linux");
  await sleep(150);await r.store.collect();
@@ -87,7 +89,7 @@ test("install packs, pinned downloads, crate archives and wasm payloads uploaded
  await r.store.close();
 });
 
-test("a blob that a pin or a recent access protects survives although a superseded result referenced it (the digest shared with a pinned download or a wasm payload)",async()=>{
+test("a blob that a pin or a recent access protects survives although a stale result referenced it (the digest shared with a pinned download or a wasm payload)",async()=>{
  const pinnedRig=await rig("pinned",{minAge:0}),pinned=text("pinned-and-referenced".repeat(50));
  await action(pinnedRig,"1".repeat(64),[pinned],"u:p");await action(pinnedRig,"2".repeat(64),[text("replacement")],"u:p");
  await pinnedRig.host.pin("fleet-fetch-holder",[sha(pinned)],60_000);await sleep(150);await pinnedRig.store.collect();
@@ -97,7 +99,7 @@ test("a blob that a pin or a recent access protects survives although a supersed
  expect(gone(recent,payload),"accessed within the host store's minimum age").toBe(false);await recent.store.close();
 });
 
-test("claims: a live claim keeps a superseded entry, its lapse (a capped lifetime) does not delete a fresh entry, and both ending lets it go",async()=>{
+test("claims: a live claim keeps a stale entry, its lapse (a capped lifetime) does not delete a fresh entry, and both ending lets it go",async()=>{
  let clock=1_000_000;const table=createClaimTableV1({now:()=>clock,sweepMilliseconds:0});
  const r=await rig("claims",{grace:80,claimed:(namespace,kind,key)=>kind!=="cas"&&table.claimed(namespace,kind,key)}),one=text("claim-1".repeat(30)),two=text("claim-2".repeat(30));
  await archive(r,"k1",one,"claimed");expect(table.claim("main","nx","k1",{owner:"a:1:x",ttlMilliseconds:60_000}).state).toBe("granted");

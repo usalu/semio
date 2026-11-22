@@ -25,7 +25,7 @@ test("the admission facts of the exchange are the memo of the process, keyed by 
  expect(block).toContain('scope+"\\0"+loadedGraphAdmissionFormatV1+"\\0"');
  expect(block).not.toContain("loadedGraphModuleAuthorityV1");
  expect(block).toContain("rememberOwnerFactsV1(");
- expect(text).toContain('key:scope+"\\0"+loadedGraphAdmissionFormatV1+"\\0"+owner.name+"\\0"+JSON.stringify([targets,inputs])');
+ expect(text).toContain('const suffix=owner.name+"\\0"+JSON.stringify([targets,inputs]),key=scope+"\\0"+loadedGraphAdmissionFormatV1+"\\0"+suffix');
 });
 
 test("the attempt of the load module is not touched by the exchange",()=>{

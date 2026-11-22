@@ -46,6 +46,9 @@ mod staged_input__chrome_dialog_and_tooltips;
 #[path = "../../../🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🕹️input/🔑️storage-prefs-and-i18n/🦀️.rs"]
 mod staged_input__storage_prefs_and_i18n;
 pub use staged_input__storage_prefs_and_i18n::*;
+#[path = "../../../🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🕹️input/🎣️suggestion-submenu/🦀️.rs"]
+mod staged_input__suggestion_submenu;
+pub use staged_input__suggestion_submenu::*;
 #[path = "../../../🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🕹️input/🔖️identity-and-types/🦀️.rs"]
 mod staged_input__identity_and_types;
 pub use staged_input__identity_and_types::*;

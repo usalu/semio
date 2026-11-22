@@ -1,0 +1,55 @@
+{
+  "id": "tree-fern",
+  "category": "vegetation",
+  "title": {
+    "en": "Soft Tree Fern",
+    "de": "Tasmanischer Baumfarn"
+  },
+  "heightM": 5.708,
+  "widthM": 4.957,
+  "powerW": 0,
+  "poses": [
+    "calm",
+    "windy",
+    "storm",
+    "dry-spell"
+  ],
+  "clips": [
+    "wind-sway",
+    "gust",
+    "diurnal-transpiration"
+  ],
+  "representations": {
+    "50": "authored",
+    "100": "authored",
+    "200": "authored",
+    "500": "authored"
+  },
+  "symbols": [
+    "tree-fern-symbol"
+  ],
+  "analytics": [
+    "thermal",
+    "transport",
+    "structural"
+  ],
+  "exports": [
+    "svg",
+    "pdf",
+    "dxf",
+    "dwg",
+    "png-sequence",
+    "mp4",
+    "webm",
+    "component",
+    "glb",
+    "fbx",
+    "model",
+    "model-zip"
+  ],
+  "distinction": {
+    "en": "A fern with a trunk of roots: a 4 m column of fibrous root mantle flaring at the base, crowned by a 5 m shuttlecock of arching bipinnate fronds with unrolling crosiers and a skirt of dead fronds; it stands in light shade and its fronds sag in a dry spell.",
+    "de": "Ein Farn mit einem Stamm aus Wurzeln: eine 4 m hohe Säule aus faserigem Wurzelmantel, am Fuß verbreitert, gekrönt von einem 5 m weiten Federball überhängender doppelt gefiederter Wedel mit sich entrollenden Farnschnecken und einem Rock toter Wedel; er steht im lichten Schatten und seine Wedel hängen in einer Trockenperiode durch."
+  },
+  "completion": "authored"
+}

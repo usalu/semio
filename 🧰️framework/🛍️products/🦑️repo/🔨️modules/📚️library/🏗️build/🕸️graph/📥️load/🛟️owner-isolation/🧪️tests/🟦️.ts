@@ -13,6 +13,7 @@ import {observeOwnerFactsMemoizedV1,selectedAdmissionFactsV1} from "../../🟦�
 import {loadedGraphAdmissionFormatV1} from "../../../🔐️authority/🟦️.ts";
 import {canonicalTestAggregatePolicyV1 as aggregate,deriveCanonicalTestAggregateV1,readCanonicalTestRoutesV1,requireCanonicalTestAggregateV1} from "../../../../../⚡️caching/🗂️suites/🧮️aggregate/🟦️.ts";
 import {isOwnerFailureV1,joinOwnerFailuresV1,observeOwnerWithRetryV1,ownerFailureDecisionV1,ownerFailureV1,ownerIsolationPolicyV1,registryPendingFailureV1,stableOwnerFailureHoldsV1} from "../🟦️.ts";
+import {isClosedOwnerRegistryInvalidationV1,registryFaultTextV1,withOwnerRegistryCustodyV1} from "../../🧭️registry-follow/🟦️.ts";
 import {revalidatedWithheldOwnersV1,withheldRevalidationV1} from "../🔁️revalidation/🟨️.mjs";
 
 const sha=(text:string)=>createHash("sha256").update(text).digest("hex");
@@ -354,4 +355,15 @@ test("a pending or vanished native owner root is never an owner's own failure: i
  }
  expect(registryPendingFailureV1(coded("Canonical native dependency owner required: x","BUILD_OTHER"))).toBe(false);
  expect(registryPendingFailureV1(ownerFailureV1("a",Error("boom"),1,true))).toBe(false);
+});
+
+test("a joined failure whose owners all failed on a pending native root is followed by the registry custody, never surfaced as an owner failure",async()=>{
+ const root="🧰️framework/🔨️modules/🖱️ui/🧬️contract/🚚️window-resource/📦️packages/🦀️rust",pending=(name:string)=>ownerFailureV1(name,coded("Canonical native dependency owner required: "+root,"BUILD_SOURCE_AUTHORITY"),1,true);
+ const joined=joinOwnerFailuresV1([pending("a"),pending("b")]);
+ expect(registryFaultTextV1(joined)).toContain(root);
+ const run=(error:Error)=>withOwnerRegistryCustodyV1<string>(new AbortController().signal,async contain=>contain(async()=>{throw error;}));
+ expect(isClosedOwnerRegistryInvalidationV1(await run(joined).catch(thrown=>thrown))).toBe(true);
+ const mixed=joinOwnerFailuresV1([pending("a"),ownerFailureV1("b",Error("boom"),1,true)]);
+ expect(registryFaultTextV1(mixed)).toBeUndefined();
+ expect(await run(mixed).catch(thrown=>thrown)).toBe(mixed);
 });

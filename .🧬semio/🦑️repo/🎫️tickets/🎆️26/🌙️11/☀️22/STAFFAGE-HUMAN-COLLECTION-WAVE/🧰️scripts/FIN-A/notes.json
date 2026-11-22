@@ -1,0 +1,191 @@
+{
+ "tests": "The finisher ran no vitest suite over the catalog (reserved for the umbrella coordinator). Run per person: `validateAsset` (`HW-01/validate.ts`), the staffage check CLI with 9 samples per clip (`FIN-A/measure.sh`), the silhouette guard measure and `checkVolumes` (`FIN-A/gate.sh`, i.e. `HW-03/measure.ts`), `validateManifest` on a copy of the manifest with the row (`HW-05/manifest.ts`, 0 issues for every row). One test was run for calibration only: `catalog-silhouette -t worker-carrying-box` fails on the established base figure (Hausdorff 107 mm against 15 mm at 1:50), filed in requests.md of the umbrella ticket; the same gate is missed by most people of this wave and was not chased with traced outlines, because traces on bones that a pose turns raise `lateral-ambiguous` (measured on `presenter-at-flipchart`, see HW-01).",
+ "HW-02": {
+  "theme": "Hospitality",
+  "assets": [
+   "waiter-with-tray",
+   "barista"
+  ],
+  "method": "`lib.py` (base snapshot `base-standing-adult.json.gz`, uniform scaling, de Leva masses, parts as revolved or extruded profiles that give the three 2D views and the 3D solid), `figure.py` (re-dressing, physiology, region areas measured from the thermal solids), `ik.py` and `rot.py` (arm inverse kinematics), `fk.ts`, `measure.ts`, `validate.ts`, `draw.ts`, `view.sh`; one generator per person: `python3 waiter.py`, `python3 barista.py` (each writes the catalog file; `--stage` writes a scratch copy). The barista's dimensions come from `FIN-A/fit_dims.py`.",
+  "never": "`hotel-receptionist`: no generator, no catalog file (only named in the docstring of `figure.py`). Not started by the finisher (order of 16:29: started rows only).",
+  "notes": {
+   "waiter-with-tray": {
+    "seen": "`🗑️generated/FIN-A/proof/waiter-with-tray.png` (deleted with the generated folder at the end; `🧰️scripts/FIN-A/proof.sh waiter-with-tray` renders it again): the walking waiter reads at every scale: black waistcoat, white sleeves and shirt front, dark apron and trousers, the level tray with three light glasses over the left shoulder; at 1:500 the tray and its load remain as a disc and a cylinder.",
+    "did": "Found in the catalog (17:27) valid and ✓ but drawn with inverted tones: the generator stated `tone` as darkness (waistcoat 0.86, shirt 0.1, glass 0.06) while the engine reads it as lightness (base figure: black shoe 0.12, white sole 0.88), so the black waistcoat printed white and the white sleeves black, against the asset's own decisions text. The finisher inverted the stated tones in `waiter.py` (waistcoat 0.14, shirt 0.9, trousers 0.22, shoes 0.1, hair 0.16, apron 0.08, glasses 0.94, drinks), completed the German structure assumption that lacked the sentence on the quasi-static solution, regenerated, re-measured, opened the sheet again.",
+    "doubts": "Skin keeps the base figure's dark tone 0.25 to 0.3 next to the dark waistcoat. The largest boundary distance of the silhouette guard (two smallest features) is missed in the views counted above, as it is by the base figure (see requests.md of the umbrella ticket); the checkVolumes findings counted above are measured, not repaired."
+   },
+   "barista": {
+    "seen": "`🗑️generated/FIN-A/proof/barista.png` (deleted with the generated folder at the end; `🧰️scripts/FIN-A/proof.sh barista` renders it again): bowed over the cup with both forearms raised, dark top, mid-grey bib apron and skirt, hair bun, light steel jug and white cup; at 1:200 and 1:500 the vessels are two small light masses in front of the chest and the bun is gone at 1:500.",
+    "did": "Found as a generator without a catalog file: garments, apron, bun, jug, cup and the three inverse-kinematics poses existed, the script ended in a `--stage` dump. The finisher completed it: three clips (`latte-art-pour` loop with the rocking jug, `idle-breathing`, `serve-to-guest`), materials, thermal regions with ISO 9920 layers, jug and cup as heated regions of the key `hot-drinks` (12 W and 5 W, passive nameplate 0 W), environment, assumptions, measured areas, all texts and decisions. Changes to the worker's design, each measured: stature 1.63 m to 1.70 m and 57 to 61 kg (a scale below 1 pushed 36 solids of the base that sit exactly on the smallest feature under it: `volumes-feature`); the milk level line dropped (`lateral-ambiguous`, 9.5 mm wrong on paper); tones inverted as for the waiter and the sneakers made white; the open hand masses of 1:200 and 1:500 shortened beyond the knuckles and the sleeve bodies of revolution drawn 10 % slimmer and 4 mm inwards so the drawings of all scales agree with each other and with the volume (`extent-*`, bounding box).",
+    "doubts": "A tall barista (1.70 m is about the 84th percentile of DIN 33402-2 women) because of the scale rule above. Heat release of jug and cup is an authored estimate. 1:500 plan IoU 0.914 (below 0.92). In the front view the bowed head shows the dark hair cap over most of the face. The largest boundary distance of the silhouette guard (two smallest features) is missed in the views counted above, as it is by the base figure (see requests.md of the umbrella ticket); the checkVolumes findings counted above are measured, not repaired."
+   }
+  }
+ },
+ "HW-03": {
+  "theme": "Healthcare",
+  "assets": [
+   "nurse-walking",
+   "doctor-with-clipboard",
+   "patient-with-iv-pole"
+  ],
+  "method": "`lib.ts` (derivation from the snapshot `base-walking-commuter.json`: remove, rename, re-bind and scale parts, trim lofts, DuBois, dimensions from the 1:50 volume), `trace.ts` (outlines re-traced from the trimmed volume), `ik.ts`, `geo.ts`, `refs.ts`, texts in `*-text.ts`, checks `check.sh`, `measure.ts`, `validate.ts`, previews `views.sh`, `prev.sh`. Generators: `bun nurse.ts` then `python3 ../FIN-A/fit_dims.py nurse-walking --write`; `bun doctor.ts`; `bun patient.ts` (each writes the catalog file, `--out file` a draft).",
+  "notes": {
+   "nurse-walking": {
+    "seen": "`🗑️generated/FIN-A/proof/nurse-walking.png` (deleted with the generated folder at the end; `🧰️scripts/FIN-A/proof.sh nurse-walking` renders it again): a brisk walker in a hip-length tunic with bare forearms, both arms swinging, clogs; one light grey for tunic and trousers, readable down to 1:500.",
+    "did": "Found as a complete generator without a catalog file. Its output had 12 validator issues: the bare forearms still named the removed hatch `wool` (fixed in `nurse.ts`: the hatch is dropped from every shape that names it). The 1:500 figure is 38 mm taller than the finer scales, so no dimension taken from the 1:50 volume satisfied the drawings: the dimensions are now fitted to the volume and drawing guards of every scale (`FIN-A/fit_dims.py`, height 1.759 m).",
+    "doubts": "The 1:500 head and hair of the base figure stand 38 mm above the finer scales (inherited from walking-commuter). Region `face-skin` measures 0.143 to 0.150 m² against 0.0947 m² stated (checkVolumes, thermal coverage: the bare forearms were added to the region's solids but not to its area). The largest boundary distance of the silhouette guard (two smallest features) is missed in the views counted above, as it is by the base figure (see requests.md of the umbrella ticket); the checkVolumes findings counted above are measured, not repaired."
+   },
+   "doctor-with-clipboard": {
+    "seen": "`🗑️generated/FIN-A/proof/doctor-with-clipboard.png` (deleted with the generated folder at the end; `🧰️scripts/FIN-A/proof.sh doctor-with-clipboard` renders it again): white knee-length coat over dark trousers, clipboard held in front of the chest, stethoscope at 1:50 and 1:100; the light coat mass carries the figure at 1:500.",
+    "did": "Found complete in the catalog without a manifest row and without a report: validator 0 and check CLI ✓ as found; the generator was run again and reproduces the shipped file byte for byte in content; row and report written. The only person besides the patient that also passes the silhouette guard in all 12 views and has no checkVolumes finding.",
+    "doubts": "None beyond the worker's design; German title `Arzt mit Klemmbrett` is masculine where the other titles are neutral."
+   },
+   "patient-with-iv-pole": {
+    "seen": "`🗑️generated/FIN-A/proof/patient-with-iv-pole.png` (deleted with the generated folder at the end; `🧰️scripts/FIN-A/proof.sh patient-with-iv-pole` renders it again): patient in a knee-length gown standing beside the IV stand with five-star base, bag and pump on the pole; at 1:500 the stand is a pole on an oval base.",
+    "did": "Found as a complete generator without a catalog file. Its output had 2 validator issues: the 1:500 base of the stand was a round ellipsoid of 0.22 m radius while the five legs with castors of the finer scales reach 0.263 m ahead and 0.214 to 0.262 m sideways, so the 1:500 drawing was 41 mm short (fixed in `patient.ts`: the envelope of the star base). Passes validator, check CLI, silhouette guard in all 12 views and checkVolumes without a finding.",
+    "doubts": "German title `Patient mit Infusionsständer` is masculine. The default pose is `standing-with-pole`, the walk is the default clip."
+   }
+  }
+ },
+ "HW-04": {
+  "theme": "Construction",
+  "assets": [
+   "construction-worker-with-shovel",
+   "worker-with-jackhammer",
+   "surveyor-with-total-station"
+  ],
+  "method": "`lib.py` (the catalog figure `worker-carrying-box` without its carton, scaled, de Leva masses, poses, clips), `tool.py` (tool parts stated once per scale as bone-local profiles: revolved or plate, giving three 2D views and the 3D solid), `ik.ts` (both hands and the tool solved onto targets), `texts_common.py` and `texts_<person>.py`, `check.sh`, `render.sh`, `dims.ts`, `extents.ts`, `frames.ts`. Generators: `python3 shovel.py --write`, `python3 jackhammer.py --write`, `python3 surveyor.py --write` (without `--write` only a draft in `🗑️generated/HW-04/draft`). `lib.set_dims` now takes the dimensions from `FIN-A/fit_dims.py`.",
+  "notes": {
+   "construction-worker-with-shovel": {
+    "seen": "`🗑️generated/FIN-A/proof/construction-worker-with-shovel.png` (deleted with the generated folder at the end; `🧰️scripts/FIN-A/proof.sh construction-worker-with-shovel` renders it again): hi-vis worker leaning forward with the shovel held at the hip and the blade ahead of the feet; helmet, vest bands and knee pads at 1:50 and 1:100; the top view shows the helmet over the shaft.",
+    "did": "Found as a complete generator without a catalog file. Its output had 5 validator issues and 2 print findings, all fixed in the generator: `volumes-slender` (1:50 shaft 19.7 times as long as thick: it now starts inside the grip socket, 20.5); `suitability-feature` 1:500 `shank-r` 0.18 mm (in `resting-on-shovel` the blade stood in front of the right shank and left a sliver: the shovel now stands just outside the right foot, text adapted); `suitability-feature` 1:100 `helmet-ridge` (the shovel was painted over the helmet in the top view: its plan paint order is now below hands, trunk and helmet); `extent-*` (dimensions fitted to volume and drawings).",
+    "doubts": "In `driving-blade` the right hand holds the D-grip at the hip and the shaft crosses in front of the thighs: an inverse-kinematics solution at the wrist limits, readable but stiff. 1:50 elevation and plan disagree on the length by more than the checkVolumes limit (`volumes-views-disagree`). The largest boundary distance of the silhouette guard (two smallest features) is missed in the views counted above, as it is by the base figure (see requests.md of the umbrella ticket); the checkVolumes findings counted above are measured, not repaired."
+   },
+   "worker-with-jackhammer": {
+    "seen": "`🗑️generated/FIN-A/proof/worker-with-jackhammer.png` (deleted with the generated folder at the end; `🧰️scripts/FIN-A/proof.sh worker-with-jackhammer` renders it again): braced worker with both fists on the T-handle, motor housing, cylinder and chisel in one line down to the ground, ear defenders on the helmet.",
+    "did": "Found as a complete generator without a catalog file. Its output had 7 validator issues (`extent-*`) and a real drawing defect that no validator rule names: the plates of the breaker (handle posts, motor housing, 1:500 body) were drawn 0.26 m behind the hands, apart from cylinder and chisel (silhouette IoU 0.71 to 0.84). Cause: the rest lateral position of the breaker bone was stated as `-0.18 S + D`, but the 0.26 m offset `D` of the bone lies in the plane of the hand, not across it. Fixed in `jackhammer.py` (`rest_z = -0.18 S`): IoU 0.946 to 0.987, validator 0, check ✓.",
+    "doubts": "Thermal region areas of the breaker deviate from the measured solids (5 thermal-coverage findings). The largest boundary distance of the silhouette guard (two smallest features) is missed in the views counted above, as it is by the base figure (see requests.md of the umbrella ticket); the checkVolumes findings counted above are measured, not repaired."
+   },
+   "surveyor-with-total-station": {
+    "seen": "`🗑️generated/FIN-A/proof/surveyor-with-total-station.png` (deleted with the generated folder at the end; `🧰️scripts/FIN-A/proof.sh surveyor-with-total-station` renders it again): surveyor bent to the eyepiece behind the instrument on its tripod, the three legs spread in all views.",
+    "did": "Found as a complete generator without a catalog file; its output was valid and ✓ at once. Written to the catalog with fitted dimensions.",
+    "doubts": "Nine thermal-coverage findings: the stated areas of tripod and instrument regions deviate from the measured solids. The largest boundary distance of the silhouette guard (two smallest features) is missed in the views counted above, as it is by the base figure (see requests.md of the umbrella ticket); the checkVolumes findings counted above are measured, not repaired."
+   }
+  }
+ },
+ "HW-05": {
+  "theme": "Children and teens",
+  "assets": [
+   "walking-toddler",
+   "schoolchild-with-backpack",
+   "teenager-with-headphones"
+  ],
+  "method": "`lib.py` (segment-wise growth factors on `running-child` or `standing-phone-user`), `gait.py` (child gait keys), `tools.py`, `texts_*.py`; generators `python3 build_toddler.py`, `python3 build_schoolchild.py`, `python3 build_teen.py`; rows with `bun manifest.ts distinctions.json` (the worker's three distinction texts were kept).",
+  "notes": {
+   "walking-toddler": {
+    "seen": "`🗑️generated/FIN-A/proof/walking-toddler.png` (deleted with the generated folder at the end; `🧰️scripts/FIN-A/proof.sh walking-toddler` renders it again): a toddler with a large head, short legs, arms held out, wide base; at 1:500 a 1.7 mm figure that still reads as a small child beside adults.",
+    "did": "Found complete in the catalog without a manifest row and without a report: validator 0 and check CLI ✓ as found; the generator was run again and reproduces the shipped file byte for byte in content; row and report written.",
+    "doubts": "Top view IoU 0.857 to 0.909 at all four scales and 1:500 elevation 0.918 (below 0.92): the arms of the middle guard and the legs are drawn differently from the volume in the top view. Five thermal-coverage findings. The largest boundary distance of the silhouette guard (two smallest features) is missed in the views counted above, as it is by the base figure (see requests.md of the umbrella ticket); the checkVolumes findings counted above are measured, not repaired."
+   },
+   "schoolchild-with-backpack": {
+    "seen": "`🗑️generated/FIN-A/proof/schoolchild-with-backpack.png` (deleted with the generated folder at the end; `🧰️scripts/FIN-A/proof.sh schoolchild-with-backpack` renders it again): walking child with a backpack standing out behind the trunk at every scale.",
+    "did": "Found complete in the catalog without a manifest row and without a report: validator 0 and check CLI ✓ as found; the generator was run again and reproduces the shipped file byte for byte in content; row and report written.",
+    "doubts": "1:500 elevation IoU 0.918 and top view 0.907 (below 0.92). Structure and thermal coverage findings (4 and 3). The largest boundary distance of the silhouette guard (two smallest features) is missed in the views counted above, as it is by the base figure (see requests.md of the umbrella ticket); the checkVolumes findings counted above are measured, not repaired."
+   },
+   "teenager-with-headphones": {
+    "seen": "`🗑️generated/FIN-A/proof/teenager-with-headphones.png` (deleted with the generated folder at the end; `🧰️scripts/FIN-A/proof.sh teenager-with-headphones` renders it again): slouched teenager over the phone, hood, headband and cups at 1:50 and 1:100, the bowed head and bent arms at the coarse scales.",
+    "did": "Found complete in the catalog without a manifest row and without a report: validator 0 and check CLI ✓ as found; the generator was run again and reproduces the shipped file byte for byte in content; row and report written.",
+    "doubts": "The default clip `nod-to-the-beat` and `idle-scrolling` both loop; there is no clip named `idle-breathing` (the brief asks for an `idle-breathing` or a gait: `idle-scrolling` is the breathing idle under another name). The largest boundary distance of the silhouette guard (two smallest features) is missed in the views counted above, as it is by the base figure (see requests.md of the umbrella ticket); the checkVolumes findings counted above are measured, not repaired."
+   }
+  }
+ },
+ "HW-06": {
+  "theme": "Elderly and care",
+  "assets": [
+   "elderly-person-knitting",
+   "mobility-scooter-user"
+  ],
+  "method": "`hw06lib.py` (derivation, ageing factors, measurement and `finalize`), per person a base, build and texts module: `python3 knit_build.py` (`knit_base.py`, `knit_texts.py`), `python3 scoot_build.py` (`scoot_base.py`, `scoot_parts.py`, `scoot_texts.py`, `scoot_decisions.py`); checks `validate.ts`, `vcheck.ts`, `suit.ts`, previews `preview.sh`, `probe_view.sh`.",
+  "never": "`carer-pushing-wheelchair`: no generator, no catalog file (only listed in `validate.ts`). Not started by the finisher.",
+  "notes": {
+   "elderly-person-knitting": {
+    "seen": "`🗑️generated/FIN-A/proof/elderly-person-knitting.png` (deleted with the generated folder at the end; `🧰️scripts/FIN-A/proof.sh elderly-person-knitting` renders it again): woman on a slatted park bench, needles and work in front of her, ball of wool on the seat; bench and sitter remain two masses at 1:500.",
+    "did": "Found complete in the catalog without a manifest row and without a report: validator 0 and check CLI ✓ as found; the generator was run again and reproduces the shipped file byte for byte in content; row and report written.",
+    "doubts": "The stated mass 66.2 kg is the sum of the rig's segment masses (body 63 kg plus clothing and carried things) as the worker stated it; not re-derived by the finisher. The largest boundary distance of the silhouette guard (two smallest features) is missed in the views counted above, as it is by the base figure (see requests.md of the umbrella ticket); the checkVolumes findings counted above are measured, not repaired."
+   },
+   "mobility-scooter-user": {
+    "seen": "`🗑️generated/FIN-A/proof/mobility-scooter-user.png` (deleted with the generated folder at the end; `🧰️scripts/FIN-A/proof.sh mobility-scooter-user` renders it again): rider on a four-wheel scooter with tiller, basket and seat; wheels, shroud and rider stay distinct down to 1:200, one compact mass at 1:500.",
+    "did": "Found complete in the catalog without a manifest row and without a report: validator 0 and check CLI ✓ as found; the generator was run again and reproduces the shipped file byte for byte in content; row and report written. `scoot_decisions.py` was newer than the catalog file; the regenerated file is nevertheless identical.",
+    "doubts": "Has a marker symbol in the asset; the manifest row lists it. The largest boundary distance of the silhouette guard (two smallest features) is missed in the views counted above, as it is by the base figure (see requests.md of the umbrella ticket); the checkVolumes findings counted above are measured, not repaired."
+   }
+  }
+ },
+ "HW-07": {
+  "theme": "Ball sports and yoga",
+  "assets": [
+   "tennis-player",
+   "basketball-player"
+  ],
+  "method": "`lib.ts`, `person.ts`, `athlete.ts` (derivation of an athlete from the closest catalog human, clothing, physiology, manifest row), `racket.ts`, `ball.ts`, `texts.ts`; generators `bun tennis-player.ts`, `bun basketball-player.ts` (`--no-save` for a dry run); checks `validate.ts`, `volcheck.ts`, `guard.ts`, previews `render.sh`, `montage.ts`.",
+  "never": "`yoga-practitioner`: no generator, no catalog file (only named in headers and default lists). Not started by the finisher.",
+  "notes": {
+   "tennis-player": {
+    "seen": "`🗑️generated/FIN-A/proof/tennis-player.png` (deleted with the generated folder at the end; `🧰️scripts/FIN-A/proof.sh tennis-player` renders it again): ready stance with both hands on the racket in front of the body, headband, shorts; the racket head stays visible at 1:500.",
+    "did": "Found complete with a manifest row. The generator, run again, did not reproduce the shipped file: the shared pose solver (`person.ts`, `athlete.ts`, `lib.ts`) had been changed at 17:07 after the tennis file was written at 16:46 (basketball was already built with it). The regenerated file differs in the arm and clavicle angles of the five poses (the clavicles no longer shrug up to 35°) and in nothing else; validator 0, check ✓, power unchanged (762 W). The finisher kept the regenerated file so that generator and catalog agree, and rewrote the row.",
+    "doubts": "1:500 top view IoU 0.915 (below 0.92). The largest boundary distance of the silhouette guard (two smallest features) is missed in the views counted above, as it is by the base figure (see requests.md of the umbrella ticket); the checkVolumes findings counted above are measured, not repaired."
+   },
+   "basketball-player": {
+    "seen": "`🗑️generated/FIN-A/proof/basketball-player.png` (deleted with the generated folder at the end; `🧰️scripts/FIN-A/proof.sh basketball-player` renders it again): dribbling player, ball beside the knee, jersey and shorts; the ball stays a separate disc at all scales.",
+    "did": "Found complete with a manifest row; the generator reproduces the shipped file; row rewritten from the evaluated asset (same values).",
+    "doubts": "Two `volumes-silhouette` findings. The largest boundary distance of the silhouette guard (two smallest features) is missed in the views counted above, as it is by the base figure (see requests.md of the umbrella ticket); the checkVolumes findings counted above are measured, not repaired."
+   }
+  }
+ },
+ "HW-08": {
+  "theme": "Outdoor fitness",
+  "assets": [
+   "hiker-with-trekking-poles",
+   "person-stretching"
+  ],
+  "method": "`lib.ts` (derivation from `courier-with-hand-truck` and `standing-adult`), `ik.ts`; generators `bun hiker.ts`, `bun stretch.ts`; many small probes (`dbg*.ts`, `exp*.ts`, `suit*.ts`, `probe*.ts`) kept as the worker left them.",
+  "never": "`inline-skater`: no generator, no catalog file (only listed in `validate.ts`). Not started by the finisher.",
+  "notes": {
+   "hiker-with-trekking-poles": {
+    "seen": "`🗑️generated/FIN-A/proof/hiker-with-trekking-poles.png` (deleted with the generated folder at the end; `🧰️scripts/FIN-A/proof.sh hiker-with-trekking-poles` renders it again): hiker with daypack and cap, both poles planted ahead; the poles are thin strokes at 1:200 and 1:500.",
+    "did": "Found complete in the catalog without a manifest row and without a report: validator 0 and check CLI ✓ as found; the generator was run again and reproduces the shipped file byte for byte in content; row and report written.",
+    "doubts": "Four `volumes-connected` findings (the poles against the hands). The largest boundary distance of the silhouette guard (two smallest features) is missed in the views counted above, as it is by the base figure (see requests.md of the umbrella ticket); the checkVolumes findings counted above are measured, not repaired."
+   },
+   "person-stretching": {
+    "seen": "`🗑️generated/FIN-A/proof/person-stretching.png` (deleted with the generated folder at the end; `🧰️scripts/FIN-A/proof.sh person-stretching` renders it again): quadriceps stretch on one leg, heel at the seat, free arm out for balance: unmistakable in side and front view at every scale.",
+    "did": "Found complete in the catalog without a manifest row and without a report: validator 0 and check CLI ✓ as found; the generator was run again and reproduces the shipped file byte for byte in content; row and report written.",
+    "doubts": "IoU below 0.92 in five views (0.892 to 0.918: elevation and top view of 1:500 and 1:200, top view of 1:50): the folded leg and the outstretched arm are drawn differently from the volume. The largest boundary distance of the silhouette guard (two smallest features) is missed in the views counted above, as it is by the base figure (see requests.md of the umbrella ticket); the checkVolumes findings counted above are measured, not repaired."
+   }
+  }
+ },
+ "HW-09": {
+  "theme": "Urban mobility",
+  "assets": [
+   "e-scooter-rider",
+   "traveller-with-rolling-suitcase",
+   "person-pushing-bicycle"
+  ],
+  "method": "`hw09lib.py` (taking parts of existing assets: bones, shapes, solids, regions; scaling, renaming, merging), `kin.ts` (pose solving and saving), per person a build script, a text module and a pose script: `python3 build_e_scooter_rider.py && bun poses_e_scooter_rider.ts`; `python3 build_traveller.py && bun poses_traveller.ts && python3 ../FIN-A/fit_dims.py traveller-with-rolling-suitcase --write`; `python3 build_person_pushing_bicycle.py && bun poses_person_pushing_bicycle.ts` (`bicycle_fixes.py`, `bicycle_texts.py`). `FIN-A/reproduce.sh <slug>` runs the chain of any person of HW-01 … HW-09.",
+  "notes": {
+   "e-scooter-rider": {
+    "seen": "`🗑️generated/FIN-A/proof/e-scooter-rider.png` (deleted with the generated folder at the end; `🧰️scripts/FIN-A/proof.sh e-scooter-rider` renders it again): helmeted rider upright on the deck, hands on the bar, small wheels and stem; scooter and rider stay distinct at 1:200.",
+    "did": "Found complete in the catalog without a manifest row and without a report: validator 0 and check CLI ✓ as found; the generator was run again and reproduces the shipped file byte for byte in content; row and report written.",
+    "doubts": "Top view IoU 0.903 (1:500) and 0.914 (1:200), below 0.92. The largest boundary distance of the silhouette guard (two smallest features) is missed in the views counted above, as it is by the base figure (see requests.md of the umbrella ticket); the checkVolumes findings counted above are measured, not repaired."
+   },
+   "traveller-with-rolling-suitcase": {
+    "seen": "`🗑️generated/FIN-A/proof/traveller-with-rolling-suitcase.png` (deleted with the generated folder at the end; `🧰️scripts/FIN-A/proof.sh traveller-with-rolling-suitcase` renders it again): traveller in a light coat with shoulder bag, the tilted trolley behind on its extended handle; front view with the case beside the legs.",
+    "did": "Found complete without row and report; generator reproduces the file. The 1:50 volume is 0.727 m wide against 0.712 m stated (bounding box guard, limit 7.5 mm): the dimensions are fitted to all scales (depth 0.723 m) by `FIN-A/fit_dims.py` as the last step of the chain.",
+    "doubts": "The largest boundary distance of the silhouette guard (two smallest features) is missed in the views counted above, as it is by the base figure (see requests.md of the umbrella ticket); the checkVolumes findings counted above are measured, not repaired."
+   },
+   "person-pushing-bicycle": {
+    "seen": "`🗑️generated/FIN-A/proof/person-pushing-bicycle.png` (deleted with the generated folder at the end; `🧰️scripts/FIN-A/proof.sh person-pushing-bicycle` renders it again): walker behind the bicycle in the side view, both hands on the bar, wheels with spokes at 1:50 and 1:100, two tyre rings and frame at 1:500.",
+    "did": "Found in the catalog with the check CLI ✗: `suitability-feature` 1:500 fork (0.194 to 0.199 mm), 1:50 `chainstay-r` (0.189 mm) and two clip instants where the polygon union of the engine fails. Fixed in the generators: the three fork shapes of 1:500 get a 0.16 mm pen; the right chainstay is not drawn in the 1:50 front view, where only a sliver of it showed beside bottom bracket and chain case; the swinging toe of the two late-swing gait keys is lifted by 1° (the 1:200 toe prism was seen exactly edge-on; engine defect filed in requests.md of the umbrella ticket). Check ✓ since.",
+    "doubts": "The source `vehicles/city-bicycle` is itself ✗ in the check CLI today (`volumes-feature` of axles and nuts, measured 21:50); the copy inside this person typifies those solids. 13 `volumes-connected` findings, 1:500 top view IoU 0.900. The largest boundary distance of the silhouette guard (two smallest features) is missed in the views counted above, as it is by the base figure (see requests.md of the umbrella ticket); the checkVolumes findings counted above are measured, not repaired."
+   }
+  }
+ }
+}

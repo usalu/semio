@@ -128,7 +128,7 @@ impl<M:Sync+'static> OriginalReplacementReceiving<M>{
  pub fn advance(&mut self,row:&mut InputReplacement,codec:&ArtifactOperationWire<M>,factory:&Arc<dyn ArtifactOwnedValueRetirementFactory<M>>,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
   if cx.should_yield(){return Ok(false)}let grant=cx.retained_grant();if grant.maximum_items==0||grant.maximum_depth==0{return Ok(false)}
    let mut outcome=None;let mut stepped=None;
-   if !cx.with_native_receiving_work(&mut outcome,|control,grant,work|{stepped=Some(self.advance_native(row,codec,factory,control,grant,work.saturating_sub(semio_framework_value::ORIGINAL_INVOCATION_WORK)));Ok(())})?{return Ok(false)}
+   if !cx.with_native_receiving_work(&mut outcome, Default::default(), |control,grant,work|{stepped=Some(self.advance_native(row,codec,factory,control,grant,work.saturating_sub(semio_framework_value::ORIGINAL_INVOCATION_WORK)));Ok(())})?{return Ok(false)}
    Self::settled(cx,outcome,stepped)?;if self.pending_work.is_some(){return Ok(false)}Ok(self.ready())
  }
  /// 🤝️ Transfers the already authenticated original typed projection under the same Job receiving continuation.

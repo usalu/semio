@@ -190,14 +190,17 @@ pub(super) fn tree_row_kind(tree: &UiTree, id: NodeId, parent_kind: Option<Layou
     }
 }
 
+/// 🎞️ The band one row owns in the flow before its nested rows: the row chrome and, under it, the detail band its Surface child fills.
+pub fn live_tree_item_band(tree: &UiTree, id: NodeId, item: &UiTreeItemNode, metrics: &TreeRowMetrics) -> f32 {
+    let open = tree.disclosure_open(id).unwrap_or(item.default_open.unwrap_or(false));
+    metrics.for_item(item).row_height + if open && tree_item_detail_node(tree, id).is_some() { TREE_DETAIL_HEIGHT } else { 0.0 }
+}
+
 pub fn live_tree_item_height(tree: &UiTree, id: NodeId, item: &UiTreeItemNode, metrics: &TreeRowMetrics, depth: usize) -> f32 {
     if !item.presence.visible() {
         return 0.0;
     }
-    let mut height = metrics.for_item(item).row_height;
-    if tree_item_detail_node(tree, id).is_some() {
-        height += TREE_DETAIL_HEIGHT;
-    }
+    let mut height = live_tree_item_band(tree, id, item, metrics);
     if document_table_row(tree, id).is_some() && tree.children(id).any(|child| matches!(tree.node(child).map(|node| &node.spec.0), Some(UiNode::ComponentScene(_)))) {
         height = height.max(TREE_DETAIL_HEIGHT);
     }
@@ -300,6 +303,9 @@ pub fn retained_tree_height(tree: &UiTree, id: NodeId, node: &UiTreeNode, metric
     if document_table(tree, id).is_some() {
         let (lead, trail) = node.sections.first().map_or((0.0, 0.0), |section| tree_window_spacer_px(section.window.as_ref(), section.items.len()));
         return metrics.header_height + lead + trail + node.sections.iter().flat_map(|section| section.items.iter()).filter_map(|item| tree.explicit_child(id, &item.id).map(|row| live_tree_item_height(tree, row, item, &metrics, 0))).sum::<f32>();
+    }
+    if node.sections.is_empty() {
+        return metrics.header_height + if matches!(node.presence.status, semio_ui_declaration::ui::UiStatus::Loading | semio_ui_declaration::ui::UiStatus::Waiting) { 0.0 } else { metrics.row_height };
     }
     node.sections
         .iter()

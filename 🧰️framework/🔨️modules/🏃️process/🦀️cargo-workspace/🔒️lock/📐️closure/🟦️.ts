@@ -139,13 +139,18 @@ export function observeCargoManifestV1(path:string,options:ReadOptionsV1={}):Pro
  return observeProjectionV1(path,projectCargoManifestV1,"Cargo.toml changed in what the build depends on",options);
 }
 
-/** 🧮️ The inputs of a Cargo target recipe: every path's digest from `physical`, except a `Cargo.lock` and a `Cargo.toml` whose projection holds, which are keyed and rechecked by their projections. */
+/** 🔑️ Whether a recipe input path takes part in the target key. `Cargo.toml` and `Cargo.lock` never do: they are observed and rechecked as witnesses, but Cargo's own fingerprints (package metadata, features, profile, dependency versions) already make every unit of a changed manifest or lock fresh or stale inside one target directory, so keying on them only discards reusable units. What decides artifact compatibility stays keyed: the toolchain and Cargo identity, the arguments (target, profile, features, package selection), the environment (rustflags) and every Cargo configuration and toolchain file.
+ * @see https://doc.rust-lang.org/cargo/reference/build-cache.html */
+export function cargoRecipeKeyedV1(path:string):boolean{return!protocol.witnessOnly.includes(path.split(/[\\/]/u).pop()!);}
+
+/** 🧮️ The inputs of a Cargo target recipe: the digest of every keyed path from `physical`; a `Cargo.lock` and a `Cargo.toml` are observed (through their projection while it holds, else byte-exact) and rechecked but never keyed, see {@link cargoRecipeKeyedV1}. */
 export async function cargoRecipeInputsV1(paths:readonly string[],roots:readonly string[],physical:Readonly<{digest:(path:string)=>Promise<string|undefined>;recheck:()=>Promise<void>}>,step:(path:string)=>Promise<void>=async()=>{},options:ReadOptionsV1={}):Promise<Readonly<{inputs:readonly Readonly<{path:string;sha256:string|null}>[];projected:readonly string[];recheck:()=>Promise<void>}>>{
  const inputs:{path:string;sha256:string|null}[]=[],witnesses:CargoLockClosureWitnessV1[]=[];
  for(const path of paths){
   const name=basename(path),witness=name==="Cargo.lock"?await observeCargoLockClosureV1(path,roots,options):name==="Cargo.toml"?await observeCargoManifestV1(path,options):undefined;
   if(witness)witnesses.push(witness);
-  inputs.push({path,sha256:witness?witness.digest:await physical.digest(path)??null});
+  const digest=witness?witness.digest:await physical.digest(path)??null;
+  if(cargoRecipeKeyedV1(path))inputs.push({path,sha256:digest});
   await step(path);
  }
  return Object.freeze({inputs:Object.freeze(inputs),projected:Object.freeze(witnesses.map(witness=>witness.path)),recheck:async()=>{await physical.recheck();for(const witness of witnesses)await witness.recheck();}});

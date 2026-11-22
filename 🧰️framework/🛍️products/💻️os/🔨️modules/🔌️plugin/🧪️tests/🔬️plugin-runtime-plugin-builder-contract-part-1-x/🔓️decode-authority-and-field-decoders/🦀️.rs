@@ -134,37 +134,42 @@ impl store::os_store::owned_schema_decode::ArtifactEnvelopeSnapshotFieldAuthorit
         store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_BYTES
     }
 
-    fn close_step(&mut self, grant: store::RetainedCloneGrant) -> Result<store::RetainedCloneStep, store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic> {
-        let empty = store::RetainedCloneProgress::default();
-        if self.terminal_is_empty() {
-            return Ok(store::RetainedCloneStep::Complete(empty));
-        }
-        if grant.maximum_items == 0 {
-            return Ok(store::RetainedCloneStep::Progress(empty));
-        }
-        let demand = self.close_demands(grant.maximum_copy_bytes)?;
-        if grant.maximum_depth < demand.depth {
-            return Err(self.diagnostic("composed-parent-envelope.snapshot-retirement-depth", 0));
-        }
-        if grant.maximum_copy_bytes < demand.copy_bytes || grant.maximum_capacity_bytes < demand.capacity_bytes || grant.maximum_release_bytes < demand.release_bytes {
-            return Ok(store::RetainedCloneStep::Progress(empty));
-        }
-        if let ComposedParentSnapshotDecodeState::Decode(authority) = &mut self.state {
-            authority.cancel();
-            self.state = ComposedParentSnapshotDecodeState::Closing;
-            return Ok(store::RetainedCloneStep::Progress(store::RetainedCloneProgress { copied_items: 1, released_bytes: store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES, ..empty }));
-        }
-        if self.retirement.is_some() {
-            let fault = self.diagnostic("composed-parent-envelope.snapshot-retirement-fault", 0);
-            return store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.retirement, grant).map_err(|_| fault);
-        }
-        if self.value.is_some() {
-            let step = store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.value, &mut self.retirement, grant).map_err(|_| self.diagnostic("composed-parent-envelope.snapshot-retirement-admission", 0))?;
-            self.state = ComposedParentSnapshotDecodeState::Closing;
-            return Ok(step);
-        }
-        self.state = ComposedParentSnapshotDecodeState::Complete;
-        Ok(store::RetainedCloneStep::Complete(empty))
+    fn close_step(&mut self, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> store::os_store::owned_schema_decode::ArtifactEnvelopeClosePoll {
+        use store::os_store::owned_schema_decode::{artifact_envelope_close_resume_with, artifact_envelope_close_settle, ArtifactEnvelopeCloseExit as Exit};
+        let grant = effect.grant();
+        let result = (|| -> Result<store::RetainedCloneStep, Exit> {
+            let empty = store::RetainedCloneProgress::default();
+            if self.terminal_is_empty() {
+                return Ok(store::RetainedCloneStep::Complete(empty));
+            }
+            if grant.maximum_items == 0 {
+                return Ok(store::RetainedCloneStep::Progress(empty));
+            }
+            let demand = self.close_demands(grant.maximum_copy_bytes)?;
+            if grant.maximum_depth < demand.depth {
+                return Err(self.diagnostic("composed-parent-envelope.snapshot-retirement-depth", 0).into());
+            }
+            if grant.maximum_copy_bytes < demand.copy_bytes || grant.maximum_capacity_bytes < demand.capacity_bytes || grant.maximum_release_bytes < demand.release_bytes {
+                return Ok(store::RetainedCloneStep::Progress(empty));
+            }
+            if let ComposedParentSnapshotDecodeState::Decode(authority) = &mut self.state {
+                authority.cancel();
+                self.state = ComposedParentSnapshotDecodeState::Closing;
+                return Ok(store::RetainedCloneStep::Progress(store::RetainedCloneProgress { copied_items: 1, released_bytes: store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES, ..empty }));
+            }
+            if self.retirement.is_some() {
+                let fault = self.diagnostic("composed-parent-envelope.snapshot-retirement-fault", 0);
+                return artifact_envelope_close_resume_with(store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.retirement, grant.maximum_copy_bytes, effect), |_| fault);
+            }
+            if self.value.is_some() {
+                let step = store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.value, &mut self.retirement, effect).result.map_err(|_| self.diagnostic("composed-parent-envelope.snapshot-retirement-admission", 0))?;
+                self.state = ComposedParentSnapshotDecodeState::Closing;
+                return Ok(step);
+            }
+            self.state = ComposedParentSnapshotDecodeState::Complete;
+            Ok(store::RetainedCloneStep::Complete(empty))
+        })();
+        artifact_envelope_close_settle(effect, result)
     }
 
     fn terminal_is_empty(&self) -> bool {
@@ -208,12 +213,12 @@ impl store::os_store::owned_schema_decode::ArtifactEnvelopeMutationFieldAuthorit
     fn next_close_release_byte_demand(&self) -> Result<usize, store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic> { Ok(0) }
     fn next_close_depth_demand(&self) -> Result<usize, store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic> { Ok(0) }
 
-    fn close_step(&mut self, grant: store::RetainedCloneGrant) -> Result<store::RetainedCloneStep, store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic> {
-        if grant.maximum_items == 0 {
-            return Ok(store::RetainedCloneStep::Progress(store::RetainedCloneProgress::default()));
+    fn close_step(&mut self, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> store::os_store::owned_schema_decode::ArtifactEnvelopeClosePoll {
+        if effect.grant().maximum_items == 0 {
+            return semio_framework_value::RetainedWorkPoll::Complete(semio_framework_value::RetainedWorkOutcome { result: Ok(store::RetainedCloneStep::Progress(Default::default())), work: 0 });
         }
         self.terminal = true;
-        Ok(store::RetainedCloneStep::Complete(store::RetainedCloneProgress::default()))
+        semio_framework_value::RetainedWorkPoll::Complete(semio_framework_value::RetainedWorkOutcome { result: Ok(store::RetainedCloneStep::Complete(Default::default())), work: effect.performed_work() })
     }
 
     fn terminal_is_empty(&self) -> bool {
@@ -237,12 +242,12 @@ impl store::os_store::owned_schema_decode::ArtifactEnvelopeSprConflictAuthority 
     fn next_close_release_byte_demand(&self) -> Result<usize, store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic> { Ok(0) }
     fn next_close_depth_demand(&self) -> Result<usize, store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic> { Ok(0) }
 
-    fn close_step(&mut self, grant: store::RetainedCloneGrant) -> Result<store::RetainedCloneStep, store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic> {
-        if grant.maximum_items == 0 {
-            return Ok(store::RetainedCloneStep::Progress(store::RetainedCloneProgress::default()));
+    fn close_step(&mut self, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> store::os_store::owned_schema_decode::ArtifactEnvelopeClosePoll {
+        if effect.grant().maximum_items == 0 {
+            return semio_framework_value::RetainedWorkPoll::Complete(semio_framework_value::RetainedWorkOutcome { result: Ok(store::RetainedCloneStep::Progress(Default::default())), work: 0 });
         }
         self.terminal = true;
-        Ok(store::RetainedCloneStep::Complete(store::RetainedCloneProgress::default()))
+        semio_framework_value::RetainedWorkPoll::Complete(semio_framework_value::RetainedWorkOutcome { result: Ok(store::RetainedCloneStep::Complete(Default::default())), work: effect.performed_work() })
     }
 
     fn terminal_is_empty(&self) -> bool {

@@ -9,6 +9,37 @@ description = "Component crate of semio-s-artifact-stdio-pdf: mut-family"
 [package.metadata.semio]
 role = "library"
 
+[package.metadata.semio.carve]
+owned = [
+  "standards::v1_7::subsets::base::schema::mutations::remove_catalog_entry",
+  "standards::v1_7::subsets::base::schema::mutations::remove_color_space",
+  "standards::v1_7::subsets::base::schema::mutations::remove_embedded_file",
+  "standards::v1_7::subsets::base::schema::mutations::remove_named_destination",
+  "standards::v1_7::subsets::base::schema::mutations::remove_properties",
+  "standards::v1_7::subsets::base::schema::mutations::replace_page",
+  "standards::v1_7::subsets::base::schema::mutations::set_acro_form",
+  "standards::v1_7::subsets::base::schema::mutations::set_catalog_entry",
+  "standards::v1_7::subsets::base::schema::mutations::set_color_space",
+  "standards::v1_7::subsets::base::schema::mutations::set_document_id",
+  "standards::v1_7::subsets::base::schema::mutations::set_embedded_file",
+  "standards::v1_7::subsets::base::schema::mutations::set_encryption",
+  "standards::v1_7::subsets::base::schema::mutations::set_language",
+  "standards::v1_7::subsets::base::schema::mutations::set_mark_info",
+  "standards::v1_7::subsets::base::schema::mutations::set_metadata",
+  "standards::v1_7::subsets::base::schema::mutations::set_named_destination",
+  "standards::v1_7::subsets::base::schema::mutations::set_open_action",
+  "standards::v1_7::subsets::base::schema::mutations::set_optional_content",
+  "standards::v1_7::subsets::base::schema::mutations::set_outlines",
+  "standards::v1_7::subsets::base::schema::mutations::set_output_intents",
+  "standards::v1_7::subsets::base::schema::mutations::set_page_labels",
+  "standards::v1_7::subsets::base::schema::mutations::set_page_layout",
+  "standards::v1_7::subsets::base::schema::mutations::set_page_mode",
+  "standards::v1_7::subsets::base::schema::mutations::set_properties",
+  "standards::v1_7::subsets::base::schema::mutations::set_viewer_preferences",
+  "standards::v1_7::subsets::h::schema::mutations::set_info_author",
+  "standards::v1_7::subsets::ua::schema::mutations::set_info_title",
+]
+
 [lints]
 workspace = true
 

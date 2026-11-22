@@ -9,6 +9,7 @@ import {fileURLToPath} from "node:url";
 import {classifyModuleReferencesV1} from "./🏗️build/🧮️task-model/🔎️module-references/🟦️.ts";
 import {nxBuildDependencySourceIdentityV1,nxBuildDependencySourceChangesV1,nxBuildDependencySourceRevisionsV1,nxBuildDependencySourceChangesFromV1,nxBuildDependencySourceProbeV1,nxEngineNamedInputV1 as engineNamedInput,nxEngineNativeNamedInputV1 as engineNativeNamedInput} from "./⚡️caching/🚀️bootstrap/🔌️nx-plugin/🔏️implementation/🟨️.mjs";
 import {nxEngineIdentityV1,nxEngineSurfaceV1,nxEngineFamilyV1,nxEnginePolicyV1,nxEngineSpawnOnlyV1} from "./⚡️caching/🚀️bootstrap/🔌️nx-plugin/🧮️engine-digest/🟦️.ts";
+import {openNxEngineReferencesMemoV1} from "./⚡️caching/🚀️bootstrap/🔌️nx-plugin/🧊️engine-references/🟨️.mjs";
 import {withNxBuildGraphPublicationV1} from "./⚡️caching/🚀️bootstrap/🔌️nx-plugin/📌️graph-pin/🟨️.mjs";
 import { isRuntimeBuiltinSpecifierV1, runtimeIdsV1 } from "../../../../📦️packages/🟦️typescript/⚙️runtime/🏷️identity/🟦️.ts";
 
@@ -55,19 +56,28 @@ export function nxBuildEngineWorkspacePackageFileV1(root,specifier){
 
 const defaultEngineRoot=fileURLToPath(new URL("../../../../../",import.meta.url)),engineDigestEntry="./⚡️caching/🚀️bootstrap/🔌️nx-plugin/🧮️engine-digest/🟨️.mjs";
 /** 🧮️ Closes only the private executor's actual source imports behind a string-only parser port: the workspace-relative files and the npm packages they name. */
+const engineClosureMemoV1=new Map();
+const engineStampV1=path=>{const row=lstatSync(path,{bigint:true,throwIfNoEntry:false});return row===undefined?"-":row.dev+":"+row.ino+":"+row.size+":"+row.mtimeNs;};
+/** 🧊️ The closure of the private executor, answered again in the same process while every file it read still has the stamp it was read at (a few thousand `lstat` instead of reading and scanning them all again for each family and each caller); any moved, replaced or removed file recomputes it. */
 export function nxBuildEngineClosureV1(policy=nxEnginePolicyV1()){
-  const root=fileURLToPath(new URL("../../../../../",import.meta.url)),pending=[import.meta.url,...["./📦️packages/🟦️typescript/📋️executors.json","./⚡️caching/🚀️bootstrap/🔌️nx-plugin/🏃️execution/🟨️.mjs","./⚡️caching/🚀️bootstrap/🔌️nx-plugin/📤️arguments/📜️script.ts","./⚡️caching/🚀️bootstrap/🔌️nx-plugin/📤️arguments/🧬️schema/🔣️command.json","./⚡️caching/🚀️bootstrap/🔌️nx-plugin/🧮️engine-digest/🟨️.mjs"].map(path=>new URL(path,import.meta.url).href)],files=new Set(),packages=new Set(["nx","typescript"]);
+ const key=JSON.stringify(policy),known=engineClosureMemoV1.get(key);
+ if(known!==undefined&&known.stamps.every(([path,stamp])=>engineStampV1(path)===stamp))return{files:[...known.value.files],packages:[...known.value.packages]};
+ const stamps=[],value=computeNxBuildEngineClosureV1(policy,path=>stamps.push([path,engineStampV1(path)]));
+ engineClosureMemoV1.set(key,{value,stamps});return{files:[...value.files],packages:[...value.packages]};
+}
+function computeNxBuildEngineClosureV1(policy,stamp){
+  const root=fileURLToPath(new URL("../../../../../",import.meta.url)),pending=[import.meta.url,...["./📦️packages/🟦️typescript/📋️executors.json","./⚡️caching/🚀️bootstrap/🔌️nx-plugin/🏃️execution/🟨️.mjs","./⚡️caching/🚀️bootstrap/🔌️nx-plugin/📤️arguments/📜️script.ts","./⚡️caching/🚀️bootstrap/🔌️nx-plugin/📤️arguments/🧬️schema/🔣️command.json","./⚡️caching/🚀️bootstrap/🔌️nx-plugin/🧮️engine-digest/🟨️.mjs"].map(path=>new URL(path,import.meta.url).href)],files=new Set(),packages=new Set(["nx","typescript"]),memo=openNxEngineReferencesMemoV1(root);
   const admit=(owner,specifier)=>{
    if(specifier.startsWith(".")){
     const candidate=nxBuildEngineSourceFileV1(owner,specifier);if(relative(root,candidate).startsWith(".."))throw Error("Private Nx engine source outside workspace");pending.push(candidate);
    }else if(!specifier.includes(":")&&!isRuntimeBuiltinSpecifierV1(specifier)){const workspaceFile=nxBuildEngineWorkspacePackageFileV1(root,specifier);if(workspaceFile)pending.push(workspaceFile);else{const name=specifier.startsWith("@")?specifier.split("/").slice(0,2).join("/"):specifier.split("/")[0];if(!name)throw Error(`Private Nx engine import names no package: ${JSON.stringify(specifier)} from ${owner}`);packages.add(name);}}
   };
   while(pending.length){
-   const reference=pending.pop(),path=reference.startsWith("file:")?fileURLToPath(reference):reference;if(files.has(path))continue;files.add(path);const source=readFileSync(path,"utf8");if(path.endsWith(".json"))continue;
-   const references=nxBuildEngineReferencesV1(source);
+   const reference=pending.pop(),path=reference.startsWith("file:")?fileURLToPath(reference):reference;if(files.has(path))continue;files.add(path);stamp(path);if(path.endsWith(".json")){readFileSync(path,"utf8");continue;}
+   const references=memo.references(path,nxBuildEngineReferencesV1);
    for(const reference of references)if(reference.kind==="module")admit(path,reference.specifier);else if(reference.kind==="file-url"){const target=resolve(dirname(path),reference.specifier);if((!existsSync(target)||!lstatSync(target).isDirectory())&&!nxEngineSpawnOnlyV1(relative(root,path).replaceAll("\\","/"),reference.specifier,policy))admit(path,reference.specifier);}
   }
- return {files:[...files].map(path=>relative(root,path).replaceAll("\\","/")).sort(),packages:[...packages].sort()};
+ memo.save();return {files:[...files].map(path=>relative(root,path).replaceAll("\\","/")).sort(),packages:[...packages].sort()};
 }
 
 /** 🔑️ Digests the bytes of the given files under their workspace-relative names, one `name NUL sha256 LF` row each, then one `NUL identity NUL sha256-of-the-identity-rows LF` row when identity rows are given, so a revision or a family that moves re-keys without a byte changing. */

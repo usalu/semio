@@ -202,13 +202,13 @@ const fakePhysical=(paths:readonly string[])=>{
 };
 const recipeKey=(inputs:readonly{path:string;sha256:string|null}[],root:string)=>sha(cargoTargetRecipeCanonicalV1({version:1,cwd:root,manifest:join(root,"app/Cargo.toml"),command:"cargo",args:["build","--locked","--manifest-path",join(root,"app/Cargo.toml")],buildDirectory:join(root,"target"),compilerIdentity:"cargo 1",toolchainIdentity:"rustc 1",inputs,environment:[]}));
 
-test("an unrelated lock edit keeps the target key, passes the recheck and costs no rerun; the whole-file observation it replaces fails on the same edit",async()=>{
+test("a lock edit never moves the target key; an unrelated one passes the recheck and costs no rerun, a closure one fails it; the whole-file observation it replaces fails on the unrelated edit",async()=>{
  await withDirectory(async root=>{
   mkdirSync(join(root,"app"));writeFileSync(join(root,"Cargo.toml"),"[workspace]\n");writeFileSync(join(root,"app/Cargo.toml"),'[package]\nname = "app"\nversion = "0.1.0"\n');
   writeFileSync(join(root,"Cargo.lock"),render(base()));
   const steps:string[]=[],physical=fakePhysical(sizes(root)),observed=await cargoRecipeInputsV1(sizes(root),cargoLockRootsV1(readFileSync(join(root,"app/Cargo.toml"),"utf8"),["build"]),physical,async path=>{steps.push(path);});
   expect(steps).toEqual(sizes(root));expect(observed.projected).toEqual(sizes(root));
-  const key=recipeKey(observed.inputs,root);
+  const key=recipeKey(observed.inputs,root);expect(observed.inputs).toEqual([]);
   const old=fakePhysical(sizes(root)),oldInputs=await Promise.all(sizes(root).map(async path=>({path,sha256:(await old.digest(path))??null}))),oldKey=recipeKey(oldInputs,root);
   writeFileSync(join(root,"Cargo.lock"),render(base().map(row=>row.name==="other"?{...row,dependencies:["unrelated","dupe 2.0.0","itoa"]}:row)));
   await observed.recheck();
@@ -218,7 +218,7 @@ test("an unrelated lock edit keeps the target key, passes the recheck and costs 
   const oldAgain=fakePhysical(sizes(root));expect(recipeKey(await Promise.all(sizes(root).map(async path=>({path,sha256:(await oldAgain.digest(path))??null}))),root)).not.toBe(oldKey);
   writeFileSync(join(root,"Cargo.lock"),render(base().map(row=>row.name==="lib"?{...row,dependencies:["itoa","dupe 1.0.0"]}:row)));
   await expect(observed.recheck()).rejects.toThrow(ConcurrentEditErrorV1);
-  expect(recipeKey((await cargoRecipeInputsV1(sizes(root),["app"],fakePhysical(sizes(root)))).inputs,root)).not.toBe(key);
+  expect(recipeKey((await cargoRecipeInputsV1(sizes(root),["app"],fakePhysical(sizes(root)))).inputs,root)).toBe(key);
  });
 });
 
@@ -273,7 +273,7 @@ test.skipIf(!cargo)("a new workspace member rewrites the manifest members and th
  }finally{rmSync(root,{recursive:true,force:true});}
 },120000);
 
-test("a new workspace member in the root manifest and the lock keeps the target key of the build of another package",async()=>{
+test("neither a new workspace member nor a manifest or lock edit of the build moves the target key; the witnesses still reject the edit of the build",async()=>{
  await withDirectory(async root=>{
   mkdirSync(join(root,"app"));writeFileSync(join(root,"Cargo.toml"),manifest(["app","lib"]));writeFileSync(join(root,"app/Cargo.toml"),'[package]\nname = "app"\nversion = "0.1.0"\n');writeFileSync(join(root,"Cargo.lock"),render(base()));
   const observed=await cargoRecipeInputsV1(sizes(root),["app"],fakePhysical(sizes(root))),key=recipeKey(observed.inputs,root);
@@ -282,7 +282,8 @@ test("a new workspace member in the root manifest and the lock keeps the target 
   await observed.recheck();
   expect(recipeKey((await cargoRecipeInputsV1(sizes(root),["app"],fakePhysical(sizes(root)))).inputs,root)).toBe(key);
   writeFileSync(join(root,"app/Cargo.toml"),'[package]\nname = "app"\nversion = "0.2.0"\n');
-  expect(recipeKey((await cargoRecipeInputsV1(sizes(root),["app"],fakePhysical(sizes(root)))).inputs,root)).not.toBe(key);
+  expect(recipeKey((await cargoRecipeInputsV1(sizes(root),["app"],fakePhysical(sizes(root)))).inputs,root)).toBe(key);
+  await expect(observed.recheck()).rejects.toThrow(ConcurrentEditErrorV1);
  });
 });
 

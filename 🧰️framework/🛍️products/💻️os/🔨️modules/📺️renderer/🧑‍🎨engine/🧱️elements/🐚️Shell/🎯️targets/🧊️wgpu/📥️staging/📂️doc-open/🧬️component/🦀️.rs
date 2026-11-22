@@ -18,6 +18,12 @@ pub struct OpeningState {
     /// 📥️ Picked-file imports moving into the session's program chunk by chunk, oldest first ([`ImportTransfer`]).
     pub import_transfers: VecDeque<ImportTransfer>,
     pub import_transfer_next: u64,
+    /// 🛬️ OS files dropped onto the window, oldest first: each answers one deferred Open File action with its path instead of a picker.
+    #[cfg(not(target_arch = "wasm32"))]
+    pub dropped_sources: VecDeque<std::path::PathBuf>,
+    /// 🛬️ OS files the browser page took from a drop, oldest first: each answers one deferred Open File action once no open runs, instead of a picker.
+    #[cfg(target_arch = "wasm32")]
+    pub dropped_files: VecDeque<BrowserPickedFile>,
     #[cfg(not(target_arch = "wasm32"))]
     pub native_media_save: Option<NativeMediaSaveTask>,
     #[cfg(not(target_arch = "wasm32"))]
@@ -29,14 +35,21 @@ pub struct OpeningState {
     /// ([`Self::advance_document_opening`]) and painted as its own band with a cancel control.
     pub document_opening: Option<ShellDocumentOpening>,
     pub icon_export: Option<IconExportBatch>,
+    /// 🎥️ The video exports of `Effect::VideoRenderExport`: their event-sourced ledger, renders and save dialogs.
+    pub video_render: VideoRenderJobs,
     /// 📈️ The latest runtime actor snapshot; `None` while no actor runtime is attached.
     pub runtime_actors: Option<Vec<RuntimeActorSample>>,
     /// 🏃️ Runtime-owned running tasks beside the shell's own transfers.
     pub runtime_tasks: Vec<TaskManagerTask>,
+    /// ⏯️ The live tool runs of the focused program, read from its rendered ToolRun panel, and the owner they are listed under.
+    pub tool_runs: Vec<TaskManagerToolRun>,
+    pub tool_run_owner: String,
     /// 🎛️ Task Manager control presses awaiting the runtime bridge.
     pub runtime_requests: Vec<TaskManagerRequest>,
     /// 🧭️ The path the shell renders as not found, if the current route is none of its own.
     pub route_not_found: Option<String>,
+    /// 🩺️ The plugin the shell shows the recovery panel for and whether it was quarantined rather than crashed — React's `pluginSupervisorById` entry in `crashed` or `quarantined`.
+    pub plugin_recovery: Option<(String, bool)>,
     /// 🪪️ The verified execution-target lease fields for the open document. Native document opening
     /// retains only a canonical surface-id preference today — `document_socket_surface_from_descriptor`
     /// was deliberately downgraded from a forgeable partial authority by the execution-target-lease

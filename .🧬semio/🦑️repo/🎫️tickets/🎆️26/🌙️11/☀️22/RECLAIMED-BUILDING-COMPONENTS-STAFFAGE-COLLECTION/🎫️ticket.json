@@ -1,0 +1,25 @@
+{
+  "title": "Reclaimed Building Components Staffage Collection",
+  "emoji": "♻️",
+  "status": "open",
+  "description": "Use a massive wave of fable agents to create staffage for a huge collection of used building components. Forty handcrafted reclaimed components (timber, steel, concrete, masonry, roof, openings, facade, services) in the staffage archive `🎓️teaching/🏛️architecture/🧍️staffage`, each with rig, poses, clips, thermal and structural model, 2D representations and 3D volumes at 1:50, 1:100, 1:200, 1:500, manifest rows and a collection, verified by the product's validators and tests.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2794"
+  },
+  "goal": "animate",
+  "sessions": [
+    "9e180fd1-0bc9-4c10-baaa-6080613c27a1"
+  ],
+  "interactions": [
+    {
+      "kind": "ticket.open",
+      "date": "2026-11-22 15:34:14",
+      "author": "",
+      "system": "mac",
+      "client": "claude-code",
+      "checkpoint": "",
+      "prompt": "Use a massive wave of fable agents to create staffage for a huge collection of used building components. Forty handcrafted reclaimed components (timber, steel, concrete, masonry, roof, openings, facade, services) in the staffage archive `🎓️teaching/🏛️architecture/🧍️staffage`, each with rig, poses, clips, thermal and structural model, 2D representations and 3D volumes at 1:50, 1:100, 1:200, 1:500, manifest rows and a collection, verified by the product's validators and tests.",
+      "llm": "fable-5-2"
+    }
+  ]
+}

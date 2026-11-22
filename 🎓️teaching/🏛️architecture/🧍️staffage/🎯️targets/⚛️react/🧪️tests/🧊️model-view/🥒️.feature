@@ -8,6 +8,9 @@ Feature: The interactive 3D model of a staffage figure
     When the model is built
     Then it holds exactly the seven views as variants and the view and the camera never build it again, but scale, pose or clip and analytic settings do
     And the seven pictures differ and a coarser scale tessellates coarser
+  Scenario: The air flow is shown once
+    Given the thermal model of the stage with any air flow layers on or off
+    Then the model is built without flow geometry, has no flow or emitter node or material, and the layers never rebuild it: the stage animates the flow itself
   Scenario: The shared transport drives the 3D time
     Given a clip on one clock
     When the clock is scrubbed, stepped or toggled with Space on the canvas

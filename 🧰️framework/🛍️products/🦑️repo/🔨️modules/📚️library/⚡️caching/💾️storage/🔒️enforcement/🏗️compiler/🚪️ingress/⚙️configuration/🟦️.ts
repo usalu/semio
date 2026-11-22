@@ -1,3 +1,4 @@
+import {implementationPinnedV1} from "../../../../../../🏗️build/📥️inputs/🔏️revision/🟨️.mjs";
 import {concurrentEditV1,staleImplementationV1} from "../../../../../../../../../../🔨️modules/📁️filesystem/🧾️observation/🔁️churn/🟦️.ts";
 import {isRepoErrorV1} from "../../../../../../../../../../🔨️modules/🏃️process/🏗️build/🗣️language/🚨️error/🟦️.ts";
 import{machinePathV1}from"../../../../../../../../../../🔨️modules/🏃️process/🏗️build/🏠️machine-state/🟦️.ts";
@@ -43,6 +44,11 @@ function selectedTargetV1(args:readonly string[]):string|undefined{const end=arg
  * @see ../../../../../../../🔨️modules/🏃️process/🔒️leases/🧭️order/🔣️policy.json */
 export function withRepositoryCargoConfigurationPublicationV1<T>(storage:NativeStorageReservationV1,control:ResourceLeaseControl,publish:()=>Promise<T>):Promise<T>{return withNativeStorageReservationOperationV1(storage,control,()=>publish());}
 
+/** 📌️ Whether a pinned run finds the policy Source edited since it loaded: the run keeps the policy it rendered (its inputs name the loaded digest and its recheck skips the file), so the edit reaches the next run only. */
+export function loadedCargoProfilePolicyDriftedV1(bytes:Uint8Array,expected:string):boolean{
+ if(!implementationPinnedV1())return false;
+ try{return createHash("sha256").update(JSON.stringify(JSON.parse(new TextDecoder("utf-8",{fatal:true}).decode(bytes)))).digest("hex")!==expected;}catch{return true;}
+}
 /** 🔏️ Refuses a policy changed since this process loaded its canonical implementation. */
 export function requireLoadedCargoProfilePolicyV1(path:string,bytes:Uint8Array,expected:string):void{
  const text=new TextDecoder("utf-8",{fatal:true}).decode(bytes),actual=createHash("sha256").update(JSON.stringify(JSON.parse(text))).digest("hex");
@@ -60,6 +66,7 @@ export async function withRepositoryCargoConfigurationV1<T>(request:RepositoryCa
    const path = join(request.workspace, record.path);
    const bytes = await readPhysicalCargoSourceV1(path, {version:1,root:request.workspace,expectedBytes:null,maximumBytes:protocol.maximumPolicyBytes,remainingFiles:1}, control);
    if(!bytes)throw concurrentEditV1("vanished", path, "Cargo profile policy Source disappeared", "build");
+   if(loadedCargoProfilePolicyDriftedV1(bytes,record.digest)){inputs.push(Object.freeze({path:record.path,digest:record.digest,bytes:bytes.length}));continue;}
    requireLoadedCargoProfilePolicyV1(path,bytes,record.digest);
    const digest = createHash("sha256").update(bytes).digest("hex");
    inputs.push(Object.freeze({path:record.path,digest,bytes:bytes.length}));

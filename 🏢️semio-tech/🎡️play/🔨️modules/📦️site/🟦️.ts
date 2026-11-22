@@ -11,6 +11,7 @@ import { prefetchPlayMapTiles } from "./🗺️map-tiles/🟦️.ts";
 import { PLAY_HOST } from "../🧩️runtime/📇️catalog/🟦️.ts";
 import { playRuntimeComponentIds } from "../🧩️runtime/🟦️.ts";
 import { playModuleCatalogFindingsV1 } from "./📄pages/🟦️.ts";
+import { specificCatalogPublicationV1 } from "../../../../✏️s/🧑‍💻dev/🧩️catalog/📣️publication/🟦️.ts";
 import { publishPlayPageCohortV1, withPublishedPlayPagesV1 } from "./📄pages/📦️publication/🟦️.ts";
 
 async function cancellable(run: (signal: AbortSignal) => Promise<void>): Promise<void> {
@@ -49,10 +50,10 @@ export async function runBundleSiteScript(context: Readonly<{ root: string; repo
 /** 🏃️ Runs the `VerifyScript` command under the caller's roots and invocation. */
 export async function runVerifyScript(context: Readonly<{ root: string; repoRoot: string; invocation: ScriptInvocation }>, args: string[]): Promise<void> {
   if (args.length) throw new Error("verify accepts no arguments");
-  const registry = join(context.repoRoot, "✏️s/🧑‍💻dev/🧩️catalog/🤖️generated");
+  const publication = specificCatalogPublicationV1(path => readFileSync(join(context.repoRoot, path), "utf8")), registry = join(context.repoRoot, publication.outputRoot);
   await withPublishedPlayPagesV1(context.repoRoot,context.invocation,async pages=>{
     const {renderCatalogFiles}=await import("../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📽️projection/🟦️.ts");
-    const findings=[...Object.entries(renderCatalogFiles(context.repoRoot,undefined,"refuse").files).filter(([name,content])=>!existsSync(join(registry,name))||readFileSync(join(registry,name),"utf8")!==content).map(([name])=>`Generated catalog ${name} differs from committed descriptors`),...playModuleCatalogFindingsV1(pages.root)];
+    const findings=[...Object.entries(renderCatalogFiles(context.repoRoot,undefined,"refuse",publication).files).filter(([name,content])=>!existsSync(join(registry,name))||readFileSync(join(registry,name),"utf8")!==content).map(([name])=>`Generated catalog ${name} differs from committed descriptors`),...playModuleCatalogFindingsV1(pages.root)];
     for(const finding of findings)console.error(finding);
     if(findings.length)throw new Error(`Play release verification failed: ${findings.length} finding(s)`);
     console.log("Play release verified: exact cohort and module catalog bind published pages");

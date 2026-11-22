@@ -1,1930 +1,2128 @@
 {
  "glb": {
-   "stand": {
-     "byteLength": 2062288,
-     "sha256": "f44d0ca2fc13cd01625f71f9e3376009411a83d3c13d644d15960c259ff96198",
-     "triangles": 196014,
-     "segments": 11453,
-     "primitives": 360,
-     "variants": [
-       "dark-line",
-       "dark-solid",
-       "light-line",
-       "light-solid",
-       "thermal",
-       "forces",
-       "moments"
-     ],
-     "extensionsUsed": [
-       "KHR_materials_unlit",
-       "KHR_materials_variants"
-     ],
-     "nodes": 352,
-     "meshes": 208,
-     "materials": 499,
-     "skins": 4,
-     "animations": 0,
-     "accessors": 279,
-     "scenes": {
-       "s50-body": {
-         "triangles": 27636,
-         "segments": 230
-       },
-       "s50-thermal": {
-         "triangles": 24354,
-         "segments": 353
-       },
-       "s50-structure": {
-         "triangles": 43504,
-         "segments": 3239
-       },
-       "s100-body": {
-         "triangles": 12492,
-         "segments": 181
-       },
-       "s100-thermal": {
-         "triangles": 14390,
-         "segments": 263
-       },
-       "s100-structure": {
-         "triangles": 23626,
-         "segments": 2496
-       },
-       "s200-body": {
-         "triangles": 7000,
-         "segments": 124
-       },
-       "s200-thermal": {
-         "triangles": 7204,
-         "segments": 226
-       },
-       "s200-structure": {
-         "triangles": 16004,
-         "segments": 2136
-       },
-       "s500-body": {
-         "triangles": 2144,
-         "segments": 160
-       },
-       "s500-thermal": {
-         "triangles": 2336,
-         "segments": 256
-       },
-       "s500-structure": {
-         "triangles": 15324,
-         "segments": 1789
-       }
-     }
-   },
-   "stride-left-forward": {
-     "byteLength": 2046536,
-     "sha256": "a773eb5cf2dd84dafe5bb0aefc28725de9e77e2bd370d271aa5d3f4a0402bf40",
-     "triangles": 184332,
-     "segments": 7928,
-     "primitives": 320,
-     "variants": [
-       "dark-line",
-       "dark-solid",
-       "light-line",
-       "light-solid",
-       "thermal",
-       "forces",
-       "moments"
-     ],
-     "extensionsUsed": [
-       "KHR_materials_unlit",
-       "KHR_materials_variants"
-     ],
-     "nodes": 328,
-     "meshes": 188,
-     "materials": 499,
-     "skins": 4,
-     "animations": 0,
-     "accessors": 279,
-     "scenes": {
-       "s50-body": {
-         "triangles": 27636,
-         "segments": 230
-       },
-       "s50-thermal": {
-         "triangles": 24354,
-         "segments": 353
-       },
-       "s50-structure": {
-         "triangles": 39482,
-         "segments": 2050
-       },
-       "s100-body": {
-         "triangles": 12492,
-         "segments": 181
-       },
-       "s100-thermal": {
-         "triangles": 14390,
-         "segments": 263
-       },
-       "s100-structure": {
-         "triangles": 20590,
-         "segments": 1584
-       },
-       "s200-body": {
-         "triangles": 7000,
-         "segments": 124
-       },
-       "s200-thermal": {
-         "triangles": 7204,
-         "segments": 226
-       },
-       "s200-structure": {
-         "triangles": 13454,
-         "segments": 1359
-       },
-       "s500-body": {
-         "triangles": 2144,
-         "segments": 160
-       },
-       "s500-thermal": {
-         "triangles": 2336,
-         "segments": 256
-       },
-       "s500-structure": {
-         "triangles": 13250,
-         "segments": 1142
-       }
-     }
-   },
-   "passing-left-stance": {
-     "byteLength": 2050888,
-     "sha256": "c13a7201ff5aa6a48e9b70d0a71791eebf52800185030c7725b2bede7ff36e3e",
-     "triangles": 188090,
-     "segments": 9035,
-     "primitives": 328,
-     "variants": [
-       "dark-line",
-       "dark-solid",
-       "light-line",
-       "light-solid",
-       "thermal",
-       "forces",
-       "moments"
-     ],
-     "extensionsUsed": [
-       "KHR_materials_unlit",
-       "KHR_materials_variants"
-     ],
-     "nodes": 332,
-     "meshes": 192,
-     "materials": 499,
-     "skins": 4,
-     "animations": 0,
-     "accessors": 279,
-     "scenes": {
-       "s50-body": {
-         "triangles": 27636,
-         "segments": 230
-       },
-       "s50-thermal": {
-         "triangles": 24354,
-         "segments": 353
-       },
-       "s50-structure": {
-         "triangles": 40782,
-         "segments": 2426
-       },
-       "s100-body": {
-         "triangles": 12492,
-         "segments": 181
-       },
-       "s100-thermal": {
-         "triangles": 14390,
-         "segments": 263
-       },
-       "s100-structure": {
-         "triangles": 21570,
-         "segments": 1872
-       },
-       "s200-body": {
-         "triangles": 7000,
-         "segments": 124
-       },
-       "s200-thermal": {
-         "triangles": 7204,
-         "segments": 226
-       },
-       "s200-structure": {
-         "triangles": 14272,
-         "segments": 1602
-       },
-       "s500-body": {
-         "triangles": 2144,
-         "segments": 160
-       },
-       "s500-thermal": {
-         "triangles": 2336,
-         "segments": 256
-       },
-       "s500-structure": {
-         "triangles": 13910,
-         "segments": 1342
-       }
-     }
-   },
-   "stride-right-forward": {
-     "byteLength": 2046544,
-     "sha256": "8ecff63aae67ce8bf4a4c4563d5fbff48c71ed4753fee8f90a029325bcc032a5",
-     "triangles": 184332,
-     "segments": 7928,
-     "primitives": 320,
-     "variants": [
-       "dark-line",
-       "dark-solid",
-       "light-line",
-       "light-solid",
-       "thermal",
-       "forces",
-       "moments"
-     ],
-     "extensionsUsed": [
-       "KHR_materials_unlit",
-       "KHR_materials_variants"
-     ],
-     "nodes": 328,
-     "meshes": 188,
-     "materials": 499,
-     "skins": 4,
-     "animations": 0,
-     "accessors": 279,
-     "scenes": {
-       "s50-body": {
-         "triangles": 27636,
-         "segments": 230
-       },
-       "s50-thermal": {
-         "triangles": 24354,
-         "segments": 353
-       },
-       "s50-structure": {
-         "triangles": 39482,
-         "segments": 2050
-       },
-       "s100-body": {
-         "triangles": 12492,
-         "segments": 181
-       },
-       "s100-thermal": {
-         "triangles": 14390,
-         "segments": 263
-       },
-       "s100-structure": {
-         "triangles": 20590,
-         "segments": 1584
-       },
-       "s200-body": {
-         "triangles": 7000,
-         "segments": 124
-       },
-       "s200-thermal": {
-         "triangles": 7204,
-         "segments": 226
-       },
-       "s200-structure": {
-         "triangles": 13454,
-         "segments": 1359
-       },
-       "s500-body": {
-         "triangles": 2144,
-         "segments": 160
-       },
-       "s500-thermal": {
-         "triangles": 2336,
-         "segments": 256
-       },
-       "s500-structure": {
-         "triangles": 13250,
-         "segments": 1142
-       }
-     }
-   },
-   "passing-right-stance": {
-     "byteLength": 2050888,
-     "sha256": "2b4c1c1ca4c018b5dcb1d3aeab1b745ba8c05390db0fb9d98fbdfb0fa139d2f8",
-     "triangles": 188090,
-     "segments": 9035,
-     "primitives": 328,
-     "variants": [
-       "dark-line",
-       "dark-solid",
-       "light-line",
-       "light-solid",
-       "thermal",
-       "forces",
-       "moments"
-     ],
-     "extensionsUsed": [
-       "KHR_materials_unlit",
-       "KHR_materials_variants"
-     ],
-     "nodes": 332,
-     "meshes": 192,
-     "materials": 499,
-     "skins": 4,
-     "animations": 0,
-     "accessors": 279,
-     "scenes": {
-       "s50-body": {
-         "triangles": 27636,
-         "segments": 230
-       },
-       "s50-thermal": {
-         "triangles": 24354,
-         "segments": 353
-       },
-       "s50-structure": {
-         "triangles": 40782,
-         "segments": 2426
-       },
-       "s100-body": {
-         "triangles": 12492,
-         "segments": 181
-       },
-       "s100-thermal": {
-         "triangles": 14390,
-         "segments": 263
-       },
-       "s100-structure": {
-         "triangles": 21570,
-         "segments": 1872
-       },
-       "s200-body": {
-         "triangles": 7000,
-         "segments": 124
-       },
-       "s200-thermal": {
-         "triangles": 7204,
-         "segments": 226
-       },
-       "s200-structure": {
-         "triangles": 14272,
-         "segments": 1602
-       },
-       "s500-body": {
-         "triangles": 2144,
-         "segments": 160
-       },
-       "s500-thermal": {
-         "triangles": 2336,
-         "segments": 256
-       },
-       "s500-structure": {
-         "triangles": 13910,
-         "segments": 1342
-       }
-     }
-   },
-   "carry-bag": {
-     "byteLength": 2080584,
-     "sha256": "a569040d4f3804afce532b75d08511306df6091230b6d31838f2a6b9a64ab86a",
-     "triangles": 200180,
-     "segments": 12764,
-     "primitives": 384,
-     "variants": [
-       "dark-line",
-       "dark-solid",
-       "light-line",
-       "light-solid",
-       "thermal",
-       "forces",
-       "moments"
-     ],
-     "extensionsUsed": [
-       "KHR_materials_unlit",
-       "KHR_materials_variants"
-     ],
-     "nodes": 368,
-     "meshes": 220,
-     "materials": 511,
-     "skins": 4,
-     "animations": 0,
-     "accessors": 279,
-     "scenes": {
-       "s50-body": {
-         "triangles": 27636,
-         "segments": 230
-       },
-       "s50-thermal": {
-         "triangles": 24354,
-         "segments": 353
-       },
-       "s50-structure": {
-         "triangles": 44926,
-         "segments": 3676
-       },
-       "s100-body": {
-         "triangles": 12492,
-         "segments": 181
-       },
-       "s100-thermal": {
-         "triangles": 14390,
-         "segments": 263
-       },
-       "s100-structure": {
-         "triangles": 24702,
-         "segments": 2832
-       },
-       "s200-body": {
-         "triangles": 7000,
-         "segments": 124
-       },
-       "s200-thermal": {
-         "triangles": 7204,
-         "segments": 226
-       },
-       "s200-structure": {
-         "triangles": 16918,
-         "segments": 2427
-       },
-       "s500-body": {
-         "triangles": 2144,
-         "segments": 160
-       },
-       "s500-thermal": {
-         "triangles": 2336,
-         "segments": 256
-       },
-       "s500-structure": {
-         "triangles": 16078,
-         "segments": 2036
-       }
-     }
+  "stand": {
+   "byteLength": 3435372,
+   "sha256": "a3b3a06d7ac50d7b05d097cc56fe801ee962bb57cbb57411b0b3583fd91b9062",
+   "triangles": 259986,
+   "segments": 16076,
+   "primitives": 490,
+   "variants": [
+    "dark-line",
+    "dark-solid",
+    "light-line",
+    "light-solid",
+    "thermal",
+    "forces",
+    "moments"
+   ],
+   "extensionsUsed": [
+    "KHR_materials_unlit",
+    "KHR_materials_variants"
+   ],
+   "nodes": 414,
+   "meshes": 266,
+   "materials": 489,
+   "skins": 4,
+   "animations": 0,
+   "accessors": 522,
+   "scenes": {
+    "s50-body": {
+     "triangles": 27636,
+     "segments": 230
+    },
+    "s50-thermal": {
+     "triangles": 62202,
+     "segments": 3013
+    },
+    "s50-structure": {
+     "triangles": 43504,
+     "segments": 3239
+    },
+    "s100-body": {
+     "triangles": 12492,
+     "segments": 181
+    },
+    "s100-thermal": {
+     "triangles": 31122,
+     "segments": 1738
+    },
+    "s100-structure": {
+     "triangles": 23626,
+     "segments": 2496
+    },
+    "s200-body": {
+     "triangles": 7000,
+     "segments": 124
+    },
+    "s200-thermal": {
+     "triangles": 13758,
+     "segments": 614
+    },
+    "s200-structure": {
+     "triangles": 16004,
+     "segments": 2136
+    },
+    "s500-body": {
+     "triangles": 2144,
+     "segments": 160
+    },
+    "s500-thermal": {
+     "triangles": 5174,
+     "segments": 356
+    },
+    "s500-structure": {
+     "triangles": 15324,
+     "segments": 1789
+    }
    }
+  },
+  "stride-left-forward": {
+   "byteLength": 4313120,
+   "sha256": "aaecd8c27cb14cbb228b0b38d08025bb002530a4cbc04c5750f8373efafb8ba9",
+   "triangles": 293736,
+   "segments": 14361,
+   "primitives": 462,
+   "variants": [
+    "dark-line",
+    "dark-solid",
+    "light-line",
+    "light-solid",
+    "thermal",
+    "forces",
+    "moments"
+   ],
+   "extensionsUsed": [
+    "KHR_materials_unlit",
+    "KHR_materials_variants"
+   ],
+   "nodes": 385,
+   "meshes": 241,
+   "materials": 505,
+   "skins": 4,
+   "animations": 0,
+   "accessors": 552,
+   "scenes": {
+    "s50-body": {
+     "triangles": 27636,
+     "segments": 230
+    },
+    "s50-thermal": {
+     "triangles": 87830,
+     "segments": 3561
+    },
+    "s50-structure": {
+     "triangles": 39482,
+     "segments": 2050
+    },
+    "s100-body": {
+     "triangles": 12492,
+     "segments": 181
+    },
+    "s100-thermal": {
+     "triangles": 43604,
+     "segments": 2182
+    },
+    "s100-structure": {
+     "triangles": 20590,
+     "segments": 1584
+    },
+    "s200-body": {
+     "triangles": 7000,
+     "segments": 124
+    },
+    "s200-thermal": {
+     "triangles": 19162,
+     "segments": 1280
+    },
+    "s200-structure": {
+     "triangles": 13454,
+     "segments": 1359
+    },
+    "s500-body": {
+     "triangles": 2144,
+     "segments": 160
+    },
+    "s500-thermal": {
+     "triangles": 7092,
+     "segments": 508
+    },
+    "s500-structure": {
+     "triangles": 13250,
+     "segments": 1142
+    }
+   }
+  },
+  "passing-left-stance": {
+   "byteLength": 4215400,
+   "sha256": "4225ad60eccb4273d1700727face952041613a8e2c296955f588e9c82a3215c4",
+   "triangles": 293408,
+   "segments": 14348,
+   "primitives": 466,
+   "variants": [
+    "dark-line",
+    "dark-solid",
+    "light-line",
+    "light-solid",
+    "thermal",
+    "forces",
+    "moments"
+   ],
+   "extensionsUsed": [
+    "KHR_materials_unlit",
+    "KHR_materials_variants"
+   ],
+   "nodes": 391,
+   "meshes": 247,
+   "materials": 505,
+   "skins": 4,
+   "animations": 0,
+   "accessors": 543,
+   "scenes": {
+    "s50-body": {
+     "triangles": 27636,
+     "segments": 230
+    },
+    "s50-thermal": {
+     "triangles": 85368,
+     "segments": 2910
+    },
+    "s50-structure": {
+     "triangles": 40782,
+     "segments": 2426
+    },
+    "s100-body": {
+     "triangles": 12492,
+     "segments": 181
+    },
+    "s100-thermal": {
+     "triangles": 42272,
+     "segments": 1774
+    },
+    "s100-structure": {
+     "triangles": 21570,
+     "segments": 1872
+    },
+    "s200-body": {
+     "triangles": 7000,
+     "segments": 124
+    },
+    "s200-thermal": {
+     "triangles": 19074,
+     "segments": 1283
+    },
+    "s200-structure": {
+     "triangles": 14272,
+     "segments": 1602
+    },
+    "s500-body": {
+     "triangles": 2144,
+     "segments": 160
+    },
+    "s500-thermal": {
+     "triangles": 6888,
+     "segments": 444
+    },
+    "s500-structure": {
+     "triangles": 13910,
+     "segments": 1342
+    }
+   }
+  },
+  "stride-right-forward": {
+   "byteLength": 4379444,
+   "sha256": "0d9d21b37289ca832b1e984209e8f154ad3cb70b1b330a45b7d5eefa26458701",
+   "triangles": 296174,
+   "segments": 15418,
+   "primitives": 468,
+   "variants": [
+    "dark-line",
+    "dark-solid",
+    "light-line",
+    "light-solid",
+    "thermal",
+    "forces",
+    "moments"
+   ],
+   "extensionsUsed": [
+    "KHR_materials_unlit",
+    "KHR_materials_variants"
+   ],
+   "nodes": 391,
+   "meshes": 247,
+   "materials": 499,
+   "skins": 4,
+   "animations": 0,
+   "accessors": 571,
+   "scenes": {
+    "s50-body": {
+     "triangles": 27636,
+     "segments": 230
+    },
+    "s50-thermal": {
+     "triangles": 88918,
+     "segments": 4301
+    },
+    "s50-structure": {
+     "triangles": 39482,
+     "segments": 2050
+    },
+    "s100-body": {
+     "triangles": 12492,
+     "segments": 181
+    },
+    "s100-thermal": {
+     "triangles": 44204,
+     "segments": 2435
+    },
+    "s100-structure": {
+     "triangles": 20590,
+     "segments": 1584
+    },
+    "s200-body": {
+     "triangles": 7000,
+     "segments": 124
+    },
+    "s200-thermal": {
+     "triangles": 19580,
+     "segments": 1160
+    },
+    "s200-structure": {
+     "triangles": 13454,
+     "segments": 1359
+    },
+    "s500-body": {
+     "triangles": 2144,
+     "segments": 160
+    },
+    "s500-thermal": {
+     "triangles": 7424,
+     "segments": 692
+    },
+    "s500-structure": {
+     "triangles": 13250,
+     "segments": 1142
+    }
+   }
+  },
+  "passing-right-stance": {
+   "byteLength": 4223992,
+   "sha256": "9d1fc20599070614e104ed1c1faeb9ab15fb5720d6ff9cf3abb5acde1062b83e",
+   "triangles": 294368,
+   "segments": 13709,
+   "primitives": 448,
+   "variants": [
+    "dark-line",
+    "dark-solid",
+    "light-line",
+    "light-solid",
+    "thermal",
+    "forces",
+    "moments"
+   ],
+   "extensionsUsed": [
+    "KHR_materials_unlit",
+    "KHR_materials_variants"
+   ],
+   "nodes": 381,
+   "meshes": 237,
+   "materials": 505,
+   "skins": 4,
+   "animations": 0,
+   "accessors": 531,
+   "scenes": {
+    "s50-body": {
+     "triangles": 27636,
+     "segments": 230
+    },
+    "s50-thermal": {
+     "triangles": 85586,
+     "segments": 2592
+    },
+    "s50-structure": {
+     "triangles": 40782,
+     "segments": 2426
+    },
+    "s100-body": {
+     "triangles": 12492,
+     "segments": 181
+    },
+    "s100-thermal": {
+     "triangles": 42946,
+     "segments": 1625
+    },
+    "s100-structure": {
+     "triangles": 21570,
+     "segments": 1872
+    },
+    "s200-body": {
+     "triangles": 7000,
+     "segments": 124
+    },
+    "s200-thermal": {
+     "triangles": 19096,
+     "segments": 1173
+    },
+    "s200-structure": {
+     "triangles": 14272,
+     "segments": 1602
+    },
+    "s500-body": {
+     "triangles": 2144,
+     "segments": 160
+    },
+    "s500-thermal": {
+     "triangles": 6934,
+     "segments": 382
+    },
+    "s500-structure": {
+     "triangles": 13910,
+     "segments": 1342
+    }
+   }
+  },
+  "carry-bag": {
+   "byteLength": 4213724,
+   "sha256": "e133d248b05710e58db00406bcdd9c328c962f7ff40ec0868455ca1279d8b9a7",
+   "triangles": 305488,
+   "segments": 17005,
+   "primitives": 486,
+   "variants": [
+    "dark-line",
+    "dark-solid",
+    "light-line",
+    "light-solid",
+    "thermal",
+    "forces",
+    "moments"
+   ],
+   "extensionsUsed": [
+    "KHR_materials_unlit",
+    "KHR_materials_variants"
+   ],
+   "nodes": 414,
+   "meshes": 262,
+   "materials": 511,
+   "skins": 4,
+   "animations": 0,
+   "accessors": 500,
+   "scenes": {
+    "s50-body": {
+     "triangles": 27636,
+     "segments": 230
+    },
+    "s50-thermal": {
+     "triangles": 85866,
+     "segments": 2641
+    },
+    "s50-structure": {
+     "triangles": 44926,
+     "segments": 3676
+    },
+    "s100-body": {
+     "triangles": 12492,
+     "segments": 181
+    },
+    "s100-thermal": {
+     "triangles": 42202,
+     "segments": 1393
+    },
+    "s100-structure": {
+     "triangles": 24702,
+     "segments": 2832
+    },
+    "s200-body": {
+     "triangles": 7000,
+     "segments": 124
+    },
+    "s200-thermal": {
+     "triangles": 18594,
+     "segments": 904
+    },
+    "s200-structure": {
+     "triangles": 16918,
+     "segments": 2427
+    },
+    "s500-body": {
+     "triangles": 2144,
+     "segments": 160
+    },
+    "s500-thermal": {
+     "triangles": 6930,
+     "segments": 401
+    },
+    "s500-structure": {
+     "triangles": 16078,
+     "segments": 2036
+    }
+   }
+  }
  },
  "fbx": {
-   "sample-figure.walk.s50.light-solid.fbx": {
-     "byteLength": 549212,
-     "sha256": "fe49f7eb00c8f59e29d9bdb9f75d09a3094feeb1ea3dbd885ff2f9799c608c88",
-     "objectCounts": {
-       "AnimationCurve": 30,
-       "AnimationCurveNode": 10,
-       "AnimationLayer": 1,
-       "AnimationStack": 1,
-       "Deformer": 3,
-       "Geometry": 12,
-       "Material": 8,
-       "Model": 14,
-       "NodeAttribute": 2,
-       "Pose": 1
-     },
-     "notices": [
-       "solids-as-property:pelvis",
-       "solids-as-property:torso",
-       "solids-as-property:head",
-       "solids-as-property:arm-l",
-       "solids-as-property:thigh-l",
-       "solids-as-property:shank-l",
-       "solids-as-property:foot-l",
-       "solids-as-property:arm-r",
-       "solids-as-property:thigh-r",
-       "solids-as-property:shank-r",
-       "solids-as-property:foot-r",
-       "solids-as-property:skinned",
-       "events-dropped:walk"
-     ]
+  "sample-figure.walk.s50.light-solid.fbx": {
+   "byteLength": 549212,
+   "sha256": "fe49f7eb00c8f59e29d9bdb9f75d09a3094feeb1ea3dbd885ff2f9799c608c88",
+   "objectCounts": {
+    "AnimationCurve": 30,
+    "AnimationCurveNode": 10,
+    "AnimationLayer": 1,
+    "AnimationStack": 1,
+    "Deformer": 3,
+    "Geometry": 12,
+    "Material": 8,
+    "Model": 14,
+    "NodeAttribute": 2,
+    "Pose": 1
    },
-   "sample-figure.walk.s50.thermal.fbx": {
-     "byteLength": 521388,
-     "sha256": "a63daf789bd7acc18a72aa43e2901aa98eddee01c40661ecd1f5d2f0c6eac243",
-     "objectCounts": {
-       "AnimationCurve": 36,
-       "AnimationCurveNode": 12,
-       "AnimationLayer": 1,
-       "AnimationStack": 1,
-       "Deformer": 3,
-       "Geometry": 15,
-       "Material": 10,
-       "Model": 17,
-       "NodeAttribute": 2,
-       "Pose": 1
-     },
-     "notices": [
-       "solids-as-property:pelvis",
-       "solids-as-property:torso",
-       "solids-as-property:head",
-       "solids-as-property:arm-l",
-       "solids-as-property:thigh-l",
-       "solids-as-property:shank-l",
-       "solids-as-property:foot-l",
-       "solids-as-property:arm-r",
-       "solids-as-property:thigh-r",
-       "solids-as-property:shank-r",
-       "solids-as-property:foot-r",
-       "solids-as-property:emitter-nose-breath",
-       "solids-as-property:emitter-mouth-breath",
-       "solids-as-property:emitter-body-plume",
-       "solids-as-property:skinned",
-       "events-dropped:walk"
-     ]
+   "notices": [
+    "solids-as-property:pelvis",
+    "solids-as-property:torso",
+    "solids-as-property:head",
+    "solids-as-property:arm-l",
+    "solids-as-property:thigh-l",
+    "solids-as-property:shank-l",
+    "solids-as-property:foot-l",
+    "solids-as-property:arm-r",
+    "solids-as-property:thigh-r",
+    "solids-as-property:shank-r",
+    "solids-as-property:foot-r",
+    "solids-as-property:skinned",
+    "events-dropped:walk"
+   ]
+  },
+  "sample-figure.walk.s50.thermal.fbx": {
+   "byteLength": 752636,
+   "sha256": "f0399baa80be2507d226d9f6fc4d8f006eda35530404b8d4bcb49682027bfab5",
+   "objectCounts": {
+    "AnimationCurve": 33,
+    "AnimationCurveNode": 11,
+    "AnimationLayer": 1,
+    "AnimationStack": 1,
+    "Deformer": 3,
+    "Geometry": 25,
+    "Material": 15,
+    "Model": 28,
+    "NodeAttribute": 3,
+    "Pose": 1
    },
-   "sample-figure.walk.s50.forces.fbx": {
-     "byteLength": 1074908,
-     "sha256": "bdb83dff05a26ecf366d49e3fee3799fcc6f436c5cc0b4403a4015542e2432c6",
-     "objectCounts": {
-       "AnimationCurve": 225,
-       "AnimationCurveNode": 75,
-       "AnimationLayer": 1,
-       "AnimationStack": 1,
-       "Geometry": 31,
-       "Material": 26,
-       "Model": 35,
-       "NodeAttribute": 4
-     },
-     "notices": [
-       "solids-as-property:pelvis",
-       "solids-as-property:torso",
-       "solids-as-property:head",
-       "solids-as-property:arm-l",
-       "solids-as-property:thigh-l",
-       "solids-as-property:shank-l",
-       "solids-as-property:foot-l",
-       "solids-as-property:arm-r",
-       "solids-as-property:thigh-r",
-       "solids-as-property:shank-r",
-       "solids-as-property:foot-r",
-       "solids-as-property:arrow-force-reaction-contact-l-head",
-       "solids-as-property:arrow-force-reaction-contact-l-shaft",
-       "solids-as-property:arrow-force-reaction-contact-r-head",
-       "solids-as-property:arrow-force-reaction-contact-r-shaft",
-       "solids-as-property:arrow-force-weight-head",
-       "solids-as-property:arrow-force-weight-shaft",
-       "solids-as-property:arrow-force-inertial-head",
-       "solids-as-property:arrow-force-inertial-shaft",
-       "solids-as-property:centre-of-mass",
-       "solids-as-property:arc-moment-joint-torso",
-       "unlit-approximated:glyph-arc-joint",
-       "solids-as-property:arc-moment-joint-arm-l",
-       "solids-as-property:arc-moment-joint-thigh-l",
-       "solids-as-property:arc-moment-joint-shank-l",
-       "solids-as-property:arc-moment-joint-foot-l",
-       "solids-as-property:arc-moment-joint-arm-r",
-       "solids-as-property:arc-moment-joint-thigh-r",
-       "solids-as-property:arc-moment-joint-shank-r",
-       "solids-as-property:arc-moment-joint-foot-r",
-       "solids-as-property:arc-moment-reaction-contact-l",
-       "unlit-approximated:glyph-arc-reaction",
-       "solids-as-property:arc-moment-reaction-contact-r",
-       "events-dropped:walk",
-       "material-animation-unbound:moments-2:baseColor",
-       "material-animation-unbound:moments-3:baseColor",
-       "material-animation-unbound:moments-4:baseColor",
-       "material-animation-unbound:moments-5:baseColor",
-       "material-animation-unbound:moments-6:baseColor",
-       "material-animation-unbound:moments-7:baseColor",
-       "material-animation-unbound:moments-8:baseColor",
-       "material-animation-unbound:moments-9:baseColor",
-       "material-animation-unbound:moments-10:baseColor",
-       "material-animation-unbound:moments-11:baseColor",
-       "material-animation-unbound:moments-12:baseColor",
-       "material-animation-unbound:moments-13:baseColor",
-       "material-animation-unbound:moments-14:baseColor",
-       "material-animation-unbound:moments-15:baseColor",
-       "material-animation-unbound:moments-16:baseColor",
-       "material-animation-unbound:moments-17:baseColor",
-       "material-animation-unbound:moments-18:baseColor",
-       "material-animation-unbound:moments-19:baseColor"
-     ]
+   "notices": [
+    "solids-as-property:pelvis",
+    "solids-as-property:torso",
+    "solids-as-property:head",
+    "solids-as-property:arm-l",
+    "solids-as-property:thigh-l",
+    "solids-as-property:shank-l",
+    "solids-as-property:foot-l",
+    "solids-as-property:arm-r",
+    "solids-as-property:thigh-r",
+    "solids-as-property:shank-r",
+    "solids-as-property:foot-r",
+    "solids-as-property:flow-stream-0",
+    "unlit-approximated:thermal-flow-excess-4",
+    "unlit-approximated:thermal-flow-excess-6",
+    "unlit-approximated:thermal-flow-excess-5",
+    "unlit-approximated:thermal-flow-excess-8",
+    "solids-as-property:flow-stream-1",
+    "solids-as-property:flow-stream-3",
+    "solids-as-property:flow-stream-5",
+    "solids-as-property:flow-stream-7",
+    "solids-as-property:flow-stream-8",
+    "solids-as-property:flow-stream-10",
+    "solids-as-property:flow-stream-12",
+    "solids-as-property:flow-stream-14",
+    "solids-as-property:flow-stream-16",
+    "solids-as-property:flow-stream-18",
+    "solids-as-property:flow-stream-22",
+    "unlit-approximated:thermal-flow-excess-7",
+    "solids-as-property:flow-vapour",
+    "unlit-approximated:thermal-flow-vapour-2",
+    "unlit-approximated:thermal-flow-vapour-1",
+    "unlit-approximated:thermal-flow-vapour-0",
+    "solids-as-property:skinned",
+    "events-dropped:walk"
+   ]
+  },
+  "sample-figure.walk.s50.forces.fbx": {
+   "byteLength": 1074908,
+   "sha256": "bdb83dff05a26ecf366d49e3fee3799fcc6f436c5cc0b4403a4015542e2432c6",
+   "objectCounts": {
+    "AnimationCurve": 225,
+    "AnimationCurveNode": 75,
+    "AnimationLayer": 1,
+    "AnimationStack": 1,
+    "Geometry": 31,
+    "Material": 26,
+    "Model": 35,
+    "NodeAttribute": 4
    },
-   "sample-figure.walk.s100.light-solid.fbx": {
-     "byteLength": 305932,
-     "sha256": "95d325058a2ff38d92df03e34ac7269e74d0cb87933b5e6b70b1bf059a8e8003",
-     "objectCounts": {
-       "AnimationCurve": 30,
-       "AnimationCurveNode": 10,
-       "AnimationLayer": 1,
-       "AnimationStack": 1,
-       "Deformer": 3,
-       "Geometry": 12,
-       "Material": 6,
-       "Model": 14,
-       "NodeAttribute": 2,
-       "Pose": 1
-     },
-     "notices": [
-       "solids-as-property:pelvis",
-       "solids-as-property:torso",
-       "solids-as-property:head",
-       "solids-as-property:arm-l",
-       "solids-as-property:thigh-l",
-       "solids-as-property:shank-l",
-       "solids-as-property:foot-l",
-       "solids-as-property:arm-r",
-       "solids-as-property:thigh-r",
-       "solids-as-property:shank-r",
-       "solids-as-property:foot-r",
-       "solids-as-property:skinned",
-       "events-dropped:walk"
-     ]
+   "notices": [
+    "solids-as-property:pelvis",
+    "solids-as-property:torso",
+    "solids-as-property:head",
+    "solids-as-property:arm-l",
+    "solids-as-property:thigh-l",
+    "solids-as-property:shank-l",
+    "solids-as-property:foot-l",
+    "solids-as-property:arm-r",
+    "solids-as-property:thigh-r",
+    "solids-as-property:shank-r",
+    "solids-as-property:foot-r",
+    "solids-as-property:arrow-force-reaction-contact-l-head",
+    "solids-as-property:arrow-force-reaction-contact-l-shaft",
+    "solids-as-property:arrow-force-reaction-contact-r-head",
+    "solids-as-property:arrow-force-reaction-contact-r-shaft",
+    "solids-as-property:arrow-force-weight-head",
+    "solids-as-property:arrow-force-weight-shaft",
+    "solids-as-property:arrow-force-inertial-head",
+    "solids-as-property:arrow-force-inertial-shaft",
+    "solids-as-property:centre-of-mass",
+    "solids-as-property:arc-moment-joint-torso",
+    "unlit-approximated:glyph-arc-joint",
+    "solids-as-property:arc-moment-joint-arm-l",
+    "solids-as-property:arc-moment-joint-thigh-l",
+    "solids-as-property:arc-moment-joint-shank-l",
+    "solids-as-property:arc-moment-joint-foot-l",
+    "solids-as-property:arc-moment-joint-arm-r",
+    "solids-as-property:arc-moment-joint-thigh-r",
+    "solids-as-property:arc-moment-joint-shank-r",
+    "solids-as-property:arc-moment-joint-foot-r",
+    "solids-as-property:arc-moment-reaction-contact-l",
+    "unlit-approximated:glyph-arc-reaction",
+    "solids-as-property:arc-moment-reaction-contact-r",
+    "events-dropped:walk",
+    "material-animation-unbound:moments-2:baseColor",
+    "material-animation-unbound:moments-3:baseColor",
+    "material-animation-unbound:moments-4:baseColor",
+    "material-animation-unbound:moments-5:baseColor",
+    "material-animation-unbound:moments-6:baseColor",
+    "material-animation-unbound:moments-7:baseColor",
+    "material-animation-unbound:moments-8:baseColor",
+    "material-animation-unbound:moments-9:baseColor",
+    "material-animation-unbound:moments-10:baseColor",
+    "material-animation-unbound:moments-11:baseColor",
+    "material-animation-unbound:moments-12:baseColor",
+    "material-animation-unbound:moments-13:baseColor",
+    "material-animation-unbound:moments-14:baseColor",
+    "material-animation-unbound:moments-15:baseColor",
+    "material-animation-unbound:moments-16:baseColor",
+    "material-animation-unbound:moments-17:baseColor",
+    "material-animation-unbound:moments-18:baseColor",
+    "material-animation-unbound:moments-19:baseColor"
+   ]
+  },
+  "sample-figure.walk.s100.light-solid.fbx": {
+   "byteLength": 305932,
+   "sha256": "95d325058a2ff38d92df03e34ac7269e74d0cb87933b5e6b70b1bf059a8e8003",
+   "objectCounts": {
+    "AnimationCurve": 30,
+    "AnimationCurveNode": 10,
+    "AnimationLayer": 1,
+    "AnimationStack": 1,
+    "Deformer": 3,
+    "Geometry": 12,
+    "Material": 6,
+    "Model": 14,
+    "NodeAttribute": 2,
+    "Pose": 1
    },
-   "sample-figure.walk.s100.thermal.fbx": {
-     "byteLength": 358508,
-     "sha256": "361ed2390544c8eb8a83b4c0b12ee056b66f04d07b05c00c1e425f38afbf4766",
-     "objectCounts": {
-       "AnimationCurve": 36,
-       "AnimationCurveNode": 12,
-       "AnimationLayer": 1,
-       "AnimationStack": 1,
-       "Deformer": 3,
-       "Geometry": 15,
-       "Material": 10,
-       "Model": 17,
-       "NodeAttribute": 2,
-       "Pose": 1
-     },
-     "notices": [
-       "solids-as-property:pelvis",
-       "solids-as-property:torso",
-       "solids-as-property:head",
-       "solids-as-property:arm-l",
-       "solids-as-property:thigh-l",
-       "solids-as-property:shank-l",
-       "solids-as-property:foot-l",
-       "solids-as-property:arm-r",
-       "solids-as-property:thigh-r",
-       "solids-as-property:shank-r",
-       "solids-as-property:foot-r",
-       "solids-as-property:emitter-nose-breath",
-       "solids-as-property:emitter-mouth-breath",
-       "solids-as-property:emitter-body-plume",
-       "solids-as-property:skinned",
-       "events-dropped:walk"
-     ]
+   "notices": [
+    "solids-as-property:pelvis",
+    "solids-as-property:torso",
+    "solids-as-property:head",
+    "solids-as-property:arm-l",
+    "solids-as-property:thigh-l",
+    "solids-as-property:shank-l",
+    "solids-as-property:foot-l",
+    "solids-as-property:arm-r",
+    "solids-as-property:thigh-r",
+    "solids-as-property:shank-r",
+    "solids-as-property:foot-r",
+    "solids-as-property:skinned",
+    "events-dropped:walk"
+   ]
+  },
+  "sample-figure.walk.s100.thermal.fbx": {
+   "byteLength": 500636,
+   "sha256": "eb72c29a7fe5ef762779fd4848fcb0bc2a9c58e4098c81dba079cae4cae7a2ba",
+   "objectCounts": {
+    "AnimationCurve": 33,
+    "AnimationCurveNode": 11,
+    "AnimationLayer": 1,
+    "AnimationStack": 1,
+    "Deformer": 3,
+    "Geometry": 22,
+    "Material": 15,
+    "Model": 25,
+    "NodeAttribute": 3,
+    "Pose": 1
    },
-   "sample-figure.walk.s100.forces.fbx": {
-     "byteLength": 697452,
-     "sha256": "c668624ed88b13082e756caf53f7e5e197a18b397078e028938660d10cf81d0c",
-     "objectCounts": {
-       "AnimationCurve": 207,
-       "AnimationCurveNode": 69,
-       "AnimationLayer": 1,
-       "AnimationStack": 1,
-       "Geometry": 31,
-       "Material": 22,
-       "Model": 35,
-       "NodeAttribute": 4
-     },
-     "notices": [
-       "solids-as-property:pelvis",
-       "solids-as-property:torso",
-       "solids-as-property:head",
-       "solids-as-property:arm-l",
-       "solids-as-property:thigh-l",
-       "solids-as-property:shank-l",
-       "solids-as-property:foot-l",
-       "solids-as-property:arm-r",
-       "solids-as-property:thigh-r",
-       "solids-as-property:shank-r",
-       "solids-as-property:foot-r",
-       "solids-as-property:arrow-force-reaction-contact-l-head",
-       "solids-as-property:arrow-force-reaction-contact-l-shaft",
-       "solids-as-property:arrow-force-reaction-contact-r-head",
-       "solids-as-property:arrow-force-reaction-contact-r-shaft",
-       "solids-as-property:arrow-force-weight-head",
-       "solids-as-property:arrow-force-weight-shaft",
-       "solids-as-property:arrow-force-inertial-head",
-       "solids-as-property:arrow-force-inertial-shaft",
-       "solids-as-property:centre-of-mass",
-       "solids-as-property:arc-moment-joint-torso",
-       "unlit-approximated:glyph-arc-joint",
-       "solids-as-property:arc-moment-joint-arm-l",
-       "solids-as-property:arc-moment-joint-thigh-l",
-       "solids-as-property:arc-moment-joint-shank-l",
-       "solids-as-property:arc-moment-joint-foot-l",
-       "solids-as-property:arc-moment-joint-arm-r",
-       "solids-as-property:arc-moment-joint-thigh-r",
-       "solids-as-property:arc-moment-joint-shank-r",
-       "solids-as-property:arc-moment-joint-foot-r",
-       "solids-as-property:arc-moment-reaction-contact-l",
-       "unlit-approximated:glyph-arc-reaction",
-       "solids-as-property:arc-moment-reaction-contact-r",
-       "events-dropped:walk",
-       "material-animation-unbound:moments-2:baseColor",
-       "material-animation-unbound:moments-3:baseColor",
-       "material-animation-unbound:moments-4:baseColor",
-       "material-animation-unbound:moments-5:baseColor",
-       "material-animation-unbound:moments-6:baseColor",
-       "material-animation-unbound:moments-7:baseColor",
-       "material-animation-unbound:moments-8:baseColor",
-       "material-animation-unbound:moments-9:baseColor",
-       "material-animation-unbound:moments-10:baseColor",
-       "material-animation-unbound:moments-11:baseColor",
-       "material-animation-unbound:moments-12:baseColor",
-       "material-animation-unbound:moments-13:baseColor",
-       "material-animation-unbound:moments-14:baseColor",
-       "material-animation-unbound:moments-15:baseColor"
-     ]
+   "notices": [
+    "solids-as-property:pelvis",
+    "solids-as-property:torso",
+    "solids-as-property:head",
+    "solids-as-property:arm-l",
+    "solids-as-property:thigh-l",
+    "solids-as-property:shank-l",
+    "solids-as-property:foot-l",
+    "solids-as-property:arm-r",
+    "solids-as-property:thigh-r",
+    "solids-as-property:shank-r",
+    "solids-as-property:foot-r",
+    "solids-as-property:flow-stream-0",
+    "unlit-approximated:thermal-flow-excess-4",
+    "unlit-approximated:thermal-flow-excess-6",
+    "unlit-approximated:thermal-flow-excess-5",
+    "unlit-approximated:thermal-flow-excess-8",
+    "solids-as-property:flow-stream-1",
+    "solids-as-property:flow-stream-3",
+    "solids-as-property:flow-stream-5",
+    "solids-as-property:flow-stream-7",
+    "solids-as-property:flow-stream-8",
+    "solids-as-property:flow-stream-12",
+    "solids-as-property:flow-stream-16",
+    "solids-as-property:flow-stream-41",
+    "unlit-approximated:thermal-flow-excess-7",
+    "solids-as-property:flow-vapour",
+    "unlit-approximated:thermal-flow-vapour-2",
+    "unlit-approximated:thermal-flow-vapour-1",
+    "unlit-approximated:thermal-flow-vapour-0",
+    "solids-as-property:skinned",
+    "events-dropped:walk"
+   ]
+  },
+  "sample-figure.walk.s100.forces.fbx": {
+   "byteLength": 697452,
+   "sha256": "c668624ed88b13082e756caf53f7e5e197a18b397078e028938660d10cf81d0c",
+   "objectCounts": {
+    "AnimationCurve": 207,
+    "AnimationCurveNode": 69,
+    "AnimationLayer": 1,
+    "AnimationStack": 1,
+    "Geometry": 31,
+    "Material": 22,
+    "Model": 35,
+    "NodeAttribute": 4
    },
-   "sample-figure.walk.s200.light-solid.fbx": {
-     "byteLength": 183692,
-     "sha256": "1a9a2c606d5d4f12ca7583f3bfbb8e7d1b0f11b12ec472754cf31dbc84357ea9",
-     "objectCounts": {
-       "AnimationCurve": 30,
-       "AnimationCurveNode": 10,
-       "AnimationLayer": 1,
-       "AnimationStack": 1,
-       "Geometry": 11,
-       "Material": 5,
-       "Model": 11
-     },
-     "notices": [
-       "solids-as-property:pelvis",
-       "solids-as-property:torso",
-       "solids-as-property:head",
-       "solids-as-property:arm-l",
-       "solids-as-property:thigh-l",
-       "solids-as-property:shank-l",
-       "solids-as-property:foot-l",
-       "solids-as-property:arm-r",
-       "solids-as-property:thigh-r",
-       "solids-as-property:shank-r",
-       "solids-as-property:foot-r",
-       "events-dropped:walk"
-     ]
+   "notices": [
+    "solids-as-property:pelvis",
+    "solids-as-property:torso",
+    "solids-as-property:head",
+    "solids-as-property:arm-l",
+    "solids-as-property:thigh-l",
+    "solids-as-property:shank-l",
+    "solids-as-property:foot-l",
+    "solids-as-property:arm-r",
+    "solids-as-property:thigh-r",
+    "solids-as-property:shank-r",
+    "solids-as-property:foot-r",
+    "solids-as-property:arrow-force-reaction-contact-l-head",
+    "solids-as-property:arrow-force-reaction-contact-l-shaft",
+    "solids-as-property:arrow-force-reaction-contact-r-head",
+    "solids-as-property:arrow-force-reaction-contact-r-shaft",
+    "solids-as-property:arrow-force-weight-head",
+    "solids-as-property:arrow-force-weight-shaft",
+    "solids-as-property:arrow-force-inertial-head",
+    "solids-as-property:arrow-force-inertial-shaft",
+    "solids-as-property:centre-of-mass",
+    "solids-as-property:arc-moment-joint-torso",
+    "unlit-approximated:glyph-arc-joint",
+    "solids-as-property:arc-moment-joint-arm-l",
+    "solids-as-property:arc-moment-joint-thigh-l",
+    "solids-as-property:arc-moment-joint-shank-l",
+    "solids-as-property:arc-moment-joint-foot-l",
+    "solids-as-property:arc-moment-joint-arm-r",
+    "solids-as-property:arc-moment-joint-thigh-r",
+    "solids-as-property:arc-moment-joint-shank-r",
+    "solids-as-property:arc-moment-joint-foot-r",
+    "solids-as-property:arc-moment-reaction-contact-l",
+    "unlit-approximated:glyph-arc-reaction",
+    "solids-as-property:arc-moment-reaction-contact-r",
+    "events-dropped:walk",
+    "material-animation-unbound:moments-2:baseColor",
+    "material-animation-unbound:moments-3:baseColor",
+    "material-animation-unbound:moments-4:baseColor",
+    "material-animation-unbound:moments-5:baseColor",
+    "material-animation-unbound:moments-6:baseColor",
+    "material-animation-unbound:moments-7:baseColor",
+    "material-animation-unbound:moments-8:baseColor",
+    "material-animation-unbound:moments-9:baseColor",
+    "material-animation-unbound:moments-10:baseColor",
+    "material-animation-unbound:moments-11:baseColor",
+    "material-animation-unbound:moments-12:baseColor",
+    "material-animation-unbound:moments-13:baseColor",
+    "material-animation-unbound:moments-14:baseColor",
+    "material-animation-unbound:moments-15:baseColor"
+   ]
+  },
+  "sample-figure.walk.s200.light-solid.fbx": {
+   "byteLength": 183692,
+   "sha256": "1a9a2c606d5d4f12ca7583f3bfbb8e7d1b0f11b12ec472754cf31dbc84357ea9",
+   "objectCounts": {
+    "AnimationCurve": 30,
+    "AnimationCurveNode": 10,
+    "AnimationLayer": 1,
+    "AnimationStack": 1,
+    "Geometry": 11,
+    "Material": 5,
+    "Model": 11
    },
-   "sample-figure.walk.s200.thermal.fbx": {
-     "byteLength": 201660,
-     "sha256": "6542c51960d21963fba2c0fd90cfb0cb9fd3394b414f5fe842bf701f05417ce6",
-     "objectCounts": {
-       "AnimationCurve": 36,
-       "AnimationCurveNode": 12,
-       "AnimationLayer": 1,
-       "AnimationStack": 1,
-       "Geometry": 14,
-       "Material": 9,
-       "Model": 14
-     },
-     "notices": [
-       "solids-as-property:pelvis",
-       "solids-as-property:torso",
-       "solids-as-property:head",
-       "solids-as-property:arm-l",
-       "solids-as-property:thigh-l",
-       "solids-as-property:shank-l",
-       "solids-as-property:foot-l",
-       "solids-as-property:arm-r",
-       "solids-as-property:thigh-r",
-       "solids-as-property:shank-r",
-       "solids-as-property:foot-r",
-       "solids-as-property:emitter-nose-breath",
-       "solids-as-property:emitter-mouth-breath",
-       "solids-as-property:emitter-body-plume",
-       "events-dropped:walk"
-     ]
+   "notices": [
+    "solids-as-property:pelvis",
+    "solids-as-property:torso",
+    "solids-as-property:head",
+    "solids-as-property:arm-l",
+    "solids-as-property:thigh-l",
+    "solids-as-property:shank-l",
+    "solids-as-property:foot-l",
+    "solids-as-property:arm-r",
+    "solids-as-property:thigh-r",
+    "solids-as-property:shank-r",
+    "solids-as-property:foot-r",
+    "events-dropped:walk"
+   ]
+  },
+  "sample-figure.walk.s200.thermal.fbx": {
+   "byteLength": 268684,
+   "sha256": "b645dd1c5a5af3558e6ad81d521728d56a1db62254dfff9d89fb839ca45d088a",
+   "objectCounts": {
+    "AnimationCurve": 33,
+    "AnimationCurveNode": 11,
+    "AnimationLayer": 1,
+    "AnimationStack": 1,
+    "Geometry": 18,
+    "Material": 13,
+    "Model": 19,
+    "NodeAttribute": 1
    },
-   "sample-figure.walk.s200.forces.fbx": {
-     "byteLength": 571036,
-     "sha256": "5a9292ef0cfd0cc948b4e717dce8b899a03ac9a55d6d242dcdef043ad6bea4a6",
-     "objectCounts": {
-       "AnimationCurve": 195,
-       "AnimationCurveNode": 65,
-       "AnimationLayer": 1,
-       "AnimationStack": 1,
-       "Geometry": 31,
-       "Material": 18,
-       "Model": 35,
-       "NodeAttribute": 4
-     },
-     "notices": [
-       "solids-as-property:pelvis",
-       "solids-as-property:torso",
-       "solids-as-property:head",
-       "solids-as-property:arm-l",
-       "solids-as-property:thigh-l",
-       "solids-as-property:shank-l",
-       "solids-as-property:foot-l",
-       "solids-as-property:arm-r",
-       "solids-as-property:thigh-r",
-       "solids-as-property:shank-r",
-       "solids-as-property:foot-r",
-       "solids-as-property:arrow-force-reaction-contact-l-head",
-       "solids-as-property:arrow-force-reaction-contact-l-shaft",
-       "solids-as-property:arrow-force-reaction-contact-r-head",
-       "solids-as-property:arrow-force-reaction-contact-r-shaft",
-       "solids-as-property:arrow-force-weight-head",
-       "solids-as-property:arrow-force-weight-shaft",
-       "solids-as-property:arrow-force-inertial-head",
-       "solids-as-property:arrow-force-inertial-shaft",
-       "solids-as-property:centre-of-mass",
-       "solids-as-property:arc-moment-joint-torso",
-       "unlit-approximated:glyph-arc-joint",
-       "solids-as-property:arc-moment-joint-arm-l",
-       "solids-as-property:arc-moment-joint-thigh-l",
-       "solids-as-property:arc-moment-joint-shank-l",
-       "solids-as-property:arc-moment-joint-foot-l",
-       "solids-as-property:arc-moment-joint-arm-r",
-       "solids-as-property:arc-moment-joint-thigh-r",
-       "solids-as-property:arc-moment-joint-shank-r",
-       "solids-as-property:arc-moment-joint-foot-r",
-       "solids-as-property:arc-moment-reaction-contact-l",
-       "unlit-approximated:glyph-arc-reaction",
-       "solids-as-property:arc-moment-reaction-contact-r",
-       "events-dropped:walk",
-       "material-animation-unbound:moments-2:baseColor",
-       "material-animation-unbound:moments-3:baseColor",
-       "material-animation-unbound:moments-4:baseColor",
-       "material-animation-unbound:moments-5:baseColor",
-       "material-animation-unbound:moments-6:baseColor",
-       "material-animation-unbound:moments-7:baseColor",
-       "material-animation-unbound:moments-8:baseColor",
-       "material-animation-unbound:moments-9:baseColor",
-       "material-animation-unbound:moments-10:baseColor",
-       "material-animation-unbound:moments-11:baseColor"
-     ]
+   "notices": [
+    "solids-as-property:pelvis",
+    "solids-as-property:torso",
+    "solids-as-property:head",
+    "solids-as-property:arm-l",
+    "solids-as-property:thigh-l",
+    "solids-as-property:shank-l",
+    "solids-as-property:foot-l",
+    "solids-as-property:arm-r",
+    "solids-as-property:thigh-r",
+    "solids-as-property:shank-r",
+    "solids-as-property:foot-r",
+    "solids-as-property:flow-stream-0",
+    "unlit-approximated:thermal-flow-excess-4",
+    "unlit-approximated:thermal-flow-excess-6",
+    "unlit-approximated:thermal-flow-excess-5",
+    "unlit-approximated:thermal-flow-excess-8",
+    "solids-as-property:flow-stream-1",
+    "solids-as-property:flow-stream-3",
+    "solids-as-property:flow-stream-5",
+    "solids-as-property:flow-stream-7",
+    "solids-as-property:flow-stream-12",
+    "solids-as-property:flow-vapour",
+    "unlit-approximated:thermal-flow-vapour-2",
+    "unlit-approximated:thermal-flow-vapour-1",
+    "unlit-approximated:thermal-flow-vapour-0",
+    "events-dropped:walk"
+   ]
+  },
+  "sample-figure.walk.s200.forces.fbx": {
+   "byteLength": 571036,
+   "sha256": "5a9292ef0cfd0cc948b4e717dce8b899a03ac9a55d6d242dcdef043ad6bea4a6",
+   "objectCounts": {
+    "AnimationCurve": 195,
+    "AnimationCurveNode": 65,
+    "AnimationLayer": 1,
+    "AnimationStack": 1,
+    "Geometry": 31,
+    "Material": 18,
+    "Model": 35,
+    "NodeAttribute": 4
    },
-   "sample-figure.walk.s500.light-solid.fbx": {
-     "byteLength": 102140,
-     "sha256": "2bb606fce8583e2e959ac6989637d0b53a7ac638c47c8b7b225cc8aec5f55dbe",
-     "objectCounts": {
-       "AnimationCurve": 30,
-       "AnimationCurveNode": 10,
-       "AnimationLayer": 1,
-       "AnimationStack": 1,
-       "Geometry": 11,
-       "Material": 5,
-       "Model": 11
-     },
-     "notices": [
-       "solids-as-property:pelvis",
-       "solids-as-property:torso",
-       "solids-as-property:head",
-       "solids-as-property:arm-l",
-       "solids-as-property:thigh-l",
-       "solids-as-property:shank-l",
-       "solids-as-property:foot-l",
-       "solids-as-property:arm-r",
-       "solids-as-property:thigh-r",
-       "solids-as-property:shank-r",
-       "solids-as-property:foot-r",
-       "events-dropped:walk"
-     ]
+   "notices": [
+    "solids-as-property:pelvis",
+    "solids-as-property:torso",
+    "solids-as-property:head",
+    "solids-as-property:arm-l",
+    "solids-as-property:thigh-l",
+    "solids-as-property:shank-l",
+    "solids-as-property:foot-l",
+    "solids-as-property:arm-r",
+    "solids-as-property:thigh-r",
+    "solids-as-property:shank-r",
+    "solids-as-property:foot-r",
+    "solids-as-property:arrow-force-reaction-contact-l-head",
+    "solids-as-property:arrow-force-reaction-contact-l-shaft",
+    "solids-as-property:arrow-force-reaction-contact-r-head",
+    "solids-as-property:arrow-force-reaction-contact-r-shaft",
+    "solids-as-property:arrow-force-weight-head",
+    "solids-as-property:arrow-force-weight-shaft",
+    "solids-as-property:arrow-force-inertial-head",
+    "solids-as-property:arrow-force-inertial-shaft",
+    "solids-as-property:centre-of-mass",
+    "solids-as-property:arc-moment-joint-torso",
+    "unlit-approximated:glyph-arc-joint",
+    "solids-as-property:arc-moment-joint-arm-l",
+    "solids-as-property:arc-moment-joint-thigh-l",
+    "solids-as-property:arc-moment-joint-shank-l",
+    "solids-as-property:arc-moment-joint-foot-l",
+    "solids-as-property:arc-moment-joint-arm-r",
+    "solids-as-property:arc-moment-joint-thigh-r",
+    "solids-as-property:arc-moment-joint-shank-r",
+    "solids-as-property:arc-moment-joint-foot-r",
+    "solids-as-property:arc-moment-reaction-contact-l",
+    "unlit-approximated:glyph-arc-reaction",
+    "solids-as-property:arc-moment-reaction-contact-r",
+    "events-dropped:walk",
+    "material-animation-unbound:moments-2:baseColor",
+    "material-animation-unbound:moments-3:baseColor",
+    "material-animation-unbound:moments-4:baseColor",
+    "material-animation-unbound:moments-5:baseColor",
+    "material-animation-unbound:moments-6:baseColor",
+    "material-animation-unbound:moments-7:baseColor",
+    "material-animation-unbound:moments-8:baseColor",
+    "material-animation-unbound:moments-9:baseColor",
+    "material-animation-unbound:moments-10:baseColor",
+    "material-animation-unbound:moments-11:baseColor"
+   ]
+  },
+  "sample-figure.walk.s500.light-solid.fbx": {
+   "byteLength": 102140,
+   "sha256": "2bb606fce8583e2e959ac6989637d0b53a7ac638c47c8b7b225cc8aec5f55dbe",
+   "objectCounts": {
+    "AnimationCurve": 30,
+    "AnimationCurveNode": 10,
+    "AnimationLayer": 1,
+    "AnimationStack": 1,
+    "Geometry": 11,
+    "Material": 5,
+    "Model": 11
    },
-   "sample-figure.walk.s500.thermal.fbx": {
-     "byteLength": 119692,
-     "sha256": "0b028d53e9e9b5b3159fef782eb448454f80dc0b81f591ad586fe6aae59db435",
-     "objectCounts": {
-       "AnimationCurve": 36,
-       "AnimationCurveNode": 12,
-       "AnimationLayer": 1,
-       "AnimationStack": 1,
-       "Geometry": 14,
-       "Material": 9,
-       "Model": 14
-     },
-     "notices": [
-       "solids-as-property:pelvis",
-       "solids-as-property:torso",
-       "solids-as-property:head",
-       "solids-as-property:arm-l",
-       "solids-as-property:thigh-l",
-       "solids-as-property:shank-l",
-       "solids-as-property:foot-l",
-       "solids-as-property:arm-r",
-       "solids-as-property:thigh-r",
-       "solids-as-property:shank-r",
-       "solids-as-property:foot-r",
-       "solids-as-property:emitter-nose-breath",
-       "solids-as-property:emitter-mouth-breath",
-       "solids-as-property:emitter-body-plume",
-       "events-dropped:walk"
-     ]
+   "notices": [
+    "solids-as-property:pelvis",
+    "solids-as-property:torso",
+    "solids-as-property:head",
+    "solids-as-property:arm-l",
+    "solids-as-property:thigh-l",
+    "solids-as-property:shank-l",
+    "solids-as-property:foot-l",
+    "solids-as-property:arm-r",
+    "solids-as-property:thigh-r",
+    "solids-as-property:shank-r",
+    "solids-as-property:foot-r",
+    "events-dropped:walk"
+   ]
+  },
+  "sample-figure.walk.s500.thermal.fbx": {
+   "byteLength": 135820,
+   "sha256": "0de524dd0629106a8448ebb91df813e5628601caf66301d90d2873a58adc0c8b",
+   "objectCounts": {
+    "AnimationCurve": 33,
+    "AnimationCurveNode": 11,
+    "AnimationLayer": 1,
+    "AnimationStack": 1,
+    "Geometry": 14,
+    "Material": 13,
+    "Model": 15,
+    "NodeAttribute": 1
    },
-   "sample-figure.walk.s500.forces.fbx": {
-     "byteLength": 543932,
-     "sha256": "284f033ba31762c7a0519cf53dbe50cae41a64497bc0e5d1d5eef6296be19e09",
-     "objectCounts": {
-       "AnimationCurve": 192,
-       "AnimationCurveNode": 64,
-       "AnimationLayer": 1,
-       "AnimationStack": 1,
-       "Geometry": 31,
-       "Material": 18,
-       "Model": 35,
-       "NodeAttribute": 4
-     },
-     "notices": [
-       "solids-as-property:pelvis",
-       "solids-as-property:torso",
-       "solids-as-property:head",
-       "solids-as-property:arm-l",
-       "solids-as-property:thigh-l",
-       "solids-as-property:shank-l",
-       "solids-as-property:foot-l",
-       "solids-as-property:arm-r",
-       "solids-as-property:thigh-r",
-       "solids-as-property:shank-r",
-       "solids-as-property:foot-r",
-       "solids-as-property:arrow-force-reaction-contact-l-head",
-       "solids-as-property:arrow-force-reaction-contact-l-shaft",
-       "solids-as-property:arrow-force-reaction-contact-r-head",
-       "solids-as-property:arrow-force-reaction-contact-r-shaft",
-       "solids-as-property:arrow-force-weight-head",
-       "solids-as-property:arrow-force-weight-shaft",
-       "solids-as-property:arrow-force-inertial-head",
-       "solids-as-property:arrow-force-inertial-shaft",
-       "solids-as-property:centre-of-mass",
-       "solids-as-property:arc-moment-joint-torso",
-       "unlit-approximated:glyph-arc-joint",
-       "solids-as-property:arc-moment-joint-arm-l",
-       "solids-as-property:arc-moment-joint-thigh-l",
-       "solids-as-property:arc-moment-joint-shank-l",
-       "solids-as-property:arc-moment-joint-foot-l",
-       "solids-as-property:arc-moment-joint-arm-r",
-       "solids-as-property:arc-moment-joint-thigh-r",
-       "solids-as-property:arc-moment-joint-shank-r",
-       "solids-as-property:arc-moment-joint-foot-r",
-       "solids-as-property:arc-moment-reaction-contact-l",
-       "unlit-approximated:glyph-arc-reaction",
-       "solids-as-property:arc-moment-reaction-contact-r",
-       "events-dropped:walk",
-       "material-animation-unbound:moments-2:baseColor",
-       "material-animation-unbound:moments-3:baseColor",
-       "material-animation-unbound:moments-4:baseColor",
-       "material-animation-unbound:moments-5:baseColor",
-       "material-animation-unbound:moments-6:baseColor",
-       "material-animation-unbound:moments-7:baseColor",
-       "material-animation-unbound:moments-8:baseColor",
-       "material-animation-unbound:moments-9:baseColor",
-       "material-animation-unbound:moments-10:baseColor",
-       "material-animation-unbound:moments-11:baseColor"
-     ]
+   "notices": [
+    "solids-as-property:pelvis",
+    "solids-as-property:torso",
+    "solids-as-property:head",
+    "solids-as-property:arm-l",
+    "solids-as-property:thigh-l",
+    "solids-as-property:shank-l",
+    "solids-as-property:foot-l",
+    "solids-as-property:arm-r",
+    "solids-as-property:thigh-r",
+    "solids-as-property:shank-r",
+    "solids-as-property:foot-r",
+    "solids-as-property:flow-stream-0",
+    "unlit-approximated:thermal-flow-excess-4",
+    "unlit-approximated:thermal-flow-excess-6",
+    "unlit-approximated:thermal-flow-excess-5",
+    "unlit-approximated:thermal-flow-excess-8",
+    "solids-as-property:flow-stream-1",
+    "solids-as-property:flow-vapour",
+    "unlit-approximated:thermal-flow-vapour-2",
+    "unlit-approximated:thermal-flow-vapour-1",
+    "unlit-approximated:thermal-flow-vapour-0",
+    "events-dropped:walk"
+   ]
+  },
+  "sample-figure.walk.s500.forces.fbx": {
+   "byteLength": 543932,
+   "sha256": "284f033ba31762c7a0519cf53dbe50cae41a64497bc0e5d1d5eef6296be19e09",
+   "objectCounts": {
+    "AnimationCurve": 192,
+    "AnimationCurveNode": 64,
+    "AnimationLayer": 1,
+    "AnimationStack": 1,
+    "Geometry": 31,
+    "Material": 18,
+    "Model": 35,
+    "NodeAttribute": 4
    },
-   "sample-figure.idle-breathing.s50.light-solid.fbx": {
-     "byteLength": 535948,
-     "sha256": "a55d43965f118bbcd41f8edb108831d0ff9bbb536797a5bfc6bf1b035b25324c",
-     "objectCounts": {
-       "AnimationCurve": 9,
-       "AnimationCurveNode": 3,
-       "AnimationLayer": 1,
-       "AnimationStack": 1,
-       "Deformer": 3,
-       "Geometry": 12,
-       "Material": 8,
-       "Model": 14,
-       "NodeAttribute": 2,
-       "Pose": 1
-     },
-     "notices": [
-       "solids-as-property:pelvis",
-       "solids-as-property:torso",
-       "solids-as-property:head",
-       "solids-as-property:arm-l",
-       "solids-as-property:thigh-l",
-       "solids-as-property:shank-l",
-       "solids-as-property:foot-l",
-       "solids-as-property:arm-r",
-       "solids-as-property:thigh-r",
-       "solids-as-property:shank-r",
-       "solids-as-property:foot-r",
-       "solids-as-property:skinned"
-     ]
+   "notices": [
+    "solids-as-property:pelvis",
+    "solids-as-property:torso",
+    "solids-as-property:head",
+    "solids-as-property:arm-l",
+    "solids-as-property:thigh-l",
+    "solids-as-property:shank-l",
+    "solids-as-property:foot-l",
+    "solids-as-property:arm-r",
+    "solids-as-property:thigh-r",
+    "solids-as-property:shank-r",
+    "solids-as-property:foot-r",
+    "solids-as-property:arrow-force-reaction-contact-l-head",
+    "solids-as-property:arrow-force-reaction-contact-l-shaft",
+    "solids-as-property:arrow-force-reaction-contact-r-head",
+    "solids-as-property:arrow-force-reaction-contact-r-shaft",
+    "solids-as-property:arrow-force-weight-head",
+    "solids-as-property:arrow-force-weight-shaft",
+    "solids-as-property:arrow-force-inertial-head",
+    "solids-as-property:arrow-force-inertial-shaft",
+    "solids-as-property:centre-of-mass",
+    "solids-as-property:arc-moment-joint-torso",
+    "unlit-approximated:glyph-arc-joint",
+    "solids-as-property:arc-moment-joint-arm-l",
+    "solids-as-property:arc-moment-joint-thigh-l",
+    "solids-as-property:arc-moment-joint-shank-l",
+    "solids-as-property:arc-moment-joint-foot-l",
+    "solids-as-property:arc-moment-joint-arm-r",
+    "solids-as-property:arc-moment-joint-thigh-r",
+    "solids-as-property:arc-moment-joint-shank-r",
+    "solids-as-property:arc-moment-joint-foot-r",
+    "solids-as-property:arc-moment-reaction-contact-l",
+    "unlit-approximated:glyph-arc-reaction",
+    "solids-as-property:arc-moment-reaction-contact-r",
+    "events-dropped:walk",
+    "material-animation-unbound:moments-2:baseColor",
+    "material-animation-unbound:moments-3:baseColor",
+    "material-animation-unbound:moments-4:baseColor",
+    "material-animation-unbound:moments-5:baseColor",
+    "material-animation-unbound:moments-6:baseColor",
+    "material-animation-unbound:moments-7:baseColor",
+    "material-animation-unbound:moments-8:baseColor",
+    "material-animation-unbound:moments-9:baseColor",
+    "material-animation-unbound:moments-10:baseColor",
+    "material-animation-unbound:moments-11:baseColor"
+   ]
+  },
+  "sample-figure.idle-breathing.s50.light-solid.fbx": {
+   "byteLength": 535948,
+   "sha256": "a55d43965f118bbcd41f8edb108831d0ff9bbb536797a5bfc6bf1b035b25324c",
+   "objectCounts": {
+    "AnimationCurve": 9,
+    "AnimationCurveNode": 3,
+    "AnimationLayer": 1,
+    "AnimationStack": 1,
+    "Deformer": 3,
+    "Geometry": 12,
+    "Material": 8,
+    "Model": 14,
+    "NodeAttribute": 2,
+    "Pose": 1
    },
-   "sample-figure.idle-breathing.s50.thermal.fbx": {
-     "byteLength": 519260,
-     "sha256": "728306c2ee2f3e4b61c72559ae2c410dd22452e07253e1e3ff6fbb2fc3febcae",
-     "objectCounts": {
-       "AnimationCurve": 21,
-       "AnimationCurveNode": 7,
-       "AnimationLayer": 1,
-       "AnimationStack": 1,
-       "Deformer": 3,
-       "Geometry": 15,
-       "Material": 10,
-       "Model": 17,
-       "NodeAttribute": 2,
-       "Pose": 1
-     },
-     "notices": [
-       "solids-as-property:pelvis",
-       "solids-as-property:torso",
-       "solids-as-property:head",
-       "solids-as-property:arm-l",
-       "solids-as-property:thigh-l",
-       "solids-as-property:shank-l",
-       "solids-as-property:foot-l",
-       "solids-as-property:arm-r",
-       "solids-as-property:thigh-r",
-       "solids-as-property:shank-r",
-       "solids-as-property:foot-r",
-       "solids-as-property:emitter-nose-breath",
-       "solids-as-property:emitter-mouth-breath",
-       "solids-as-property:emitter-body-plume",
-       "solids-as-property:skinned"
-     ]
+   "notices": [
+    "solids-as-property:pelvis",
+    "solids-as-property:torso",
+    "solids-as-property:head",
+    "solids-as-property:arm-l",
+    "solids-as-property:thigh-l",
+    "solids-as-property:shank-l",
+    "solids-as-property:foot-l",
+    "solids-as-property:arm-r",
+    "solids-as-property:thigh-r",
+    "solids-as-property:shank-r",
+    "solids-as-property:foot-r",
+    "solids-as-property:skinned"
+   ]
+  },
+  "sample-figure.idle-breathing.s50.thermal.fbx": {
+   "byteLength": 1196300,
+   "sha256": "bdd3223c628af7dbf467b685ceb03ab07cfa1cf74a3a5fe3d97e7c9f3decb2bd",
+   "objectCounts": {
+    "AnimationCurve": 9,
+    "AnimationCurveNode": 3,
+    "AnimationLayer": 1,
+    "AnimationStack": 1,
+    "Deformer": 3,
+    "Geometry": 39,
+    "Material": 13,
+    "Model": 42,
+    "NodeAttribute": 3,
+    "Pose": 1
    },
-   "sample-figure.idle-breathing.s50.forces.fbx": {
-     "byteLength": 944492,
-     "sha256": "843c2f617f7d248e4834c4f4e6480a6facf168b9104f5bef62fc5a99f72ec33f",
-     "objectCounts": {
-       "AnimationCurve": 78,
-       "AnimationCurveNode": 26,
-       "AnimationLayer": 1,
-       "AnimationStack": 1,
-       "Geometry": 29,
-       "Material": 26,
-       "Model": 33,
-       "NodeAttribute": 4
-     },
-     "notices": [
-       "solids-as-property:pelvis",
-       "solids-as-property:torso",
-       "solids-as-property:head",
-       "solids-as-property:arm-l",
-       "solids-as-property:thigh-l",
-       "solids-as-property:shank-l",
-       "solids-as-property:foot-l",
-       "solids-as-property:arm-r",
-       "solids-as-property:thigh-r",
-       "solids-as-property:shank-r",
-       "solids-as-property:foot-r",
-       "solids-as-property:arrow-force-reaction-contact-l-head",
-       "solids-as-property:arrow-force-reaction-contact-l-shaft",
-       "solids-as-property:arrow-force-reaction-contact-r-head",
-       "solids-as-property:arrow-force-reaction-contact-r-shaft",
-       "solids-as-property:arrow-force-weight-head",
-       "solids-as-property:arrow-force-weight-shaft",
-       "solids-as-property:arrow-force-inertial-head",
-       "solids-as-property:arrow-force-inertial-shaft",
-       "solids-as-property:centre-of-mass",
-       "solids-as-property:arc-moment-joint-thigh-l",
-       "unlit-approximated:glyph-arc-joint",
-       "solids-as-property:arc-moment-joint-shank-l",
-       "solids-as-property:arc-moment-joint-foot-l",
-       "solids-as-property:arc-moment-joint-thigh-r",
-       "solids-as-property:arc-moment-joint-shank-r",
-       "solids-as-property:arc-moment-joint-foot-r",
-       "solids-as-property:arc-moment-reaction-contact-l",
-       "unlit-approximated:glyph-arc-reaction",
-       "solids-as-property:arc-moment-reaction-contact-r",
-       "solids-as-property:arc-moment-joint-torso",
-       "material-animation-unbound:moments-2:baseColor",
-       "material-animation-unbound:moments-3:baseColor",
-       "material-animation-unbound:moments-4:baseColor",
-       "material-animation-unbound:moments-5:baseColor",
-       "material-animation-unbound:moments-6:baseColor",
-       "material-animation-unbound:moments-7:baseColor",
-       "material-animation-unbound:moments-8:baseColor",
-       "material-animation-unbound:moments-9:baseColor",
-       "material-animation-unbound:moments-10:baseColor",
-       "material-animation-unbound:moments-11:baseColor",
-       "material-animation-unbound:moments-12:baseColor",
-       "material-animation-unbound:moments-13:baseColor",
-       "material-animation-unbound:moments-14:baseColor",
-       "material-animation-unbound:moments-15:baseColor",
-       "material-animation-unbound:moments-16:baseColor",
-       "material-animation-unbound:moments-17:baseColor",
-       "material-animation-unbound:moments-18:baseColor",
-       "material-animation-unbound:moments-19:baseColor"
-     ]
+   "notices": [
+    "solids-as-property:pelvis",
+    "solids-as-property:torso",
+    "solids-as-property:head",
+    "solids-as-property:arm-l",
+    "solids-as-property:thigh-l",
+    "solids-as-property:shank-l",
+    "solids-as-property:foot-l",
+    "solids-as-property:arm-r",
+    "solids-as-property:thigh-r",
+    "solids-as-property:shank-r",
+    "solids-as-property:foot-r",
+    "solids-as-property:flow-stream-0",
+    "unlit-approximated:thermal-flow-excess-4",
+    "unlit-approximated:thermal-flow-excess-5",
+    "solids-as-property:flow-stream-1",
+    "unlit-approximated:thermal-flow-excess-6",
+    "solids-as-property:flow-stream-2",
+    "solids-as-property:flow-stream-4",
+    "solids-as-property:flow-stream-6",
+    "solids-as-property:flow-stream-7",
+    "solids-as-property:flow-stream-9",
+    "solids-as-property:flow-stream-10",
+    "solids-as-property:flow-stream-12",
+    "solids-as-property:flow-stream-14",
+    "solids-as-property:flow-stream-15",
+    "solids-as-property:flow-stream-17",
+    "solids-as-property:flow-stream-19",
+    "solids-as-property:flow-stream-21",
+    "solids-as-property:flow-stream-22",
+    "solids-as-property:flow-stream-23",
+    "solids-as-property:flow-stream-25",
+    "solids-as-property:flow-stream-27",
+    "solids-as-property:flow-stream-31",
+    "solids-as-property:flow-stream-32",
+    "solids-as-property:flow-stream-34",
+    "solids-as-property:flow-stream-40",
+    "solids-as-property:flow-stream-42",
+    "solids-as-property:flow-stream-46",
+    "unlit-approximated:thermal-flow-excess-7",
+    "solids-as-property:flow-stream-48",
+    "solids-as-property:flow-stream-49",
+    "solids-as-property:flow-vapour",
+    "unlit-approximated:thermal-flow-vapour-1",
+    "unlit-approximated:thermal-flow-vapour-0",
+    "solids-as-property:skinned"
+   ]
+  },
+  "sample-figure.idle-breathing.s50.forces.fbx": {
+   "byteLength": 944492,
+   "sha256": "843c2f617f7d248e4834c4f4e6480a6facf168b9104f5bef62fc5a99f72ec33f",
+   "objectCounts": {
+    "AnimationCurve": 78,
+    "AnimationCurveNode": 26,
+    "AnimationLayer": 1,
+    "AnimationStack": 1,
+    "Geometry": 29,
+    "Material": 26,
+    "Model": 33,
+    "NodeAttribute": 4
    },
-   "sample-figure.idle-breathing.s100.light-solid.fbx": {
-     "byteLength": 292684,
-     "sha256": "39a64ef7e6a3cd946f15fb4b6d26ab2e17310b45711113e2fb447c17b49aa7e0",
-     "objectCounts": {
-       "AnimationCurve": 9,
-       "AnimationCurveNode": 3,
-       "AnimationLayer": 1,
-       "AnimationStack": 1,
-       "Deformer": 3,
-       "Geometry": 12,
-       "Material": 6,
-       "Model": 14,
-       "NodeAttribute": 2,
-       "Pose": 1
-     },
-     "notices": [
-       "solids-as-property:pelvis",
-       "solids-as-property:torso",
-       "solids-as-property:head",
-       "solids-as-property:arm-l",
-       "solids-as-property:thigh-l",
-       "solids-as-property:shank-l",
-       "solids-as-property:foot-l",
-       "solids-as-property:arm-r",
-       "solids-as-property:thigh-r",
-       "solids-as-property:shank-r",
-       "solids-as-property:foot-r",
-       "solids-as-property:skinned"
-     ]
+   "notices": [
+    "solids-as-property:pelvis",
+    "solids-as-property:torso",
+    "solids-as-property:head",
+    "solids-as-property:arm-l",
+    "solids-as-property:thigh-l",
+    "solids-as-property:shank-l",
+    "solids-as-property:foot-l",
+    "solids-as-property:arm-r",
+    "solids-as-property:thigh-r",
+    "solids-as-property:shank-r",
+    "solids-as-property:foot-r",
+    "solids-as-property:arrow-force-reaction-contact-l-head",
+    "solids-as-property:arrow-force-reaction-contact-l-shaft",
+    "solids-as-property:arrow-force-reaction-contact-r-head",
+    "solids-as-property:arrow-force-reaction-contact-r-shaft",
+    "solids-as-property:arrow-force-weight-head",
+    "solids-as-property:arrow-force-weight-shaft",
+    "solids-as-property:arrow-force-inertial-head",
+    "solids-as-property:arrow-force-inertial-shaft",
+    "solids-as-property:centre-of-mass",
+    "solids-as-property:arc-moment-joint-thigh-l",
+    "unlit-approximated:glyph-arc-joint",
+    "solids-as-property:arc-moment-joint-shank-l",
+    "solids-as-property:arc-moment-joint-foot-l",
+    "solids-as-property:arc-moment-joint-thigh-r",
+    "solids-as-property:arc-moment-joint-shank-r",
+    "solids-as-property:arc-moment-joint-foot-r",
+    "solids-as-property:arc-moment-reaction-contact-l",
+    "unlit-approximated:glyph-arc-reaction",
+    "solids-as-property:arc-moment-reaction-contact-r",
+    "solids-as-property:arc-moment-joint-torso",
+    "material-animation-unbound:moments-2:baseColor",
+    "material-animation-unbound:moments-3:baseColor",
+    "material-animation-unbound:moments-4:baseColor",
+    "material-animation-unbound:moments-5:baseColor",
+    "material-animation-unbound:moments-6:baseColor",
+    "material-animation-unbound:moments-7:baseColor",
+    "material-animation-unbound:moments-8:baseColor",
+    "material-animation-unbound:moments-9:baseColor",
+    "material-animation-unbound:moments-10:baseColor",
+    "material-animation-unbound:moments-11:baseColor",
+    "material-animation-unbound:moments-12:baseColor",
+    "material-animation-unbound:moments-13:baseColor",
+    "material-animation-unbound:moments-14:baseColor",
+    "material-animation-unbound:moments-15:baseColor",
+    "material-animation-unbound:moments-16:baseColor",
+    "material-animation-unbound:moments-17:baseColor",
+    "material-animation-unbound:moments-18:baseColor",
+    "material-animation-unbound:moments-19:baseColor"
+   ]
+  },
+  "sample-figure.idle-breathing.s100.light-solid.fbx": {
+   "byteLength": 292684,
+   "sha256": "39a64ef7e6a3cd946f15fb4b6d26ab2e17310b45711113e2fb447c17b49aa7e0",
+   "objectCounts": {
+    "AnimationCurve": 9,
+    "AnimationCurveNode": 3,
+    "AnimationLayer": 1,
+    "AnimationStack": 1,
+    "Deformer": 3,
+    "Geometry": 12,
+    "Material": 6,
+    "Model": 14,
+    "NodeAttribute": 2,
+    "Pose": 1
    },
-   "sample-figure.idle-breathing.s100.thermal.fbx": {
-     "byteLength": 356380,
-     "sha256": "56cd1103a72a188586ea815e4686dfc3286a70e5459ee67a690e8a32fc096234",
-     "objectCounts": {
-       "AnimationCurve": 21,
-       "AnimationCurveNode": 7,
-       "AnimationLayer": 1,
-       "AnimationStack": 1,
-       "Deformer": 3,
-       "Geometry": 15,
-       "Material": 10,
-       "Model": 17,
-       "NodeAttribute": 2,
-       "Pose": 1
-     },
-     "notices": [
-       "solids-as-property:pelvis",
-       "solids-as-property:torso",
-       "solids-as-property:head",
-       "solids-as-property:arm-l",
-       "solids-as-property:thigh-l",
-       "solids-as-property:shank-l",
-       "solids-as-property:foot-l",
-       "solids-as-property:arm-r",
-       "solids-as-property:thigh-r",
-       "solids-as-property:shank-r",
-       "solids-as-property:foot-r",
-       "solids-as-property:emitter-nose-breath",
-       "solids-as-property:emitter-mouth-breath",
-       "solids-as-property:emitter-body-plume",
-       "solids-as-property:skinned"
-     ]
+   "notices": [
+    "solids-as-property:pelvis",
+    "solids-as-property:torso",
+    "solids-as-property:head",
+    "solids-as-property:arm-l",
+    "solids-as-property:thigh-l",
+    "solids-as-property:shank-l",
+    "solids-as-property:foot-l",
+    "solids-as-property:arm-r",
+    "solids-as-property:thigh-r",
+    "solids-as-property:shank-r",
+    "solids-as-property:foot-r",
+    "solids-as-property:skinned"
+   ]
+  },
+  "sample-figure.idle-breathing.s100.thermal.fbx": {
+   "byteLength": 658652,
+   "sha256": "3370c7960971be50c7c91a08780d0983a46a40354be35e257e1cf32d11a72231",
+   "objectCounts": {
+    "AnimationCurve": 9,
+    "AnimationCurveNode": 3,
+    "AnimationLayer": 1,
+    "AnimationStack": 1,
+    "Deformer": 3,
+    "Geometry": 26,
+    "Material": 12,
+    "Model": 29,
+    "NodeAttribute": 3,
+    "Pose": 1
    },
-   "sample-figure.idle-breathing.s100.forces.fbx": {
-     "byteLength": 542508,
-     "sha256": "99fe6c9ededcf15a45c672024c126a549e6aac9e291863545f50e0a154f6fe92",
-     "objectCounts": {
-       "AnimationCurve": 42,
-       "AnimationCurveNode": 14,
-       "AnimationLayer": 1,
-       "AnimationStack": 1,
-       "Geometry": 29,
-       "Material": 22,
-       "Model": 33,
-       "NodeAttribute": 4
-     },
-     "notices": [
-       "solids-as-property:pelvis",
-       "solids-as-property:torso",
-       "solids-as-property:head",
-       "solids-as-property:arm-l",
-       "solids-as-property:thigh-l",
-       "solids-as-property:shank-l",
-       "solids-as-property:foot-l",
-       "solids-as-property:arm-r",
-       "solids-as-property:thigh-r",
-       "solids-as-property:shank-r",
-       "solids-as-property:foot-r",
-       "solids-as-property:arrow-force-reaction-contact-l-head",
-       "solids-as-property:arrow-force-reaction-contact-l-shaft",
-       "solids-as-property:arrow-force-reaction-contact-r-head",
-       "solids-as-property:arrow-force-reaction-contact-r-shaft",
-       "solids-as-property:arrow-force-weight-head",
-       "solids-as-property:arrow-force-weight-shaft",
-       "solids-as-property:arrow-force-inertial-head",
-       "solids-as-property:arrow-force-inertial-shaft",
-       "solids-as-property:centre-of-mass",
-       "solids-as-property:arc-moment-joint-thigh-l",
-       "unlit-approximated:glyph-arc-joint",
-       "solids-as-property:arc-moment-joint-shank-l",
-       "solids-as-property:arc-moment-joint-foot-l",
-       "solids-as-property:arc-moment-joint-thigh-r",
-       "solids-as-property:arc-moment-joint-shank-r",
-       "solids-as-property:arc-moment-joint-foot-r",
-       "solids-as-property:arc-moment-reaction-contact-l",
-       "unlit-approximated:glyph-arc-reaction",
-       "solids-as-property:arc-moment-reaction-contact-r",
-       "solids-as-property:arc-moment-joint-torso",
-       "material-animation-unbound:moments-2:baseColor",
-       "material-animation-unbound:moments-3:baseColor",
-       "material-animation-unbound:moments-4:baseColor",
-       "material-animation-unbound:moments-5:baseColor",
-       "material-animation-unbound:moments-6:baseColor",
-       "material-animation-unbound:moments-7:baseColor",
-       "material-animation-unbound:moments-8:baseColor",
-       "material-animation-unbound:moments-9:baseColor",
-       "material-animation-unbound:moments-10:baseColor",
-       "material-animation-unbound:moments-11:baseColor",
-       "material-animation-unbound:moments-12:baseColor",
-       "material-animation-unbound:moments-13:baseColor",
-       "material-animation-unbound:moments-14:baseColor",
-       "material-animation-unbound:moments-15:baseColor"
-     ]
+   "notices": [
+    "solids-as-property:pelvis",
+    "solids-as-property:torso",
+    "solids-as-property:head",
+    "solids-as-property:arm-l",
+    "solids-as-property:thigh-l",
+    "solids-as-property:shank-l",
+    "solids-as-property:foot-l",
+    "solids-as-property:arm-r",
+    "solids-as-property:thigh-r",
+    "solids-as-property:shank-r",
+    "solids-as-property:foot-r",
+    "solids-as-property:flow-stream-0",
+    "unlit-approximated:thermal-flow-excess-4",
+    "unlit-approximated:thermal-flow-excess-5",
+    "solids-as-property:flow-stream-1",
+    "unlit-approximated:thermal-flow-excess-6",
+    "solids-as-property:flow-stream-2",
+    "solids-as-property:flow-stream-4",
+    "solids-as-property:flow-stream-7",
+    "solids-as-property:flow-stream-10",
+    "solids-as-property:flow-stream-12",
+    "solids-as-property:flow-stream-15",
+    "solids-as-property:flow-stream-17",
+    "solids-as-property:flow-stream-19",
+    "solids-as-property:flow-stream-32",
+    "solids-as-property:flow-stream-34",
+    "solids-as-property:flow-stream-42",
+    "solids-as-property:flow-vapour",
+    "unlit-approximated:thermal-flow-vapour-1",
+    "unlit-approximated:thermal-flow-vapour-0",
+    "solids-as-property:skinned"
+   ]
+  },
+  "sample-figure.idle-breathing.s100.forces.fbx": {
+   "byteLength": 542508,
+   "sha256": "99fe6c9ededcf15a45c672024c126a549e6aac9e291863545f50e0a154f6fe92",
+   "objectCounts": {
+    "AnimationCurve": 42,
+    "AnimationCurveNode": 14,
+    "AnimationLayer": 1,
+    "AnimationStack": 1,
+    "Geometry": 29,
+    "Material": 22,
+    "Model": 33,
+    "NodeAttribute": 4
    },
-   "sample-figure.idle-breathing.s200.light-solid.fbx": {
-     "byteLength": 170444,
-     "sha256": "efde8602723181b48155b9b37d1dd5032d40004286234f91041f5e0c87e6f601",
-     "objectCounts": {
-       "AnimationCurve": 9,
-       "AnimationCurveNode": 3,
-       "AnimationLayer": 1,
-       "AnimationStack": 1,
-       "Geometry": 11,
-       "Material": 5,
-       "Model": 11
-     },
-     "notices": [
-       "solids-as-property:pelvis",
-       "solids-as-property:torso",
-       "solids-as-property:head",
-       "solids-as-property:arm-l",
-       "solids-as-property:thigh-l",
-       "solids-as-property:shank-l",
-       "solids-as-property:foot-l",
-       "solids-as-property:arm-r",
-       "solids-as-property:thigh-r",
-       "solids-as-property:shank-r",
-       "solids-as-property:foot-r"
-     ]
+   "notices": [
+    "solids-as-property:pelvis",
+    "solids-as-property:torso",
+    "solids-as-property:head",
+    "solids-as-property:arm-l",
+    "solids-as-property:thigh-l",
+    "solids-as-property:shank-l",
+    "solids-as-property:foot-l",
+    "solids-as-property:arm-r",
+    "solids-as-property:thigh-r",
+    "solids-as-property:shank-r",
+    "solids-as-property:foot-r",
+    "solids-as-property:arrow-force-reaction-contact-l-head",
+    "solids-as-property:arrow-force-reaction-contact-l-shaft",
+    "solids-as-property:arrow-force-reaction-contact-r-head",
+    "solids-as-property:arrow-force-reaction-contact-r-shaft",
+    "solids-as-property:arrow-force-weight-head",
+    "solids-as-property:arrow-force-weight-shaft",
+    "solids-as-property:arrow-force-inertial-head",
+    "solids-as-property:arrow-force-inertial-shaft",
+    "solids-as-property:centre-of-mass",
+    "solids-as-property:arc-moment-joint-thigh-l",
+    "unlit-approximated:glyph-arc-joint",
+    "solids-as-property:arc-moment-joint-shank-l",
+    "solids-as-property:arc-moment-joint-foot-l",
+    "solids-as-property:arc-moment-joint-thigh-r",
+    "solids-as-property:arc-moment-joint-shank-r",
+    "solids-as-property:arc-moment-joint-foot-r",
+    "solids-as-property:arc-moment-reaction-contact-l",
+    "unlit-approximated:glyph-arc-reaction",
+    "solids-as-property:arc-moment-reaction-contact-r",
+    "solids-as-property:arc-moment-joint-torso",
+    "material-animation-unbound:moments-2:baseColor",
+    "material-animation-unbound:moments-3:baseColor",
+    "material-animation-unbound:moments-4:baseColor",
+    "material-animation-unbound:moments-5:baseColor",
+    "material-animation-unbound:moments-6:baseColor",
+    "material-animation-unbound:moments-7:baseColor",
+    "material-animation-unbound:moments-8:baseColor",
+    "material-animation-unbound:moments-9:baseColor",
+    "material-animation-unbound:moments-10:baseColor",
+    "material-animation-unbound:moments-11:baseColor",
+    "material-animation-unbound:moments-12:baseColor",
+    "material-animation-unbound:moments-13:baseColor",
+    "material-animation-unbound:moments-14:baseColor",
+    "material-animation-unbound:moments-15:baseColor"
+   ]
+  },
+  "sample-figure.idle-breathing.s200.light-solid.fbx": {
+   "byteLength": 170444,
+   "sha256": "efde8602723181b48155b9b37d1dd5032d40004286234f91041f5e0c87e6f601",
+   "objectCounts": {
+    "AnimationCurve": 9,
+    "AnimationCurveNode": 3,
+    "AnimationLayer": 1,
+    "AnimationStack": 1,
+    "Geometry": 11,
+    "Material": 5,
+    "Model": 11
    },
-   "sample-figure.idle-breathing.s200.thermal.fbx": {
-     "byteLength": 199532,
-     "sha256": "b61c1dc341de0093dd3bea052ff7c1b4bb4fc3b1ce78ed56934fffca47e8827b",
-     "objectCounts": {
-       "AnimationCurve": 21,
-       "AnimationCurveNode": 7,
-       "AnimationLayer": 1,
-       "AnimationStack": 1,
-       "Geometry": 14,
-       "Material": 9,
-       "Model": 14
-     },
-     "notices": [
-       "solids-as-property:pelvis",
-       "solids-as-property:torso",
-       "solids-as-property:head",
-       "solids-as-property:arm-l",
-       "solids-as-property:thigh-l",
-       "solids-as-property:shank-l",
-       "solids-as-property:foot-l",
-       "solids-as-property:arm-r",
-       "solids-as-property:thigh-r",
-       "solids-as-property:shank-r",
-       "solids-as-property:foot-r",
-       "solids-as-property:emitter-nose-breath",
-       "solids-as-property:emitter-mouth-breath",
-       "solids-as-property:emitter-body-plume"
-     ]
+   "notices": [
+    "solids-as-property:pelvis",
+    "solids-as-property:torso",
+    "solids-as-property:head",
+    "solids-as-property:arm-l",
+    "solids-as-property:thigh-l",
+    "solids-as-property:shank-l",
+    "solids-as-property:foot-l",
+    "solids-as-property:arm-r",
+    "solids-as-property:thigh-r",
+    "solids-as-property:shank-r",
+    "solids-as-property:foot-r"
+   ]
+  },
+  "sample-figure.idle-breathing.s200.thermal.fbx": {
+   "byteLength": 327676,
+   "sha256": "6e8ccf9dbacd54f4955a726e0cd090ab772409bb4e05e79c321bab9179555663",
+   "objectCounts": {
+    "AnimationCurve": 9,
+    "AnimationCurveNode": 3,
+    "AnimationLayer": 1,
+    "AnimationStack": 1,
+    "Geometry": 20,
+    "Material": 11,
+    "Model": 21,
+    "NodeAttribute": 1
    },
-   "sample-figure.idle-breathing.s200.forces.fbx": {
-     "byteLength": 429260,
-     "sha256": "f19f57504dafe2e6e778b85eeb5acc70a046c88147fe0826ef3245d954cbe18c",
-     "objectCounts": {
-       "AnimationCurve": 42,
-       "AnimationCurveNode": 14,
-       "AnimationLayer": 1,
-       "AnimationStack": 1,
-       "Geometry": 29,
-       "Material": 18,
-       "Model": 33,
-       "NodeAttribute": 4
-     },
-     "notices": [
-       "solids-as-property:pelvis",
-       "solids-as-property:torso",
-       "solids-as-property:head",
-       "solids-as-property:arm-l",
-       "solids-as-property:thigh-l",
-       "solids-as-property:shank-l",
-       "solids-as-property:foot-l",
-       "solids-as-property:arm-r",
-       "solids-as-property:thigh-r",
-       "solids-as-property:shank-r",
-       "solids-as-property:foot-r",
-       "solids-as-property:arrow-force-reaction-contact-l-head",
-       "solids-as-property:arrow-force-reaction-contact-l-shaft",
-       "solids-as-property:arrow-force-reaction-contact-r-head",
-       "solids-as-property:arrow-force-reaction-contact-r-shaft",
-       "solids-as-property:arrow-force-weight-head",
-       "solids-as-property:arrow-force-weight-shaft",
-       "solids-as-property:arrow-force-inertial-head",
-       "solids-as-property:arrow-force-inertial-shaft",
-       "solids-as-property:centre-of-mass",
-       "solids-as-property:arc-moment-joint-thigh-l",
-       "unlit-approximated:glyph-arc-joint",
-       "solids-as-property:arc-moment-joint-shank-l",
-       "solids-as-property:arc-moment-joint-foot-l",
-       "solids-as-property:arc-moment-joint-thigh-r",
-       "solids-as-property:arc-moment-joint-shank-r",
-       "solids-as-property:arc-moment-joint-foot-r",
-       "solids-as-property:arc-moment-reaction-contact-l",
-       "unlit-approximated:glyph-arc-reaction",
-       "solids-as-property:arc-moment-reaction-contact-r",
-       "solids-as-property:arc-moment-joint-torso",
-       "material-animation-unbound:moments-2:baseColor",
-       "material-animation-unbound:moments-3:baseColor",
-       "material-animation-unbound:moments-4:baseColor",
-       "material-animation-unbound:moments-5:baseColor",
-       "material-animation-unbound:moments-6:baseColor",
-       "material-animation-unbound:moments-7:baseColor",
-       "material-animation-unbound:moments-8:baseColor",
-       "material-animation-unbound:moments-9:baseColor",
-       "material-animation-unbound:moments-10:baseColor",
-       "material-animation-unbound:moments-11:baseColor"
-     ]
+   "notices": [
+    "solids-as-property:pelvis",
+    "solids-as-property:torso",
+    "solids-as-property:head",
+    "solids-as-property:arm-l",
+    "solids-as-property:thigh-l",
+    "solids-as-property:shank-l",
+    "solids-as-property:foot-l",
+    "solids-as-property:arm-r",
+    "solids-as-property:thigh-r",
+    "solids-as-property:shank-r",
+    "solids-as-property:foot-r",
+    "solids-as-property:flow-stream-0",
+    "unlit-approximated:thermal-flow-excess-4",
+    "unlit-approximated:thermal-flow-excess-5",
+    "solids-as-property:flow-stream-1",
+    "unlit-approximated:thermal-flow-excess-6",
+    "solids-as-property:flow-stream-2",
+    "solids-as-property:flow-stream-4",
+    "solids-as-property:flow-stream-12",
+    "solids-as-property:flow-stream-15",
+    "solids-as-property:flow-stream-32",
+    "solids-as-property:flow-stream-34",
+    "solids-as-property:flow-vapour",
+    "unlit-approximated:thermal-flow-vapour-1",
+    "unlit-approximated:thermal-flow-vapour-0"
+   ]
+  },
+  "sample-figure.idle-breathing.s200.forces.fbx": {
+   "byteLength": 429260,
+   "sha256": "f19f57504dafe2e6e778b85eeb5acc70a046c88147fe0826ef3245d954cbe18c",
+   "objectCounts": {
+    "AnimationCurve": 42,
+    "AnimationCurveNode": 14,
+    "AnimationLayer": 1,
+    "AnimationStack": 1,
+    "Geometry": 29,
+    "Material": 18,
+    "Model": 33,
+    "NodeAttribute": 4
    },
-   "sample-figure.idle-breathing.s500.light-solid.fbx": {
-     "byteLength": 88876,
-     "sha256": "0a294fe48bd3b0951d0efb55590fa2b839d64ac8603fd20e7d3da2f8c357520d",
-     "objectCounts": {
-       "AnimationCurve": 9,
-       "AnimationCurveNode": 3,
-       "AnimationLayer": 1,
-       "AnimationStack": 1,
-       "Geometry": 11,
-       "Material": 5,
-       "Model": 11
-     },
-     "notices": [
-       "solids-as-property:pelvis",
-       "solids-as-property:torso",
-       "solids-as-property:head",
-       "solids-as-property:arm-l",
-       "solids-as-property:thigh-l",
-       "solids-as-property:shank-l",
-       "solids-as-property:foot-l",
-       "solids-as-property:arm-r",
-       "solids-as-property:thigh-r",
-       "solids-as-property:shank-r",
-       "solids-as-property:foot-r"
-     ]
+   "notices": [
+    "solids-as-property:pelvis",
+    "solids-as-property:torso",
+    "solids-as-property:head",
+    "solids-as-property:arm-l",
+    "solids-as-property:thigh-l",
+    "solids-as-property:shank-l",
+    "solids-as-property:foot-l",
+    "solids-as-property:arm-r",
+    "solids-as-property:thigh-r",
+    "solids-as-property:shank-r",
+    "solids-as-property:foot-r",
+    "solids-as-property:arrow-force-reaction-contact-l-head",
+    "solids-as-property:arrow-force-reaction-contact-l-shaft",
+    "solids-as-property:arrow-force-reaction-contact-r-head",
+    "solids-as-property:arrow-force-reaction-contact-r-shaft",
+    "solids-as-property:arrow-force-weight-head",
+    "solids-as-property:arrow-force-weight-shaft",
+    "solids-as-property:arrow-force-inertial-head",
+    "solids-as-property:arrow-force-inertial-shaft",
+    "solids-as-property:centre-of-mass",
+    "solids-as-property:arc-moment-joint-thigh-l",
+    "unlit-approximated:glyph-arc-joint",
+    "solids-as-property:arc-moment-joint-shank-l",
+    "solids-as-property:arc-moment-joint-foot-l",
+    "solids-as-property:arc-moment-joint-thigh-r",
+    "solids-as-property:arc-moment-joint-shank-r",
+    "solids-as-property:arc-moment-joint-foot-r",
+    "solids-as-property:arc-moment-reaction-contact-l",
+    "unlit-approximated:glyph-arc-reaction",
+    "solids-as-property:arc-moment-reaction-contact-r",
+    "solids-as-property:arc-moment-joint-torso",
+    "material-animation-unbound:moments-2:baseColor",
+    "material-animation-unbound:moments-3:baseColor",
+    "material-animation-unbound:moments-4:baseColor",
+    "material-animation-unbound:moments-5:baseColor",
+    "material-animation-unbound:moments-6:baseColor",
+    "material-animation-unbound:moments-7:baseColor",
+    "material-animation-unbound:moments-8:baseColor",
+    "material-animation-unbound:moments-9:baseColor",
+    "material-animation-unbound:moments-10:baseColor",
+    "material-animation-unbound:moments-11:baseColor"
+   ]
+  },
+  "sample-figure.idle-breathing.s500.light-solid.fbx": {
+   "byteLength": 88876,
+   "sha256": "0a294fe48bd3b0951d0efb55590fa2b839d64ac8603fd20e7d3da2f8c357520d",
+   "objectCounts": {
+    "AnimationCurve": 9,
+    "AnimationCurveNode": 3,
+    "AnimationLayer": 1,
+    "AnimationStack": 1,
+    "Geometry": 11,
+    "Material": 5,
+    "Model": 11
    },
-   "sample-figure.idle-breathing.s500.thermal.fbx": {
-     "byteLength": 117564,
-     "sha256": "1cc6587618a824963f7adb7e9becac3bcdd5c103c61fd8d82d5a6b6df622fc8f",
-     "objectCounts": {
-       "AnimationCurve": 21,
-       "AnimationCurveNode": 7,
-       "AnimationLayer": 1,
-       "AnimationStack": 1,
-       "Geometry": 14,
-       "Material": 9,
-       "Model": 14
-     },
-     "notices": [
-       "solids-as-property:pelvis",
-       "solids-as-property:torso",
-       "solids-as-property:head",
-       "solids-as-property:arm-l",
-       "solids-as-property:thigh-l",
-       "solids-as-property:shank-l",
-       "solids-as-property:foot-l",
-       "solids-as-property:arm-r",
-       "solids-as-property:thigh-r",
-       "solids-as-property:shank-r",
-       "solids-as-property:foot-r",
-       "solids-as-property:emitter-nose-breath",
-       "solids-as-property:emitter-mouth-breath",
-       "solids-as-property:emitter-body-plume"
-     ]
+   "notices": [
+    "solids-as-property:pelvis",
+    "solids-as-property:torso",
+    "solids-as-property:head",
+    "solids-as-property:arm-l",
+    "solids-as-property:thigh-l",
+    "solids-as-property:shank-l",
+    "solids-as-property:foot-l",
+    "solids-as-property:arm-r",
+    "solids-as-property:thigh-r",
+    "solids-as-property:shank-r",
+    "solids-as-property:foot-r"
+   ]
+  },
+  "sample-figure.idle-breathing.s500.thermal.fbx": {
+   "byteLength": 156940,
+   "sha256": "a8008e5849d935a7fe5757dcfc05bd75c3edb1f5b0fe93007ef5f1f12125c69b",
+   "objectCounts": {
+    "AnimationCurve": 9,
+    "AnimationCurveNode": 3,
+    "AnimationLayer": 1,
+    "AnimationStack": 1,
+    "Geometry": 15,
+    "Material": 10,
+    "Model": 16,
+    "NodeAttribute": 1
    },
-   "sample-figure.idle-breathing.s500.forces.fbx": {
-     "byteLength": 409788,
-     "sha256": "fda92f3fcf16ac131ee62e3406bb17579d7736f8abff9d93f94608c2b92dfed0",
-     "objectCounts": {
-       "AnimationCurve": 42,
-       "AnimationCurveNode": 14,
-       "AnimationLayer": 1,
-       "AnimationStack": 1,
-       "Geometry": 29,
-       "Material": 18,
-       "Model": 33,
-       "NodeAttribute": 4
-     },
-     "notices": [
-       "solids-as-property:pelvis",
-       "solids-as-property:torso",
-       "solids-as-property:head",
-       "solids-as-property:arm-l",
-       "solids-as-property:thigh-l",
-       "solids-as-property:shank-l",
-       "solids-as-property:foot-l",
-       "solids-as-property:arm-r",
-       "solids-as-property:thigh-r",
-       "solids-as-property:shank-r",
-       "solids-as-property:foot-r",
-       "solids-as-property:arrow-force-reaction-contact-l-head",
-       "solids-as-property:arrow-force-reaction-contact-l-shaft",
-       "solids-as-property:arrow-force-reaction-contact-r-head",
-       "solids-as-property:arrow-force-reaction-contact-r-shaft",
-       "solids-as-property:arrow-force-weight-head",
-       "solids-as-property:arrow-force-weight-shaft",
-       "solids-as-property:arrow-force-inertial-head",
-       "solids-as-property:arrow-force-inertial-shaft",
-       "solids-as-property:centre-of-mass",
-       "solids-as-property:arc-moment-joint-thigh-l",
-       "unlit-approximated:glyph-arc-joint",
-       "solids-as-property:arc-moment-joint-shank-l",
-       "solids-as-property:arc-moment-joint-foot-l",
-       "solids-as-property:arc-moment-joint-thigh-r",
-       "solids-as-property:arc-moment-joint-shank-r",
-       "solids-as-property:arc-moment-joint-foot-r",
-       "solids-as-property:arc-moment-reaction-contact-l",
-       "unlit-approximated:glyph-arc-reaction",
-       "solids-as-property:arc-moment-reaction-contact-r",
-       "solids-as-property:arc-moment-joint-torso",
-       "material-animation-unbound:moments-2:baseColor",
-       "material-animation-unbound:moments-3:baseColor",
-       "material-animation-unbound:moments-4:baseColor",
-       "material-animation-unbound:moments-5:baseColor",
-       "material-animation-unbound:moments-6:baseColor",
-       "material-animation-unbound:moments-7:baseColor",
-       "material-animation-unbound:moments-8:baseColor",
-       "material-animation-unbound:moments-9:baseColor",
-       "material-animation-unbound:moments-10:baseColor",
-       "material-animation-unbound:moments-11:baseColor"
-     ]
+   "notices": [
+    "solids-as-property:pelvis",
+    "solids-as-property:torso",
+    "solids-as-property:head",
+    "solids-as-property:arm-l",
+    "solids-as-property:thigh-l",
+    "solids-as-property:shank-l",
+    "solids-as-property:foot-l",
+    "solids-as-property:arm-r",
+    "solids-as-property:thigh-r",
+    "solids-as-property:shank-r",
+    "solids-as-property:foot-r",
+    "solids-as-property:flow-stream-0",
+    "unlit-approximated:thermal-flow-excess-4",
+    "unlit-approximated:thermal-flow-excess-5",
+    "solids-as-property:flow-stream-2",
+    "solids-as-property:flow-stream-12",
+    "solids-as-property:flow-vapour",
+    "unlit-approximated:thermal-flow-vapour-1",
+    "unlit-approximated:thermal-flow-vapour-0"
+   ]
+  },
+  "sample-figure.idle-breathing.s500.forces.fbx": {
+   "byteLength": 409788,
+   "sha256": "fda92f3fcf16ac131ee62e3406bb17579d7736f8abff9d93f94608c2b92dfed0",
+   "objectCounts": {
+    "AnimationCurve": 42,
+    "AnimationCurveNode": 14,
+    "AnimationLayer": 1,
+    "AnimationStack": 1,
+    "Geometry": 29,
+    "Material": 18,
+    "Model": 33,
+    "NodeAttribute": 4
    },
-   "sample-figure.bag-swing.s50.light-solid.fbx": {
-     "byteLength": 535244,
-     "sha256": "df68f632f37b3c91791fcbda3acf90c8a0cd13c4ce580c674af4fca757e054fb",
-     "objectCounts": {
-       "AnimationCurve": 12,
-       "AnimationCurveNode": 4,
-       "AnimationLayer": 1,
-       "AnimationStack": 1,
-       "Deformer": 3,
-       "Geometry": 12,
-       "Material": 8,
-       "Model": 14,
-       "NodeAttribute": 2,
-       "Pose": 1
-     },
-     "notices": [
-       "solids-as-property:pelvis",
-       "solids-as-property:torso",
-       "solids-as-property:head",
-       "solids-as-property:arm-l",
-       "solids-as-property:thigh-l",
-       "solids-as-property:shank-l",
-       "solids-as-property:foot-l",
-       "solids-as-property:arm-r",
-       "solids-as-property:thigh-r",
-       "solids-as-property:shank-r",
-       "solids-as-property:foot-r",
-       "solids-as-property:skinned",
-       "events-dropped:bag-swing"
-     ]
+   "notices": [
+    "solids-as-property:pelvis",
+    "solids-as-property:torso",
+    "solids-as-property:head",
+    "solids-as-property:arm-l",
+    "solids-as-property:thigh-l",
+    "solids-as-property:shank-l",
+    "solids-as-property:foot-l",
+    "solids-as-property:arm-r",
+    "solids-as-property:thigh-r",
+    "solids-as-property:shank-r",
+    "solids-as-property:foot-r",
+    "solids-as-property:arrow-force-reaction-contact-l-head",
+    "solids-as-property:arrow-force-reaction-contact-l-shaft",
+    "solids-as-property:arrow-force-reaction-contact-r-head",
+    "solids-as-property:arrow-force-reaction-contact-r-shaft",
+    "solids-as-property:arrow-force-weight-head",
+    "solids-as-property:arrow-force-weight-shaft",
+    "solids-as-property:arrow-force-inertial-head",
+    "solids-as-property:arrow-force-inertial-shaft",
+    "solids-as-property:centre-of-mass",
+    "solids-as-property:arc-moment-joint-thigh-l",
+    "unlit-approximated:glyph-arc-joint",
+    "solids-as-property:arc-moment-joint-shank-l",
+    "solids-as-property:arc-moment-joint-foot-l",
+    "solids-as-property:arc-moment-joint-thigh-r",
+    "solids-as-property:arc-moment-joint-shank-r",
+    "solids-as-property:arc-moment-joint-foot-r",
+    "solids-as-property:arc-moment-reaction-contact-l",
+    "unlit-approximated:glyph-arc-reaction",
+    "solids-as-property:arc-moment-reaction-contact-r",
+    "solids-as-property:arc-moment-joint-torso",
+    "material-animation-unbound:moments-2:baseColor",
+    "material-animation-unbound:moments-3:baseColor",
+    "material-animation-unbound:moments-4:baseColor",
+    "material-animation-unbound:moments-5:baseColor",
+    "material-animation-unbound:moments-6:baseColor",
+    "material-animation-unbound:moments-7:baseColor",
+    "material-animation-unbound:moments-8:baseColor",
+    "material-animation-unbound:moments-9:baseColor",
+    "material-animation-unbound:moments-10:baseColor",
+    "material-animation-unbound:moments-11:baseColor"
+   ]
+  },
+  "sample-figure.bag-swing.s50.light-solid.fbx": {
+   "byteLength": 535244,
+   "sha256": "df68f632f37b3c91791fcbda3acf90c8a0cd13c4ce580c674af4fca757e054fb",
+   "objectCounts": {
+    "AnimationCurve": 12,
+    "AnimationCurveNode": 4,
+    "AnimationLayer": 1,
+    "AnimationStack": 1,
+    "Deformer": 3,
+    "Geometry": 12,
+    "Material": 8,
+    "Model": 14,
+    "NodeAttribute": 2,
+    "Pose": 1
    },
-   "sample-figure.bag-swing.s50.thermal.fbx": {
-     "byteLength": 522492,
-     "sha256": "42e1b293ad75ef2549a14f99c7fd6ca9567b66545ad0be02fdfa7c40b99401f8",
-     "objectCounts": {
-       "AnimationCurve": 33,
-       "AnimationCurveNode": 11,
-       "AnimationLayer": 1,
-       "AnimationStack": 1,
-       "Deformer": 3,
-       "Geometry": 15,
-       "Material": 10,
-       "Model": 17,
-       "NodeAttribute": 2,
-       "Pose": 1
-     },
-     "notices": [
-       "solids-as-property:pelvis",
-       "solids-as-property:torso",
-       "solids-as-property:head",
-       "solids-as-property:arm-l",
-       "solids-as-property:thigh-l",
-       "solids-as-property:shank-l",
-       "solids-as-property:foot-l",
-       "solids-as-property:arm-r",
-       "solids-as-property:thigh-r",
-       "solids-as-property:shank-r",
-       "solids-as-property:foot-r",
-       "solids-as-property:emitter-nose-breath",
-       "solids-as-property:emitter-mouth-breath",
-       "solids-as-property:emitter-body-plume",
-       "solids-as-property:skinned",
-       "events-dropped:bag-swing"
-     ]
+   "notices": [
+    "solids-as-property:pelvis",
+    "solids-as-property:torso",
+    "solids-as-property:head",
+    "solids-as-property:arm-l",
+    "solids-as-property:thigh-l",
+    "solids-as-property:shank-l",
+    "solids-as-property:foot-l",
+    "solids-as-property:arm-r",
+    "solids-as-property:thigh-r",
+    "solids-as-property:shank-r",
+    "solids-as-property:foot-r",
+    "solids-as-property:skinned",
+    "events-dropped:bag-swing"
+   ]
+  },
+  "sample-figure.bag-swing.s50.thermal.fbx": {
+   "byteLength": 1783212,
+   "sha256": "f6920e65cb8a7b1ea25b0135c1b57ab48d10f95651a599a818a7e3d6e6bc95dd",
+   "objectCounts": {
+    "AnimationCurve": 12,
+    "AnimationCurveNode": 4,
+    "AnimationLayer": 1,
+    "AnimationStack": 1,
+    "Deformer": 3,
+    "Geometry": 43,
+    "Material": 12,
+    "Model": 46,
+    "NodeAttribute": 3,
+    "Pose": 1
    },
-   "sample-figure.bag-swing.s50.forces.fbx": {
-     "byteLength": 951068,
-     "sha256": "7e411c06ae292d70da73341590dab0a0a8aa82d5a3a7743d2a958bcf07d9384e",
-     "objectCounts": {
-       "AnimationCurve": 108,
-       "AnimationCurveNode": 36,
-       "AnimationLayer": 1,
-       "AnimationStack": 1,
-       "Geometry": 31,
-       "Material": 27,
-       "Model": 36,
-       "NodeAttribute": 5
-     },
-     "notices": [
-       "solids-as-property:pelvis",
-       "solids-as-property:torso",
-       "solids-as-property:head",
-       "solids-as-property:arm-l",
-       "solids-as-property:thigh-l",
-       "solids-as-property:shank-l",
-       "solids-as-property:foot-l",
-       "solids-as-property:arm-r",
-       "solids-as-property:thigh-r",
-       "solids-as-property:shank-r",
-       "solids-as-property:foot-r",
-       "solids-as-property:arrow-force-applied-shoulder-bag-head",
-       "solids-as-property:arrow-force-applied-shoulder-bag-shaft",
-       "solids-as-property:arrow-force-reaction-contact-l-head",
-       "solids-as-property:arrow-force-reaction-contact-l-shaft",
-       "solids-as-property:arrow-force-reaction-contact-r-head",
-       "solids-as-property:arrow-force-reaction-contact-r-shaft",
-       "solids-as-property:arrow-force-weight-head",
-       "solids-as-property:arrow-force-weight-shaft",
-       "solids-as-property:arrow-force-inertial-head",
-       "solids-as-property:arrow-force-inertial-shaft",
-       "solids-as-property:centre-of-mass",
-       "solids-as-property:arc-moment-joint-torso",
-       "unlit-approximated:glyph-arc-joint",
-       "solids-as-property:arc-moment-joint-thigh-l",
-       "solids-as-property:arc-moment-joint-shank-l",
-       "solids-as-property:arc-moment-joint-foot-l",
-       "solids-as-property:arc-moment-joint-thigh-r",
-       "solids-as-property:arc-moment-joint-shank-r",
-       "solids-as-property:arc-moment-joint-foot-r",
-       "solids-as-property:arc-moment-reaction-contact-l",
-       "unlit-approximated:glyph-arc-reaction",
-       "solids-as-property:arc-moment-reaction-contact-r",
-       "events-dropped:bag-swing",
-       "material-animation-unbound:moments-2:baseColor",
-       "material-animation-unbound:moments-3:baseColor",
-       "material-animation-unbound:moments-4:baseColor",
-       "material-animation-unbound:moments-5:baseColor",
-       "material-animation-unbound:moments-6:baseColor",
-       "material-animation-unbound:moments-7:baseColor",
-       "material-animation-unbound:moments-8:baseColor",
-       "material-animation-unbound:moments-9:baseColor",
-       "material-animation-unbound:moments-10:baseColor",
-       "material-animation-unbound:moments-11:baseColor",
-       "material-animation-unbound:moments-12:baseColor",
-       "material-animation-unbound:moments-13:baseColor",
-       "material-animation-unbound:moments-14:baseColor",
-       "material-animation-unbound:moments-15:baseColor",
-       "material-animation-unbound:moments-16:baseColor",
-       "material-animation-unbound:moments-17:baseColor",
-       "material-animation-unbound:moments-18:baseColor",
-       "material-animation-unbound:moments-19:baseColor"
-     ]
+   "notices": [
+    "solids-as-property:pelvis",
+    "solids-as-property:torso",
+    "solids-as-property:head",
+    "solids-as-property:arm-l",
+    "solids-as-property:thigh-l",
+    "solids-as-property:shank-l",
+    "solids-as-property:foot-l",
+    "solids-as-property:arm-r",
+    "solids-as-property:thigh-r",
+    "solids-as-property:shank-r",
+    "solids-as-property:foot-r",
+    "solids-as-property:flow-stream-0",
+    "unlit-approximated:thermal-flow-excess-4",
+    "solids-as-property:flow-stream-1",
+    "unlit-approximated:thermal-flow-excess-5",
+    "solids-as-property:flow-stream-2",
+    "solids-as-property:flow-stream-4",
+    "solids-as-property:flow-stream-6",
+    "solids-as-property:flow-stream-8",
+    "solids-as-property:flow-stream-11",
+    "solids-as-property:flow-stream-12",
+    "solids-as-property:flow-stream-14",
+    "solids-as-property:flow-stream-15",
+    "solids-as-property:flow-stream-19",
+    "solids-as-property:flow-stream-21",
+    "solids-as-property:flow-stream-23",
+    "solids-as-property:flow-stream-25",
+    "solids-as-property:flow-stream-27",
+    "solids-as-property:flow-stream-29",
+    "solids-as-property:flow-stream-31",
+    "solids-as-property:flow-stream-32",
+    "solids-as-property:flow-stream-35",
+    "solids-as-property:flow-stream-36",
+    "solids-as-property:flow-stream-38",
+    "solids-as-property:flow-stream-39",
+    "solids-as-property:flow-stream-41",
+    "solids-as-property:flow-stream-43",
+    "solids-as-property:flow-stream-44",
+    "solids-as-property:flow-stream-45",
+    "solids-as-property:flow-stream-47",
+    "solids-as-property:flow-stream-48",
+    "solids-as-property:flow-stream-50",
+    "solids-as-property:flow-stream-51",
+    "solids-as-property:flow-vapour",
+    "unlit-approximated:thermal-flow-vapour-2",
+    "unlit-approximated:thermal-flow-vapour-1",
+    "unlit-approximated:thermal-flow-vapour-0",
+    "solids-as-property:skinned",
+    "events-dropped:bag-swing"
+   ]
+  },
+  "sample-figure.bag-swing.s50.forces.fbx": {
+   "byteLength": 951068,
+   "sha256": "7e411c06ae292d70da73341590dab0a0a8aa82d5a3a7743d2a958bcf07d9384e",
+   "objectCounts": {
+    "AnimationCurve": 108,
+    "AnimationCurveNode": 36,
+    "AnimationLayer": 1,
+    "AnimationStack": 1,
+    "Geometry": 31,
+    "Material": 27,
+    "Model": 36,
+    "NodeAttribute": 5
    },
-   "sample-figure.bag-swing.s100.light-solid.fbx": {
-     "byteLength": 291980,
-     "sha256": "eadb600555759b38e1d7ab231664374c41d832f102b90313a9bddfb06e038401",
-     "objectCounts": {
-       "AnimationCurve": 12,
-       "AnimationCurveNode": 4,
-       "AnimationLayer": 1,
-       "AnimationStack": 1,
-       "Deformer": 3,
-       "Geometry": 12,
-       "Material": 6,
-       "Model": 14,
-       "NodeAttribute": 2,
-       "Pose": 1
-     },
-     "notices": [
-       "solids-as-property:pelvis",
-       "solids-as-property:torso",
-       "solids-as-property:head",
-       "solids-as-property:arm-l",
-       "solids-as-property:thigh-l",
-       "solids-as-property:shank-l",
-       "solids-as-property:foot-l",
-       "solids-as-property:arm-r",
-       "solids-as-property:thigh-r",
-       "solids-as-property:shank-r",
-       "solids-as-property:foot-r",
-       "solids-as-property:skinned",
-       "events-dropped:bag-swing"
-     ]
+   "notices": [
+    "solids-as-property:pelvis",
+    "solids-as-property:torso",
+    "solids-as-property:head",
+    "solids-as-property:arm-l",
+    "solids-as-property:thigh-l",
+    "solids-as-property:shank-l",
+    "solids-as-property:foot-l",
+    "solids-as-property:arm-r",
+    "solids-as-property:thigh-r",
+    "solids-as-property:shank-r",
+    "solids-as-property:foot-r",
+    "solids-as-property:arrow-force-applied-shoulder-bag-head",
+    "solids-as-property:arrow-force-applied-shoulder-bag-shaft",
+    "solids-as-property:arrow-force-reaction-contact-l-head",
+    "solids-as-property:arrow-force-reaction-contact-l-shaft",
+    "solids-as-property:arrow-force-reaction-contact-r-head",
+    "solids-as-property:arrow-force-reaction-contact-r-shaft",
+    "solids-as-property:arrow-force-weight-head",
+    "solids-as-property:arrow-force-weight-shaft",
+    "solids-as-property:arrow-force-inertial-head",
+    "solids-as-property:arrow-force-inertial-shaft",
+    "solids-as-property:centre-of-mass",
+    "solids-as-property:arc-moment-joint-torso",
+    "unlit-approximated:glyph-arc-joint",
+    "solids-as-property:arc-moment-joint-thigh-l",
+    "solids-as-property:arc-moment-joint-shank-l",
+    "solids-as-property:arc-moment-joint-foot-l",
+    "solids-as-property:arc-moment-joint-thigh-r",
+    "solids-as-property:arc-moment-joint-shank-r",
+    "solids-as-property:arc-moment-joint-foot-r",
+    "solids-as-property:arc-moment-reaction-contact-l",
+    "unlit-approximated:glyph-arc-reaction",
+    "solids-as-property:arc-moment-reaction-contact-r",
+    "events-dropped:bag-swing",
+    "material-animation-unbound:moments-2:baseColor",
+    "material-animation-unbound:moments-3:baseColor",
+    "material-animation-unbound:moments-4:baseColor",
+    "material-animation-unbound:moments-5:baseColor",
+    "material-animation-unbound:moments-6:baseColor",
+    "material-animation-unbound:moments-7:baseColor",
+    "material-animation-unbound:moments-8:baseColor",
+    "material-animation-unbound:moments-9:baseColor",
+    "material-animation-unbound:moments-10:baseColor",
+    "material-animation-unbound:moments-11:baseColor",
+    "material-animation-unbound:moments-12:baseColor",
+    "material-animation-unbound:moments-13:baseColor",
+    "material-animation-unbound:moments-14:baseColor",
+    "material-animation-unbound:moments-15:baseColor",
+    "material-animation-unbound:moments-16:baseColor",
+    "material-animation-unbound:moments-17:baseColor",
+    "material-animation-unbound:moments-18:baseColor",
+    "material-animation-unbound:moments-19:baseColor"
+   ]
+  },
+  "sample-figure.bag-swing.s100.light-solid.fbx": {
+   "byteLength": 291980,
+   "sha256": "eadb600555759b38e1d7ab231664374c41d832f102b90313a9bddfb06e038401",
+   "objectCounts": {
+    "AnimationCurve": 12,
+    "AnimationCurveNode": 4,
+    "AnimationLayer": 1,
+    "AnimationStack": 1,
+    "Deformer": 3,
+    "Geometry": 12,
+    "Material": 6,
+    "Model": 14,
+    "NodeAttribute": 2,
+    "Pose": 1
    },
-   "sample-figure.bag-swing.s100.thermal.fbx": {
-     "byteLength": 359612,
-     "sha256": "ab2f024f83ed3e4241c07d9b5f73b440710d2450bcfa7c95497b2b9746fc67df",
-     "objectCounts": {
-       "AnimationCurve": 33,
-       "AnimationCurveNode": 11,
-       "AnimationLayer": 1,
-       "AnimationStack": 1,
-       "Deformer": 3,
-       "Geometry": 15,
-       "Material": 10,
-       "Model": 17,
-       "NodeAttribute": 2,
-       "Pose": 1
-     },
-     "notices": [
-       "solids-as-property:pelvis",
-       "solids-as-property:torso",
-       "solids-as-property:head",
-       "solids-as-property:arm-l",
-       "solids-as-property:thigh-l",
-       "solids-as-property:shank-l",
-       "solids-as-property:foot-l",
-       "solids-as-property:arm-r",
-       "solids-as-property:thigh-r",
-       "solids-as-property:shank-r",
-       "solids-as-property:foot-r",
-       "solids-as-property:emitter-nose-breath",
-       "solids-as-property:emitter-mouth-breath",
-       "solids-as-property:emitter-body-plume",
-       "solids-as-property:skinned",
-       "events-dropped:bag-swing"
-     ]
+   "notices": [
+    "solids-as-property:pelvis",
+    "solids-as-property:torso",
+    "solids-as-property:head",
+    "solids-as-property:arm-l",
+    "solids-as-property:thigh-l",
+    "solids-as-property:shank-l",
+    "solids-as-property:foot-l",
+    "solids-as-property:arm-r",
+    "solids-as-property:thigh-r",
+    "solids-as-property:shank-r",
+    "solids-as-property:foot-r",
+    "solids-as-property:skinned",
+    "events-dropped:bag-swing"
+   ]
+  },
+  "sample-figure.bag-swing.s100.thermal.fbx": {
+   "byteLength": 928412,
+   "sha256": "ce0d5a84220e980ecf60c1f07ff4e67b2e63304865d0f704eb82f0b9d513b2e9",
+   "objectCounts": {
+    "AnimationCurve": 12,
+    "AnimationCurveNode": 4,
+    "AnimationLayer": 1,
+    "AnimationStack": 1,
+    "Deformer": 3,
+    "Geometry": 36,
+    "Material": 12,
+    "Model": 39,
+    "NodeAttribute": 3,
+    "Pose": 1
    },
-   "sample-figure.bag-swing.s100.forces.fbx": {
-     "byteLength": 564332,
-     "sha256": "e7fed1e47c0214b151ca3ccd2e9fc985b3d7581ceefdcf5a292b6db52587e8d6",
-     "objectCounts": {
-       "AnimationCurve": 75,
-       "AnimationCurveNode": 25,
-       "AnimationLayer": 1,
-       "AnimationStack": 1,
-       "Geometry": 31,
-       "Material": 23,
-       "Model": 36,
-       "NodeAttribute": 5
-     },
-     "notices": [
-       "solids-as-property:pelvis",
-       "solids-as-property:torso",
-       "solids-as-property:head",
-       "solids-as-property:arm-l",
-       "solids-as-property:thigh-l",
-       "solids-as-property:shank-l",
-       "solids-as-property:foot-l",
-       "solids-as-property:arm-r",
-       "solids-as-property:thigh-r",
-       "solids-as-property:shank-r",
-       "solids-as-property:foot-r",
-       "solids-as-property:arrow-force-applied-shoulder-bag-head",
-       "solids-as-property:arrow-force-applied-shoulder-bag-shaft",
-       "solids-as-property:arrow-force-reaction-contact-l-head",
-       "solids-as-property:arrow-force-reaction-contact-l-shaft",
-       "solids-as-property:arrow-force-reaction-contact-r-head",
-       "solids-as-property:arrow-force-reaction-contact-r-shaft",
-       "solids-as-property:arrow-force-weight-head",
-       "solids-as-property:arrow-force-weight-shaft",
-       "solids-as-property:arrow-force-inertial-head",
-       "solids-as-property:arrow-force-inertial-shaft",
-       "solids-as-property:centre-of-mass",
-       "solids-as-property:arc-moment-joint-torso",
-       "unlit-approximated:glyph-arc-joint",
-       "solids-as-property:arc-moment-joint-thigh-l",
-       "solids-as-property:arc-moment-joint-shank-l",
-       "solids-as-property:arc-moment-joint-foot-l",
-       "solids-as-property:arc-moment-joint-thigh-r",
-       "solids-as-property:arc-moment-joint-shank-r",
-       "solids-as-property:arc-moment-joint-foot-r",
-       "solids-as-property:arc-moment-reaction-contact-l",
-       "unlit-approximated:glyph-arc-reaction",
-       "solids-as-property:arc-moment-reaction-contact-r",
-       "events-dropped:bag-swing",
-       "material-animation-unbound:moments-2:baseColor",
-       "material-animation-unbound:moments-3:baseColor",
-       "material-animation-unbound:moments-4:baseColor",
-       "material-animation-unbound:moments-5:baseColor",
-       "material-animation-unbound:moments-6:baseColor",
-       "material-animation-unbound:moments-7:baseColor",
-       "material-animation-unbound:moments-8:baseColor",
-       "material-animation-unbound:moments-9:baseColor",
-       "material-animation-unbound:moments-10:baseColor",
-       "material-animation-unbound:moments-11:baseColor",
-       "material-animation-unbound:moments-12:baseColor",
-       "material-animation-unbound:moments-13:baseColor",
-       "material-animation-unbound:moments-14:baseColor",
-       "material-animation-unbound:moments-15:baseColor"
-     ]
+   "notices": [
+    "solids-as-property:pelvis",
+    "solids-as-property:torso",
+    "solids-as-property:head",
+    "solids-as-property:arm-l",
+    "solids-as-property:thigh-l",
+    "solids-as-property:shank-l",
+    "solids-as-property:foot-l",
+    "solids-as-property:arm-r",
+    "solids-as-property:thigh-r",
+    "solids-as-property:shank-r",
+    "solids-as-property:foot-r",
+    "solids-as-property:flow-stream-0",
+    "unlit-approximated:thermal-flow-excess-4",
+    "solids-as-property:flow-stream-1",
+    "unlit-approximated:thermal-flow-excess-5",
+    "solids-as-property:flow-stream-2",
+    "solids-as-property:flow-stream-4",
+    "solids-as-property:flow-stream-6",
+    "solids-as-property:flow-stream-8",
+    "solids-as-property:flow-stream-11",
+    "solids-as-property:flow-stream-12",
+    "solids-as-property:flow-stream-14",
+    "solids-as-property:flow-stream-15",
+    "solids-as-property:flow-stream-21",
+    "solids-as-property:flow-stream-23",
+    "solids-as-property:flow-stream-25",
+    "solids-as-property:flow-stream-27",
+    "solids-as-property:flow-stream-29",
+    "solids-as-property:flow-stream-36",
+    "solids-as-property:flow-stream-38",
+    "solids-as-property:flow-stream-39",
+    "solids-as-property:flow-stream-41",
+    "solids-as-property:flow-stream-43",
+    "solids-as-property:flow-stream-45",
+    "solids-as-property:flow-stream-48",
+    "solids-as-property:flow-stream-50",
+    "solids-as-property:flow-vapour",
+    "unlit-approximated:thermal-flow-vapour-2",
+    "unlit-approximated:thermal-flow-vapour-1",
+    "unlit-approximated:thermal-flow-vapour-0",
+    "solids-as-property:skinned",
+    "events-dropped:bag-swing"
+   ]
+  },
+  "sample-figure.bag-swing.s100.forces.fbx": {
+   "byteLength": 564332,
+   "sha256": "e7fed1e47c0214b151ca3ccd2e9fc985b3d7581ceefdcf5a292b6db52587e8d6",
+   "objectCounts": {
+    "AnimationCurve": 75,
+    "AnimationCurveNode": 25,
+    "AnimationLayer": 1,
+    "AnimationStack": 1,
+    "Geometry": 31,
+    "Material": 23,
+    "Model": 36,
+    "NodeAttribute": 5
    },
-   "sample-figure.bag-swing.s200.light-solid.fbx": {
-     "byteLength": 169740,
-     "sha256": "e526df43d05430a05c2bf112585dc96f2f61cb937c0479f379feebed387a233d",
-     "objectCounts": {
-       "AnimationCurve": 12,
-       "AnimationCurveNode": 4,
-       "AnimationLayer": 1,
-       "AnimationStack": 1,
-       "Geometry": 11,
-       "Material": 5,
-       "Model": 11
-     },
-     "notices": [
-       "solids-as-property:pelvis",
-       "solids-as-property:torso",
-       "solids-as-property:head",
-       "solids-as-property:arm-l",
-       "solids-as-property:thigh-l",
-       "solids-as-property:shank-l",
-       "solids-as-property:foot-l",
-       "solids-as-property:arm-r",
-       "solids-as-property:thigh-r",
-       "solids-as-property:shank-r",
-       "solids-as-property:foot-r",
-       "events-dropped:bag-swing"
-     ]
+   "notices": [
+    "solids-as-property:pelvis",
+    "solids-as-property:torso",
+    "solids-as-property:head",
+    "solids-as-property:arm-l",
+    "solids-as-property:thigh-l",
+    "solids-as-property:shank-l",
+    "solids-as-property:foot-l",
+    "solids-as-property:arm-r",
+    "solids-as-property:thigh-r",
+    "solids-as-property:shank-r",
+    "solids-as-property:foot-r",
+    "solids-as-property:arrow-force-applied-shoulder-bag-head",
+    "solids-as-property:arrow-force-applied-shoulder-bag-shaft",
+    "solids-as-property:arrow-force-reaction-contact-l-head",
+    "solids-as-property:arrow-force-reaction-contact-l-shaft",
+    "solids-as-property:arrow-force-reaction-contact-r-head",
+    "solids-as-property:arrow-force-reaction-contact-r-shaft",
+    "solids-as-property:arrow-force-weight-head",
+    "solids-as-property:arrow-force-weight-shaft",
+    "solids-as-property:arrow-force-inertial-head",
+    "solids-as-property:arrow-force-inertial-shaft",
+    "solids-as-property:centre-of-mass",
+    "solids-as-property:arc-moment-joint-torso",
+    "unlit-approximated:glyph-arc-joint",
+    "solids-as-property:arc-moment-joint-thigh-l",
+    "solids-as-property:arc-moment-joint-shank-l",
+    "solids-as-property:arc-moment-joint-foot-l",
+    "solids-as-property:arc-moment-joint-thigh-r",
+    "solids-as-property:arc-moment-joint-shank-r",
+    "solids-as-property:arc-moment-joint-foot-r",
+    "solids-as-property:arc-moment-reaction-contact-l",
+    "unlit-approximated:glyph-arc-reaction",
+    "solids-as-property:arc-moment-reaction-contact-r",
+    "events-dropped:bag-swing",
+    "material-animation-unbound:moments-2:baseColor",
+    "material-animation-unbound:moments-3:baseColor",
+    "material-animation-unbound:moments-4:baseColor",
+    "material-animation-unbound:moments-5:baseColor",
+    "material-animation-unbound:moments-6:baseColor",
+    "material-animation-unbound:moments-7:baseColor",
+    "material-animation-unbound:moments-8:baseColor",
+    "material-animation-unbound:moments-9:baseColor",
+    "material-animation-unbound:moments-10:baseColor",
+    "material-animation-unbound:moments-11:baseColor",
+    "material-animation-unbound:moments-12:baseColor",
+    "material-animation-unbound:moments-13:baseColor",
+    "material-animation-unbound:moments-14:baseColor",
+    "material-animation-unbound:moments-15:baseColor"
+   ]
+  },
+  "sample-figure.bag-swing.s200.light-solid.fbx": {
+   "byteLength": 169740,
+   "sha256": "e526df43d05430a05c2bf112585dc96f2f61cb937c0479f379feebed387a233d",
+   "objectCounts": {
+    "AnimationCurve": 12,
+    "AnimationCurveNode": 4,
+    "AnimationLayer": 1,
+    "AnimationStack": 1,
+    "Geometry": 11,
+    "Material": 5,
+    "Model": 11
    },
-   "sample-figure.bag-swing.s200.thermal.fbx": {
-     "byteLength": 202764,
-     "sha256": "797c583a5a9351d7703b290ae4b39db596e86ec2afd191a28e9c36602a2f8aa3",
-     "objectCounts": {
-       "AnimationCurve": 33,
-       "AnimationCurveNode": 11,
-       "AnimationLayer": 1,
-       "AnimationStack": 1,
-       "Geometry": 14,
-       "Material": 9,
-       "Model": 14
-     },
-     "notices": [
-       "solids-as-property:pelvis",
-       "solids-as-property:torso",
-       "solids-as-property:head",
-       "solids-as-property:arm-l",
-       "solids-as-property:thigh-l",
-       "solids-as-property:shank-l",
-       "solids-as-property:foot-l",
-       "solids-as-property:arm-r",
-       "solids-as-property:thigh-r",
-       "solids-as-property:shank-r",
-       "solids-as-property:foot-r",
-       "solids-as-property:emitter-nose-breath",
-       "solids-as-property:emitter-mouth-breath",
-       "solids-as-property:emitter-body-plume",
-       "events-dropped:bag-swing"
-     ]
+   "notices": [
+    "solids-as-property:pelvis",
+    "solids-as-property:torso",
+    "solids-as-property:head",
+    "solids-as-property:arm-l",
+    "solids-as-property:thigh-l",
+    "solids-as-property:shank-l",
+    "solids-as-property:foot-l",
+    "solids-as-property:arm-r",
+    "solids-as-property:thigh-r",
+    "solids-as-property:shank-r",
+    "solids-as-property:foot-r",
+    "events-dropped:bag-swing"
+   ]
+  },
+  "sample-figure.bag-swing.s200.thermal.fbx": {
+   "byteLength": 423164,
+   "sha256": "b84a7f297e3f92986a0340ba7210baf45fec4b8993cec0ee8df049aa49ca951d",
+   "objectCounts": {
+    "AnimationCurve": 12,
+    "AnimationCurveNode": 4,
+    "AnimationLayer": 1,
+    "AnimationStack": 1,
+    "Geometry": 23,
+    "Material": 11,
+    "Model": 24,
+    "NodeAttribute": 1
    },
-   "sample-figure.bag-swing.s200.forces.fbx": {
-     "byteLength": 437772,
-     "sha256": "eb1feceeec22ea52c2057e6475a99bc26876f5da5e2ae7c83672abdcabc4ef2b",
-     "objectCounts": {
-       "AnimationCurve": 60,
-       "AnimationCurveNode": 20,
-       "AnimationLayer": 1,
-       "AnimationStack": 1,
-       "Geometry": 31,
-       "Material": 19,
-       "Model": 36,
-       "NodeAttribute": 5
-     },
-     "notices": [
-       "solids-as-property:pelvis",
-       "solids-as-property:torso",
-       "solids-as-property:head",
-       "solids-as-property:arm-l",
-       "solids-as-property:thigh-l",
-       "solids-as-property:shank-l",
-       "solids-as-property:foot-l",
-       "solids-as-property:arm-r",
-       "solids-as-property:thigh-r",
-       "solids-as-property:shank-r",
-       "solids-as-property:foot-r",
-       "solids-as-property:arrow-force-applied-shoulder-bag-head",
-       "solids-as-property:arrow-force-applied-shoulder-bag-shaft",
-       "solids-as-property:arrow-force-reaction-contact-l-head",
-       "solids-as-property:arrow-force-reaction-contact-l-shaft",
-       "solids-as-property:arrow-force-reaction-contact-r-head",
-       "solids-as-property:arrow-force-reaction-contact-r-shaft",
-       "solids-as-property:arrow-force-weight-head",
-       "solids-as-property:arrow-force-weight-shaft",
-       "solids-as-property:arrow-force-inertial-head",
-       "solids-as-property:arrow-force-inertial-shaft",
-       "solids-as-property:centre-of-mass",
-       "solids-as-property:arc-moment-joint-torso",
-       "unlit-approximated:glyph-arc-joint",
-       "solids-as-property:arc-moment-joint-thigh-l",
-       "solids-as-property:arc-moment-joint-shank-l",
-       "solids-as-property:arc-moment-joint-foot-l",
-       "solids-as-property:arc-moment-joint-thigh-r",
-       "solids-as-property:arc-moment-joint-shank-r",
-       "solids-as-property:arc-moment-joint-foot-r",
-       "solids-as-property:arc-moment-reaction-contact-l",
-       "unlit-approximated:glyph-arc-reaction",
-       "solids-as-property:arc-moment-reaction-contact-r",
-       "events-dropped:bag-swing",
-       "material-animation-unbound:moments-2:baseColor",
-       "material-animation-unbound:moments-3:baseColor",
-       "material-animation-unbound:moments-4:baseColor",
-       "material-animation-unbound:moments-5:baseColor",
-       "material-animation-unbound:moments-6:baseColor",
-       "material-animation-unbound:moments-7:baseColor",
-       "material-animation-unbound:moments-8:baseColor",
-       "material-animation-unbound:moments-9:baseColor",
-       "material-animation-unbound:moments-10:baseColor",
-       "material-animation-unbound:moments-11:baseColor"
-     ]
+   "notices": [
+    "solids-as-property:pelvis",
+    "solids-as-property:torso",
+    "solids-as-property:head",
+    "solids-as-property:arm-l",
+    "solids-as-property:thigh-l",
+    "solids-as-property:shank-l",
+    "solids-as-property:foot-l",
+    "solids-as-property:arm-r",
+    "solids-as-property:thigh-r",
+    "solids-as-property:shank-r",
+    "solids-as-property:foot-r",
+    "solids-as-property:flow-stream-0",
+    "unlit-approximated:thermal-flow-excess-4",
+    "solids-as-property:flow-stream-1",
+    "unlit-approximated:thermal-flow-excess-5",
+    "solids-as-property:flow-stream-2",
+    "solids-as-property:flow-stream-4",
+    "solids-as-property:flow-stream-6",
+    "solids-as-property:flow-stream-11",
+    "solids-as-property:flow-stream-15",
+    "solids-as-property:flow-stream-21",
+    "solids-as-property:flow-stream-25",
+    "solids-as-property:flow-stream-29",
+    "solids-as-property:flow-stream-41",
+    "solids-as-property:flow-vapour",
+    "unlit-approximated:thermal-flow-vapour-2",
+    "unlit-approximated:thermal-flow-vapour-1",
+    "unlit-approximated:thermal-flow-vapour-0",
+    "events-dropped:bag-swing"
+   ]
+  },
+  "sample-figure.bag-swing.s200.forces.fbx": {
+   "byteLength": 437772,
+   "sha256": "eb1feceeec22ea52c2057e6475a99bc26876f5da5e2ae7c83672abdcabc4ef2b",
+   "objectCounts": {
+    "AnimationCurve": 60,
+    "AnimationCurveNode": 20,
+    "AnimationLayer": 1,
+    "AnimationStack": 1,
+    "Geometry": 31,
+    "Material": 19,
+    "Model": 36,
+    "NodeAttribute": 5
    },
-   "sample-figure.bag-swing.s500.light-solid.fbx": {
-     "byteLength": 88172,
-     "sha256": "8c470c6f8ba119b2a88000aa7866ea8bae1bb21a6ccba6a56ae05d14f1b25ac4",
-     "objectCounts": {
-       "AnimationCurve": 12,
-       "AnimationCurveNode": 4,
-       "AnimationLayer": 1,
-       "AnimationStack": 1,
-       "Geometry": 11,
-       "Material": 5,
-       "Model": 11
-     },
-     "notices": [
-       "solids-as-property:pelvis",
-       "solids-as-property:torso",
-       "solids-as-property:head",
-       "solids-as-property:arm-l",
-       "solids-as-property:thigh-l",
-       "solids-as-property:shank-l",
-       "solids-as-property:foot-l",
-       "solids-as-property:arm-r",
-       "solids-as-property:thigh-r",
-       "solids-as-property:shank-r",
-       "solids-as-property:foot-r",
-       "events-dropped:bag-swing"
-     ]
+   "notices": [
+    "solids-as-property:pelvis",
+    "solids-as-property:torso",
+    "solids-as-property:head",
+    "solids-as-property:arm-l",
+    "solids-as-property:thigh-l",
+    "solids-as-property:shank-l",
+    "solids-as-property:foot-l",
+    "solids-as-property:arm-r",
+    "solids-as-property:thigh-r",
+    "solids-as-property:shank-r",
+    "solids-as-property:foot-r",
+    "solids-as-property:arrow-force-applied-shoulder-bag-head",
+    "solids-as-property:arrow-force-applied-shoulder-bag-shaft",
+    "solids-as-property:arrow-force-reaction-contact-l-head",
+    "solids-as-property:arrow-force-reaction-contact-l-shaft",
+    "solids-as-property:arrow-force-reaction-contact-r-head",
+    "solids-as-property:arrow-force-reaction-contact-r-shaft",
+    "solids-as-property:arrow-force-weight-head",
+    "solids-as-property:arrow-force-weight-shaft",
+    "solids-as-property:arrow-force-inertial-head",
+    "solids-as-property:arrow-force-inertial-shaft",
+    "solids-as-property:centre-of-mass",
+    "solids-as-property:arc-moment-joint-torso",
+    "unlit-approximated:glyph-arc-joint",
+    "solids-as-property:arc-moment-joint-thigh-l",
+    "solids-as-property:arc-moment-joint-shank-l",
+    "solids-as-property:arc-moment-joint-foot-l",
+    "solids-as-property:arc-moment-joint-thigh-r",
+    "solids-as-property:arc-moment-joint-shank-r",
+    "solids-as-property:arc-moment-joint-foot-r",
+    "solids-as-property:arc-moment-reaction-contact-l",
+    "unlit-approximated:glyph-arc-reaction",
+    "solids-as-property:arc-moment-reaction-contact-r",
+    "events-dropped:bag-swing",
+    "material-animation-unbound:moments-2:baseColor",
+    "material-animation-unbound:moments-3:baseColor",
+    "material-animation-unbound:moments-4:baseColor",
+    "material-animation-unbound:moments-5:baseColor",
+    "material-animation-unbound:moments-6:baseColor",
+    "material-animation-unbound:moments-7:baseColor",
+    "material-animation-unbound:moments-8:baseColor",
+    "material-animation-unbound:moments-9:baseColor",
+    "material-animation-unbound:moments-10:baseColor",
+    "material-animation-unbound:moments-11:baseColor"
+   ]
+  },
+  "sample-figure.bag-swing.s500.light-solid.fbx": {
+   "byteLength": 88172,
+   "sha256": "8c470c6f8ba119b2a88000aa7866ea8bae1bb21a6ccba6a56ae05d14f1b25ac4",
+   "objectCounts": {
+    "AnimationCurve": 12,
+    "AnimationCurveNode": 4,
+    "AnimationLayer": 1,
+    "AnimationStack": 1,
+    "Geometry": 11,
+    "Material": 5,
+    "Model": 11
    },
-   "sample-figure.bag-swing.s500.thermal.fbx": {
-     "byteLength": 120796,
-     "sha256": "a264495ccba0b3aeff75c100ad8d5649a88920acc60fea76d4155cf78df78a96",
-     "objectCounts": {
-       "AnimationCurve": 33,
-       "AnimationCurveNode": 11,
-       "AnimationLayer": 1,
-       "AnimationStack": 1,
-       "Geometry": 14,
-       "Material": 9,
-       "Model": 14
-     },
-     "notices": [
-       "solids-as-property:pelvis",
-       "solids-as-property:torso",
-       "solids-as-property:head",
-       "solids-as-property:arm-l",
-       "solids-as-property:thigh-l",
-       "solids-as-property:shank-l",
-       "solids-as-property:foot-l",
-       "solids-as-property:arm-r",
-       "solids-as-property:thigh-r",
-       "solids-as-property:shank-r",
-       "solids-as-property:foot-r",
-       "solids-as-property:emitter-nose-breath",
-       "solids-as-property:emitter-mouth-breath",
-       "solids-as-property:emitter-body-plume",
-       "events-dropped:bag-swing"
-     ]
+   "notices": [
+    "solids-as-property:pelvis",
+    "solids-as-property:torso",
+    "solids-as-property:head",
+    "solids-as-property:arm-l",
+    "solids-as-property:thigh-l",
+    "solids-as-property:shank-l",
+    "solids-as-property:foot-l",
+    "solids-as-property:arm-r",
+    "solids-as-property:thigh-r",
+    "solids-as-property:shank-r",
+    "solids-as-property:foot-r",
+    "events-dropped:bag-swing"
+   ]
+  },
+  "sample-figure.bag-swing.s500.thermal.fbx": {
+   "byteLength": 203676,
+   "sha256": "2ae53a5d9792ccabf92df544529df95e76b7b3c2a9d64f93847ee221683085a4",
+   "objectCounts": {
+    "AnimationCurve": 12,
+    "AnimationCurveNode": 4,
+    "AnimationLayer": 1,
+    "AnimationStack": 1,
+    "Geometry": 17,
+    "Material": 9,
+    "Model": 18,
+    "NodeAttribute": 1
    },
-   "sample-figure.bag-swing.s500.forces.fbx": {
-     "byteLength": 418460,
-     "sha256": "c6a3f9e4a0eea452acbdd3cc2374b5a4e65d3cfeaa47c0237d61e52e60c46fdd",
-     "objectCounts": {
-       "AnimationCurve": 60,
-       "AnimationCurveNode": 20,
-       "AnimationLayer": 1,
-       "AnimationStack": 1,
-       "Geometry": 31,
-       "Material": 19,
-       "Model": 36,
-       "NodeAttribute": 5
-     },
-     "notices": [
-       "solids-as-property:pelvis",
-       "solids-as-property:torso",
-       "solids-as-property:head",
-       "solids-as-property:arm-l",
-       "solids-as-property:thigh-l",
-       "solids-as-property:shank-l",
-       "solids-as-property:foot-l",
-       "solids-as-property:arm-r",
-       "solids-as-property:thigh-r",
-       "solids-as-property:shank-r",
-       "solids-as-property:foot-r",
-       "solids-as-property:arrow-force-applied-shoulder-bag-head",
-       "solids-as-property:arrow-force-applied-shoulder-bag-shaft",
-       "solids-as-property:arrow-force-reaction-contact-l-head",
-       "solids-as-property:arrow-force-reaction-contact-l-shaft",
-       "solids-as-property:arrow-force-reaction-contact-r-head",
-       "solids-as-property:arrow-force-reaction-contact-r-shaft",
-       "solids-as-property:arrow-force-weight-head",
-       "solids-as-property:arrow-force-weight-shaft",
-       "solids-as-property:arrow-force-inertial-head",
-       "solids-as-property:arrow-force-inertial-shaft",
-       "solids-as-property:centre-of-mass",
-       "solids-as-property:arc-moment-joint-torso",
-       "unlit-approximated:glyph-arc-joint",
-       "solids-as-property:arc-moment-joint-thigh-l",
-       "solids-as-property:arc-moment-joint-shank-l",
-       "solids-as-property:arc-moment-joint-foot-l",
-       "solids-as-property:arc-moment-joint-thigh-r",
-       "solids-as-property:arc-moment-joint-shank-r",
-       "solids-as-property:arc-moment-joint-foot-r",
-       "solids-as-property:arc-moment-reaction-contact-l",
-       "unlit-approximated:glyph-arc-reaction",
-       "solids-as-property:arc-moment-reaction-contact-r",
-       "events-dropped:bag-swing",
-       "material-animation-unbound:moments-2:baseColor",
-       "material-animation-unbound:moments-3:baseColor",
-       "material-animation-unbound:moments-4:baseColor",
-       "material-animation-unbound:moments-5:baseColor",
-       "material-animation-unbound:moments-6:baseColor",
-       "material-animation-unbound:moments-7:baseColor",
-       "material-animation-unbound:moments-8:baseColor",
-       "material-animation-unbound:moments-9:baseColor",
-       "material-animation-unbound:moments-10:baseColor",
-       "material-animation-unbound:moments-11:baseColor"
-     ]
-   }
+   "notices": [
+    "solids-as-property:pelvis",
+    "solids-as-property:torso",
+    "solids-as-property:head",
+    "solids-as-property:arm-l",
+    "solids-as-property:thigh-l",
+    "solids-as-property:shank-l",
+    "solids-as-property:foot-l",
+    "solids-as-property:arm-r",
+    "solids-as-property:thigh-r",
+    "solids-as-property:shank-r",
+    "solids-as-property:foot-r",
+    "solids-as-property:flow-stream-0",
+    "unlit-approximated:thermal-flow-excess-4",
+    "solids-as-property:flow-stream-2",
+    "solids-as-property:flow-stream-15",
+    "solids-as-property:flow-stream-21",
+    "solids-as-property:flow-stream-25",
+    "solids-as-property:flow-vapour",
+    "unlit-approximated:thermal-flow-vapour-2",
+    "unlit-approximated:thermal-flow-vapour-0",
+    "events-dropped:bag-swing"
+   ]
+  },
+  "sample-figure.bag-swing.s500.forces.fbx": {
+   "byteLength": 418460,
+   "sha256": "c6a3f9e4a0eea452acbdd3cc2374b5a4e65d3cfeaa47c0237d61e52e60c46fdd",
+   "objectCounts": {
+    "AnimationCurve": 60,
+    "AnimationCurveNode": 20,
+    "AnimationLayer": 1,
+    "AnimationStack": 1,
+    "Geometry": 31,
+    "Material": 19,
+    "Model": 36,
+    "NodeAttribute": 5
+   },
+   "notices": [
+    "solids-as-property:pelvis",
+    "solids-as-property:torso",
+    "solids-as-property:head",
+    "solids-as-property:arm-l",
+    "solids-as-property:thigh-l",
+    "solids-as-property:shank-l",
+    "solids-as-property:foot-l",
+    "solids-as-property:arm-r",
+    "solids-as-property:thigh-r",
+    "solids-as-property:shank-r",
+    "solids-as-property:foot-r",
+    "solids-as-property:arrow-force-applied-shoulder-bag-head",
+    "solids-as-property:arrow-force-applied-shoulder-bag-shaft",
+    "solids-as-property:arrow-force-reaction-contact-l-head",
+    "solids-as-property:arrow-force-reaction-contact-l-shaft",
+    "solids-as-property:arrow-force-reaction-contact-r-head",
+    "solids-as-property:arrow-force-reaction-contact-r-shaft",
+    "solids-as-property:arrow-force-weight-head",
+    "solids-as-property:arrow-force-weight-shaft",
+    "solids-as-property:arrow-force-inertial-head",
+    "solids-as-property:arrow-force-inertial-shaft",
+    "solids-as-property:centre-of-mass",
+    "solids-as-property:arc-moment-joint-torso",
+    "unlit-approximated:glyph-arc-joint",
+    "solids-as-property:arc-moment-joint-thigh-l",
+    "solids-as-property:arc-moment-joint-shank-l",
+    "solids-as-property:arc-moment-joint-foot-l",
+    "solids-as-property:arc-moment-joint-thigh-r",
+    "solids-as-property:arc-moment-joint-shank-r",
+    "solids-as-property:arc-moment-joint-foot-r",
+    "solids-as-property:arc-moment-reaction-contact-l",
+    "unlit-approximated:glyph-arc-reaction",
+    "solids-as-property:arc-moment-reaction-contact-r",
+    "events-dropped:bag-swing",
+    "material-animation-unbound:moments-2:baseColor",
+    "material-animation-unbound:moments-3:baseColor",
+    "material-animation-unbound:moments-4:baseColor",
+    "material-animation-unbound:moments-5:baseColor",
+    "material-animation-unbound:moments-6:baseColor",
+    "material-animation-unbound:moments-7:baseColor",
+    "material-animation-unbound:moments-8:baseColor",
+    "material-animation-unbound:moments-9:baseColor",
+    "material-animation-unbound:moments-10:baseColor",
+    "material-animation-unbound:moments-11:baseColor"
+   ]
+  }
  }
 }

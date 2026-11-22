@@ -1,12 +1,33 @@
 import {randomBytes} from "node:crypto";
-import {closeSync,linkSync,mkdirSync,openSync,readFileSync,readdirSync,renameSync,rmSync,statSync,utimesSync,writeSync} from "node:fs";
+import {closeSync,linkSync,watch,type FSWatcher,mkdirSync,openSync,readFileSync,readdirSync,renameSync,rmSync,statSync,utimesSync,writeSync} from "node:fs";
 import {join} from "node:path";
 import {filesystemBusyErrorV1,settleBusyFilesystemSyncV1} from "../../../../../../../../🔨️modules/📁️filesystem/🧾️observation/🔁️churn/🟦️.ts";
 import {UNIT_CACHE_POLICY_V1} from "../🔏️key/🟦️.ts";
+import {enterScriptProcessWaitV1} from "../../../../../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🐕️watchdog/🟦️.ts";
 
 const policy=UNIT_CACHE_POLICY_V1;
-/** ⏳️ Cancellable pause. */
-export const sleepV1=(milliseconds:number,signal?:AbortSignal):Promise<void>=>new Promise((done,fail)=>{if(signal?.aborted){fail(signal.reason);return;}const timer=setTimeout(done,milliseconds);signal?.addEventListener("abort",()=>{clearTimeout(timer);fail(signal.reason);},{once:true});});
+/** ⏳️ Cancellable pause that counts as a declared wait for the process watchdog: a process that sleeps here for a lane, a claim or a slot is waiting, not stalled (bounded by the watchdog's wait ceiling). */
+export const sleepV1=async(milliseconds:number,signal?:AbortSignal):Promise<void>=>{const leave=enterScriptProcessWaitV1();try{await new Promise<void>((done,fail)=>{if(signal?.aborted){fail(signal.reason);return;}const timer=setTimeout(done,milliseconds);signal?.addEventListener("abort",()=>{clearTimeout(timer);fail(signal.reason);},{once:true});});}finally{leave();}};
+
+/** 👂️ A waiter that sleeps on directory events instead of a poll: `wait` returns at once when a file was created or removed in one of the directories since the last `wait` (heartbeat touches are `change` events and ignored), else after `milliseconds` (a jittered fallback that reaps dead holders), and blocks without CPU in between. A directory that cannot be watched is covered by the fallback alone. Create it BEFORE inspecting the state, so no event between inspection and sleep is lost. */
+export function watchChangesV1(directories:readonly string[]):Readonly<{wait(milliseconds:number,signal?:AbortSignal):Promise<void>;close():void}>{
+ let pending=false,wake:(()=>void)|undefined;const watchers:FSWatcher[]=[];
+ for(const directory of directories)try{const watcher=watch(directory,type=>{if(type!=="rename")return;pending=true;wake?.();});watcher.on("error",()=>undefined);watchers.push(watcher);}catch{}
+ return Object.freeze({
+  async wait(milliseconds,signal){
+   if(pending){pending=false;return;}
+   const leave=enterScriptProcessWaitV1();
+   try{await new Promise<void>((done,fail)=>{
+    if(signal?.aborted){fail(signal.reason);return;}
+    const finish=()=>{clearTimeout(timer);signal?.removeEventListener("abort",abort);wake=undefined;pending=false;};
+    const abort=()=>{finish();fail(signal!.reason);};
+    const timer=setTimeout(()=>{finish();done();},Math.ceil(milliseconds*(0.8+Math.random()*0.4)));
+    wake=()=>{finish();done();};signal?.addEventListener("abort",abort,{once:true});
+   });}finally{leave();}
+  },
+  close(){for(const watcher of watchers)try{watcher.close();}catch{}},
+ });
+}
 
 /** 🫀️ Whether a process exists; a permission refusal still means it exists. */
 export function processAliveV1(pid:number):boolean{try{process.kill(pid,0);return true;}catch(error){return(error as NodeJS.ErrnoException).code==="EPERM";}}
@@ -74,21 +95,54 @@ export function claimHeldV1(directory:string,name:string):boolean{
  return ageOf(path,Date.now())!==undefined&&!stale(path,policy.lock.staleMilliseconds,Date.now());
 }
 
+/** 🪪️ Who holds the claim `name` right now (pid and claim time), `undefined` when it is free or its holder is unreadable; reads only. */
+export function claimHolderV1(directory:string,name:string):Readonly<{pid:number;atMs:number}>|undefined{
+ const path=join(directory,name+".lock"),holder=holderOf(path);
+ return holder===undefined||!claimHeldV1(directory,name)?undefined:Object.freeze({pid:holder.pid,atMs:holder.atMs});
+}
+
 /** 🔐️ Takes the per-unit claim named `name` inside `directory`. Waiting is bounded: `undefined` after the maximum wait means "compile anyway", so no wait chain can become a deadlock. A holder that died or stopped beating is replaced atomically. */
 export async function acquireUnitClaimV1(directory:string,name:string,options:Readonly<{maximumWaitMs?:number;signal?:AbortSignal;onWait?:(waitedMs:number)=>void}>={}):Promise<ClaimV1|undefined>{
  mkdirSync(directory,{recursive:true});
- const path=join(directory,name+".lock"),started=Date.now(),limit=options.maximumWaitMs??policy.lock.maximumWaitMilliseconds;
+ const path=join(directory,name+".lock"),started=Date.now(),limit=options.maximumWaitMs??policy.lock.maximumWaitMilliseconds,listener=watchChangesV1([directory]);
  let poll=policy.lock.pollMinimumMilliseconds,reported=false;
- for(;;){
+ try{for(;;){
   const claim=tryCreate(path,policy.lock.heartbeatMilliseconds);
   if(claim)return Object.freeze({...claim,waitedMs:Date.now()-started});
   if(stale(path,policy.lock.staleMilliseconds,Date.now())){removeStale(path,policy.lock.staleMilliseconds);continue;}
   const waited=Date.now()-started;
   if(waited>=limit)return undefined;
   if(!reported){reported=true;options.onWait?.(0);}
-  await sleepV1(Math.min(poll,Math.max(1,limit-waited)),options.signal);
+  await listener.wait(Math.min(poll,Math.max(1,limit-waited)),options.signal);
   poll=Math.min(policy.lock.pollMaximumMilliseconds,Math.ceil(poll*policy.lock.pollBackoffBasisPoints/10000));
- }
+ }}finally{listener.close();}
+}
+
+/** 🪶️ A light slot of a unit that only ships its inputs to a worker and waits for the answer: it holds no compile slot, so it is not charged against the local CPU and memory grant, and is bounded by its own count (`count` files `light-<n>.lock` beside the compile slots, the first free one wins, no ticket queue because a light slot is rarely contended). Waits while all are taken, so a unit never fails for want of one. */
+export async function acquireLightSlotV1(root:string,count:number,options:Readonly<{signal?:AbortSignal;onWait?:(waitedMs:number)=>void}>={}):Promise<ClaimV1>{
+ if(!Number.isSafeInteger(count)||count<1)throw Error("Positive light slot count required");
+ const slots=join(root,policy.layout.slots);mkdirSync(slots,{recursive:true});
+ const started=Date.now(),listener=watchChangesV1([slots]);let reported=false;
+ try{
+  for(;;){
+   const now=Date.now();
+   for(let index=0;index<count;index++){
+    const path=join(slots,"light-"+String(index)+".lock");
+    if(stale(path,policy.slot.staleMilliseconds,now))removeStale(path,policy.slot.staleMilliseconds);
+    const claim=tryCreate(path,policy.slot.heartbeatMilliseconds);
+    if(claim)return Object.freeze({...claim,waitedMs:Date.now()-started});
+   }
+   if(!reported&&Date.now()-started>200){reported=true;options.onWait?.(Date.now()-started);}
+   await listener.wait(policy.slot.fallbackMilliseconds,options.signal);
+  }
+ }finally{listener.close();}
+}
+
+/** 🔢️ How many light slots (`acquireLightSlotV1`) live units hold right now: counted from the claim files, reads only; the number of units that are running on a worker for this machine. */
+export function lightSlotsHeldV1(root:string,count:number):number{
+ const slots=join(root,policy.layout.slots);let held=0;
+ for(let index=0;index<count;index++)if(claimHeldV1(slots,"light-"+String(index)))held++;
+ return held;
 }
 
 /** 🎰️ Host-wide compile slots. Waiters take a numbered ticket and only the oldest live ticket may claim a free slot, so grants are first-in-first-out and no waiter starves; tickets and slots of dead processes are reaped. */
@@ -97,7 +151,7 @@ export async function acquireSlotV1(root:string,count:number,options:Readonly<{s
  const slots=join(root,policy.layout.slots),tickets=join(root,policy.layout.tickets);mkdirSync(slots,{recursive:true});mkdirSync(tickets,{recursive:true});
  const started=Date.now(),name=String(started).padStart(15,"0")+"-"+randomBytes(4).toString("hex")+"-"+process.pid,ticket=join(tickets,name);
  const writeTicket=()=>{const fd=openSync(ticket,"w");try{writeSync(fd,JSON.stringify({pid:process.pid,token:name,atMs:started}));}finally{closeSync(fd);}};
- writeTicket();
+ const listener=watchChangesV1([slots,tickets]);writeTicket();
  const beat=setInterval(()=>{try{const now=new Date();utimesSync(ticket,now,now);}catch{}},policy.slot.heartbeatMilliseconds);beat.unref?.();
  let reported=false;
  try{
@@ -113,7 +167,7 @@ export async function acquireSlotV1(root:string,count:number,options:Readonly<{s
     }
    }
    if(!reported&&Date.now()-started>200){reported=true;options.onWait?.(Date.now()-started);}
-   await sleepV1(policy.slot.pollMilliseconds,options.signal);
+   await listener.wait(policy.slot.fallbackMilliseconds,options.signal);
   }
- }catch(error){clearInterval(beat);removeClaimFileV1(ticket);throw error;}
+ }catch(error){clearInterval(beat);removeClaimFileV1(ticket);throw error;}finally{listener.close();}
 }

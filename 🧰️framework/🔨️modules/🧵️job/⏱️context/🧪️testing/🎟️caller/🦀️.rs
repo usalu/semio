@@ -34,7 +34,7 @@ impl OriginalJobFixtureCaller{
     }
     /// 🪪️ One decoder prerequisite turn, the Source loan, the work issuer, then the return table, funded by the given grant.
     pub fn admit_decoder_step(&mut self,decoder:&mut semio_framework_job_context::OriginalJobDecodeOwner,grant:RetainedCloneGrant)->bool{
-        self.turn(grant,|cx|{if !decoder.admit_step(cx)?{return Ok(false)}Ok(cx.admit_original_return_table()?)}).expect("original decoder prerequisite turn")
+        self.turn(grant,|cx|{if !decoder.admit_step(cx)?{return Ok(false)}Ok(cx.admit_original_return_origin()?)}).expect("original decoder prerequisite turn")
     }
     /// 🪪️ Admits a decoder's prerequisites, each turn funded by exactly the prerequisite quote.
     pub fn admitted_decoder(&mut self)->semio_framework_job_context::OriginalJobDecodeOwner{
@@ -51,7 +51,7 @@ impl OriginalJobFixtureCaller{
     pub fn refreshed_turn_with_decoder<R>(&mut self,business:RetainedCloneGrant,decoder:&mut semio_framework_job_context::OriginalJobDecodeOwner,advance:impl FnOnce(&mut StepContext<'_>)->Result<R,OriginalTurnFailure>)->Result<R,OriginalTurnFailure>{self.refreshed_original(business,Some(decoder),advance)}
     fn refreshed_original<R>(&mut self,business:RetainedCloneGrant,decoder:Option<&mut semio_framework_job_context::OriginalJobDecodeOwner>,advance:impl FnOnce(&mut StepContext<'_>)->Result<R,OriginalTurnFailure>)->Result<R,OriginalTurnFailure>{
         let mut spent=RetainedCloneProgress::default();
-        let result=self.turn_original(Self::refreshed(business),decoder,true,|cx|{let mut value=None;cx.with_retained_loan(business,|cx|{let before=cx.retained_progress();let result=advance(cx);spent=fixture_delta(before,cx.retained_progress());value=Some(result?);Ok(())})?;Ok(value.expect("original fixture callback returned its value"))});
+        let mut turn=Self::refreshed(business);if decoder.is_some(){let(items,copy,_)=semio_framework_job_context::original_receiving_service_scope_headroom();turn.maximum_items+=items;turn.maximum_copy_bytes+=copy}let result=self.turn_original(turn,decoder,true,|cx|{let mut value=None;cx.with_retained_loan(business,|cx|{let before=cx.retained_progress();let result=advance(cx);spent=fixture_delta(before,cx.retained_progress());value=Some(result?);Ok(())})?;Ok(value.expect("original fixture callback returned its value"))});
         self.business=spent;result
     }
     /// 🫧️ One turn that pays no origin refresh, for owners that never touch the Source's return table.
@@ -65,7 +65,7 @@ impl OriginalJobFixtureCaller{
     /// 🌱️ Admits the return table of this Source, each turn funded by exactly its birth quote; returns the retained capacity those turns paid.
     pub fn admit_return_table(&mut self)->usize{
         let quote=semio_framework_job_native_turn::original_return_table_birth_quote().expect("bounded return table birth quote").standalone();let mut paid=0;
-        for _ in 0..4{let born=self.turn(quote,|cx|Ok(cx.admit_original_return_table()?)).expect("original return table birth turn");paid+=self.last.retained_capacity_bytes;self.born+=self.last.retained_capacity_bytes.saturating_sub(self.served);if born{return paid}}
+        for _ in 0..4{let born=self.turn(quote,|cx|Ok(cx.admit_original_return_origin()?)).expect("original return table birth turn");paid+=self.last.retained_capacity_bytes;self.born+=self.last.retained_capacity_bytes.saturating_sub(self.served);if born{return paid}}
         panic!("original return table must admit within its quoted turns")
     }
     pub fn born_bytes(&self)->usize{self.born}
@@ -86,13 +86,13 @@ impl OriginalJobFixtureCaller{
         self.turn_original(grant,None,false,|cx|cx.with_original_retirement(retire))
     }
     /// 🛬️ Borrows the same caller turn and its explicitly supplied original decoder without issuing authority.
-    pub fn turn_with_decoder<R>(&mut self,grant:RetainedCloneGrant,decoder:&mut semio_framework_job_context::OriginalJobDecodeOwner,advance:impl FnOnce(&mut StepContext<'_>)->Result<R,OriginalTurnFailure>)->Result<R,OriginalTurnFailure>{self.turn_original(grant,Some(decoder),true,advance)}
+    pub fn turn_with_decoder<R>(&mut self,grant:RetainedCloneGrant,decoder:&mut semio_framework_job_context::OriginalJobDecodeOwner,advance:impl FnOnce(&mut StepContext<'_>)->Result<R,OriginalTurnFailure>)->Result<R,OriginalTurnFailure>{let(items,copy,_)=semio_framework_job_context::original_receiving_service_scope_headroom();let widened=RetainedCloneGrant{maximum_items:grant.maximum_items+items,maximum_copy_bytes:grant.maximum_copy_bytes+copy,..grant};self.turn_original(widened,Some(decoder),true,|cx|{let mut value=None;cx.with_retained_loan(grant,|cx|{value=Some(advance(cx)?);Ok(())})?;Ok(value.expect("original fixture callback returned its value"))})}
     fn turn_original<R>(&mut self,grant:RetainedCloneGrant,decoder:Option<&mut semio_framework_job_context::OriginalJobDecodeOwner>,serve:bool,advance:impl FnOnce(&mut StepContext<'_>)->Result<R,OriginalTurnFailure>)->Result<R,OriginalTurnFailure>{
         let before=self.spent;let issued_fuel=self.fuel;let mut value=None;let mut served=0usize;let mut served_released=0usize;self.clock_stride.begin((self.clock)());
         let parent=self.parent.as_ref().ok_or_else(||ValueError::literal(ValueRefusalKind::InvalidValue,"original fixture parent has already closed"))?;let budget=StepBudget::new(self.fuel,self.deadline,self.stock);let mut cx=match self.dispatch.as_ref(){Some(turn)=>parent.borrow_context_for_turn(turn,budget,self.clock,&mut self.sequence,&mut self.spent)?,None=>parent.borrow_context(budget,self.clock,&mut self.sequence,&mut self.spent)?};
         if let Some(decoder)=decoder{cx=cx.with_original_decoder(decoder);}
         cx.bind_original_clock_binding(self.clock_binding)?;cx.restore_clock_stride(self.clock_stride);assert_eq!(cx.operation(),self.operation);assert_eq!(cx.generation(),self.generation);
-        let birth=&mut self.birth;let run=||std::panic::catch_unwind(std::panic::AssertUnwindSafe(||cx.with_retained_loan(grant,|cx|{if serve{let funded=cx.retained_progress().retained_capacity_bytes;let freed=cx.retained_progress().released_bytes;birth.service(cx)?;served+=cx.retained_progress().retained_capacity_bytes-funded;served_released+=cx.retained_progress().released_bytes-freed;}value=Some(advance(cx)?);Ok(())})));let(result,observed)=if self.audit{let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(run);(result,Some(heap))}else{(run(),None)};
+        let birth=&mut self.birth;let run=||std::panic::catch_unwind(std::panic::AssertUnwindSafe(||cx.with_retained_loan(grant,|cx|{if serve{let funded=cx.retained_progress().retained_capacity_bytes;let freed=cx.retained_progress().released_bytes;let work=cx.original_work_units_spent();let kept=cx.retained_progress();birth.service(cx)?;cx.exclude_original_birth(work,kept);served+=cx.retained_progress().retained_capacity_bytes-funded;served_released+=cx.retained_progress().released_bytes-freed;}value=Some(advance(cx)?);Ok(())})));let(result,observed)=if self.audit{let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(run);(result,Some(heap))}else{(run(),None)};
         self.fuel=cx.original_source_fuel_remaining().min(issued_fuel);self.clock_stride=cx.clock_stride();let reserved=cx.reserved_return_progress();self.construction=cx.receiving_child_progress();self.born=(self.born+served).saturating_sub(served_released);self.served=served;drop(cx);self.last=fixture_delta(before,self.spent);if let Some(heap)=observed{assert!(!heap.overflowed);assert_eq!((heap.requested_bytes,heap.released_bytes),(self.last.retained_capacity_bytes,self.last.released_bytes),"an allocation of this turn was not receipted in it")}
         match result{Ok(result)=>{if result.is_ok(){assert!(fixture_delta(reserved,self.last).fits(grant));assert!(self.spent.fits(self.stock));}result.map(|()|value.expect("original fixture callback returned its original value"))},Err(payload)=>std::panic::resume_unwind(payload)}
     }

@@ -9,6 +9,8 @@ pub struct Board2dSurface {
     pub controller_id: String,
     pub snapshot_json: String,
     pub window_id: String,
+    /// 💡️ The handle-suggestions menu the board scene publishes, `None` while closed.
+    pub suggestion_menu_json: Option<String>,
 }
 
 pub fn board2d_pointer_down_into(surface_id: &str, inner: Rect, x: f32, y: f32, button: i16, shift: bool, ctrl_or_meta: bool, input: &mut semio_ui_wgpu_input::InputState<ActionDescriptor>) -> Result<(), semio_ui_action::BoundedActionFault> {

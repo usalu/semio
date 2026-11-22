@@ -1,0 +1,43 @@
+{
+ "schema": "live-jobs wire v1: u32 count, per job u64 actor, u64 job, u64 steps, u8 reports, u16 kind length, kind utf8, little endian; oracle python struct",
+ "cases": [
+  {
+   "id": "empty",
+   "jobs": [],
+   "hex": "00000000"
+  },
+  {
+   "id": "one",
+   "jobs": [
+    {
+     "actor": 1,
+     "job": 2,
+     "kind": "semio.io-run",
+     "steps": 3,
+     "reportsProgress": true
+    }
+   ],
+   "hex": "01000000010000000000000002000000000000000300000000000000010c0073656d696f2e696f2d72756e"
+  },
+  {
+   "id": "two-with-unicode",
+   "jobs": [
+    {
+     "actor": 18446744073709551615,
+     "job": 7,
+     "kind": "fülle",
+     "steps": 0,
+     "reportsProgress": false
+    },
+    {
+     "actor": 9,
+     "job": 1,
+     "kind": "",
+     "steps": 65536,
+     "reportsProgress": true
+    }
+   ],
+   "hex": "02000000ffffffffffffffff0700000000000000000000000000000000060066c3bc6c6c65090000000000000001000000000000000000010000000000010000"
+  }
+ ]
+}

@@ -52,7 +52,7 @@ async fn retained_window_input_recursive_document_archive_round_trips_the_comple
         hlt: (1, 1, 0),
         dependencies: Vec::new(),
         observed: None,
-        payload: vec![0xff],
+        payload: protocol::CausalPayload::try_from_slice(&[0xff]).expect("rejected frame payload"),
     });
     malformed_history.parent_spr = Box::pin(protocol::encode_history(
         &history,
@@ -128,6 +128,29 @@ async fn retained_window_input_recursive_document_archive_cancel_retires_the_exa
     assert_eq!(app.stores.store.envelope().id, previous);
     close_recursive_replacement_app(app.as_mut(), &mut cx);
 
+    let fuel=cx.fuel_remaining();drop(cx);caller.retire(fuel).expect("original composition caller paid retirement");
+}
+
+/// 🛑️ A hydration step that rejects a History frame ends the archive load with a typed fault and terminal progress; it never keeps reporting `Running`, and acknowledging it releases every owner.
+#[semio_framework_async_macros::async_test]
+async fn retained_window_input_recursive_document_archive_rejected_history_frame_ends_in_a_typed_fault_with_terminal_progress() {
+    let mut caller=semio_plugin_testing_laws::OriginalFixtureCaller::admit().expect("original composition caller input");let mut cx=caller.context();
+    let mut app = live_recursive_replacement_app().await;
+    let live = Box::pin(PluginApp::document_archive(app.as_ref())).await.expect("live archive before rejection");
+    let mut rejected = live.clone();
+    let mut history = Box::pin(protocol::decode_history(&rejected.parent_spr, &protocol::os_spr::history::DecodeOptions::default())).await.expect("decode history fixture");
+    history.transitions.push(protocol::HistoryTransitionRecord { id: "rejected-frame".into(), actor: "rejected-frame-actor".into(), hlt: (1, 1, 0), dependencies: Vec::new(), observed: None, payload: protocol::CausalPayload::try_from_slice(&[0xff]).expect("rejected frame payload") });
+    rejected.parent_spr = Box::pin(protocol::encode_history(&history, &protocol::os_spr::history::EncodeOptions { write_backwards_section: true, ..protocol::os_spr::history::EncodeOptions::default() })).await.expect("encode rejected history");
+    semio_plugin_testing_laws::artifact_app_laws::admit_document_archive_load(app.as_mut(), 87, rejected, &mut cx).expect("rejected archive admission");
+    let status = Box::pin(drive_recursive_document_archive_load(app.as_mut(), 87, &mut cx)).await;
+    assert_eq!(status.state, protocol::DocumentArchiveLoadState::Fault);
+    assert!(!status.fault.is_empty(), "a rejected frame surfaces a typed fault");
+    assert!(status.completed <= status.total, "terminal progress never overshoots its total");
+    assert!(!app.document_archive_maintenance_is_runnable(COMPOSITION_MAINTENANCE_GRANT).unwrap(), "a faulted load is no longer runnable");
+    PluginApp::acknowledge_document_archive_load(app.as_mut(), 87).expect("rejected archive acknowledgement");
+    assert!(app.ingest.document_archive_loads.is_empty(), "acknowledgement releases the load slot and its owners");
+    assert_eq!(Box::pin(PluginApp::document_archive(app.as_ref())).await.expect("live archive after rejected frame"), live);
+    close_recursive_replacement_app(app.as_mut(), &mut cx);
     let fuel=cx.fuel_remaining();drop(cx);caller.retire(fuel).expect("original composition caller paid retirement");
 }
 

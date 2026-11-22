@@ -1,0 +1,56 @@
+{
+  "id": "person-in-winter-coat",
+  "category": "humans",
+  "title": {
+    "en": "Person in Winter Coat",
+    "de": "Person im Wintermantel"
+  },
+  "heightM": 1.812,
+  "widthM": 0.461,
+  "powerW": 154.2,
+  "poses": [
+    "hands-in-pockets",
+    "arms-at-sides",
+    "stamping-feet",
+    "contact-left",
+    "passing-right"
+  ],
+  "clips": [
+    "walk-hands-in-pockets",
+    "idle-breathing",
+    "stamp-feet"
+  ],
+  "representations": {
+    "50": "authored",
+    "100": "authored",
+    "200": "authored",
+    "500": "authored"
+  },
+  "symbols": [
+    "walking-direction-marker"
+  ],
+  "analytics": [
+    "thermal",
+    "transport",
+    "structural"
+  ],
+  "exports": [
+    "svg",
+    "pdf",
+    "dxf",
+    "dwg",
+    "png-sequence",
+    "mp4",
+    "webm",
+    "component",
+    "glb",
+    "fbx",
+    "model",
+    "model-zip"
+  ],
+  "distinction": {
+    "en": "A man of 1.78 m bundled up for a frosty day in a knee-length quilted down parka with stand collar, a chunky wool scarf, a knitted beanie, gloves and lined winter boots: standing with the hands in the side pockets, with the arms at the sides and stamping the feet, with a walk with the hands in the pockets, a foot-stamping loop and idle breathing.",
+    "de": "Ein Mann von 1,78 m, für einen Frosttag eingepackt in einen knielangen gesteppten Daunenparka mit Stehkragen, einen dicken Wollschal, eine Strickmütze, Handschuhe und gefütterte Winterstiefel: stehend mit den Händen in den Seitentaschen, mit hängenden Armen und mit stampfenden Füßen, mit einem Gang mit den Händen in den Taschen, einer Schleife aus Füßestampfen und ruhigem Atmen."
+  },
+  "completion": "authored"
+}

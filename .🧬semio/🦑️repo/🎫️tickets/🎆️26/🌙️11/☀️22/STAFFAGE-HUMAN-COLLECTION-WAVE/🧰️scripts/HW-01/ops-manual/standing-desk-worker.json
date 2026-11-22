@@ -1,0 +1,4 @@
+[
+  {"scale": "100", "view": "elevation", "op": "shape-delete", "id": "hem-rib"},
+  {"scale": "100", "view": "front", "op": "shape-add", "after": "shank-r", "shape": {"id": "sock-r", "bone": "shank-r", "role": "body", "z": 1.02, "filled": true, "tone": 0.62, "region": "jeans", "kind": "poly", "points": [[-0.1337, 0.1185], [-0.1241, 0.1173], [-0.1253, 0.0732], [-0.0533, 0.0732], [-0.0533, 0.1173], [-0.0425, 0.1185], [-0.0425, 0.135], [-0.1337, 0.135]], "closed": true}}
+]

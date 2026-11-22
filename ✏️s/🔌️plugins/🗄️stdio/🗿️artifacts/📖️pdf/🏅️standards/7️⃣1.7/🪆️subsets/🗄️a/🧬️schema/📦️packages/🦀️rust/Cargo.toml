@@ -9,6 +9,38 @@ description = "Component crate of semio-s-artifact-stdio-pdf: mut-family"
 [package.metadata.semio]
 role = "library"
 
+[package.metadata.semio.carve]
+owned = [
+  "standards::v1_7::subsets::a::schema",
+  "standards::v1_7::subsets::e::schema",
+  "standards::v1_7::subsets::h::io",
+  "standards::v1_7::subsets::h::io::derived_analysis",
+  "standards::v1_7::subsets::h::io::derived_composition",
+  "standards::v1_7::subsets::h::io::derived_construction",
+  "standards::v1_7::subsets::h::io::mutation_bridge",
+  "standards::v1_7::subsets::h::schema::mutations::embed_font_file::tests",
+  "standards::v1_7::subsets::h::schema::mutations::insert_javascript_action::tests",
+  "standards::v1_7::subsets::h::schema::mutations::insert_launch_action::tests",
+  "standards::v1_7::subsets::h::schema::mutations::insert_signature_field::tests",
+  "standards::v1_7::subsets::h::schema::mutations::remove_font_file::tests",
+  "standards::v1_7::subsets::h::schema::mutations::remove_javascript_action::tests",
+  "standards::v1_7::subsets::h::schema::mutations::remove_launch_action::tests",
+  "standards::v1_7::subsets::h::schema::mutations::remove_signature_field::tests",
+  "standards::v1_7::subsets::h::schema::mutations::set_info_author::tests",
+  "standards::v1_7::subsets::h::schema::mutations::set_info_title::tests",
+  "standards::v1_7::subsets::ua::schema",
+  "standards::v1_7::subsets::vt::schema::mutations::remove_launch_action::tests",
+  "standards::v1_7::subsets::vt::schema::mutations::remove_media_annotation::tests",
+  "standards::v1_7::subsets::vt::schema::mutations::remove_output_intent::tests",
+  "standards::v1_7::subsets::vt::schema::mutations::remove_trim_box::tests",
+  "standards::v1_7::subsets::vt::schema::mutations::set_dpart_metadata::tests",
+  "standards::v1_7::subsets::vt::schema::mutations::set_dpart_root::tests",
+  "standards::v1_7::subsets::vt::schema::mutations::set_output_intent::tests",
+  "standards::v1_7::subsets::vt::schema::mutations::set_trim_box::tests",
+  "standards::v1_7::subsets::x::schema",
+  "viewer::pdf14x",
+]
+
 [lints]
 workspace = true
 

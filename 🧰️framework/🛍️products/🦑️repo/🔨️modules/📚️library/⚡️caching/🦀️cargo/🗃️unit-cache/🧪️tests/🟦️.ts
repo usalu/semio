@@ -133,6 +133,17 @@ test("compile slots never exceed their count and are granted first-in-first-out"
  for(const left of done)for(const right of done)if(left.asked+40<right.asked)expect(left.acquired<=right.acquired+15,"first in first out").toBe(true);
 },60000);
 
+test("waiters of a full slot pool block on events and use almost no CPU", async()=>{
+ const root=scratch(),holder=launch(["slot",root,"1","4500"]);
+ await new Promise(done=>setTimeout(done,500));
+ const waiters=Array.from({length:12},()=>new Promise<{cpuMicroseconds:number;windowMilliseconds:number}>((done,fail)=>{
+  const child=spawn(process.execPath,[worker,"slot-cpu",root,"1","2500"],{stdio:["ignore","pipe","inherit"]});
+  child.stdout.once("data",chunk=>done(JSON.parse(String(chunk))));child.once("error",fail);
+ }));
+ const rows=await Promise.all(waiters);await holder;
+ for(const row of rows)expect(row.cpuMicroseconds/1000/row.windowMilliseconds,"waiting costs almost no CPU").toBeLessThan(0.02);
+},60000);
+
 const cargo=process.env.SEMIO_TEST_CARGO??"cargo";
 const pinnedToolchain=/^\s*channel\s*=\s*"([^"]+)"/mu.exec(readFileSync(resolve(import.meta.dir,"../../../../../../../../../rust-toolchain.toml"),"utf8"))![1]!;
 function writeCrate(root:string,name:string,manifest:string,source:string,extra:Record<string,string>={}){const directory=join(root,name);mkdirSync(join(directory,"src"),{recursive:true});writeFileSync(join(directory,"Cargo.toml"),manifest);writeFileSync(join(directory,"src",source.startsWith("fn main")||source.includes("fn main()")?"main.rs":"lib.rs"),source);for(const [file,text] of Object.entries(extra))writeFileSync(join(directory,file),text);}
@@ -211,13 +222,13 @@ function artifactDigests(target:string){
  return rows;
 }
 
-test("cached artifacts equal the bytes of a plain Cargo build, and sccache reaches the same hit and miss counts on library units", async()=>{
+test("cached artifacts carry the file names of a plain Cargo build (their bytes differ by the canonical metadata), and sccache reaches the same hit and miss counts on library units", async()=>{
  const directory=scratch(),workspace=join(directory,"ws"),cache=join(directory,"cache"),libraries=["l1","l2","l3"];writeWorkspace(workspace,libraries,false);
  const plan=[["a",["-p","l1"]],["b",["-p","l2"]],["c",["-p","l1","-p","l2","-p","l3"]]] as const;
  for(const [lane,args] of plan){const run=await session(workspace,cache,lane,[...args],{CARGO_INCREMENTAL:"0",SEMIO_UNIT_CACHE_INNER:JSON.stringify(["rustc"])});expect(run.code,run.output).toBe(0);}
  const rows=events(cache);expect(count(rows,"miss")).toBe(4);expect(count(rows,"hit")).toBe(4);
  const reference=join(directory,"reference"),plain=spawnSync(cargo,["build","--manifest-path",join(workspace,"Cargo.toml"),"-p","l1","-p","l2","-p","l3"],{cwd:workspace,env:{...process.env,CARGO_TARGET_DIR:reference,CARGO_INCREMENTAL:"0"},encoding:"utf8"});
- expect(plain.status,plain.stderr).toBe(0);expect(artifactDigests(join(cache,"l","c","t"))).toEqual(artifactDigests(reference));
+ expect(plain.status,plain.stderr).toBe(0);const names=(target:string)=>artifactDigests(target).map(row=>row.split(" ")[0]);expect(names(join(cache,"l","c","t"))).toEqual(names(reference));
  const sccache=process.env.SEMIO_TEST_SCCACHE??"sccache";
  if(spawnSync(sccache,["--version"]).status!==0)return;
  const store=join(directory,"sccache"),port=String(20000+Math.floor(Math.random()*20000)),environment={...process.env,SCCACHE_DIR:store,SCCACHE_SERVER_PORT:port,SCCACHE_IDLE_TIMEOUT:"0",CARGO_INCREMENTAL:"0",RUSTC_WRAPPER:sccache};

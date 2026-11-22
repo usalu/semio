@@ -89,6 +89,8 @@ pub struct ToolRunTraceLayer {
     batches: BTreeMap<ToolRunTraceBatchKey, ToolRunTraceBatch>,
     next_stamp: u64,
     newest_testing: Option<(u64, u64)>,
+    /// 🔦️ The ONE record a host focuses (the hovered row of a suggestion menu): drawn alone, opaque in its verdict paint and outlined as the newest, whatever the legend hides.
+    pub focus: Option<u64>,
 }
 
 impl ToolRunTraceLayer {
@@ -214,9 +216,10 @@ impl ToolRunTraceLayer {
     pub fn draws(&self, palette: &ToolRunTracePalette, visibility: ToolRunTraceVisibility) -> Vec<ToolRunTraceDraw> {
         let newest_stamp = self.next_stamp.saturating_sub(1);
         let newest_testing = self.newest_testing();
+        let focus = self.focus;
         self.batches
             .iter()
-            .filter(|(key, _)| key.family == ToolRunTraceFamily::Instance3d && visibility.shows(key.verdict()))
+            .filter(|(key, _)| key.family == ToolRunTraceFamily::Instance3d && (self.focus.is_some() || visibility.shows(key.verdict())))
             .map(|(key, batch)| {
                 let verdict = key.verdict();
                 let base = palette.color(verdict);
@@ -227,13 +230,17 @@ impl ToolRunTraceLayer {
                     .zip(&batch.stamps)
                     .filter_map(|((record, subject), stamp)| {
                         let ToolRunTraceSubject::Instance3d { position, rotation, scale, .. } = *subject else { return None };
-                        let newest = newest_testing == Some(*record);
+                        if focus.is_some_and(|focus| focus != *record) {
+                            return None;
+                        }
+                        let newest = focus.is_some() || newest_testing == Some(*record);
                         let alpha = if newest { base.a } else { base.a * tool_run_trace_fade(newest_stamp - stamp) };
                         Some(Instance3d { component_source: None, id: format!("toolRunTrace:{record}"), model: Instance3d::model_from_trs(position, rotation, [scale; 3]), color: [base.r, base.g, base.b, alpha], selected: newest, hovered: false, material: Default::default() })
                     })
                     .collect();
                 ToolRunTraceDraw { mesh: key.index, verdict, instances }
             })
+            .filter(|draw| focus.is_none() || !draw.instances.is_empty())
             .collect()
     }
 
@@ -242,14 +249,18 @@ impl ToolRunTraceLayer {
     pub fn placement_draws(&self, palette: &ToolRunTracePalette, visibility: ToolRunTraceVisibility) -> Vec<ToolRunTrace2dDraw> {
         let newest_stamp = self.next_stamp.saturating_sub(1);
         let newest_testing = self.newest_testing();
+        let focus = self.focus;
         self.batches
             .iter()
-            .filter(|(key, _)| key.family == ToolRunTraceFamily::Placement2d && visibility.shows(key.verdict()))
+            .filter(|(key, _)| key.family == ToolRunTraceFamily::Placement2d && (self.focus.is_some() || visibility.shows(key.verdict())))
             .flat_map(|(key, batch)| {
                 let base = palette.color(key.verdict());
                 batch.keys.iter().zip(&batch.subjects).zip(&batch.stamps).filter_map(move |((record, subject), stamp)| {
                     let ToolRunTraceSubject::Placement2d { shape, position, rotation } = *subject else { return None };
-                    let newest = newest_testing == Some(*record);
+                    if focus.is_some_and(|focus| focus != *record) {
+                        return None;
+                    }
+                    let newest = focus.is_some() || newest_testing == Some(*record);
                     let alpha = if newest { base.a } else { base.a * tool_run_trace_fade(newest_stamp - stamp) };
                     Some(ToolRunTrace2dDraw { shape, position, rotation, color: base.with_alpha(alpha), newest })
                 })

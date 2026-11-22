@@ -1,0 +1,10 @@
+{
+  "name": "@semio-tech/stdio-pdf-view-lane-rs",
+  "$schema": "../../../../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧬️schema/📋️project/🔣️.json",
+  "projectType": "library",
+  "tags": [
+    "language:rust",
+    "role:library",
+    "family:stdio"
+  ]
+}

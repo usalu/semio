@@ -1,0 +1,54 @@
+{
+  "id": "basketball-player",
+  "category": "humans",
+  "title": {
+    "en": "Basketball Player",
+    "de": "Basketballspielende Person"
+  },
+  "heightM": 1.851,
+  "widthM": 0.67,
+  "powerW": 869.7,
+  "poses": [
+    "dribbling",
+    "jump-shot-set",
+    "jump-shot-release",
+    "standing-with-ball"
+  ],
+  "clips": [
+    "dribble",
+    "idle-breathing"
+  ],
+  "representations": {
+    "50": "authored",
+    "100": "authored",
+    "200": "authored",
+    "500": "authored"
+  },
+  "symbols": [
+    "player-position-mark"
+  ],
+  "analytics": [
+    "thermal",
+    "transport",
+    "structural"
+  ],
+  "exports": [
+    "svg",
+    "pdf",
+    "dxf",
+    "dwg",
+    "png-sequence",
+    "mp4",
+    "webm",
+    "component",
+    "glb",
+    "fbx",
+    "model",
+    "model-zip"
+  ],
+  "distinction": {
+    "en": "The tallest person of the catalog and the only one with a free ball: the ball hangs on a chain of its own from the court, bounces to the floor in the dribble and leaves the fingertips at the top of an airborne jump shot.",
+    "de": "Die grösste Person des Katalogs und die einzige mit einem freien Ball: der Ball hängt an einer eigenen Kette vom Spielfeld, springt beim Dribbeln auf den Boden und verlässt beim Sprungwurf in der Luft die Fingerspitzen."
+  },
+  "completion": "authored"
+}

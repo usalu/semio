@@ -260,7 +260,7 @@ fn presenter_retirement_contract(glue: &str, prepared: &str, gpu: &str, draw: &s
         && glue.contains("begin_prepared_offscreen(token, &self.gate, packet, expected.scene_revision, expected.input_generation)")
         && glue.contains("self.raster_operation_authority.begin(expected.scene_revision, expected.input_generation)")
         && glue.contains(concat!("raster_witness.scene_revision != packet.scene_revision() || raster_witness.", "preview_generation != packet.preview_generation()"))
-        && glue.matches("mark_scene_changed();").count() == 4
+        && glue.matches("mark_scene_changed();").count() == 5
         && !glue.contains(concat!("let revision = packet.", "scene_revision();"))
         && !glue.contains(concat!("let generation = packet.", "preview_generation();"))
         && !glue.contains(concat!("scene_revision: packet.", "scene_revision()"))
@@ -272,9 +272,9 @@ fn presenter_retirement_contract(glue: &str, prepared: &str, gpu: &str, draw: &s
         && glue.contains("prepared_close_turn(cx, demand, |effect| previous.close_step(effect))")
         && glue.contains("if !gpu.close_mesh_upload_step()")
         && glue.contains("self.gpu.close_mesh_table_step()")
-        && glue.contains("pub(crate) fn admit_next_frame")
+        && glue.contains("pub fn admit_next_frame")
         && winit.contains(".admit_next_frame(||match frame_build.poll_runtime_on_original_caller")
-        && winit.contains("observe_presentation_input_generation(build_generation.0)")
+        && winit.contains("observe_presentation_input_generation(generation.0)")
         && !winit.contains("begin_present(frame).is_err()")
         && host.contains("presenter.close_world_owners_step(cx)")
         && host.contains("presenter.world_owners_terminal_is_empty()")
@@ -365,5 +365,5 @@ const PRESENTER_RETIREMENT_MUTATIONS: &[(PresenterContractSource, &str, &str, bo
     (PresenterContractSource::Host, "presenter.world_owners_terminal_is_empty()", "true", false),
     (PresenterContractSource::Host, "presenter.close_world_owners_step(cx)", "drop(presenter)", false),
     (PresenterContractSource::Winit, ".admit_next_frame(||match frame_build.poll_runtime_on_original_caller", "", false),
-    (PresenterContractSource::Winit, "self.runtime.observe_presentation_input_generation(build_generation.0);", "", false),
+    (PresenterContractSource::Winit, "self.runtime.observe_presentation_input_generation(generation.0);", "", false),
 ];

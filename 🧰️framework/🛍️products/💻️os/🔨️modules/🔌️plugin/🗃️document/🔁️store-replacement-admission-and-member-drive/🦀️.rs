@@ -285,7 +285,6 @@ where
             let after=cx.retained_progress();
             let delta=|end:usize,start:usize|end.checked_sub(start).ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original member receipt moved before its initiating recipient"));
             let spent=RetainedCloneProgress{copied_items:delta(after.copied_items,before.copied_items)?,copied_bytes:delta(after.copied_bytes,before.copied_bytes)?,retained_capacity_bytes:delta(after.retained_capacity_bytes,before.retained_capacity_bytes)?,released_bytes:delta(after.released_bytes,before.released_bytes)?};
-            { static N:std::sync::atomic::AtomicUsize=std::sync::atomic::AtomicUsize::new(0); let n=N.fetch_add(1,std::sync::atomic::Ordering::Relaxed); if n<5||n%4000==0 { eprintln!("[DEBUG] memberstep#{n} grant={:?} spent={:?} step={}",grant,spent,match &step{store::MemberOpenStep::Pending(p)=>format!("Pending({:?})",p),store::MemberOpenStep::Rejected(_)=>"Rejected".into(),store::MemberOpenStep::Ready(_)=>"Ready".into()}); } }
             return match step {
                 store::MemberOpenStep::Pending(_) => Ok(PluginLifecycleStep::Progress(spent)),
                 store::MemberOpenStep::Rejected(diagnostic) => {

@@ -4,6 +4,7 @@ import {createScriptProcessEnvelope,withScriptProcessEnvelope,advanceScriptInvoc
 import {processTestCheckoutV1,runProcessTestSuiteV1,withProcessTestOutputV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🗂️suites/🏃️run/🟦️.ts";
 import {isRepoErrorV1,renderRepoErrorV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🗣️language/🚨️error/🟦️.ts";
 import type {ProcessTestSuiteV1,ProcessTestTableV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🗂️suites/🟦️.ts";
+import {stretchedBudgetMillisecondsV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
 import {genuineBirthLaunchersV1} from "../../../🧪️testing/🌱️genuine-birth/🚀️launchers/🟦️.ts";
 import {createBuildBootstrapCapabilitiesV1} from "../../📥️caller/📤️child/🟦️.ts";
 import {workspaceTestPythonEnvironmentV1} from "../../🗂️suites/🐍️python/🟦️.ts";
@@ -41,7 +42,8 @@ export async function providedTestEnvironmentV1(provider:TestFilePolicyV1["provi
 /** 🧩️ Runs a file the way its project script runs it, as a child of the admitted Script envelope with the environment its provider supplies and the artifact sandbox of the project's contract targets. */
 async function runProvidedFileV1(provider:TestFilePolicyV1["providers"][number]["provider"],invocation:Parameters<typeof runProcessTestSuiteV1>[0]["invocation"],checkout:string,file:string,environment:NodeJS.ProcessEnv,budgetMs:number):Promise<void>{
  const {runRepositoryCommand}=await import("../../../🏃️process/🎛️owned-execution/🟦️.ts"),{repoTestArtifactEnvironment}=await import("../../../🏃️process/🌿️environment/🧪️test-output/🟦️.ts"),{runtimeExecutableV1}=await import("../../../../../../../📦️packages/🟦️typescript/⚙️runtime/🏷️identity/🟦️.ts"),{runtimeTestArgumentsV1}=await import("../../../../../../../📦️packages/🟦️typescript/⚙️runtime/🚀️process/🟦️.ts");
- await runRepositoryCommand(invocation,runtimeExecutableV1(),runtimeTestArgumentsV1([resolve(checkout,file)]),checkout,"test-file-"+provider,{version:1,maximumElapsedMilliseconds:budgetMs,output:{maximumBytes:134217728,maximumLines:65536}},{stdout:"stderr",env:{...repoTestArtifactEnvironment(checkout,"test-file-"+provider,environment),...await providedTestEnvironmentV1(provider,checkout)}});
+ const {pinnedRustToolchainV1}=await import("../../../../../../../🔨️modules/🏃️process/🧪️testing/🧰️toolchain/📌️pinned/🟦️.ts");
+ await runRepositoryCommand(invocation,runtimeExecutableV1(),runtimeTestArgumentsV1([resolve(checkout,file)]),checkout,"test-file-"+provider,{version:1,maximumElapsedMilliseconds:budgetMs,output:{maximumBytes:134217728,maximumLines:65536}},{stdout:"stderr",env:{...repoTestArtifactEnvironment(checkout,"test-file-"+provider,environment),...pinnedRustToolchainV1(undefined,environment).environment,...await providedTestEnvironmentV1(provider,checkout)}});
 }
 
 function messageV1(error:unknown,language:TestFileLanguageV1,limit:number):string{
@@ -67,13 +69,13 @@ export async function runTestFileRoutesV1(root:string,routes:readonly TestFileRo
    let failure:unknown,failed=false,cancelled:AbortSignal|undefined;
    try{
     const capabilities=await createBuildBootstrapCapabilitiesV1(checkout,["run",project+":test-"+row.id],environment);
-    await withScriptProcessEnvelope(createScriptProcessEnvelope({version:1,owner:"test-file",maximumElapsedMilliseconds:row.budgetMs+rules.elapsedSlackMs},capabilities,Date.now()),async invocation=>{
+    await withScriptProcessEnvelope(createScriptProcessEnvelope({version:1,owner:"test-file",maximumElapsedMilliseconds:stretchedBudgetMillisecondsV1(row.budgetMs)+rules.elapsedSlackMs},capabilities,Date.now()),async invocation=>{
      cancelled=invocation.control.signal;
      await advanceScriptInvocation(invocation,"test-file:"+route.file,"running");
      let environmentForRun:NodeJS.ProcessEnv=environment;
      if(route.python)try{environmentForRun=await workspaceTestPythonEnvironmentV1(checkout,environment,invocation.control.signal);}catch(error){if(route.mode==="suite"||invocation.control.signal.aborted)throw error;notice(testFileTextV1(options.language,"run.python-unavailable",{reason:messageV1(error,options.language,rules.limits.errorCharacters)}));}
      const provider=route.mode==="plain"?rules.providers.find(row=>route.file.startsWith(row.root+"/"))?.provider:undefined;
-     if(provider!==undefined)await runProvidedFileV1(provider,invocation,checkout,route.file,environmentForRun,row.budgetMs);
+     if(provider!==undefined)await runProvidedFileV1(provider,invocation,checkout,route.file,environmentForRun,stretchedBudgetMillisecondsV1(row.budgetMs));
      else await withProcessTestOutputV1(checkout,owner?.route??rules.plain.route,output=>runProcessTestSuiteV1({invocation,root:tableRoot,checkout,table,suite:row.id,owner:owner?.owner??rules.plain.owner,output,environment:environmentForRun,...(launchers?{launchers}:{})}),row.scratch);
     });
    }catch(error){if(cancelled?.aborted&&!(cancelled.reason instanceof Error&&/deadline exhausted/u.test(cancelled.reason.message)))throw error;failed=true;failure=error;}

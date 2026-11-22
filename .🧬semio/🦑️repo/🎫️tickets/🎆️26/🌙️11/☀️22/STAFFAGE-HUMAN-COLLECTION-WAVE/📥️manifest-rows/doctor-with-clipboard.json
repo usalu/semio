@@ -1,0 +1,54 @@
+{
+  "id": "doctor-with-clipboard",
+  "category": "humans",
+  "title": {
+    "en": "Doctor with Clipboard",
+    "de": "Arzt mit Klemmbrett"
+  },
+  "heightM": 1.801,
+  "widthM": 0.63,
+  "powerW": 145.7,
+  "poses": [
+    "reading-clipboard",
+    "writing-note",
+    "talking-to-patient"
+  ],
+  "clips": [
+    "read-and-note",
+    "idle-breathing",
+    "look-up-and-talk"
+  ],
+  "representations": {
+    "50": "authored",
+    "100": "authored",
+    "200": "authored",
+    "500": "authored"
+  },
+  "symbols": [
+    "standing-person-marker"
+  ],
+  "analytics": [
+    "thermal",
+    "transport",
+    "structural"
+  ],
+  "exports": [
+    "svg",
+    "pdf",
+    "dxf",
+    "dwg",
+    "png-sequence",
+    "mp4",
+    "webm",
+    "component",
+    "glb",
+    "fbx",
+    "model",
+    "model-zip"
+  ],
+  "distinction": {
+    "en": "A ward doctor in a knee-length white lab coat with a stethoscope round the neck, reading the chart on an A4 clipboard held at chest height in the right hand and noting with a pen in the left; loops for reading and noting and for looking up to speak with a patient.",
+    "de": "Eine Stationsärztin bzw. ein Stationsarzt in knielangem weißem Kittel mit Stethoskop um den Hals liest das Krankenblatt auf einem A4-Klemmbrett, das die rechte Hand auf Brusthöhe hält, und notiert mit einem Stift in der linken; Schleifen für Lesen und Notieren und für das Aufblicken zum Gespräch mit einer Patientin oder einem Patienten."
+  },
+  "completion": "authored"
+}

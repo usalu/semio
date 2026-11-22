@@ -114,3 +114,15 @@ async fn the_roster_has_no_gap_between_avatars() {
     peers.extend((0..6).map(|i| peer(&format!("actor-{i}"), "Peer", None)));
     assert_no_gaps(&build_presence_bar("s-presence-peers", &peers, Some(5), Locale::En));
 }
+
+#[test]
+fn the_roster_paints_avatar_cells_with_initials_and_an_overflow_chip() {
+    assert_eq!(presence_initials("ada lovelace byron"), "AL");
+    assert_eq!(presence_initials("  bob "), "B");
+    assert_eq!(presence_initials(""), "");
+    let peers: Vec<PresencePeerRow> = (0..7).map(|index| peer(&format!("a{index}"), &format!("Peer {index}"), None)).collect();
+    let cells = presence_bar_cells(&peers, None);
+    assert_eq!(cells.len(), PRESENCE_BAR_DEFAULT_MAX + 1);
+    assert_eq!(cells.last(), Some(&PresenceCell::Overflow { count: 2 }));
+    assert!(presence_bar_cells(&[], None).is_empty());
+}

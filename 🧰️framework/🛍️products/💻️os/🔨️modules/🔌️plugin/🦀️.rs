@@ -58,6 +58,7 @@ pub use wasip2::component_export_anchor;
 pub fn component_export_anchor() {}
 
 pub use semio_plugin_ownership::bounded_ownership::{PluginLifecycleFailure,PluginLifecyclePrimary};
+pub use semio_plugin_ownership::bounded_ownership::{plugin_self_funded_grant,PLUGIN_SELF_FUNDED_BODY_BYTES};
 //#region 🏛️OwnershipFacet
 pub use semio_framework_job::StepContext;
 // 🧭️ Mount hubs: the module mounts that used to follow live in one file per work package of PLAN-PLUGIN-CRATES.md,
@@ -412,7 +413,6 @@ pub use app::{
     ArtifactViewer,
     AsyncComposeFn,
     BuiltNode,
-    // 🧸️👥️🫧️ Composition child-read seam plus the two ephemeral state lanes.
     ChildContentView,
     ChildContentReadRetirement,
     ComponentTree,
@@ -487,6 +487,7 @@ pub use app::{
     PluginLifecycleStep,
     PluginProgram,
     PresenceView,
+    PresencePeersView,
     SelectionKind,
     StandardId,
     SubsetId,
@@ -548,7 +549,7 @@ pub use app::{
     TREE_WINDOW_DEFAULT_ROWS, TREE_WINDOW_FIXED_NODE_HEADROOM, TREE_WINDOW_PATH_SEPARATOR,
 };
 pub use engagement::{engagement_token_matches, strip_engagement_prefix};
-pub use semio_framework_tool_machine::{TypingCommit, TypingFold, TYPING_BUFFER_ARG, TYPING_COMMIT_ARG, TYPING_IDLE_MS};
+pub use semio_framework_tool_machine::{TypingCommit, TypingFold, SCRUB_COMMIT_ARG, SCRUB_GESTURE_ARG, TYPING_BUFFER_ARG, TYPING_COMMIT_ARG, TYPING_IDLE_MS};
 // 🧬️ A2 (design-abi.md §4): `host_port`'s re-export is deleted along with the module (see the
 // "Replace, never wrap" note above `pub mod engagement`). `host::now_ms` replaces `host_now_ms` —
 // `✏️s/🔌️plugins/🪐️space` is the one measured external caller (design-abi.md §0) and will be

@@ -9,6 +9,9 @@ pub mod tree_window;
 #[path = "../../../🧱️elements/🌳️Tree/⌨️roving/🦀️.rs"]
 pub mod tree_roving;
 
+#[path = "../../../🧱️elements/🌳️Tree/🧲️drag-drop/🦀️.rs"]
+pub mod tree_drop;
+
 #[path = "../../../🧱️elements/👥️PresenceBar/🎯️targets/🧊️wgpu/🦀️.rs"]
 pub mod presence_bar;
 

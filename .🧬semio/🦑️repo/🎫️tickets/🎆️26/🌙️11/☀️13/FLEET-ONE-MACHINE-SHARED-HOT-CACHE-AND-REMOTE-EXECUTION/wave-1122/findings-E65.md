@@ -1,0 +1,5 @@
+# Findings E65 (outside my lane)
+1. `repo cargo --store=shared --configuration=prototype -- check --lib` fails at 15:36 CET with `Closed compiler builtin-read import coverage refused: the rewrite did not count every built-in import` (`redirectCapturedBuiltinReadsV1`, thrown from the captured source of the compile gate). A peer landing in the captured source (fs / fs/promises / module imports not spelled with literal specifiers) broke every `repo cargo`. Owner: whoever edited the captured sources 15:0x-15:3x (source lock holder E59?). Repro: any `repo cargo` call, 4.5 s.
+2. Fleet counters: `unrecorded` skip reason is 5677 on this machine and 14-20k on m02/m06/m07/m10 (about 100k fleet-wide); the unit tier skips those units silently (E66 domain, cache-divergence/skip classification).
+3. g1-m05 (Windows, unconfined) joins the scheduler and is lost 37 times per day (about every 4-5 min); no heartbeat/lease explanation in the log (E64 domain).
+4. Scheduler log shows 4925 `cancelled` rows; requesters cancel after a queue timeout, so cancel churn is the dominant log line and hides real faults (consider a counter instead of a line per cancel).

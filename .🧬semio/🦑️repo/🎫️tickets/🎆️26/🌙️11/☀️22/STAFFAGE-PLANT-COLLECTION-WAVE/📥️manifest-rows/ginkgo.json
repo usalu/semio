@@ -1,0 +1,56 @@
+{
+  "id": "ginkgo",
+  "category": "vegetation",
+  "title": {
+    "en": "Ginkgo, Street Tree",
+    "de": "Ginkgo, Straßenbaum"
+  },
+  "heightM": 14.9,
+  "widthM": 7.701,
+  "powerW": 0,
+  "poses": [
+    "calm",
+    "windy",
+    "storm",
+    "autumn-gold"
+  ],
+  "clips": [
+    "wind-sway",
+    "gust",
+    "diurnal-transpiration"
+  ],
+  "representations": {
+    "50": "authored",
+    "100": "authored",
+    "200": "authored",
+    "500": "authored"
+  },
+  "symbols": [
+    "ginkgo-symbol",
+    "tree-sign"
+  ],
+  "analytics": [
+    "thermal",
+    "transport",
+    "structural"
+  ],
+  "exports": [
+    "svg",
+    "pdf",
+    "dxf",
+    "dwg",
+    "png-sequence",
+    "mp4",
+    "webm",
+    "component",
+    "glb",
+    "fbx",
+    "model",
+    "model-zip"
+  ],
+  "distinction": {
+    "en": "A 15 m male street ginkgo (Ginkgo biloba) with one continuous leader, irregular ascending tiers of scaffold limbs and clumpy fan-leaf foliage on spur shoots: an open, irregularly conical crown about 8 m wide, golden yellow in autumn.",
+    "de": "Ein 15 m hoher männlicher Straßen-Ginkgo (Ginkgo biloba) mit durchgehender Stammverlängerung, unregelmäßigen aufsteigenden Etagen von Gerüstästen und büscheligem Fächerlaub an Kurztrieben: eine offene, unregelmäßig kegelförmige Krone von etwa 8 m Breite, im Herbst goldgelb."
+  },
+  "completion": "authored"
+}

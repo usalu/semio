@@ -9,6 +9,29 @@ description = "Component crate of semio-s-artifact-stdio-pdf: mut-vt"
 [package.metadata.semio]
 role = "library"
 
+[package.metadata.semio.carve]
+owned = [
+  "standards::v1_7::subsets::vt::io::text::mutations::embed_font_file",
+  "standards::v1_7::subsets::vt::io::text::mutations::insert_encryption_dictionary",
+  "standards::v1_7::subsets::vt::io::text::mutations::insert_javascript_action",
+  "standards::v1_7::subsets::vt::io::text::mutations::insert_launch_action",
+  "standards::v1_7::subsets::vt::io::text::mutations::insert_media_annotation",
+  "standards::v1_7::subsets::vt::io::text::mutations::remove_dpart_metadata",
+  "standards::v1_7::subsets::vt::io::text::mutations::remove_dpart_root",
+  "standards::v1_7::subsets::vt::io::text::mutations::remove_encryption_dictionary",
+  "standards::v1_7::subsets::vt::io::text::mutations::remove_font_file",
+  "standards::v1_7::subsets::vt::io::text::mutations::remove_javascript_action",
+  "standards::v1_7::subsets::vt::io::text::mutations::remove_launch_action",
+  "standards::v1_7::subsets::vt::io::text::mutations::remove_media_annotation",
+  "standards::v1_7::subsets::vt::io::text::mutations::remove_output_intent",
+  "standards::v1_7::subsets::vt::io::text::mutations::remove_trim_box",
+  "standards::v1_7::subsets::vt::io::text::mutations::remove_trim_box_tests",
+  "standards::v1_7::subsets::vt::io::text::mutations::set_dpart_metadata",
+  "standards::v1_7::subsets::vt::io::text::mutations::set_output_intent",
+  "standards::v1_7::subsets::vt::io::text::mutations::set_trim_box",
+  "standards::v1_7::subsets::vt::io::text::mutations::set_trim_box_tests",
+]
+
 [lints]
 workspace = true
 

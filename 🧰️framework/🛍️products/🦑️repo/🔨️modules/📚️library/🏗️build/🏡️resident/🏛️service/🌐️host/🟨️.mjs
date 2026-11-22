@@ -38,6 +38,10 @@ function memoryStatusV1(workers=[]){
 const validateClient=validatorV1("ClientFrame");
 const validateReply=validatorV1("PlanReply");
 
+/** 🔀️ Whether a service that a newer one superseded (since `supersededSinceMs`, debounced by `graceMilliseconds`) ends now: once idle (no connection, no plan in flight), or while plans are in flight only when none of them observed original work for `stallMilliseconds`, so a progressing load always drains to its answer on the code it started with and a stalled one is handed over to the newer service; never before the grace.
+ * @see ../../🧪️tests/🔀️supersession-drain/🟦️.ts */
+export const supersededDrainDueV1=({supersededSinceMs,nowMs,lastProgressMs,connections,inFlight,graceMilliseconds,stallMilliseconds})=>supersededSinceMs!==undefined&&nowMs-supersededSinceMs>=graceMilliseconds&&(connections===0&&inFlight===0||inFlight>0&&nowMs-Math.max(supersededSinceMs,lastProgressMs)>=stallMilliseconds);
+
 /** 🚨 Another live host service already owns the endpoint. */
 export class HostRunningErrorV1 extends Error{constructor(endpoint){super("A host graph service already listens on "+endpoint);this.name="HostRunningErrorV1";this.code="running";}}
 
@@ -217,6 +221,7 @@ export function createHostServiceV1(options){
    else if(controller.signal.aborted||error?.name==="AbortError"){
     const reason=controller.signal.reason;
     if(reason?.code==="deadline")await refuse(connection,frame.id,"deadline","deadline",{milliseconds:frame.deadlineMs},"never");
+    else if(reason?.code==="handover")await refuse(connection,frame.id,"handover","host-service-handover",{reason:String(reason.reason)},"later");
     else await refuse(connection,frame.id,"shutdown","shutdown",{},"never");
    }else{
     const failure=failureRefusalV1(error,{streak:failureStreak,sameCauseMaximum:policy.sliceRestartSameCauseMaximum,log,logPath:runtime.log,root:options.access?.root??process.cwd(),platform:options.access?.platform,home:options.access?.home});
@@ -407,7 +412,7 @@ export function createHostServiceV1(options){
    if((ports.resident?.rss??(()=>process.memoryUsage().rss))()>policy.maximumResidentBytes*1.25)void drainAndExit("memory");
   }
   if(newerSibling()){supersededSince??=at;}else supersededSince=undefined;
-  if(supersededSince!==undefined&&connections.size===0&&governor.inFlight===0&&at-supersededSince>=policy.supersededGraceMilliseconds)void drainAndExit("superseded");
+  if(supersededDrainDueV1({supersededSinceMs:supersededSince,nowMs:at,lastProgressMs:lastProgressAt,connections:connections.size,inFlight:governor.inFlight,graceMilliseconds:policy.supersededGraceMilliseconds,stallMilliseconds:policy.reload.drainStallMilliseconds}))void drainAndExit("superseded");
  };
 
  const cacheStop=new AbortController();let cacheRunning=false;
@@ -420,6 +425,8 @@ export function createHostServiceV1(options){
   Promise.resolve().then(()=>ports.cache.tick(cacheStop.signal)).catch(error=>{if(!cacheStop.signal.aborted)log("cache-tick-failed",String(error?.stack??error));}).finally(()=>{cacheRunning=false;});
  };
 
+ /** 🚪️ Ends the service: it stops accepting, lets every plan in flight run (a reload until `policy.reload.drainStallMilliseconds` without an original work observation, a superseded service is only drained once it is idle or its work stalled that long, anything else 5 s), then hands each plan still running over: its client gets the refusal `handover` (retry `later`) within `policy.handoverFlushMilliseconds`, asks the service that follows again, and that service continues the read from the persisted owner checkpoints and memo rows; only a service without file access ends its plans with `shutdown`.
+ * @see ../../../🧭️invocation/🛰️plan/🟦️.ts `requestInvocationPlanV1`, the client that asks again after a hand-over */
  async function drainAndExit(reason){
   if(closing)return;
   closing=true;log("shutdown",reason);
@@ -429,7 +436,10 @@ export function createHostServiceV1(options){
   server?.close();
   const began=now(),cut=()=>reason==="reload"?now()-Math.max(began,lastProgressAt)>=policy.reload.drainStallMilliseconds:now()-began>=5000;
   while((governor.inFlight>0||[...connections].some(c=>c.requests.size>0))&&!cut())await new Promise(resolve=>setTimeout(resolve,20));
-  for(const connection of connections){for(const controller of connection.requests.values())controller.abort(new Error("shutdown"));connection.socket.destroy();}
+  const handover=Object.assign(new Error("handover"),{code:"handover",reason}),flushed=performance.now();
+  for(const connection of connections)for(const controller of connection.requests.values())controller.abort(reason==="access-denied"?new Error("shutdown"):handover);
+  while([...connections].some(connection=>connection.requests.size>0)&&performance.now()-flushed<policy.handoverFlushMilliseconds)await new Promise(resolve=>setTimeout(resolve,10));
+  for(const connection of connections)connection.socket.destroy();
   for(const id of[...workspaces.keys()])closeWorkspace(id);
   pool.clear();memo.clear();
   if(listening){if(posix)rmSync(runtime.endpoint,{force:true});rmSync(runtime.descriptor,{force:true});}

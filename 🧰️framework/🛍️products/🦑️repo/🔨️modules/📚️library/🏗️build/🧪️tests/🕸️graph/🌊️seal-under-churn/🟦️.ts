@@ -58,7 +58,7 @@ const world=(seed:number)=>{
   requireIssuedResourceControlInvocationV1:()=>{},checkResourceLeaseControl:()=>{},checkScriptInvocation:()=>{},
   process:{env:{},stderr:{write:(text:string)=>{lines.push(text);return true;}}},performance,JSON,Buffer,URL,join:posix.join,dirname:posix.dirname,
   buildGraphPathV1:()=>"/owned/cache/canonical.json",graphDeclarationV1:()=>({properties:{authority:{const:"authority.json"}}}),
-  createRequire:()=>(()=>observation),readBuildOwnerRegistryV1:(value:unknown)=>value,buildGraphScopeKeyV1:()=>"scope",
+  createRequire:()=>(()=>observation),readBuildOwnerRegistryV1:(value:unknown)=>value,buildGraphScopeKeyV1:()=>"scope",ownerRegistryDigestV1:()=>"registry",askOwnerRegistryV1:()=>"registry",
   ownerRegistryInvalidationV1:{kind:"invalidated",reason:"owner-registry"},isOwnerRegistryInvalidationV1:(value:unknown)=>value===undefined?false:(value as{kind?:string})?.kind==="invalidated",
   buildGraphErrorCodeV1:(error:unknown)=>(error as{code?:string})?.code,
   readAdmissionMemoV1:async()=>undefined,writeAdmissionMemoV1:async()=>{},

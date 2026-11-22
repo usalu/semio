@@ -111,7 +111,6 @@ impl ShellState {
                 app_catalogue_json: String::new(),
                 app_catalogue_instance: None,
                 active_example_id: None,
-                #[cfg(target_arch = "wasm32")]
                 pending_extension_invocations: Vec::new(),
                 default_app_pins: HashMap::new(),
                 plugin_install: None,
@@ -129,6 +128,7 @@ impl ShellState {
                 local_folder_reattach_tried: None,
                 local_folder_direct_reattach: LOCAL_FOLDER_DIRECT_REATTACH,
                 host_route_folder: None,
+                local_files: initial_local_files(),
             },
             prefs: PrefsState {
                 appearance_id: "system".into(),
@@ -192,9 +192,11 @@ impl ShellState {
                 next_sync_binding_generation: 1,
                 sync_terminal_fault: None,
                 sync_status: None,
+                close_guard: None,
                 sync_link: DocumentLinkStatus::Linked,
                 hub_documents: BTreeMap::new(),
                 sync_bootstrap_progress: None,
+                sync_bootstrap_cancel: false,
                 sync_reseed: None,
                 last_uncommitted_edit_at_ms: None,
                 auto_checkin_pending: false,
@@ -216,6 +218,7 @@ impl ShellState {
                 window_search_documents: HashMap::new(),
                 window_projection_documents: HashMap::new(),
                 window_measures_documents: HashMap::new(),
+                app_labels_overlay: Default::default(),
             },
             opening: OpeningState {
                 uri_history: vec!["/".into()],
@@ -227,6 +230,10 @@ impl ShellState {
                 import_transfers: VecDeque::new(),
                 import_transfer_next: 1,
                 #[cfg(not(target_arch = "wasm32"))]
+                dropped_sources: VecDeque::new(),
+                #[cfg(target_arch = "wasm32")]
+                dropped_files: VecDeque::new(),
+                #[cfg(not(target_arch = "wasm32"))]
                 native_media_save: None,
                 #[cfg(not(target_arch = "wasm32"))]
                 native_original_media: Vec::new(),
@@ -235,10 +242,14 @@ impl ShellState {
                 document_services: Vec::new(),
                 document_opening: None,
                 icon_export: None,
+                video_render: Default::default(),
                 runtime_actors: None,
                 runtime_tasks: Vec::new(),
+                tool_runs: Vec::new(),
+                tool_run_owner: String::new(),
                 runtime_requests: Vec::new(),
                 route_not_found: None,
+                plugin_recovery: None,
                 document_execution_target_lease: None,
             },
             windows: WindowState {
@@ -322,9 +333,12 @@ impl ShellState {
                 tree_open_states: BTreeMap::new(),
                 accessibility_focused_control_id: None,
                 pending_row_control_focus: None,
+                pending_row_menu: None,
                 interaction_selection: HashMap::new(),
                 open_selects: HashMap::new(),
                 context_menu: None,
+                suggestion_search: None,
+                suggestion_popup_suppressed: false,
                 right_click: RightClickState::default(),
                 tree_drag: None,
                 tree_hovered_id: None,

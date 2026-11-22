@@ -38,7 +38,7 @@
         "documentTimeoutMilliseconds": 120000,
         "installFileMode": 420,
         "timeouts": {"lookupMilliseconds": 1500, "claimMilliseconds": 1500, "blobMilliseconds": 20000, "blobBytesPerSecond": 2097152, "awaitSliceMilliseconds": 20000, "headMilliseconds": 1500},
-        "breaker": {"downMilliseconds": 15000, "deniedMilliseconds": 60000, "noClaimsMilliseconds": 600000},
+        "breaker": {"confirmMilliseconds": 3000, "lateMilliseconds": 750, "downMilliseconds": 15000, "deniedMilliseconds": 60000, "noClaimsMilliseconds": 600000},
         "slotHeader": "x-semio-slot",
         "generatedDirectory": "🤖️generated",
         "generatedSkipped": ["🧰️framework/🤖️generated"],

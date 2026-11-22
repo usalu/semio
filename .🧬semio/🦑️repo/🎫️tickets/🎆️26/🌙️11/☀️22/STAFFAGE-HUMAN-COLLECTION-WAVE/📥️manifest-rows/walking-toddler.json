@@ -1,0 +1,55 @@
+{
+  "id": "walking-toddler",
+  "category": "humans",
+  "title": {
+    "en": "Walking Toddler",
+    "de": "Laufendes Kleinkind"
+  },
+  "heightM": 0.872,
+  "widthM": 0.241,
+  "powerW": 73.4,
+  "poses": [
+    "toddling-midstance",
+    "toddling-foot-lands",
+    "standing-wide",
+    "squatting"
+  ],
+  "clips": [
+    "toddle",
+    "squat-and-stand",
+    "idle-breathing"
+  ],
+  "representations": {
+    "50": "authored",
+    "100": "authored",
+    "200": "authored",
+    "500": "authored"
+  },
+  "symbols": [
+    "toddler-marker"
+  ],
+  "analytics": [
+    "thermal",
+    "transport",
+    "structural"
+  ],
+  "exports": [
+    "svg",
+    "pdf",
+    "dxf",
+    "dwg",
+    "png-sequence",
+    "mp4",
+    "webm",
+    "component",
+    "glb",
+    "fbx",
+    "model",
+    "model-zip"
+  ],
+  "distinction": {
+    "en": "The only toddler of the archive: a two-year-old with a head a fifth of the stature, short chubby legs, a nappy under the shorts and the immature wide-based gait of a young walker (flat-foot landings, about 170 short steps per minute, arms held out in a middle guard), plus a deep squat to pick something up.",
+    "de": "Das einzige Kleinkind des Archivs: ein zweijähriges Kind mit einem Kopf von einem Fünftel der Körperhöhe, kurzen rundlichen Beinen, einer Windel unter den Shorts und dem unreifen breitspurigen Gang eines jungen Läufers (flache Fußaufsätze, etwa 170 kurze Schritte je Minute, Arme in mittlerer Schutzhaltung), dazu eine tiefe Hocke zum Aufheben."
+  },
+  "completion": "authored"
+}

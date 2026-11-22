@@ -33,17 +33,14 @@ test("overlapping operation durations remain cumulative rather than reported as 
  clock=10;release({});await Promise.all([first,second]);await observed.finish();const summary=profile.summary(),detail=JSON.parse(summary.rows.find(row=>row.phase==="cargo.planning.aggregate")!.detail!);expect(summary.total).toBe(10);expect(detail.operations.capture).toEqual({calls:2,cumulativeOperationMilliseconds:20});
 }));
 
-import {readFileSync} from "node:fs";
-import ts from "typescript";
-import {transformSync} from "esbuild";
-import {evaluateExtractedFunctionV1} from "../../../../../../../../../🔨️modules/🏃️process/🧪️testing/🧩️extracted-function/🟦️.ts";
+import {loadProductFunctionsV1} from "../../../../../../../../../🔨️modules/🏃️process/🧪️testing/🧩️extracted-function/🟦️.ts";
 import storeFixture from "./📦️store.json" with {type:"json"};
 test("compiler-store spans preserve recording-port operations, exact controls, results and failure cleanup",async()=>{
- const file=new URL("../../../../💾️storage/🔒️enforcement/🏗️compiler/🟦️.ts",import.meta.url),source=ts.createSourceFile("compiler.ts",readFileSync(file,"utf8"),ts.ScriptTarget.Latest,true),node=source.statements.find(value=>ts.isFunctionDeclaration(value)&&value.name?.text==="withRepositoryCompilerStoreOwnedV1")!,code=transformSync(node.getText(source),{loader:"ts",format:"cjs"}).code;
+ const file=new URL("../../../../💾️storage/🔒️enforcement/🏗️compiler/🟦️.ts",import.meta.url);
  expect(storeFixture.version).toBe(1);
  for(const row of storeFixture.cases){
   const operations:string[]=[],phases:string[]=[],control={},original={},environment=Object.freeze({PATH:"qualified"}),policy={},nativeEnvironment=Object.freeze({PATH:"native-qualified"}),storage={async recheck(){operations.push("recheck");}},result=Object.freeze({result:1}),failure=Error("exact recorded consumer failure"),owners=new WeakMap();let exposed:unknown;
-  const profile=createRepoProfileV1({mode:"json",write(){}}),run=evaluateExtractedFunctionV1(code,"withRepositoryCompilerStoreOwnedV1",{
+  const profile=createRepoProfileV1({mode:"json",write(){}}),run=(await loadProductFunctionsV1(file,["withRepositoryCompilerStoreOwnedV1"],{
    profilePhaseV1:(name:string,body:()=>unknown)=>{phases.push(name);return profile.phase(name,body);},requireIssuedResourceControlInvocationV1:(actual:unknown,owner:unknown)=>{expect(actual).toBe(control);expect(owner).toBe(original);},readBuildMode:(mode:unknown)=>mode,repositoryStrictStorageV1:()=>policy,
    withRequestedIssuedResourceControlV1:(actual:unknown,_requested:unknown,body:(actual:unknown)=>unknown)=>{expect(actual).toBe(control);return body(control);},
    openRepositoryCachePartitionV1:async(_host:unknown,name:unknown,actual:unknown)=>{expect(actual).toBe(control);expect(name).toBe("rust");operations.push("image");return{root:"root",async close(){operations.push("close");}};},
@@ -51,7 +48,7 @@ test("compiler-store spans preserve recording-port operations, exact controls, r
    repositoryCompilerLaunchEnvironmentV1:async(actualStorage:unknown,actual:unknown,env:unknown)=>{expect(actualStorage).toBe(storage);expect(actual).toBe(control);expect(env).toBe(environment);operations.push("environment");return environment;},
    withRepositoryNativeCompilerV1:(actualStorage:unknown,actual:unknown,env:unknown,body:(env:unknown)=>unknown)=>{expect(actualStorage).toBe(storage);expect(actual).toBe(control);expect(env).toBe(environment);operations.push("native");return body(nativeEnvironment);},
    compilerStoreOwners:owners,withCompilerWorkspaceLifetimeV1:(actualStorage:unknown,actual:unknown,body:(actual:unknown)=>unknown)=>{expect(actualStorage).toBe(storage);expect(actual).toBe(control);operations.push("workspace");return body(control);},unitCacheRootV1:()=>"units",UNIT_CACHE_SCRIPT_V1:"script"
-  });
+  })).withRepositoryCompilerStoreOwnedV1;
   let caught:unknown;try{const actual=await run("host","workspace","prototype",control,environment,async(store:unknown,actual:unknown)=>{expect(actual).toBe(control);exposed=store;operations.push("body");if(row.fail)throw failure;return result;},original);expect(actual).toBe(result);}catch(error){caught=error;}
   expect(caught).toBe(row.fail?failure:undefined);expect(operations).toEqual(storeFixture.operations);expect(_.countBy(operations)).toEqual(_.countBy(storeFixture.operations));expect(phases).toEqual(storeFixture.phases);expect(owners.get(exposed as object).live).toBe(false);
  }
@@ -61,11 +58,11 @@ import {join} from "node:path";
 import {createHash} from "node:crypto";
 import rustupFixture from "./🦀️rustup.json" with {type:"json"};
 test("Rustup preparation spans preserve actual warm-path recording delegation and exact failure identity",async()=>{
- const source=ts.createSourceFile("rustup.ts",readFileSync(new URL("../../../../🚀️bootstrap/🛠️tools/🦀️rustup/📥️installation/🟦️.ts",import.meta.url),"utf8"),ts.ScriptTarget.Latest,true),node=source.statements.find(value=>ts.isFunctionDeclaration(value)&&value.name?.text==="withRepositoryRustToolchainOwnedV1")!,code=transformSync(node.getText(source),{loader:"ts",format:"cjs"}).code;
+ const file=new URL("../../../../🚀️bootstrap/🛠️tools/🦀️rustup/📥️installation/🟦️.ts",import.meta.url);
  expect(rustupFixture.version).toBe(1);
  for(const row of rustupFixture.cases){
   const phases:string[]=[],operations:string[]=[],control={},original={},failure=Error("exact Rustup recording failure"),result=Object.freeze({value:1}),request={version:1,channel:"nightly",profile:"minimal",components:[],targets:[]},bootstrap={digest:"b".repeat(64),host:"host",environment:Object.freeze({RUSTUP_HOME:"tools/home",CARGO_HOME:"tools/cargo",PATH:"bootstrap-qualified"})},tools=Object.freeze({PATH:"cargo-tools-qualified",SEMIO_TOOL_CARGO_CLIPPY:"qualified-clippy"}),manifest=Buffer.from(JSON.stringify({version:1,files:[{path:"bin/rustc",kind:"file",digest:"c".repeat(64),bytes:4}]})),receipt={request:createHash("sha256").update(JSON.stringify({version:1,request,host:bootstrap.host,bootstrap:bootstrap.digest})).digest("hex"),host:"host",channel:"nightly",bootstrap:bootstrap.digest,allocation:"allocation",seal:"s".repeat(64),entries:1,manifest:createHash("sha256").update(manifest).digest("hex"),directory:{device:"1",inode:"2"},bytes:4},storage={allocation:{owner:"repository:tooling-store",id:"allocation"},async recheck(){operations.push("storage");}},store={control,invocation:original,root:"tools",storage,environment:{}},readers=new WeakMap(),readerControls=new WeakMap(),programDigests=new WeakMap(),compilers=new Map();let exposed:object|undefined;
-  const check=(actual:unknown)=>expect(actual).toBe(control),run=evaluateExtractedFunctionV1(code,"withRepositoryRustToolchainOwnedV1",{
+  const check=(actual:unknown)=>expect(actual).toBe(control),run=(await loadProductFunctionsV1(file,["withRepositoryRustToolchainOwnedV1"],{
    profilePhaseV1:(name:string,body:()=>unknown)=>{phases.push(name);return createRepoProfileV1({mode:"off"}).phase(name,body);},join,createHash,
    requireIssuedResourceControlInvocationV1:(actual:unknown,owner:unknown)=>{check(actual);expect(owner).toBe(original);},requireNativeStorageReservationV1:(actual:unknown,actualControl:unknown)=>{expect(actual).toBe(storage);check(actualControl);},repositoryCachePartitionRootV1:()=>"tools",readNativeCallerAuthorityV1:()=>({network:{offline:false}}),
    sourceRequest:async(_workspace:unknown,actual:unknown,actualStore:unknown)=>{check(actual);expect(actualStore).toBe(store);operations.push("source");return{request,sourceDigest:"d".repeat(64)};},
@@ -78,7 +75,7 @@ test("Rustup preparation spans preserve actual warm-path recording delegation an
    repositoryLeaseDirectoryV1:()=>"leases",withResourceLeases:(options:{control:unknown;resources:{mode:string}[]},body:()=>unknown)=>{check(options.control);expect(options.resources[0]!.mode).toBe("shared");operations.push("home-sh");return body();},
    withRustupGenerationCustodyV1:(_workspace:unknown,actualStore:unknown,actual:unknown,_directory:unknown,mode:unknown,body:(scope:unknown,actual:unknown)=>unknown)=>{check(actual);expect(actualStore).toBe(store);expect(mode).toBe("shared");operations.push("generation-sh");return body({},control);},
    withRequestedIssuedResourceControlV1:(actual:unknown,_requested:unknown,body:(actual:unknown)=>unknown)=>{check(actual);return body(control);},readers,readerControls,programDigests,compilers
-  });
+  })).withRepositoryRustToolchainOwnedV1;
   let caught:unknown;try{expect(await run("workspace",store,control,async(generation:{environment:Record<string,string>},actual:unknown)=>{check(actual);exposed=generation;operations.push("body");expect(generation.environment.SEMIO_TOOL_CARGO_CLIPPY).toBe(tools.SEMIO_TOOL_CARGO_CLIPPY);expect(generation.environment.PATH).toEndWith(tools.PATH);if(row.fail==="body")throw failure;return result;})).toBe(result);}catch(error){caught=error;}
   expect(caught).toBe(row.fail?failure:undefined);expect(operations).toEqual(row.fail==="bootstrap"?rustupFixture.operations.slice(0,3):rustupFixture.operations);expect(_.countBy(operations)).toEqual(_.countBy(row.fail==="bootstrap"?rustupFixture.operations.slice(0,3):rustupFixture.operations));expect(phases).toEqual(row.fail==="bootstrap"?rustupFixture.phases.slice(0,3):rustupFixture.phases);if(exposed){expect(readers.has(exposed)).toBe(false);expect(readerControls.has(exposed)).toBe(false);expect(programDigests.has(exposed)).toBe(false);}expect(compilers.size).toBe(0);
  }

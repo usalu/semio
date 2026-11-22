@@ -64,6 +64,8 @@ semio-os-kernel = { path = "../../../../../../📦️packages/🦀️rust", feat
 semio-framework-pack-json = { path = "../../../../../../../../🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
 semio-plugin-mounted-owner = { path = "../../../../🏇️mounted-owner/📦️packages/🦀️rust" }
 semio-plugin-ownership = { path = "../../../../🏛️ownership/🧱️owner/📦️packages/🦀️rust" }
+semio-framework-schema-composition = { path = "../../../../../../../../🔨️modules/🧬️schema/🧩️composition/📦️packages/🦀️rust" }
+semio-framework-schema-state = { path = "../../../../../../../../🔨️modules/🧬️schema/📶️state/📦️packages/🦀️rust" }
 semio-framework-schema = { path = "../../../../../../../../🔨️modules/🧬️schema/📦️packages/🦀️rust" }
 semio-framework-trace = { workspace = true }
 semio_ui_contract = { path = "../../../../../../../../🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust", package = "semio-ui-contract" }

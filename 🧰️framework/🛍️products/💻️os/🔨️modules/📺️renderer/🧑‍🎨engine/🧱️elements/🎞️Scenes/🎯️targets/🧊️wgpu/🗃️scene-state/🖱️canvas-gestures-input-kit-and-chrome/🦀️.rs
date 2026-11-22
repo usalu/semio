@@ -229,6 +229,8 @@ pub struct IconRenderChromeLabels {
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct TableChromeLabels {
     pub no_data: &'static str,
+    /// 🔽️ ⋯ `ui.contextMenu.more`: the name of every row's menu trigger.
+    pub row_menu: &'static str,
 }
 
 /// 🩹️ The tiled map's given-up notice: React's `ui.host.canvasUnavailable` and `ui.common.retry`.
@@ -256,7 +258,7 @@ impl SceneChromeLabels {
             virtual_file_system: VirtualFileSystemChromeLabels { name: "Name", no_file_system_nodes: "No file system nodes", expand: "Expand", collapse: "Collapse" },
             block_list: BlockListChromeLabels { steps: "Steps", add_step: "Add Step", delete: "Delete" },
             icon_render: IconRenderChromeLabels { empty_scene: "No scene", rendering: "Rendering…", failed: "Icon rendering failed" },
-            table: TableChromeLabels { no_data: "No data" },
+            table: TableChromeLabels { no_data: "No data", row_menu: "More" },
             map: MapChromeLabels { canvas_unavailable: "Canvas unavailable", retry: "Retry" },
         }
     }

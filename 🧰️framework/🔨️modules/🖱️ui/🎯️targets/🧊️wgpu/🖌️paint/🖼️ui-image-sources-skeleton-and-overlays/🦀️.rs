@@ -1,6 +1,14 @@
-//! 💿️ Ui image sources, skeleton and overlays: the image admission ledger and data url decoding, the skeleton blocks and the overlay backdrop, surface, chrome and tooltip painters. See [`super`].
+//! 💿️ Ui image sources, skeleton and overlays: the image admission ledger and data url decoding, the skeleton blocks and the overlay backdrop, surface, chrome and tooltip painters. See `semio_ui_wgpu_paint`.
 
-use super::*;
+use semio_ui_declaration::ui::{UiNode, UiPresence, UiStatus};
+use semio_ui_draw_contract::DrawList;
+use semio_ui_text::FontAtlas;
+use semio_ui_theme::geometry::Rect;
+use semio_ui_theme::{Level, Theme};
+use semio_ui_wgpu_layout::chrome::push_chrome_border;
+use semio_ui_wgpu_widget_kit::draw_text_on;
+
+const RETAINED_NODE_FIXED_OUTPUT_BYTES: usize = 64 * 1024;
 
 // #region paint
 //#region 🖼️UiImageSources
@@ -59,7 +67,7 @@ pub struct UiImageUpload {
 
 #[derive(Default)]
 struct UiImageLedger {
-    pub(super) entries: Vec<(String, u32, u32)>,
+    entries: Vec<(String, u32, u32)>,
     pending: Vec<UiImageUpload>,
     unsupported: Vec<String>,
 }
@@ -323,22 +331,6 @@ pub fn skeleton_replaces_content(node: &UiNode, presence: &UiPresence) -> bool {
     !matches!(node, UiNode::Progress(_)) && matches!(presence.status, UiStatus::Loading | UiStatus::Waiting)
 }
 
-/// 🪜️ Draws the pulse blocks. Motionless (no animation clock in this pass), which is also the
-/// `motion-reduce:animate-none` rendering React falls back to.
-pub(super) fn retained_skeleton_step(node: &UiNode, bounds: Rect, theme: &Theme, draw: &mut DrawList) -> RetainedNodePaintStep {
-    let (blocks, count) = skeleton_blocks(skeleton_kind(node), bounds, theme);
-    let fill = theme.text_muted.with_alpha(0.2);
-    let result = retained_fixed_output(draw, |draw| {
-        for block in blocks.iter().take(count) {
-            draw.push_rounded([block.x, block.y, block.w, block.h], fill, theme.border_radius);
-        }
-    });
-    if result.is_err() {
-        RetainedNodePaintStep::Fault
-    } else {
-        RetainedNodePaintStep::Pending
-    }
-}
 //#endregion 🦴️Skeleton
 
 //#region 🪟️OverlayChrome
@@ -411,4 +403,103 @@ pub fn paint_tooltip(draw: &mut DrawList, atlas: &mut FontAtlas, label: &str, or
     draw.end_glass_content();
 }
 //#endregion 🪟️OverlayChrome
+
+//#region 🎞️MediaOverlay
+/// 🎞️ What one native media slot paints over its panel, addressed by the slot's own identity, its window ([`media_window_handle`]) and its document node id: the contained video picture (a keyed raster the host uploaded) and the transport rows, in reading order.
+#[derive(Clone, Debug, Default, PartialEq)]
+pub struct MediaOverlay {
+    pub window: u64,
+    pub node_id: u64,
+    pub rect: [f32; 4],
+    pub quad: Option<MediaOverlayQuad>,
+    pub rows: Vec<MediaOverlayRow>,
+}
+
+/// 🖼️ The video picture: where it sits and the raster key its pixels were uploaded under.
+#[derive(Clone, Debug, PartialEq)]
+pub struct MediaOverlayQuad {
+    pub rect: [f32; 4],
+    pub raster_key: String,
+}
+
+/// 🎛️ What a transport row looks like.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum MediaOverlayShape {
+    Text,
+    Alert,
+    Button,
+    Slider,
+}
+
+/// 🎛️ One drawn transport row: its box, its caption, the share of a slider that is filled and whether it is enabled or holds the focus.
+#[derive(Clone, Debug, PartialEq)]
+pub struct MediaOverlayRow {
+    pub shape: MediaOverlayShape,
+    pub rect: [f32; 4],
+    pub text: String,
+    pub fraction: Option<f32>,
+    pub enabled: bool,
+    pub focused: bool,
+}
+
+static MEDIA_OVERLAYS: std::sync::Mutex<Vec<MediaOverlay>> = std::sync::Mutex::new(Vec::new());
+
+/// 📮️ Replaces the overlays of the next frame's media slots (the host's per-frame publish).
+pub fn publish_media_overlays(overlays: Vec<MediaOverlay>) {
+    if let Ok(mut held) = MEDIA_OVERLAYS.lock() {
+        *held = overlays;
+    }
+}
+
+static MEDIA_WINDOWS: std::sync::Mutex<Vec<String>> = std::sync::Mutex::new(Vec::new());
+
+/// 🔑️ The handle of a window id: its exact position in a process-wide intern table (first sight appends), so a window is named by its own id, never by a hash that two ids could share. `0` only when the table is unavailable.
+pub fn media_window_handle(window_id: &str) -> u64 {
+    let Ok(mut windows) = MEDIA_WINDOWS.lock() else { return 0 };
+    let index = windows.iter().position(|known| known == window_id).unwrap_or_else(|| {
+        windows.push(window_id.to_owned());
+        windows.len() - 1
+    });
+    index as u64 + 1
+}
+
+/// 🔎️ The overlay of node `node_id` of the window with handle `window`.
+pub fn media_overlay_for(window: u64, node_id: u64) -> Option<MediaOverlay> {
+    MEDIA_OVERLAYS.lock().ok()?.iter().find(|overlay| overlay.window == window && overlay.node_id == node_id).cloned()
+}
+
+/// 📤️ Queues one decoded RGBA8 picture under `key` for the host's per-frame upload drain, replacing an earlier pending picture of that key; `false` when the ledger is full or the pixels do not fit the size.
+pub fn submit_ui_image_upload(key: &str, width: u32, height: u32, pixels: Vec<u8>) -> bool {
+    if width == 0 || height == 0 || width > UI_IMAGE_MAX_DIMENSION || height > UI_IMAGE_MAX_DIMENSION || pixels.len() != width as usize * height as usize * 4 {
+        return false;
+    }
+    ui_image_ledger(|ledger| {
+        ledger.pending.retain(|pending| pending.key != key);
+        if ledger.pending.len() >= UI_IMAGE_LEDGER_ENTRIES {
+            return false;
+        }
+        ledger.pending.push(UiImageUpload { key: key.to_string(), width, height, pixels });
+        true
+    })
+    .unwrap_or(false)
+}
+
+/// 🖍️ Draws one media row's box (the caption follows as its own text step).
+pub fn paint_media_overlay_row(draw: &mut DrawList, row: &MediaOverlayRow, theme: &Theme) {
+    let [x, y, w, h] = row.rect;
+    let fill = if row.focused { theme.selected } else { theme.muted };
+    match row.shape {
+        MediaOverlayShape::Button => draw.push_rounded([x, y, w, h], if row.enabled { fill } else { theme.panel }, theme.border_radius),
+        MediaOverlayShape::Slider => {
+            let track = [x, y + h * 0.5 - 2.0, w, 4.0];
+            draw.push_rounded(track, theme.muted, 2.0);
+            let filled = row.fraction.unwrap_or(0.0).clamp(0.0, 1.0);
+            draw.push_rounded([x, track[1], w * filled, 4.0], theme.accent, 2.0);
+            draw.push_rounded([x + w * filled - 4.0, y + h * 0.5 - 4.0, 8.0, 8.0], if row.focused { theme.accent_hover } else { theme.accent }, 4.0);
+        }
+        MediaOverlayShape::Alert => draw.push_rounded([x, y, w, h], theme.panel, theme.border_radius),
+        MediaOverlayShape::Text => {}
+    }
+}
+//#endregion 🎞️MediaOverlay
 // #endregion paint

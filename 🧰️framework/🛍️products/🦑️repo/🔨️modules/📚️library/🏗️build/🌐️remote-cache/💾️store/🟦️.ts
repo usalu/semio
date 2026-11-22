@@ -1,12 +1,13 @@
 import {createHash,randomUUID} from "node:crypto";
-import {link,mkdir,open,readdir,readFile,rename,rm,stat,unlink,utimes,writeFile} from "node:fs/promises";
+import {appendFile,link,mkdir,open,readdir,readFile,rename,rm,stat,unlink,utimes,writeFile} from "node:fs/promises";
 import {join} from "node:path";
 import {requireRemoteCacheShapeV1} from "../🟦️.ts";
 import type {CasStoreV1} from "../../🗄️cas/🗃️store/🟦️.ts";
-import {acquireRemoteCacheLockV1,liveRemoteCacheReferencesV1,planRemoteCacheCollectionV1,REMOTE_CACHE_COLLECTOR_LOCK_V1,removeRemoteCacheEntryV1,scanRemoteCacheDirectoryV1,type RemoteCacheStepV1} from "../🧹️collector/🟦️.ts";
+import {acquireRemoteCacheLockV1,judgeRemoteCacheStalenessV1,liveRemoteCacheReferencesV1,planRemoteCacheCollectionV1,REMOTE_CACHE_COLLECTOR_LOCK_V1,removeRemoteCacheEntryV1,scanRemoteCacheDirectoryV1,type RemoteCacheStepV1} from "../🧹️collector/🟦️.ts";
 import {parseRemoteCacheActionResultV1} from "../🔬️action-result/🟦️.ts";
 import {readRemoteCacheReferencesV1,removeRemoteCacheMetaV1,scanRemoteCacheMetaV1,writeRemoteCacheMetaV1,type RemoteCacheMetaV1} from "../🏷️retention/🟦️.ts";
-import {classifySlotsV1,SLOT_GRACE_MILLISECONDS_V1} from "../../🪢️slots/🟦️.ts";
+import {SLOT_GRACE_MILLISECONDS_V1,type DeclarationV1,type StalenessModeV1} from "../../🪢️slots/🟦️.ts";
+import {stalenessOnArrivalV1,stalenessReportV1,type StalenessReasonV1,type StalenessVerdictV1,type TreeDigestsV1} from "../🏷️retention/🍂️staleness/🟦️.ts";
 import {reclaimCasObjectsV1} from "../../🗄️cas/🪦️reclaim/🟦️.ts";
 import {remoteCacheFileBudgetOfMachineV1,remoteCacheWidthV1} from "../📏️fd-budget/🟦️.ts";
 
@@ -22,14 +23,17 @@ export type RemoteCachePutOutcomeV1="created"|"replaced"|"exists"|"digest-mismat
 /** 📡️ Progress and housekeeping events of one store, published to the caller without any logging dependency. */
 export type RemoteCacheStoreEventV1=Readonly<{stage:"scan";entries:number;bytes:number}>|Readonly<{stage:"evict";entries:number;bytes:number}>|Readonly<{stage:"reclaim";entries:number;bytes:number}>|Readonly<{stage:"ready";entries:number;bytes:number}>;
 
-/** 🧱️ Authors the finite bounds of one store: total bytes, bytes per entry and the idle age after which an entry without a slot is dropped (0 keeps entries until space is needed), the supersession grace in milliseconds (default ten minutes), the predicate of entries an active claim holds and a hook that tests use to simulate a crash between the steps of a removal. */
-export type RemoteCacheStoreOptionsV1=Readonly<{fileBudget?:number;scanRetryMilliseconds?:number;writeBudgetMilliseconds?:number;directory:string;startupScan?:"await"|"background";maximumBytes:number;maximumEntryBytes:number;maximumAgeMilliseconds:number;host?:CasStoreV1;pinBudgetBytes?():number|undefined;graceMilliseconds?:number;claimed?:(namespace:string,kind:RemoteCacheKindV1,key:string)=>boolean;onStep?:(point:RemoteCacheStepV1)=>void;signal?:AbortSignal;onEvent?:(event:RemoteCacheStoreEventV1)=>void}>;
+/** 🥀️ How a store judges staleness: the mode (`off`, `dry-run` only records, `enforce` retires and refuses), the digests of the synchronized tree, the toolchain identities that are the fleet's (`undefined` judges none), how many examples a report keeps, the milliseconds after which an entry that looks stale on arrival is looked at again and the manifest names of an action result that carry a declaration. */
+export type RemoteCacheStalenessOptionsV1=Readonly<{mode:StalenessModeV1;tree:TreeDigestsV1;toolchains?:()=>ReadonlySet<string>|undefined;examples:number;recheckMilliseconds:number;manifestNames:readonly string[]}>;
+
+/** 🧱️ Authors the finite bounds of one store: total bytes, bytes per entry and the idle age after which an entry without a slot is dropped (0 keeps entries until space is needed), the grace in milliseconds that protects entries of builds in flight (default ten minutes), the staleness policy (absent judges nothing), the predicate of entries an active claim holds and a hook that tests use to simulate a crash between the steps of a removal. */
+export type RemoteCacheStoreOptionsV1=Readonly<{fileBudget?:number;scanRetryMilliseconds?:number;writeBudgetMilliseconds?:number;directory:string;startupScan?:"await"|"background";maximumBytes:number;maximumEntryBytes:number;maximumAgeMilliseconds:number;host?:CasStoreV1;pinBudgetBytes?():number|undefined;graceMilliseconds?:number;claimed?:(namespace:string,kind:RemoteCacheKindV1,key:string)=>boolean;staleness?:RemoteCacheStalenessOptionsV1;onStep?:(point:RemoteCacheStepV1)=>void;signal?:AbortSignal;onEvent?:(event:RemoteCacheStoreEventV1)=>void}>;
 
 /** 📏️ Describes the current fill of one store. */
 export type RemoteCacheStoreUsageV1=Readonly<{entries:number;bytes:number;reservedBytes:number;maximumBytes:number;maximumEntryBytes:number;slotted:number;evictedEntries:number;evictedBytes:number}>;
 
-/** 🪢️ What a write says about the slot of its entry: the slot id and, for action results, the blobs they reference (Nx entries reference their host store body). */
-export type RemoteCachePutSlotV1=Readonly<{slot:string;refs?:readonly string[]}>;
+/** 🪢️ What a write says about its entry: the slot id (a dedupe hint), for action results the blobs they reference (Nx entries reference their host store body) and what the entry declared it was built from. */
+export type RemoteCachePutSlotV1=Readonly<{slot:string;refs?:readonly string[];declaration?:DeclarationV1}>;
 
 /** 📤️ One stored value ready to be streamed. */
 export type RemoteCacheEntryV1=Readonly<{path:string;size:number}>;
@@ -61,6 +65,10 @@ export class RemoteCacheStoreV1{
  private reserved=0;
  private clock=0;
  private collecting:Promise<void>=Promise.resolve();
+ private verdicts:ReadonlyMap<string,StalenessVerdictV1>|undefined;
+ private report:ReturnType<typeof stalenessReportV1>|undefined;
+ private readonly refused:Record<string,number>={};
+ private retired=new Set<string>();
  private readonly writing=join(".tmp",`${process.pid}-${randomUUID()}`);
  private readonly options:RemoteCacheStoreOptionsV1; private constructor(options:RemoteCacheStoreOptionsV1){this.options=options;}
  private get grace():number{return this.options.graceMilliseconds??SLOT_GRACE_MILLISECONDS_V1;}
@@ -73,6 +81,7 @@ export class RemoteCacheStoreV1{
   if(options.maximumEntryBytes>options.maximumBytes)throw Error("Finite remote cache bounds required: an entry cannot exceed the store");
   const store=new RemoteCacheStoreV1(options);
   await mkdir(store.root,{recursive:true});await mkdir(join(store.root,".tmp"),{recursive:true});
+  try{store.retired=new Set(JSON.parse(await readFile(join(store.root,".retention","retired.json"),"utf8")) as string[]);}catch{}
   for(const name of await readdir(join(store.root,".tmp")))if(!alive(Number.parseInt(name,10)))await rm(join(store.root,".tmp",name),{recursive:true,force:true});
   await mkdir(store.temporary,{recursive:true});
   const scanned=store.exclusively(()=>store.refresh(options.startupScan==="background"?4:32)).then(()=>{options.onEvent?.({stage:"ready",entries:store.index.size,bytes:store.bytes});});
@@ -181,7 +190,7 @@ export class RemoteCacheStoreV1{
   this.slots.delete(relative);await removeRemoteCacheMetaV1(this.root,relative).catch(()=>undefined);
  }
 
- /** 🧹️ Plans and removes, in this order: unusable values, values a newer key of their slot superseded beyond the grace (never one an active claim holds or one stored within the grace), values without a slot idle longer than the authored age, then the least valuable values (superseded, without slot, current; least recently used first) until the fill is at most nine tenths of the bound; afterwards it offers the blobs no remaining entry references to the host store, which keeps every blob a live pin, a recent access or a workspace hard link protects. Calls queue behind each other. */
+ /** 🧹️ Plans and removes, in this order: unusable values, values that are stale against the synchronized tree or unreached (in enforce mode only; never one an active claim holds or one stored within the grace), values that declared nothing idle longer than the authored age, then the least valuable values (stale or unreached, undeclared, live; least recently used first) until the fill is at most nine tenths of the bound; every sweep records what it found (and, in dry-run mode, what it would retire) for `stalenessStatus`; afterwards it offers the blobs no remaining entry references to the host store, which keeps every blob a live pin, a recent access or a workspace hard link protects. Calls queue behind each other. */
  collect(need:number=0):Promise<void>{
   const run=async()=>{
    const claimed=(relative:string):boolean=>{
@@ -189,8 +198,9 @@ export class RemoteCacheStoreV1{
     if(!this.options.claimed)return false;
     const [namespace,kind,,key]=relative.split("/");return this.options.claimed(namespace!,kind as RemoteCacheKindV1,key!);
    };
-   const plan=planRemoteCacheCollectionV1([...this.index].map(([key,row])=>({key,...row})),{maximumBytes:this.options.maximumBytes,maximumAgeMilliseconds:this.options.maximumAgeMilliseconds,now:Date.now(),need,reserved:this.reserved},new Set(),{metas:this.slots,graceMilliseconds:this.grace,claimed});
-   let removedEntries=0,removedBytes=0;const gone:string[]=[],refs=new Set<string>();
+   const now=Date.now(),judged=await this.judge(now),staleness=this.options.staleness;
+   const plan=planRemoteCacheCollectionV1([...this.index].map(([key,row])=>({key,...row})),{maximumBytes:this.options.maximumBytes,maximumAgeMilliseconds:this.options.maximumAgeMilliseconds,now,need,reserved:this.reserved},new Set(),{metas:this.slots,graceMilliseconds:this.grace,claimed,...judged&&staleness?.mode==="enforce"?{verdicts:judged}:{}});
+   let removedEntries=0,removedBytes=0,retiredNow=0;const gone:string[]=[],refs=new Set<string>(),tombstones=new Set<string>();
    for(const drop of plan){
     this.checkpoint();
     const meta=this.slots.get(drop.key);let outcome;
@@ -198,9 +208,11 @@ export class RemoteCacheStoreV1{
     if(outcome==="kept")continue;
     const row=this.index.get(drop.key);
     if(row){this.index.delete(drop.key);this.bytes-=row.size;}
-    this.slots.delete(drop.key);gone.push(drop.key);if(meta)for(const hash of meta.refs)refs.add(hash);
+    this.slots.delete(drop.key);gone.push(drop.key);if(meta)for(const hash of meta.refs){refs.add(hash);if(drop.reason==="stale")tombstones.add(hash);}
+    if(drop.reason==="stale")retiredNow++;
     removedEntries++;removedBytes+=drop.size;
    }
+   if(judged&&staleness)await this.record(now,judged,retiredNow,tombstones);
    if(removedEntries){this.evictedEntries+=removedEntries;this.evictedBytes+=removedBytes;this.options.onEvent?.({stage:"evict",entries:removedEntries,bytes:removedBytes});}
    if(this.options.host&&refs.size>0){
     const live=await liveRemoteCacheReferencesV1(this.root,this.index.keys(),this.slots,this.options.signal,(namespace,tree)=>this.readBytes(namespace,"cas",tree.hash,Math.min(tree.size,16*1048576))),orphaned=[...refs].filter(hash=>!live.has(hash));
@@ -214,11 +226,10 @@ export class RemoteCacheStoreV1{
   this.collecting=this.collecting.then(run,run);return this.collecting;
  }
 
- /** 📌️ Pins the blobs of the synchronized state (the newest slotted entries that are current or still within their grace, until `pinBudgetBytes` of blobs are pinned: the older ones stay unpinned, so the host store's own eviction can take them before the partition is ever critical and the entry then misses) in the host store under this process's holder, so the host store's own eviction by age, cap or partition pressure, which knows no entries, cannot take a blob a live entry needs; the pin lives one hour at most and is renewed by every collection (the maintenance timer), and a dead process loses it at once. Answers the number of pinned blobs. */
+ /** 📌️ Pins the blobs of the synchronized state (the newest entries with a sidecar that are not stale or unreached, until `pinBudgetBytes` of blobs are pinned: the older ones stay unpinned, so the host store's own eviction can take them before the partition is ever critical and the entry then misses) in the host store under this process's holder, so the host store's own eviction by age, cap or partition pressure, which knows no entries, cannot take a blob a live entry needs; the pin lives one hour at most and is renewed by every collection (the maintenance timer), and a dead process loses it at once. Answers the number of pinned blobs. */
  async pinLive():Promise<number>{
   const host=this.options.host;if(!host)return 0;
-  const verdicts=classifySlotsV1([...this.slots].map(([key,meta])=>({key,slot:meta.slot,storedAt:meta.storedAt,accessed:0,size:0})),{now:Date.now(),graceMilliseconds:this.grace}),hashes=new Set<string>();
-  const budget=this.options.pinBudgetBytes?.(),live=[...this.slots].filter(([key])=>{const state=verdicts.get(key)?.state;return state==="current"||state==="retained";}).sort((left,right)=>right[1].storedAt-left[1].storedAt);
+  const hashes=new Set<string>(),budget=this.options.pinBudgetBytes?.(),live=[...this.slots].filter(([key])=>{const state=this.verdicts?.get(key)?.state;return state!=="stale"&&state!=="unreached";}).sort((left,right)=>right[1].storedAt-left[1].storedAt);
   let pinned=0;
   for(const[,meta]of live){
    if(budget!==undefined&&pinned>=budget)break;
@@ -230,8 +241,40 @@ export class RemoteCacheStoreV1{
   await host.pin(`remote-cache-live-${process.pid}`,[...hashes],3600000);return hashes.size;
  }
 
+ private async judge(now:number):Promise<Map<string,StalenessVerdictV1>|undefined>{
+  const staleness=this.options.staleness;if(staleness===undefined||staleness.mode==="off")return undefined;
+  const verdicts=await judgeRemoteCacheStalenessV1(this.index,this.slots,{now,graceMilliseconds:this.grace,tree:staleness.tree,toolchains:staleness.toolchains?.(),retired:this.retired,signal:this.options.signal});
+  await staleness.tree.flush().catch(()=>undefined);this.verdicts=verdicts;return verdicts;
+ }
+ private async record(now:number,verdicts:ReadonlyMap<string,StalenessVerdictV1>,retired:number,tombstones:ReadonlySet<string>):Promise<void>{
+  const staleness=this.options.staleness!,report=stalenessReportV1({mode:staleness.mode,now,verdicts,retired,refused:this.refused,examples:staleness.examples});
+  this.report=report;
+  try{
+   const directory=join(this.root,".retention");await mkdir(directory,{recursive:true});
+   if(tombstones.size>0){this.retired=new Set([...this.retired,...tombstones].slice(-200000));const temporary=join(directory,`retired-${process.pid}.tmp`);await writeFile(temporary,JSON.stringify([...this.retired]));await rename(temporary,join(directory,"retired.json"));}
+   const log=join(directory,"sweeps.jsonl");
+   if((await stat(log).catch(()=>undefined))?.size!>5*1048576)await rename(log,log+".1");
+   await appendFile(log,JSON.stringify(report)+"\n");
+  }catch{}
+ }
+
+ /** 🥀️ What the last staleness sweep found and what the publish gate refused or would refuse since this store opened (`StalenessReport` of the slot schema); `undefined` before the first sweep or when staleness is off. */
+ stalenessStatus():ReturnType<typeof stalenessReportV1>|undefined{return this.report===undefined?undefined:{...this.report,refused:{...this.refused}};}
+
+ /** 🥀️ The mode and the manifest names of the staleness policy (`undefined` when the store judges none). */
+ get stalenessPolicy():Readonly<{mode:StalenessModeV1;manifestNames:readonly string[]}>|undefined{const staleness=this.options.staleness;return staleness===undefined||staleness.mode==="off"?undefined:{mode:staleness.mode,manifestNames:staleness.manifestNames};}
+
+ /** 🚪️ The publish gate: whether an entry arriving with this declaration is stale on arrival. In enforce mode answers the reason (and counts it as refused); in dry-run mode counts it as one that would be refused and answers nothing; answers nothing when it is current. */
+ async staleOnArrival(declaration:DeclarationV1):Promise<Readonly<{reason:StalenessReasonV1;detail:string}>|undefined>{
+  const staleness=this.options.staleness;if(staleness===undefined||staleness.mode==="off")return undefined;
+  const found=await stalenessOnArrivalV1(declaration,{digest:path=>staleness.tree.digest(path),recheckMilliseconds:staleness.recheckMilliseconds,toolchains:staleness.toolchains?.()});
+  if(found===undefined)return undefined;
+  const name=staleness.mode==="enforce"?"stale-on-arrival":"would-refuse-stale-on-arrival";this.refused[name]=(this.refused[name]??0)+1;
+  return staleness.mode==="enforce"?found:undefined;
+ }
+
  private async publish(relative:string,slot:RemoteCachePutSlotV1,kind:RemoteCacheKindV1,refs:readonly string[]):Promise<void>{
-  const meta:RemoteCacheMetaV1={version:1,slot:slot.slot,storedAt:this.stamp(),refs:slot.refs??refs};
+  const declaration=slot.declaration??this.slots.get(relative)?.declaration,meta:RemoteCacheMetaV1={version:1,slot:slot.slot,storedAt:this.stamp(),refs:slot.refs??refs,...declaration===undefined?{}:{declaration}};
   try{await writeRemoteCacheMetaV1(this.root,this.temporary,relative,meta);this.slots.set(relative,meta);}
   catch(error){if(this.options.signal?.aborted)throw error;}
  }

@@ -1,0 +1,6 @@
+# Findings E67 (outside the lane)
+1. help-offline memory (new regression): `⚙️operations/🧪️tests/🧭️help-offline` is stopped at the 3072 MB ceiling (3075-3593 MB held). The offline help path should not load a graph-sized closure. Owner: command-line / operations.
+2. Hermetic/worker sandbox on macOS: the darwin profile writes only the input root while the hermetic runner stages in the fixed `/tmp/<12 hex>` (policy `🔧️tools/🏗️bazel/📐️path-plan`); on a macOS worker with `darwin-sandbox` every hermetic action fails EPERM. Either the profile must allow the scratch base or the scratch base must be inside the input root. Bazel / remote-execution lane. The hermetic entry also imports `library/🏃️process/🔌️providers` whose closure is not staged.
+3. read-oracle seatbelt backend reports `clean` when the unified log yields no denial (log read failure is not distinguishable from "no denial"): a silent clean is unsound for an oracle that learns undeclared reads.
+4. Harness: `🧫️fixture.ts` files (child scripts) appear in the B test list; they are not tests.
+5. 127 zero-touch findings of root-registry commands (workspace specifiers `@semio-tech/*` reachable from `command:verify` through the OS mcp modules) are real design debt behind the zero-touch law; the law is red until they are resolved or declared.

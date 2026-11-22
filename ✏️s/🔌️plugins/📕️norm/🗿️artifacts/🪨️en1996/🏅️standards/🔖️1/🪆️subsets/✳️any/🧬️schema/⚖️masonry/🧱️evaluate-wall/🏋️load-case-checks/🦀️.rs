@@ -129,6 +129,9 @@ fn check_wall_compression(annex: AnnexChoice, gamma_m: f64, gamma_ndp: &'static 
         let mut r = Vec::new();
         if let Some(x) = solve_threshold(t, 3.0, 1e-3, |x| passes(&|w, _, v| w.thickness_m = v, x, mid)) {
             r.push(Remedy::at_least(wall_subject(wall, &path_t), Quantity::length_m(t), Quantity::length_m(x), loc("Increase thickness.", "Dicke erhöhen.")));
+        } else if let Some(x) = solve_threshold(t, 3.0, 1e-3, |x| passes(&|w, _, v| { w.thickness_m = v; w.slab_bearing_depth_m = w.slab_bearing_depth_m.max(v) }, x, mid)) {
+            r.push(Remedy::at_least(wall_subject(wall, &path_t), Quantity::length_m(t), Quantity::length_m(x), loc("Increase thickness together with the slab bearing depth (a thicker wall under a fixed bearing raises the slab eccentricity).", "Dicke zusammen mit der Deckenauflagertiefe erhöhen (eine dickere Wand unter festem Auflager erhöht die Deckenexzentrizität).")));
+            r.push(Remedy::at_least(wall_subject(wall, &path_bearing), Quantity::length_m(wall.slab_bearing_depth_m), Quantity::length_m(x), loc("Increase slab bearing depth to the new wall thickness.", "Deckenauflagertiefe auf die neue Wanddicke erhöhen.")));
         }
         if !mid {
             if let Some(x) = solve_threshold(wall.f_b_pa, 1000e6, 1e5, |x| passes(&|w, _, v| w.f_b_pa = v, x, false)) {

@@ -3,9 +3,11 @@
   "emoji": "💨",
   "status": "open",
   "description": "staffage: the airflow preview is currently extremely undersophisticated by showing cones, etc. Show proper thermodynamic view (different depending on the humidity and temperature with proper streams, particles and flow directions, etc). Replace the cone-style airflow preview of the staffage product with a physically grounded thermodynamic flow view end to end: streamlines and advected particles from the computed transport field, moisture, condensation, in 2D views, 3D stage and exports, with oracle-checked tests.",
+  "summary": "Replaced the emitter-cone airflow preview of the staffage thermal view with a thermodynamic flow view: an Eulerian field reconstructed from the transport parcels (Gaussian mean flow, entrainment sinks with ground images), streams, advected tracers, vapour clouds and fog, generalised by scale; drawn on paper (flow-view depiction, CLI --flow, browser downloads) and animated on screen by one canvas overlay in the 2D figure and the 3D stage, solved in a worker with progress, cancel and retry; viewer layer toggles, address parameter fl, reference environment select, bilingual legends. New oracle-checked tests (scipy, numpy, CoolProp, psychrolib, d3) and a React test; touched existing suites green. Report: flow-view-report.md.",
   "goal": "animate",
   "sessions": [
-    "b5605501-eee7-47f2-8699-50620e83779b"
+    "b5605501-eee7-47f2-8699-50620e83779b",
+    "8d3c993a-f4ab-4e34-a253-de187b0f3665"
   ],
   "interactions": [
     {
@@ -16,6 +18,156 @@
       "client": "claude-code",
       "checkpoint": "",
       "prompt": "staffage: the airflow preview is currently extremely undersophisticated by showing cones, etc. Show proper thermodynamic view (different depending on the humidity and temperature with proper streams, particles and flow directions, etc). Replace the cone-style airflow preview of the staffage product with a physically grounded thermodynamic flow view end to end: streamlines and advected particles from the computed transport field, moisture, condensation, in 2D views, 3D stage and exports, with oracle-checked tests.",
+      "llm": "fable-5-2"
+    },
+    {
+      "kind": "ticket.close",
+      "date": "2026-11-22 14:11:25",
+      "author": "ueli",
+      "system": "mac",
+      "client": "claude-code",
+      "checkpoint": "01324745f8082082a02880b731dd024f640dc29b",
+      "summary": "Replaced the emitter-cone airflow preview of the staffage thermal view with a thermodynamic flow view: an Eulerian field reconstructed from the transport parcels (Gaussian mean flow, entrainment sinks with ground images), streams, advected tracers, vapour clouds and fog, generalised by scale; drawn on paper (flow-view depiction, CLI --flow, browser downloads) and animated on screen by one canvas overlay in the 2D figure and the 3D stage, solved in a worker with progress, cancel and retry; viewer layer toggles, address parameter fl, reference environment select, bilingual legends. New oracle-checked tests (scipy, numpy, CoolProp, psychrolib, d3) and a React test; touched existing suites green. Report: flow-view-report.md.",
+      "files": [
+        {
+          "path": "🎓️teaching/🏛️architecture/🧍️staffage/README.md"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/🧍️staffage/📦️packages/🟦️typescript/🟦️.ts"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/🧍️staffage/🔨️modules/🔗️contracts/🟦️.ts"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/🧍️staffage/🔨️modules/💨️transport/🟦️.ts"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/🧍️staffage/🔨️modules/💨️transport/🌫️air/🟦️.ts"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/🧍️staffage/🔨️modules/💨️transport/🌊️flow/🟦️.ts"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/🧍️staffage/🔨️modules/🎨️depiction/🟦️.ts"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/🧍️staffage/🔨️modules/🎨️depiction/🌊️flow-view/🟦️.ts"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/🧍️staffage/🔨️modules/🧊️volume/🟦️.ts"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/🧍️staffage/🔨️modules/📤️export/🎬️cli/🟦️.ts"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/🧍️staffage/🎯️targets/⚛️react/🔨️modules/🌊️flow/🟦️.ts"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/🧍️staffage/🎯️targets/⚛️react/🔨️modules/🌊️flow/🧵️server/🟦️.ts"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/🧍️staffage/🎯️targets/⚛️react/🔨️modules/🌊️flow/🧵️server/worker.ts"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/🧍️staffage/🎯️targets/⚛️react/🔨️modules/🌊️flow/📡️session/🟦️.ts"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/🧍️staffage/🎯️targets/⚛️react/🔨️modules/🌊️flow/🖌️overlay/🟦️.ts"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/🧍️staffage/🎯️targets/⚛️react/🔨️modules/🌊️flow/🖥️stage/🟦️.ts"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/🧍️staffage/🎯️targets/⚛️react/🔨️modules/🧍️figure/🟦️.tsx"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/🧍️staffage/🎯️targets/⚛️react/🔨️modules/🎛️viewer/🟦️.tsx"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/🧍️staffage/🎯️targets/⚛️react/🔨️modules/🎛️viewer/🗺️stage/🟦️.tsx"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/🧍️staffage/🎯️targets/⚛️react/🔨️modules/🎛️viewer/🧾️reading/🟦️.tsx"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/🧍️staffage/🎯️targets/⚛️react/🔨️modules/🗺️routing/🟦️.ts"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/🧍️staffage/🎯️targets/⚛️react/🔨️modules/🧊️spatial/🟦️.ts"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/🧍️staffage/🎯️targets/⚛️react/🔨️modules/🧊️spatial/🖥️stage/🟦️.ts"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/🧍️staffage/🎯️targets/⚛️react/🔨️modules/🧊️spatial/🏭️prepare/🟦️.ts"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/🧍️staffage/🎯️targets/⚛️react/🔨️modules/🧊️spatial/⚛️figure/🟦️.tsx"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/🧍️staffage/🎯️targets/⚛️react/🔨️modules/🧮️pipeline/🟦️.ts"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/🧍️staffage/🎯️targets/⚛️react/🔨️modules/📤️downloads/🟦️.ts"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/🧍️staffage/🎯️targets/⚛️react/🔨️modules/🔬️detail/🟦️.tsx"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/🧍️staffage/🎯️targets/⚛️react/🔨️modules/🌐️i18n/🔠️english/🎛️viewer.ts"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/🧍️staffage/🎯️targets/⚛️react/🔨️modules/🌐️i18n/🔡️german/🎛️viewer.ts"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/🧍️staffage/🎯️targets/⚛️react/🧪️tests/🌊️flow/🟦️.tsx"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/🧍️staffage/🎯️targets/⚛️react/🧪️tests/🌊️flow/🥒️.feature"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/🧍️staffage/🧪️tests/🌊️flow-field/🟦️.ts"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/🧍️staffage/🧪️tests/🌊️flow-field/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/🧍️staffage/🧪️tests/🌊️flow-field/🥒️.feature"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/🧍️staffage/🧪️tests/🌊️flow-environments/🟦️.ts"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/🧍️staffage/🧪️tests/🌊️flow-environments/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/🧍️staffage/🧪️tests/🌊️flow-environments/🥒️.feature"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/🧍️staffage/🧪️tests/🌊️flow-view/🟦️.ts"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/🧍️staffage/🧪️tests/🌊️flow-view/🥒️.feature"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/🧍️staffage/🧫️fixtures/🌊️flow-field/🔣️.json"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/🧍️staffage/🧫️fixtures/🌊️flow-environments/🔣️.json"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/🧍️staffage/🧫️fixtures/🌊️flow-view/🔣️.json"
+        }
+      ]
+    },
+    {
+      "kind": "ticket.reopen",
+      "date": "2026-11-22 14:25:34",
+      "author": "",
+      "system": "mac",
+      "client": "claude-code",
+      "checkpoint": "",
+      "prompt": "Treat the task fully end to end: leave no legacy unsophisticated airflow preview anywhere (emitter cones in 3D models and exports, the old dashed streamline and condensation layers), give full control over wind and the other flow conditions, make every export work with the flow, close the physics gaps (body deflection, 3D occlusion) and the custom element.",
       "llm": "fable-5-2"
     }
   ]

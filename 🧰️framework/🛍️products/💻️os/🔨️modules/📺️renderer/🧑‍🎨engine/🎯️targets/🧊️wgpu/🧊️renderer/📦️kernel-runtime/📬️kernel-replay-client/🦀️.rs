@@ -113,6 +113,16 @@ impl KernelClient {
         }
     }
 
+    /// 🧩️ Activates a runtime-installed extension beside the live parent instance (`activation.parent_instance`) without re-creating the parent, answering the extension's own instance id: its surfaces are addressed to that instance, and [`Self::begin_destroy_app`] of it retires it.
+    pub async fn activate_extension(&self, wasm_path: &std::path::Path, activation: semio_renderer_wgpu_kernel_protocol::ExtensionActivation) -> Result<u32, ProgramFault> {
+        let owner = open_create_app_source(CreateAppBorrowed { path: wasm_path, plugin: &activation.extension.extension_id, app: "", schema: "" }).await.map_err(ProgramFault::from)?;
+        match self.submit(KernelRequest::ActivateExtension { owner, activation }).await {
+            KernelOutcome::Created(result) => result,
+            KernelOutcome::Exchanged(_) => Err("kernel: unexpected Exchanged response for activate_extension".into()),
+            KernelOutcome::ProductReplayMounted(_) => Err("kernel: unexpected product replay response for activate_extension".into()),
+        }
+    }
+
     pub fn begin_destroy_app(&self, instance: u32) -> Result<KernelCloseHandle, String> {
         let reservation = reserve_seq()?;
         let owner = Arc::new(KernelCloseSubmission {
@@ -195,7 +205,7 @@ impl KernelClient {
             Ok(event) => event,
             Err(owner) => {
                 self.queue.enqueue_retained(KernelRequest::CloseRejectedEvents { owner }, Arc::new(ResponseSlot::default())).await;
-                return Err(("only one bounded SurfaceVisible or document-backbone Message event is admitted per kernel request turn".to_string()).into());
+                return Err(("only one bounded SurfaceVisible, document-backbone Message, shell Request or Completed event is admitted per kernel request turn".to_string()).into());
             }
         };
         match self.submit(KernelRequest::Exchange { instance, event }).await {

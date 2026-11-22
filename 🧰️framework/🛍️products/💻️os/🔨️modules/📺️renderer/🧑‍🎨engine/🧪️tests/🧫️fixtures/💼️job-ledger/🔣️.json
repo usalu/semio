@@ -1,0 +1,305 @@
+{
+  "schema": "semio.os.job-ledger-vectors/v1",
+  "description": "Language-neutral laws of the live spawned-job ledger: ops in, snapshot rows and cancel call counts out. Driven by the TypeScript ledger (`PluginRuntime/job-ledger`) and the Rust ledger (host-base `spawned-job-ledger`).",
+  "cases": [
+    {
+      "id": "a job is listed exactly while its drive runs",
+      "ops": [
+        {
+          "op": "begin",
+          "job": {
+            "key": "actor-1#7",
+            "pluginId": "s.puzzle",
+            "actorId": "actor-1",
+            "instanceId": 3,
+            "job": 7,
+            "kind": "semio.puzzle3d.fill",
+            "startedAtMs": 1000
+          },
+          "opened": true
+        },
+        {
+          "op": "snapshot",
+          "rows": [
+            {
+              "key": "actor-1#7",
+              "steps": 0,
+              "reportsProgress": false,
+              "progressAtMs": 1000,
+              "cancelling": false
+            }
+          ]
+        },
+        {
+          "op": "step",
+          "key": "actor-1#7",
+          "steps": 64,
+          "progressed": false,
+          "atMs": 2000
+        },
+        {
+          "op": "step",
+          "key": "actor-1#7",
+          "steps": 128,
+          "progressed": true,
+          "atMs": 3000
+        },
+        {
+          "op": "snapshot",
+          "rows": [
+            {
+              "key": "actor-1#7",
+              "steps": 128,
+              "reportsProgress": true,
+              "progressAtMs": 3000,
+              "cancelling": false
+            }
+          ]
+        },
+        {
+          "op": "end",
+          "key": "actor-1#7"
+        },
+        {
+          "op": "snapshot",
+          "rows": []
+        }
+      ]
+    },
+    {
+      "id": "progress, once reported, stays reported",
+      "ops": [
+        {
+          "op": "begin",
+          "job": {
+            "key": "actor-1#7",
+            "pluginId": "s.puzzle",
+            "actorId": "actor-1",
+            "instanceId": 3,
+            "job": 7,
+            "kind": "semio.puzzle3d.fill",
+            "startedAtMs": 1000
+          },
+          "opened": true
+        },
+        {
+          "op": "step",
+          "key": "actor-1#7",
+          "steps": 1,
+          "progressed": true,
+          "atMs": 1500
+        },
+        {
+          "op": "step",
+          "key": "actor-1#7",
+          "steps": 2,
+          "progressed": false,
+          "atMs": 1600
+        },
+        {
+          "op": "snapshot",
+          "rows": [
+            {
+              "key": "actor-1#7",
+              "steps": 2,
+              "reportsProgress": true,
+              "progressAtMs": 1600,
+              "cancelling": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "a duplicated spawn is refused and cannot close the real row",
+      "ops": [
+        {
+          "op": "begin",
+          "job": {
+            "key": "actor-1#7",
+            "pluginId": "s.puzzle",
+            "actorId": "actor-1",
+            "instanceId": 3,
+            "job": 7,
+            "kind": "semio.puzzle3d.fill",
+            "startedAtMs": 1000
+          },
+          "opened": true
+        },
+        {
+          "op": "begin",
+          "job": {
+            "key": "actor-1#7",
+            "pluginId": "s.puzzle",
+            "actorId": "actor-1",
+            "instanceId": 3,
+            "job": 7,
+            "kind": "other.kind",
+            "startedAtMs": 9000
+          },
+          "opened": false
+        },
+        {
+          "op": "snapshot",
+          "rows": [
+            {
+              "key": "actor-1#7",
+              "steps": 0,
+              "reportsProgress": false,
+              "progressAtMs": 1000,
+              "cancelling": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "a step or end of an unknown key changes nothing",
+      "ops": [
+        {
+          "op": "step",
+          "key": "nobody#1",
+          "steps": 5,
+          "progressed": true,
+          "atMs": 1
+        },
+        {
+          "op": "end",
+          "key": "nobody#1"
+        },
+        {
+          "op": "snapshot",
+          "rows": []
+        }
+      ]
+    },
+    {
+      "id": "a cancel reaches the owner once and only marks the row",
+      "ops": [
+        {
+          "op": "begin",
+          "job": {
+            "key": "actor-1#7",
+            "pluginId": "s.puzzle",
+            "actorId": "actor-1",
+            "instanceId": 3,
+            "job": 7,
+            "kind": "semio.puzzle3d.fill",
+            "startedAtMs": 1000
+          },
+          "opened": true
+        },
+        {
+          "op": "cancel",
+          "key": "actor-1#7",
+          "accepted": true
+        },
+        {
+          "op": "cancel",
+          "key": "actor-1#7",
+          "accepted": false
+        },
+        {
+          "op": "cancel",
+          "key": "nobody#1",
+          "accepted": false
+        },
+        {
+          "op": "cancelCalls",
+          "key": "actor-1#7",
+          "count": 1
+        },
+        {
+          "op": "snapshot",
+          "rows": [
+            {
+              "key": "actor-1#7",
+              "steps": 0,
+              "reportsProgress": false,
+              "progressAtMs": 1000,
+              "cancelling": true
+            }
+          ]
+        },
+        {
+          "op": "end",
+          "key": "actor-1#7"
+        },
+        {
+          "op": "snapshot",
+          "rows": []
+        }
+      ]
+    },
+    {
+      "id": "rows are listed oldest first, ties by key",
+      "ops": [
+        {
+          "op": "begin",
+          "job": {
+            "key": "b#2",
+            "pluginId": "s.puzzle",
+            "actorId": "b",
+            "instanceId": 3,
+            "job": 2,
+            "kind": "k",
+            "startedAtMs": 2000
+          },
+          "opened": true
+        },
+        {
+          "op": "begin",
+          "job": {
+            "key": "c#3",
+            "pluginId": "s.puzzle",
+            "actorId": "c",
+            "instanceId": 3,
+            "job": 3,
+            "kind": "k",
+            "startedAtMs": 1000
+          },
+          "opened": true
+        },
+        {
+          "op": "begin",
+          "job": {
+            "key": "a#1",
+            "pluginId": "s.puzzle",
+            "actorId": "a",
+            "instanceId": 3,
+            "job": 1,
+            "kind": "k",
+            "startedAtMs": 1000
+          },
+          "opened": true
+        },
+        {
+          "op": "snapshot",
+          "rows": [
+            {
+              "key": "a#1",
+              "steps": 0,
+              "reportsProgress": false,
+              "progressAtMs": 1000,
+              "cancelling": false
+            },
+            {
+              "key": "c#3",
+              "steps": 0,
+              "reportsProgress": false,
+              "progressAtMs": 1000,
+              "cancelling": false
+            },
+            {
+              "key": "b#2",
+              "steps": 0,
+              "reportsProgress": false,
+              "progressAtMs": 2000,
+              "cancelling": false
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

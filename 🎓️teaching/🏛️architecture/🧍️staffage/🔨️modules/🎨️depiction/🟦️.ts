@@ -1,6 +1,6 @@
 /** 🎨️ Depiction: one {@link EvaluatedState} becomes any of seven synchronized paper-space views ({@link depict}) or a CAD model-space scene ({@link modelScene}).
  *
- * Paper space is millimetres, y down. The scene size is the drawn extent (ground line, plumes, arrows, diagrams, annotations when shown) × `mmPerMetre`
+ * Paper space is millimetres, y down. The scene size is the drawn extent (ground line, the whole flow domain when flow layers are drawn, so the frames of a sequence keep one extent, arrows, diagrams, annotations when shown) × `mmPerMetre`
  * plus margins; `metadata.origin` is where the model origin landed, so a model point `(x, y)` sits at paper `(origin.xMm + x·k, origin.yMm − y·k)` with
  * `k = mmPerMetre`. Every view paints the same prepared rings (identical `fill` item commands per shape id, relative to the origin); line views add
  * role-weighted outlines with hidden lines removed, solid views add tones, analytic views add legends with unit, sign convention and interpretation.
@@ -15,26 +15,27 @@
  * @see ../🔗️contracts/🟦️.ts — {@link DepictionOptions}, {@link DrawingScene}, {@link ModelScene}
  */
 import type { Language, PlanarViewpoint, Text, Viewpoint } from "../../🧬️schema/🟦️.ts";
-import { VIEWS, type AxonometricKind, type AxonometricSpec, type DepictionCommon, type DepictionOptions, type TextlessDepiction, type TextualDepiction, type DrawingScene, type EvaluatedState, type EvaluationQuery, type JobControl, type Legend, type ModelLayer, type ModelScene, type Point, type RepresentationResolution, type StructuralResult, type ThermalField, type TransportField, type View } from "../🔗️contracts/🟦️.ts";
+import { VIEWS, type AxonometricKind, type AxonometricSpec, type DepictionCommon, type DepictionOptions, type TextlessDepiction, type TextualDepiction, type DrawingScene, type EvaluatedState, type FlowField, type EvaluationQuery, type JobControl, type Legend, type ModelLayer, type ModelScene, type Point, type RepresentationResolution, type StructuralResult, type ThermalField, type TransportField, type View } from "../🔗️contracts/🟦️.ts";
 import { LABEL_TEXT_MM, mmPerMetre } from "../📐️units/🟦️.ts";
 import { DEFAULT_PRINT_PROFILE, requireDrawable, resolveRepresentation, resolveSymbol } from "../🖨️representation/🟦️.ts";
 import { solveStructure } from "../🏗️structure/🟦️.ts";
 import { magnitude, planeOf } from "../🏗️structure/📽️projection/🟦️.ts";
 import { solveThermalAt } from "../🌡️thermal/🟦️.ts";
-import { developedTimeS, solveTransport } from "../💨️transport/🟦️.ts";
+import { developTransport, developedTimeS, moveFlow, solveTransport } from "../💨️transport/🟦️.ts";
+import { evaluate } from "../🧮️evaluation/🟦️.ts";
 import { type DimensionExtent, dimensionLine, legendBlock, scaleBar, titleBlock } from "./🏷️annotations/🟦️.ts";
 import { Canvas, type Ctx, Labels, labelBudget } from "./🧱️canvas/🟦️.ts";
 import { type DiagramKind, diagramPolygons, forceList, forcesView, momentsView, peakOf } from "./🏗️structural-view/🟦️.ts";
 import { type Theme, THEMES, toneColour, tx } from "./🖍️palette/🟦️.ts";
 import { type AnalyticView, type Prepared, type Source, baseStyle, drawShapes, outlineRuns, prepare, selectRoles, sourceOf, themeOf } from "./🧩️shapes/🟦️.ts";
 import { arrowOutline, commandsOf } from "./📐️geometry/🟦️.ts";
-import { ViewMissingError, axonometricCamera, projectionOf } from "./🔭️views/🟦️.ts";
+import { ViewMissingError, axonometricCamera, project, projectionOf } from "./🔭️views/🟦️.ts";
 import type { AxonometricFigure } from "./🧊️axonometric/🟦️.ts";
 import { type Checkpoint, drive, driveAsync } from "./⏳️steps/🟦️.ts";
 import { SECTION_MARKER_MAX_DENOMINATOR, drawSectionMarkers, sectionOf, viewpointCaption } from "./✂️section/🟦️.ts";
 import { thermalView } from "./🌡️thermal-view/🟦️.ts";
-import { transportView } from "./💨️transport-view/🟦️.ts";
 import { flowView } from "./🌊️flow-view/🟦️.ts";
+import { type ModelFlow, flowModelLayers } from "./🌊️flow-view/📐️model/🟦️.ts";
 import * as portable from "../../../../../🧰️framework/🔨️modules/🧊️3d/🗿️model/🧮️math/🎯️portable/🟦️.ts";
 
 const GROUND_OVERHANG_M = 0.3;
@@ -139,7 +140,6 @@ function commonOptions(view: View, denominator: number, viewpoint: Viewpoint, th
     forceQuantity: "axial",
     range: { mode: "shared" },
     patterns: true,
-    transport: [],
     ...(theme ? { theme } : {}),
   };
 }
@@ -182,14 +182,46 @@ export async function depictAsync(state: EvaluatedState, options: DepictionOptio
   return driveAsync(depictSteps(state, options, analysis), control);
 }
 
-/** 🌬️ The transport a depiction solves itself: at the query time moved on by `flowDevelopS` ({@link developedTimeS}; a looping clip keeps its pose and makes the field periodic with its duration), with the flow field when a flow layer is asked for. */
-export function transportOf(state: EvaluatedState, options: Pick<DepictionOptions, "flow" | "flowDevelopS" | "environment" | "environmentTimeline">): TransportField {
+/** ⏳️ Seconds of history the air flow of a drawn file has before its first instant unless the caller says otherwise: the life of a parcel, the same as the flow on screen. */
+export const FLOW_DEVELOP_S = 14;
+
+type FlowRequestOptions = Pick<DepictionOptions, "flow" | "flowDevelopS" | "flowConditions" | "environment" | "environmentTimeline">;
+
+/** 🔁️ The seconds after which the flow of a state repeats: the duration of its looping clip, else nothing. A depiction lets the tracers repeat with it (`FlowMarkDetail.loopS`), so the frame after the last of a loop is its first. */
+export function flowLoopS(state: Pick<EvaluatedState, "asset" | "query">): number | undefined {
+  const { asset, query } = state;
+  const clip = query.kind === "clip" ? asset.clips.find((candidate) => candidate.id === query.clip) : undefined;
+  return clip?.loop === true && clip.durationS > 0 ? clip.durationS : undefined;
+}
+
+function transportRequest(state: Pick<EvaluatedState, "asset" | "query">, options: FlowRequestOptions) {
   const { asset, query } = state;
   const clip = query.kind === "clip" ? asset.clips.find((candidate) => candidate.id === query.clip) : undefined;
   const periodS = clip?.loop === true && clip.durationS > 0 ? clip.durationS : 0;
-  const developS = options.flowDevelopS ?? 0;
-  const timeS = developedTimeS(Math.max(0, query.timeS ?? 0), developS, periodS);
-  return solveTransport(asset, { ...query, timeS } as EvaluationQuery, options.environmentTimeline ?? options.environment ?? asset.thermal.environment, { ...(developS > 0 ? { maxAgeS: developS, ...(periodS > 0 ? { periodS } : {}) } : {}), ...((options.flow?.length ?? 0) > 0 ? { flow: true } : {}) });
+  const developS = clip !== undefined && periodS === 0 ? 0 : (options.flowDevelopS ?? 0);
+  const conditions = options.flowConditions ?? {};
+  return { query: { ...query, timeS: developedTimeS(Math.max(0, query.timeS ?? 0), developS, periodS) } as EvaluationQuery, environment: options.environmentTimeline ?? options.environment ?? asset.thermal.environment, solver: { ...(developS > 0 ? { maxAgeS: developS, ...(periodS > 0 ? { periodS } : {}) } : {}), ...(conditions.maxAgeS === undefined ? {} : { maxAgeS: conditions.maxAgeS }), ...(conditions.seed === undefined ? {} : { seed: conditions.seed }), ...(conditions.turbulence === undefined ? {} : { turbulence: conditions.turbulence }), ...(conditions.boundaryLayer === undefined ? {} : { boundaryLayer: conditions.boundaryLayer }), ...((options.flow?.length ?? 0) > 0 ? { flow: true } : {}), pathlines: options.flow?.includes("pathlines") === true } };
+}
+
+/** ⏳️ Develops, without blocking, the transport that {@link transportOf} then finds solved: the same request integrated in cooperative slices with progress and cancellation through `control` (see `developTransport`). Call it before a depiction with flow layers whenever a cold solve would be felt. */
+export async function developFlow(state: Pick<EvaluatedState, "asset" | "query">, options: FlowRequestOptions, control: JobControl = {}): Promise<TransportField> {
+  const request = transportRequest(state, options);
+  return developTransport(state.asset, request.query, request.environment, { ...request.solver, ...control });
+}
+
+/** 🌬️ The transport a depiction solves itself: at the query time moved on by `flowDevelopS` ({@link developedTimeS}; a looping clip keeps its pose and makes the field periodic with its duration; a clip that plays once has no history before its first frame, its air starts still as its devices do), with the flow field when a flow layer is asked for and the parcel paths only when the `pathlines` layer is. */
+export function transportOf(state: Pick<EvaluatedState, "asset" | "query">, options: FlowRequestOptions): TransportField {
+  const request = transportRequest(state, options);
+  return solveTransport(state.asset, request.query, request.environment, request.solver);
+}
+
+/** 🚶️ The flow field around the figure as it is shown: a field developed to a later instant of a loop in which the figure travels (a walk cycle) lies around the figure of that instant, so it is moved back by what the rig root travelled between the shown and the developed instant ({@link moveFlow}). Poses and loops in place return the field itself. */
+export function shownFlow(state: Pick<EvaluatedState, "asset" | "query" | "bones" | "timeS">, flow: FlowField): FlowField {
+  const { asset, query } = state;
+  if (query.kind !== "clip" || Math.abs(flow.timeS - state.timeS) < 1e-9) return flow;
+  const from = state.bones[asset.rig.root]?.frame.o;
+  const to = evaluate(asset, { ...query, timeS: flow.timeS }).bones[asset.rig.root]?.frame.o;
+  return from === undefined || to === undefined ? flow : moveFlow(flow, { x: from.x - to.x, y: from.y - to.y, z: from.z - to.z });
 }
 
 function* depictSteps(state: EvaluatedState, options: DepictionOptions, analysis: Analysis): Generator<Checkpoint, DrawingScene> {
@@ -199,7 +231,8 @@ function* depictSteps(state: EvaluatedState, options: DepictionOptions, analysis
   const theme = themeOf(options.view, options.theme);
   const colours = THEMES[theme];
   const camera = options.viewpoint === "axonometric" ? axonometricCamera(options.axonometric) : undefined;
-  const ctx: Ctx = { state, options, get language(): Language { return requireLanguage(options); }, k, theme, colours, paper: (p: Point) => ({ x: p.x * k, y: -p.y * k }), labels: new Labels(), ...(camera ? { camera } : {}) };
+  const loopS = (options.flow?.length ?? 0) > 0 && options.flowDetail?.loopS === undefined ? flowLoopS(state) : undefined;
+  const ctx: Ctx = { state, options: loopS === undefined ? options : { ...options, flowDetail: { ...options.flowDetail, loopS } }, get language(): Language { return requireLanguage(options); }, k, theme, colours, paper: (p: Point) => ({ x: p.x * k, y: -p.y * k }), labels: new Labels(), ...(camera ? { camera } : {}) };
   const canvas = new Canvas();
   const source = sourceOf(state);
   const thermal = options.view === "thermal" ? (analysis.thermal ?? solveThermalAt(state.asset, state.query, options.environmentTimeline ?? options.environment)) : undefined;
@@ -212,8 +245,7 @@ function* depictSteps(state: EvaluatedState, options: DepictionOptions, analysis
   let figure: AxonometricFigure | null = null;
   if (camera !== undefined) {
     if (resolution.kind === "symbol") throw new ViewMissingError(state.asset.id, "axonometric");
-    const emitters = thermal !== undefined && state.asset.thermal.emitters.length > 0 ? (analysis.transport ?? solveTransport(state.asset, state.query, thermal.environment, { maxAgeS: 0.5, pathlines: false, streamlines: false })).emitters : undefined;
-    figure = yield* axonometricOf().drawAxonometric(canvas, ctx, source, { ...(thermal ? { thermal } : {}), ...(structure ? { structure } : {}), ...(emitters ? { emitters } : {}) }, { groundOverhangM: options.annotations.ground ? GROUND_OVERHANG_M : null });
+    figure = yield* axonometricOf().drawAxonometric(canvas, ctx, source, { ...(thermal ? { thermal } : {}), ...(structure ? { structure } : {}) }, { groundOverhangM: options.annotations.ground ? GROUND_OVERHANG_M : null });
   } else {
     const viewpoint = options.viewpoint as PlanarViewpoint;
     if (state.shapes[viewpoint].length === 0) throw new ViewMissingError(state.asset.id, viewpoint);
@@ -242,17 +274,15 @@ function* depictSteps(state: EvaluatedState, options: DepictionOptions, analysis
   if ((options.viewpoint === "elevation" || options.viewpoint === "plan") && metric && options.annotations.labels && options.scale.denominator <= SECTION_MARKER_MAX_DENOMINATOR && resolution.kind === "authored" && resolution.representation.sections !== undefined) drawSectionMarkers(canvas, ctx, resolution.representation.sections, b, options.viewpoint);
   const legendsOfTransport: Legend[] = [];
   const flowLayers = options.flow ?? [];
-  if (options.transport.length > 0 || flowLayers.length > 0) {
+  if (flowLayers.length > 0) {
     const field = analysis.transport ?? transportOf(state, options);
-    if (flowLayers.length > 0 && field.flow !== null) {
-      const flow = flowView(ctx, field.flow, flowLayers, options.range);
+    if (field.flow !== null) {
+      const shown = shownFlow(state, field.flow);
+      const { min, max } = shown.domain;
+      for (const x of [min.x, max.x]) for (const y of [min.y, max.y]) for (const z of [min.z, max.z]) canvas.reach(ctx.paper(project(options.viewpoint, { x, y, z }, camera)));
+      const flow = flowView(ctx, shown, flowLayers, options.range);
       flow.overlay(canvas);
       legendsOfTransport.push(...flow.legends);
-    }
-    if (options.transport.length > 0) {
-      const overlay = transportView(ctx, field, options.transport, options.range);
-      overlay.overlay(canvas);
-      legendsOfTransport.push(...overlay.legends);
     }
   }
   if (figure !== null && options.annotations.dimensions && canvas.box !== null) {
@@ -294,7 +324,7 @@ function* depictSteps(state: EvaluatedState, options: DepictionOptions, analysis
 
 /** 🖼️ Depicts a state in all seven views, solving each analysis at most once. */
 export function depictAll(state: EvaluatedState, options: WithoutView<DepictionOptions>, analysis: Analysis = {}): Record<View, DrawingScene> {
-  const transport = analysis.transport ?? (options.transport.length > 0 || (options.flow?.length ?? 0) > 0 ? transportOf(state, options) : undefined);
+  const transport = analysis.transport ?? ((options.flow?.length ?? 0) > 0 ? transportOf(state, options) : undefined);
   const solved: Analysis = { thermal: analysis.thermal ?? solveThermalAt(state.asset, state.query, options.environmentTimeline ?? options.environment), structure: analysis.structure ?? solveStructure(state), ...(transport ? { transport } : {}) };
   return Object.fromEntries(VIEWS.map((view) => [view, depict(state, { ...options, view }, solved)])) as Record<View, DrawingScene>;
 }
@@ -307,9 +337,14 @@ const CAD_LAYERS = {
   ground: { name: "GROUND", aci: 3 },
 } as const;
 
-/** 🏗️ The CAD model-space scene in metres: hidden-line-cleaned outlines on STAFFAGE-BODY/-DETAIL/-TEXTURE/-GLAZING and GROUND with ACI colours and the lineweights (1/100 mm) of the pens of the representation the state was evaluated with; optional ANALYSIS-ARROWS and ANALYSIS-DIAGRAM layers from a structural result. Paper-unit symbols have no model extent and yield no outlines.
+/** 🧰️ What {@link modelScene} draws: the viewpoint (with its camera when axonometric), the structural result and its diagrams, and the thermodynamic air flow (`flow`: field, layers and the scale the marks are sized for, see ./🌊️flow-view/📐️model). */
+export type ModelSceneOptions = { readonly viewpoint: Viewpoint; readonly analysis?: Analysis; readonly diagrams?: readonly DiagramKind[]; readonly axonometric?: AxonometricSpec; readonly flow?: ModelFlow };
+
+const flowOf = (state: EvaluatedState, flow: ModelFlow): ModelFlow => (flow.detail?.loopS !== undefined || flowLoopS(state) === undefined ? flow : { ...flow, detail: { ...flow.detail, loopS: flowLoopS(state)! } });
+
+/** 🏗️ The CAD model-space scene in metres: hidden-line-cleaned outlines on STAFFAGE-BODY/-DETAIL/-TEXTURE/-GLAZING and GROUND with ACI colours and the lineweights (1/100 mm) of the pens of the representation the state was evaluated with; optional ANALYSIS-ARROWS and ANALYSIS-DIAGRAM layers from a structural result, and with `options.flow` the thermodynamic air flow on its FLOW-… layers (stream polylines, arrow heads, tracer streaks, vapour and fog circles; the same marks at the same instant as the paper view). Paper-unit symbols have no model extent and yield no outlines.
  * For the `axonometric` viewpoint the polylines are the visible silhouette, crease and interpenetration lines of the 3D volume projected through `options.axonometric` (default isometric) into the picture plane, in metres of that plane (the vertical axis true to scale); a structural result adds the outlines of its 3D arrows to ANALYSIS-ARROWS and no diagrams. Throws `ViewMissingError` for an asset without volume or a symbol state. */
-export function modelScene(state: EvaluatedState, options: { readonly viewpoint: Viewpoint; readonly analysis?: Analysis; readonly diagrams?: readonly DiagramKind[]; readonly axonometric?: AxonometricSpec }): ModelScene {
+export function modelScene(state: EvaluatedState, options: ModelSceneOptions): ModelScene {
   if (options.viewpoint === "axonometric") return axonometricModelScene(state, options);
   const viewpoint = options.viewpoint;
   const millimetres = 1000;
@@ -350,18 +385,19 @@ export function modelScene(state: EvaluatedState, options: { readonly viewpoint:
     });
     if (diagrams.length) layers.push({ name: "ANALYSIS-DIAGRAM", aci: 5, lineweight: 18, polylines: diagrams, texts: [] });
   }
+  if (options.flow !== undefined) layers.push(...flowModelLayers(flowOf(state, options.flow), (p) => project(viewpoint, p)));
   return { units: "m", asset: state.asset.id, timeS: state.timeS, representation: state.representation, layers };
 }
 
 /** 🪁️ {@link modelScene} as a promise that loads the axonometric depiction first when the viewpoint asks for it. */
-export async function modelSceneAsync(state: EvaluatedState, options: { readonly viewpoint: Viewpoint; readonly analysis?: Analysis; readonly diagrams?: readonly DiagramKind[]; readonly axonometric?: AxonometricSpec }): Promise<ModelScene> {
+export async function modelSceneAsync(state: EvaluatedState, options: ModelSceneOptions): Promise<ModelScene> {
   if (options.viewpoint === "axonometric") await loadAxonometric();
   return modelScene(state, options);
 }
 
 const MODEL_MM = 1000;
 
-function axonometricModelScene(state: EvaluatedState, options: { readonly analysis?: Analysis; readonly axonometric?: AxonometricSpec }): ModelScene {
+function axonometricModelScene(state: EvaluatedState, options: Omit<ModelSceneOptions, "viewpoint">): ModelScene {
   const representation = state.representation;
   if (representation.kind !== "scale") throw new ViewMissingError(state.asset.id, "axonometric");
   const result = options.analysis?.structure;
@@ -371,8 +407,7 @@ function axonometricModelScene(state: EvaluatedState, options: { readonly analys
   const source = sourceOf(state);
   const ctx: Ctx = { state, options: drawing, get language(): Language { return requireLanguage(drawing); }, k: MODEL_MM, theme: "light", colours: THEMES.light, paper: (p: Point) => ({ x: p.x * MODEL_MM, y: -p.y * MODEL_MM }), labels: new Labels(), camera };
   const canvas = new Canvas();
-  const emitters = undefined;
-  drive(axonometricOf().drawAxonometric(canvas, ctx, source, { ...(result ? { structure: result } : {}), ...(emitters ? { emitters } : {}) }, { glyphEdges: true, groundOverhangM: GROUND_OVERHANG_M }));
+  drive(axonometricOf().drawAxonometric(canvas, ctx, source, { ...(result ? { structure: result } : {}) }, { glyphEdges: true, groundOverhangM: GROUND_OVERHANG_M }));
   const done = canvas.finish(0);
   const toModel = (c: { readonly x: number; readonly y: number }): Point => ({ x: (c.x - done.origin.x) / MODEL_MM, y: -(c.y - done.origin.y) / MODEL_MM });
   const lines = new Map<string, ModelLayer["polylines"][number][]>();
@@ -403,5 +438,6 @@ function axonometricModelScene(state: EvaluatedState, options: { readonly analys
   });
   const arrows = lines.get("forces");
   if (arrows?.length) layers.push({ name: "ANALYSIS-ARROWS", aci: 1, lineweight: 25, polylines: arrows, texts: [] });
+  if (options.flow !== undefined) layers.push(...flowModelLayers(flowOf(state, options.flow), (p) => project("axonometric", p, camera)));
   return { units: "m", asset: state.asset.id, timeS: state.timeS, representation: state.representation, layers };
 }

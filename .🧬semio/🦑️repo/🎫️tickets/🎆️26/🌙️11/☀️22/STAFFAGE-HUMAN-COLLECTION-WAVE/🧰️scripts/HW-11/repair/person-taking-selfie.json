@@ -1,0 +1,7 @@
+[
+{"op":"region-set","id":"daypack","set":{"areaM2":0.2988}},
+{"op":"set","path":["poses",{"id":"selfie-arm-out"},"thermal","regions","daypack","exposedFraction"],"value":0.5974},
+{"op":"set","path":["poses",{"id":"selfie-high-angle"},"thermal","regions","daypack","exposedFraction"],"value":0.5974},
+{"op":"set","path":["poses",{"id":"selfie-with-backdrop"},"thermal","regions","daypack","exposedFraction"],"value":0.5974},
+{"op":"set","path":["poses",{"id":"checking-photo"},"thermal","regions","daypack","exposedFraction"],"value":0.5974}
+]

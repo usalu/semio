@@ -22,18 +22,25 @@ export type CacheBudgetV1=Readonly<{bytes:number}>|Readonly<{basisPoints:number}
 export type CacheCollectV1=Readonly<{unusedAgeMs:number|null;quietMs:number;custody:"quiet"|"sqlite"|"lease"|"pid";lease?:string;depth?:1|2;units?:string;pressure?:"reclaimable"|"pinned"}>;
 /** 🚰️ The free space below which an owner is asked to reclaim in the background, and the free space it reclaims up to. */
 export type CacheReclaimV1=Readonly<{softAvailableBytes:number;targetAvailableBytes:number}>;
+/** 📐️ The same thresholds relative to the volume of an image, for images whose size differs per machine: a share of the volume in basis points, raised to a floor that never exceeds one and a half times the share, so a small image can always satisfy it and soft stays below target. */
+export type CacheReclaimShareV1=Readonly<{softBasisPoints:number;targetBasisPoints:number;softFloorBytes:number;targetFloorBytes:number}>;
+const shareBytes=(volumeBytes:number,basisPoints:number,floorBytes:number):number=>{const share=Math.floor(volumeBytes*basisPoints/10000);return Math.max(share,Math.min(floorBytes,Math.floor(share*3/2)));};
+/** 🎯️ The soft and target available bytes of a share rule on an image of this volume. Pure. */
+export function cacheReclaimShareBytesV1(share:CacheReclaimShareV1,volumeBytes:number):CacheReclaimV1{return Object.freeze({softAvailableBytes:shareBytes(volumeBytes,share.softBasisPoints,share.softFloorBytes),targetAvailableBytes:shareBytes(volumeBytes,share.targetBasisPoints,share.targetFloorBytes)});}
 /** 📏️ One part of a partition's measured need: its cap (an area's budget or explicit bytes) and what was measured. */
 export type CacheNeedComponentV1=Readonly<{id:string;area?:string;bytes?:number;measuredBytes:number}>;
 /** 🧪️ A partition's need derived from measurement: the caps of its parts plus headroom plus the floor that must stay free. */
 export type CacheNeedV1=Readonly<{partition:string;measuredOn:string;headroomPercent:number;floorBytes:number;components:readonly CacheNeedComponentV1[]}>;
 /** 📍️ One declared home of cached bytes. */
-export type CacheAreaV1=Readonly<{id:string;root:CacheRootIdV1;kind:"partition"|"control"|"nested"|"tree";directory?:string;pattern?:string;partition?:string;budget?:CacheBudgetV1;managed?:Readonly<{owner:CacheOwnerV1}>;recreate?:"derived"|"carried";carry?:readonly string[];reclaim?:CacheReclaimV1;collect?:CacheCollectV1;writers:readonly string[];purpose:Bilingual}>;
+export type CacheAreaV1=Readonly<{id:string;root:CacheRootIdV1;kind:"partition"|"control"|"nested"|"tree";directory?:string;pattern?:string;partition?:string;budget?:CacheBudgetV1;managed?:Readonly<{owner:CacheOwnerV1}>;recreate?:"derived"|"carried";carry?:readonly string[];reclaim?:CacheReclaimV1;reclaimShare?:CacheReclaimShareV1;collect?:CacheCollectV1;writers:readonly string[];purpose:Bilingual}>;
 /** 🪦️ One root that no writer feeds any more and the collector removes once it has been quiet. */
 export type CacheRetirementV1=Readonly<{root:CacheRootIdV1;directory:string;quietMs:number;reason:Bilingual;within?:string}>;
+/** 🥀️ The rule for cache roots that tools left below member directories: how long they stay quiet, which segments are never entered, which top-level directories are not looked at, and why they go. */
+export type CacheStrayV1=Readonly<{quietMs:number;ignoredSegments:readonly string[];excludedDirectories:readonly string[];reason:Bilingual}>;
 /** 🗃️ One loose root with the budget of all its areas and the rule for entries nobody declared. */
 export type CacheRootV1=Readonly<{directory:string;maximumBytes:number;undeclaredUnusedAgeMs:number;undeclaredQuietMs:number;ignored:readonly string[]}>;
 /** 🧾️ The whole closed ledger of cache homes. */
-export type CacheLedgerV1=Readonly<{version:1;roots:Readonly<Record<CacheRootIdV1,CacheRootV1>>;areas:readonly CacheAreaV1[];retirements:readonly CacheRetirementV1[];needs?:readonly CacheNeedV1[]}>;
+export type CacheLedgerV1=Readonly<{version:1;roots:Readonly<Record<CacheRootIdV1,CacheRootV1>>;areas:readonly CacheAreaV1[];retirements:readonly CacheRetirementV1[];strays?:CacheStrayV1;needs?:readonly CacheNeedV1[]}>;
 /** 🔢️ The partition facts the ledger needs from the authored budget; tests replace them. */
 export type CachePartitionBudgetsV1=Readonly<Record<string,Readonly<{directory:string;capacityBytes:number;maximumLogicalBytes:number}>>>;
 
@@ -63,6 +70,7 @@ export function readCacheLedgerV1(value:unknown,partitions:CachePartitionBudgets
   const remainder=area.budget!==undefined&&"remainder" in area.budget;
   if(area.kind==="nested"){
    if(area.reclaim&&(area.reclaim.softAvailableBytes>=area.reclaim.targetAvailableBytes||area.partition==="graph"&&area.reclaim.targetAvailableBytes>2684354560))refuse("reclaim needs soft below target and, in the graph partition, a target within the headroom schema: "+area.id);
+   if(area.reclaimShare&&(area.reclaim||area.reclaimShare.softBasisPoints>=area.reclaimShare.targetBasisPoints||area.reclaimShare.softFloorBytes>=area.reclaimShare.targetFloorBytes||!area.partition||[1073741824,4294967296,17179869184,103080263680,1099511627776,Object.hasOwn(partitions,area.partition)?partitions[area.partition]!.capacityBytes:0].some(volume=>{const row=cacheReclaimShareBytesV1(area.reclaimShare!,volume);return row.softAvailableBytes>=row.targetAvailableBytes||row.targetAvailableBytes>volume/2;})))refuse("reclaim share needs soft below target for every image size and no absolute reclaim beside it: "+area.id);
    if(!area.partition||!Object.hasOwn(partitions,area.partition)||area.pattern!==undefined||(area.collect===undefined)===(area.managed===undefined)||area.collect?.custody==="lease"||!area.budget||remainder===(area.directory!==undefined)||remainder&&area.collect!==undefined)refuse("nested area "+area.id+" needs a declared partition, exactly one of manager and collection, and a budget");
    const row=nested.get(area.partition!)??{paths:[],explicit:0,remainders:0};nested.set(area.partition!,row);
    if(remainder)row.remainders++;else{let units:RegExp|undefined;try{units=area.collect?.units===undefined?undefined:new RegExp(area.collect.units,"u");}catch{refuse("valid unit pattern required for "+area.id);}const own:NestedHome={path:segments(area.directory!),units};if(row.paths.some(other=>(inside(other.path,own.path)||inside(own.path,other.path))&&!carved(other,own)&&!carved(own,other)))refuse("overlapping nested areas in "+area.partition);row.paths.push(own);}
@@ -161,9 +169,11 @@ export function requireDeclaredCacheSegmentsV1(path:readonly string[],ledger:Cac
 
 /** 🔎️ Names what a path below a loose root is: a declared area, a container of declared homes, a retired root, an ignored file or nobody's. */
 export type CacheClassV1=Readonly<{kind:"area"|"container"|"retired"|"ignored"|"undeclared";id?:string}>;
-/** 🧮️ Classifies one root-relative path against the ledger. */
+/** 🌿️ The single-segment directory names of the loose roots (`.cache`, `.r`): a directory of such a name below any member directory is a stray root. */
+export function cacheStrayNamesV1(ledger:CacheLedgerV1):readonly string[]{return Object.freeze([...new Set(CACHE_ROOT_IDS_V1.map(root=>ledger.roots[root].directory).filter(directory=>!directory.includes("/")))]);}
+/** 🧮️ Classifies one root-relative path against the ledger: an ignored entry is a listed root-relative path, or a listed file name anywhere inside a container of declared homes. */
 export function classifyCachePathV1(ledger:CacheLedgerV1,root:CacheRootIdV1,path:string):CacheClassV1{
- const parts=segments(path);if(parts.length===1&&ledger.roots[root].ignored.includes(parts[0]!))return{kind:"ignored"};
+ const parts=segments(path),ignored=ledger.roots[root].ignored;if(ignored.includes(path))return{kind:"ignored"};
  for(const retirement of ledger.retirements)if(retirement.within!==undefined&&retirement.root===root&&inside(segments(retirement.directory),parts))return{kind:"retired",id:retirement.directory};
  for(const area of ledger.areas){
   if(area.root!==root)continue;
@@ -173,7 +183,7 @@ export function classifyCachePathV1(ledger:CacheLedgerV1,root:CacheRootIdV1,path
  }
  for(const retirement of ledger.retirements)if(retirement.root===root&&inside(segments(retirement.directory),parts))return{kind:"retired",id:retirement.directory};
  const homes=[...ledger.areas.filter(area=>area.root===root&&area.kind!=="nested"&&area.directory!==undefined).map(area=>segments(area.directory!)),...ledger.retirements.filter(row=>row.root===root).map(row=>segments(row.directory))];
- return homes.some(home=>inside(parts,home))?{kind:"container"}:{kind:"undeclared"};
+ return homes.some(home=>inside(parts,home))?{kind:"container"}:ignored.includes(parts[parts.length-1]!)?{kind:"ignored"}:{kind:"undeclared"};
 }
 
 /** 💬️ Renders one catalogue message with its placeholders. */

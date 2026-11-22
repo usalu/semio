@@ -14,10 +14,19 @@ extern crate semio_framework_value_derive as value_derive;
 mod example;
 #[path = "🏢️seismic-multipart/🦀️.rs"]
 pub mod seismic_multipart;
+#[cfg(test)]
+#[path = "🏢️seismic-multipart/🧪️tests/🧩️example/🦀️.rs"]
+mod example_seismic_multipart;
 #[path = "⚠️seismic-multipart-fail/🦀️.rs"]
 pub mod seismic_multipart_fail;
+#[cfg(test)]
+#[path = "⚠️seismic-multipart-fail/🧪️tests/🧩️example/🦀️.rs"]
+mod example_seismic_multipart_fail;
 #[path = "🏢️seismic-rc-frame/🦀️.rs"]
 pub mod seismic_rc_frame;
 #[path = "⚠️seismic-rc-frame-fail/🦀️.rs"]
 pub mod seismic_rc_frame_fail;
+#[cfg(test)]
+#[path = "⚠️seismic-rc-frame-fail/🧪️tests/🧩️example/🦀️.rs"]
+mod example_seismic_rc_frame_fail;
 //#endregion 🪢️Mounts

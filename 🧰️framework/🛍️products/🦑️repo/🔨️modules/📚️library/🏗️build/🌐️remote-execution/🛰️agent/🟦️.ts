@@ -4,11 +4,12 @@ import {admitRemoteExecutionActionV1,buildRemoteExecutionLoadReportV1,readRemote
 import {remoteExecutionWorkerWhyOfMessageV1,remoteExecutionWorkerWhyV1,type RemoteExecutionWorkerWhyV1} from "../🌡️load/🔎️why/🟦️.ts";
 import {runRemoteExecutionWorkerV1,type RemoteExecutionWorkerEventV1,type RemoteExecutionWorkerOptionsV1} from "../👷️worker/🟦️.ts";
 import {remoteExecutionHostPropertiesV1,type RemoteExecutionPropertyV1} from "../🟦️.ts";
+import {OFFLOAD_POLICY_V1} from "../🚀️offload/📐️policy/🟦️.ts";
 import {remoteExecutionDiskSlotsV1,remoteExecutionFreeBytesV1,type RemoteExecutionWorkerDiskV1} from "./💽️disk/🟦️.ts";
 
 /** ⚙️ A build agent: the worker and the load reporter of one machine, one process. */
 export type RemoteExecutionAgentOptionsV1=Readonly<Omit<RemoteExecutionWorkerOptionsV1,"admit"|"observe"|"origin"|"capacity"|"properties"|"platform">&{
- root:string;environment?:Readonly<Record<string,string|undefined>>;origin?:string;extraProperties?:readonly RemoteExecutionPropertyV1[];loadIntervalSeconds:number;worker?:boolean;drain?:AbortSignal;onRunning?:(running:number)=>void;why?:RemoteExecutionWorkerWhyV1;retryWorkerSeconds?:number;disk?:RemoteExecutionWorkerDiskV1;freeBytes?:()=>number|undefined;
+ root:string;environment?:Readonly<Record<string,string|undefined>>;origin?:string;extraProperties?:readonly RemoteExecutionPropertyV1[];loadIntervalSeconds:number;worker?:boolean;drain?:AbortSignal;onRunning?:(running:number)=>void;why?:RemoteExecutionWorkerWhyV1;retryWorkerSeconds?:number;disk?:RemoteExecutionWorkerDiskV1;freeBytes?:()=>number|undefined;hostFreeBytes?:()=>number|undefined;
  view?:()=>Promise<RemoteExecutionHostViewV1>;ready?:()=>boolean;policy?:HostCapacityPolicyV1;now?:()=>number;onReport?:(event:RemoteExecutionReporterEventV1)=>void;
 }>;
 
@@ -23,7 +24,7 @@ export function drainWhenIdleV1(drain:AbortSignal|undefined,busy:()=>number,done
  return stop;
 }
 
-/** 🛰️ Runs the build agent of this machine until its signal aborts: it reads the toolchain identity once, offers it (and the operating system and architecture) as worker properties, admits every remote action through the host capacity decision of this machine, and reports its load to the scheduler every `loadIntervalSeconds` as long as it runs, whether or not the worker could join. With `disk` the free space of the work directory is part of every admission: the worker runs as many actions at once as the space allows (none below the reserve) and says `disk-full` with the numbers while it is refusing for that reason, so a machine that runs short of disk neither leaves the scheduler nor needs a restart to serve again: the next admission, two seconds later, sees the space. A confinement the policy requires but the host lacks stops the worker (and the agent) with an error. With `ready` a machine lends only while it answers true (the toolchain behind its offer is installed): otherwise every admission refuses with `not-ready` and every report says `no-toolchain` without headroom, so the scheduler places nothing there. */
+/** 🛰️ Runs the build agent of this machine until its signal aborts: it reads the toolchain identity once, offers it (and the operating system and architecture) as worker properties, admits every remote action through the host capacity decision of this machine, and reports its load to the scheduler every `loadIntervalSeconds` as long as it runs, whether or not the worker could join. With `disk` the free space of the work directory and of the checkout (the host volume) is part of every admission: the worker runs as many actions at once as the space allows (none below the reserve) and says `disk-full` with the numbers while it is refusing for that reason, so a machine that runs short of disk neither leaves the scheduler nor needs a restart to serve again: the next admission, two seconds later, sees the space. A confinement the policy requires but the host lacks stops the worker (and the agent) with an error. With `ready` a machine lends only while it answers true (the toolchain behind its offer is installed): otherwise every admission refuses with `not-ready` and every report says `no-toolchain` without headroom, so the scheduler places nothing there. */
 export async function runRemoteExecutionAgentV1(options:RemoteExecutionAgentOptionsV1):Promise<void>{
  const environment=options.environment??process.env,now=options.now??Date.now,origin=options.origin??remoteExecutionOriginV1(options.root,environment);
  const workerEnabled=options.worker!==false;
@@ -40,8 +41,8 @@ export async function runRemoteExecutionAgentV1(options:RemoteExecutionAgentOpti
  const admit=async(running:number):Promise<RemoteExecutionAdmissionV1>=>{
   if(draining)return {admit:false,reason:"draining"};
   if(options.ready!==undefined&&!options.ready())return {admit:false,reason:"not-ready"};
-  const space=options.disk===undefined?undefined:remoteExecutionDiskSlotsV1({freeBytes:(options.freeBytes??(()=>remoteExecutionFreeBytesV1(options.directory)))(),concurrency:options.concurrency,disk:options.disk});
-  diskWhy=space!==undefined&&running>=space.slots?remoteExecutionWorkerWhyV1("disk-full","",{free:((space.freeBytes??0)/2**30).toFixed(1),path:options.directory.split(/[\\/]/u).filter(Boolean).slice(-3).join("/"),slots:space.slots,concurrency:options.concurrency,oneAction:(space.oneActionBytes/2**30).toFixed(1)}):undefined;
+  const space=options.disk===undefined?undefined:remoteExecutionDiskSlotsV1({freeBytes:(options.freeBytes??(()=>remoteExecutionFreeBytesV1(options.directory)))(),hostFreeBytes:(options.hostFreeBytes??(()=>remoteExecutionFreeBytesV1(options.root)))(),concurrency:options.concurrency,disk:options.disk});
+  diskWhy=space!==undefined&&running>=space.slots?remoteExecutionWorkerWhyV1("disk-full","",{free:((space.freeBytes??0)/2**30).toFixed(1),path:(space.volume==="host"?options.root:options.directory).split(/[\\/]/u).filter(Boolean).slice(-3).join("/"),slots:space.slots,concurrency:options.concurrency,oneAction:(space.oneActionBytes/2**30).toFixed(1)}):undefined;
   if(diskWhy!==undefined)return {admit:false,reason:"disk"};
   return admitRemoteExecutionActionV1({view:await view(),running,concurrency:options.concurrency,nowMs:now(),...options.policy?{policy:options.policy}:{}});
  };
@@ -55,7 +56,7 @@ export async function runRemoteExecutionAgentV1(options:RemoteExecutionAgentOpti
  if(options.signal.aborted)abort();
  const stopDraining=drainWhenIdleV1(options.drain,()=>{draining=true;return state.running;},()=>{controller.abort();});
  const capacity=await view().then(first=>({cores:Math.max(1,first.host.cores),memoryMegabytes:Math.max(1,first.host.totalMegabytes)}),()=>undefined);
- const properties=[...remoteExecutionHostPropertiesV1(osPlatform(),process.arch,toolchain),...options.extraProperties??[]];
+ const properties=[...remoteExecutionHostPropertiesV1(osPlatform(),process.arch,toolchain),{name:OFFLOAD_POLICY_V1.property.pin,value:origin},...options.extraProperties??[]];
  const reporter=runRemoteExecutionReporterV1({scheduler:options.scheduler,token:options.token,fetch:options.fetch,intervalSeconds:options.loadIntervalSeconds,signal:controller.signal,report,...options.onReport?{onEvent:options.onReport}:{}});
  const remember=(next:RemoteExecutionWorkerStateV1):void=>{state=next;options.onRunning?.(next.running);if(next.state!=="absent")why=undefined;};
  const onEvent=(event:RemoteExecutionWorkerEventV1):void=>{

@@ -1,0 +1,7877 @@
+{
+ "$schema": "../../../🧬️schema/🔣️.json#/$defs/AssetDocument",
+ "version": "semio.staffage/v2",
+ "asset": {
+  "id": "reclaimed-rafter-bundle",
+  "category": "components",
+  "title": {
+   "en": "Reclaimed Rafter Bundle",
+   "de": "Gebrauchtes Sparrenbündel"
+  },
+  "summary": {
+   "en": "Twelve reclaimed softwood rafters 80 x 160 mm, 4.50 m long with plumb-cut ends, two birdsmouths each and the nail holes of battens and purlin anchors, stacked on edge in two stickered layers on two squared-timber bearers and strapped twice; lifted on two choked round slings, and one rafter reinstalled in a 40 degree purlin roof on wall plate and ridge purlin under roof covering, snow and a roofer.",
+   "de": "Zwölf gebrauchte Nadelholzsparren 80 x 160 mm, 4,50 m lang mit Lotschnittenden, je zwei Kerven und den Nagellöchern von Lattung und Sparrenpfettenankern, hochkant in zwei gelatteten Lagen auf zwei Kantholz-Unterlegern gestapelt und zweimal umreift; an zwei geschnürten Rundschlingen angehoben, und ein Sparren in einem 40-Grad-Pfettendach auf Fuß- und Firstpfette wiedereingebaut unter Dachdeckung, Schnee und einem Dachdecker."
+  },
+  "tags": [
+   "component",
+   "reclaimed",
+   "structural",
+   "timber",
+   "softwood",
+   "rafter",
+   "roof",
+   "bundle",
+   "stored"
+  ],
+  "provenance": {
+   "author": "Semio staffage component authors",
+   "method": "handcrafted",
+   "created": "2026-11-22",
+   "references": [
+    {
+     "id": "en-338",
+     "citation": "EN 338:2016 Structural timber, strength classes, Table 1: C24 f_m,k 24 N/mm2, E0,mean 11.0 kN/mm2, rho_k 350 kg/m3, rho_mean 420 kg/m3."
+    },
+    {
+     "id": "din-4074-1",
+     "citation": "DIN 4074-1:2012-06 Sortierung von Holz nach der Tragfähigkeit, Teil 1: Nadelschnittholz (visual grade S10, assigned to C24 by EN 1912)."
+    },
+    {
+     "id": "en-1995-1-1",
+     "citation": "EN 1995-1-1:2004+A2:2014 Eurocode 5, design of timber structures, 6.5 (notched members at supports), used for the birdsmouth depth against the h/4 rule of carpentry practice."
+    },
+    {
+     "id": "en-1991-1-1",
+     "citation": "EN 1991-1-1:2002 Eurocode 1, Part 1-1, Table 6.9 and 6.10: roofs of category H (not accessible except for normal maintenance), concentrated load Q_k 1.0 kN as set by the German National Annex."
+    },
+    {
+     "id": "din-en-1991-1-1-na",
+     "citation": "DIN EN 1991-1-1/NA:2010-12, Annex NA.A (weights of building materials and area loads of roof coverings): interlocking clay tiles with battens about 0.55 kN/m2 of roof area, used as the authored dead load."
+    },
+    {
+     "id": "en-1991-1-3",
+     "citation": "EN 1991-1-3:2003 Eurocode 1, Part 1-3, snow loads, Table 5.2: mu1 = 0.8 (60 - alpha)/30 for 30 <= alpha <= 60 degrees; DIN EN 1991-1-3/NA:2010-12, zone 2 minimum s_k = 0.85 kN/m2."
+    },
+    {
+     "id": "en-1492-2",
+     "citation": "EN 1492-2:2000+A1:2008 Textile slings, safety, part 2: round slings made of man-made fibres; colour code violet = working load limit 1000 kg in straight pull, mode factors for a two-leg choke."
+    },
+    {
+     "id": "en-iso-10456",
+     "citation": "EN ISO 10456:2007 Building materials and products, hygrothermal properties, Table 3 (softwood 500 kg/m3: lambda 0.13 W/mK, c 1600 J/kgK; steel 50 W/mK, 450 J/kgK)."
+    },
+    {
+     "id": "en-iso-13786",
+     "citation": "EN ISO 13786:2017 Thermal performance of building components, dynamic thermal characteristics: periodic penetration depth delta = sqrt(lambda T / (pi rho c)); about half of it is taken as the effective storage depth of an exposed face."
+    },
+    {
+     "id": "ashrae-fundamentals",
+     "citation": "ASHRAE Handbook Fundamentals (2021), thermal radiation properties of building materials (typical emissivity and solar absorptance of weathered wood and of white and coloured polymer textiles; rounded values guided by the chapter, not table look-ups)."
+    },
+    {
+     "id": "din-1356-1",
+     "citation": "DIN 1356-1:1995 Building drawings, part 1: types of drawings, contents and basic principles of presentation (scales, line groups)."
+    }
+   ],
+   "notes": {
+    "en": "Twelve rafters 80 x 160 mm, 4.50 m over the plumb-cut ends (plumb offset 134 mm at 40 degrees), birdsmouths 40 mm deep at 0.82 m and 4.29 m; stack of two layers of six on edge, 25 mm gaps, 50 x 30 mm stickers over the 100 x 100 mm bearers 2.60 m apart; reinstalled horizontal span 2.662 m. Geometry is authored-estimate after typical German purlin roofs; nothing is measured.",
+    "de": "Zwölf Sparren 80 x 160 mm, 4,50 m über die Lotschnittenden (Lotversatz 134 mm bei 40 Grad), Kerven 40 mm tief bei 0,82 m und 4,29 m; Stapel aus zwei Lagen zu sechs hochkant, 25-mm-Fugen, Stapellatten 50 x 30 mm über den Unterlegern 100 x 100 mm im Abstand 2,60 m; waagrechte Stützweite im Wiedereinbau 2,662 m. Die Geometrie ist eine Schätzung nach typischen deutschen Pfettendächern; nichts ist gemessen."
+   }
+  },
+  "dimensions": {
+   "heightM": 0.503,
+   "widthM": 4.5,
+   "depthM": 1.0,
+   "massKg": 292.34
+  },
+  "materials": [
+   {
+    "id": "reclaimed-softwood",
+    "title": {
+     "en": "Reclaimed softwood rafter timber (spruce/fir, S10 = C24), aged",
+     "de": "Gebrauchtes Nadelholz der Sparren (Fichte/Tanne, S10 = C24), gealtert"
+    },
+    "emissivity": 0.9,
+    "solarAbsorptivity": 0.72,
+    "densityKgM3": 420.0,
+    "conductivityWmK": 0.13,
+    "specificHeatJKgK": 1600,
+    "elasticModulusPa": 11000000000,
+    "strengthPa": 24000000,
+    "source": "literature",
+    "reference": "en-338"
+   },
+   {
+    "id": "yard-softwood",
+    "title": {
+     "en": "Yard softwood of bearers and stickers, weathered grey",
+     "de": "Lagerholz der Unterleger und Stapellatten, vergraut"
+    },
+    "emissivity": 0.9,
+    "solarAbsorptivity": 0.65,
+    "densityKgM3": 450.0,
+    "conductivityWmK": 0.13,
+    "specificHeatJKgK": 1600,
+    "elasticModulusPa": 11000000000,
+    "source": "authored-estimate",
+    "reference": "en-iso-10456"
+   },
+   {
+    "id": "polyester-strap",
+    "title": {
+     "en": "Woven polyester cord strap, white",
+     "de": "Gewebtes Polyester-Kraftband, weiß"
+    },
+    "emissivity": 0.88,
+    "solarAbsorptivity": 0.3,
+    "densityKgM3": 520.0,
+    "conductivityWmK": 0.15,
+    "specificHeatJKgK": 1250,
+    "source": "authored-estimate",
+    "reference": "ashrae-fundamentals"
+   },
+   {
+    "id": "polyester-sling",
+    "title": {
+     "en": "Polyester round sling, violet (WLL 1000 kg)",
+     "de": "Polyester-Rundschlinge, violett (WLL 1000 kg)"
+    },
+    "emissivity": 0.9,
+    "solarAbsorptivity": 0.7,
+    "densityKgM3": 220.0,
+    "conductivityWmK": 0.15,
+    "specificHeatJKgK": 1250,
+    "elasticModulusPa": 2000000000,
+    "source": "authored-estimate",
+    "reference": "en-1492-2"
+   },
+   {
+    "id": "galvanised-steel",
+    "title": {
+     "en": "Galvanised wire buckle",
+     "de": "Verzinkte Drahtschnalle"
+    },
+    "emissivity": 0.3,
+    "solarAbsorptivity": 0.6,
+    "densityKgM3": 7850,
+    "conductivityWmK": 50,
+    "specificHeatJKgK": 450,
+    "source": "literature",
+    "reference": "en-iso-10456"
+   }
+  ],
+  "rig": {
+   "kind": "structural",
+   "root": "yard",
+   "bones": [
+    {
+     "id": "yard",
+     "parent": null,
+     "title": {
+      "en": "Yard ground (massless reference)",
+      "de": "Lagerplatzboden (masseloser Bezug)"
+     },
+     "x": 0,
+     "y": 0,
+     "angleDeg": 0,
+     "lengthM": 0,
+     "joint": {
+      "type": "fixed"
+     }
+    },
+    {
+     "id": "bundle",
+     "parent": "yard",
+     "title": {
+      "en": "Bundle of eleven rafters with stickers, straps and sling chokes (lifts vertically)",
+      "de": "Bündel aus elf Sparren mit Stapellatten, Bändern und Schlingenschnürungen (hebt sich senkrecht)"
+     },
+     "x": 0,
+     "y": 0.1,
+     "angleDeg": 0,
+     "lengthM": 4.5,
+     "joint": {
+      "type": "prismatic",
+      "axisDeg": 90,
+      "minM": 0,
+      "maxM": 0.8
+     },
+     "mass": {
+      "kg": 259.399469,
+      "comX": 2.25,
+      "comY": 0.166445,
+      "distribution": "uniform",
+      "source": "literature",
+      "reference": "en-338"
+     },
+     "section": {
+      "areaM2": 0.1408,
+      "secondMomentM4": 0.0003003733,
+      "extremeFibreM": 0.08,
+      "material": "reclaimed-softwood",
+      "title": {
+       "en": "Eleven rafters 80 x 160 mm side by side, not composite",
+       "de": "Elf Sparren 80 x 160 mm nebeneinander, nicht verbunden"
+      }
+     }
+    },
+    {
+     "id": "bearer-a",
+     "parent": "bundle",
+     "title": {
+      "en": "Squared-timber bearer at the foot end (stays on the ground)",
+      "de": "Kantholz-Unterleger am Fußende (bleibt am Boden)"
+     },
+     "x": 0.95,
+     "y": 0,
+     "angleDeg": 0,
+     "lengthM": 0,
+     "joint": {
+      "type": "prismatic",
+      "axisDeg": 90,
+      "minM": -0.8,
+      "maxM": 0
+     },
+     "mass": {
+      "kg": 4.470642,
+      "comX": 0,
+      "comY": -0.05,
+      "distribution": "point",
+      "source": "authored-estimate",
+      "reference": "en-iso-10456"
+     }
+    },
+    {
+     "id": "bearer-b",
+     "parent": "bundle",
+     "title": {
+      "en": "Squared-timber bearer at the ridge end (stays on the ground)",
+      "de": "Kantholz-Unterleger am Firstende (bleibt am Boden)"
+     },
+     "x": 3.55,
+     "y": 0,
+     "angleDeg": 0,
+     "lengthM": 0,
+     "joint": {
+      "type": "prismatic",
+      "axisDeg": 90,
+      "minM": -0.8,
+      "maxM": 0
+     },
+     "mass": {
+      "kg": 4.470642,
+      "comX": 0,
+      "comY": -0.05,
+      "distribution": "point",
+      "source": "authored-estimate",
+      "reference": "en-iso-10456"
+     }
+    },
+    {
+     "id": "rafter-carrier",
+     "parent": "bundle",
+     "title": {
+      "en": "Reinstallation carrier (massless, lifts the outer upper rafter to the roof)",
+      "de": "Einbauträger (masselos, hebt den äußeren oberen Sparren ins Dach)"
+     },
+     "x": 0,
+     "y": 0.27,
+     "z": 0.2625,
+     "angleDeg": 0,
+     "lengthM": 0,
+     "joint": {
+      "type": "prismatic",
+      "axisDeg": 90,
+      "minM": 0,
+      "maxM": 2.0
+     }
+    },
+    {
+     "id": "rafter",
+     "parent": "rafter-carrier",
+     "title": {
+      "en": "Reinstalled rafter (centroid axis from the foot plumb cut, pitches about its foot)",
+      "de": "Wiedereingebauter Sparren (Schwerachse ab dem Fußlotschnitt, neigt sich um seinen Fuß)"
+     },
+     "x": 0,
+     "y": 0,
+     "angleDeg": 0,
+     "lengthM": 4.5,
+     "joint": {
+      "type": "revolute",
+      "minDeg": 0,
+      "maxDeg": 45
+     },
+     "mass": {
+      "kg": 23.349479,
+      "comX": 2.25,
+      "comY": 0,
+      "distribution": "uniform",
+      "source": "literature",
+      "reference": "en-338"
+     },
+     "section": {
+      "areaM2": 0.0128,
+      "secondMomentM4": 2.730667e-05,
+      "extremeFibreM": 0.08,
+      "material": "reclaimed-softwood",
+      "title": {
+       "en": "Rafter 80 x 160 mm, C24",
+       "de": "Sparren 80 x 160 mm, C24"
+      }
+     }
+    },
+    {
+     "id": "load-carrier",
+     "parent": "rafter",
+     "title": {
+      "en": "Roofer load carrier on the rafter top edge (massless)",
+      "de": "Lastträger Dachdecker auf der Sparrenoberkante (masselos)"
+     },
+     "x": 0.843835,
+     "y": 0.08,
+     "angleDeg": 0,
+     "lengthM": 0,
+     "joint": {
+      "type": "prismatic",
+      "axisDeg": 0,
+      "minM": 0,
+      "maxM": 3.474875
+     }
+    },
+    {
+     "id": "sling-a",
+     "parent": "bundle",
+     "title": {
+      "en": "Round sling A, leg from the choke at 1.15 m to the crane hook",
+      "de": "Rundschlinge A, Strang von der Schnürung bei 1,15 m zum Kranhaken"
+     },
+     "x": 1.15,
+     "y": 0.358292,
+     "angleDeg": 0,
+     "lengthM": 2.1,
+     "joint": {
+      "type": "revolute",
+      "minDeg": 0,
+      "maxDeg": 70
+     },
+     "mass": {
+      "kg": 0.326569,
+      "comX": 1.05,
+      "comY": 0,
+      "distribution": "uniform",
+      "source": "authored-estimate",
+      "reference": "en-1492-2"
+     },
+     "section": {
+      "areaM2": 0.0007068583,
+      "secondMomentM4": 3.976078e-08,
+      "extremeFibreM": 0.015,
+      "material": "polyester-sling",
+      "title": {
+       "en": "Round sling, 30 mm equivalent rod",
+       "de": "Rundschlinge, 30-mm-Ersatzstab"
+      }
+     }
+    },
+    {
+     "id": "sling-b",
+     "parent": "bundle",
+     "title": {
+      "en": "Round sling B, leg from the choke at 3.35 m to the crane hook",
+      "de": "Rundschlinge B, Strang von der Schnürung bei 3,35 m zum Kranhaken"
+     },
+     "x": 3.35,
+     "y": 0.388292,
+     "angleDeg": 180,
+     "lengthM": 2.074504,
+     "joint": {
+      "type": "revolute",
+      "minDeg": -70,
+      "maxDeg": 0
+     },
+     "mass": {
+      "kg": 0.322604,
+      "comX": 1.037252,
+      "comY": 0,
+      "distribution": "uniform",
+      "source": "authored-estimate",
+      "reference": "en-1492-2"
+     },
+     "section": {
+      "areaM2": 0.0007068583,
+      "secondMomentM4": 3.976078e-08,
+      "extremeFibreM": 0.015,
+      "material": "polyester-sling",
+      "title": {
+       "en": "Round sling, 30 mm equivalent rod",
+       "de": "Rundschlinge, 30-mm-Ersatzstab"
+      }
+     }
+    }
+   ]
+  },
+  "anchors": [
+   {
+    "id": "bearer-a-ground",
+    "bone": "bearer-a",
+    "x": 0,
+    "y": -0.1,
+    "kind": "contact",
+    "title": {
+     "en": "Foot-end bearer on the yard ground",
+     "de": "Unterleger am Fußende auf dem Lagerplatz"
+    },
+    "support": "contact",
+    "footprintLengthM": 0.1,
+    "footprintWidthM": 1.0
+   },
+   {
+    "id": "bearer-b-ground",
+    "bone": "bearer-b",
+    "x": 0,
+    "y": -0.1,
+    "kind": "contact",
+    "title": {
+     "en": "Ridge-end bearer on the yard ground",
+     "de": "Unterleger am Firstende auf dem Lagerplatz"
+    },
+    "support": "contact",
+    "footprintLengthM": 0.1,
+    "footprintWidthM": 1.0
+   },
+   {
+    "id": "rafter-on-sticker-a",
+    "bone": "rafter",
+    "x": 0.95,
+    "y": -0.08,
+    "kind": "contact",
+    "title": {
+     "en": "Outer upper rafter on the foot-end sticker",
+     "de": "Äußerer oberer Sparren auf der fußseitigen Stapellatte"
+    },
+    "support": "contact",
+    "footprintLengthM": 0.05,
+    "footprintWidthM": 0.08,
+    "frictionCoefficient": 0
+   },
+   {
+    "id": "rafter-on-sticker-b",
+    "bone": "rafter",
+    "x": 3.55,
+    "y": -0.08,
+    "kind": "contact",
+    "title": {
+     "en": "Outer upper rafter on the ridge-end sticker",
+     "de": "Äußerer oberer Sparren auf der firstseitigen Stapellatte"
+    },
+    "support": "contact",
+    "footprintLengthM": 0.05,
+    "footprintWidthM": 0.08,
+    "frictionCoefficient": 0
+   },
+   {
+    "id": "hook-a",
+    "bone": "sling-a",
+    "x": 2.1,
+    "y": 0,
+    "kind": "support",
+    "title": {
+     "en": "Eye of sling A in the crane hook, pulls along the leg",
+     "de": "Auge der Schlinge A im Kranhaken, zieht entlang des Strangs"
+    },
+    "support": "roller",
+    "normalDeg": 58.411864
+   },
+   {
+    "id": "hook-b",
+    "bone": "sling-b",
+    "x": 2.074504,
+    "y": 0,
+    "kind": "support",
+    "title": {
+     "en": "Eye of sling B in the crane hook, pulls along the leg",
+     "de": "Auge der Schlinge B im Kranhaken, zieht entlang des Strangs"
+    },
+    "support": "roller",
+    "normalDeg": 122.022153
+   },
+   {
+    "id": "wall-plate",
+    "bone": "rafter",
+    "x": 0.843835,
+    "y": -0.06,
+    "kind": "support",
+    "title": {
+     "en": "Birdsmouth seat on the wall plate, pin",
+     "de": "Kervensitz auf der Fußpfette, Festlager"
+    },
+    "support": "pin"
+   },
+   {
+    "id": "ridge-purlin",
+    "bone": "rafter",
+    "x": 4.318711,
+    "y": -0.06,
+    "kind": "support",
+    "title": {
+     "en": "Birdsmouth seat on the ridge purlin, roller",
+     "de": "Kervensitz auf der Firstpfette, Rollenlager"
+    },
+    "support": "roller",
+    "normalDeg": 90
+   },
+   {
+    "id": "roofer-load",
+    "bone": "load-carrier",
+    "x": 0,
+    "y": 0,
+    "kind": "load",
+    "title": {
+     "en": "Roofer standing on the rafter",
+     "de": "Dachdecker auf dem Sparren"
+    },
+    "footprintLengthM": 0.1,
+    "footprintWidthM": 0.08
+   }
+  ],
+  "representations": {
+   "50": {
+    "status": "authored",
+    "denominator": 50,
+    "validRange": {
+     "minDenominator": 20,
+     "maxDenominator": 75
+    },
+    "pens": {
+     "body": 0.35,
+     "detail": 0.18,
+     "texture": 0.1,
+     "glazing": 0.13,
+     "ground": 0.5
+    },
+    "hatches": [],
+    "geometry": {
+     "elevation": [
+      {
+       "id": "layer-lower",
+       "bone": "bundle",
+       "role": "body",
+       "z": 1,
+       "filled": true,
+       "tone": 0.6,
+       "region": "bundle-rafters",
+       "material": "reclaimed-softwood",
+       "penMm": 0.22,
+       "kind": "poly",
+       "points": [
+        [
+         0.0,
+         0.0
+        ],
+        [
+         0.786436,
+         0.0
+        ],
+        [
+         0.82,
+         0.04
+        ],
+        [
+         0.86767,
+         0.0
+        ],
+        [
+         4.261311,
+         0.0
+        ],
+        [
+         4.294875,
+         0.04
+        ],
+        [
+         4.342546,
+         0.0
+        ],
+        [
+         4.365744,
+         0.0
+        ],
+        [
+         4.5,
+         0.16
+        ],
+        [
+         0.134256,
+         0.16
+        ]
+       ],
+       "closed": true
+      },
+      {
+       "id": "layer-upper",
+       "bone": "bundle",
+       "role": "body",
+       "z": 1,
+       "filled": true,
+       "tone": 0.46,
+       "region": "bundle-rafters",
+       "material": "reclaimed-softwood",
+       "penMm": 0.22,
+       "kind": "poly",
+       "points": [
+        [
+         0.0,
+         0.19
+        ],
+        [
+         0.786436,
+         0.19
+        ],
+        [
+         0.82,
+         0.23
+        ],
+        [
+         0.86767,
+         0.19
+        ],
+        [
+         4.261311,
+         0.19
+        ],
+        [
+         4.294875,
+         0.23
+        ],
+        [
+         4.342546,
+         0.19
+        ],
+        [
+         4.365744,
+         0.19
+        ],
+        [
+         4.5,
+         0.35
+        ],
+        [
+         0.134256,
+         0.35
+        ]
+       ],
+       "closed": true
+      },
+      {
+       "id": "rafter-upper-near",
+       "bone": "bundle",
+       "role": "body",
+       "z": 1.2,
+       "filled": true,
+       "tone": 0.57,
+       "region": "bundle-rafters",
+       "material": "reclaimed-softwood",
+       "penMm": 0.22,
+       "kind": "poly",
+       "points": [
+        [
+         0.0,
+         0.19
+        ],
+        [
+         0.786436,
+         0.19
+        ],
+        [
+         0.82,
+         0.23
+        ],
+        [
+         0.86767,
+         0.19
+        ],
+        [
+         4.261311,
+         0.19
+        ],
+        [
+         4.294875,
+         0.23
+        ],
+        [
+         4.342546,
+         0.19
+        ],
+        [
+         4.365744,
+         0.19
+        ],
+        [
+         4.480716,
+         0.327019
+        ],
+        [
+         4.47,
+         0.35
+        ],
+        [
+         0.134256,
+         0.35
+        ]
+       ],
+       "closed": true
+      },
+      {
+       "id": "nails-near",
+       "bone": "bundle",
+       "role": "texture",
+       "z": 1.5,
+       "filled": false,
+       "tone": 0.2,
+       "region": "bundle-rafters",
+       "kind": "path",
+       "d": "M 0.8978 0.035 A 0.0028 0.0028 0 1 0 0.8922 0.035 A 0.0028 0.0028 0 1 0 0.8978 0.035 Z M 0.8978 0.065 A 0.0028 0.0028 0 1 0 0.8922 0.065 A 0.0028 0.0028 0 1 0 0.8978 0.065 Z M 0.9228 0.035 A 0.0028 0.0028 0 1 0 0.9172 0.035 A 0.0028 0.0028 0 1 0 0.9228 0.035 Z M 0.9228 0.065 A 0.0028 0.0028 0 1 0 0.9172 0.065 A 0.0028 0.0028 0 1 0 0.9228 0.065 Z M 0.9478 0.035 A 0.0028 0.0028 0 1 0 0.9422 0.035 A 0.0028 0.0028 0 1 0 0.9478 0.035 Z M 0.9478 0.065 A 0.0028 0.0028 0 1 0 0.9422 0.065 A 0.0028 0.0028 0 1 0 0.9478 0.065 Z M 0.8352 0.052 A 0.0032 0.0032 0 1 0 0.8288 0.052 A 0.0032 0.0032 0 1 0 0.8352 0.052 Z M 4.372675 0.035 A 0.0028 0.0028 0 1 0 4.367075 0.035 A 0.0028 0.0028 0 1 0 4.372675 0.035 Z M 4.372675 0.065 A 0.0028 0.0028 0 1 0 4.367075 0.065 A 0.0028 0.0028 0 1 0 4.372675 0.065 Z M 4.397675 0.035 A 0.0028 0.0028 0 1 0 4.392075 0.035 A 0.0028 0.0028 0 1 0 4.397675 0.035 Z M 4.397675 0.065 A 0.0028 0.0028 0 1 0 4.392075 0.065 A 0.0028 0.0028 0 1 0 4.397675 0.065 Z M 4.422675 0.035 A 0.0028 0.0028 0 1 0 4.417075 0.035 A 0.0028 0.0028 0 1 0 4.422675 0.035 Z M 4.422675 0.065 A 0.0028 0.0028 0 1 0 4.417075 0.065 A 0.0028 0.0028 0 1 0 4.422675 0.065 Z M 4.310075 0.052 A 0.0032 0.0032 0 1 0 4.303675 0.052 A 0.0032 0.0032 0 1 0 4.310075 0.052 Z M 0.8978 0.225 A 0.0028 0.0028 0 1 0 0.8922 0.225 A 0.0028 0.0028 0 1 0 0.8978 0.225 Z M 0.8978 0.255 A 0.0028 0.0028 0 1 0 0.8922 0.255 A 0.0028 0.0028 0 1 0 0.8978 0.255 Z M 0.9228 0.225 A 0.0028 0.0028 0 1 0 0.9172 0.225 A 0.0028 0.0028 0 1 0 0.9228 0.225 Z M 0.9228 0.255 A 0.0028 0.0028 0 1 0 0.9172 0.255 A 0.0028 0.0028 0 1 0 0.9228 0.255 Z M 0.9478 0.225 A 0.0028 0.0028 0 1 0 0.9422 0.225 A 0.0028 0.0028 0 1 0 0.9478 0.225 Z M 0.9478 0.255 A 0.0028 0.0028 0 1 0 0.9422 0.255 A 0.0028 0.0028 0 1 0 0.9478 0.255 Z M 0.8352 0.242 A 0.0032 0.0032 0 1 0 0.8288 0.242 A 0.0032 0.0032 0 1 0 0.8352 0.242 Z M 4.372675 0.225 A 0.0028 0.0028 0 1 0 4.367075 0.225 A 0.0028 0.0028 0 1 0 4.372675 0.225 Z M 4.372675 0.255 A 0.0028 0.0028 0 1 0 4.367075 0.255 A 0.0028 0.0028 0 1 0 4.372675 0.255 Z M 4.397675 0.225 A 0.0028 0.0028 0 1 0 4.392075 0.225 A 0.0028 0.0028 0 1 0 4.397675 0.225 Z M 4.397675 0.255 A 0.0028 0.0028 0 1 0 4.392075 0.255 A 0.0028 0.0028 0 1 0 4.397675 0.255 Z M 4.422675 0.225 A 0.0028 0.0028 0 1 0 4.417075 0.225 A 0.0028 0.0028 0 1 0 4.422675 0.225 Z M 4.422675 0.255 A 0.0028 0.0028 0 1 0 4.417075 0.255 A 0.0028 0.0028 0 1 0 4.422675 0.255 Z M 4.310075 0.242 A 0.0032 0.0032 0 1 0 4.303675 0.242 A 0.0032 0.0032 0 1 0 4.310075 0.242 Z"
+      },
+      {
+       "id": "sticker-a",
+       "bone": "bundle",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.72,
+       "region": "storage-timbers",
+       "material": "yard-softwood",
+       "kind": "rect",
+       "x": 0.925,
+       "y": 0.16,
+       "w": 0.05,
+       "h": 0.03
+      },
+      {
+       "id": "sticker-b",
+       "bone": "bundle",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.72,
+       "region": "storage-timbers",
+       "material": "yard-softwood",
+       "kind": "rect",
+       "x": 3.525,
+       "y": 0.16,
+       "w": 0.05,
+       "h": 0.03
+      },
+      {
+       "id": "strap-a",
+       "bone": "bundle",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.92,
+       "region": "straps",
+       "material": "polyester-strap",
+       "kind": "rect",
+       "x": 0.434,
+       "y": -0.0015,
+       "w": 0.032,
+       "h": 0.353
+      },
+      {
+       "id": "buckle-a",
+       "bone": "bundle",
+       "role": "detail",
+       "z": 3.9,
+       "filled": true,
+       "tone": 0.5,
+       "region": "straps",
+       "material": "galvanised-steel",
+       "kind": "rect",
+       "x": 0.432,
+       "y": 0.3515,
+       "w": 0.036,
+       "h": 0.008
+      },
+      {
+       "id": "strap-b",
+       "bone": "bundle",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.92,
+       "region": "straps",
+       "material": "polyester-strap",
+       "kind": "rect",
+       "x": 4.034,
+       "y": -0.0015,
+       "w": 0.032,
+       "h": 0.353
+      },
+      {
+       "id": "buckle-b",
+       "bone": "bundle",
+       "role": "detail",
+       "z": 3.9,
+       "filled": true,
+       "tone": 0.5,
+       "region": "straps",
+       "material": "galvanised-steel",
+       "kind": "rect",
+       "x": 4.032,
+       "y": 0.3515,
+       "w": 0.036,
+       "h": 0.008
+      },
+      {
+       "id": "loop-a",
+       "bone": "bundle",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.3,
+       "region": "slings",
+       "material": "polyester-sling",
+       "kind": "rect",
+       "x": 1.13,
+       "y": -0.03,
+       "w": 0.04,
+       "h": 0.41
+      },
+      {
+       "id": "loop-b",
+       "bone": "bundle",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.3,
+       "region": "slings",
+       "material": "polyester-sling",
+       "kind": "rect",
+       "x": 3.33,
+       "y": -0.03,
+       "w": 0.04,
+       "h": 0.41
+      },
+      {
+       "id": "rafter",
+       "bone": "rafter",
+       "role": "body",
+       "z": 0.5,
+       "filled": true,
+       "tone": 0.54,
+       "region": "rafter-reinstalled",
+       "material": "reclaimed-softwood",
+       "kind": "poly",
+       "points": [
+        [
+         0.03,
+         -0.08
+        ],
+        [
+         0.786436,
+         -0.08
+        ],
+        [
+         0.82,
+         -0.04
+        ],
+        [
+         0.86767,
+         -0.08
+        ],
+        [
+         4.261311,
+         -0.08
+        ],
+        [
+         4.294875,
+         -0.04
+        ],
+        [
+         4.342546,
+         -0.08
+        ],
+        [
+         4.365744,
+         -0.08
+        ],
+        [
+         4.5,
+         0.08
+        ],
+        [
+         0.134256,
+         0.08
+        ],
+        [
+         0.019284,
+         -0.057019
+        ]
+       ],
+       "closed": true
+      },
+      {
+       "id": "rafter-nails",
+       "bone": "rafter",
+       "role": "texture",
+       "z": 0.6,
+       "filled": false,
+       "tone": 0.2,
+       "region": "rafter-reinstalled",
+       "kind": "path",
+       "d": "M 0.8978 -0.045 A 0.0028 0.0028 0 1 0 0.8922 -0.045 A 0.0028 0.0028 0 1 0 0.8978 -0.045 Z M 0.8978 -0.015 A 0.0028 0.0028 0 1 0 0.8922 -0.015 A 0.0028 0.0028 0 1 0 0.8978 -0.015 Z M 0.9228 -0.045 A 0.0028 0.0028 0 1 0 0.9172 -0.045 A 0.0028 0.0028 0 1 0 0.9228 -0.045 Z M 0.9228 -0.015 A 0.0028 0.0028 0 1 0 0.9172 -0.015 A 0.0028 0.0028 0 1 0 0.9228 -0.015 Z M 0.9478 -0.045 A 0.0028 0.0028 0 1 0 0.9422 -0.045 A 0.0028 0.0028 0 1 0 0.9478 -0.045 Z M 0.9478 -0.015 A 0.0028 0.0028 0 1 0 0.9422 -0.015 A 0.0028 0.0028 0 1 0 0.9478 -0.015 Z M 0.8352 -0.028 A 0.0032 0.0032 0 1 0 0.8288 -0.028 A 0.0032 0.0032 0 1 0 0.8352 -0.028 Z M 4.372675 -0.045 A 0.0028 0.0028 0 1 0 4.367075 -0.045 A 0.0028 0.0028 0 1 0 4.372675 -0.045 Z M 4.372675 -0.015 A 0.0028 0.0028 0 1 0 4.367075 -0.015 A 0.0028 0.0028 0 1 0 4.372675 -0.015 Z M 4.397675 -0.045 A 0.0028 0.0028 0 1 0 4.392075 -0.045 A 0.0028 0.0028 0 1 0 4.397675 -0.045 Z M 4.397675 -0.015 A 0.0028 0.0028 0 1 0 4.392075 -0.015 A 0.0028 0.0028 0 1 0 4.397675 -0.015 Z M 4.422675 -0.045 A 0.0028 0.0028 0 1 0 4.417075 -0.045 A 0.0028 0.0028 0 1 0 4.422675 -0.045 Z M 4.422675 -0.015 A 0.0028 0.0028 0 1 0 4.417075 -0.015 A 0.0028 0.0028 0 1 0 4.422675 -0.015 Z M 4.310075 -0.028 A 0.0032 0.0032 0 1 0 4.303675 -0.028 A 0.0032 0.0032 0 1 0 4.310075 -0.028 Z"
+      },
+      {
+       "id": "bearer-a",
+       "bone": "bearer-a",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.34,
+       "region": "storage-timbers",
+       "material": "yard-softwood",
+       "kind": "rect",
+       "x": -0.05,
+       "y": -0.1,
+       "w": 0.1,
+       "h": 0.1,
+       "r": 0.008
+      },
+      {
+       "id": "bearer-b",
+       "bone": "bearer-b",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.34,
+       "region": "storage-timbers",
+       "material": "yard-softwood",
+       "kind": "rect",
+       "x": -0.05,
+       "y": -0.1,
+       "w": 0.1,
+       "h": 0.1,
+       "r": 0.008
+      },
+      {
+       "id": "leg-a",
+       "bone": "sling-a",
+       "role": "body",
+       "z": 5,
+       "filled": true,
+       "tone": 0.3,
+       "region": "slings",
+       "material": "polyester-sling",
+       "kind": "rect",
+       "x": 0.0,
+       "y": -0.015,
+       "w": 2.1,
+       "h": 0.03
+      },
+      {
+       "id": "leg-b",
+       "bone": "sling-b",
+       "role": "body",
+       "z": 5,
+       "filled": true,
+       "tone": 0.3,
+       "region": "slings",
+       "material": "polyester-sling",
+       "kind": "rect",
+       "x": 0.0,
+       "y": -0.015,
+       "w": 2.074504,
+       "h": 0.03
+      },
+      {
+       "id": "ground",
+       "bone": "bearer-a",
+       "role": "ground",
+       "z": 0,
+       "filled": false,
+       "tone": 0.5,
+       "kind": "poly",
+       "points": [
+        [
+         -1.2,
+         -0.1
+        ],
+        [
+         3.8,
+         -0.1
+        ]
+       ],
+       "closed": false
+      }
+     ],
+     "front": [
+      {
+       "id": "ends-lower",
+       "bone": "bundle",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.6,
+       "region": "bundle-rafters",
+       "material": "reclaimed-softwood",
+       "kind": "path",
+       "d": "M -0.3025 0.1 L -0.2225 0.1 L -0.2225 0.26 L -0.3025 0.26 Z M -0.1975 0.1 L -0.1175 0.1 L -0.1175 0.26 L -0.1975 0.26 Z M -0.0925 0.1 L -0.0125 0.1 L -0.0125 0.26 L -0.0925 0.26 Z M 0.0125 0.1 L 0.0925 0.1 L 0.0925 0.26 L 0.0125 0.26 Z M 0.1175 0.1 L 0.1975 0.1 L 0.1975 0.26 L 0.1175 0.26 Z M 0.2225 0.1 L 0.3025 0.1 L 0.3025 0.26 L 0.2225 0.26 Z"
+      },
+      {
+       "id": "ends-upper",
+       "bone": "bundle",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.5599999999999999,
+       "region": "bundle-rafters",
+       "material": "reclaimed-softwood",
+       "kind": "path",
+       "d": "M -0.3025 0.29 L -0.2225 0.29 L -0.2225 0.45 L -0.3025 0.45 Z M -0.1975 0.29 L -0.1175 0.29 L -0.1175 0.45 L -0.1975 0.45 Z M -0.0925 0.29 L -0.0125 0.29 L -0.0125 0.45 L -0.0925 0.45 Z M 0.0125 0.29 L 0.0925 0.29 L 0.0925 0.45 L 0.0125 0.45 Z M 0.1175 0.29 L 0.1975 0.29 L 0.1975 0.45 L 0.1175 0.45 Z"
+      },
+      {
+       "id": "sticker-a",
+       "bone": "bundle",
+       "role": "body",
+       "z": 1,
+       "filled": true,
+       "tone": 0.72,
+       "region": "storage-timbers",
+       "material": "yard-softwood",
+       "kind": "rect",
+       "x": -0.4,
+       "y": 0.26,
+       "w": 0.8,
+       "h": 0.03
+      },
+      {
+       "id": "sticker-b",
+       "bone": "bundle",
+       "role": "body",
+       "z": 1,
+       "filled": true,
+       "tone": 0.72,
+       "region": "storage-timbers",
+       "material": "yard-softwood",
+       "kind": "rect",
+       "x": -0.4,
+       "y": 0.26,
+       "w": 0.8,
+       "h": 0.03
+      },
+      {
+       "id": "strap-a",
+       "bone": "bundle",
+       "role": "detail",
+       "z": 3,
+       "filled": false,
+       "tone": 0.92,
+       "region": "straps",
+       "kind": "poly",
+       "points": [
+        [
+         -0.30325,
+         0.09925
+        ],
+        [
+         0.30325,
+         0.09925
+        ],
+        [
+         0.30325,
+         0.45075
+        ],
+        [
+         -0.30325,
+         0.45075
+        ],
+        [
+         -0.30325,
+         0.09925
+        ]
+       ],
+       "closed": false
+      },
+      {
+       "id": "buckle-a",
+       "bone": "bundle",
+       "role": "detail",
+       "z": 3.5,
+       "filled": true,
+       "tone": 0.5,
+       "region": "straps",
+       "material": "galvanised-steel",
+       "kind": "rect",
+       "x": 0.0775,
+       "y": 0.4515,
+       "w": 0.045,
+       "h": 0.008
+      },
+      {
+       "id": "strap-b",
+       "bone": "bundle",
+       "role": "detail",
+       "z": 3,
+       "filled": false,
+       "tone": 0.92,
+       "region": "straps",
+       "kind": "poly",
+       "points": [
+        [
+         -0.30325,
+         0.09925
+        ],
+        [
+         0.30325,
+         0.09925
+        ],
+        [
+         0.30325,
+         0.45075
+        ],
+        [
+         -0.30325,
+         0.45075
+        ],
+        [
+         -0.30325,
+         0.09925
+        ]
+       ],
+       "closed": false
+      },
+      {
+       "id": "buckle-b",
+       "bone": "bundle",
+       "role": "detail",
+       "z": 3.5,
+       "filled": true,
+       "tone": 0.5,
+       "region": "straps",
+       "material": "galvanised-steel",
+       "kind": "rect",
+       "x": 0.0775,
+       "y": 0.4515,
+       "w": 0.045,
+       "h": 0.008
+      },
+      {
+       "id": "loop-a",
+       "bone": "bundle",
+       "role": "body",
+       "z": 2.5,
+       "filled": true,
+       "tone": 0.3,
+       "region": "slings",
+       "material": "polyester-sling",
+       "kind": "path",
+       "d": "M -0.3325 0.07 L 0.3325 0.07 L 0.3325 0.48 L -0.3325 0.48 Z M -0.3025 0.1 L 0.3025 0.1 L 0.3025 0.45 L -0.3025 0.45 Z"
+      },
+      {
+       "id": "loop-b",
+       "bone": "bundle",
+       "role": "body",
+       "z": 2.5,
+       "filled": true,
+       "tone": 0.3,
+       "region": "slings",
+       "material": "polyester-sling",
+       "kind": "path",
+       "d": "M -0.3325 0.07 L 0.3325 0.07 L 0.3325 0.48 L -0.3325 0.48 Z M -0.3025 0.1 L 0.3025 0.1 L 0.3025 0.45 L -0.3025 0.45 Z"
+      },
+      {
+       "id": "rafter",
+       "bone": "rafter",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.54,
+       "region": "rafter-reinstalled",
+       "material": "reclaimed-softwood",
+       "kind": "poly",
+       "points": [
+        [
+         0.03,
+         -0.08
+        ],
+        [
+         0.786436,
+         -0.08
+        ],
+        [
+         0.82,
+         -0.04
+        ],
+        [
+         0.86767,
+         -0.08
+        ],
+        [
+         4.261311,
+         -0.08
+        ],
+        [
+         4.294875,
+         -0.04
+        ],
+        [
+         4.342546,
+         -0.08
+        ],
+        [
+         4.365744,
+         -0.08
+        ],
+        [
+         4.5,
+         0.08
+        ],
+        [
+         0.134256,
+         0.08
+        ],
+        [
+         0.019284,
+         -0.057019
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.2225,
+        "z1": 0.3025
+       }
+      },
+      {
+       "id": "bearer-a",
+       "bone": "bearer-a",
+       "role": "body",
+       "z": 1,
+       "filled": true,
+       "tone": 0.34,
+       "region": "storage-timbers",
+       "material": "yard-softwood",
+       "kind": "rect",
+       "x": -0.5,
+       "y": 0.0,
+       "w": 1.0,
+       "h": 0.1,
+       "r": 0.008
+      },
+      {
+       "id": "bearer-b",
+       "bone": "bearer-b",
+       "role": "body",
+       "z": 1,
+       "filled": true,
+       "tone": 0.34,
+       "region": "storage-timbers",
+       "material": "yard-softwood",
+       "kind": "rect",
+       "x": -0.5,
+       "y": 0.0,
+       "w": 1.0,
+       "h": 0.1,
+       "r": 0.008
+      },
+      {
+       "id": "leg-a",
+       "bone": "sling-a",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.3,
+       "region": "slings",
+       "material": "polyester-sling",
+       "kind": "rect",
+       "x": 0.0,
+       "y": -0.015,
+       "w": 2.1,
+       "h": 0.03,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.015,
+        "z1": 0.015
+       }
+      },
+      {
+       "id": "leg-b",
+       "bone": "sling-b",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.3,
+       "region": "slings",
+       "material": "polyester-sling",
+       "kind": "rect",
+       "x": 0.0,
+       "y": -0.015,
+       "w": 2.074504,
+       "h": 0.03,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.015,
+        "z1": 0.015
+       }
+      },
+      {
+       "id": "ground",
+       "bone": "bearer-a",
+       "role": "ground",
+       "z": 0,
+       "filled": false,
+       "tone": 0.5,
+       "kind": "poly",
+       "points": [
+        [
+         -0.75,
+         0.0
+        ],
+        [
+         0.75,
+         0.0
+        ]
+       ],
+       "closed": false
+      }
+     ],
+     "plan": [
+      {
+       "id": "bearer-a",
+       "bone": "bearer-a",
+       "role": "body",
+       "z": 0.2,
+       "filled": true,
+       "tone": 0.34,
+       "region": "storage-timbers",
+       "material": "yard-softwood",
+       "kind": "rect",
+       "x": 0.9,
+       "y": -0.5,
+       "w": 0.1,
+       "h": 1.0,
+       "r": 0.008
+      },
+      {
+       "id": "bearer-b",
+       "bone": "bearer-b",
+       "role": "body",
+       "z": 0.2,
+       "filled": true,
+       "tone": 0.34,
+       "region": "storage-timbers",
+       "material": "yard-softwood",
+       "kind": "rect",
+       "x": 3.5,
+       "y": -0.5,
+       "w": 0.1,
+       "h": 1.0,
+       "r": 0.008
+      },
+      {
+       "id": "sticker-a",
+       "bone": "bundle",
+       "role": "body",
+       "z": 0.5,
+       "filled": true,
+       "tone": 0.72,
+       "region": "storage-timbers",
+       "material": "yard-softwood",
+       "kind": "rect",
+       "x": 0.925,
+       "y": -0.4,
+       "w": 0.05,
+       "h": 0.8
+      },
+      {
+       "id": "sticker-b",
+       "bone": "bundle",
+       "role": "body",
+       "z": 0.5,
+       "filled": true,
+       "tone": 0.72,
+       "region": "storage-timbers",
+       "material": "yard-softwood",
+       "kind": "rect",
+       "x": 3.525,
+       "y": -0.4,
+       "w": 0.05,
+       "h": 0.8
+      },
+      {
+       "id": "top-lower-outer",
+       "bone": "bundle",
+       "role": "body",
+       "z": 0.8,
+       "filled": true,
+       "tone": 0.46,
+       "region": "bundle-rafters",
+       "material": "reclaimed-softwood",
+       "kind": "rect",
+       "x": 0.0,
+       "y": 0.2225,
+       "w": 4.5,
+       "h": 0.08
+      },
+      {
+       "id": "tops-upper",
+       "bone": "bundle",
+       "role": "body",
+       "z": 1,
+       "filled": true,
+       "tone": 0.6,
+       "region": "bundle-rafters",
+       "material": "reclaimed-softwood",
+       "kind": "path",
+       "d": "M 0.0 -0.3025 L 4.5 -0.3025 L 4.5 -0.2225 L 0.0 -0.2225 Z M 0.0 -0.1975 L 4.5 -0.1975 L 4.5 -0.1175 L 0.0 -0.1175 Z M 0.0 -0.0925 L 4.5 -0.0925 L 4.5 -0.0125 L 0.0 -0.0125 Z M 0.0 0.0125 L 4.5 0.0125 L 4.5 0.0925 L 0.0 0.0925 Z M 0.0 0.1175 L 4.5 0.1175 L 4.5 0.1975 L 0.0 0.1975 Z"
+      },
+      {
+       "id": "plumb-edges",
+       "bone": "bundle",
+       "role": "detail",
+       "z": 1.1,
+       "filled": false,
+       "tone": 0.3,
+       "region": "bundle-rafters",
+       "kind": "path",
+       "d": "M 0.134256 -0.3025 L 0.134256 -0.2225 M 0.134256 -0.1975 L 0.134256 -0.1175 M 0.134256 -0.0925 L 0.134256 -0.0125 M 0.134256 0.0125 L 0.134256 0.0925 M 0.134256 0.1175 L 0.134256 0.1975"
+      },
+      {
+       "id": "nails-top",
+       "bone": "bundle",
+       "role": "texture",
+       "z": 1.2,
+       "filled": false,
+       "tone": 0.2,
+       "region": "bundle-rafters",
+       "kind": "path",
+       "d": "M 0.4028 -0.2745 A 0.0028 0.0028 0 1 0 0.3972 -0.2745 A 0.0028 0.0028 0 1 0 0.4028 -0.2745 Z M 0.7328 -0.2505 A 0.0028 0.0028 0 1 0 0.7272 -0.2505 A 0.0028 0.0028 0 1 0 0.7328 -0.2505 Z M 1.0628 -0.2745 A 0.0028 0.0028 0 1 0 1.0572 -0.2745 A 0.0028 0.0028 0 1 0 1.0628 -0.2745 Z M 1.3928 -0.2505 A 0.0028 0.0028 0 1 0 1.3872 -0.2505 A 0.0028 0.0028 0 1 0 1.3928 -0.2505 Z M 1.7228 -0.2745 A 0.0028 0.0028 0 1 0 1.7172 -0.2745 A 0.0028 0.0028 0 1 0 1.7228 -0.2745 Z M 2.0528 -0.2505 A 0.0028 0.0028 0 1 0 2.0472 -0.2505 A 0.0028 0.0028 0 1 0 2.0528 -0.2505 Z M 2.3828 -0.2745 A 0.0028 0.0028 0 1 0 2.3772 -0.2745 A 0.0028 0.0028 0 1 0 2.3828 -0.2745 Z M 2.7128 -0.2505 A 0.0028 0.0028 0 1 0 2.7072 -0.2505 A 0.0028 0.0028 0 1 0 2.7128 -0.2505 Z M 3.0428 -0.2745 A 0.0028 0.0028 0 1 0 3.0372 -0.2745 A 0.0028 0.0028 0 1 0 3.0428 -0.2745 Z M 3.3728 -0.2505 A 0.0028 0.0028 0 1 0 3.3672 -0.2505 A 0.0028 0.0028 0 1 0 3.3728 -0.2505 Z M 3.7028 -0.2745 A 0.0028 0.0028 0 1 0 3.6972 -0.2745 A 0.0028 0.0028 0 1 0 3.7028 -0.2745 Z M 4.0328 -0.2505 A 0.0028 0.0028 0 1 0 4.0272 -0.2505 A 0.0028 0.0028 0 1 0 4.0328 -0.2505 Z M 0.4028 -0.1695 A 0.0028 0.0028 0 1 0 0.3972 -0.1695 A 0.0028 0.0028 0 1 0 0.4028 -0.1695 Z M 0.7328 -0.1455 A 0.0028 0.0028 0 1 0 0.7272 -0.1455 A 0.0028 0.0028 0 1 0 0.7328 -0.1455 Z M 1.0628 -0.1695 A 0.0028 0.0028 0 1 0 1.0572 -0.1695 A 0.0028 0.0028 0 1 0 1.0628 -0.1695 Z M 1.3928 -0.1455 A 0.0028 0.0028 0 1 0 1.3872 -0.1455 A 0.0028 0.0028 0 1 0 1.3928 -0.1455 Z M 1.7228 -0.1695 A 0.0028 0.0028 0 1 0 1.7172 -0.1695 A 0.0028 0.0028 0 1 0 1.7228 -0.1695 Z M 2.0528 -0.1455 A 0.0028 0.0028 0 1 0 2.0472 -0.1455 A 0.0028 0.0028 0 1 0 2.0528 -0.1455 Z M 2.3828 -0.1695 A 0.0028 0.0028 0 1 0 2.3772 -0.1695 A 0.0028 0.0028 0 1 0 2.3828 -0.1695 Z M 2.7128 -0.1455 A 0.0028 0.0028 0 1 0 2.7072 -0.1455 A 0.0028 0.0028 0 1 0 2.7128 -0.1455 Z M 3.0428 -0.1695 A 0.0028 0.0028 0 1 0 3.0372 -0.1695 A 0.0028 0.0028 0 1 0 3.0428 -0.1695 Z M 3.3728 -0.1455 A 0.0028 0.0028 0 1 0 3.3672 -0.1455 A 0.0028 0.0028 0 1 0 3.3728 -0.1455 Z M 3.7028 -0.1695 A 0.0028 0.0028 0 1 0 3.6972 -0.1695 A 0.0028 0.0028 0 1 0 3.7028 -0.1695 Z M 4.0328 -0.1455 A 0.0028 0.0028 0 1 0 4.0272 -0.1455 A 0.0028 0.0028 0 1 0 4.0328 -0.1455 Z M 0.4028 -0.0645 A 0.0028 0.0028 0 1 0 0.3972 -0.0645 A 0.0028 0.0028 0 1 0 0.4028 -0.0645 Z M 0.7328 -0.0405 A 0.0028 0.0028 0 1 0 0.7272 -0.0405 A 0.0028 0.0028 0 1 0 0.7328 -0.0405 Z M 1.0628 -0.0645 A 0.0028 0.0028 0 1 0 1.0572 -0.0645 A 0.0028 0.0028 0 1 0 1.0628 -0.0645 Z M 1.3928 -0.0405 A 0.0028 0.0028 0 1 0 1.3872 -0.0405 A 0.0028 0.0028 0 1 0 1.3928 -0.0405 Z M 1.7228 -0.0645 A 0.0028 0.0028 0 1 0 1.7172 -0.0645 A 0.0028 0.0028 0 1 0 1.7228 -0.0645 Z M 2.0528 -0.0405 A 0.0028 0.0028 0 1 0 2.0472 -0.0405 A 0.0028 0.0028 0 1 0 2.0528 -0.0405 Z M 2.3828 -0.0645 A 0.0028 0.0028 0 1 0 2.3772 -0.0645 A 0.0028 0.0028 0 1 0 2.3828 -0.0645 Z M 2.7128 -0.0405 A 0.0028 0.0028 0 1 0 2.7072 -0.0405 A 0.0028 0.0028 0 1 0 2.7128 -0.0405 Z M 3.0428 -0.0645 A 0.0028 0.0028 0 1 0 3.0372 -0.0645 A 0.0028 0.0028 0 1 0 3.0428 -0.0645 Z M 3.3728 -0.0405 A 0.0028 0.0028 0 1 0 3.3672 -0.0405 A 0.0028 0.0028 0 1 0 3.3728 -0.0405 Z M 3.7028 -0.0645 A 0.0028 0.0028 0 1 0 3.6972 -0.0645 A 0.0028 0.0028 0 1 0 3.7028 -0.0645 Z M 4.0328 -0.0405 A 0.0028 0.0028 0 1 0 4.0272 -0.0405 A 0.0028 0.0028 0 1 0 4.0328 -0.0405 Z M 0.4028 0.0405 A 0.0028 0.0028 0 1 0 0.3972 0.0405 A 0.0028 0.0028 0 1 0 0.4028 0.0405 Z M 0.7328 0.0645 A 0.0028 0.0028 0 1 0 0.7272 0.0645 A 0.0028 0.0028 0 1 0 0.7328 0.0645 Z M 1.0628 0.0405 A 0.0028 0.0028 0 1 0 1.0572 0.0405 A 0.0028 0.0028 0 1 0 1.0628 0.0405 Z M 1.3928 0.0645 A 0.0028 0.0028 0 1 0 1.3872 0.0645 A 0.0028 0.0028 0 1 0 1.3928 0.0645 Z M 1.7228 0.0405 A 0.0028 0.0028 0 1 0 1.7172 0.0405 A 0.0028 0.0028 0 1 0 1.7228 0.0405 Z M 2.0528 0.0645 A 0.0028 0.0028 0 1 0 2.0472 0.0645 A 0.0028 0.0028 0 1 0 2.0528 0.0645 Z M 2.3828 0.0405 A 0.0028 0.0028 0 1 0 2.3772 0.0405 A 0.0028 0.0028 0 1 0 2.3828 0.0405 Z M 2.7128 0.0645 A 0.0028 0.0028 0 1 0 2.7072 0.0645 A 0.0028 0.0028 0 1 0 2.7128 0.0645 Z M 3.0428 0.0405 A 0.0028 0.0028 0 1 0 3.0372 0.0405 A 0.0028 0.0028 0 1 0 3.0428 0.0405 Z M 3.3728 0.0645 A 0.0028 0.0028 0 1 0 3.3672 0.0645 A 0.0028 0.0028 0 1 0 3.3728 0.0645 Z M 3.7028 0.0405 A 0.0028 0.0028 0 1 0 3.6972 0.0405 A 0.0028 0.0028 0 1 0 3.7028 0.0405 Z M 4.0328 0.0645 A 0.0028 0.0028 0 1 0 4.0272 0.0645 A 0.0028 0.0028 0 1 0 4.0328 0.0645 Z M 0.4028 0.1455 A 0.0028 0.0028 0 1 0 0.3972 0.1455 A 0.0028 0.0028 0 1 0 0.4028 0.1455 Z M 0.7328 0.1695 A 0.0028 0.0028 0 1 0 0.7272 0.1695 A 0.0028 0.0028 0 1 0 0.7328 0.1695 Z M 1.0628 0.1455 A 0.0028 0.0028 0 1 0 1.0572 0.1455 A 0.0028 0.0028 0 1 0 1.0628 0.1455 Z M 1.3928 0.1695 A 0.0028 0.0028 0 1 0 1.3872 0.1695 A 0.0028 0.0028 0 1 0 1.3928 0.1695 Z M 1.7228 0.1455 A 0.0028 0.0028 0 1 0 1.7172 0.1455 A 0.0028 0.0028 0 1 0 1.7228 0.1455 Z M 2.0528 0.1695 A 0.0028 0.0028 0 1 0 2.0472 0.1695 A 0.0028 0.0028 0 1 0 2.0528 0.1695 Z M 2.3828 0.1455 A 0.0028 0.0028 0 1 0 2.3772 0.1455 A 0.0028 0.0028 0 1 0 2.3828 0.1455 Z M 2.7128 0.1695 A 0.0028 0.0028 0 1 0 2.7072 0.1695 A 0.0028 0.0028 0 1 0 2.7128 0.1695 Z M 3.0428 0.1455 A 0.0028 0.0028 0 1 0 3.0372 0.1455 A 0.0028 0.0028 0 1 0 3.0428 0.1455 Z M 3.3728 0.1695 A 0.0028 0.0028 0 1 0 3.3672 0.1695 A 0.0028 0.0028 0 1 0 3.3728 0.1695 Z M 3.7028 0.1455 A 0.0028 0.0028 0 1 0 3.6972 0.1455 A 0.0028 0.0028 0 1 0 3.7028 0.1455 Z M 4.0328 0.1695 A 0.0028 0.0028 0 1 0 4.0272 0.1695 A 0.0028 0.0028 0 1 0 4.0328 0.1695 Z"
+      },
+      {
+       "id": "strap-a",
+       "bone": "bundle",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.92,
+       "region": "straps",
+       "material": "polyester-strap",
+       "kind": "rect",
+       "x": 0.434,
+       "y": -0.304,
+       "w": 0.032,
+       "h": 0.608
+      },
+      {
+       "id": "buckle-a",
+       "bone": "bundle",
+       "role": "detail",
+       "z": 3.5,
+       "filled": true,
+       "tone": 0.5,
+       "region": "straps",
+       "material": "galvanised-steel",
+       "kind": "rect",
+       "x": 0.432,
+       "y": 0.0775,
+       "w": 0.036,
+       "h": 0.045
+      },
+      {
+       "id": "strap-b",
+       "bone": "bundle",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.92,
+       "region": "straps",
+       "material": "polyester-strap",
+       "kind": "rect",
+       "x": 4.034,
+       "y": -0.304,
+       "w": 0.032,
+       "h": 0.608
+      },
+      {
+       "id": "buckle-b",
+       "bone": "bundle",
+       "role": "detail",
+       "z": 3.5,
+       "filled": true,
+       "tone": 0.5,
+       "region": "straps",
+       "material": "galvanised-steel",
+       "kind": "rect",
+       "x": 4.032,
+       "y": 0.0775,
+       "w": 0.036,
+       "h": 0.045
+      },
+      {
+       "id": "loop-a",
+       "bone": "bundle",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.3,
+       "region": "slings",
+       "material": "polyester-sling",
+       "kind": "rect",
+       "x": 1.13,
+       "y": -0.3325,
+       "w": 0.04,
+       "h": 0.665
+      },
+      {
+       "id": "loop-b",
+       "bone": "bundle",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.3,
+       "region": "slings",
+       "material": "polyester-sling",
+       "kind": "rect",
+       "x": 3.33,
+       "y": -0.3325,
+       "w": 0.04,
+       "h": 0.665
+      },
+      {
+       "id": "rafter",
+       "bone": "rafter",
+       "role": "body",
+       "z": 1,
+       "filled": true,
+       "tone": 0.54,
+       "region": "rafter-reinstalled",
+       "material": "reclaimed-softwood",
+       "kind": "poly",
+       "points": [
+        [
+         0.03,
+         -0.08
+        ],
+        [
+         0.786436,
+         -0.08
+        ],
+        [
+         0.82,
+         -0.04
+        ],
+        [
+         0.86767,
+         -0.08
+        ],
+        [
+         4.261311,
+         -0.08
+        ],
+        [
+         4.294875,
+         -0.04
+        ],
+        [
+         4.342546,
+         -0.08
+        ],
+        [
+         4.365744,
+         -0.08
+        ],
+        [
+         4.5,
+         0.08
+        ],
+        [
+         0.134256,
+         0.08
+        ],
+        [
+         0.019284,
+         -0.057019
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.2225,
+        "z1": 0.3025
+       }
+      },
+      {
+       "id": "rafter-plumb-edge",
+       "bone": "rafter",
+       "role": "detail",
+       "z": 1.1,
+       "filled": false,
+       "tone": 0.3,
+       "region": "rafter-reinstalled",
+       "kind": "poly",
+       "points": [
+        [
+         0.134256,
+         0.2225
+        ],
+        [
+         0.134256,
+         0.3025
+        ]
+       ],
+       "closed": false
+      },
+      {
+       "id": "rafter-nails-top",
+       "bone": "rafter",
+       "role": "texture",
+       "z": 1.2,
+       "filled": false,
+       "tone": 0.2,
+       "region": "rafter-reinstalled",
+       "kind": "path",
+       "d": "M 0.4028 0.2505 A 0.0028 0.0028 0 1 0 0.3972 0.2505 A 0.0028 0.0028 0 1 0 0.4028 0.2505 Z M 0.7328 0.2745 A 0.0028 0.0028 0 1 0 0.7272 0.2745 A 0.0028 0.0028 0 1 0 0.7328 0.2745 Z M 1.0628 0.2505 A 0.0028 0.0028 0 1 0 1.0572 0.2505 A 0.0028 0.0028 0 1 0 1.0628 0.2505 Z M 1.3928 0.2745 A 0.0028 0.0028 0 1 0 1.3872 0.2745 A 0.0028 0.0028 0 1 0 1.3928 0.2745 Z M 1.7228 0.2505 A 0.0028 0.0028 0 1 0 1.7172 0.2505 A 0.0028 0.0028 0 1 0 1.7228 0.2505 Z M 2.0528 0.2745 A 0.0028 0.0028 0 1 0 2.0472 0.2745 A 0.0028 0.0028 0 1 0 2.0528 0.2745 Z M 2.3828 0.2505 A 0.0028 0.0028 0 1 0 2.3772 0.2505 A 0.0028 0.0028 0 1 0 2.3828 0.2505 Z M 2.7128 0.2745 A 0.0028 0.0028 0 1 0 2.7072 0.2745 A 0.0028 0.0028 0 1 0 2.7128 0.2745 Z M 3.0428 0.2505 A 0.0028 0.0028 0 1 0 3.0372 0.2505 A 0.0028 0.0028 0 1 0 3.0428 0.2505 Z M 3.3728 0.2745 A 0.0028 0.0028 0 1 0 3.3672 0.2745 A 0.0028 0.0028 0 1 0 3.3728 0.2745 Z M 3.7028 0.2505 A 0.0028 0.0028 0 1 0 3.6972 0.2505 A 0.0028 0.0028 0 1 0 3.7028 0.2505 Z M 4.0328 0.2745 A 0.0028 0.0028 0 1 0 4.0272 0.2745 A 0.0028 0.0028 0 1 0 4.0328 0.2745 Z"
+      },
+      {
+       "id": "leg-a",
+       "bone": "sling-a",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.3,
+       "region": "slings",
+       "material": "polyester-sling",
+       "kind": "rect",
+       "x": 0.0,
+       "y": -0.015,
+       "w": 2.1,
+       "h": 0.03,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.015,
+        "z1": 0.015
+       }
+      },
+      {
+       "id": "leg-b",
+       "bone": "sling-b",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.3,
+       "region": "slings",
+       "material": "polyester-sling",
+       "kind": "rect",
+       "x": 0.0,
+       "y": -0.015,
+       "w": 2.074504,
+       "h": 0.03,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.015,
+        "z1": 0.015
+       }
+      }
+     ]
+    },
+    "decisions": {
+     "silhouette": {
+      "en": "Side elevation of the 4.50 m bundle (90 mm on paper): the two layers of rafters on edge with their plumb-cut ends and the two birdsmouths of every rafter (open through the whole bundle), the 30 mm sticker slot between the layers, the two 100 mm bearers, the white cord straps and the violet sling chokes as bands across the side, the sling legs on top. Front: twelve 80 x 160 mm end faces with 25 mm gaps, the stickers in the slot, the sling chokes as rings. Plan: the upper rafters with their gaps over the stickers and bearers.",
+      "de": "Seitenansicht des 4,50 m langen Bündels (90 mm auf Papier): die zwei Lagen hochkant stehender Sparren mit Lotschnitten an den Enden und den zwei Kerven jedes Sparrens (durch das ganze Bündel offen), der 30-mm-Lattenspalt zwischen den Lagen, die zwei 100-mm-Unterleger, die weißen Kraftbänder und die violetten Schlingenschnürungen als Bänder über die Flanke, die Schlingenstränge obenauf. Vorderansicht: zwölf Stirnflächen 80 x 160 mm mit 25-mm-Fugen, die Latten im Spalt, die Schnürungen als Ringe. Draufsicht: die oberen Sparren mit ihren Fugen über Latten und Unterlegern."
+     },
+     "retained": {
+      "en": "Every rafter at its true place, both 40 mm deep birdsmouths (0.8 mm), the plumb cuts (2.7 mm offset), the splintered acute tips of three rafters, the 25 mm gaps (0.5 mm), the 32 mm straps with their wire buckles and the 40 mm chokes.",
+      "de": "Jeder Sparren an seiner wahren Stelle, beide 40 mm tiefen Kerven (0,8 mm), die Lotschnitte (2,7 mm Versatz), die abgesplitterten spitzen Enden dreier Sparren, die 25-mm-Fugen (0,5 mm), die 32-mm-Bänder mit ihren Drahtschnallen und die 40-mm-Schnürungen."
+     },
+     "merged": {
+      "en": "The rafters behind the near column of each layer share one outline in the side elevation; the hidden lower layer is drawn in plan only under the outer upper rafter, where it shows once that rafter is reinstalled.",
+      "de": "Die Sparren hinter der vorderen Reihe jeder Lage teilen sich in der Seitenansicht einen Umriss; die verdeckte untere Lage ist in der Draufsicht nur unter dem äußeren oberen Sparren gezeichnet, wo sie nach dessen Wiedereinbau sichtbar wird."
+     },
+     "omitted": {
+      "en": "The 4 to 6 mm nail holes are texture, not holes in the outline; the arris wane of a few millimetres is below the 7.5 mm smallest feature.",
+      "de": "Die Nagellöcher von 4 bis 6 mm sind Textur, keine Löcher im Umriss; die Baumkante von wenigen Millimetern liegt unter der kleinsten Einzelheit von 7,5 mm."
+     },
+     "thinElements": {
+      "en": "The 1.5 mm cord strap is a filled 32 mm band in side view and plan and a 0.18 mm outline around the bundle in the front view, where only its edge shows.",
+      "de": "Das 1,5-mm-Kraftband ist in Seitenansicht und Draufsicht ein gefülltes 32-mm-Band und in der Vorderansicht ein 0,18-mm-Umriss um das Bündel, wo nur seine Kante zu sehen ist."
+     },
+     "hatching": {
+      "en": "No hatch: the faces are views, not sections; tones tell the aged rafters, the grey yard timber, the white straps and the violet slings apart.",
+      "de": "Keine Schraffur: die Flächen sind Ansichten, keine Schnitte; Grautöne unterscheiden gealterte Sparren, graues Lagerholz, weiße Bänder und violette Schlingen."
+     },
+     "styles": {
+      "en": "Outline 0.35 mm; the rafter layers of the side elevation 0.22 mm, so that the 30 mm sticker slot stays a printable white line up to 1:75; buckles and plumb edges 0.18 mm, nail holes 0.1 mm texture.",
+      "de": "Kontur 0,35 mm; die Sparrenlagen der Seitenansicht 0,22 mm, damit der 30-mm-Lattenspalt bis 1:75 eine druckbare weiße Linie bleibt; Schnallen und Lotkanten 0,18 mm, Nagellöcher 0,1 mm Textur."
+     },
+     "overlays": {
+      "en": "Each rafter group, the storage timbers, the straps and the slings are their own region cells.",
+      "de": "Jede Sparrengruppe, das Lagerholz, die Bänder und die Schlingen sind eigene Regionenzellen."
+     }
+    }
+   },
+   "100": {
+    "status": "authored",
+    "denominator": 100,
+    "validRange": {
+     "minDenominator": 75,
+     "maxDenominator": 150
+    },
+    "pens": {
+     "body": 0.25,
+     "detail": 0.13,
+     "texture": 0.1,
+     "glazing": 0.1,
+     "ground": 0.35
+    },
+    "hatches": [],
+    "geometry": {
+     "elevation": [
+      {
+       "id": "layer-lower",
+       "bone": "bundle",
+       "role": "body",
+       "z": 1,
+       "filled": true,
+       "tone": 0.6,
+       "region": "bundle-rafters",
+       "material": "reclaimed-softwood",
+       "kind": "poly",
+       "points": [
+        [
+         0.0,
+         0.0
+        ],
+        [
+         0.786436,
+         0.0
+        ],
+        [
+         0.82,
+         0.04
+        ],
+        [
+         0.86767,
+         0.0
+        ],
+        [
+         4.261311,
+         0.0
+        ],
+        [
+         4.294875,
+         0.04
+        ],
+        [
+         4.342546,
+         0.0
+        ],
+        [
+         4.365744,
+         0.0
+        ],
+        [
+         4.5,
+         0.16
+        ],
+        [
+         0.134256,
+         0.16
+        ]
+       ],
+       "closed": true
+      },
+      {
+       "id": "layer-upper",
+       "bone": "bundle",
+       "role": "body",
+       "z": 1,
+       "filled": true,
+       "tone": 0.5599999999999999,
+       "region": "bundle-rafters",
+       "material": "reclaimed-softwood",
+       "kind": "poly",
+       "points": [
+        [
+         0.0,
+         0.19
+        ],
+        [
+         0.786436,
+         0.19
+        ],
+        [
+         0.82,
+         0.23
+        ],
+        [
+         0.86767,
+         0.19
+        ],
+        [
+         4.261311,
+         0.19
+        ],
+        [
+         4.294875,
+         0.23
+        ],
+        [
+         4.342546,
+         0.19
+        ],
+        [
+         4.365744,
+         0.19
+        ],
+        [
+         4.5,
+         0.35
+        ],
+        [
+         0.134256,
+         0.35
+        ]
+       ],
+       "closed": true
+      },
+      {
+       "id": "sticker-a",
+       "bone": "bundle",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.72,
+       "region": "storage-timbers",
+       "material": "yard-softwood",
+       "kind": "rect",
+       "x": 0.925,
+       "y": 0.16,
+       "w": 0.05,
+       "h": 0.03
+      },
+      {
+       "id": "sticker-b",
+       "bone": "bundle",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.72,
+       "region": "storage-timbers",
+       "material": "yard-softwood",
+       "kind": "rect",
+       "x": 3.525,
+       "y": 0.16,
+       "w": 0.05,
+       "h": 0.03
+      },
+      {
+       "id": "strap-a",
+       "bone": "bundle",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.92,
+       "region": "straps",
+       "material": "polyester-strap",
+       "kind": "rect",
+       "x": 0.434,
+       "y": -0.0015,
+       "w": 0.032,
+       "h": 0.353
+      },
+      {
+       "id": "strap-b",
+       "bone": "bundle",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.92,
+       "region": "straps",
+       "material": "polyester-strap",
+       "kind": "rect",
+       "x": 4.034,
+       "y": -0.0015,
+       "w": 0.032,
+       "h": 0.353
+      },
+      {
+       "id": "loop-a",
+       "bone": "bundle",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.3,
+       "region": "slings",
+       "material": "polyester-sling",
+       "kind": "rect",
+       "x": 1.13,
+       "y": -0.03,
+       "w": 0.04,
+       "h": 0.41
+      },
+      {
+       "id": "loop-b",
+       "bone": "bundle",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.3,
+       "region": "slings",
+       "material": "polyester-sling",
+       "kind": "rect",
+       "x": 3.33,
+       "y": -0.03,
+       "w": 0.04,
+       "h": 0.41
+      },
+      {
+       "id": "rafter",
+       "bone": "rafter",
+       "role": "body",
+       "z": 0.5,
+       "filled": true,
+       "tone": 0.54,
+       "region": "rafter-reinstalled",
+       "material": "reclaimed-softwood",
+       "kind": "poly",
+       "points": [
+        [
+         0.0,
+         -0.08
+        ],
+        [
+         0.786436,
+         -0.08
+        ],
+        [
+         0.82,
+         -0.04
+        ],
+        [
+         0.86767,
+         -0.08
+        ],
+        [
+         4.261311,
+         -0.08
+        ],
+        [
+         4.294875,
+         -0.04
+        ],
+        [
+         4.342546,
+         -0.08
+        ],
+        [
+         4.365744,
+         -0.08
+        ],
+        [
+         4.5,
+         0.08
+        ],
+        [
+         0.134256,
+         0.08
+        ]
+       ],
+       "closed": true
+      },
+      {
+       "id": "bearer-a",
+       "bone": "bearer-a",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.34,
+       "region": "storage-timbers",
+       "material": "yard-softwood",
+       "kind": "rect",
+       "x": -0.05,
+       "y": -0.1,
+       "w": 0.1,
+       "h": 0.1
+      },
+      {
+       "id": "bearer-b",
+       "bone": "bearer-b",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.34,
+       "region": "storage-timbers",
+       "material": "yard-softwood",
+       "kind": "rect",
+       "x": -0.05,
+       "y": -0.1,
+       "w": 0.1,
+       "h": 0.1
+      },
+      {
+       "id": "leg-a",
+       "bone": "sling-a",
+       "role": "body",
+       "z": 5,
+       "filled": true,
+       "tone": 0.3,
+       "region": "slings",
+       "material": "polyester-sling",
+       "kind": "rect",
+       "x": 0.0,
+       "y": -0.015,
+       "w": 2.1,
+       "h": 0.03
+      },
+      {
+       "id": "leg-b",
+       "bone": "sling-b",
+       "role": "body",
+       "z": 5,
+       "filled": true,
+       "tone": 0.3,
+       "region": "slings",
+       "material": "polyester-sling",
+       "kind": "rect",
+       "x": 0.0,
+       "y": -0.015,
+       "w": 2.074504,
+       "h": 0.03
+      },
+      {
+       "id": "ground",
+       "bone": "bearer-a",
+       "role": "ground",
+       "z": 0,
+       "filled": false,
+       "tone": 0.5,
+       "kind": "poly",
+       "points": [
+        [
+         -1.2,
+         -0.1
+        ],
+        [
+         3.8,
+         -0.1
+        ]
+       ],
+       "closed": false
+      }
+     ],
+     "front": [
+      {
+       "id": "ends-lower",
+       "bone": "bundle",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.6,
+       "region": "bundle-rafters",
+       "material": "reclaimed-softwood",
+       "kind": "path",
+       "d": "M -0.3025 0.1 L -0.2225 0.1 L -0.2225 0.26 L -0.3025 0.26 Z M -0.1975 0.1 L -0.1175 0.1 L -0.1175 0.26 L -0.1975 0.26 Z M -0.0925 0.1 L -0.0125 0.1 L -0.0125 0.26 L -0.0925 0.26 Z M 0.0125 0.1 L 0.0925 0.1 L 0.0925 0.26 L 0.0125 0.26 Z M 0.1175 0.1 L 0.1975 0.1 L 0.1975 0.26 L 0.1175 0.26 Z M 0.2225 0.1 L 0.3025 0.1 L 0.3025 0.26 L 0.2225 0.26 Z"
+      },
+      {
+       "id": "ends-upper",
+       "bone": "bundle",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.5599999999999999,
+       "region": "bundle-rafters",
+       "material": "reclaimed-softwood",
+       "kind": "path",
+       "d": "M -0.3025 0.29 L -0.2225 0.29 L -0.2225 0.45 L -0.3025 0.45 Z M -0.1975 0.29 L -0.1175 0.29 L -0.1175 0.45 L -0.1975 0.45 Z M -0.0925 0.29 L -0.0125 0.29 L -0.0125 0.45 L -0.0925 0.45 Z M 0.0125 0.29 L 0.0925 0.29 L 0.0925 0.45 L 0.0125 0.45 Z M 0.1175 0.29 L 0.1975 0.29 L 0.1975 0.45 L 0.1175 0.45 Z"
+      },
+      {
+       "id": "sticker-a",
+       "bone": "bundle",
+       "role": "body",
+       "z": 1,
+       "filled": true,
+       "tone": 0.72,
+       "region": "storage-timbers",
+       "material": "yard-softwood",
+       "kind": "rect",
+       "x": -0.4,
+       "y": 0.26,
+       "w": 0.8,
+       "h": 0.03
+      },
+      {
+       "id": "sticker-b",
+       "bone": "bundle",
+       "role": "body",
+       "z": 1,
+       "filled": true,
+       "tone": 0.72,
+       "region": "storage-timbers",
+       "material": "yard-softwood",
+       "kind": "rect",
+       "x": -0.4,
+       "y": 0.26,
+       "w": 0.8,
+       "h": 0.03
+      },
+      {
+       "id": "strap-a",
+       "bone": "bundle",
+       "role": "detail",
+       "z": 3,
+       "filled": false,
+       "tone": 0.92,
+       "region": "straps",
+       "kind": "poly",
+       "points": [
+        [
+         -0.30325,
+         0.09925
+        ],
+        [
+         0.30325,
+         0.09925
+        ],
+        [
+         0.30325,
+         0.45075
+        ],
+        [
+         -0.30325,
+         0.45075
+        ],
+        [
+         -0.30325,
+         0.09925
+        ]
+       ],
+       "closed": false
+      },
+      {
+       "id": "strap-b",
+       "bone": "bundle",
+       "role": "detail",
+       "z": 3,
+       "filled": false,
+       "tone": 0.92,
+       "region": "straps",
+       "kind": "poly",
+       "points": [
+        [
+         -0.30325,
+         0.09925
+        ],
+        [
+         0.30325,
+         0.09925
+        ],
+        [
+         0.30325,
+         0.45075
+        ],
+        [
+         -0.30325,
+         0.45075
+        ],
+        [
+         -0.30325,
+         0.09925
+        ]
+       ],
+       "closed": false
+      },
+      {
+       "id": "loop-a",
+       "bone": "bundle",
+       "role": "body",
+       "z": 2.5,
+       "filled": true,
+       "tone": 0.3,
+       "region": "slings",
+       "material": "polyester-sling",
+       "kind": "path",
+       "d": "M -0.3325 0.07 L 0.3325 0.07 L 0.3325 0.48 L -0.3325 0.48 Z M -0.3025 0.1 L 0.3025 0.1 L 0.3025 0.45 L -0.3025 0.45 Z"
+      },
+      {
+       "id": "loop-b",
+       "bone": "bundle",
+       "role": "body",
+       "z": 2.5,
+       "filled": true,
+       "tone": 0.3,
+       "region": "slings",
+       "material": "polyester-sling",
+       "kind": "path",
+       "d": "M -0.3325 0.07 L 0.3325 0.07 L 0.3325 0.48 L -0.3325 0.48 Z M -0.3025 0.1 L 0.3025 0.1 L 0.3025 0.45 L -0.3025 0.45 Z"
+      },
+      {
+       "id": "rafter",
+       "bone": "rafter",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.54,
+       "region": "rafter-reinstalled",
+       "material": "reclaimed-softwood",
+       "kind": "poly",
+       "points": [
+        [
+         0.0,
+         -0.08
+        ],
+        [
+         0.786436,
+         -0.08
+        ],
+        [
+         0.82,
+         -0.04
+        ],
+        [
+         0.86767,
+         -0.08
+        ],
+        [
+         4.261311,
+         -0.08
+        ],
+        [
+         4.294875,
+         -0.04
+        ],
+        [
+         4.342546,
+         -0.08
+        ],
+        [
+         4.365744,
+         -0.08
+        ],
+        [
+         4.5,
+         0.08
+        ],
+        [
+         0.134256,
+         0.08
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.2225,
+        "z1": 0.3025
+       }
+      },
+      {
+       "id": "bearer-a",
+       "bone": "bearer-a",
+       "role": "body",
+       "z": 1,
+       "filled": true,
+       "tone": 0.34,
+       "region": "storage-timbers",
+       "material": "yard-softwood",
+       "kind": "rect",
+       "x": -0.5,
+       "y": 0.0,
+       "w": 1.0,
+       "h": 0.1
+      },
+      {
+       "id": "bearer-b",
+       "bone": "bearer-b",
+       "role": "body",
+       "z": 1,
+       "filled": true,
+       "tone": 0.34,
+       "region": "storage-timbers",
+       "material": "yard-softwood",
+       "kind": "rect",
+       "x": -0.5,
+       "y": 0.0,
+       "w": 1.0,
+       "h": 0.1
+      },
+      {
+       "id": "leg-a",
+       "bone": "sling-a",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.3,
+       "region": "slings",
+       "material": "polyester-sling",
+       "kind": "rect",
+       "x": 0.0,
+       "y": -0.015,
+       "w": 2.1,
+       "h": 0.03,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.015,
+        "z1": 0.015
+       }
+      },
+      {
+       "id": "leg-b",
+       "bone": "sling-b",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.3,
+       "region": "slings",
+       "material": "polyester-sling",
+       "kind": "rect",
+       "x": 0.0,
+       "y": -0.015,
+       "w": 2.074504,
+       "h": 0.03,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.015,
+        "z1": 0.015
+       }
+      },
+      {
+       "id": "ground",
+       "bone": "bearer-a",
+       "role": "ground",
+       "z": 0,
+       "filled": false,
+       "tone": 0.5,
+       "kind": "poly",
+       "points": [
+        [
+         -0.75,
+         0.0
+        ],
+        [
+         0.75,
+         0.0
+        ]
+       ],
+       "closed": false
+      }
+     ],
+     "plan": [
+      {
+       "id": "bearer-a",
+       "bone": "bearer-a",
+       "role": "body",
+       "z": 0.2,
+       "filled": true,
+       "tone": 0.34,
+       "region": "storage-timbers",
+       "material": "yard-softwood",
+       "kind": "rect",
+       "x": 0.9,
+       "y": -0.5,
+       "w": 0.1,
+       "h": 1.0
+      },
+      {
+       "id": "bearer-b",
+       "bone": "bearer-b",
+       "role": "body",
+       "z": 0.2,
+       "filled": true,
+       "tone": 0.34,
+       "region": "storage-timbers",
+       "material": "yard-softwood",
+       "kind": "rect",
+       "x": 3.5,
+       "y": -0.5,
+       "w": 0.1,
+       "h": 1.0
+      },
+      {
+       "id": "sticker-a",
+       "bone": "bundle",
+       "role": "body",
+       "z": 0.5,
+       "filled": true,
+       "tone": 0.72,
+       "region": "storage-timbers",
+       "material": "yard-softwood",
+       "kind": "rect",
+       "x": 0.925,
+       "y": -0.4,
+       "w": 0.05,
+       "h": 0.8
+      },
+      {
+       "id": "sticker-b",
+       "bone": "bundle",
+       "role": "body",
+       "z": 0.5,
+       "filled": true,
+       "tone": 0.72,
+       "region": "storage-timbers",
+       "material": "yard-softwood",
+       "kind": "rect",
+       "x": 3.525,
+       "y": -0.4,
+       "w": 0.05,
+       "h": 0.8
+      },
+      {
+       "id": "top-lower-outer",
+       "bone": "bundle",
+       "role": "body",
+       "z": 0.8,
+       "filled": true,
+       "tone": 0.46,
+       "region": "bundle-rafters",
+       "material": "reclaimed-softwood",
+       "kind": "rect",
+       "x": 0.0,
+       "y": 0.2225,
+       "w": 4.5,
+       "h": 0.08
+      },
+      {
+       "id": "tops-upper",
+       "bone": "bundle",
+       "role": "body",
+       "z": 1,
+       "filled": true,
+       "tone": 0.6,
+       "region": "bundle-rafters",
+       "material": "reclaimed-softwood",
+       "kind": "path",
+       "d": "M 0.0 -0.3025 L 4.5 -0.3025 L 4.5 -0.2225 L 0.0 -0.2225 Z M 0.0 -0.1975 L 4.5 -0.1975 L 4.5 -0.1175 L 0.0 -0.1175 Z M 0.0 -0.0925 L 4.5 -0.0925 L 4.5 -0.0125 L 0.0 -0.0125 Z M 0.0 0.0125 L 4.5 0.0125 L 4.5 0.0925 L 0.0 0.0925 Z M 0.0 0.1175 L 4.5 0.1175 L 4.5 0.1975 L 0.0 0.1975 Z"
+      },
+      {
+       "id": "plumb-edges",
+       "bone": "bundle",
+       "role": "detail",
+       "z": 1.1,
+       "filled": false,
+       "tone": 0.3,
+       "region": "bundle-rafters",
+       "kind": "path",
+       "d": "M 0.134256 -0.3025 L 0.134256 -0.2225 M 0.134256 -0.1975 L 0.134256 -0.1175 M 0.134256 -0.0925 L 0.134256 -0.0125 M 0.134256 0.0125 L 0.134256 0.0925 M 0.134256 0.1175 L 0.134256 0.1975"
+      },
+      {
+       "id": "strap-a",
+       "bone": "bundle",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.92,
+       "region": "straps",
+       "material": "polyester-strap",
+       "kind": "rect",
+       "x": 0.434,
+       "y": -0.304,
+       "w": 0.032,
+       "h": 0.608
+      },
+      {
+       "id": "strap-b",
+       "bone": "bundle",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.92,
+       "region": "straps",
+       "material": "polyester-strap",
+       "kind": "rect",
+       "x": 4.034,
+       "y": -0.304,
+       "w": 0.032,
+       "h": 0.608
+      },
+      {
+       "id": "loop-a",
+       "bone": "bundle",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.3,
+       "region": "slings",
+       "material": "polyester-sling",
+       "kind": "rect",
+       "x": 1.13,
+       "y": -0.3325,
+       "w": 0.04,
+       "h": 0.665
+      },
+      {
+       "id": "loop-b",
+       "bone": "bundle",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.3,
+       "region": "slings",
+       "material": "polyester-sling",
+       "kind": "rect",
+       "x": 3.33,
+       "y": -0.3325,
+       "w": 0.04,
+       "h": 0.665
+      },
+      {
+       "id": "rafter",
+       "bone": "rafter",
+       "role": "body",
+       "z": 1,
+       "filled": true,
+       "tone": 0.54,
+       "region": "rafter-reinstalled",
+       "material": "reclaimed-softwood",
+       "kind": "poly",
+       "points": [
+        [
+         0.0,
+         -0.08
+        ],
+        [
+         0.786436,
+         -0.08
+        ],
+        [
+         0.82,
+         -0.04
+        ],
+        [
+         0.86767,
+         -0.08
+        ],
+        [
+         4.261311,
+         -0.08
+        ],
+        [
+         4.294875,
+         -0.04
+        ],
+        [
+         4.342546,
+         -0.08
+        ],
+        [
+         4.365744,
+         -0.08
+        ],
+        [
+         4.5,
+         0.08
+        ],
+        [
+         0.134256,
+         0.08
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.2225,
+        "z1": 0.3025
+       }
+      },
+      {
+       "id": "rafter-plumb-edge",
+       "bone": "rafter",
+       "role": "detail",
+       "z": 1.1,
+       "filled": false,
+       "tone": 0.3,
+       "region": "rafter-reinstalled",
+       "kind": "poly",
+       "points": [
+        [
+         0.134256,
+         0.2225
+        ],
+        [
+         0.134256,
+         0.3025
+        ]
+       ],
+       "closed": false
+      },
+      {
+       "id": "leg-a",
+       "bone": "sling-a",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.3,
+       "region": "slings",
+       "material": "polyester-sling",
+       "kind": "rect",
+       "x": 0.0,
+       "y": -0.015,
+       "w": 2.1,
+       "h": 0.03,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.015,
+        "z1": 0.015
+       }
+      },
+      {
+       "id": "leg-b",
+       "bone": "sling-b",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.3,
+       "region": "slings",
+       "material": "polyester-sling",
+       "kind": "rect",
+       "x": 0.0,
+       "y": -0.015,
+       "w": 2.074504,
+       "h": 0.03,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.015,
+        "z1": 0.015
+       }
+      }
+     ]
+    },
+    "decisions": {
+     "silhouette": {
+      "en": "The bundle 45 x 4.8 mm on paper: two layers of plumb-cut rafters with the birdsmouths, sticker slot, bearers, straps, chokes and the sling legs; front with the twelve end faces and 25 mm gaps (0.25 mm); plan with the five upper rafters and the outer lower one.",
+      "de": "Das Bündel 45 x 4,8 mm auf Papier: zwei Lagen lotgeschnittener Sparren mit den Kerven, Lattenspalt, Unterleger, Bänder, Schnürungen und die Schlingenstränge; Vorderansicht mit den zwölf Stirnflächen und 25-mm-Fugen (0,25 mm); Draufsicht mit den fünf oberen Sparren und dem äußeren unteren."
+     },
+     "retained": {
+      "en": "Birdsmouths (0.4 mm deep), plumb cuts, gaps and slot, straps and chokes as bands, the reinstalled rafter as its own part.",
+      "de": "Kerven (0,4 mm tief), Lotschnitte, Fugen und Spalt, Bänder und Schnürungen als Bänder, der wiedereingebaute Sparren als eigenes Teil."
+     },
+     "merged": {
+      "en": "Each layer is one outline in side view; the splintered tips (30 mm) are merged into the straight cut.",
+      "de": "Jede Lage ist in der Seitenansicht ein Umriss; die abgesplitterten Spitzen (30 mm) gehen im geraden Schnitt auf."
+     },
+     "omitted": {
+      "en": "Nail holes, wire buckles and the rounded arrises of the bearers.",
+      "de": "Nagellöcher, Drahtschnallen und die gerundeten Kanten der Unterleger."
+     },
+     "thinElements": {
+      "en": "Straps as 32 mm bands (0.32 mm) in side view and plan, as an outline in the front view; sling legs as 30 mm bars.",
+      "de": "Bänder als 32-mm-Bänder (0,32 mm) in Seitenansicht und Draufsicht, als Umriss in der Vorderansicht; Schlingenstränge als 30-mm-Stäbe."
+     },
+     "hatching": {
+      "en": "No hatch.",
+      "de": "Keine Schraffur."
+     },
+     "styles": {
+      "en": "Outline 0.25 mm, plumb edges 0.13 mm.",
+      "de": "Kontur 0,25 mm, Lotkanten 0,13 mm."
+     },
+     "overlays": {
+      "en": "Region cells as at 1:50.",
+      "de": "Regionenzellen wie bei 1:50."
+     }
+    }
+   },
+   "200": {
+    "status": "authored",
+    "denominator": 200,
+    "validRange": {
+     "minDenominator": 150,
+     "maxDenominator": 350
+    },
+    "pens": {
+     "body": 0.18,
+     "detail": 0.1,
+     "texture": null,
+     "glazing": 0.1,
+     "ground": 0.25
+    },
+    "hatches": [],
+    "geometry": {
+     "elevation": [
+      {
+       "id": "block",
+       "bone": "bundle",
+       "role": "body",
+       "z": 1,
+       "filled": true,
+       "tone": 0.5599999999999999,
+       "region": "bundle-rafters",
+       "material": "reclaimed-softwood",
+       "kind": "poly",
+       "points": [
+        [
+         0.0,
+         0.0
+        ],
+        [
+         0.786436,
+         0.0
+        ],
+        [
+         0.82,
+         0.04
+        ],
+        [
+         0.86767,
+         0.0
+        ],
+        [
+         4.261311,
+         0.0
+        ],
+        [
+         4.294875,
+         0.04
+        ],
+        [
+         4.342546,
+         0.0
+        ],
+        [
+         4.365744,
+         0.0
+        ],
+        [
+         4.5,
+         0.16
+        ],
+        [
+         4.365744,
+         0.16
+        ],
+        [
+         4.365744,
+         0.19
+        ],
+        [
+         4.5,
+         0.35
+        ],
+        [
+         0.134256,
+         0.35
+        ],
+        [
+         0.0,
+         0.19
+        ],
+        [
+         0.134256,
+         0.19
+        ],
+        [
+         0.134256,
+         0.16
+        ]
+       ],
+       "closed": true
+      },
+      {
+       "id": "sticker-a",
+       "bone": "bundle",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.72,
+       "region": "storage-timbers",
+       "material": "yard-softwood",
+       "kind": "rect",
+       "x": 0.925,
+       "y": 0.16,
+       "w": 0.05,
+       "h": 0.03
+      },
+      {
+       "id": "sticker-b",
+       "bone": "bundle",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.72,
+       "region": "storage-timbers",
+       "material": "yard-softwood",
+       "kind": "rect",
+       "x": 3.525,
+       "y": 0.16,
+       "w": 0.05,
+       "h": 0.03
+      },
+      {
+       "id": "strap-a",
+       "bone": "bundle",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.92,
+       "region": "straps",
+       "material": "polyester-strap",
+       "kind": "rect",
+       "x": 0.434,
+       "y": -0.0015,
+       "w": 0.032,
+       "h": 0.353
+      },
+      {
+       "id": "strap-b",
+       "bone": "bundle",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.92,
+       "region": "straps",
+       "material": "polyester-strap",
+       "kind": "rect",
+       "x": 4.034,
+       "y": -0.0015,
+       "w": 0.032,
+       "h": 0.353
+      },
+      {
+       "id": "loop-a",
+       "bone": "bundle",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.3,
+       "region": "slings",
+       "material": "polyester-sling",
+       "kind": "rect",
+       "x": 1.13,
+       "y": -0.03,
+       "w": 0.04,
+       "h": 0.41
+      },
+      {
+       "id": "loop-b",
+       "bone": "bundle",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.3,
+       "region": "slings",
+       "material": "polyester-sling",
+       "kind": "rect",
+       "x": 3.33,
+       "y": -0.03,
+       "w": 0.04,
+       "h": 0.41
+      },
+      {
+       "id": "rafter",
+       "bone": "rafter",
+       "role": "body",
+       "z": 0.5,
+       "filled": true,
+       "tone": 0.54,
+       "region": "rafter-reinstalled",
+       "material": "reclaimed-softwood",
+       "kind": "poly",
+       "points": [
+        [
+         0.0,
+         -0.08
+        ],
+        [
+         0.786436,
+         -0.08
+        ],
+        [
+         0.82,
+         -0.04
+        ],
+        [
+         0.86767,
+         -0.08
+        ],
+        [
+         4.261311,
+         -0.08
+        ],
+        [
+         4.294875,
+         -0.04
+        ],
+        [
+         4.342546,
+         -0.08
+        ],
+        [
+         4.365744,
+         -0.08
+        ],
+        [
+         4.5,
+         0.08
+        ],
+        [
+         0.134256,
+         0.08
+        ]
+       ],
+       "closed": true
+      },
+      {
+       "id": "bearer-a",
+       "bone": "bearer-a",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.34,
+       "region": "storage-timbers",
+       "material": "yard-softwood",
+       "kind": "rect",
+       "x": -0.05,
+       "y": -0.1,
+       "w": 0.1,
+       "h": 0.1
+      },
+      {
+       "id": "bearer-b",
+       "bone": "bearer-b",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.34,
+       "region": "storage-timbers",
+       "material": "yard-softwood",
+       "kind": "rect",
+       "x": -0.05,
+       "y": -0.1,
+       "w": 0.1,
+       "h": 0.1
+      },
+      {
+       "id": "leg-a",
+       "bone": "sling-a",
+       "role": "body",
+       "z": 5,
+       "filled": true,
+       "tone": 0.3,
+       "region": "slings",
+       "material": "polyester-sling",
+       "kind": "rect",
+       "x": 0.0,
+       "y": -0.015,
+       "w": 2.1,
+       "h": 0.03
+      },
+      {
+       "id": "leg-b",
+       "bone": "sling-b",
+       "role": "body",
+       "z": 5,
+       "filled": true,
+       "tone": 0.3,
+       "region": "slings",
+       "material": "polyester-sling",
+       "kind": "rect",
+       "x": 0.0,
+       "y": -0.015,
+       "w": 2.074504,
+       "h": 0.03
+      },
+      {
+       "id": "ground",
+       "bone": "bearer-a",
+       "role": "ground",
+       "z": 0,
+       "filled": false,
+       "tone": 0.5,
+       "kind": "poly",
+       "points": [
+        [
+         -1.2,
+         -0.1
+        ],
+        [
+         3.8,
+         -0.1
+        ]
+       ],
+       "closed": false
+      }
+     ],
+     "front": [
+      {
+       "id": "block",
+       "bone": "bundle",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.5599999999999999,
+       "region": "bundle-rafters",
+       "material": "reclaimed-softwood",
+       "kind": "poly",
+       "points": [
+        [
+         -0.3025,
+         0.1
+        ],
+        [
+         0.3025,
+         0.1
+        ],
+        [
+         0.3025,
+         0.29
+        ],
+        [
+         0.1975,
+         0.29
+        ],
+        [
+         0.1975,
+         0.45
+        ],
+        [
+         -0.3025,
+         0.45
+        ]
+       ],
+       "closed": true
+      },
+      {
+       "id": "sticker-a",
+       "bone": "bundle",
+       "role": "body",
+       "z": 1,
+       "filled": true,
+       "tone": 0.72,
+       "region": "storage-timbers",
+       "material": "yard-softwood",
+       "kind": "rect",
+       "x": -0.4,
+       "y": 0.26,
+       "w": 0.8,
+       "h": 0.03
+      },
+      {
+       "id": "sticker-b",
+       "bone": "bundle",
+       "role": "body",
+       "z": 1,
+       "filled": true,
+       "tone": 0.72,
+       "region": "storage-timbers",
+       "material": "yard-softwood",
+       "kind": "rect",
+       "x": -0.4,
+       "y": 0.26,
+       "w": 0.8,
+       "h": 0.03
+      },
+      {
+       "id": "strap-a",
+       "bone": "bundle",
+       "role": "detail",
+       "z": 3,
+       "filled": false,
+       "tone": 0.92,
+       "region": "straps",
+       "kind": "poly",
+       "points": [
+        [
+         -0.30325,
+         0.09925
+        ],
+        [
+         0.30325,
+         0.09925
+        ],
+        [
+         0.30325,
+         0.45075
+        ],
+        [
+         -0.30325,
+         0.45075
+        ],
+        [
+         -0.30325,
+         0.09925
+        ]
+       ],
+       "closed": false
+      },
+      {
+       "id": "strap-b",
+       "bone": "bundle",
+       "role": "detail",
+       "z": 3,
+       "filled": false,
+       "tone": 0.92,
+       "region": "straps",
+       "kind": "poly",
+       "points": [
+        [
+         -0.30325,
+         0.09925
+        ],
+        [
+         0.30325,
+         0.09925
+        ],
+        [
+         0.30325,
+         0.45075
+        ],
+        [
+         -0.30325,
+         0.45075
+        ],
+        [
+         -0.30325,
+         0.09925
+        ]
+       ],
+       "closed": false
+      },
+      {
+       "id": "loop-a",
+       "bone": "bundle",
+       "role": "body",
+       "z": 2.5,
+       "filled": true,
+       "tone": 0.3,
+       "region": "slings",
+       "material": "polyester-sling",
+       "kind": "path",
+       "d": "M -0.3325 0.07 L 0.3325 0.07 L 0.3325 0.48 L -0.3325 0.48 Z M -0.3025 0.1 L 0.3025 0.1 L 0.3025 0.45 L -0.3025 0.45 Z"
+      },
+      {
+       "id": "loop-b",
+       "bone": "bundle",
+       "role": "body",
+       "z": 2.5,
+       "filled": true,
+       "tone": 0.3,
+       "region": "slings",
+       "material": "polyester-sling",
+       "kind": "path",
+       "d": "M -0.3325 0.07 L 0.3325 0.07 L 0.3325 0.48 L -0.3325 0.48 Z M -0.3025 0.1 L 0.3025 0.1 L 0.3025 0.45 L -0.3025 0.45 Z"
+      },
+      {
+       "id": "rafter",
+       "bone": "rafter",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.54,
+       "region": "rafter-reinstalled",
+       "material": "reclaimed-softwood",
+       "kind": "poly",
+       "points": [
+        [
+         0.0,
+         -0.08
+        ],
+        [
+         0.786436,
+         -0.08
+        ],
+        [
+         0.82,
+         -0.04
+        ],
+        [
+         0.86767,
+         -0.08
+        ],
+        [
+         4.261311,
+         -0.08
+        ],
+        [
+         4.294875,
+         -0.04
+        ],
+        [
+         4.342546,
+         -0.08
+        ],
+        [
+         4.365744,
+         -0.08
+        ],
+        [
+         4.5,
+         0.08
+        ],
+        [
+         0.134256,
+         0.08
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.2225,
+        "z1": 0.3025
+       }
+      },
+      {
+       "id": "bearer-a",
+       "bone": "bearer-a",
+       "role": "body",
+       "z": 1,
+       "filled": true,
+       "tone": 0.34,
+       "region": "storage-timbers",
+       "material": "yard-softwood",
+       "kind": "rect",
+       "x": -0.5,
+       "y": 0.0,
+       "w": 1.0,
+       "h": 0.1
+      },
+      {
+       "id": "bearer-b",
+       "bone": "bearer-b",
+       "role": "body",
+       "z": 1,
+       "filled": true,
+       "tone": 0.34,
+       "region": "storage-timbers",
+       "material": "yard-softwood",
+       "kind": "rect",
+       "x": -0.5,
+       "y": 0.0,
+       "w": 1.0,
+       "h": 0.1
+      },
+      {
+       "id": "leg-a",
+       "bone": "sling-a",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.3,
+       "region": "slings",
+       "material": "polyester-sling",
+       "kind": "rect",
+       "x": 0.0,
+       "y": -0.015,
+       "w": 2.1,
+       "h": 0.03,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.015,
+        "z1": 0.015
+       }
+      },
+      {
+       "id": "leg-b",
+       "bone": "sling-b",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.3,
+       "region": "slings",
+       "material": "polyester-sling",
+       "kind": "rect",
+       "x": 0.0,
+       "y": -0.015,
+       "w": 2.074504,
+       "h": 0.03,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.015,
+        "z1": 0.015
+       }
+      },
+      {
+       "id": "ground",
+       "bone": "bearer-a",
+       "role": "ground",
+       "z": 0,
+       "filled": false,
+       "tone": 0.5,
+       "kind": "poly",
+       "points": [
+        [
+         -0.75,
+         0.0
+        ],
+        [
+         0.75,
+         0.0
+        ]
+       ],
+       "closed": false
+      }
+     ],
+     "plan": [
+      {
+       "id": "bearer-a",
+       "bone": "bearer-a",
+       "role": "body",
+       "z": 0.2,
+       "filled": true,
+       "tone": 0.34,
+       "region": "storage-timbers",
+       "material": "yard-softwood",
+       "kind": "rect",
+       "x": 0.9,
+       "y": -0.5,
+       "w": 0.1,
+       "h": 1.0
+      },
+      {
+       "id": "bearer-b",
+       "bone": "bearer-b",
+       "role": "body",
+       "z": 0.2,
+       "filled": true,
+       "tone": 0.34,
+       "region": "storage-timbers",
+       "material": "yard-softwood",
+       "kind": "rect",
+       "x": 3.5,
+       "y": -0.5,
+       "w": 0.1,
+       "h": 1.0
+      },
+      {
+       "id": "sticker-a",
+       "bone": "bundle",
+       "role": "body",
+       "z": 0.5,
+       "filled": true,
+       "tone": 0.72,
+       "region": "storage-timbers",
+       "material": "yard-softwood",
+       "kind": "rect",
+       "x": 0.925,
+       "y": -0.4,
+       "w": 0.05,
+       "h": 0.8
+      },
+      {
+       "id": "sticker-b",
+       "bone": "bundle",
+       "role": "body",
+       "z": 0.5,
+       "filled": true,
+       "tone": 0.72,
+       "region": "storage-timbers",
+       "material": "yard-softwood",
+       "kind": "rect",
+       "x": 3.525,
+       "y": -0.4,
+       "w": 0.05,
+       "h": 0.8
+      },
+      {
+       "id": "block",
+       "bone": "bundle",
+       "role": "body",
+       "z": 1,
+       "filled": true,
+       "tone": 0.5599999999999999,
+       "region": "bundle-rafters",
+       "material": "reclaimed-softwood",
+       "kind": "rect",
+       "x": 0.0,
+       "y": -0.3025,
+       "w": 4.5,
+       "h": 0.605
+      },
+      {
+       "id": "plumb-edges",
+       "bone": "bundle",
+       "role": "detail",
+       "z": 1.1,
+       "filled": false,
+       "tone": 0.3,
+       "region": "bundle-rafters",
+       "kind": "path",
+       "d": "M 0.134256 -0.3025 L 0.134256 0.1975"
+      },
+      {
+       "id": "strap-a",
+       "bone": "bundle",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.92,
+       "region": "straps",
+       "material": "polyester-strap",
+       "kind": "rect",
+       "x": 0.434,
+       "y": -0.304,
+       "w": 0.032,
+       "h": 0.608
+      },
+      {
+       "id": "strap-b",
+       "bone": "bundle",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.92,
+       "region": "straps",
+       "material": "polyester-strap",
+       "kind": "rect",
+       "x": 4.034,
+       "y": -0.304,
+       "w": 0.032,
+       "h": 0.608
+      },
+      {
+       "id": "loop-a",
+       "bone": "bundle",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.3,
+       "region": "slings",
+       "material": "polyester-sling",
+       "kind": "rect",
+       "x": 1.13,
+       "y": -0.3325,
+       "w": 0.04,
+       "h": 0.665
+      },
+      {
+       "id": "loop-b",
+       "bone": "bundle",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.3,
+       "region": "slings",
+       "material": "polyester-sling",
+       "kind": "rect",
+       "x": 3.33,
+       "y": -0.3325,
+       "w": 0.04,
+       "h": 0.665
+      },
+      {
+       "id": "rafter",
+       "bone": "rafter",
+       "role": "body",
+       "z": 1,
+       "filled": true,
+       "tone": 0.54,
+       "region": "rafter-reinstalled",
+       "material": "reclaimed-softwood",
+       "kind": "poly",
+       "points": [
+        [
+         0.0,
+         -0.08
+        ],
+        [
+         0.786436,
+         -0.08
+        ],
+        [
+         0.82,
+         -0.04
+        ],
+        [
+         0.86767,
+         -0.08
+        ],
+        [
+         4.261311,
+         -0.08
+        ],
+        [
+         4.294875,
+         -0.04
+        ],
+        [
+         4.342546,
+         -0.08
+        ],
+        [
+         4.365744,
+         -0.08
+        ],
+        [
+         4.5,
+         0.08
+        ],
+        [
+         0.134256,
+         0.08
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.2225,
+        "z1": 0.3025
+       }
+      },
+      {
+       "id": "leg-a",
+       "bone": "sling-a",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.3,
+       "region": "slings",
+       "material": "polyester-sling",
+       "kind": "rect",
+       "x": 0.0,
+       "y": -0.015,
+       "w": 2.1,
+       "h": 0.03,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.015,
+        "z1": 0.015
+       }
+      },
+      {
+       "id": "leg-b",
+       "bone": "sling-b",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.3,
+       "region": "slings",
+       "material": "polyester-sling",
+       "kind": "rect",
+       "x": 0.0,
+       "y": -0.015,
+       "w": 2.074504,
+       "h": 0.03,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.015,
+        "z1": 0.015
+       }
+      }
+     ]
+    },
+    "decisions": {
+     "silhouette": {
+      "en": "The bundle as one stack 22.5 x 1.75 mm on paper with the sawtooth of the plumb-cut ends and the lower birdsmouths, the sticker ends, bearers, straps, chokes and legs; the reinstalled rafter stays separate in every view.",
+      "de": "Das Bündel als ein Stapel 22,5 x 1,75 mm auf Papier mit dem Sägezahn der lotgeschnittenen Enden und den unteren Kerven, Lattenenden, Unterleger, Bänder, Schnürungen und Stränge; der wiedereingebaute Sparren bleibt in jeder Ansicht eigenständig."
+     },
+     "retained": {
+      "en": "The lower birdsmouths (40 mm, 0.2 mm), the 0.67 mm plumb offset, the protruding sticker ends, straps and chokes.",
+      "de": "Die unteren Kerven (40 mm, 0,2 mm), der 0,67-mm-Lotversatz, die überstehenden Lattenenden, Bänder und Schnürungen."
+     },
+     "merged": {
+      "en": "The 25 mm gaps (0.13 mm) and the 30 mm slot (0.15 mm) close; the eleven bundle rafters become one block with the outer upper corner left open for the reinstalled rafter. The upper birdsmouths open into the closed slot and merge.",
+      "de": "Die 25-mm-Fugen (0,13 mm) und der 30-mm-Spalt (0,15 mm) schließen sich; die elf Bündelsparren werden ein Block, dessen äußere obere Ecke für den wiedereingebauten Sparren frei bleibt. Die oberen Kerven öffnen sich in den geschlossenen Spalt und gehen darin auf."
+     },
+     "omitted": {
+      "en": "Nail holes, buckles, splintered tips, the individual end faces.",
+      "de": "Nagellöcher, Schnallen, abgesplitterte Spitzen, die einzelnen Stirnflächen."
+     },
+     "thinElements": {
+      "en": "Straps 32 mm (0.16 mm) as filled bands that the 0.18 mm pen makes legible; sling legs as 30 mm bars.",
+      "de": "Bänder 32 mm (0,16 mm) als gefüllte Bänder, die die 0,18-mm-Feder lesbar macht; Schlingenstränge als 30-mm-Stäbe."
+     },
+     "hatching": {
+      "en": "No hatch.",
+      "de": "Keine Schraffur."
+     },
+     "styles": {
+      "en": "Outline 0.18 mm, the foot plumb edge 0.1 mm in plan.",
+      "de": "Kontur 0,18 mm, die Fußlotkante 0,1 mm in der Draufsicht."
+     },
+     "overlays": {
+      "en": "The block is the bundle-rafter cell; bearers with stickers, straps, slings and the rafter keep their cells.",
+      "de": "Der Block ist die Zelle der Bündelsparren; Unterleger mit Latten, Bänder, Schlingen und der Sparren behalten ihre Zellen."
+     }
+    }
+   },
+   "500": {
+    "status": "authored",
+    "denominator": 500,
+    "validRange": {
+     "minDenominator": 350,
+     "maxDenominator": 1000
+    },
+    "pens": {
+     "body": 0.13,
+     "detail": null,
+     "texture": null,
+     "glazing": null,
+     "ground": 0.18
+    },
+    "hatches": [],
+    "geometry": {
+     "elevation": [
+      {
+       "id": "block",
+       "bone": "bundle",
+       "role": "body",
+       "z": 1,
+       "filled": true,
+       "tone": 0.5,
+       "regions": [
+        "bundle-rafters",
+        "straps",
+        "slings"
+       ],
+       "material": "reclaimed-softwood",
+       "kind": "poly",
+       "points": [
+        [
+         0.0,
+         0.0
+        ],
+        [
+         4.365744,
+         0.0
+        ],
+        [
+         4.5,
+         0.16
+        ],
+        [
+         4.365744,
+         0.16
+        ],
+        [
+         4.365744,
+         0.19
+        ],
+        [
+         4.5,
+         0.35
+        ],
+        [
+         0.134256,
+         0.35
+        ],
+        [
+         0.0,
+         0.19
+        ],
+        [
+         0.134256,
+         0.19
+        ],
+        [
+         0.134256,
+         0.16
+        ]
+       ],
+       "closed": true
+      },
+      {
+       "id": "rafter",
+       "bone": "rafter",
+       "role": "body",
+       "z": 0.5,
+       "filled": true,
+       "tone": 0.54,
+       "region": "rafter-reinstalled",
+       "material": "reclaimed-softwood",
+       "kind": "poly",
+       "points": [
+        [
+         0.0,
+         -0.08
+        ],
+        [
+         4.365744,
+         -0.08
+        ],
+        [
+         4.5,
+         0.08
+        ],
+        [
+         0.134256,
+         0.08
+        ]
+       ],
+       "closed": true
+      },
+      {
+       "id": "bearer-a",
+       "bone": "bearer-a",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.34,
+       "region": "storage-timbers",
+       "material": "yard-softwood",
+       "kind": "rect",
+       "x": -0.05,
+       "y": -0.1,
+       "w": 0.1,
+       "h": 0.1
+      },
+      {
+       "id": "bearer-b",
+       "bone": "bearer-b",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.34,
+       "region": "storage-timbers",
+       "material": "yard-softwood",
+       "kind": "rect",
+       "x": -0.05,
+       "y": -0.1,
+       "w": 0.1,
+       "h": 0.1
+      },
+      {
+       "id": "leg-a",
+       "bone": "sling-a",
+       "role": "body",
+       "z": 5,
+       "filled": true,
+       "tone": 0.3,
+       "region": "slings",
+       "material": "polyester-sling",
+       "penMm": 0.2,
+       "kind": "rect",
+       "x": 0.0,
+       "y": -0.015,
+       "w": 2.1,
+       "h": 0.03
+      },
+      {
+       "id": "leg-b",
+       "bone": "sling-b",
+       "role": "body",
+       "z": 5,
+       "filled": true,
+       "tone": 0.3,
+       "region": "slings",
+       "material": "polyester-sling",
+       "penMm": 0.2,
+       "kind": "rect",
+       "x": 0.0,
+       "y": -0.015,
+       "w": 2.074504,
+       "h": 0.03
+      },
+      {
+       "id": "ground",
+       "bone": "bearer-a",
+       "role": "ground",
+       "z": 0,
+       "filled": false,
+       "tone": 0.5,
+       "kind": "poly",
+       "points": [
+        [
+         -1.2,
+         -0.1
+        ],
+        [
+         3.8,
+         -0.1
+        ]
+       ],
+       "closed": false
+      }
+     ],
+     "front": [
+      {
+       "id": "block",
+       "bone": "bundle",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.5,
+       "regions": [
+        "bundle-rafters",
+        "straps",
+        "slings"
+       ],
+       "material": "reclaimed-softwood",
+       "kind": "poly",
+       "points": [
+        [
+         -0.3025,
+         0.1
+        ],
+        [
+         0.3025,
+         0.1
+        ],
+        [
+         0.3025,
+         0.29
+        ],
+        [
+         0.1975,
+         0.29
+        ],
+        [
+         0.1975,
+         0.45
+        ],
+        [
+         -0.3025,
+         0.45
+        ]
+       ],
+       "closed": true
+      },
+      {
+       "id": "rafter",
+       "bone": "rafter",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.54,
+       "region": "rafter-reinstalled",
+       "material": "reclaimed-softwood",
+       "kind": "poly",
+       "points": [
+        [
+         0.0,
+         -0.08
+        ],
+        [
+         4.365744,
+         -0.08
+        ],
+        [
+         4.5,
+         0.08
+        ],
+        [
+         0.134256,
+         0.08
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.2225,
+        "z1": 0.3025
+       }
+      },
+      {
+       "id": "bearer-a",
+       "bone": "bearer-a",
+       "role": "body",
+       "z": 1,
+       "filled": true,
+       "tone": 0.34,
+       "region": "storage-timbers",
+       "material": "yard-softwood",
+       "kind": "rect",
+       "x": -0.5,
+       "y": 0.0,
+       "w": 1.0,
+       "h": 0.1
+      },
+      {
+       "id": "bearer-b",
+       "bone": "bearer-b",
+       "role": "body",
+       "z": 1,
+       "filled": true,
+       "tone": 0.34,
+       "region": "storage-timbers",
+       "material": "yard-softwood",
+       "kind": "rect",
+       "x": -0.5,
+       "y": 0.0,
+       "w": 1.0,
+       "h": 0.1
+      },
+      {
+       "id": "leg-a",
+       "bone": "sling-a",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.3,
+       "region": "slings",
+       "material": "polyester-sling",
+       "penMm": 0.2,
+       "kind": "rect",
+       "x": 0.0,
+       "y": -0.015,
+       "w": 2.1,
+       "h": 0.03,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.015,
+        "z1": 0.015
+       }
+      },
+      {
+       "id": "leg-b",
+       "bone": "sling-b",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.3,
+       "region": "slings",
+       "material": "polyester-sling",
+       "penMm": 0.2,
+       "kind": "rect",
+       "x": 0.0,
+       "y": -0.015,
+       "w": 2.074504,
+       "h": 0.03,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.015,
+        "z1": 0.015
+       }
+      },
+      {
+       "id": "ground",
+       "bone": "bearer-a",
+       "role": "ground",
+       "z": 0,
+       "filled": false,
+       "tone": 0.5,
+       "kind": "poly",
+       "points": [
+        [
+         -0.75,
+         0.0
+        ],
+        [
+         0.75,
+         0.0
+        ]
+       ],
+       "closed": false
+      }
+     ],
+     "plan": [
+      {
+       "id": "bearer-a",
+       "bone": "bearer-a",
+       "role": "body",
+       "z": 0.2,
+       "filled": true,
+       "tone": 0.34,
+       "region": "storage-timbers",
+       "material": "yard-softwood",
+       "kind": "rect",
+       "x": 0.9,
+       "y": -0.5,
+       "w": 0.1,
+       "h": 1.0
+      },
+      {
+       "id": "bearer-b",
+       "bone": "bearer-b",
+       "role": "body",
+       "z": 0.2,
+       "filled": true,
+       "tone": 0.34,
+       "region": "storage-timbers",
+       "material": "yard-softwood",
+       "kind": "rect",
+       "x": 3.5,
+       "y": -0.5,
+       "w": 0.1,
+       "h": 1.0
+      },
+      {
+       "id": "block",
+       "bone": "bundle",
+       "role": "body",
+       "z": 1,
+       "filled": true,
+       "tone": 0.5,
+       "regions": [
+        "bundle-rafters",
+        "straps",
+        "slings"
+       ],
+       "material": "reclaimed-softwood",
+       "kind": "rect",
+       "x": 0.0,
+       "y": -0.3025,
+       "w": 4.5,
+       "h": 0.605
+      },
+      {
+       "id": "rafter",
+       "bone": "rafter",
+       "role": "body",
+       "z": 1,
+       "filled": true,
+       "tone": 0.54,
+       "region": "rafter-reinstalled",
+       "material": "reclaimed-softwood",
+       "kind": "poly",
+       "points": [
+        [
+         0.0,
+         -0.08
+        ],
+        [
+         4.365744,
+         -0.08
+        ],
+        [
+         4.5,
+         0.08
+        ],
+        [
+         0.134256,
+         0.08
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.2225,
+        "z1": 0.3025
+       }
+      },
+      {
+       "id": "leg-a",
+       "bone": "sling-a",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.3,
+       "region": "slings",
+       "material": "polyester-sling",
+       "penMm": 0.2,
+       "kind": "rect",
+       "x": 0.0,
+       "y": -0.015,
+       "w": 2.1,
+       "h": 0.03,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.015,
+        "z1": 0.015
+       }
+      },
+      {
+       "id": "leg-b",
+       "bone": "sling-b",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.3,
+       "region": "slings",
+       "material": "polyester-sling",
+       "penMm": 0.2,
+       "kind": "rect",
+       "x": 0.0,
+       "y": -0.015,
+       "w": 2.074504,
+       "h": 0.03,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.015,
+        "z1": 0.015
+       }
+      }
+     ]
+    },
+    "decisions": {
+     "silhouette": {
+      "en": "The stack as one block 9 x 0.7 mm on paper with its plumb-cut ends, the reinstalled rafter beside it, the two bearers as 0.2 mm squares and the sling legs as 0.2 mm bars; front view the L-shaped stack beside the rafter end, plan the 4.50 x 0.605 m stack over the 1.0 m bearers.",
+      "de": "Der Stapel als ein Block 9 x 0,7 mm auf Papier mit seinen lotgeschnittenen Enden, daneben der wiedereingebaute Sparren, die zwei Unterleger als 0,2-mm-Quadrate und die Schlingenstränge als 0,2-mm-Stäbe; Vorderansicht der L-förmige Stapel neben dem Sparrenende, Draufsicht der 4,50 x 0,605 m große Stapel über den 1,0 m langen Unterlegern."
+     },
+     "retained": {
+      "en": "Overall length, height and width, the plumb offsets (0.27 mm), the bearers and the rafter that is reinstalled.",
+      "de": "Gesamtlänge, -höhe und -breite, die Lotversätze (0,27 mm), die Unterleger und der wiederverwendete Sparren."
+     },
+     "merged": {
+      "en": "Rafters, stickers, straps and chokes are one block (regions merged); the birdsmouths (40 mm, 0.08 mm) close.",
+      "de": "Sparren, Latten, Bänder und Schnürungen sind ein Block (Regionen zusammengefasst); die Kerven (40 mm, 0,08 mm) schließen sich."
+     },
+     "omitted": {
+      "en": "Gaps, slot, birdsmouths, buckles and the protruding sticker ends (30 mm).",
+      "de": "Fugen, Spalt, Kerven, Schnallen und die überstehenden Lattenenden (30 mm)."
+     },
+     "thinElements": {
+      "en": "The 30 mm sling legs (0.06 mm) are filled bars drawn with a 0.2 mm pen, so they print and read as lines in every view and in the lifted pose.",
+      "de": "Die 30-mm-Schlingenstränge (0,06 mm) sind gefüllte Stäbe mit einer 0,2-mm-Feder, damit sie drucken und sich in jeder Ansicht und in der angehobenen Pose als Linien lesen."
+     },
+     "hatching": {
+      "en": "No hatch.",
+      "de": "Keine Schraffur."
+     },
+     "styles": {
+      "en": "Outline 0.13 mm; the block one tone darker than at 1:200 so that it holds at 1:1000.",
+      "de": "Kontur 0,13 mm; der Block einen Ton dunkler als bei 1:200, damit er bei 1:1000 trägt."
+     },
+     "overlays": {
+      "en": "The block carries the area-weighted value of the bundle rafters, straps and slings (labelled merged).",
+      "de": "Der Block trägt den flächengewichteten Wert von Bündelsparren, Bändern und Schlingen (als zusammengefasst gekennzeichnet)."
+     }
+    }
+   }
+  },
+  "symbols": [],
+  "poses": [
+   {
+    "id": "stored",
+    "title": {
+     "en": "Stored in the yard",
+     "de": "Gelagert auf dem Hof"
+    },
+    "description": {
+     "en": "Twelve rafters on edge in two stickered layers on two squared-timber bearers, strapped twice, the two round slings choked around the bundle with their legs laid on top.",
+     "de": "Zwölf Sparren hochkant in zwei gelatteten Lagen auf zwei Kantholz-Unterlegern, zweimal umreift, die beiden Rundschlingen um das Bündel geschnürt, ihre Stränge oben aufgelegt."
+    },
+    "bones": {},
+    "ground": "authored",
+    "contacts": [
+     "bearer-a-ground",
+     "bearer-b-ground",
+     "rafter-on-sticker-a",
+     "rafter-on-sticker-b"
+    ],
+    "thermal": {
+     "regions": {
+      "rafter-reinstalled": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.49
+      },
+      "bundle-rafters": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.1
+      },
+      "storage-timbers": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.25,
+       "contact": {
+        "fraction": 0.18711,
+        "tempC": 18
+       }
+      },
+      "straps": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.3
+      },
+      "slings": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.5
+      }
+     },
+     "emitters": {}
+    },
+    "loads": []
+   },
+   {
+    "id": "slings-taut",
+    "key": true,
+    "title": {
+     "en": "Slings in the hook",
+     "de": "Schlingen im Haken"
+    },
+    "description": {
+     "en": "The crane hook has taken both sling eyes; the legs stand at 58 degrees, the bundle still rests on its bearers.",
+     "de": "Der Kranhaken hat beide Schlingenaugen aufgenommen; die Stränge stehen unter 58 Grad, das Bündel liegt noch auf den Unterlegern."
+    },
+    "bones": {
+     "sling-a": {
+      "angleDeg": 58.411864
+     },
+     "sling-b": {
+      "angleDeg": -57.977847
+     }
+    },
+    "ground": "authored",
+    "contacts": [
+     "bearer-a-ground",
+     "bearer-b-ground",
+     "rafter-on-sticker-a",
+     "rafter-on-sticker-b"
+    ],
+    "thermal": {
+     "regions": {
+      "rafter-reinstalled": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.49
+      },
+      "bundle-rafters": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.1
+      },
+      "storage-timbers": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.25,
+       "contact": {
+        "fraction": 0.18711,
+        "tempC": 18
+       }
+      },
+      "straps": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.3
+      },
+      "slings": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.5
+      }
+     },
+     "emitters": {}
+    },
+    "loads": []
+   },
+   {
+    "id": "lifted",
+    "title": {
+     "en": "Lifted on two round slings",
+     "de": "An zwei Rundschlingen angehoben"
+    },
+    "description": {
+     "en": "The bundle hangs 0.45 m above its bearers from the two violet round slings choked at 1.15 m and 3.35 m, legs at 58 degrees to the horizontal, both eyes in the crane hook; the bearers stay on the ground.",
+     "de": "Das Bündel hängt 0,45 m über seinen Unterlegern an den zwei violetten Rundschlingen, geschnürt bei 1,15 m und 3,35 m, Stränge unter 58 Grad zur Waagrechten, beide Augen im Kranhaken; die Unterleger bleiben am Boden."
+    },
+    "bones": {
+     "bundle": {
+      "dy": 0.45
+     },
+     "bearer-a": {
+      "dy": -0.45
+     },
+     "bearer-b": {
+      "dy": -0.45
+     },
+     "sling-a": {
+      "angleDeg": 58.411864
+     },
+     "sling-b": {
+      "angleDeg": -57.977847
+     }
+    },
+    "ground": "authored",
+    "contacts": [
+     "hook-a",
+     "hook-b",
+     "rafter-on-sticker-a",
+     "rafter-on-sticker-b"
+    ],
+    "thermal": {
+     "regions": {
+      "rafter-reinstalled": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.49
+      },
+      "bundle-rafters": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.1
+      },
+      "storage-timbers": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.35,
+       "contact": {
+        "fraction": 0.18711,
+        "tempC": 18
+       }
+      },
+      "straps": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.3
+      },
+      "slings": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.5
+      }
+     },
+     "emitters": {}
+    },
+    "loads": [
+     {
+      "id": "yard-under-bearer-a",
+      "kind": "carried",
+      "title": {
+       "en": "Yard ground under bearer A: 0.044 kN (the bearer left on the ground)",
+       "de": "Lagerplatz unter Unterleger A: 0,044 kN (der am Boden verbliebene Unterleger)"
+      },
+      "anchor": "bearer-a-ground",
+      "fxN": 0,
+      "fyN": 43.9,
+      "source": "authored-estimate",
+      "reference": "en-338"
+     },
+     {
+      "id": "yard-under-bearer-b",
+      "kind": "carried",
+      "title": {
+       "en": "Yard ground under bearer B: 0.044 kN (the bearer left on the ground)",
+       "de": "Lagerplatz unter Unterleger B: 0,044 kN (der am Boden verbliebene Unterleger)"
+      },
+      "anchor": "bearer-b-ground",
+      "fxN": 0,
+      "fyN": 43.9,
+      "source": "authored-estimate",
+      "reference": "en-338"
+     }
+    ]
+   },
+   {
+    "id": "reinstalled",
+    "title": {
+     "en": "Reinstalled under the roof covering",
+     "de": "Wiedereingebaut unter der Dachdeckung"
+    },
+    "description": {
+     "en": "The outer upper rafter is back in a 40 degree purlin roof: birdsmouth on the wall plate (pin) and on the ridge purlin (roller), horizontal span 2.66 m between the plate and purlin faces, carrying its roof covering; the rest of the bundle stays in the yard.",
+     "de": "Der äußere obere Sparren liegt wieder in einem 40-Grad-Pfettendach: Kerve auf der Fußpfette (Festlager) und auf der Firstpfette (Rollenlager), waagrechte Stützweite 2,66 m zwischen den Pfettenaußenkanten, mit seiner Dachdeckung belastet; der Rest des Bündels bleibt auf dem Hof."
+    },
+    "bones": {
+     "rafter-carrier": {
+      "dy": 1.75
+     },
+     "rafter": {
+      "angleDeg": 40.0
+     }
+    },
+    "ground": "authored",
+    "contacts": [
+     "wall-plate",
+     "ridge-purlin"
+    ],
+    "thermal": {
+     "regions": {
+      "rafter-reinstalled": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.0
+      },
+      "bundle-rafters": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.15
+      },
+      "storage-timbers": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.25,
+       "contact": {
+        "fraction": 0.18711,
+        "tempC": 18
+       }
+      },
+      "straps": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.3
+      },
+      "slings": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.5
+      }
+     },
+     "emitters": {}
+    },
+    "loads": [
+     {
+      "id": "roof-dead-load",
+      "kind": "carried",
+      "title": {
+       "en": "Roof covering 0.55 kN/m² x 0.80 m = 0.44 kN/m",
+       "de": "Dachdeckung 0,55 kN/m² x 0,80 m = 0,44 kN/m"
+      },
+      "fxN": 0,
+      "fyN": 0,
+      "distributed": {
+       "bone": "rafter",
+       "fromM": 0,
+       "toM": 4.5,
+       "wxNPerM": 0,
+       "wyNPerM": -440.0
+      },
+      "source": "authored-estimate",
+      "reference": "din-en-1991-1-1-na"
+     },
+     {
+      "id": "yard-under-bearer-a",
+      "kind": "carried",
+      "title": {
+       "en": "Yard ground under bearer A: 1.319 kN (the stack left in the yard)",
+       "de": "Lagerplatz unter Unterleger A: 1,319 kN (der auf dem Hof verbliebene Stapel)"
+      },
+      "anchor": "bearer-a-ground",
+      "fxN": 0,
+      "fyN": 1319.4,
+      "source": "authored-estimate",
+      "reference": "en-338"
+     },
+     {
+      "id": "yard-under-bearer-b",
+      "kind": "carried",
+      "title": {
+       "en": "Yard ground under bearer B: 1.319 kN (the stack left in the yard)",
+       "de": "Lagerplatz unter Unterleger B: 1,319 kN (der auf dem Hof verbliebene Stapel)"
+      },
+      "anchor": "bearer-b-ground",
+      "fxN": 0,
+      "fyN": 1319.4,
+      "source": "authored-estimate",
+      "reference": "en-338"
+     }
+    ]
+   },
+   {
+    "id": "reinstalled-snow",
+    "title": {
+     "en": "Reinstalled under roof covering and snow",
+     "de": "Wiedereingebaut unter Dachdeckung und Schnee"
+    },
+    "description": {
+     "en": "As reinstalled, with the snow load of zone 2 at low altitude on the 40 degree roof.",
+     "de": "Wie wiedereingebaut, dazu die Schneelast der Zone 2 in geringer Höhe auf dem 40-Grad-Dach."
+    },
+    "bones": {
+     "rafter-carrier": {
+      "dy": 1.75
+     },
+     "rafter": {
+      "angleDeg": 40.0
+     }
+    },
+    "ground": "authored",
+    "contacts": [
+     "wall-plate",
+     "ridge-purlin"
+    ],
+    "thermal": {
+     "regions": {
+      "rafter-reinstalled": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.0
+      },
+      "bundle-rafters": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.15
+      },
+      "storage-timbers": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.25,
+       "contact": {
+        "fraction": 0.18711,
+        "tempC": 18
+       }
+      },
+      "straps": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.3
+      },
+      "slings": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.5
+      }
+     },
+     "emitters": {}
+    },
+    "loads": [
+     {
+      "id": "roof-dead-load",
+      "kind": "carried",
+      "title": {
+       "en": "Roof covering 0.55 kN/m² x 0.80 m = 0.44 kN/m",
+       "de": "Dachdeckung 0,55 kN/m² x 0,80 m = 0,44 kN/m"
+      },
+      "fxN": 0,
+      "fyN": 0,
+      "distributed": {
+       "bone": "rafter",
+       "fromM": 0,
+       "toM": 4.5,
+       "wxNPerM": 0,
+       "wyNPerM": -440.0
+      },
+      "source": "authored-estimate",
+      "reference": "din-en-1991-1-1-na"
+     },
+     {
+      "id": "snow",
+      "kind": "snow",
+      "title": {
+       "en": "Snow mu1 s_k = 0.533 x 0.85 kN/m² on plan, 0.278 kN/m along the rafter",
+       "de": "Schnee mu1 s_k = 0,533 x 0,85 kN/m² Grundfläche, 0,278 kN/m entlang des Sparrens"
+      },
+      "fxN": 0,
+      "fyN": 0,
+      "distributed": {
+       "bone": "rafter",
+       "fromM": 0,
+       "toM": 4.5,
+       "wxNPerM": 0,
+       "wyNPerM": -277.8
+      },
+      "source": "literature",
+      "reference": "en-1991-1-3"
+     },
+     {
+      "id": "yard-under-bearer-a",
+      "kind": "carried",
+      "title": {
+       "en": "Yard ground under bearer A: 1.319 kN (the stack left in the yard)",
+       "de": "Lagerplatz unter Unterleger A: 1,319 kN (der auf dem Hof verbliebene Stapel)"
+      },
+      "anchor": "bearer-a-ground",
+      "fxN": 0,
+      "fyN": 1319.4,
+      "source": "authored-estimate",
+      "reference": "en-338"
+     },
+     {
+      "id": "yard-under-bearer-b",
+      "kind": "carried",
+      "title": {
+       "en": "Yard ground under bearer B: 1.319 kN (the stack left in the yard)",
+       "de": "Lagerplatz unter Unterleger B: 1,319 kN (der auf dem Hof verbliebene Stapel)"
+      },
+      "anchor": "bearer-b-ground",
+      "fxN": 0,
+      "fyN": 1319.4,
+      "source": "authored-estimate",
+      "reference": "en-338"
+     }
+    ]
+   },
+   {
+    "id": "reinstalled-roofer",
+    "title": {
+     "en": "Reinstalled with a roofer at mid-span",
+     "de": "Wiedereingebaut mit Dachdecker in Feldmitte"
+    },
+    "description": {
+     "en": "As reinstalled, with the 1.0 kN concentrated load of a roofer standing on the rafter at mid-span.",
+     "de": "Wie wiedereingebaut, dazu die Einzellast 1,0 kN eines Dachdeckers, der in Feldmitte auf dem Sparren steht."
+    },
+    "bones": {
+     "rafter-carrier": {
+      "dy": 1.75
+     },
+     "rafter": {
+      "angleDeg": 40.0
+     },
+     "load-carrier": {
+      "dx": 1.737438
+     }
+    },
+    "ground": "authored",
+    "contacts": [
+     "wall-plate",
+     "ridge-purlin"
+    ],
+    "thermal": {
+     "regions": {
+      "rafter-reinstalled": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.0
+      },
+      "bundle-rafters": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.15
+      },
+      "storage-timbers": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.25,
+       "contact": {
+        "fraction": 0.18711,
+        "tempC": 18
+       }
+      },
+      "straps": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.3
+      },
+      "slings": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.5
+      }
+     },
+     "emitters": {}
+    },
+    "loads": [
+     {
+      "id": "roof-dead-load",
+      "kind": "carried",
+      "title": {
+       "en": "Roof covering 0.55 kN/m² x 0.80 m = 0.44 kN/m",
+       "de": "Dachdeckung 0,55 kN/m² x 0,80 m = 0,44 kN/m"
+      },
+      "fxN": 0,
+      "fyN": 0,
+      "distributed": {
+       "bone": "rafter",
+       "fromM": 0,
+       "toM": 4.5,
+       "wxNPerM": 0,
+       "wyNPerM": -440.0
+      },
+      "source": "authored-estimate",
+      "reference": "din-en-1991-1-1-na"
+     },
+     {
+      "id": "roofer",
+      "kind": "occupant",
+      "title": {
+       "en": "Roofer 1.0 kN (category H)",
+       "de": "Dachdecker 1,0 kN (Kategorie H)"
+      },
+      "anchor": "roofer-load",
+      "fxN": 0,
+      "fyN": -1000.0,
+      "source": "literature",
+      "reference": "en-1991-1-1"
+     },
+     {
+      "id": "yard-under-bearer-a",
+      "kind": "carried",
+      "title": {
+       "en": "Yard ground under bearer A: 1.319 kN (the stack left in the yard)",
+       "de": "Lagerplatz unter Unterleger A: 1,319 kN (der auf dem Hof verbliebene Stapel)"
+      },
+      "anchor": "bearer-a-ground",
+      "fxN": 0,
+      "fyN": 1319.4,
+      "source": "authored-estimate",
+      "reference": "en-338"
+     },
+     {
+      "id": "yard-under-bearer-b",
+      "kind": "carried",
+      "title": {
+       "en": "Yard ground under bearer B: 1.319 kN (the stack left in the yard)",
+       "de": "Lagerplatz unter Unterleger B: 1,319 kN (der auf dem Hof verbliebene Stapel)"
+      },
+      "anchor": "bearer-b-ground",
+      "fxN": 0,
+      "fyN": 1319.4,
+      "source": "authored-estimate",
+      "reference": "en-338"
+     }
+    ]
+   }
+  ],
+  "clips": [
+   {
+    "id": "lift",
+    "title": {
+     "en": "Lift off the bearers",
+     "de": "Abheben von den Unterlegern"
+    },
+    "description": {
+     "en": "The crane takes the two sling eyes, the legs rise to 58 degrees, then the bundle lifts 0.45 m off its bearers, which stay on the ground.",
+     "de": "Der Kran nimmt die beiden Schlingenaugen auf, die Stränge richten sich auf 58 Grad auf, dann hebt das Bündel 0,45 m von seinen Unterlegern ab, die am Boden bleiben."
+    },
+    "durationS": 4,
+    "fps": 30,
+    "loop": false,
+    "rootMotion": "none",
+    "keys": [
+     {
+      "t": 0,
+      "pose": "stored",
+      "ease": "out"
+     },
+     {
+      "t": 1.5,
+      "pose": "slings-taut",
+      "ease": "linear"
+     },
+     {
+      "t": 3.5,
+      "pose": "lifted",
+      "ease": "step"
+     },
+     {
+      "t": 4,
+      "pose": "lifted",
+      "ease": "step"
+     }
+    ],
+    "contacts": [
+     {
+      "anchor": "bearer-a-ground",
+      "fromS": 0,
+      "toS": 1.5
+     },
+     {
+      "anchor": "bearer-b-ground",
+      "fromS": 0,
+      "toS": 1.5
+     },
+     {
+      "anchor": "hook-a",
+      "fromS": 1.5,
+      "toS": 4
+     },
+     {
+      "anchor": "hook-b",
+      "fromS": 1.5,
+      "toS": 4
+     },
+     {
+      "anchor": "rafter-on-sticker-a",
+      "fromS": 0,
+      "toS": 4
+     },
+     {
+      "anchor": "rafter-on-sticker-b",
+      "fromS": 0,
+      "toS": 4
+     }
+    ],
+    "phases": [
+     {
+      "id": "slinging",
+      "fromS": 0,
+      "toS": 1.5,
+      "title": {
+       "en": "Hooking the slings",
+       "de": "Schlingen einhängen"
+      }
+     },
+     {
+      "id": "lifting",
+      "fromS": 1.5,
+      "toS": 3.5,
+      "title": {
+       "en": "Lifting",
+       "de": "Anheben"
+      }
+     },
+     {
+      "id": "hanging",
+      "fromS": 3.5,
+      "toS": 4,
+      "title": {
+       "en": "Hanging",
+       "de": "Hängen"
+      }
+     }
+    ],
+    "events": [
+     {
+      "t": 1.5,
+      "kind": "contact-off",
+      "title": {
+       "en": "Bundle leaves the bearers",
+       "de": "Bündel verlässt die Unterleger"
+      }
+     }
+    ],
+    "tracks": []
+   },
+   {
+    "id": "roofer-walk",
+    "title": {
+     "en": "Roofer walking up the rafter",
+     "de": "Dachdecker geht den Sparren hinauf"
+    },
+    "description": {
+     "en": "A 1.0 kN roofer load travels on the top edge from the wall plate seat to the ridge purlin seat over the roof covering load.",
+     "de": "Eine Dachdeckerlast von 1,0 kN wandert auf der Oberkante vom Kervensitz der Fußpfette zum Kervensitz der Firstpfette, zusätzlich zur Last der Dachdeckung."
+    },
+    "durationS": 6,
+    "fps": 30,
+    "loop": false,
+    "rootMotion": "none",
+    "keys": [
+     {
+      "t": 0,
+      "pose": "reinstalled-roofer",
+      "ease": "linear",
+      "bones": {
+       "load-carrier": {
+        "dx": 0
+       }
+      }
+     },
+     {
+      "t": 6,
+      "pose": "reinstalled-roofer",
+      "ease": "linear",
+      "bones": {
+       "load-carrier": {
+        "dx": 3.474875
+       }
+      }
+     }
+    ],
+    "contacts": [
+     {
+      "anchor": "wall-plate",
+      "fromS": 0,
+      "toS": 6
+     },
+     {
+      "anchor": "ridge-purlin",
+      "fromS": 0,
+      "toS": 6
+     }
+    ],
+    "phases": [
+     {
+      "id": "walk",
+      "fromS": 0,
+      "toS": 6,
+      "title": {
+       "en": "Walking up",
+       "de": "Hinaufgehen"
+      }
+     }
+    ],
+    "events": [
+     {
+      "t": 0,
+      "kind": "load-on",
+      "title": {
+       "en": "Roofer steps on above the wall plate",
+       "de": "Dachdecker tritt über der Fußpfette auf"
+      }
+     }
+    ],
+    "tracks": []
+   }
+  ],
+  "thermal": {
+   "minimumAirPassageM": 0.025,
+   "environment": {
+    "airTempC": 20,
+    "meanRadiantTempC": 20,
+    "skyTempC": 8,
+    "groundTempC": 18,
+    "relativeHumidity": 0.5,
+    "windMS": 1,
+    "windDirectionDeg": 0,
+    "solarWM2": 500,
+    "diffuseFraction": 0.2,
+    "pressurePa": 101325
+   },
+   "operating": [],
+   "regions": [
+    {
+     "id": "rafter-reinstalled",
+     "title": {
+      "en": "Reinstalled rafter, all faces",
+      "de": "Wiedereingebauter Sparren, alle Flächen"
+     },
+     "kind": "surface",
+     "model": "passive",
+     "material": "reclaimed-softwood",
+     "areaM2": 2.1243,
+     "characteristicLengthM": 0.16,
+     "geometry": "vertical-plate",
+     "skyViewFactor": 0.5,
+     "layers": [],
+     "heatCapacityJM2K": 24000,
+     "source": "authored-estimate",
+     "reference": "en-iso-13786"
+    },
+    {
+     "id": "bundle-rafters",
+     "title": {
+      "en": "Eleven bundled rafters, all faces in the stickered stack",
+      "de": "Elf gebündelte Sparren, alle Flächen im gelatteten Stapel"
+     },
+     "kind": "surface",
+     "model": "passive",
+     "material": "reclaimed-softwood",
+     "areaM2": 23.3988,
+     "characteristicLengthM": 0.16,
+     "geometry": "vertical-plate",
+     "skyViewFactor": 0.3,
+     "layers": [],
+     "heatCapacityJM2K": 24000,
+     "source": "authored-estimate",
+     "reference": "en-iso-13786"
+    },
+    {
+     "id": "storage-timbers",
+     "title": {
+      "en": "Bearers and stickers",
+      "de": "Unterleger und Stapellatten"
+     },
+     "kind": "surface",
+     "model": "passive",
+     "material": "yard-softwood",
+     "areaM2": 1.0689,
+     "characteristicLengthM": 0.1,
+     "geometry": "vertical-plate",
+     "skyViewFactor": 0.4,
+     "layers": [],
+     "heatCapacityJM2K": 18000,
+     "source": "authored-estimate",
+     "reference": "en-iso-13786"
+    },
+    {
+     "id": "straps",
+     "title": {
+      "en": "Polyester cord straps with wire buckles",
+      "de": "Polyester-Kraftbänder mit Drahtschnallen"
+     },
+     "kind": "surface",
+     "model": "passive",
+     "material": "polyester-strap",
+     "areaM2": 0.2593,
+     "characteristicLengthM": 0.032,
+     "geometry": "vertical-plate",
+     "skyViewFactor": 0.5,
+     "layers": [],
+     "heatCapacityJM2K": 490,
+     "source": "authored-estimate",
+     "reference": "ashrae-fundamentals"
+    },
+    {
+     "id": "slings",
+     "title": {
+      "en": "Two violet round slings (chokes and legs)",
+      "de": "Zwei violette Rundschlingen (Schnürungen und Stränge)"
+     },
+     "kind": "surface",
+     "model": "passive",
+     "material": "polyester-sling",
+     "areaM2": 0.9595,
+     "characteristicLengthM": 0.03,
+     "geometry": "cylinder",
+     "skyViewFactor": 0.6,
+     "layers": [],
+     "heatCapacityJM2K": 2000,
+     "source": "authored-estimate",
+     "reference": "en-1492-2"
+    }
+   ],
+   "emitters": [],
+   "assumptions": [
+    {
+     "en": "Timber faces store heat in about 36 mm (half the 24 h penetration depth of 73 mm for lambda 0.13 W/mK, rho 420 kg/m3, c 1600 J/kgK, EN ISO 13786); the 80 mm rafter therefore responds as a whole within a day. Bearers and stickers take 25 mm of 450 kg/m3 yard timber.",
+     "de": "Holzflächen speichern Wärme in etwa 36 mm (die Hälfte der 24-h-Eindringtiefe von 73 mm für Lambda 0,13 W/mK, Rho 420 kg/m³, c 1600 J/kgK, EN ISO 13786); der 80-mm-Sparren reagiert daher innerhalb eines Tages als Ganzes. Unterleger und Stapellatten nehmen 25 mm Lagerholz zu 450 kg/m³ an."
+    },
+    {
+     "en": "Aged rafter timber from a roof space is darker than fresh spruce: solar absorptance 0.72 against about 0.5 when new; the bearers and stickers stand outdoors and are weathered grey (0.65). Both are authored estimates guided by the ASHRAE radiation tables; emissivity 0.9 for all timber.",
+     "de": "Gealtertes Sparrenholz aus einem Dachraum ist dunkler als frische Fichte: solarer Absorptionsgrad 0,72 statt etwa 0,5 im Neuzustand; Unterleger und Stapellatten liegen im Freien und sind vergraut (0,65). Beides sind Schätzungen nach den ASHRAE-Strahlungstabellen; Emissionsgrad 0,9 für alles Holz."
+    },
+    {
+     "en": "The 25 mm gaps between the rafters and the 30 mm sticker slot are open to the air (minimumAirPassageM), so every rafter face exchanges heat; only the top faces of the upper layer and the sunward side see the sun (sunlit fractions of the poses).",
+     "de": "Die 25-mm-Fugen zwischen den Sparren und der 30-mm-Lattenspalt sind zur Luft offen (minimumAirPassageM), daher tauscht jede Sparrenfläche Wärme aus; nur die Oberseiten der oberen Lage und die sonnenseitige Flanke sehen die Sonne (Besonnungsanteile der Posen)."
+    },
+    {
+     "en": "Reinstalled, the rafter lies under the roof covering: shaded, in the air of the roof space taken equal to the outdoor reference case. The bundle is no device and draws no power.",
+     "de": "Wiedereingebaut liegt der Sparren unter der Dachdeckung: verschattet, in der Luft des Dachraums, die dem Außenreferenzfall gleichgesetzt ist. Das Bündel ist kein Gerät und nimmt keine Leistung auf."
+    }
+   ],
+   "passengers": []
+  },
+  "structure": {
+   "gravityMS2": 9.81,
+   "dynamics": "quasi-static",
+   "supports": [],
+   "assumptions": [
+    {
+     "en": "Softwood rafters of sorting class S10 (DIN 4074-1), assigned to C24 (EN 338: E0,mean 11.0 GPa, f_m,k 24 MPa, mean density 420 kg/m3); section 80 x 160 mm on edge, A = 0.0128 m2, I = 27.3e-6 m4. Masses are section x density of the modelled solids.",
+     "de": "Nadelholzsparren der Sortierklasse S10 (DIN 4074-1), zugeordnet C24 (EN 338: E0,mean 11,0 GPa, f_m,k 24 MPa, mittlere Rohdichte 420 kg/m³); Querschnitt 80 x 160 mm hochkant, A = 0,0128 m², I = 27,3e-6 m⁴. Massen sind Querschnitt x Rohdichte der modellierten Körper."
+    },
+    {
+     "en": "Stored: each rafter bears on the two stickers or bearers 2.60 m apart with 0.95 m overhangs; the eleven bundle rafters act as one member of eleven independent sections, the outer upper rafter as its own member on its two frictionless sticker contacts, so its reactions are shown where they act on it and the ground reactions of the bearers show the rest.",
+     "de": "Gelagert: jeder Sparren liegt auf den zwei Stapellatten oder Unterlegern im Abstand 2,60 m mit 0,95 m Kragarmen; die elf Bündelsparren wirken als ein Stab aus elf unabhängigen Querschnitten, der äußere obere Sparren als eigener Stab auf seinen zwei reibungsfreien Lattenkontakten, deren Reaktionen dort gezeigt werden, wo sie auf ihn wirken; die Bodenreaktionen der Unterleger zeigen den Rest."
+    },
+    {
+     "en": "Lifted: the two sling legs are pinned in the crane hook, 58.4 degrees to the horizontal (included angle 63 degrees, within the 0 to 90 degree range of EN 1492-2 for a two-leg hitch); the bearers stay on the ground and carry their own 2 x 4.5 kg there.",
+     "de": "Angehoben: die zwei Schlingenstränge sind im Kranhaken gelenkig gelagert, 58,4 Grad zur Waagrechten (Spreizwinkel 63 Grad, im Bereich 0 bis 90 Grad der EN 1492-2 für zwei Stränge); die Unterleger bleiben am Boden und tragen dort ihre eigenen 2 x 4,5 kg."
+    },
+    {
+     "en": "Reinstalled: a purlin roof of 40 degrees, rafter spacing 0.80 m; the birdsmouth (40 mm deep, h/4) seats on the wall plate as a pin and on the ridge purlin as a roller, horizontal span 2.662 m, eaves overhang 0.60 m; roof covering 0.55 kN/m2 of roof area, snow s_k 0.85 kN/m2 with mu1 0.533 (EN 1991-1-3 Table 5.2), roofer 1.0 kN (EN 1991-1-1 category H).",
+     "de": "Wiedereingebaut: ein Pfettendach mit 40 Grad, Sparrenabstand 0,80 m; die Kerve (40 mm tief, h/4) sitzt auf der Fußpfette als Festlager und auf der Firstpfette als Rollenlager, waagrechte Stützweite 2,662 m, Traufüberstand 0,60 m; Dachdeckung 0,55 kN/m² Dachfläche, Schnee s_k 0,85 kN/m² mit mu1 0,533 (EN 1991-1-3 Tabelle 5,2), Dachdecker 1,0 kN (EN 1991-1-1 Kategorie H),"
+    },
+    {
+     "en": "The structural solver treats each pose as one rigid body on supports of equal stiffness. Where the asset is two separately supported bodies (the rafter in the roof and the stack in the yard; the hanging bundle and the bearers left on the ground), the statically determinate ground reactions under the bearers are applied as known loads (yard-under-bearer), so that the roof supports and the sling legs carry exactly their own body; in the lift clip that load fades in while the bundle rises.",
+     "de": "Der Tragwerkslöser behandelt jede Pose als einen starren Körper auf Auflagern gleicher Steifigkeit. Wo das Asset zwei getrennt gelagerte Körper ist (der Sparren im Dach und der Stapel auf dem Hof; das hängende Bündel und die am Boden verbliebenen Unterleger), werden die statisch bestimmten Bodenreaktionen unter den Unterlegern als bekannte Lasten angesetzt (yard-under-bearer), damit Dachauflager und Schlingenstränge genau ihren eigenen Körper tragen; im Hebe-Clip wird diese Last eingeblendet, während das Bündel steigt."
+    }
+   ],
+   "clinical": false
+  },
+  "volumes": {
+   "50": {
+    "status": "authored",
+    "denominator": 50,
+    "body": [
+     {
+      "id": "rafters-lower-a",
+      "bone": "bundle",
+      "material": "reclaimed-softwood",
+      "role": "body",
+      "tone": 0.6,
+      "kind": "extrude",
+      "profile": [
+       [
+        0.0,
+        0.0
+       ],
+       [
+        0.786436,
+        0.0
+       ],
+       [
+        0.82,
+        0.04
+       ],
+       [
+        0.86767,
+        0.0
+       ],
+       [
+        4.261311,
+        0.0
+       ],
+       [
+        4.294875,
+        0.04
+       ],
+       [
+        4.342546,
+        0.0
+       ],
+       [
+        4.365744,
+        0.0
+       ],
+       [
+        4.5,
+        0.16
+       ],
+       [
+        0.134256,
+        0.16
+       ]
+      ],
+      "plane": "xy",
+      "from": -0.3025,
+      "to": -0.2225,
+      "repeat": {
+       "count": 3,
+       "translation": [
+        0,
+        0,
+        0.105
+       ]
+      }
+     },
+     {
+      "id": "rafter-lower-chipped",
+      "bone": "bundle",
+      "material": "reclaimed-softwood",
+      "role": "body",
+      "tone": 0.55,
+      "kind": "extrude",
+      "profile": [
+       [
+        0.03,
+        0.0
+       ],
+       [
+        0.786436,
+        0.0
+       ],
+       [
+        0.82,
+        0.04
+       ],
+       [
+        0.86767,
+        0.0
+       ],
+       [
+        4.261311,
+        0.0
+       ],
+       [
+        4.294875,
+        0.04
+       ],
+       [
+        4.342546,
+        0.0
+       ],
+       [
+        4.365744,
+        0.0
+       ],
+       [
+        4.5,
+        0.16
+       ],
+       [
+        0.134256,
+        0.16
+       ],
+       [
+        0.019284,
+        0.022981
+       ]
+      ],
+      "plane": "xy",
+      "from": 0.0125,
+      "to": 0.0925
+     },
+     {
+      "id": "rafters-lower-b",
+      "bone": "bundle",
+      "material": "reclaimed-softwood",
+      "role": "body",
+      "tone": 0.63,
+      "kind": "extrude",
+      "profile": [
+       [
+        0.0,
+        0.0
+       ],
+       [
+        0.786436,
+        0.0
+       ],
+       [
+        0.82,
+        0.04
+       ],
+       [
+        0.86767,
+        0.0
+       ],
+       [
+        4.261311,
+        0.0
+       ],
+       [
+        4.294875,
+        0.04
+       ],
+       [
+        4.342546,
+        0.0
+       ],
+       [
+        4.365744,
+        0.0
+       ],
+       [
+        4.5,
+        0.16
+       ],
+       [
+        0.134256,
+        0.16
+       ]
+      ],
+      "plane": "xy",
+      "from": 0.1175,
+      "to": 0.1975,
+      "repeat": {
+       "count": 2,
+       "translation": [
+        0,
+        0,
+        0.105
+       ]
+      }
+     },
+     {
+      "id": "rafter-upper-chipped",
+      "bone": "bundle",
+      "material": "reclaimed-softwood",
+      "role": "body",
+      "tone": 0.57,
+      "kind": "extrude",
+      "profile": [
+       [
+        0.0,
+        0.19
+       ],
+       [
+        0.786436,
+        0.19
+       ],
+       [
+        0.82,
+        0.23
+       ],
+       [
+        0.86767,
+        0.19
+       ],
+       [
+        4.261311,
+        0.19
+       ],
+       [
+        4.294875,
+        0.23
+       ],
+       [
+        4.342546,
+        0.19
+       ],
+       [
+        4.365744,
+        0.19
+       ],
+       [
+        4.480716,
+        0.327019
+       ],
+       [
+        4.47,
+        0.35
+       ],
+       [
+        0.134256,
+        0.35
+       ]
+      ],
+      "plane": "xy",
+      "from": -0.3025,
+      "to": -0.2225
+     },
+     {
+      "id": "rafters-upper",
+      "bone": "bundle",
+      "material": "reclaimed-softwood",
+      "role": "body",
+      "tone": 0.61,
+      "kind": "extrude",
+      "profile": [
+       [
+        0.0,
+        0.19
+       ],
+       [
+        0.786436,
+        0.19
+       ],
+       [
+        0.82,
+        0.23
+       ],
+       [
+        0.86767,
+        0.19
+       ],
+       [
+        4.261311,
+        0.19
+       ],
+       [
+        4.294875,
+        0.23
+       ],
+       [
+        4.342546,
+        0.19
+       ],
+       [
+        4.365744,
+        0.19
+       ],
+       [
+        4.5,
+        0.35
+       ],
+       [
+        0.134256,
+        0.35
+       ]
+      ],
+      "plane": "xy",
+      "from": -0.1975,
+      "to": -0.1175,
+      "repeat": {
+       "count": 4,
+       "translation": [
+        0,
+        0,
+        0.105
+       ]
+      }
+     },
+     {
+      "id": "rafter",
+      "bone": "rafter",
+      "material": "reclaimed-softwood",
+      "role": "body",
+      "tone": 0.56,
+      "kind": "extrude",
+      "profile": [
+       [
+        0.03,
+        -0.08
+       ],
+       [
+        0.786436,
+        -0.08
+       ],
+       [
+        0.82,
+        -0.04
+       ],
+       [
+        0.86767,
+        -0.08
+       ],
+       [
+        4.261311,
+        -0.08
+       ],
+       [
+        4.294875,
+        -0.04
+       ],
+       [
+        4.342546,
+        -0.08
+       ],
+       [
+        4.365744,
+        -0.08
+       ],
+       [
+        4.5,
+        0.08
+       ],
+       [
+        0.134256,
+        0.08
+       ],
+       [
+        0.019284,
+        -0.057019
+       ]
+      ],
+      "plane": "xy",
+      "from": -0.04,
+      "to": 0.04
+     },
+     {
+      "id": "bearer-a",
+      "bone": "bearer-a",
+      "material": "yard-softwood",
+      "role": "body",
+      "tone": 0.34,
+      "kind": "box",
+      "size": [
+       0.1,
+       0.1,
+       1.0
+      ],
+      "transform": {
+       "translation": [
+        0.0,
+        -0.05,
+        0.0
+       ]
+      },
+      "cornerRadius": 0.008
+     },
+     {
+      "id": "bearer-b",
+      "bone": "bearer-b",
+      "material": "yard-softwood",
+      "role": "body",
+      "tone": 0.34,
+      "kind": "box",
+      "size": [
+       0.1,
+       0.1,
+       1.0
+      ],
+      "transform": {
+       "translation": [
+        0.0,
+        -0.05,
+        0.0
+       ]
+      },
+      "cornerRadius": 0.008
+     },
+     {
+      "id": "sticker-a",
+      "bone": "bundle",
+      "material": "yard-softwood",
+      "role": "body",
+      "tone": 0.72,
+      "kind": "box",
+      "size": [
+       0.05,
+       0.03,
+       0.8
+      ],
+      "transform": {
+       "translation": [
+        0.95,
+        0.175,
+        0.0
+       ]
+      }
+     },
+     {
+      "id": "sticker-b",
+      "bone": "bundle",
+      "material": "yard-softwood",
+      "role": "body",
+      "tone": 0.72,
+      "kind": "box",
+      "size": [
+       0.05,
+       0.03,
+       0.8
+      ],
+      "transform": {
+       "translation": [
+        3.55,
+        0.175,
+        0.0
+       ]
+      }
+     },
+     {
+      "id": "strap-a",
+      "bone": "bundle",
+      "material": "polyester-strap",
+      "role": "body",
+      "tone": 0.92,
+      "kind": "extrude",
+      "profile": [
+       [
+        -0.0015,
+        -0.304
+       ],
+       [
+        0.3515,
+        -0.304
+       ],
+       [
+        0.3515,
+        0.304
+       ],
+       [
+        -0.0015,
+        0.304
+       ]
+      ],
+      "holes": [
+       [
+        [
+         0.0,
+         -0.3025
+        ],
+        [
+         0.35,
+         -0.3025
+        ],
+        [
+         0.35,
+         0.3025
+        ],
+        [
+         0.0,
+         0.3025
+        ]
+       ]
+      ],
+      "plane": "yz",
+      "from": 0.434,
+      "to": 0.466
+     },
+     {
+      "id": "strap-b",
+      "bone": "bundle",
+      "material": "polyester-strap",
+      "role": "body",
+      "tone": 0.92,
+      "kind": "extrude",
+      "profile": [
+       [
+        -0.0015,
+        -0.304
+       ],
+       [
+        0.3515,
+        -0.304
+       ],
+       [
+        0.3515,
+        0.304
+       ],
+       [
+        -0.0015,
+        0.304
+       ]
+      ],
+      "holes": [
+       [
+        [
+         0.0,
+         -0.3025
+        ],
+        [
+         0.35,
+         -0.3025
+        ],
+        [
+         0.35,
+         0.3025
+        ],
+        [
+         0.0,
+         0.3025
+        ]
+       ]
+      ],
+      "plane": "yz",
+      "from": 4.034,
+      "to": 4.066
+     },
+     {
+      "id": "buckle-a",
+      "bone": "bundle",
+      "material": "galvanised-steel",
+      "role": "body",
+      "tone": 0.5,
+      "kind": "box",
+      "size": [
+       0.036,
+       0.008,
+       0.045
+      ],
+      "transform": {
+       "translation": [
+        0.45,
+        0.3555,
+        0.1
+       ]
+      }
+     },
+     {
+      "id": "buckle-b",
+      "bone": "bundle",
+      "material": "galvanised-steel",
+      "role": "body",
+      "tone": 0.5,
+      "kind": "box",
+      "size": [
+       0.036,
+       0.008,
+       0.045
+      ],
+      "transform": {
+       "translation": [
+        4.05,
+        0.3555,
+        0.1
+       ]
+      }
+     },
+     {
+      "id": "loop-a",
+      "bone": "bundle",
+      "material": "polyester-sling",
+      "role": "body",
+      "tone": 0.3,
+      "kind": "extrude",
+      "profile": [
+       [
+        -0.03,
+        -0.3325
+       ],
+       [
+        0.38,
+        -0.3325
+       ],
+       [
+        0.38,
+        0.3325
+       ],
+       [
+        -0.03,
+        0.3325
+       ]
+      ],
+      "holes": [
+       [
+        [
+         0.0,
+         -0.3025
+        ],
+        [
+         0.35,
+         -0.3025
+        ],
+        [
+         0.35,
+         0.3025
+        ],
+        [
+         0.0,
+         0.3025
+        ]
+       ]
+      ],
+      "plane": "yz",
+      "from": 1.13,
+      "to": 1.17
+     },
+     {
+      "id": "loop-b",
+      "bone": "bundle",
+      "material": "polyester-sling",
+      "role": "body",
+      "tone": 0.3,
+      "kind": "extrude",
+      "profile": [
+       [
+        -0.03,
+        -0.3325
+       ],
+       [
+        0.38,
+        -0.3325
+       ],
+       [
+        0.38,
+        0.3325
+       ],
+       [
+        -0.03,
+        0.3325
+       ]
+      ],
+      "holes": [
+       [
+        [
+         0.0,
+         -0.3025
+        ],
+        [
+         0.35,
+         -0.3025
+        ],
+        [
+         0.35,
+         0.3025
+        ],
+        [
+         0.0,
+         0.3025
+        ]
+       ]
+      ],
+      "plane": "yz",
+      "from": 3.33,
+      "to": 3.37
+     },
+     {
+      "id": "leg-a",
+      "bone": "sling-a",
+      "material": "polyester-sling",
+      "role": "body",
+      "tone": 0.3,
+      "kind": "revolve",
+      "profile": [
+       [
+        0.0,
+        0.0
+       ],
+       [
+        0.0,
+        0.015
+       ],
+       [
+        2.1,
+        0.015
+       ],
+       [
+        2.1,
+        0.0
+       ]
+      ],
+      "axis": [
+       1,
+       0,
+       0
+      ],
+      "origin": [
+       0,
+       0,
+       0
+      ],
+      "slender": true
+     },
+     {
+      "id": "leg-b",
+      "bone": "sling-b",
+      "material": "polyester-sling",
+      "role": "body",
+      "tone": 0.3,
+      "kind": "revolve",
+      "profile": [
+       [
+        0.0,
+        0.0
+       ],
+       [
+        0.0,
+        0.015
+       ],
+       [
+        2.074504,
+        0.015
+       ],
+       [
+        2.074504,
+        0.0
+       ]
+      ],
+      "axis": [
+       1,
+       0,
+       0
+      ],
+      "origin": [
+       0,
+       0,
+       0
+      ],
+      "slender": true
+     }
+    ],
+    "thermal": [
+     {
+      "id": "th-rafters-lower-a",
+      "of": "rafters-lower-a",
+      "region": "bundle-rafters"
+     },
+     {
+      "id": "th-rafter-lower-chipped",
+      "of": "rafter-lower-chipped",
+      "region": "bundle-rafters"
+     },
+     {
+      "id": "th-rafters-lower-b",
+      "of": "rafters-lower-b",
+      "region": "bundle-rafters"
+     },
+     {
+      "id": "th-rafter-upper-chipped",
+      "of": "rafter-upper-chipped",
+      "region": "bundle-rafters"
+     },
+     {
+      "id": "th-rafters-upper",
+      "of": "rafters-upper",
+      "region": "bundle-rafters"
+     },
+     {
+      "id": "th-rafter",
+      "of": "rafter",
+      "region": "rafter-reinstalled"
+     },
+     {
+      "id": "th-bearer-a",
+      "of": "bearer-a",
+      "region": "storage-timbers"
+     },
+     {
+      "id": "th-bearer-b",
+      "of": "bearer-b",
+      "region": "storage-timbers"
+     },
+     {
+      "id": "th-sticker-a",
+      "of": "sticker-a",
+      "region": "storage-timbers"
+     },
+     {
+      "id": "th-sticker-b",
+      "of": "sticker-b",
+      "region": "storage-timbers"
+     },
+     {
+      "id": "th-strap-a",
+      "of": "strap-a",
+      "region": "straps"
+     },
+     {
+      "id": "th-strap-b",
+      "of": "strap-b",
+      "region": "straps"
+     },
+     {
+      "id": "th-buckle-a",
+      "of": "buckle-a",
+      "region": "straps"
+     },
+     {
+      "id": "th-buckle-b",
+      "of": "buckle-b",
+      "region": "straps"
+     },
+     {
+      "id": "th-loop-a",
+      "of": "loop-a",
+      "region": "slings"
+     },
+     {
+      "id": "th-loop-b",
+      "of": "loop-b",
+      "region": "slings"
+     },
+     {
+      "id": "th-leg-a",
+      "of": "leg-a",
+      "region": "slings"
+     },
+     {
+      "id": "th-leg-b",
+      "of": "leg-b",
+      "region": "slings"
+     }
+    ],
+    "structure": [
+     {
+      "id": "st-rafters-lower-a",
+      "of": "rafters-lower-a",
+      "member": "bundle",
+      "part": "member"
+     },
+     {
+      "id": "st-rafter-lower-chipped",
+      "of": "rafter-lower-chipped",
+      "member": "bundle",
+      "part": "member"
+     },
+     {
+      "id": "st-rafters-lower-b",
+      "of": "rafters-lower-b",
+      "member": "bundle",
+      "part": "member"
+     },
+     {
+      "id": "st-rafter-upper-chipped",
+      "of": "rafter-upper-chipped",
+      "member": "bundle",
+      "part": "member"
+     },
+     {
+      "id": "st-rafters-upper",
+      "of": "rafters-upper",
+      "member": "bundle",
+      "part": "member"
+     },
+     {
+      "id": "st-sticker-a",
+      "of": "sticker-a",
+      "member": "bundle",
+      "part": "member"
+     },
+     {
+      "id": "st-sticker-b",
+      "of": "sticker-b",
+      "member": "bundle",
+      "part": "member"
+     },
+     {
+      "id": "st-rafter",
+      "of": "rafter",
+      "member": "rafter",
+      "part": "member"
+     },
+     {
+      "id": "st-leg-a",
+      "of": "leg-a",
+      "member": "sling-a",
+      "part": "member"
+     },
+     {
+      "id": "st-leg-b",
+      "of": "leg-b",
+      "member": "sling-b",
+      "part": "member"
+     }
+    ],
+    "decisions": [
+     {
+      "en": "Body: every rafter is its true side profile extruded 80 mm across: plumb cuts at foot and ridge, the wall-plate birdsmouth at 0.82 m and the ridge-purlin birdsmouth at 4.29 m, both 40 mm deep with horizontal seat and plumb face; three rafters have their 50-degree acute tip splintered off over 30 mm. Runs of identical rafters are repeats at the 105 mm pitch of the stack (80 mm rafter, 25 mm gap).",
+      "de": "Körper: jeder Sparren ist sein wahres Seitenprofil, 80 mm quer extrudiert: Lotschnitte an Fuß und First, die Fußpfettenkerve bei 0,82 m und die Firstpfettenkerve bei 4,29 m, beide 40 mm tief mit waagrechtem Sitz und lotrechter Stirn; bei drei Sparren ist die spitze 50-Grad-Ecke auf 30 mm abgesplittert. Läufe gleicher Sparren sind Wiederholungen im Raster 105 mm des Stapels (80 mm Sparren, 25 mm Fuge)."
+     },
+     {
+      "en": "Storage aids: 100 x 100 x 1000 mm bearers with 8 mm rounded arrises on their own bones, 50 x 30 x 800 mm stickers on the bundle, two 32 x 1.5 mm cord straps hugging the stack with galvanised wire buckles on top, two violet round slings choked as 40 x 30 mm bands, their 30 mm legs lying on the upper layer side by side.",
+      "de": "Lagerhilfen: Unterleger 100 x 100 x 1000 mm mit 8-mm-gerundeten Kanten auf eigenen Knochen, Stapellatten 50 x 30 x 800 mm am Bündel, zwei Kraftbänder 32 x 1,5 mm eng um den Stapel mit verzinkten Drahtschnallen oben, zwei violette Rundschlingen als 40 x 30 mm Schnürbänder, ihre 30-mm-Stränge nebeneinander auf der oberen Lage."
+     },
+     {
+      "en": "Thermal: the regions are the body surfaces themselves (references): the reinstalled rafter, the eleven bundle rafters, bearers with stickers, straps with buckles, slings; the open gaps let the air reach every face.",
+      "de": "Thermik: die Regionen sind die Körperoberflächen selbst (Verweise): der wiedereingebaute Sparren, die elf Bündelsparren, Unterleger mit Latten, Bänder mit Schnallen, Schlingen; die offenen Fugen lassen die Luft an jede Fläche."
+     },
+     {
+      "en": "Structure: the bundle member is the eleven rafters with the two stickers that carry the upper layer onto the lower one over the bearers; the reinstalled rafter and the two sling legs are their own members. The bearers are compression blocks on the ground (no member), the supports are the pose contacts.",
+      "de": "Tragwerk: der Bündelstab sind die elf Sparren mit den zwei Latten, die die obere Lage über den Unterlegern auf die untere übertragen; der wiedereingebaute Sparren und die zwei Schlingenstränge sind eigene Stäbe. Die Unterleger sind Druckklötze auf dem Boden (kein Stab), die Auflager sind die Kontakte der Posen."
+     }
+    ]
+   },
+   "100": {
+    "status": "authored",
+    "denominator": 100,
+    "body": [
+     {
+      "id": "rafters-lower",
+      "bone": "bundle",
+      "material": "reclaimed-softwood",
+      "role": "body",
+      "tone": 0.6,
+      "kind": "extrude",
+      "profile": [
+       [
+        0.0,
+        0.0
+       ],
+       [
+        0.786436,
+        0.0
+       ],
+       [
+        0.82,
+        0.04
+       ],
+       [
+        0.86767,
+        0.0
+       ],
+       [
+        4.261311,
+        0.0
+       ],
+       [
+        4.294875,
+        0.04
+       ],
+       [
+        4.342546,
+        0.0
+       ],
+       [
+        4.365744,
+        0.0
+       ],
+       [
+        4.5,
+        0.16
+       ],
+       [
+        0.134256,
+        0.16
+       ]
+      ],
+      "plane": "xy",
+      "from": -0.3025,
+      "to": -0.2225,
+      "repeat": {
+       "count": 6,
+       "translation": [
+        0,
+        0,
+        0.105
+       ]
+      }
+     },
+     {
+      "id": "rafters-upper",
+      "bone": "bundle",
+      "material": "reclaimed-softwood",
+      "role": "body",
+      "tone": 0.57,
+      "kind": "extrude",
+      "profile": [
+       [
+        0.0,
+        0.19
+       ],
+       [
+        0.786436,
+        0.19
+       ],
+       [
+        0.82,
+        0.23
+       ],
+       [
+        0.86767,
+        0.19
+       ],
+       [
+        4.261311,
+        0.19
+       ],
+       [
+        4.294875,
+        0.23
+       ],
+       [
+        4.342546,
+        0.19
+       ],
+       [
+        4.365744,
+        0.19
+       ],
+       [
+        4.5,
+        0.35
+       ],
+       [
+        0.134256,
+        0.35
+       ]
+      ],
+      "plane": "xy",
+      "from": -0.3025,
+      "to": -0.2225,
+      "repeat": {
+       "count": 5,
+       "translation": [
+        0,
+        0,
+        0.105
+       ]
+      }
+     },
+     {
+      "id": "rafter",
+      "bone": "rafter",
+      "material": "reclaimed-softwood",
+      "role": "body",
+      "tone": 0.56,
+      "kind": "extrude",
+      "profile": [
+       [
+        0.0,
+        -0.08
+       ],
+       [
+        0.786436,
+        -0.08
+       ],
+       [
+        0.82,
+        -0.04
+       ],
+       [
+        0.86767,
+        -0.08
+       ],
+       [
+        4.261311,
+        -0.08
+       ],
+       [
+        4.294875,
+        -0.04
+       ],
+       [
+        4.342546,
+        -0.08
+       ],
+       [
+        4.365744,
+        -0.08
+       ],
+       [
+        4.5,
+        0.08
+       ],
+       [
+        0.134256,
+        0.08
+       ]
+      ],
+      "plane": "xy",
+      "from": -0.04,
+      "to": 0.04
+     },
+     {
+      "id": "bearer-a",
+      "bone": "bearer-a",
+      "material": "yard-softwood",
+      "role": "body",
+      "tone": 0.34,
+      "kind": "box",
+      "size": [
+       0.1,
+       0.1,
+       1.0
+      ],
+      "transform": {
+       "translation": [
+        0.0,
+        -0.05,
+        0.0
+       ]
+      }
+     },
+     {
+      "id": "bearer-b",
+      "bone": "bearer-b",
+      "material": "yard-softwood",
+      "role": "body",
+      "tone": 0.34,
+      "kind": "box",
+      "size": [
+       0.1,
+       0.1,
+       1.0
+      ],
+      "transform": {
+       "translation": [
+        0.0,
+        -0.05,
+        0.0
+       ]
+      }
+     },
+     {
+      "id": "sticker-a",
+      "bone": "bundle",
+      "material": "yard-softwood",
+      "role": "body",
+      "tone": 0.72,
+      "kind": "box",
+      "size": [
+       0.05,
+       0.03,
+       0.8
+      ],
+      "transform": {
+       "translation": [
+        0.95,
+        0.175,
+        0.0
+       ]
+      }
+     },
+     {
+      "id": "sticker-b",
+      "bone": "bundle",
+      "material": "yard-softwood",
+      "role": "body",
+      "tone": 0.72,
+      "kind": "box",
+      "size": [
+       0.05,
+       0.03,
+       0.8
+      ],
+      "transform": {
+       "translation": [
+        3.55,
+        0.175,
+        0.0
+       ]
+      }
+     },
+     {
+      "id": "strap-a",
+      "bone": "bundle",
+      "material": "polyester-strap",
+      "role": "body",
+      "tone": 0.92,
+      "kind": "extrude",
+      "profile": [
+       [
+        -0.0015,
+        -0.304
+       ],
+       [
+        0.3515,
+        -0.304
+       ],
+       [
+        0.3515,
+        0.304
+       ],
+       [
+        -0.0015,
+        0.304
+       ]
+      ],
+      "holes": [
+       [
+        [
+         0.0,
+         -0.3025
+        ],
+        [
+         0.35,
+         -0.3025
+        ],
+        [
+         0.35,
+         0.3025
+        ],
+        [
+         0.0,
+         0.3025
+        ]
+       ]
+      ],
+      "plane": "yz",
+      "from": 0.434,
+      "to": 0.466
+     },
+     {
+      "id": "strap-b",
+      "bone": "bundle",
+      "material": "polyester-strap",
+      "role": "body",
+      "tone": 0.92,
+      "kind": "extrude",
+      "profile": [
+       [
+        -0.0015,
+        -0.304
+       ],
+       [
+        0.3515,
+        -0.304
+       ],
+       [
+        0.3515,
+        0.304
+       ],
+       [
+        -0.0015,
+        0.304
+       ]
+      ],
+      "holes": [
+       [
+        [
+         0.0,
+         -0.3025
+        ],
+        [
+         0.35,
+         -0.3025
+        ],
+        [
+         0.35,
+         0.3025
+        ],
+        [
+         0.0,
+         0.3025
+        ]
+       ]
+      ],
+      "plane": "yz",
+      "from": 4.034,
+      "to": 4.066
+     },
+     {
+      "id": "loop-a",
+      "bone": "bundle",
+      "material": "polyester-sling",
+      "role": "body",
+      "tone": 0.3,
+      "kind": "extrude",
+      "profile": [
+       [
+        -0.03,
+        -0.3325
+       ],
+       [
+        0.38,
+        -0.3325
+       ],
+       [
+        0.38,
+        0.3325
+       ],
+       [
+        -0.03,
+        0.3325
+       ]
+      ],
+      "holes": [
+       [
+        [
+         0.0,
+         -0.3025
+        ],
+        [
+         0.35,
+         -0.3025
+        ],
+        [
+         0.35,
+         0.3025
+        ],
+        [
+         0.0,
+         0.3025
+        ]
+       ]
+      ],
+      "plane": "yz",
+      "from": 1.13,
+      "to": 1.17
+     },
+     {
+      "id": "loop-b",
+      "bone": "bundle",
+      "material": "polyester-sling",
+      "role": "body",
+      "tone": 0.3,
+      "kind": "extrude",
+      "profile": [
+       [
+        -0.03,
+        -0.3325
+       ],
+       [
+        0.38,
+        -0.3325
+       ],
+       [
+        0.38,
+        0.3325
+       ],
+       [
+        -0.03,
+        0.3325
+       ]
+      ],
+      "holes": [
+       [
+        [
+         0.0,
+         -0.3025
+        ],
+        [
+         0.35,
+         -0.3025
+        ],
+        [
+         0.35,
+         0.3025
+        ],
+        [
+         0.0,
+         0.3025
+        ]
+       ]
+      ],
+      "plane": "yz",
+      "from": 3.33,
+      "to": 3.37
+     },
+     {
+      "id": "leg-a",
+      "bone": "sling-a",
+      "material": "polyester-sling",
+      "role": "body",
+      "tone": 0.3,
+      "kind": "revolve",
+      "profile": [
+       [
+        0.0,
+        0.0
+       ],
+       [
+        0.0,
+        0.015
+       ],
+       [
+        2.1,
+        0.015
+       ],
+       [
+        2.1,
+        0.0
+       ]
+      ],
+      "axis": [
+       1,
+       0,
+       0
+      ],
+      "origin": [
+       0,
+       0,
+       0
+      ],
+      "slender": true
+     },
+     {
+      "id": "leg-b",
+      "bone": "sling-b",
+      "material": "polyester-sling",
+      "role": "body",
+      "tone": 0.3,
+      "kind": "revolve",
+      "profile": [
+       [
+        0.0,
+        0.0
+       ],
+       [
+        0.0,
+        0.015
+       ],
+       [
+        2.074504,
+        0.015
+       ],
+       [
+        2.074504,
+        0.0
+       ]
+      ],
+      "axis": [
+       1,
+       0,
+       0
+      ],
+      "origin": [
+       0,
+       0,
+       0
+      ],
+      "slender": true
+     }
+    ],
+    "thermal": [
+     {
+      "id": "th-rafters-lower",
+      "of": "rafters-lower",
+      "region": "bundle-rafters"
+     },
+     {
+      "id": "th-rafters-upper",
+      "of": "rafters-upper",
+      "region": "bundle-rafters"
+     },
+     {
+      "id": "th-rafter",
+      "of": "rafter",
+      "region": "rafter-reinstalled"
+     },
+     {
+      "id": "th-bearer-a",
+      "of": "bearer-a",
+      "region": "storage-timbers"
+     },
+     {
+      "id": "th-bearer-b",
+      "of": "bearer-b",
+      "region": "storage-timbers"
+     },
+     {
+      "id": "th-sticker-a",
+      "of": "sticker-a",
+      "region": "storage-timbers"
+     },
+     {
+      "id": "th-sticker-b",
+      "of": "sticker-b",
+      "region": "storage-timbers"
+     },
+     {
+      "id": "th-strap-a",
+      "of": "strap-a",
+      "region": "straps"
+     },
+     {
+      "id": "th-strap-b",
+      "of": "strap-b",
+      "region": "straps"
+     },
+     {
+      "id": "th-loop-a",
+      "of": "loop-a",
+      "region": "slings"
+     },
+     {
+      "id": "th-loop-b",
+      "of": "loop-b",
+      "region": "slings"
+     },
+     {
+      "id": "th-leg-a",
+      "of": "leg-a",
+      "region": "slings"
+     },
+     {
+      "id": "th-leg-b",
+      "of": "leg-b",
+      "region": "slings"
+     }
+    ],
+    "structure": [
+     {
+      "id": "st-rafters-lower",
+      "of": "rafters-lower",
+      "member": "bundle",
+      "part": "member"
+     },
+     {
+      "id": "st-rafters-upper",
+      "of": "rafters-upper",
+      "member": "bundle",
+      "part": "member"
+     },
+     {
+      "id": "st-sticker-a",
+      "of": "sticker-a",
+      "member": "bundle",
+      "part": "member"
+     },
+     {
+      "id": "st-sticker-b",
+      "of": "sticker-b",
+      "member": "bundle",
+      "part": "member"
+     },
+     {
+      "id": "st-rafter",
+      "of": "rafter",
+      "member": "rafter",
+      "part": "member"
+     },
+     {
+      "id": "st-leg-a",
+      "of": "leg-a",
+      "member": "sling-a",
+      "part": "member"
+     },
+     {
+      "id": "st-leg-b",
+      "of": "leg-b",
+      "member": "sling-b",
+      "part": "member"
+     }
+    ],
+    "decisions": [
+     {
+      "en": "Body: the same twelve rafters with plumb cuts and both 40 mm birdsmouths, now two repeated runs of straight-cut rafters: the 30 mm splinters are below what this scale keeps apart from the cut. Bearers are sharp-edged boxes, the wire buckles (8 mm) are left out; straps, stickers, chokes and legs keep their true sizes, all at least 15 mm.",
+      "de": "Körper: dieselben zwölf Sparren mit Lotschnitten und beiden 40-mm-Kerven, jetzt zwei wiederholte Läufe gerade geschnittener Sparren: die 30-mm-Absplitterungen trennt dieser Maßstab nicht mehr vom Schnitt. Unterleger sind scharfkantige Quader, die Drahtschnallen (8 mm) entfallen; Bänder, Latten, Schnürungen und Stränge behalten ihre wahren Maße, alle mindestens 15 mm."
+     },
+     {
+      "en": "Thermal: references to the body surfaces by region, as at 1:50.",
+      "de": "Thermik: Verweise auf die Körperoberflächen je Region, wie bei 1:50."
+     },
+     {
+      "en": "Structure: the eleven rafters and two stickers as the bundle member, the reinstalled rafter and the two legs.",
+      "de": "Tragwerk: die elf Sparren und zwei Latten als Bündelstab, der wiedereingebaute Sparren und die zwei Stränge."
+     }
+    ]
+   },
+   "200": {
+    "status": "authored",
+    "denominator": 200,
+    "body": [
+     {
+      "id": "block-lower",
+      "bone": "bundle",
+      "material": "reclaimed-softwood",
+      "role": "body",
+      "tone": 0.56,
+      "kind": "extrude",
+      "profile": [
+       [
+        0.0,
+        0.0
+       ],
+       [
+        0.786436,
+        0.0
+       ],
+       [
+        0.82,
+        0.04
+       ],
+       [
+        0.86767,
+        0.0
+       ],
+       [
+        4.261311,
+        0.0
+       ],
+       [
+        4.294875,
+        0.04
+       ],
+       [
+        4.342546,
+        0.0
+       ],
+       [
+        4.365744,
+        0.0
+       ],
+       [
+        4.5,
+        0.16
+       ],
+       [
+        4.365744,
+        0.16
+       ],
+       [
+        4.365744,
+        0.19
+       ],
+       [
+        0.134256,
+        0.19
+       ],
+       [
+        0.134256,
+        0.16
+       ]
+      ],
+      "plane": "xy",
+      "from": -0.3025,
+      "to": 0.3025
+     },
+     {
+      "id": "block-upper",
+      "bone": "bundle",
+      "material": "reclaimed-softwood",
+      "role": "body",
+      "tone": 0.56,
+      "kind": "extrude",
+      "profile": [
+       [
+        0.0,
+        0.19
+       ],
+       [
+        4.365744,
+        0.19
+       ],
+       [
+        4.5,
+        0.35
+       ],
+       [
+        0.134256,
+        0.35
+       ]
+      ],
+      "plane": "xy",
+      "from": -0.3025,
+      "to": 0.1975
+     },
+     {
+      "id": "rafter",
+      "bone": "rafter",
+      "material": "reclaimed-softwood",
+      "role": "body",
+      "tone": 0.56,
+      "kind": "extrude",
+      "profile": [
+       [
+        0.0,
+        -0.08
+       ],
+       [
+        0.786436,
+        -0.08
+       ],
+       [
+        0.82,
+        -0.04
+       ],
+       [
+        0.86767,
+        -0.08
+       ],
+       [
+        4.261311,
+        -0.08
+       ],
+       [
+        4.294875,
+        -0.04
+       ],
+       [
+        4.342546,
+        -0.08
+       ],
+       [
+        4.365744,
+        -0.08
+       ],
+       [
+        4.5,
+        0.08
+       ],
+       [
+        0.134256,
+        0.08
+       ]
+      ],
+      "plane": "xy",
+      "from": -0.04,
+      "to": 0.04
+     },
+     {
+      "id": "bearer-a",
+      "bone": "bearer-a",
+      "material": "yard-softwood",
+      "role": "body",
+      "tone": 0.34,
+      "kind": "box",
+      "size": [
+       0.1,
+       0.1,
+       1.0
+      ],
+      "transform": {
+       "translation": [
+        0.0,
+        -0.05,
+        0.0
+       ]
+      }
+     },
+     {
+      "id": "bearer-b",
+      "bone": "bearer-b",
+      "material": "yard-softwood",
+      "role": "body",
+      "tone": 0.34,
+      "kind": "box",
+      "size": [
+       0.1,
+       0.1,
+       1.0
+      ],
+      "transform": {
+       "translation": [
+        0.0,
+        -0.05,
+        0.0
+       ]
+      }
+     },
+     {
+      "id": "sticker-a",
+      "bone": "bundle",
+      "material": "yard-softwood",
+      "role": "body",
+      "tone": 0.72,
+      "kind": "box",
+      "size": [
+       0.05,
+       0.03,
+       0.8
+      ],
+      "transform": {
+       "translation": [
+        0.95,
+        0.175,
+        0.0
+       ]
+      }
+     },
+     {
+      "id": "sticker-b",
+      "bone": "bundle",
+      "material": "yard-softwood",
+      "role": "body",
+      "tone": 0.72,
+      "kind": "box",
+      "size": [
+       0.05,
+       0.03,
+       0.8
+      ],
+      "transform": {
+       "translation": [
+        3.55,
+        0.175,
+        0.0
+       ]
+      }
+     },
+     {
+      "id": "strap-a",
+      "bone": "bundle",
+      "material": "polyester-strap",
+      "role": "body",
+      "tone": 0.92,
+      "kind": "extrude",
+      "profile": [
+       [
+        -0.0015,
+        -0.304
+       ],
+       [
+        0.3515,
+        -0.304
+       ],
+       [
+        0.3515,
+        0.304
+       ],
+       [
+        -0.0015,
+        0.304
+       ]
+      ],
+      "holes": [
+       [
+        [
+         0.0,
+         -0.3025
+        ],
+        [
+         0.35,
+         -0.3025
+        ],
+        [
+         0.35,
+         0.3025
+        ],
+        [
+         0.0,
+         0.3025
+        ]
+       ]
+      ],
+      "plane": "yz",
+      "from": 0.434,
+      "to": 0.466
+     },
+     {
+      "id": "strap-b",
+      "bone": "bundle",
+      "material": "polyester-strap",
+      "role": "body",
+      "tone": 0.92,
+      "kind": "extrude",
+      "profile": [
+       [
+        -0.0015,
+        -0.304
+       ],
+       [
+        0.3515,
+        -0.304
+       ],
+       [
+        0.3515,
+        0.304
+       ],
+       [
+        -0.0015,
+        0.304
+       ]
+      ],
+      "holes": [
+       [
+        [
+         0.0,
+         -0.3025
+        ],
+        [
+         0.35,
+         -0.3025
+        ],
+        [
+         0.35,
+         0.3025
+        ],
+        [
+         0.0,
+         0.3025
+        ]
+       ]
+      ],
+      "plane": "yz",
+      "from": 4.034,
+      "to": 4.066
+     },
+     {
+      "id": "loop-a",
+      "bone": "bundle",
+      "material": "polyester-sling",
+      "role": "body",
+      "tone": 0.3,
+      "kind": "extrude",
+      "profile": [
+       [
+        -0.03,
+        -0.3325
+       ],
+       [
+        0.38,
+        -0.3325
+       ],
+       [
+        0.38,
+        0.3325
+       ],
+       [
+        -0.03,
+        0.3325
+       ]
+      ],
+      "holes": [
+       [
+        [
+         0.0,
+         -0.3025
+        ],
+        [
+         0.35,
+         -0.3025
+        ],
+        [
+         0.35,
+         0.3025
+        ],
+        [
+         0.0,
+         0.3025
+        ]
+       ]
+      ],
+      "plane": "yz",
+      "from": 1.13,
+      "to": 1.17
+     },
+     {
+      "id": "loop-b",
+      "bone": "bundle",
+      "material": "polyester-sling",
+      "role": "body",
+      "tone": 0.3,
+      "kind": "extrude",
+      "profile": [
+       [
+        -0.03,
+        -0.3325
+       ],
+       [
+        0.38,
+        -0.3325
+       ],
+       [
+        0.38,
+        0.3325
+       ],
+       [
+        -0.03,
+        0.3325
+       ]
+      ],
+      "holes": [
+       [
+        [
+         0.0,
+         -0.3025
+        ],
+        [
+         0.35,
+         -0.3025
+        ],
+        [
+         0.35,
+         0.3025
+        ],
+        [
+         0.0,
+         0.3025
+        ]
+       ]
+      ],
+      "plane": "yz",
+      "from": 3.33,
+      "to": 3.37
+     },
+     {
+      "id": "leg-a",
+      "bone": "sling-a",
+      "material": "polyester-sling",
+      "role": "body",
+      "tone": 0.3,
+      "kind": "revolve",
+      "profile": [
+       [
+        0.0,
+        0.0
+       ],
+       [
+        0.0,
+        0.015
+       ],
+       [
+        2.1,
+        0.015
+       ],
+       [
+        2.1,
+        0.0
+       ]
+      ],
+      "axis": [
+       1,
+       0,
+       0
+      ],
+      "origin": [
+       0,
+       0,
+       0
+      ],
+      "slender": true
+     },
+     {
+      "id": "leg-b",
+      "bone": "sling-b",
+      "material": "polyester-sling",
+      "role": "body",
+      "tone": 0.3,
+      "kind": "revolve",
+      "profile": [
+       [
+        0.0,
+        0.0
+       ],
+       [
+        0.0,
+        0.015
+       ],
+       [
+        2.074504,
+        0.015
+       ],
+       [
+        2.074504,
+        0.0
+       ]
+      ],
+      "axis": [
+       1,
+       0,
+       0
+      ],
+      "origin": [
+       0,
+       0,
+       0
+      ],
+      "slender": true
+     }
+    ],
+    "thermal": [
+     {
+      "id": "th-rafters-lower",
+      "bone": "bundle",
+      "material": "reclaimed-softwood",
+      "role": "body",
+      "tone": 0.6,
+      "kind": "extrude",
+      "profile": [
+       [
+        0.0,
+        0.0
+       ],
+       [
+        0.786436,
+        0.0
+       ],
+       [
+        0.82,
+        0.04
+       ],
+       [
+        0.86767,
+        0.0
+       ],
+       [
+        4.261311,
+        0.0
+       ],
+       [
+        4.294875,
+        0.04
+       ],
+       [
+        4.342546,
+        0.0
+       ],
+       [
+        4.365744,
+        0.0
+       ],
+       [
+        4.5,
+        0.16
+       ],
+       [
+        0.134256,
+        0.16
+       ]
+      ],
+      "plane": "xy",
+      "from": -0.3025,
+      "to": -0.2225,
+      "repeat": {
+       "count": 6,
+       "translation": [
+        0,
+        0,
+        0.105
+       ]
+      },
+      "region": "bundle-rafters"
+     },
+     {
+      "id": "th-rafters-upper",
+      "bone": "bundle",
+      "material": "reclaimed-softwood",
+      "role": "body",
+      "tone": 0.6,
+      "kind": "extrude",
+      "profile": [
+       [
+        0.0,
+        0.19
+       ],
+       [
+        0.786436,
+        0.19
+       ],
+       [
+        0.82,
+        0.23
+       ],
+       [
+        0.86767,
+        0.19
+       ],
+       [
+        4.261311,
+        0.19
+       ],
+       [
+        4.294875,
+        0.23
+       ],
+       [
+        4.342546,
+        0.19
+       ],
+       [
+        4.365744,
+        0.19
+       ],
+       [
+        4.5,
+        0.35
+       ],
+       [
+        0.134256,
+        0.35
+       ]
+      ],
+      "plane": "xy",
+      "from": -0.3025,
+      "to": -0.2225,
+      "repeat": {
+       "count": 5,
+       "translation": [
+        0,
+        0,
+        0.105
+       ]
+      },
+      "region": "bundle-rafters"
+     },
+     {
+      "id": "th-rafter",
+      "of": "rafter",
+      "region": "rafter-reinstalled"
+     },
+     {
+      "id": "th-bearer-a",
+      "of": "bearer-a",
+      "region": "storage-timbers"
+     },
+     {
+      "id": "th-bearer-b",
+      "of": "bearer-b",
+      "region": "storage-timbers"
+     },
+     {
+      "id": "th-sticker-a",
+      "of": "sticker-a",
+      "region": "storage-timbers"
+     },
+     {
+      "id": "th-sticker-b",
+      "of": "sticker-b",
+      "region": "storage-timbers"
+     },
+     {
+      "id": "th-strap-a",
+      "of": "strap-a",
+      "region": "straps"
+     },
+     {
+      "id": "th-strap-b",
+      "of": "strap-b",
+      "region": "straps"
+     },
+     {
+      "id": "th-leg-a",
+      "of": "leg-a",
+      "region": "slings"
+     },
+     {
+      "id": "th-leg-b",
+      "of": "leg-b",
+      "region": "slings"
+     }
+    ],
+    "structure": [
+     {
+      "id": "st-rafters-lower",
+      "bone": "bundle",
+      "material": "reclaimed-softwood",
+      "role": "body",
+      "tone": 0.6,
+      "kind": "extrude",
+      "profile": [
+       [
+        0.0,
+        0.0
+       ],
+       [
+        4.365744,
+        0.0
+       ],
+       [
+        4.5,
+        0.16
+       ],
+       [
+        0.134256,
+        0.16
+       ]
+      ],
+      "plane": "xy",
+      "from": -0.3025,
+      "to": -0.2225,
+      "repeat": {
+       "count": 6,
+       "translation": [
+        0,
+        0,
+        0.105
+       ]
+      },
+      "member": "bundle",
+      "part": "member"
+     },
+     {
+      "id": "st-rafters-upper",
+      "bone": "bundle",
+      "material": "reclaimed-softwood",
+      "role": "body",
+      "tone": 0.6,
+      "kind": "extrude",
+      "profile": [
+       [
+        0.0,
+        0.19
+       ],
+       [
+        4.365744,
+        0.19
+       ],
+       [
+        4.5,
+        0.35
+       ],
+       [
+        0.134256,
+        0.35
+       ]
+      ],
+      "plane": "xy",
+      "from": -0.3025,
+      "to": -0.2225,
+      "repeat": {
+       "count": 5,
+       "translation": [
+        0,
+        0,
+        0.105
+       ]
+      },
+      "member": "bundle",
+      "part": "member"
+     },
+     {
+      "id": "st-sticker-a",
+      "of": "sticker-a",
+      "member": "bundle",
+      "part": "member"
+     },
+     {
+      "id": "st-sticker-b",
+      "of": "sticker-b",
+      "member": "bundle",
+      "part": "member"
+     },
+     {
+      "id": "st-rafter",
+      "of": "rafter",
+      "member": "rafter",
+      "part": "member"
+     },
+     {
+      "id": "st-leg-a",
+      "of": "leg-a",
+      "member": "sling-a",
+      "part": "member"
+     },
+     {
+      "id": "st-leg-b",
+      "of": "leg-b",
+      "member": "sling-b",
+      "part": "member"
+     }
+    ],
+    "decisions": [
+     {
+      "en": "Body: the 25 mm gaps and the 30 mm slot are at or below the 30 mm feature, so the eleven bundle rafters are one stack: the lower layer with the slot as one prism keeping the 40 mm birdsmouths and the sawtooth plumb ends, the upper five as one parallelogram prism that leaves the outer upper place to the reinstalled rafter (its own prism with both birdsmouths). The stickers stay because they stand 97.5 mm out of both flanks; straps, chokes and legs are at least 30 mm.",
+      "de": "Körper: die 25-mm-Fugen und der 30-mm-Spalt liegen bei oder unter der Einzelheit von 30 mm, daher sind die elf Bündelsparren ein Stapel: die untere Lage mit dem Spalt als ein Prisma mit den 40-mm-Kerven und den gesägezahnten Lotenden, die oberen fünf als ein Parallelogrammprisma, das den äußeren oberen Platz dem wiedereingebauten Sparren lässt (eigenes Prisma mit beiden Kerven). Die Latten bleiben, weil sie 97,5 mm aus beiden Flanken ragen; Bänder, Schnürungen und Stränge sind mindestens 30 mm."
+     },
+     {
+      "en": "Thermal: the exchange surface of a stickered stack is the surface of its rafters, so the thermal model keeps the twelve rafters apart with their open gaps (minimumAirPassageM 25 mm), with the birdsmouths; bearers, stickers, straps and legs are references; the chokes (2 % of the area) merge into the legs.",
+      "de": "Thermik: die Austauschfläche eines gelatteten Stapels ist die Oberfläche seiner Sparren, daher hält das Thermikmodell die zwölf Sparren mit ihren offenen Fugen getrennt (minimumAirPassageM 25 mm), mit den Kerven; Unterleger, Latten, Bänder und Stränge sind Verweise; die Schnürungen (2 % der Fläche) gehen in den Strängen auf."
+     },
+     {
+      "en": "Structure: the bundle member keeps the eleven true 80 x 160 mm sections as prisms with plumb ends (the birdsmouths are local reductions below this idealisation) and the two stickers that join the layers; rafter and legs are references.",
+      "de": "Tragwerk: der Bündelstab behält die elf wahren Querschnitte 80 x 160 mm als Prismen mit Lotenden (die Kerven sind örtliche Schwächungen unter dieser Idealisierung) und die zwei Latten, die die Lagen verbinden; Sparren und Stränge sind Verweise."
+     }
+    ]
+   },
+   "500": {
+    "status": "authored",
+    "denominator": 500,
+    "body": [
+     {
+      "id": "block-lower",
+      "bone": "bundle",
+      "material": "reclaimed-softwood",
+      "role": "body",
+      "tone": 0.5,
+      "kind": "extrude",
+      "profile": [
+       [
+        0.0,
+        0.0
+       ],
+       [
+        4.365744,
+        0.0
+       ],
+       [
+        4.5,
+        0.16
+       ],
+       [
+        4.365744,
+        0.16
+       ],
+       [
+        4.365744,
+        0.19
+       ],
+       [
+        0.134256,
+        0.19
+       ],
+       [
+        0.134256,
+        0.16
+       ]
+      ],
+      "plane": "xy",
+      "from": -0.3025,
+      "to": 0.3025
+     },
+     {
+      "id": "block-upper",
+      "bone": "bundle",
+      "material": "reclaimed-softwood",
+      "role": "body",
+      "tone": 0.5,
+      "kind": "extrude",
+      "profile": [
+       [
+        0.0,
+        0.19
+       ],
+       [
+        4.365744,
+        0.19
+       ],
+       [
+        4.5,
+        0.35
+       ],
+       [
+        0.134256,
+        0.35
+       ]
+      ],
+      "plane": "xy",
+      "from": -0.3025,
+      "to": 0.1975
+     },
+     {
+      "id": "rafter",
+      "bone": "rafter",
+      "material": "reclaimed-softwood",
+      "role": "body",
+      "tone": 0.56,
+      "kind": "extrude",
+      "profile": [
+       [
+        0.0,
+        -0.08
+       ],
+       [
+        4.365744,
+        -0.08
+       ],
+       [
+        4.5,
+        0.08
+       ],
+       [
+        0.134256,
+        0.08
+       ]
+      ],
+      "plane": "xy",
+      "from": -0.04,
+      "to": 0.04
+     },
+     {
+      "id": "bearer-a",
+      "bone": "bearer-a",
+      "material": "yard-softwood",
+      "role": "body",
+      "tone": 0.34,
+      "kind": "box",
+      "size": [
+       0.1,
+       0.1,
+       1.0
+      ],
+      "transform": {
+       "translation": [
+        0.0,
+        -0.05,
+        0.0
+       ]
+      }
+     },
+     {
+      "id": "bearer-b",
+      "bone": "bearer-b",
+      "material": "yard-softwood",
+      "role": "body",
+      "tone": 0.34,
+      "kind": "box",
+      "size": [
+       0.1,
+       0.1,
+       1.0
+      ],
+      "transform": {
+       "translation": [
+        0.0,
+        -0.05,
+        0.0
+       ]
+      }
+     },
+     {
+      "id": "leg-a",
+      "bone": "sling-a",
+      "material": "polyester-sling",
+      "role": "body",
+      "tone": 0.3,
+      "kind": "revolve",
+      "profile": [
+       [
+        0.0,
+        0.0
+       ],
+       [
+        0.0,
+        0.015
+       ],
+       [
+        2.1,
+        0.015
+       ],
+       [
+        2.1,
+        0.0
+       ]
+      ],
+      "axis": [
+       1,
+       0,
+       0
+      ],
+      "origin": [
+       0,
+       0,
+       0
+      ],
+      "slender": true
+     },
+     {
+      "id": "leg-b",
+      "bone": "sling-b",
+      "material": "polyester-sling",
+      "role": "body",
+      "tone": 0.3,
+      "kind": "revolve",
+      "profile": [
+       [
+        0.0,
+        0.0
+       ],
+       [
+        0.0,
+        0.015
+       ],
+       [
+        2.074504,
+        0.015
+       ],
+       [
+        2.074504,
+        0.0
+       ]
+      ],
+      "axis": [
+       1,
+       0,
+       0
+      ],
+      "origin": [
+       0,
+       0,
+       0
+      ],
+      "slender": true
+     }
+    ],
+    "thermal": [
+     {
+      "id": "th-rafters-lower",
+      "bone": "bundle",
+      "material": "reclaimed-softwood",
+      "role": "body",
+      "tone": 0.6,
+      "kind": "extrude",
+      "profile": [
+       [
+        0.0,
+        0.0
+       ],
+       [
+        4.365744,
+        0.0
+       ],
+       [
+        4.5,
+        0.16
+       ],
+       [
+        0.134256,
+        0.16
+       ]
+      ],
+      "plane": "xy",
+      "from": -0.3025,
+      "to": -0.2225,
+      "repeat": {
+       "count": 6,
+       "translation": [
+        0,
+        0,
+        0.105
+       ]
+      },
+      "region": "bundle-rafters"
+     },
+     {
+      "id": "th-rafters-upper",
+      "bone": "bundle",
+      "material": "reclaimed-softwood",
+      "role": "body",
+      "tone": 0.6,
+      "kind": "extrude",
+      "profile": [
+       [
+        0.0,
+        0.19
+       ],
+       [
+        4.365744,
+        0.19
+       ],
+       [
+        4.5,
+        0.35
+       ],
+       [
+        0.134256,
+        0.35
+       ]
+      ],
+      "plane": "xy",
+      "from": -0.3025,
+      "to": -0.2225,
+      "repeat": {
+       "count": 5,
+       "translation": [
+        0,
+        0,
+        0.105
+       ]
+      },
+      "region": "bundle-rafters"
+     },
+     {
+      "id": "th-rafter",
+      "of": "rafter",
+      "region": "rafter-reinstalled"
+     },
+     {
+      "id": "th-bearer-a",
+      "of": "bearer-a",
+      "region": "storage-timbers"
+     },
+     {
+      "id": "th-bearer-b",
+      "of": "bearer-b",
+      "region": "storage-timbers"
+     },
+     {
+      "id": "th-strap-a",
+      "bone": "bundle",
+      "material": "polyester-strap",
+      "role": "body",
+      "tone": 0.92,
+      "kind": "extrude",
+      "profile": [
+       [
+        -0.0015,
+        -0.304
+       ],
+       [
+        0.3515,
+        -0.304
+       ],
+       [
+        0.3515,
+        0.304
+       ],
+       [
+        -0.0015,
+        0.304
+       ]
+      ],
+      "holes": [
+       [
+        [
+         0.0,
+         -0.3025
+        ],
+        [
+         0.35,
+         -0.3025
+        ],
+        [
+         0.35,
+         0.3025
+        ],
+        [
+         0.0,
+         0.3025
+        ]
+       ]
+      ],
+      "plane": "yz",
+      "from": 0.4125,
+      "to": 0.4875,
+      "region": "straps"
+     },
+     {
+      "id": "th-strap-b",
+      "bone": "bundle",
+      "material": "polyester-strap",
+      "role": "body",
+      "tone": 0.92,
+      "kind": "extrude",
+      "profile": [
+       [
+        -0.0015,
+        -0.304
+       ],
+       [
+        0.3515,
+        -0.304
+       ],
+       [
+        0.3515,
+        0.304
+       ],
+       [
+        -0.0015,
+        0.304
+       ]
+      ],
+      "holes": [
+       [
+        [
+         0.0,
+         -0.3025
+        ],
+        [
+         0.35,
+         -0.3025
+        ],
+        [
+         0.35,
+         0.3025
+        ],
+        [
+         0.0,
+         0.3025
+        ]
+       ]
+      ],
+      "plane": "yz",
+      "from": 4.0125,
+      "to": 4.0875,
+      "region": "straps"
+     },
+     {
+      "id": "th-leg-a",
+      "of": "leg-a",
+      "region": "slings"
+     },
+     {
+      "id": "th-leg-b",
+      "of": "leg-b",
+      "region": "slings"
+     }
+    ],
+    "structure": [
+     {
+      "id": "st-block-lower",
+      "of": "block-lower",
+      "member": "bundle",
+      "part": "member"
+     },
+     {
+      "id": "st-block-upper",
+      "of": "block-upper",
+      "member": "bundle",
+      "part": "member"
+     },
+     {
+      "id": "st-rafter",
+      "of": "rafter",
+      "member": "rafter",
+      "part": "member"
+     },
+     {
+      "id": "st-leg-a",
+      "of": "leg-a",
+      "member": "sling-a",
+      "part": "member"
+     },
+     {
+      "id": "st-leg-b",
+      "of": "leg-b",
+      "member": "sling-b",
+      "part": "member"
+     }
+    ],
+    "decisions": [
+     {
+      "en": "Body: one stack of the two layers with the slot closed, plumb-cut sawtooth ends kept (134 mm offset), the 40 mm birdsmouths closed; the reinstalled rafter as its own 80 x 160 mm prism, the 100 mm bearers, the 30 mm legs as slender rods, drawn as 0.2 mm bars. Stickers (30 mm), straps (32 mm), buckles and chokes (40 mm) are below the 75 mm feature and are part of the stack.",
+      "de": "Körper: ein Stapel aus beiden Lagen mit geschlossenem Spalt, die Sägezahnenden der Lotschnitte bleiben (134 mm Versatz), die 40-mm-Kerven schließen sich; der wiedereingebaute Sparren als eigenes Prisma 80 x 160 mm, die 100-mm-Unterleger, die 30-mm-Stränge als schlanke Stäbe, gezeichnet als 0,2-mm-Stäbe. Latten (30 mm), Bänder (32 mm), Schnallen und Schnürungen (40 mm) liegen unter der Einzelheit von 75 mm und gehören zum Stapel."
+     },
+     {
+      "en": "Thermal: the twelve rafters stay apart as 80 x 160 mm prisms without birdsmouths so that the stack keeps its exchange surface through the 25 mm gaps (minimumAirPassageM); the straps are 75 mm bands at the size floor of this scale, bearers and legs are references, stickers and chokes are left out (2 % of the area).",
+      "de": "Thermik: die zwölf Sparren bleiben als Prismen 80 x 160 mm ohne Kerven getrennt, damit der Stapel durch die 25-mm-Fugen seine Austauschfläche behält (minimumAirPassageM); die Bänder sind 75-mm-Bänder an der Größenuntergrenze dieses Maßstabs, Unterleger und Stränge sind Verweise, Latten und Schnürungen entfallen (2 % der Fläche)."
+     },
+     {
+      "en": "Structure: the 25 mm gaps and the 30 mm slot are below the 75 mm feature, so the eleven rafters are one member band per layer, the body prisms themselves (the lower layer with the slot, the upper five beside the reinstalled rafter); the member keeps the true section of eleven rafters in its section data. Rafter and legs are references.",
+      "de": "Tragwerk: die 25-mm-Fugen und der 30-mm-Spalt liegen unter der Einzelheit von 75 mm, daher sind die elf Sparren je Lage ein Stabband, die Körperprismen selbst (die untere Lage mit dem Spalt, die oberen fünf neben dem wiedereingebauten Sparren); der Stab behält in seinen Querschnittswerten den wahren Querschnitt von elf Sparren. Sparren und Stränge sind Verweise."
+     }
+    ]
+   }
+  },
+  "presentation": {
+   "defaultPose": "stored",
+   "defaultClip": "lift",
+   "defaultScale": 50
+  },
+  "exports": [
+   "svg",
+   "pdf",
+   "dxf",
+   "dwg",
+   "png-sequence",
+   "mp4",
+   "webm",
+   "component",
+   "glb",
+   "fbx",
+   "model",
+   "model-zip"
+  ],
+  "completion": "authored"
+ }
+}

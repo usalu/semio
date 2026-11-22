@@ -15,8 +15,15 @@ export interface BuildTestFixtureV1<T>{readonly settled:Promise<void>;run<R>(bod
 type FixtureOpen<T>=(original:ScriptInvocation,retain:(value:T)=>Promise<void>)=>Promise<void>;
 import lawSchema from"./🧬️schema/📐️law.json"with{type:"json"};
 import {refuseProcessV1} from "../../📖️texts/🟦️.ts";
+import {stretchedBudgetMillisecondsV1} from "../🎚️budget/⏲️contention/🟦️.ts";
 /** ⏱️ Selects one authored test-role budget without caller numeric overrides. */
 export type BuildTestLawPlanV1=keyof typeof lawSchema.properties.plans.const;
+/** ⏱️ The funding of one build test law plan: each declared span of a `load` plan stretched by the contention of the host (a `fixed` plan proves timing itself and keeps its declared spans) (`ratio`, this host at its first deadline when none is given), the total being their sum, so a busy host never ends a law that fits its declared plan on an idle one. */
+export function buildTestLawBudgetV1(plan:BuildTestLawPlanV1,ratio?:number):Readonly<{totalMilliseconds:number;bodyMilliseconds:number;drainMilliseconds:number}>{
+ if(!Object.hasOwn(lawSchema.properties.plans.const,plan))throw Error("Closed build test law plan required");const declared=lawSchema.properties.plans.const[plan];if(declared.totalMilliseconds!==declared.bodyMilliseconds+declared.drainMilliseconds)throw Error("Complete build test law funding required");
+ const stretch=(milliseconds:number)=>declared.scaling==="load"?stretchedBudgetMillisecondsV1(milliseconds,ratio):milliseconds,bodyMilliseconds=stretch(declared.bodyMilliseconds),drainMilliseconds=stretch(declared.drainMilliseconds);
+ return Object.freeze({totalMilliseconds:bodyMilliseconds+drainMilliseconds,bodyMilliseconds,drainMilliseconds});
+}
 let activeLaw:{owner:symbol;completionOpen:boolean}|undefined;
 type Pending={controller:AbortController;work:Promise<unknown>};
 type Suite={close:()=>void;work:Promise<void>;users:Set<Promise<unknown>>;live:boolean};
@@ -69,7 +76,7 @@ async function bornInProcessV1(envelope:BuildTestEnvelopeV1,issuer:BuildTestGran
  try{
   if(artifacts!==undefined&&!configured){if(!saved.has("SEMIO_TEST_ARTIFACT_DIR"))saved.set("SEMIO_TEST_ARTIFACT_DIR",process.env.SEMIO_TEST_ARTIFACT_DIR);process.env.SEMIO_TEST_ARTIFACT_DIR=artifacts;}
   const issued=grant===undefined?{}:await issuer!.capabilities(grant,process.env);
-  await withScriptProcessEnvelope(createScriptProcessEnvelope({version:1,owner:envelope.owner,maximumElapsedMilliseconds:envelope.maximumElapsedMilliseconds},{...issued,...(artifacts!==undefined?{artifacts}:{}),...(envelope.capabilities.command!==undefined?{command:envelope.capabilities.command}:{})},Date.now()),body);
+  await withScriptProcessEnvelope(createScriptProcessEnvelope({version:1,owner:envelope.owner,maximumElapsedMilliseconds:stretchedBudgetMillisecondsV1(envelope.maximumElapsedMilliseconds)},{...issued,...(artifacts!==undefined?{artifacts}:{}),...(envelope.capabilities.command!==undefined?{command:envelope.capabilities.command}:{})},Date.now()),body);
  }finally{
   for(const[name,value]of saved){if(value===undefined)delete process.env[name];else process.env[name]=value;}
   prepared?.release();prepared=undefined;
@@ -95,7 +102,7 @@ function enqueue<T>(body:(original:IssuedScriptInvocationV1)=>Promise<T>,additio
 export function withBuildTestInvocationV1<T>(body:(original:IssuedScriptInvocationV1)=>Promise<T>):Promise<T>{return enqueue(body);}
 /** 🔨️ Owns Bun callback completion through actual issued cancellation, accepted drainage and terminal reporting. */
 export function registerBuildTestLawV1(name:string,plan:BuildTestLawPlanV1,body:(original:IssuedScriptInvocationV1)=>Promise<unknown>):void{
- if(!Object.hasOwn(lawSchema.properties.plans.const,plan)||typeof body!=="function")throw Error("Closed build test law plan required");const budget=lawSchema.properties.plans.const[plan];if(budget.totalMilliseconds!==budget.bodyMilliseconds+budget.drainMilliseconds)throw Error("Complete build test law funding required");
+ if(typeof body!=="function")throw Error("Closed build test law plan required");const budget=buildTestLawBudgetV1(plan);
  test(name,(done:(error?:unknown)=>void)=>{
   if(activeLaw){activeLaw.completionOpen=false;const error=Error("Previous build test law remains unsettled");failure(error);done(error);return;}
   const owner=Symbol(name),started=performance.now(),stop=new AbortController(),deadline=Error("Build test law body deadline exhausted");const port={owner,completionOpen:true};activeLaw=port;let timer:ReturnType<typeof setTimeout>|undefined;

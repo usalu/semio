@@ -1,0 +1,52 @@
+{
+  "id": "person-pushing-bicycle",
+  "category": "humans",
+  "title": {
+    "en": "Person Pushing a Bicycle",
+    "de": "Person schiebt Fahrrad"
+  },
+  "heightM": 1.791,
+  "widthM": 1.868,
+  "powerW": 341.4,
+  "poses": [
+    "pushing-bicycle",
+    "standing-with-bicycle",
+    "lifting-onto-stand"
+  ],
+  "clips": [
+    "push-walk",
+    "park-on-stand",
+    "idle-breathing"
+  ],
+  "representations": {
+    "50": "authored",
+    "100": "authored",
+    "200": "authored",
+    "500": "authored"
+  },
+  "symbols": [],
+  "analytics": [
+    "thermal",
+    "transport",
+    "structural"
+  ],
+  "exports": [
+    "svg",
+    "pdf",
+    "dxf",
+    "dwg",
+    "png-sequence",
+    "mp4",
+    "webm",
+    "component",
+    "glb",
+    "fbx",
+    "model",
+    "model-zip"
+  ],
+  "distinction": {
+    "en": "An adult in quilted jacket, scarf and jeans walking on the left side of a Dutch city bicycle and pushing it by the handlebar, the left hand on the grip and the right on the bar beside the stem: the bicycle is the root, its wheels and cranks turn with the distance, with standing beside it and lifting it onto the stand.",
+    "de": "Eine erwachsene Person in Steppjacke, Schal und Jeans geht links neben einem Hollandrad und schiebt es am Lenker, die linke Hand am Griff und die rechte am Lenker neben dem Vorbau: Das Fahrrad ist die Wurzel, seine Räder und Kurbeln drehen mit der Strecke, dazu das Stehen daneben und das Aufbocken auf den Ständer."
+  },
+  "completion": "authored"
+}

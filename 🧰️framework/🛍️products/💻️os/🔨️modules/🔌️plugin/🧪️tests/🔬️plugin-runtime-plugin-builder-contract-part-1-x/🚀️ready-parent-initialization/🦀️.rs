@@ -92,15 +92,18 @@ impl store::ArtifactStoreInitializationAuthority<ComposedParentSnapshot, Recursi
                 return semio_framework_job::JobOutcomeBorrow::admit_yield(cx).map_err(semio_framework_job::OriginalTurnFailure::from);
             }
             let grant=cx.retained_grant();
-            let stepped = store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.retirement, grant).map(|step| (grant, step));
+            let body=grant.maximum_copy_bytes;
+            let stepped = match cx.with_original_effect(grant,|_,effect|store::os_store::snapshot_read::settle_close_poll(store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.retirement,body,effect)))? {
+                Some((Ok(step),performed)) if step.progress().fits(grant) => Some((step,performed)),
+                _ => None,
+            };
             return match stepped {
-                Ok((grant, step)) if step.progress().fits(grant) => {
-                    let progress = step.progress();
-                    cx.consume_retained(progress)?;
-                    cx.consume_fuel((progress.copied_items + progress.released_bytes).max(1) as u64);
+                Some((step,performed)) => {
+                    cx.consume_retained(step.progress())?;
+                    cx.consume_fuel(u64::try_from(performed).unwrap_or(u64::MAX).max(1));
                     semio_framework_job::JobOutcomeBorrow::admit_yield(cx).map_err(semio_framework_job::OriginalTurnFailure::from)
                 }
-                _ => Err((Self::fault(b"recursive-parent-replay-retirement-rejected")).into()),
+                None => Err((Self::fault(b"recursive-parent-replay-retirement-rejected")).into()),
             };
         }
         if cx.should_yield() {
@@ -108,12 +111,13 @@ impl store::ArtifactStoreInitializationAuthority<ComposedParentSnapshot, Recursi
         }
         if let Some(runtime) = self.runtime.as_mut() {
             let grant=cx.retained_grant();
-            let settled=runtime.settle_current_retirement_step(grant).and_then(|step|{cx.consume_retained(step.progress())?;Ok((grant,step))});
-            match settled {
-                Ok((_, store::RetainedCloneStep::Complete(_))) => {}
-                Ok((grant, store::RetainedCloneStep::Progress(progress))) if progress.fits(grant) => {
-                    cx.consume_fuel((progress.copied_items + progress.released_bytes).max(1) as u64);
-                    return semio_framework_job::JobOutcomeBorrow::admit_yield(cx).map_err(semio_framework_job::OriginalTurnFailure::from);
+            match cx.with_original_effect(grant,|_,effect|runtime.settle_current_retirement_step(effect))? {
+                Some((Ok(step),performed)) if step.progress().fits(grant) => {
+                    cx.consume_retained(step.progress())?;
+                    if let store::RetainedCloneStep::Progress(_) = step {
+                        cx.consume_fuel(u64::try_from(performed).unwrap_or(u64::MAX).max(1));
+                        return semio_framework_job::JobOutcomeBorrow::admit_yield(cx).map_err(semio_framework_job::OriginalTurnFailure::from);
+                    }
                 }
                 _ => return Err((Self::fault(b"recursive-parent-current-retirement-rejected")).into()),
             }
@@ -243,8 +247,9 @@ impl store::ArtifactStoreInitializationAuthority<ComposedParentSnapshot, Recursi
         self.begin_close();
         if self.terminal_is_empty(){return Ok(semio_framework_value::retained_clone::RetainedCloneStep::Complete(Default::default()))}
         let demand=self.retirement_demands(cx.retained_grant().maximum_copy_bytes)?;
-        let step=semio_framework_job::close_original_retained_step(cx,demand,|grant|{
+        let step=semio_framework_job::close_original_retained_effect_step(cx,demand,|effect|{
         use semio_framework_value::{ValueError, ValueRefusalKind};
+        let grant = effect.grant();
         let empty = store::RetainedCloneProgress::default();
         if self.terminal_is_empty() {
             return Ok(store::RetainedCloneStep::Complete(empty));
@@ -261,18 +266,19 @@ impl store::ArtifactStoreInitializationAuthority<ComposedParentSnapshot, Recursi
         }
         let child = store::RetainedCloneGrant { maximum_items: 1, maximum_depth: grant.maximum_depth - 1, ..grant };
         if let Some(candidate) = self.candidate.as_mut() {
-            let step = semio_framework_value::retained_clone::admit_retained_clone_close(child, candidate.close_owned_step_cold(child)?, candidate.close_owned_terminal_is_empty(), "composed parent initializer candidate")?;
+            let step = store::os_store::snapshot_read::settle_close_poll(candidate.close_owned_store_step(&mut effect.nested(child)))?;
+            let step = semio_framework_value::retained_clone::admit_retained_clone_close(child, step, candidate.close_owned_store_terminal_is_empty(), "composed parent initializer candidate")?;
             if matches!(step, store::RetainedCloneStep::Complete(_)) {
                 drop(self.candidate.take());
             }
             return Ok(store::RetainedCloneStep::Progress(step.progress()));
         }
         if self.retirement.is_some() {
-            return store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.retirement, grant);
+            return store::os_store::snapshot_read::settle_close_poll(store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.retirement, grant.maximum_copy_bytes, &mut effect.nested(child)));
         }
         if let Some(runtime) = self.runtime.as_mut() {
             let factory: std::sync::Arc<dyn store::ArtifactOwnedValueRetirementFactory<ComposedParentSnapshot>> = std::sync::Arc::new(semio_framework_value::factory::OwnedValueRetirementFactory::<ComposedParentSnapshot>::default());
-            let step = semio_framework_value::retained_clone::admit_retained_clone_close(child, runtime.close_step(&factory, child)?, runtime.terminal_is_empty(), "composed parent initializer runtime")?;
+            let step = semio_framework_value::retained_clone::admit_retained_clone_close(child, runtime.close_step(&factory, &mut effect.nested(child))?, runtime.terminal_is_empty(), "composed parent initializer runtime")?;
             if matches!(step, store::RetainedCloneStep::Complete(_)) {
                 drop(self.runtime.take());
             }

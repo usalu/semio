@@ -35,7 +35,7 @@ export interface FleetClientV1{
  getBlob(hash:string,size:number):Promise<Uint8Array|undefined>;
  hasBlob(hash:string):Promise<boolean|undefined>;
  putBlob(hash:string,bytes:Uint8Array):Promise<boolean>;
- putResult(key:string,bytes:Uint8Array,slot:string):Promise<boolean|"diverged">;
+ putResult(key:string,bytes:Uint8Array,slot:string):Promise<boolean|"diverged"|"stale">;
  claim(key:string,owner:string,ttlMilliseconds:number,expectedMilliseconds?:number):Promise<FleetClaimV1>;
  renew(key:string,owner:string,ttlMilliseconds:number):Promise<"granted"|"lost"|"fault">;
  release(key:string,owner:string):Promise<void>;
@@ -122,7 +122,7 @@ export function createFleetClientV1(settings:FleetSettingsV1,world:Readonly<{fet
   },
   async putResult(key,bytes,slot){
    const answer=await call("PUT",`${base}/ac/${key}`,fleet.timeouts.claimMilliseconds*4,{body:sendable(bytes),headers:{"content-type":"application/octet-stream",[fleet.slotHeader]:slot}});
-   return typeof answer!=="string"&&answer.status===409?"diverged":typeof answer!=="string"&&answer.status===200;
+   return typeof answer!=="string"&&answer.status===409?"diverged":typeof answer!=="string"&&answer.status===422?"stale":typeof answer!=="string"&&answer.status===200;
   },
   async claim(key,owner,ttlMilliseconds,expectedMilliseconds){
    const answer=await call("POST",`${base}/claim/ac/${key}`,fleet.timeouts.claimMilliseconds,{body:JSON.stringify({owner,ttlMilliseconds,...(expectedMilliseconds===undefined?{}:{expectedMilliseconds})})});

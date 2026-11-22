@@ -38,3 +38,9 @@ Read `T/r3-tools.md` completely (frames, mirror sense, how 2D follows 3D). Solid
 - Never edit `AGENTS.md`. Never edit shared `r3-*.ts` / `volumes-*.ts` tools except to fix a real defect (say so in the report). Temporary logs carry the `[DEBUG] ` prefix. No comments inside definitions; docstrings start with an emoji.
 - Fundamental defects you meet outside your assets (kernel, evaluator, exporter, validator, viewer): fix them at the root with a test if small and clearly yours to fix, otherwise describe them precisely under "Fundamental issues" in your report.
 - Do not stop to ask. Do not return prose results in chat: return only the report path and at most five lines (done / not started / fundamental issues).
+
+## Addendum 2026-11-22 14:50 — rules are settled, loop fast
+
+- Read items 1–19 under "Rule changes authors must know" at the top of `T/validator.md` before modelling: `sheet: true` for thin sheets, `slender: true` long bones keep their true section, a chain of short bones may share one member via `members`, hoops are rods, typified rows use `envelope`, hollow thermal shells are modelled hollow (`thermal.minimumAirPassageM` for real narrow openings).
+- While iterating use `$BUN r3-validate.ts <asset> --scale N --rules a,b --no-print` (seconds); run the full `--volumes` only as the final proof of a stage.
+- Lateral rest placement of bones (girdles, axles, handlebars): `T/rig-lateral-rest.md`, verified across all consumers (section 4).

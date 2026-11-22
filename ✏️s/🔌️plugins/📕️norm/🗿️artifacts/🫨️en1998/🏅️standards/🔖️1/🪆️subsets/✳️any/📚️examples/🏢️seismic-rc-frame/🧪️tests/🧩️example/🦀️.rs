@@ -49,3 +49,17 @@ async fn committed_pack_twin_matches_the_code_built_snapshot() {
     let bytes = std::fs::read(path).expect("read committed pack twin");
     assert!(decode_en1998_pack(&bytes).expect("decode committed pack twin") == crate::seismic_rc_frame::snapshot());
 }
+
+/// 🌋️ The showcase asset (picker-only, no code-built twin) decodes through the production decoder.
+#[semio_framework_async_macros::async_test]
+async fn showcase_asset_decodes() {
+    let text = include_str!("../../../../🖼️assets/🏢️seismic-showcase/🏢️seismic-showcase/🗣️.dsl.semio");
+    semio_s_artifact_norm_en1998_io::text::snapshot::decode_en1998_dsl(text).unwrap_or_else(|error| panic!("seismic-showcase: {error}"));
+}
+
+#[test]
+fn dump_rc_frame() {
+    let snap = semio_s_artifact_norm_en1998_io::text::snapshot::decode_en1998_dsl(crate::seismic_rc_frame::PRIMARY_TEXT).expect("decodes");
+    let report = semio_s_artifact_norm_en1998_inferences::evaluate(&snap);
+    for c in &report.checks { eprintln!("[DEBUG] seismic_rc_frame {} {:?} u={} rem={}", c.id, c.status, c.utilization, c.remedies.len()); }
+}

@@ -4,7 +4,6 @@ use super::*;
 
 // #region tree
 impl UiTree {
-    //#region 🪪️DocumentIdentity
     /// 📄️ The arena node currently standing for `id`, if one is mounted.
     pub fn document_node(&self, id: UiNodeId) -> Option<NodeId> {
         self.document_nodes.binary_search_by_key(&id, |(document, _)| *document).ok().and_then(|index| self.document_nodes.get(index)).map(|(_, node)| *node)
@@ -152,7 +151,6 @@ impl UiTree {
         }
     }
 
-    //#region 🔽️CompositeRows
     /// 🔽️ Mints one synthesized child under `owner` and ledgers it. `None` when the ledger is full,
     /// which a caller treats exactly like a row it could not mount — skipped, never a fault.
     pub fn mint_composite_row(&mut self, owner: NodeId, node: Node) -> Option<NodeId> {
@@ -197,7 +195,11 @@ impl UiTree {
     /// their paint and pointer priority is overlay priority rather than ordinary child priority.
     pub fn is_open_select_popup_row(&self, row: NodeId) -> bool {
         let Some(owner) = self.composite_rows.iter().find_map(|(owner, candidate)| (*candidate == row).then_some(*owner)) else { return false };
-        self.node(owner).is_some_and(|node| matches!(&node.spec.0, UiNode::Select(_)) && node.state.open && node.state.select_popup.is_some())
+        self.node(owner).is_some_and(|node| node.state.open && match &node.spec.0 {
+            UiNode::Select(_) => node.state.select_popup.is_some(),
+            UiNode::Input(input) => matches!(input.input_kind.as_str(), "date" | "color"),
+            _ => false,
+        })
     }
 
     /// 🔒️ The still-published Select owner of a synthesized `row`. A captured option uses this to
@@ -210,7 +212,11 @@ impl UiTree {
             let selector = self.node(owner).and_then(|node| node.parent)?;
             return record_of(selector).filter(|record| matches!(&record.component, ui_contract::Component::IconSelect(_))).map(|_| owner);
         }
-        record_of(owner).filter(|record| matches!(&record.component, ui_contract::Component::Select(_))).map(|_| owner)
+        record_of(owner).filter(|record| match &record.component {
+            ui_contract::Component::Select(_) => true,
+            ui_contract::Component::Input(props) => matches!(props.kind, ui_contract::InputKind::Date | ui_contract::InputKind::Color),
+            _ => false,
+        }).map(|_| owner)
     }
 
     /// ❔️ Whether `owner` already has its synthesized rows this generation.
@@ -285,7 +291,6 @@ impl UiTree {
             node.next_sibling = None;
         }
     }
-    //#endregion 🔽️CompositeRows
 
     /// 🍃️ Inserts `node` unparented and unlinked — the reconcile links it in a later step.
     pub fn insert_detached(&mut self, node: Node) -> NodeId {
@@ -351,6 +356,5 @@ impl UiTree {
         }
         self.arena.close_vacant_step()
     }
-    //#endregion 🪪️DocumentIdentity
 }
 // #endregion tree

@@ -54,9 +54,39 @@ pub fn lift_image(id: &str, dict: &[PdfDictEntry], data: &[u8], filters: &[PdfSt
     };
     image.body=match codec {
         Some(filter)=>{let kind=match filter {PdfStreamFilter::Dct {..}=>"s.stdio.jpeg",PdfStreamFilter::Jpx=>"s.stdio.jpeg2000",PdfStreamFilter::Ccitt {..}=>"s.stdio.ccitt",PdfStreamFilter::Jbig2 {..}=>"s.stdio.jbig2",_=>unreachable!()};let reference=NativePdfArtifactResources::default().admit(kind,PdfObject::Stream {dict:dict.to_vec(),data:data.to_vec(),filters:filters.to_vec()})?;PdfImageBody::Artifact {reference}},
-        None=>PdfImageBody::Samples {values:unpack_image_samples(image.width,image.height,image_components(&image),image.bits_per_component,data)?},
+        None=>if let Some(reference)=sampled_artifact_reference(dict,data,filters)? {PdfImageBody::Artifact {reference}} else {PdfImageBody::Samples {values:unpack_image_samples(image.width,image.height,image_components(&image),image.bits_per_component,data)?}},
     };Ok(image)
 
+}
+
+fn sampled_artifact_reference(dict: &[PdfDictEntry], data: &[u8], filters: &[PdfStreamFilter]) -> PResult<Option<semio_framework_artifact_reference::ArtifactRef>> {
+    use crate::standards::v1_7::subsets::base::io::foreign_artifacts::{
+        INLINE_IMAGE_SAMPLES_MAXIMUM_BYTES, PdfSampledResourceIdentity, qualified_image_dictionary,
+    };
+    if !matches!(filters, [] | [PdfStreamFilter::Flate { .. }]) || !qualified_image_dictionary(dict) {
+        return Ok(None);
+    }
+    let Some(components) = dict_name(dict, "ColorSpace").and_then(|name| match name {
+        "DeviceGray" => Some(1u32),
+        "DeviceRGB" => Some(3u32),
+        _ => None,
+    }) else { return Ok(None); };
+    let dimension = |key| match dict_get(dict, key) {
+        Some(PdfObject::Int(raw)) => u32::try_from(*raw).ok().filter(|size| *size != 0),
+        _ => None,
+    };
+    let width = dimension("Width").ok_or_else(|| PdfEngineError::Unsupported("invalid PDF image width".into()))?;
+    let height = dimension("Height").ok_or_else(|| PdfEngineError::Unsupported("invalid PDF image height".into()))?;
+    let (row_samples, packed_length) = packed_image_geometry(width, height, components, 8)?;
+    if packed_length != data.len() {
+        return Err(PdfEngineError::Unsupported("image packed body does not match its declared geometry".into()));
+    }
+    if row_samples * height as usize * std::mem::size_of::<u32>() <= INLINE_IMAGE_SAMPLES_MAXIMUM_BYTES {
+        return Ok(None);
+    }
+    let Some(mut identity) = PdfSampledResourceIdentity::new(filters) else { return Ok(None); };
+    identity.append(data);
+    Ok(Some(identity.reference()))
 }
 
 /// ⬆️ Lowers an image to its stream object. `ref_of` resolves the ids of masks/soft masks and
@@ -91,9 +121,12 @@ pub fn lower_image(image: &PdfImage, sink: &mut dyn ObjectSink, ref_of: &mut dyn
     let (data,filters)=match &image.body {
         PdfImageBody::Samples {values}=>(pack_image_samples(image.width,image.height,image_components(image),image.bits_per_component,values)?,vec![PdfStreamFilter::Flate {predictor:None}]),
         PdfImageBody::Artifact {reference}=>{
-            use crate::standards::v1_7::subsets::base::io::foreign_artifacts::png_source::PngPlane;
+            use crate::standards::v1_7::subsets::base::io::foreign_artifacts::{
+                png_source::PngPlane, require_pdf_artifact_kind, SAMPLED_IMAGE_KIND,
+            };
             let value = sink.resolve_artifact(reference)?;
             let sourced_png = PngPlane::match_reference(reference);
+            let sampled = sourced_png.is_none() && require_pdf_artifact_kind(reference, SAMPLED_IMAGE_KIND).is_ok();
             if let Some(role) = sourced_png {
                 let number = |key| value.dict_get(key).and_then(PdfObject::as_i64);
                 if image.bits_per_component != 8 || role.channels() != image_components(image) as usize
@@ -105,7 +138,12 @@ pub fn lower_image(image: &PdfImage, sink: &mut dyn ObjectSink, ref_of: &mut dyn
             let PdfObject::Stream {data,filters,..} = value else {
                 return Err(PdfEngineError::Unsupported("image artifact is not a native stream".into()));
             };
-            if sourced_png.is_none() && !filters.iter().any(|filter|filter.is_image_codec()) {
+            if sampled {
+                let (_, expected) = packed_image_geometry(image.width, image.height, image_components(image), image.bits_per_component)?;
+                if data.len() != expected || !matches!(filters.as_slice(), [] | [PdfStreamFilter::Flate { .. }]) {
+                    return Err(PdfEngineError::Malformed("PDF sampled image resource geometry changed before image lowering".into()));
+                }
+            } else if sourced_png.is_none() && !filters.iter().any(|filter|filter.is_image_codec()) {
                 return Err(PdfEngineError::Unsupported("referenced image artifact has no native image codec".into()));
             }
             (data,filters)
@@ -263,6 +301,34 @@ pub fn pack_image_samples(width:u32,height:u32,components:u32,bits:u32,values:&[
 #[cfg(test)]
 mod sample_tests {
     use super::*;
+
+    #[test]
+    fn controlled_sampled_artifact_reference_agrees_with_the_native_resource_port() {
+        use crate::standards::v1_7::subsets::base::{
+            io::foreign_artifacts::{PdfSampledResourceIdentity, SAMPLED_IMAGE_KIND},
+            schema::snapshot::PdfPredictor,
+        };
+
+        let data = [37u8; 5_000];
+        let predictor = PdfPredictor { predictor: 12, colors: 3, bits_per_component: 8, columns: 16 };
+        for filters in [
+            Vec::new(),
+            vec![PdfStreamFilter::Flate { predictor: None }],
+            vec![PdfStreamFilter::Flate { predictor: Some(predictor) }],
+        ] {
+            let stream = PdfObject::Stream { dict: Vec::new(), data: data.to_vec(), filters: filters.clone() };
+            let reference = NativePdfArtifactResources::default().admit(SAMPLED_IMAGE_KIND, stream).unwrap();
+            let mut incremental = PdfSampledResourceIdentity::new(&filters).unwrap();
+            assert_eq!(incremental.advance(&data, 1), 1);
+            assert!(!incremental.complete(data.len()));
+            assert_eq!(incremental.advance(&data, 1), 1);
+            assert!(incremental.complete(data.len()));
+            assert_eq!(incremental.reference(), reference);
+            let bytes = reference.artifact_id.capacity() + reference.dialect.artifact_kind.capacity()
+                + reference.dialect.standard.capacity() + reference.dialect.subset.capacity();
+            assert_eq!(bytes, PdfSampledResourceIdentity::REFERENCE_BYTES);
+        }
+    }
 
     #[test]
     fn controlled_dct_reference_agrees_with_the_native_resource_port() {

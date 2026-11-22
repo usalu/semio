@@ -2,6 +2,7 @@ preload = ["./🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀�
 
 [test]
 preload = ["./🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/📌️runtime-pin/📜️script.ts", "./🧰️framework/🔨️modules/🏃️process/🧪️testing/🟨️bun/🪦️orphans/📜️script.ts", "./🧰️framework/🔨️modules/🏃️process/🧪️testing/🟨️bun/🧹️scratch/📜️script.ts", "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🚧️fence/📜️script.ts"]
+pathIgnorePatterns = ["**/🗑️generated/**", "**/generated/**", "**/target*/**", "**/dist/**", "**/bazel-out/**", "**/.cache/**", "**/.nx/**"]
 
 [install]
 linker = "hoisted"

@@ -1,0 +1,55 @@
+{
+ "id": "rhododendron",
+ "category": "vegetation",
+ "title": {
+  "en": "Rhododendron, Evergreen Dome",
+  "de": "Rhododendron, immergrüne Kuppel"
+ },
+ "heightM": 3.075,
+ "widthM": 3.378,
+ "powerW": 0,
+ "poses": [
+  "flowering-calm",
+  "flowering-breeze",
+  "storm",
+  "late-frost"
+ ],
+ "clips": [
+  "wind-sway",
+  "gust",
+  "diurnal-transpiration"
+ ],
+ "representations": {
+  "50": "authored",
+  "100": "authored",
+  "200": "authored",
+  "500": "authored"
+ },
+ "symbols": [
+  "rhododendron-symbol"
+ ],
+ "analytics": [
+  "thermal",
+  "transport",
+  "structural"
+ ],
+ "exports": [
+  "svg",
+  "pdf",
+  "dxf",
+  "dwg",
+  "png-sequence",
+  "mp4",
+  "webm",
+  "component",
+  "glb",
+  "fbx",
+  "model",
+  "model-zip"
+ ],
+ "distinction": {
+  "en": "A dense evergreen dome shrub clothed almost to the ground with flower trusses on the shoot tips, whose late-frost pose lets the leathery leaves droop and close their stomata.",
+  "de": "Ein dichter immergrüner Kuppelstrauch, fast bis zum Boden belaubt, mit Blütenständen an den Triebspitzen; in der Spätfrostpose hängen die ledrigen Blätter und schließen ihre Spaltöffnungen."
+ },
+ "completion": "authored"
+}

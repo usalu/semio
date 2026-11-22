@@ -1,0 +1,18 @@
+{
+  "version": 1,
+  "quiet": [
+    {"name": "the newest change decides and it is old enough", "quietMilliseconds": 60000, "nowMs": 1000000, "stamps": [["/r/a.ts", 900000], ["/r/b.ts", 930000]], "quiet": true, "quietForMilliseconds": 70000, "newestPath": "/r/b.ts"},
+    {"name": "one recent change keeps the code unsettled", "quietMilliseconds": 60000, "nowMs": 1000000, "stamps": [["/r/a.ts", 900000], ["/r/b.ts", 990000]], "quiet": false, "quietForMilliseconds": 10000, "newestPath": "/r/b.ts"},
+    {"name": "exactly the quiet period is quiet", "quietMilliseconds": 60000, "nowMs": 1000000, "stamps": [["/r/a.ts", 940000]], "quiet": true, "quietForMilliseconds": 60000, "newestPath": "/r/a.ts"},
+    {"name": "a change stamped in the future counts as a change now", "quietMilliseconds": 60000, "nowMs": 1000000, "stamps": [["/r/a.ts", 1005000]], "quiet": false, "quietForMilliseconds": 0, "newestPath": "/r/a.ts"},
+    {"name": "a removed module is quiet", "quietMilliseconds": 60000, "nowMs": 1000000, "stamps": [["/r/gone.ts", null]], "quiet": true, "quietForMilliseconds": 60000},
+    {"name": "equal stamps name the first path in order", "quietMilliseconds": 60000, "nowMs": 1000000, "stamps": [["/r/z.ts", 999000], ["/r/a.ts", 999000]], "quiet": false, "quietForMilliseconds": 1000, "newestPath": "/r/a.ts"}
+  ],
+  "drift": [
+    {"name": "a pinned drift names its path once although both languages and the detail repeat it", "cause": "Stale source facts that a repeated inference cannot refresh; restart required: file:/w/🏗️build/🕸️graph/📥️load/🟦️.ts / Veraltete Quellfakten, die eine erneute Ableitung nicht erneuern kann; Neustart erforderlich: file:/w/🏗️build/🕸️graph/📥️load/🟦️.ts ({\"path\":\"/w/🏗️build/🕸️graph/📥️load/🟦️.ts\",\"expectedSha256\":\"2b\",\"currentSha256\":\"2b\",\"pinnedSha256\":\"cc\"})", "paths": ["/w/🏗️build/🕸️graph/📥️load/🟦️.ts"]},
+    {"name": "a changed module-load authority names the analysed file without the full stop of the sentence", "cause": "Build graph implementation authority changed during inference; restart the owned build invocation: analysis:/w/📚️library/🔣️taxonomy.json. It is started again", "paths": ["/w/📚️library/🔣️taxonomy.json"]},
+    {"name": "several stale rows are all named", "cause": "Stale source facts that a repeated inference cannot refresh; restart required: file:/w/a.ts, digest:/w/b.json / Veraltete", "paths": ["/w/a.ts", "/w/b.json"]},
+    {"name": "a worker that ended for another reason names no implementation", "cause": "TypeError: undefined is not an object (evaluating 'file:/w/a.ts')", "paths": []},
+    {"name": "an empty cause names nothing", "cause": "", "paths": []}
+  ]
+}

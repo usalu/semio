@@ -153,6 +153,8 @@ test("a result and a plan satisfy their schemas under both validators, render in
  const english=renderTestFileResultV1(result,"en"),german=renderTestFileResultV1(result,"de");
  expect(english).toContain("FAILED  b.ts");
  expect(german).toContain("FEHLGESCHLAGEN  b.ts");
+ expect(english).toContain("\n  error: boom");
+ expect(german).toContain("\n  Fehler: boom");
  expect(english).toContain("SKIPPED (not passed)");
  expect(english).not.toEqual(german);
  const plan={version:1 as const,files:[{file:"a.ts",mode:"suite" as const,table:"build",suite:"s",owner:"build",typecheck:"strict" as const,budgetMs:300000,python:true,launcher:"g",runsOnHost:false}]},planCheck=validator("Plan");

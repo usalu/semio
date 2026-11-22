@@ -1,0 +1,13 @@
+{
+  "schema": "semio.ui.text-selection-menu/v1",
+  "description": "The rows of the context menu a secondary press on selected text opens, for both targets: React's buildTextSelectionContextMenuItems and the wgpu shell's text-selection menu. A row without verb is the separator. editableOnly rows are offered for an editable target only, needsSelection rows are disabled without a selection. chord is the keybinding text each row shows; labelKey is the i18n key React reads and label carries the same texts for the shell (en, de).",
+  "actionController": "framework",
+  "actionPrefix": "textSelection.",
+  "rows": [
+    { "id": "text-cut", "verb": "cut", "icon": "scissors", "chord": "mod+x", "editableOnly": true, "needsSelection": true, "labelKey": "ui.contextMenu.cut", "label": { "en": "Cut", "de": "Ausschneiden" } },
+    { "id": "text-copy", "verb": "copy", "icon": "copy", "chord": "mod+c", "editableOnly": false, "needsSelection": true, "labelKey": "ui.contextMenu.copy", "label": { "en": "Copy", "de": "Kopieren" } },
+    { "id": "text-paste", "verb": "paste", "icon": "clipboard", "chord": "mod+v", "editableOnly": true, "needsSelection": false, "labelKey": "ui.contextMenu.paste", "label": { "en": "Paste", "de": "Einfügen" } },
+    { "id": "text-sep", "separator": true },
+    { "id": "text-select-all", "verb": "selectAll", "icon": "select-all", "chord": "mod+a", "editableOnly": false, "needsSelection": false, "labelKey": "ui.contextMenu.selectAll", "label": { "en": "Select all", "de": "Alles auswählen" } }
+  ]
+}

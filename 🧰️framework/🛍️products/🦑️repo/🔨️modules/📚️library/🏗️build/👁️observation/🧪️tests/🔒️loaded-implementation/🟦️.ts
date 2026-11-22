@@ -55,3 +55,23 @@ console.log(JSON.stringify({hash,fresh,old}));`);
  const run=Bun.spawnSync([process.execPath,script],{cwd:base,env:{...process.env,BUN_OPTIONS:process.env.BUN_OPTIONS??""}});expect(run.exitCode,run.stderr.toString()).toBe(0);
  expect(JSON.parse(run.stdout.toString().trim().split("\n").at(-1)!)).toEqual({hash:current,fresh:true,old:false});
 },60000);
+
+test("a process that finishes on its loaded code records the loaded digest of a file edited after load, and the next process records the new one",()=>{
+ const path=join(base,"finish.mjs"),module=fileURLToPath(new URL("../../🟨️.mjs",import.meta.url));writeFileSync(path,"export const a=1;\n");
+ const script=join(base,"finish-child.mjs");
+ writeFileSync(script,`import{createHash}from"node:crypto";import{readFileSync,writeFileSync,statSync}from"node:fs";import*as observation from${JSON.stringify(module)};
+const path=${JSON.stringify(path)},hash=()=>createHash("sha256").update(readFileSync(path)).digest("hex"),loaded=hash(),status=()=>statSync(path),fact=()=>({size:status().size,mtimeMs:status().mtimeMs,ctimeMs:status().ctimeMs,ino:status().ino,sha256:hash()});
+observation.registerLoadedImplementationRowsV1([{kind:"digest",path,fact:{sha256:loaded}}]);
+const before=observation.loadedImplementationRecordedFactV1("file",path,fact()).sha256;
+writeFileSync(path,"export const a=2;"+String.fromCharCode(10));
+const untouched=observation.loadedImplementationRecordedFactV1("file",path,fact()).sha256;
+observation.finishOnLoadedImplementationV1();
+const finished=observation.loadedImplementationRecordedFactV1("file",path,fact()).sha256,other=observation.loadedImplementationRecordedFactV1("file",path+".x",{sha256:"f".repeat(64)}).sha256,error=observation.loadedImplementationRecordedFactV1("file",path,{error:"ENOENT",sha256:"e".repeat(64)}).sha256;
+console.log(JSON.stringify({loaded,before,untouched,finished,current:hash(),other,error}));`);
+ const run=Bun.spawnSync([process.execPath,script],{cwd:base,env:{...process.env,BUN_OPTIONS:process.env.BUN_OPTIONS??""}});expect(run.exitCode,run.stderr.toString()).toBe(0);
+ const row=JSON.parse(run.stdout.toString().trim().split("\n").at(-1)!);
+ expect(row.loaded).toBe(sha("export const a=1;\n"));expect(row.current).toBe(sha("export const a=2;\n"));
+ expect(row.before).toBe(row.loaded);expect(row.untouched).toBe(row.current);expect(row.finished).toBe(row.loaded);expect(row.other).toBe("f".repeat(64));expect(row.error).toBe("e".repeat(64));
+ const next=Bun.spawnSync([process.execPath,script],{cwd:base,env:{...process.env,BUN_OPTIONS:process.env.BUN_OPTIONS??""}});expect(next.exitCode,next.stderr.toString()).toBe(0);
+ const second=JSON.parse(next.stdout.toString().trim().split("\n").at(-1)!);expect(second.loaded).toBe(sha("export const a=2;\n"));
+},60000);

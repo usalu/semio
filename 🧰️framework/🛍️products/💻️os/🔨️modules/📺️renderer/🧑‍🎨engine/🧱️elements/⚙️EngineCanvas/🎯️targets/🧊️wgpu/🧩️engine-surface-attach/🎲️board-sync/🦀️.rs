@@ -85,6 +85,9 @@ pub fn sync_board_engine(host: &mut infinite_canvas::BoardHost, cache: &mut Boar
         cache.active_utility = Some(active_utility);
         changed = true;
     }
+    if cache.suggestion_menu_json != board.suggestion_menu_json {
+        cache.suggestion_menu_json.clone_from(&board.suggestion_menu_json);
+    }
     if cache.grid_snap_enabled != Some(board.grid_snap_enabled) {
         host.style.set_grid_snap_enabled(board.grid_snap_enabled);
         cache.grid_snap_enabled = Some(board.grid_snap_enabled);
@@ -253,7 +256,7 @@ pub fn sync_board2d_scene(scene: &UiComponentSceneNode, window_id: &str, bounds:
     let Some(created) = created else {
         return false;
     };
-    register_engine_surface(scene, window_id, bounds, EngineSurfaceKindDetail::Board2d { snapshot_json: board.snapshot_json.clone() }, created, Some(snapshot.identity.token));
+    register_engine_surface(scene, window_id, bounds, EngineSurfaceKindDetail::Board2d { snapshot_json: board.snapshot_json.clone(), suggestion_menu_json: board.suggestion_menu_json.clone() }, created, Some(snapshot.identity.token));
     true
 }
 //#endregion 🧩️EngineSurfaceAttach

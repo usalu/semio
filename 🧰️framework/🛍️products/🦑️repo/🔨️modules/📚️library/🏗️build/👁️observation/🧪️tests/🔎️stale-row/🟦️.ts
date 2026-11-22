@@ -42,3 +42,20 @@ test("a closure row that the provider refuses is the named row of a stale record
  expect(said.verdict).toBe("stale");expect(said.staleRow.kind).toBe("closure");expect(said.staleRow.path).toContain("closure-a");
  expect(said.staleRow.why).toMatch(/^closure-value; judge /u);expect(verified).toEqual([2]);
 });
+
+test("the look of the owner names the first moved row with recorded and current content digest, once, and a record that holds names none",async()=>{
+ const{createHash}=await import("node:crypto");
+ const sha=(text:string)=>createHash("sha256").update(text).digest("hex").slice(0,12);
+ writeFileSync(file,"one");
+ await new Promise(done=>setTimeout(done,2200));
+ const cachePath=join(root,"np","owner.json"),told:any[]=[],run=()=>observation.observeProjectInferenceV1({cachePath,key:["owner"],owner:"o",stale:(row:any)=>told.push(row)},async()=>({text:observation.observedFs.readFileSync(file,"utf8")}));
+ await run();
+ expect(told).toEqual([]);
+ writeFileSync(file,"two, longer");
+ const again=await run();
+ expect(again).toEqual({text:"two, longer"});
+ expect(told.length).toBe(1);
+ expect([told[0].kind,told[0].recorded,told[0].current]).toEqual(["file",sha("one"),sha("two, longer")]);
+ expect(told[0].path).toContain("input.txt");
+ writeFileSync(file,"one");
+});

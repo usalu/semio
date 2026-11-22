@@ -1,13 +1,13 @@
 import{test,expect}from"bun:test";
-import ts from"typescript";
+import{loadProductFunctionsSyncV1}from"../../../../../../../../🔨️modules/🏃️process/🧪️testing/🧩️extracted-function/🟦️.ts";
+import{createRequire}from"node:module";
 import Ajv from"ajv";
 import{Database}from"bun:sqlite";
-import{readFileSync}from"node:fs";
 import schema from"../../🧬️schema/🔣️.json";
 import corpus from"./🔣️.json";
 
-const source=readFileSync(new URL("../../🟨️.cjs",import.meta.url),"utf8"),tree=ts.createSourceFile("ownership.js",source,ts.ScriptTarget.Latest,true);
-function implementation(name:string,bindings:Record<string,unknown>):any{const node=tree.statements.find(row=>(ts.isFunctionDeclaration(row)||ts.isClassDeclaration(row))&&row.name?.text===name);if(!node)throw Error("Actual ownership implementation required");return new Function(...Object.keys(bindings),node.getText(tree)+";return "+name+";")(...Object.values(bindings));}
+const owner=new URL("../../🟨️.cjs",import.meta.url);
+function implementation(name:string,bindings:Record<string,unknown>):any{return loadProductFunctionsSyncV1(owner,[name],{require:createRequire(owner),...bindings})[name];}
 
 test("frontier continuations are bounded while final replay catches changes across every batch",async()=>{
  const database=new Database(":memory:"),validate=new Ajv({strict:true}).compile(schema.$defs.FrontierBatchCase),batch=schema.$defs.FrontierReplayProtocol.const.progressBatchPaths;

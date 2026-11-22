@@ -4,7 +4,8 @@
     "Scan": {
       "const": {
         "entriesPerYield": 128,
-        "entriesPerProgress": 4096
+        "entriesPerProgress": 4096,
+        "gateHoldMilliseconds": 2000
       }
     },
     "Idle": {
@@ -20,6 +21,7 @@
         "claimTurnsPerSweep": 4,
         "admissionPatienceMilliseconds": 2000,
         "budgetMilliseconds": 3000,
+        "slicePauseMilliseconds": 25,
         "pressureSweepIntervalMilliseconds": 30000,
         "nestedStoresPerSweep": 16,
         "nestedEntries": 512,

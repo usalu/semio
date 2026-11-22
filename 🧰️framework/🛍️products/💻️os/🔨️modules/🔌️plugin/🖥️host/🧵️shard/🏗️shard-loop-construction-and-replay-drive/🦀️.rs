@@ -14,6 +14,7 @@ impl ShardLoop {
             next_registration: 1,
             running_jobs: BTreeSet::new(),
             job_turns: HashMap::new(),
+            sent_job_snapshot: None,
             job_authorities: HashMap::new(),
             replay_seeds: std::iter::repeat_with(|| None).take(JOB_REPLAY_SEED_SLOT_CAPACITY).collect(),
             replay_seed_refusals: std::iter::repeat_with(|| None).take(JOB_REPLAY_REFUSAL_SLOT_CAPACITY).collect(),

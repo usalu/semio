@@ -14,6 +14,7 @@ impl<'ctx> FramePumpsCtx<'ctx> {
     /// its own — one pump cadence for every out-of-process conversation this shell holds.
     #[cfg(target_arch = "wasm32")]
     pub async fn pump_directory_events(&mut self) -> bool {
+        semio_ui_wgpu_layout::date_picker::set_today_epoch_day((semio_renderer_wgpu_host_base::app_now_ms() / 86_400_000.0).floor() as i64);
         let identity_changed = self.directory.poll_browser_identity().await;
         let administration_changed = self.directory.pump_space_administration().await;
         self.directory.flush_pending_directory_commands().await;
@@ -237,6 +238,20 @@ impl<'ctx> FramePumpsCtx<'ctx> {
                         self.opening.document_opening = Some(opening);
                         self.opening.fail_document_opening(error, &mut self.chrome, &self.prefs);
                     }
+                }
+            }
+            #[cfg(target_arch = "wasm32")]
+            Ok(ShellDocumentOpenAnswer::BrowserRouting(routing)) => {
+                self.as_actions().continue_browser_routed(opening, routing).await;
+            }
+            #[cfg(target_arch = "wasm32")]
+            Ok(ShellDocumentOpenAnswer::BrowserFile(imported)) => {
+                if opening.cancel_requested || imported.is_none() {
+                    opening.phase = ShellDocumentOpenPhase::Cancelled;
+                    self.opening.document_opening = Some(opening);
+                } else if let Err(error) = self.as_actions().finish_browser_open(imported.expect("checked imported file")).await {
+                    self.opening.document_opening = Some(opening);
+                    self.opening.fail_document_opening(error, &mut self.chrome, &self.prefs);
                 }
             }
             Ok(ShellDocumentOpenAnswer::Instantiated(instance_id)) => {

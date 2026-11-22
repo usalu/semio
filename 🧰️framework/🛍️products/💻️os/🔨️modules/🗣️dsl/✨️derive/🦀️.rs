@@ -7,7 +7,7 @@ use syn::{Data, DeriveInput, Fields, Type, parse_macro_input};
 
 #[path = "🔖️mutation-source-authority/🦀️.rs"]
 pub(crate) mod source_authority;
-use source_authority::{MUTATION_SCHEMA_INDEX_LOCATOR, MUTATION_SCHEMA_INDEX_SCHEMA, MutationAggregateSourceAuthority, MutationSourceAuthority, mutation_aggregate_source_authority, mutation_authority_locator, mutation_authority_no_follow, mutation_authority_relative, mutation_authority_workspace_root, mutation_source_authority};
+use source_authority::{MUTATION_SCHEMA_INDEX_LOCATOR, MUTATION_SCHEMA_INDEX_SCHEMA, MutationAggregateSourceAuthority, MutationSourceAuthority, mutation_aggregate_source_authority, mutation_authority_locator, mutation_authority_no_follow, mutation_authority_raw_no_follow, mutation_authority_relative, mutation_authority_workspace_root, mutation_source_authority};
 
 #[path = "🧾️mutation-leaf-descriptor/🦀️.rs"]
 pub(crate) mod mutation_leaf_descriptor;

@@ -17,7 +17,7 @@ async function retirePrivatePartitionV1(options:any):Promise<void>{
  const image=await openNativePlatformStorageV1(options);let primary:{error:unknown}|undefined;
  try{const held=await image.withExclusiveMaintenance({version:1,wait:false},async(port:any)=>{
   const policy={version:1 as const,root:image.root,leaseDirectory:options.leaseDirectory,capacityBytes:options.maximumPhysicalBytes,maximumWorkspaceBytes:options.filesystemBytes,maximumArtifactBytes:options.filesystemBytes},state=await observeNativeStorageStateV1({policy,control:options.control,port});let cleared=false;
-  const retiring=nativeStorageRetirementPortV1(port,async()=>{if(cleared)return;for(const name of await readdir(image.root)){if(name==="storage-events.jsonl"||nativeImageServiceEntryV1(name))continue;await rm(requireNativeStoragePathV1(image.root,join(image.root,name)),{recursive:true,force:true});}cleared=true;});
+  const retiring=nativeStorageRetirementPortV1(port,async()=>{if(cleared)return;detachDiskImagesUnderV1(image.root);for(const name of await readdir(image.root)){if(name==="storage-events.jsonl"||nativeImageServiceEntryV1(name))continue;await rm(requireNativeStoragePathV1(image.root,join(image.root,name)),{recursive:true,force:true});}cleared=true;});
   for(const row of state.allocations){const receipt=await recoverNativeStorageReservationV1({policy,control:options.control,port:retiring,id:row.id});await receipt.retire();}
  });if(!held.acquired)throw Error("private-repository-partition-has-readers");}catch(error){primary={error};throw error;}finally{try{await image.close();}catch(error){if(!primary)throw error;}}
  if(!await retireNativePlatformStorageV1(options,{version:1,wait:false}))throw Error("private-repository-image-retirement-refused");

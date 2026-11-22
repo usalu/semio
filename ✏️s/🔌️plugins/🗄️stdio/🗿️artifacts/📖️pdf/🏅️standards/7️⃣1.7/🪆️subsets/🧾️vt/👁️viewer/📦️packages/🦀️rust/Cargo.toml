@@ -9,6 +9,16 @@ description = "Component crate of semio-s-artifact-stdio-pdf: viewer"
 [package.metadata.semio]
 role = "library"
 
+[package.metadata.semio.carve]
+owned = [
+  "editor::pdf17vt::tests",
+  "examples::bachelor_thesis",
+  "standards::v1_7::subsets::base::modules::xref::tests",
+  "viewer::pdf17vt",
+  "viewer::pdf17vt::tests",
+  "viewer::pdf17x::tests",
+]
+
 [lints]
 workspace = true
 

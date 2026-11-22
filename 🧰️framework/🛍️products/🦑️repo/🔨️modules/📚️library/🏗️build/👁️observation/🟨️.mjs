@@ -7,6 +7,7 @@ import {withBuildGraphOptionalPublicationV1,registerBuildGraphOptionalHandleV1,r
 import * as fs from "node:fs";
 import{fieldFactV1,fieldValueV1,installedPackageFileV1,jsonPointerValueV1,registerFieldExtractorV1}from"./🧩️field/🟨️.mjs";
 import{noteObservedInReadParentV1}from"./🚧️read-parent/🟨️.mjs";
+import{retireProducerPublicationAtExitV1}from"./🪦️producer-publications/🟨️.mjs";
 
 const observedWorlds = new AsyncLocalStorage();
 const world = new Proxy({}, { get: (_target, key) => (observedWorlds.getStore() ?? fs)[key] });
@@ -69,6 +70,18 @@ function loadedImplementationFactV1(kind, path, fact) {
   const loaded = loadedImplementationFactsV1.get(path);
   if (loaded === undefined || typeof fact?.sha256 !== "string") return undefined;
   return kind === "digest" || (kind === "file" && !loaded.ignored && fact.error === undefined) ? loaded : undefined;
+}
+
+let finishOnLoadedImplementationV1Enabled = false;
+
+/** 🧊️ Makes this process finish what it runs on the code it loaded: an observation of an implementation file it loaded names the loaded digest even when a peer edited the file since, so a running request is never restarted by an edit and the next request, loaded from the new code, finds the old digest stale and observes again. */
+export function finishOnLoadedImplementationV1() { finishOnLoadedImplementationV1Enabled = true; }
+
+/** 🧊️ The fact a pinned process records for an implementation file: the loaded digest when the file moved after load. */
+export function loadedImplementationRecordedFactV1(kind, path, fact) {
+  if (!finishOnLoadedImplementationV1Enabled || kind !== "file" || fact === null || typeof fact !== "object" || fact.error !== undefined || typeof fact.sha256 !== "string") return fact;
+  const loaded = loadedImplementationFactsV1.get(path);
+  return loaded === undefined || loaded.ignored || loaded.sha256 === fact.sha256 ? fact : { ...fact, sha256: loaded.sha256 };
 }
 
 /** 🔎️ A pinned implementation observation holds exactly when it names the digest the process loaded. */
@@ -217,7 +230,7 @@ export function adoptInferenceAuthorityV1(rows){
 }
 
 /** 🎟️ Admits one physical project's own input observations through its own computation, bound to the sealed authority digest. */
-export async function observeProjectInferenceV1({cachePath,key,owner,reusable,stamps=[],prepare,fleet,deferOffer=false,verdict,verdictFinal=false,prepareAttempts=1},compute){
+export async function observeProjectInferenceV1({cachePath,key,owner,reusable,stamps=[],prepare,fleet,deferOffer=false,verdict,verdictFinal=false,prepareAttempts=1,stale},compute){
  requireCurrentObservationV1();requireInferenceReuseV1(reusable);originalInferencePublications.delete(cachePath);usedInference.delete(cachePath);
  const parent=scopes.getStore(),identity=sha256HexV1(JSON.stringify([recordStampV1(),null,key])),previous=projectImages.get(cachePath);
  const inherit=rows=>{retainSourceFactsV1(rows);retainObservationsV1(parent,rows);};
@@ -225,7 +238,7 @@ export async function observeProjectInferenceV1({cachePath,key,owner,reusable,st
   const value=internJsonStringsV1(JSON.parse(previous.image.toString("utf8")),graphStringInternerV1);
   if(await inferenceReusableV1(reusable,value)&&(parent?consistentObservationsV1(previous.observations):current(previous.observations))){inherit(previous.observations);originalInferencePublications.set(cachePath,previous.publication);usedInference.set(cachePath,previous.headerDigest);return value;}
  }
- let own;const value=await observeInferenceComputationV1({cachePath,key,reusable,prepare,fleet,deferOffer,verdict,verdictFinal,prepareAttempts,published:found=>{own=found;}},async()=>{projectComputations.set(owner,(projectComputations.get(owner)??0)+1);observedInferenceStampsV1(stamps);const image=jsonImage(await compute());if(image===undefined)throw Error("Project inference requires a language-neutral JSON image");return JSON.parse(image);},Boolean(parent&&inferenceValidationScopes.getStore()));
+ let own;const value=await observeInferenceComputationV1({cachePath,key,reusable,prepare,fleet,deferOffer,verdict,verdictFinal,prepareAttempts,stale,published:found=>{own=found;}},async()=>{projectComputations.set(owner,(projectComputations.get(owner)??0)+1);observedInferenceStampsV1(stamps);const image=jsonImage(await compute());if(image===undefined)throw Error("Project inference requires a language-neutral JSON image");return JSON.parse(image);},Boolean(parent&&inferenceValidationScopes.getStore()));
  const publication=own??originalInferencePublications.get(cachePath);
  if(!publication)throw Object.assign(Error("Original project inference observations required for "+String(owner)+" ("+cachePath+") / Ursprüngliche Beobachtungen der Projektableitung erforderlich für "+String(owner)+" ("+cachePath+")"),{code:"BUILD_INFERENCE_PUBLICATION_LOST",semioProject:typeof owner==="string"?owner:undefined});
  inherit(publication.observations);
@@ -675,7 +688,17 @@ export async function firstFailingRowV1(rows,value){
 /** 🏷️ Renders one already observed failure without probing its source again. */
 function namedStaleRowV1(row,why){
  const short=(text,limit)=>{const line=typeof text==="string"?text:JSON.stringify(text)??"";return line.length>limit?line.slice(0,limit)+"...":line;};
- return Object.freeze({kind:String(row.kind),path:short(row.path,200),fact:short(row.fact,160),...why===undefined?{}:{why:short(why,300)}});
+ return Object.freeze({kind:String(row.kind),path:short(row.path,200),fact:short(row.fact,160),...staleDigestsV1(row),...why===undefined?{}:{why:short(why,300)}});
+}
+/** 🔖️ The recorded and the current digest (12 hex digits) of one row that no longer holds, so a stale verdict names what moved and not only where: a file by its content digest, a field by its value digest, any other fact by the digest of its JSON; `-` when the current answer cannot be asked here. */
+function staleDigestsV1(row){
+ const digest=value=>sha256HexV1(typeof value==="string"?value:JSON.stringify(value)??"").slice(0,12),{kind,path,fact}=row;
+ try{
+  if(kind==="file"&&typeof fact?.sha256==="string"){const now=facts.file(path);return{recorded:fact.sha256.slice(0,12),current:typeof now.sha256==="string"?now.sha256.slice(0,12):"!"+String(now.error??"unknown")};}
+  if(kind==="field"&&typeof fact?.digest==="string")return{recorded:fact.digest.slice(0,12),current:String(facts.field(path,fact).digest).slice(0,12)};
+  if(kind==="analysis"||kind==="global"||typeof facts[kind]!=="function")return{recorded:digest(fact),current:"-"};
+  return{recorded:digest(fact),current:digest(facts[kind](path))};
+ }catch{return{recorded:digest(fact),current:"-"};}
 }
 /** 🤝️ The verdict of one process on one stored project record, the only verification the record gets: the record is read plainly (a farm child holds no custody of the graph store and only reads), its closure entries are settled and every observed row is verified, the closure rows through the provider and the others as they stand now. `headerDigest` names the record by the digest of its header line, which covers every observed row and every block digest the record names, so a reader that holds the same header and adopts a `holds` verdict verifies nothing itself; `other` is a record of another key, `missing` none, `stale` a row that no longer holds. A verdict is single use and never kept: a later verdict judges the files as they are then.
  * @see ./🧪️tests/🤝️adopted-verdict */
@@ -887,7 +910,7 @@ function record(kind, path, fact) {
   footprintPulseV1();noteObservedInReadParentV1("records");
   const capture=sourceCaptures.getStore(),target = scopes.getStore() ?? (loadSealed||capture ? undefined : loadObservations);
   if(!target&&!capture)return;
-  const row=canonicalObservationV1(kind,path,fact===undefined?facts[kind](path):fact);
+  const row=canonicalObservationV1(kind,path,loadedImplementationRecordedFactV1(kind,path,fact===undefined?facts[kind](path):fact));
   retainObservationsV1(target,[row]);retainSourceFactsV1([row]);
 }
 
@@ -1263,14 +1286,14 @@ async function lookupLapAsyncV1(key,work){const at=performance.now();try{return 
 /** ⏱️ The lookup clock of this process, in whole milliseconds. */
 export function observationLookupClockV1(){return Object.fromEntries(Object.entries(lookupClockV1).map(([key,value])=>[key,Math.round(value)]));}
 /** 📤️ With `deferOffer` a record that is found stored here is not offered to the fleet cache by this look (the take pass of a machine that does not serve the fleet: every look would build the documents of the record, closure bundles with their layers inline, and queue up to 64 of them for upload before the next look may go on). */
-async function observeInferenceComputationV1({cachePath,key,reusable,prepare,fleet,deferOffer=false,verdict,verdictFinal=false,prepareAttempts=1,published},compute,nestedProject) {
+async function observeInferenceComputationV1({cachePath,key,reusable,prepare,fleet,deferOffer=false,verdict,verdictFinal=false,prepareAttempts=1,stale,published},compute,nestedProject) {
   requireCurrentObservationV1();loadSealed = true;
   originalInferencePublications.delete(cachePath);usedInference.delete(cachePath);
   const parent=scopes.getStore();
   const digest = sha256HexV1(JSON.stringify([recordStampV1(), null, key])), hints = new Map(), authority=nestedProject?[]:[...loadObservations.values()];
   const lookup=async()=>{
-  let candidate;lookupClockV1.count++;
-  const record=lookupLapV1("read",()=>readInferenceRecordOrMissV1(cachePath));if(record){const{header,line}=record;if(header.digest===digest){const headerDigest=sha256HexV1(line),said=verdict===undefined?undefined:await lookupLapAsyncV1("verdict",()=>verdict({headerDigest})).catch(error=>{if(verdictFinal)throw error;return undefined;});if(said?.verdict==="holds"&&said.headerDigest===headerDigest)candidate={value:record.value,header,headerDigest,adopted:true};else if(verdictFinal&&(said?.verdict==="stale"||said?.verdict==="other"||said?.verdict==="missing")){}else{await lookupLapAsyncV1("settle",()=>settleClosureRowsV1(header.observations,record.value));if(await lookupLapAsyncV1("hold",()=>projectRowsHoldV1(header.observations,record.value,rest=>nestedProject?sharedObservationsHoldV1(rest,parent):current(rest))))candidate={value:record.value,header,headerDigest};}}for(const{kind,path,fact}of header.observations)if(kind==="file"&&typeof fact?.sha256==="string")hints.set(path,fact);}
+  let candidate,told=false,refused;lookupClockV1.count++;
+  const record=lookupLapV1("read",()=>readInferenceRecordOrMissV1(cachePath));if(record){const{header,line}=record;refused=stale===undefined?undefined:(row,why,count)=>{if(told)return;told=true;stale(row===undefined?staleWholeRowV1(header.observations,why,count):namedStaleRowV1(row,why));};if(header.digest===digest){const headerDigest=sha256HexV1(line),said=verdict===undefined?undefined:await lookupLapAsyncV1("verdict",()=>verdict({headerDigest})).catch(error=>{if(verdictFinal)throw error;return undefined;});if(said?.verdict==="holds"&&said.headerDigest===headerDigest)candidate={value:record.value,header,headerDigest,adopted:true};else if(verdictFinal&&(said?.verdict==="stale"||said?.verdict==="other"||said?.verdict==="missing")){}else{await lookupLapAsyncV1("settle",()=>settleClosureRowsV1(header.observations,record.value));if(await lookupLapAsyncV1("hold",()=>projectRowsHoldV1(header.observations,record.value,rest=>nestedProject?sharedObservationsHoldV1(rest,parent):current(rest,refused),refused)))candidate={value:record.value,header,headerDigest};}}for(const{kind,path,fact}of header.observations)if(kind==="file"&&typeof fact?.sha256==="string")hints.set(path,fact);}
   if(candidate&&await lookupLapAsyncV1("reusable",()=>inferenceReusableV1(reusable,candidate.value))&&(candidate.adopted===true||await lookupLapAsyncV1("hold",()=>projectRowsHoldV1(candidate.header.observations,candidate.value,rest=>nestedProject?sharedObservationsHoldV1(rest,parent):current(rest))))){const{header,value,headerDigest}=candidate;retainSourceFactsV1(header.observations);retainObservationsV1(parent,header.observations);usedInference.set(cachePath,headerDigest);{const found={path:cachePath,digest,authorityObservations:header.authorityObservations,observations:header.observations};originalInferencePublications.set(cachePath,found);published?.(found);}return{value};}
   return undefined;
   };
@@ -1334,7 +1357,7 @@ export async function observeDependencies({ receiptPath, recordDirectory }, comp
   const originalInference=[...originalInferencePublications.values()].filter(value=>dirname(value.path)===dirname(receiptPath)).sort((left,right)=>Buffer.compare(Buffer.from(left.path),Buffer.from(right.path)));
   if(publicationPath===receiptPath)throw Error("Original inference receipt must have an owned publication path");
   const producerPath=resolve(dirname(publicationPath),"p-"+process.pid,basename(publicationPath));
-  if(originalInference.length&&jsonImage(result)!==undefined){const image=JSON.stringify({version:1,revision:OBSERVATION_REVISION,pid:process.pid,startedAt:started,completedAt:Date.now(),inference:originalInference,observations:rows});fs.mkdirSync(dirname(producerPath),{recursive:true});for(const path of [producerPath,publicationPath]){const temporary=path+"."+process.pid+"."+started+".tmp",parent=resolve(dirname(path)),status=fs.lstatSync(parent);if(temporary.length>observationBlockPolicyV1.maximumPathUnits||[...temporary].length>observationBlockPolicyV1.maximumPathUnits||!status.isDirectory()||status.isSymbolicLink()||fs.realpathSync(parent)!==parent)throw Error("Original inference producer namespace refused");publishFileDurablySyncV1(temporary,path,Buffer.from(image));}}else for(const path of [producerPath,publicationPath])fs.rmSync(path,{force:true});
+  if(originalInference.length&&jsonImage(result)!==undefined){const image=JSON.stringify({version:1,revision:OBSERVATION_REVISION,pid:process.pid,startedAt:started,completedAt:Date.now(),inference:originalInference,observations:rows});fs.mkdirSync(dirname(producerPath),{recursive:true});retireProducerPublicationAtExitV1(dirname(producerPath));for(const path of [producerPath,publicationPath]){const temporary=path+"."+process.pid+"."+started+".tmp",parent=resolve(dirname(path)),status=fs.lstatSync(parent);if(temporary.length>observationBlockPolicyV1.maximumPathUnits||[...temporary].length>observationBlockPolicyV1.maximumPathUnits||!status.isDirectory()||status.isSymbolicLink()||fs.realpathSync(parent)!==parent)throw Error("Original inference producer namespace refused");publishFileDurablySyncV1(temporary,path,Buffer.from(image));}}else for(const path of [producerPath,publicationPath])fs.rmSync(path,{force:true});
   if (racy || inference.length === 0 || inference.some(([, digest]) => digest === null) || !current(rows)) { fs.rmSync(receiptPath, { force: true }); return result; }
   const temporary = `${receiptPath}.${process.pid}.${started}.tmp`;
   publishFileDurablySyncV1(temporary, receiptPath, Buffer.from(JSON.stringify({ format: 1, revision: OBSERVATION_REVISION, pid: process.pid, completedAt: Date.now(), inference, observations: rows })));

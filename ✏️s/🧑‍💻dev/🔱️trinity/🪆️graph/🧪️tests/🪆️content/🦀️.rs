@@ -148,7 +148,7 @@ async fn remove_node_cascades_edges() {
 
 #[semio_framework_async_macros::async_test]
 async fn graph_effects_create_a_node_and_its_content_leaf_undoes_it() {
-    use jack::standards::v1::subsets::any::schema::content::{jack_self_funded_grant, retire_owned_to_terminal};
+    use jack::standards::v1::subsets::any::schema::content::retire_owned_to_terminal;
     use semio_framework_value::RetirementDemand;
     use semio_plugin::app::OwnedChildEmit;
 
@@ -166,11 +166,11 @@ async fn graph_effects_create_a_node_and_its_content_leaf_undoes_it() {
     for _ in 0..128 {
         if preparation.preparation_is_ready() { break; }
         let demand = preparation.step_demands().expect("child operation demand");
-        let (step, _) = pump.turn(1024, u64::MAX, || Some(0), jack_self_funded_grant(demand)).unwrap()
+        let (step, _) = pump.turn(1024, u64::MAX, || Some(0), semio_plugin::plugin_self_funded_grant(demand, semio_plugin::PLUGIN_SELF_FUNDED_BODY_BYTES)).unwrap()
             .with_effect(|effect| preparation.step(effect)).unwrap().expect("admitted child operation preparation");
         step.expect("prepare original operation");
     }
-    let grant = jack_self_funded_grant(RetirementDemand { capacity_bytes: preparation.next_owned_capacity_byte_demand(), depth: 1, ..Default::default() });
+    let grant = semio_plugin::plugin_self_funded_grant(RetirementDemand { capacity_bytes: preparation.next_owned_capacity_byte_demand(), depth: 1, ..Default::default() }, semio_plugin::PLUGIN_SELF_FUNDED_BODY_BYTES);
     let (metadata, batch, _) = preparation.take_ready_owned(grant).unwrap().expect("original typed batch");
     assert_eq!(metadata.child_id, fixture.content.child_id);
     assert!(metadata.ops.is_empty());

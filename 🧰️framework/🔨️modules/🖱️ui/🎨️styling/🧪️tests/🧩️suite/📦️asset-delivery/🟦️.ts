@@ -2,7 +2,7 @@ import { describe, it, expect } from "bun:test";
 import { readFileSync, realpathSync, mkdtempSync, writeFileSync, mkdirSync, rmSync, existsSync, renameSync } from "node:fs";
 import { resolve, join, dirname } from "node:path";
 import { assetPathFromRequest, assetTransportUrl, parseAssetDeliveryAuthority, SEMIO_ASSET_DIRECTORY, SEMIO_ASSET_ROUTE } from "@semio-tech/assets/resolver/delivery";
-import { resolveSemioAssetRoot, semioAssetsVitePlugin, SEMIO_ASSET_ROOT } from "../../../🏗️builder/🌐️vite/🗃️assets/🟦️.ts";
+import { resolveSemioAssetRoot, semioAssetShipsToBrowserV1, semioAssetsVitePlugin, semioReferencedAssetsVitePlugin, SEMIO_ASSET_ROOT } from "../../../🏗️builder/🌐️vite/🗃️assets/🟦️.ts";
 import type { OwnedBuildMiddleware } from "@semio-tech/ui-react/build-tooling";
 import { createServer } from "node:http";
 import { EventEmitter, once } from "node:events";
@@ -10,6 +10,7 @@ import { createHash } from "node:crypto";
 import { semioFaviconSources, semioFaviconSvgMarkup, semioFaviconVitePlugin, SEMIO_FAVICON_HEAD_HTML } from "../../../🏗️builder/🌐️vite/🔖️favicon/🟦️.ts";
 import { tmpdir } from "node:os";
 import { semioEmojiIndexHtmlVitePlugin, semioBrandHtmlVitePlugins } from "../../../🏗️builder/🌐️vite/🌐️site-html/🟦️.ts";
+import { katexWoff2OnlyCssV1, semioKatexWoff2OnlyVitePlugin } from "../../../🏗️builder/🌐️vite/🔡️woff2-only/🟦️.ts";
 import { meshCollectionVitePlugin } from "../../../🏗️builder/🌐️vite/🗺️mesh-collection/🟦️.ts";
 import { tileProxyVitePlugin } from "../../../🏗️builder/🌐️vite/🛰️tile-proxy/🟦️.ts";
 import { staticDirVitePlugin, staticDirMountVitePlugins, TILE_PROXY_ASSET_PROVIDER_V1 } from "../../../🏗️builder/🌐️vite/🟦️.ts";
@@ -24,6 +25,58 @@ describe("scrollbar selector", () => {
   it("uses the hovered owner for the WebKit thumb", () => {
     expect(uiCss).toContain("*:hover::-webkit-scrollbar-thumb {");
     expect(uiCss).not.toContain("*::-webkit-scrollbar:hover::-webkit-scrollbar-thumb");
+  });
+});
+
+describe("shipped asset selection", () => {
+  it("keeps runtime media and drops sources, tests, fixtures and agent docs", () => {
+    for (const path of ["🔤️fonts/inter.woff2", "🥽️mesh/cube.glb", "🪧️logos/a.png", "🔣️icons/a.svg", "📃️list/rows.json"]) expect(semioAssetShipsToBrowserV1(path)).toBe(true);
+    for (const path of ["🧪️tests/data.json", "🥽️mesh/🧪️tests/🧫️fixtures/🔣️.json", "🔣️icons/🦀️.rs", "🔤️fonts/fonts.toml", "AGENTS.md", "README.md", "🏗️builder/🟦️.ts", "a/node_modules/b.png"]) expect(semioAssetShipsToBrowserV1(path)).toBe(false);
+  });
+});
+
+describe("trimmed site delivery", () => {
+  const put = (path: string, content: string) => { mkdirSync(dirname(path), { recursive: true }); writeFileSync(path, content); };
+  const build = async (plugin: { configResolved?(config: never): void; closeBundle?(): void | Promise<void> }, sandbox: string) => {
+    plugin.configResolved?.({ root: sandbox, build: { outDir: "📤️output" } } as never);
+    await plugin.closeBundle?.();
+  };
+
+  it("keeps agent docs out of a copied static directory", async () => {
+    const sandbox = mkdtempSync(join(tmpdir(), "semio-static-docs-"));
+    try {
+      put(join(sandbox, "📥️input/AGENTS.md"), "docs");
+      put(join(sandbox, "📥️input/🏗️defs/🔣️.json"), "{}");
+      await build(staticDirVitePlugin(sandbox, { kind: "static-dir", route: "/fixture", root: "📥️input" })[1]!, sandbox);
+      expect(existsSync(join(sandbox, "📤️output/fixture/AGENTS.md"))).toBe(false);
+      expect(readFileSync(join(sandbox, "📤️output/fixture/🏗️defs/🔣️.json"), "utf8")).toBe("{}");
+    } finally { rmSync(sandbox, { recursive: true, force: true }); }
+  });
+
+  it("copies only the asset files a written bundle references", async () => {
+    const sandbox = mkdtempSync(join(tmpdir(), "semio-referenced-assets-"));
+    try {
+      put(join(sandbox, SEMIO_ASSET_ROOT, "🔤️fonts/🔤️a.woff2"), "font");
+      put(join(sandbox, SEMIO_ASSET_ROOT, "👆️cursor/🖱️default.svg"), "<svg/>");
+      put(join(sandbox, SEMIO_ASSET_ROOT, "🖼️images/🖼️unused.gif"), "gif");
+      put(join(sandbox, SEMIO_ASSET_ROOT, "🥽️mesh/🧊️twin.glb"), "glb");
+      put(join(sandbox, "📤️output/assets/a.css"), `@font-face{src:url(${SEMIO_ASSET_ROUTE}/🔤️fonts/🔤️a.woff2)}a{cursor:url(${SEMIO_ASSET_ROUTE}/👆️cursor/🖱️default.svg)}`);
+      put(join(sandbox, "📤️output/assets/a.js"), `const source="🧰️framework/🔨️modules/🖼️assets/🥽️mesh/🧊️twin.glb"`);
+      await build(semioReferencedAssetsVitePlugin(sandbox)[1]!, sandbox);
+      const shipped = (path: string) => existsSync(join(sandbox, "📤️output", SEMIO_ASSET_DIRECTORY, path));
+      expect([shipped("🔤️fonts/🔤️a.woff2"), shipped("👆️cursor/🖱️default.svg"), shipped("🖼️images/🖼️unused.gif"), shipped("🥽️mesh/🧊️twin.glb")]).toEqual([true, true, false, false]);
+    } finally { rmSync(sandbox, { recursive: true, force: true }); }
+  });
+
+  it("strips every non-woff2 KaTeX font source and keeps the woff2 one", () => {
+    const real = readFileSync(resolve(repoRoot, "node_modules/katex/dist/katex.min.css"), "utf8");
+    const stripped = katexWoff2OnlyCssV1(real);
+    expect([...real.matchAll(/\.woff2\)/gu)].length).toBe(20);
+    expect([...stripped.matchAll(/\.woff2\)/gu)].length).toBe(20);
+    expect(stripped).not.toMatch(/\.(?:woff|ttf)\)|format\("(?:woff|truetype)"\)/u);
+    const plugin = semioKatexWoff2OnlyVitePlugin();
+    expect(plugin.load!(resolve(repoRoot, "node_modules/katex/dist/katex.min.css?inline"))).toBe(stripped);
+    expect(plugin.load!(resolve(repoRoot, "node_modules/katex/dist/katex.js"))).toBeNull();
   });
 });
 

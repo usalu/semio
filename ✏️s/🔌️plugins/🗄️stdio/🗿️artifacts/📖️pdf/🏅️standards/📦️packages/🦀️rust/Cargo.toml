@@ -9,6 +9,31 @@ description = "Component crate of semio-s-artifact-stdio-pdf: mut-base"
 [package.metadata.semio]
 role = "library"
 
+[package.metadata.semio.carve]
+owned = [
+  "standards::v1_4::subsets::base::schema::mutations::insert_page::tests_round_trips_the_concrete_inverse",
+  "standards::v1_4::subsets::base::schema::mutations::move_page::tests",
+  "standards::v1_4::subsets::base::schema::mutations::move_page::tests_round_trips_the_concrete_inverse",
+  "standards::v1_4::subsets::base::schema::mutations::remove_page::tests_round_trips_the_concrete_inverse",
+  "standards::v1_4::subsets::base::schema::mutations::replace_page_text::tests",
+  "standards::v1_4::subsets::base::schema::mutations::replace_page_text::tests_round_trips_the_concrete_inverse",
+  "standards::v1_4::subsets::base::schema::mutations::resize_page::tests",
+  "standards::v1_4::subsets::base::schema::mutations::resize_page::tests_round_trips_the_concrete_inverse",
+  "standards::v1_7::subsets::base::io::binary::diff",
+  "standards::v1_7::subsets::base::io::binary::diff::diff_codec",
+  "standards::v1_7::subsets::base::io::text::diff",
+  "standards::v1_7::subsets::base::io::text::diff::diff_codec",
+  "standards::v1_7::subsets::base::schema::diff",
+  "standards::v1_7::subsets::base::schema::diff::mutation_diff_builders",
+  "standards::v1_7::subsets::base::schema::diff::page_info_and_pages",
+  "standards::v1_7::subsets::base::schema::diff::path_addressing_and_validation",
+  "standards::v1_7::subsets::base::schema::diff::pdf_diff_aggregate",
+  "standards::v1_7::subsets::base::schema::diff::tri_state_indexed_and_keyed",
+  "standards::v1_7::subsets::base::schema::diff::value_trees",
+  "standards::v1_7::subsets::base::schema::mutations::insert_page",
+  "standards::v1_7::subsets::base::schema::mutations::remove_page",
+]
+
 [lints]
 workspace = true
 

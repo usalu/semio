@@ -864,7 +864,27 @@ fn a_group_alpha_group_is_bracketed_by_begin_and_end_cursors() {
         walk.push(cursor);
     }
     let at = |wanted: DrawMeasureCursor| walk.iter().position(|step| *step == wanted).unwrap_or_else(|| panic!("{wanted:?} missing from {walk:?}"));
-    let (begin, inside, end, after) = (at(DrawMeasureCursor::GroupBegin(1)), at(DrawMeasureCursor::LayerUi { layer: 1, item: 0, overlay: false }), at(DrawMeasureCursor::GroupEnd(1)), at(DrawMeasureCursor::LayerUi { layer: 2, item: 0, overlay: false }));
+    let (begin, inside, end, after) = (at(DrawMeasureCursor::GroupBegin(1)), at(DrawMeasureCursor::LayerUi { layer: 1, item: 0, overlay: false }), at(DrawMeasureCursor::GroupEnd(1, 1)), at(DrawMeasureCursor::LayerUi { layer: 2, item: 0, overlay: false }));
     assert!(begin < inside && inside < end && end < after);
-    assert_eq!(walk.iter().filter(|step| matches!(step, DrawMeasureCursor::GroupBegin(_) | DrawMeasureCursor::GroupEnd(_))).count(), 2);
+    assert_eq!(walk.iter().filter(|step| matches!(step, DrawMeasureCursor::GroupBegin(_) | DrawMeasureCursor::GroupEnd(..))).count(), 2);
+}
+
+#[test]
+fn nested_group_alpha_groups_close_innermost_first_and_return_to_the_parent() {
+    let rect = semio_ui_theme::geometry::Rect::new(0.0, 0.0, 8.0, 8.0);
+    let mut draw = DrawList::default();
+    let outer = draw.begin_group_alpha(rect, 0.5);
+    draw.push_solid([0.0, 0.0, 4.0, 4.0], semio_ui_theme::Rgba::new(0.0, 1.0, 0.0, 1.0));
+    let inner = draw.begin_group_alpha(rect, 0.5);
+    draw.push_solid([0.0, 0.0, 4.0, 4.0], semio_ui_theme::Rgba::new(1.0, 0.0, 0.0, 1.0));
+    draw.end_group_alpha(inner);
+    draw.push_solid([0.0, 0.0, 4.0, 4.0], semio_ui_theme::Rgba::new(0.0, 0.0, 1.0, 1.0));
+    draw.end_group_alpha(outer);
+    let mut cursor = DrawMeasureCursor::default();
+    let mut walk = vec![cursor];
+    while PreparedRenderJob::next_draw_usage(&draw, &mut cursor).is_some() {
+        walk.push(cursor);
+    }
+    let brackets: Vec<_> = walk.iter().filter(|step| matches!(step, DrawMeasureCursor::GroupBegin(_) | DrawMeasureCursor::GroupEnd(..))).copied().collect();
+    assert_eq!(brackets, [DrawMeasureCursor::GroupBegin(0), DrawMeasureCursor::GroupBegin(1), DrawMeasureCursor::GroupEnd(1, 1), DrawMeasureCursor::GroupEnd(2, 1)]);
 }

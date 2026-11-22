@@ -1,0 +1,168 @@
+{
+ "pal": {
+  "arm-r": {
+   "angleDeg": 0.9811
+  },
+  "forearm-r": {
+   "angleDeg": 28.661
+  },
+  "hand-r": {
+   "angleDeg": -15.6641,
+   "abductionDeg": -2.6048,
+   "twistDeg": -18.77
+  },
+  "arm-l": {
+   "angleDeg": -22.544,
+   "abductionDeg": 11.94,
+   "twistDeg": 2.612
+  },
+  "forearm-l": {
+   "angleDeg": 112.304,
+   "twistDeg": 79.311
+  },
+  "hand-l": {
+   "angleDeg": -30,
+   "abductionDeg": 1.327
+  },
+  "thigh-l": {
+   "angleDeg": 7
+  },
+  "shank-l": {
+   "angleDeg": -12
+  },
+  "foot-l": {
+   "angleDeg": 5
+  },
+  "thigh-r": {
+   "angleDeg": 7
+  },
+  "shank-r": {
+   "angleDeg": -12
+  },
+  "foot-r": {
+   "angleDeg": 5
+  }
+ },
+ "strokes": [
+  {
+   "arm-r": {
+    "angleDeg": 57.855,
+    "abductionDeg": 2.604,
+    "twistDeg": -13.425
+   },
+   "forearm-r": {
+    "angleDeg": 72.432,
+    "twistDeg": 68.394
+   },
+   "hand-r": {
+    "angleDeg": -27.487,
+    "abductionDeg": -29.774,
+    "twistDeg": -18.77
+   },
+   "brush": {
+    "angleDeg": -0.539,
+    "abductionDeg": 0.067
+   }
+  },
+  {
+   "arm-r": {
+    "angleDeg": 66.517,
+    "abductionDeg": 12.955,
+    "twistDeg": -16.093
+   },
+   "forearm-r": {
+    "angleDeg": 61.916,
+    "twistDeg": 57.471
+   },
+   "hand-r": {
+    "angleDeg": -29.994,
+    "abductionDeg": -30.625,
+    "twistDeg": -18.77
+   },
+   "brush": {
+    "angleDeg": -0.472,
+    "abductionDeg": -0.231
+   }
+  },
+  {
+   "arm-r": {
+    "angleDeg": 79.392,
+    "abductionDeg": 23.095,
+    "twistDeg": -16.445
+   },
+   "forearm-r": {
+    "angleDeg": 41.222,
+    "twistDeg": 50.044
+   },
+   "hand-r": {
+    "angleDeg": -29.971,
+    "abductionDeg": -26.597,
+    "twistDeg": -18.77
+   },
+   "brush": {
+    "angleDeg": -0.436,
+    "abductionDeg": -0.464
+   }
+  },
+  {
+   "arm-r": {
+    "angleDeg": 61.083,
+    "abductionDeg": 21.215,
+    "twistDeg": -8.84
+   },
+   "forearm-r": {
+    "angleDeg": 71.818,
+    "twistDeg": 46.765
+   },
+   "hand-r": {
+    "angleDeg": -30,
+    "abductionDeg": -30.627,
+    "twistDeg": -18.77
+   },
+   "brush": {
+    "angleDeg": -0.311,
+    "abductionDeg": -0.19
+   }
+  },
+  {
+   "arm-r": {
+    "angleDeg": 52.203,
+    "abductionDeg": 14.621,
+    "twistDeg": -1.292
+   },
+   "forearm-r": {
+    "angleDeg": 82.908,
+    "twistDeg": 56.11
+   },
+   "hand-r": {
+    "angleDeg": -29.55,
+    "abductionDeg": -29.177,
+    "twistDeg": -18.77
+   },
+   "brush": {
+    "angleDeg": 0.239,
+    "abductionDeg": 0.076
+   }
+  }
+ ],
+ "mix": {
+  "arm-r": {
+   "angleDeg": 67.736,
+   "abductionDeg": 69.032,
+   "twistDeg": 8.765
+  },
+  "forearm-r": {
+   "angleDeg": 2.746,
+   "twistDeg": 87.391
+  },
+  "hand-r": {
+   "angleDeg": 18.015,
+   "abductionDeg": -27.344,
+   "twistDeg": -18.77
+  },
+  "brush": {
+   "angleDeg": -0.246,
+   "abductionDeg": 5.245
+  }
+ }
+}

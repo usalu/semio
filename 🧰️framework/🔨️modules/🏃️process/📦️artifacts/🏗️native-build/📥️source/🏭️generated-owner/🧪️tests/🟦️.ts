@@ -1,5 +1,4 @@
 import { expect, test } from "bun:test";
-import { spawnSync } from "node:child_process";
 import { mkdirSync, mkdtempSync, realpathSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
@@ -15,30 +14,50 @@ const workspace = () => {
   write(root, "ui/📦️packages/📋️project.json", JSON.stringify({ name: "@t/tokens", targets: { generate: { outputs: [] } } }));
   write(root, "ui/styling/🦀️.rs", '#[path = "🤖️generated/tokens.rs"] mod generated;');
   write(root, "plain/🦀️.rs", '#[path = "absent.rs"] mod absent;');
-  write(root, ".gitignore", "🤖️generated/\n");
-  spawnSync("git", ["init", "-q"], { cwd: root });
   return root;
 };
-const read = (root: string) => async (path: string) => { try { return new Uint8Array(await Bun.file(path).arrayBuffer()); } catch { return null; } };
+const read = (path: string) => Bun.file(path).arrayBuffer().then(buffer => new Uint8Array(buffer), () => null);
 
 test("a missing generated module names its owning target in English and German", async () => {
   const root = workspace();
   try {
-    const failure = await readRustSourceClosureV1(["assets/icons/schema/🦀️.rs"], root, [], read(root)).catch((error: unknown) => error);
+    const failure = await readRustSourceClosureV1(["assets/icons/schema/🦀️.rs"], root, [], read).catch((error: unknown) => error);
     expect(isRepoErrorV1(failure)).toBe(true);
     for (const language of ["en", "de"]) expect(renderRepoErrorV1(failure as never, language)).toContain("@t/assets:build");
-    const ungenerated = await readRustSourceClosureV1(["plain/🦀️.rs"], root, [], read(root)).catch((error: unknown) => error);
+    const ungenerated = await readRustSourceClosureV1(["plain/🦀️.rs"], root, [], read).catch((error: unknown) => error);
     expect(isRepoErrorV1(ungenerated) && ungenerated.key).toMatch(/source.unresolved-module$/u);
   } finally { rmSync(root, { recursive: true, force: true }); }
 });
 
-test("generate prerequisites cover every missing generated mount and nothing else", () => {
+test("generate prerequisites cover every missing generated mount and nothing else", async () => {
   const root = workspace();
   try {
-    expect(missingMountedModulesV1(root)).toHaveLength(3);
-    expect(generatedModuleOwnersV1(root, join(root, "ui/styling/🤖️generated/tokens.rs"))).toEqual(["@t/tokens:generate"]);
-    expect(generatedPrerequisiteArgumentsV1(root)).toEqual([["run", "@t/assets:build"], ["run", "@t/tokens:generate"]]);
+    expect(await missingMountedModulesV1(root)).toHaveLength(3);
+    expect(await generatedModuleOwnersV1(root, join(root, "ui/styling/🤖️generated/tokens.rs"))).toEqual(["@t/tokens:generate"]);
+    expect(await generatedPrerequisiteArgumentsV1(root)).toEqual([["run", "@t/assets:build"], ["run", "@t/tokens:generate"]]);
     write(root, "assets/icons/🤖️generated/🪪️icon-name/🦀️.rs", "");
-    expect(generatedPrerequisiteArgumentsV1(root)).toEqual([["run", "@t/tokens:generate"]]);
+    expect(await generatedPrerequisiteArgumentsV1(root)).toEqual([["run", "@t/tokens:generate"]]);
+  } finally { rmSync(root, { recursive: true, force: true }); }
+});
+
+test("generate prerequisites resolve relative to the workspace root and report progress", async () => {
+  const root = workspace();
+  const stages: string[] = [];
+  try {
+    const cwd = process.cwd();
+    process.chdir(tmpdir());
+    try {
+      expect(await generatedPrerequisiteArgumentsV1(root, { report: stage => { stages.push(stage); } })).toEqual([["run", "@t/assets:build"], ["run", "@t/tokens:generate"]]);
+    } finally { process.chdir(cwd); }
+    expect(stages).toEqual(["loading", "running"]);
+  } finally { rmSync(root, { recursive: true, force: true }); }
+});
+
+test("generate prerequisites stop when the caller cancels the scan", async () => {
+  const root = workspace();
+  const controller = new AbortController();
+  try {
+    controller.abort();
+    await expect(generatedPrerequisiteArgumentsV1(root, { signal: controller.signal })).rejects.toThrow();
   } finally { rmSync(root, { recursive: true, force: true }); }
 });

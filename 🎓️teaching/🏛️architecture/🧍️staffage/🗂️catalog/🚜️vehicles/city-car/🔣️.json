@@ -19832,7 +19832,7 @@
           "material": "cast-iron",
           "role": "detail",
           "tone": 0.42,
-          "profile": [[-0.012, 0.15], [0, 0.15], [0, 0.075], [-0.012, 0.075], [-0.012, 0.15]],
+          "profile": [[-0.015, 0.15], [0.0, 0.15], [0.0, 0.075], [-0.015, 0.075], [-0.015, 0.15]],
           "axis": [0, 0, 1],
           "origin": [0, 0, 0.72]
         },
@@ -19982,7 +19982,7 @@
           "material": "cast-iron",
           "role": "detail",
           "tone": 0.42,
-          "profile": [[-0.012, 0.15], [0, 0.15], [0, 0.075], [-0.012, 0.075], [-0.012, 0.15]],
+          "profile": [[-0.015, 0.15], [0.0, 0.15], [0.0, 0.075], [-0.015, 0.075], [-0.015, 0.15]],
           "axis": [0, 0, -1],
           "origin": [0, 0, -0.72]
         },
@@ -22019,6 +22019,10 @@
         {
           "en": "The front end is no longer one closed lump: scuttle, two front wings and the front end with the slam panel leave the engine bay open under the bonnet, and the bay holds the powertrain of the thermal model (engine, gearbox) on the front rails, so the bonnet-open pose shows a bay instead of a second bonnet.",
           "de": "Der Vorderwagen ist kein geschlossener Klotz mehr: Spritzwand, zwei Kotflügel und die Front mit dem Schlossträger lassen den Motorraum unter der Haube offen, und darin steht der Antrieb des thermischen Modells (Motor, Getriebe) auf den Längsträgern, sodass die Pose mit offener Haube einen Motorraum statt einer zweiten Haube zeigt."
+        },
+        {
+          "en": "The plain rear brake discs are 15 mm thick, the smallest feature of 1:100.",
+          "de": "Die massiven hinteren Bremsscheiben sind 15 mm dick, das kleinste Merkmal von 1:100."
         }
       ]
     },
@@ -23994,7 +23998,7 @@
           "material": "cast-iron",
           "role": "detail",
           "tone": 0.42,
-          "profile": [[-0.012, 0.15], [0, 0.15], [0, 0.075], [-0.012, 0.075], [-0.012, 0.15]],
+          "profile": [[-0.03, 0.15], [0.0, 0.15], [0.0, 0.075], [-0.03, 0.075], [-0.03, 0.15]],
           "axis": [0, 0, 1],
           "origin": [0, 0, 0.72]
         },
@@ -24137,7 +24141,7 @@
           "material": "cast-iron",
           "role": "detail",
           "tone": 0.42,
-          "profile": [[-0.012, 0.15], [0, 0.15], [0, 0.075], [-0.012, 0.075], [-0.012, 0.15]],
+          "profile": [[-0.03, 0.15], [0.0, 0.15], [0.0, 0.075], [-0.03, 0.075], [-0.03, 0.15]],
           "axis": [0, 0, -1],
           "origin": [0, 0, -0.72]
         },
@@ -25792,6 +25796,10 @@
         {
           "en": "The wheel arches are six chords of 30 degrees on the arch circle of 0.365 m, so the largest gap between chord and circle is 12 mm, under half a feature; four chords left a whole feature.",
           "de": "Die Radläufe sind sechs Sehnen von 30 Grad auf dem Radlaufkreis von 0,365 m, sodass die größte Abweichung zwischen Sehne und Kreis 12 mm beträgt, unter einem halben Merkmal; vier Sehnen ließen ein ganzes Merkmal stehen."
+        },
+        {
+          "en": "The rear brake discs are 30 mm thick like the front ones, the smallest feature of 1:200.",
+          "de": "Die hinteren Bremsscheiben sind wie die vorderen 30 mm dick, das kleinste Merkmal von 1:200."
         }
       ]
     },
@@ -26430,7 +26438,7 @@
           "material": "cast-iron",
           "role": "detail",
           "tone": 0.42,
-          "profile": [[-0.012, 0.15], [0, 0.15], [0, 0.075], [-0.012, 0.075], [-0.012, 0.15]],
+          "profile": [[-0.045, 0.15], [0.03, 0.15], [0.03, 0.075], [-0.045, 0.075], [-0.045, 0.15]],
           "axis": [0, 0, 1],
           "origin": [0, 0, 0.72]
         },
@@ -26532,7 +26540,7 @@
           "material": "cast-iron",
           "role": "detail",
           "tone": 0.42,
-          "profile": [[-0.012, 0.15], [0, 0.15], [0, 0.075], [-0.012, 0.075], [-0.012, 0.15]],
+          "profile": [[-0.045, 0.15], [0.03, 0.15], [0.03, 0.075], [-0.045, 0.075], [-0.045, 0.15]],
           "axis": [0, 0, -1],
           "origin": [0, 0, -0.72]
         },
@@ -26634,7 +26642,7 @@
           "material": "cast-iron",
           "role": "detail",
           "tone": 0.42,
-          "profile": [[-0.012, 0.15], [0, 0.15], [0, 0.075], [-0.012, 0.075], [-0.012, 0.15]],
+          "profile": [[-0.045, 0.15], [0.03, 0.15], [0.03, 0.075], [-0.045, 0.075], [-0.045, 0.15]],
           "axis": [0, 0, 1],
           "origin": [0, 0, 0.72]
         },
@@ -26736,7 +26744,7 @@
           "material": "cast-iron",
           "role": "detail",
           "tone": 0.42,
-          "profile": [[-0.012, 0.15], [0, 0.15], [0, 0.075], [-0.012, 0.075], [-0.012, 0.15]],
+          "profile": [[-0.045, 0.15], [0.03, 0.15], [0.03, 0.075], [-0.045, 0.075], [-0.045, 0.15]],
           "axis": [0, 0, -1],
           "origin": [0, 0, -0.72]
         },
@@ -28063,6 +28071,10 @@
         {
           "en": "The hull ends at the scuttle; two front wings and the front end leave the engine bay open under the bonnet, with the engine block of the thermal model standing on the underbody, so the bonnet-open pose shows a bay.",
           "de": "Der Rumpf endet an der Spritzwand; zwei Kotflügel und die Front lassen den Motorraum unter der Haube offen, der Motorblock des thermischen Modells steht auf dem Unterboden, sodass die Pose mit offener Haube einen Motorraum zeigt."
+        },
+        {
+          "en": "Each brake is one 75 mm body of disc and hat behind the wheel disc.",
+          "de": "Jede Bremse ist ein 75 mm tiefer Körper aus Scheibe und Topf hinter der Radscheibe."
         }
       ]
     }

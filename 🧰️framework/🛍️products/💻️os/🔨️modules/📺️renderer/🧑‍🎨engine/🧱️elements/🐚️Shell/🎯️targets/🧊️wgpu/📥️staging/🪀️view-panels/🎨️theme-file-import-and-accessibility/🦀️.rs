@@ -323,6 +323,17 @@ impl<'ctx> PanelsViewCtx<'ctx> {
                 status.busy = export.running();
                 nodes.push(status);
             }
+            if let Some(message) = self.opening.video_render_message(self.prefs.locale_id == "de") {
+                let mut status = chrome_status_accessibility_node(nodes.len() as u64 + 1, "shell.video-export.progress", message);
+                let (done, total) = self.opening.video_render_counts();
+                status.role = "progressbar".into();
+                status.value_min = Some(0.0);
+                status.value_max = Some(total as f64);
+                status.value_now = Some(done as f64);
+                status.value_text = status.label.clone();
+                status.busy = true;
+                nodes.push(status);
+            }
             if let Some(notice) = self.transient_notice_accessibility_node(nodes.len() as u64 + 1).filter(|_| nodes.len() < SHELL_CHROME_ACCESSIBLE_NAME_CAPACITY) {
                 nodes.push(notice);
             }
@@ -333,6 +344,9 @@ impl<'ctx> PanelsViewCtx<'ctx> {
             }
             if let Some(folder) = self.as_overlays_view().folder_reconnect_accessibility_node(nodes.len() as u64 + 1).filter(|_| nodes.len() < SHELL_CHROME_ACCESSIBLE_NAME_CAPACITY) {
                 nodes.push(folder);
+            }
+            if let Some(files) = self.as_overlays_view().local_files_accessibility_node(nodes.len() as u64 + 1).filter(|_| nodes.len() < SHELL_CHROME_ACCESSIBLE_NAME_CAPACITY) {
+                nodes.push(files);
             }
             for band in self.as_overlays_view().band_accessibility_nodes(nodes.len() as u64 + 1) {
                 if nodes.len() < SHELL_CHROME_ACCESSIBLE_NAME_CAPACITY {

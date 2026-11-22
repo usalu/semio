@@ -6,7 +6,7 @@ import schema from "../🧬️schema/🔣️.json";
 import policy from "../🔣️policy.json";
 import fixture from "./🧫️fixtures/🔣️.json";
 import {elasticCapacityV1,elasticMinimumV1,hostShareCapacityV1,hostSharePercentV1,pinnedCapacityV1,readRepositoryCacheBudgetV1,repositoryCacheBudgetV1} from "../🟦️.ts";
-import {mkdtempSync,mkdirSync,writeFileSync,rmSync,statfsSync} from "node:fs";
+import {mkdtempSync,mkdirSync,writeFileSync,rmSync} from "node:fs";
 import {tmpdir} from "node:os";
 import {repositoryStrictStorageV1} from "../../🟦️.ts";
 import {cleanProtectedPrefixes,cleanRemovalProtection} from "../../../../../🧼️workspace-cleanup/🛡️protection/🟦️.ts";
@@ -16,7 +16,7 @@ import {withRepositoryCacheStoreV1} from "../📥️opening/🏪️store/🟦️
 import {runProbe} from "../../../../../🏃️process/🔍️probe/🟦️.ts";
 import {withBuildTestInvocationV1} from "@semio-tech/process/testing/invocation";
 import {lstatSync,readdirSync,readFileSync} from "node:fs";
-import{privateRepositoryWorkspaceV1}from"../../../../../🧪️testing/🧫️private-repository/🟦️.ts";
+import{privateRepositoryHostFreeBytesV1,privateRepositoryWorkspaceV1}from"../../../../../🧪️testing/🧫️private-repository/🟦️.ts";
 import{nativePlatformImageBackendV1}from"../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/🟦️.ts";
 import{nativeStorageBackendsV1,nativeStorageBackingFilenameV1,nativeStorageMountedAtV1}from"../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🔌️backends/📋️contract/🟦️.ts";
 import {declareLibraryBuildTestEnvelopeV1} from "../../../../../🧪️testing/🪪️native-birth/🟦️.ts";
@@ -132,7 +132,7 @@ print(json.dumps(out))`,run=Bun.spawnSync(["python3","-I","-c",model,JSON.string
  const budget=readRepositoryCacheBudgetV1(grown);expect(budget.partitions.rust.filesystemBytes).toBe(60*2**30-1048576);expect(budget.headroomBytes).toBe(readRepositoryCacheBudgetV1(policy).headroomBytes);
  expect(rule.minimumBytes).toBeLessThan(declared);expect(rule.minimumBytes).toBeLessThanOrEqual(rule.maximumBytes);
  for(const free of Array.from({length:600},(_,i)=>(i+34)*2**30)){const capacity=elasticCapacityV1(rule,rule.minimumBytes,free);expect(capacity,String(free)).toBeLessThanOrEqual(free-64*2**20);expect(capacity).toBeGreaterThanOrEqual(rule.minimumBytes);}
- const strict=repositoryStrictStorageV1(repository.root);expect(strict.capacityBytes).toBeGreaterThanOrEqual(elasticMinimumV1(rule,rule.minimumBytes,(()=>{const row=statfsSync(repository.root);return row.bavail*row.bsize;})()));expect(strict.capacityBytes).toBeLessThanOrEqual(rule.maximumBytes);expect(strict.filesystemBytes).toBe(strict.capacityBytes-1048576);
+ const strict=repositoryStrictStorageV1(repository.root);expect(strict.capacityBytes).toBeGreaterThanOrEqual(elasticMinimumV1(rule,rule.minimumBytes,privateRepositoryHostFreeBytesV1));expect(strict.capacityBytes).toBeLessThanOrEqual(rule.maximumBytes);expect(strict.filesystemBytes).toBe(strict.capacityBytes-1048576);
 });
 
 test("the elastic graph capacity follows need and host free space, never below the declared capacity, and agrees with an independent Python model",()=>{
@@ -182,7 +182,7 @@ print(json.dumps(out))`,run=Bun.spawnSync(["python3","-I","-c",model,JSON.string
    pinRust(root);const directory=join(root,declared.directory);mkdirSync(directory,{recursive:true});
    if(row.receipt!==null)writeFileSync(join(directory,"image.json"),typeof row.receipt==="string"?row.receipt:JSON.stringify(row.receipt));
    expect(pinnedCapacityV1(directory,declared.capacityBytes),row.id).toBe(row.expected);expect(independent[row.id],row.id).toBe(row.expected);
-   const budget=repositoryCacheBudgetV1(root),partition=budget.partitions.dependencies,born=row.id==="no-receipt"?hostShareCapacityV1(declared.capacityBytes,declared.hostSharePercent,(()=>{const free=statfsSync(join(root,".cache","b"));return free.bavail*free.bsize;})()):row.expected;
+   const budget=repositoryCacheBudgetV1(root),partition=budget.partitions.dependencies,born=row.id==="no-receipt"?hostShareCapacityV1(declared.capacityBytes,declared.hostSharePercent,privateRepositoryHostFreeBytesV1):row.expected;
    expect(partition.capacityBytes,row.id).toBe(born);expect(partition.filesystemBytes,row.id).toBe(born-unit);
    expect(budget.partitionBytes-base.partitionBytes,row.id).toBe(born-base.partitions.dependencies.capacityBytes);
    expect(budget.maximumBytes-base.maximumBytes,row.id).toBe(born-base.partitions.dependencies.capacityBytes);
@@ -264,7 +264,7 @@ print(json.dumps(out))`,run=Bun.spawnSync(["python3","-I","-c",model,JSON.string
   const directory=join(root,"g");mkdirSync(directory);mkdirSync(join(root,"c"));
   const born=effectiveCapacityV1(directory,graph.minimumBytes,graph);
   writeElasticGrowthV1(directory,born+6*GiB);
-  const hostFree=require("node:fs").statfsSync(root),allowed=Math.floor(hostFree.bavail*hostFree.bsize*(100-graph.hostFreeReservePercent)/100/graph.alignBytes)*graph.alignBytes;expect(effectiveCapacityV1(directory,graph.minimumBytes,graph)).toBe(Math.max(born,Math.min(born+6*GiB,graph.maximumBytes,allowed)));
+  const allowed=Math.floor(privateRepositoryHostFreeBytesV1*(100-graph.hostFreeReservePercent)/100/graph.alignBytes)*graph.alignBytes;expect(effectiveCapacityV1(directory,graph.minimumBytes,graph)).toBe(Math.max(born,Math.min(born+6*GiB,graph.maximumBytes,allowed)));
   expect(effectiveCapacityV1(directory,graph.minimumBytes,graph)).toBeLessThanOrEqual(graph.maximumBytes);
  }finally{rmSync(root,{recursive:true,force:true});}
 });

@@ -123,7 +123,7 @@ pub use withdraw_restore_and_alternative_scenarios::acceptance_withdraw_only_kin
 #[path = "🔢️end-to-end-assertion-census-and-search/🦀️.rs"]
 mod end_to_end_assertion_census_and_search;
 #[cfg(any(test, feature = "artifact-app-testing"))]
-pub use end_to_end_assertion_census_and_search::{assert_closes_live_history_session, assert_history_edits_end_to_end};
+pub use end_to_end_assertion_census_and_search::{assert_closes_live_history_session, assert_closes_mid_reserved_commit, assert_history_edits_end_to_end};
 #[cfg(any(test, feature = "artifact-app-testing"))]
 use end_to_end_assertion_census_and_search::{acceptance_search, AcceptanceSearch};
 
@@ -195,6 +195,15 @@ macro_rules! history_edit_acceptance_law {
                 $plugin, $manifest, &fixtures, &examples,
             ));
             ::std::println!("[history-edit-acceptance] {summary}");
+        }
+
+        /// 🧯️ LAW: closing this editor mid undo, with the reserved route pending and with its commit queued, retires every commit's metadata.
+        #[test]
+        fn closes_mid_reserved_commit() {
+            let fixtures = $fixtures;
+            $crate::block_on_acceptance($crate::assert_closes_mid_reserved_commit::<$crate::__EditorApp<$editor>, <$editor as $crate::__ArtifactEditor>::Members>(
+                $plugin, $manifest, &fixtures,
+            ));
         }
 
         /// ⛓️ LAW (design §16.3): every document leaf payload schema of this editor resolves through the runtime resolver.

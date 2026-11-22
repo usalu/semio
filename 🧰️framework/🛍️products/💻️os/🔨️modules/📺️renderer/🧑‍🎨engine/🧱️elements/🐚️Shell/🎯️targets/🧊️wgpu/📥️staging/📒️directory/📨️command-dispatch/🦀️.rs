@@ -6,8 +6,6 @@ use super::*;
 
 //#region ShellActions
 impl DirectoryState {
-    //#region 🔖️DirectoryAndIdentity
-    //#region 📇️DirectoryLane
     /// 🏛️ Installs the one retained administration operation for exactly one space, retiring any
     /// predecessor first. Nothing is administrable until the hub's own canonical page has landed.
     pub fn open_space_administration(&mut self, space_id: &str) {
@@ -163,8 +161,6 @@ impl DirectoryState {
         }
     }
 
-    //#endregion 📇️DirectoryLane
-    //#region 🔐️HubWorkspaceLane
     /// 🌱️ Opens the creation door for `space_id`: a fresh door holding a minted idempotency key, then
     /// the space's selected current catalog. A hub with no ready catalog leaves the door
     /// `Unavailable`, saying so in both languages; local work never waits on it.
@@ -198,6 +194,7 @@ impl DirectoryState {
             cancel_sent: false,
             ready: None,
             opening: HubArtifactOpening::Idle,
+            issued_at_ms: now_ms,
             last_answered_at_ms: now_ms,
             polls: 0,
             next_poll_at_ms: now_ms,
@@ -469,8 +466,6 @@ impl DirectoryState {
         Vec::new()
     }
 
-    //#endregion 🔐️HubWorkspaceLane
-    //#region 💡️InferencePort
     /// 🔄️ One bounded drain per frame; the runner never spins and never blocks the render loop.
     #[cfg(not(target_arch = "wasm32"))]
     pub fn pump_inference_port(&mut self) -> bool {
@@ -503,7 +498,6 @@ impl DirectoryState {
         }
     }
 
-    //#endregion 💡️InferencePort
     /// 🏠️ Begins one bounded canonical-page fetch owned by the retained Home bootstrap epoch.
     #[cfg(not(target_arch = "wasm32"))]
     pub fn start_directory_event_page_fetch(&mut self) {
@@ -603,7 +597,6 @@ impl DirectoryState {
         }));
         self.identity_bootstrap_rx = Some(rx);
     }
-    //#endregion 🔖️DirectoryAndIdentity
 }
 
 //#endregion ShellActions

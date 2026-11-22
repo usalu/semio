@@ -9,6 +9,11 @@ description = "Component crate of semio-s-artifact-stdio-pdf: tables"
 [package.metadata.semio]
 role = "library"
 
+[package.metadata.semio.carve]
+owned = [
+  "standards::v1_7::subsets::base::modules::fonts::tables",
+]
+
 [lints]
 workspace = true
 

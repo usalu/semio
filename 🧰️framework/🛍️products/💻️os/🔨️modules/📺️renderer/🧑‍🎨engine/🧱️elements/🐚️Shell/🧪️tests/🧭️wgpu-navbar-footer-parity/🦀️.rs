@@ -324,7 +324,7 @@ fn an_unfolded_projection_pane_publishes_its_rows_within_one_frame_budget() {
     assert!(opportunities < WORLD_PROJECTION_PANE_PAINT_OPPORTUNITIES, "⏱️ the body terminates well inside its own budget, it does not exhaust it: {opportunities}");
     assert_eq!(rows.len(), WORLD_PROJECTION_TEMPLATES.len(), "⏱️ and publishes every row of React's taxonomy");
     let pane = window_projection_rect("pane-top", Rect::new(0.0, 0.0, 800.0, 600.0), &theme);
-    assert!((pane.w - WINDOW_PANE_BODY_WIDTH_PX).abs() < 0.5, "⏱️ Projection uses React's 300px Pane body");
+    assert!((pane.w - window_pane_body_width_px()).abs() < 0.5, "⏱️ Projection uses React's 300px Pane body");
     for row in &rows {
         assert!(row.rect.x >= pane.x - 0.5 && row.rect.x + row.rect.w <= pane.x + pane.w + 0.5, "⏱️ each retained Tree row stays inside the common Pane body: {:?}", row.rect);
         assert!((row.rect.x + row.rect.w - (pane.x + pane.w)).abs() < 0.5, "⏱️ each retained Tree row reaches the Pane's trailing edge: {:?}", row.rect);

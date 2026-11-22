@@ -56,7 +56,7 @@ fn variadic_merge_evaluates_port_routed_inputs() {
         ..Default::default()
     }]));
     host.previous_snapshot = None;
-    if let Some(channels)=host.current_channels.take().and_then(std::sync::Arc::into_inner){neural::ColdOwner::new(channels);}
+    neural::ColdOwner::new(host.current_channels.take());
     host.evaluate_internal();
     settle_baseline(&mut host);
     let preview = host

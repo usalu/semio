@@ -1,6 +1,6 @@
 @capability-staffage-thermal-multiview
 Feature: Thermal and transport read the same physical state in the side, front and top view
-  The thermal field and the air transport (parcels, pathlines, streamlines, condensation, emitters) are solved once per instant in world metres
+  The thermal field and the air transport (parcels, their pathlines and the flow field drawn as streams, tracers, moisture, fog and paths) are solved once per instant in world metres
   (x ahead, y up, z left, a left-handed frame) and only projected afterwards: elevation (x, y), front (z, y), plan (x, z) through the cameras of the views module.
   The wind is a horizontal bearing from +x towards +z, so a crosswind drifts parcels sideways in the plan and not at all in the side view.
 
@@ -13,11 +13,12 @@ Feature: Thermal and transport read the same physical state in the side, front a
     And the legends of the three views state the same quantity, unit, range, stops and conditions
     And a region that a viewpoint cannot see is named in its legend
 
-  Scenario: Parcels, pathlines and emitters sit at the same world place in every view
+  Scenario: Vapour puffs, parcel paths and streams sit at the same world place in every view
     Given the breath of the jogger and the exhaust of the generator
-    When the transport overlay is drawn in the three views
-    Then each parcel is at the projection of its world position and the three views draw the same parcels and legends
-    And an emitter pointing along the viewing axis is drawn end-on
+    When the flow view is drawn in the three views
+    Then each vapour cloud is at the projection of the world position of its puff and each drawn path is the projected history of its parcel
+    And the three views draw the same paths, clouds, streams and legends
+    And a stream that points along the viewing axis gets no arrow head there, while the side view draws it
 
   Scenario: A crosswind drifts parcels sideways
     Given a wind bearing of 0, 30, 90 and 180 degrees on a transpiring tree without turbulence

@@ -27,6 +27,8 @@ export interface ActivationManifestEntry {
   /** 🪪️ The plugin id the program's own descriptor names, when the program id differs from it (a hub document's
    * catalog-resolved program): what an extension's activation event names as its host. */
   readonly manifestPluginId?: string;
+  /** 🔐️ The program this one extends, when it is an extension installed outside the catalog cascade (a dynamic install): its grants never exceed the host's. */
+  readonly host?: string;
   /** 🚚️ The package assets the plugin's descriptor declares, delivered with the activation so they reach `instance-open`. */
   readonly assets?: readonly PackageAssetDeclaration[];
 }
@@ -197,7 +199,6 @@ export class ActivationRegistry {
         : () => {};
   }
 
-  //#region 📖️Manifest
   registerManifest(entry: ActivationManifestEntry): void {
     this.manifests.set(entry.pluginId, entry);
   }
@@ -230,7 +231,18 @@ export class ActivationRegistry {
   manifestFor(pluginId: string): ActivationManifestEntry | undefined {
     return this.manifests.get(pluginId);
   }
-  //#endregion 📖️Manifest
+
+  /** 🔐️ THE one place any activation (first, cascade child, resume, request actor) takes its grants from: a program's own request, intersected with every host it extends (declared `host` or indexed under a parent), recursively. An unknown host or a cycle yields nothing. */
+  grantsFor(pluginId: string, chain: ReadonlySet<string> = new Set()): readonly ShardCapabilityGrant[] {
+    const own = this.manifests.get(pluginId)?.caps ?? [];
+    const declared = this.manifests.get(pluginId)?.host;
+    const hosts = new Set<string>(declared === undefined ? [] : [declared]);
+    for (const [parent, ids] of this.extensionsByParent) if (ids.includes(pluginId)) hosts.add(parent);
+    if (hosts.size === 0) return own;
+    if (chain.has(pluginId)) return [];
+    const next = new Set(chain).add(pluginId);
+    return [...hosts].reduce((scoped, host) => intersectCapabilityGrants(this.grantsFor(host, next), scoped), own);
+  }
 
   private loadAssets(moduleUrl: string): Promise<readonly ShardAsset[]> {
     this.assetsPromise ??= this.fetchAssets(moduleUrl).catch((error: unknown) => {
@@ -271,7 +283,6 @@ export class ActivationRegistry {
     this.residencyOrder.push(actorId);
   }
 
-  //#region ▶️Activate
   /** ▶️ `events::activation-event` → `Kernel::activate`. Cascades to every registered extension of
    * `pluginId` — see `activateExtensionsOf`.
    *
@@ -287,7 +298,7 @@ export class ActivationRegistry {
     if (!manifest) throw new Error(`ActivationRegistry.activate: no manifest for plugin ${pluginId}`);
     await this.evictForMemoryPressure();
     const assets = [...(await this.loadAssets(manifest.moduleUrl)), ...(await this.loadPackageAssets(manifest))];
-    await this.shardClient.activate(actorId, manifest.moduleUrl, manifest.caps, this.defaultBudget, assets);
+    await this.shardClient.activate(actorId, manifest.moduleUrl, this.grantsFor(pluginId), this.defaultBudget, assets);
     this.markResident(actorId, pluginId);
     const activation = activationEventEnvelope(reason);
     if (activation) this.enqueueTurn(actorId, "Maintenance", [activation]);
@@ -314,7 +325,6 @@ export class ActivationRegistry {
   private async activateExtensionsOf(pluginId: string, parentActorId: string): Promise<void> {
     const extensionIds = this.extensionsByParent.get(pluginId);
     if (!extensionIds || extensionIds.length === 0) return;
-    const parentCaps = this.manifests.get(pluginId)?.caps ?? [];
     const children: string[] = [];
     for (const extensionId of extensionIds) {
       const manifest = this.manifests.get(extensionId);
@@ -323,9 +333,8 @@ export class ActivationRegistry {
       }
       const childActorId = `${parentActorId}::${extensionId}`;
       try {
-        const scopedCaps = intersectCapabilityGrants(parentCaps, manifest.caps);
         const assets = [...(await this.loadAssets(manifest.moduleUrl)), ...(await this.loadPackageAssets(manifest))];
-        await this.shardClient.activate(childActorId, manifest.moduleUrl, scopedCaps, this.defaultBudget, assets);
+        await this.shardClient.activate(childActorId, manifest.moduleUrl, this.grantsFor(extensionId), this.defaultBudget, assets);
         this.markResident(childActorId, extensionId);
         const activation = activationEventEnvelope(`${ON_EXTENSION_REQUEST_ACTIVATION_PREFIX}${this.manifests.get(pluginId)?.manifestPluginId ?? pluginId}`);
         if (activation) this.enqueueTurn(childActorId, "Maintenance", [activation]);
@@ -335,9 +344,7 @@ export class ActivationRegistry {
     }
     if (children.length > 0) this.extensionChildren.set(parentActorId, children);
   }
-  //#endregion ▶️Activate
 
-  //#region 🧵️TurnDispatch
   /** 🪣️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (web-activation): routes one turn through the
    * `TurnScheduler` instead of a caller reaching `ShardClient.turn` directly — lane priority,
    * latest-wins coalescing, and cancellation-on-suspend/teardown/restore all come from the scheduler,
@@ -365,9 +372,7 @@ export class ActivationRegistry {
       events = (result as { readonly unsent?: readonly ShardEventEnvelope[] } | null)?.unsent ?? [];
     } while (events.length > 0);
   }
-  //#endregion 🧵️TurnDispatch
 
-  //#region 🚑️SuspendResume
   private async evictForMemoryPressure(): Promise<void> {
     while (this.residencyOrder.length >= this.maxResidentActors) {
       await this.suspend(this.residencyOrder[0]!);
@@ -414,7 +419,7 @@ export class ActivationRegistry {
     if (!manifest) throw new Error(`ActivationRegistry.resume: no manifest for plugin ${pluginId}`);
     await this.evictForMemoryPressure();
     const assets = [...(await this.loadAssets(manifest.moduleUrl)), ...(await this.loadPackageAssets(manifest))];
-    await this.shardClient.activate(actorId, manifest.moduleUrl, manifest.caps, this.defaultBudget, assets);
+    await this.shardClient.activate(actorId, manifest.moduleUrl, this.grantsFor(pluginId), this.defaultBudget, assets);
     const checkpoint = this.checkpoints.get(actorId);
     if (checkpoint) await this.shardClient.restore(actorId, checkpoint);
     this.markResident(actorId, pluginId);
@@ -515,9 +520,7 @@ export class ActivationRegistry {
   dispose(): void {
     this.stopMetricsPublisher();
   }
-  //#endregion 🚑️SuspendResume
 
-  //#region 📈️RuntimeMetrics
   /** 📊️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (T1): one row per actor this registry has ever
    * activated (`actorPlugin` — populated on `markResident`, never cleared on `suspend`, so a
    * suspended-but-not-forgotten actor still gets a row with `resident: false`). Field-compatible
@@ -560,7 +563,6 @@ export class ActivationRegistry {
     }, RUNTIME_METRICS_PUBLISH_INTERVAL_MS);
     return () => clearInterval(interval);
   }
-  //#endregion 📈️RuntimeMetrics
 }
 //#endregion 🐚️ActivationRegistry
 // #endregion 🎠️Kernel

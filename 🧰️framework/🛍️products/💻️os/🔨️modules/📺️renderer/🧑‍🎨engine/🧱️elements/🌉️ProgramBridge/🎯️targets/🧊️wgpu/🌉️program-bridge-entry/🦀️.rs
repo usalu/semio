@@ -2,6 +2,10 @@
 
 use super::*;
 
+#[cfg(not(target_arch = "wasm32"))]
+#[path = "🎛️handle-doors.rs"]
+mod handle_doors;
+
 /// 🪪️ The package a browser program mounts, as the JS bridge's `packageIdentity` reads it off the
 /// served package descriptor the module was admitted with.
 #[cfg(target_arch = "wasm32")]
@@ -224,6 +228,7 @@ impl ProgramBridgeEntry {
             #[cfg(not(target_arch = "wasm32"))]
             ProgramBridgeBackend::Wasm { client, .. } => {
                 wasm_program_exchange::forget_ephemeral_snapshot(instance_id);
+                native_handle_doors::forget_document_pack(instance_id);
                 client.destroy_app(instance_id);
             }
         }
@@ -253,6 +258,25 @@ impl ProgramBridgeEntry {
         }
     }
 
+    #[cfg(not(target_arch = "wasm32"))]
+    pub async fn dispatch_invoke_extension(&self, instance_id: u32, extension_id: &str, capability: &str, request_json: &str, req: u64) -> Result<semio_framework::kernel::InvocationResult, ProgramFault> {
+        extension_invoke::dispatch_native(self, instance_id, extension_id, capability, request_json, req).await
+    }
+
+    /// 📨️ Sends one inbound `Event::Request` (from the shell instance `origin`) to this extension's live `instance` and reads the actor's `Effect::Respond` for it out of the same exchange; a refused or failed exchange is `Failed`.
+    #[cfg(not(target_arch = "wasm32"))]
+    pub(super) async fn answer_extension_request(&self, instance: u32, origin: u32, req: semio_framework::kernel::RequestId, capability: &str, payload: Vec<u8>) -> extension_invoke::ExtensionAnswer {
+        let ProgramBridgeBackend::Wasm { client, .. } = &self.backend;
+        wasm_program_exchange::answer_extension_request(client, instance, origin, req, capability, payload).await
+    }
+
+    /// ✅️ Completes the requester's parked request once: delivers `Event::Completed` to `instance` and answers the effects that turn raised.
+    #[cfg(not(target_arch = "wasm32"))]
+    pub(super) async fn complete_extension_request(&self, instance: u32, req: u64, result: semio_framework::kernel::RequestOutcome) -> Result<semio_framework::kernel::InvocationResult, ProgramFault> {
+        let ProgramBridgeBackend::Wasm { client, .. } = &self.backend;
+        wasm_program_exchange::deliver_extension_completion(client, instance, req, result).await
+    }
+
     #[cfg(target_arch = "wasm32")]
     pub async fn push_scoped_contributions(&self, instance_id: u32, app_id: &str, view_state_json: &str) -> Result<semio_framework::kernel::InvocationResult, ProgramFault> {
         match &self.backend {
@@ -273,19 +297,13 @@ impl ProgramBridgeEntry {
         }
     }
 
-    /// 🖱️ On-demand context menu rows for the given surface hit and selection snapshot. 🚧️ Native:
-    /// `context-menu` has no defined path in the new reactor ABI (it was a synchronous
-    /// `WasmPluginRuntime` export, not an `AppCommand`) — honest empty result until a packet gives it
-    /// one, matching the wasm32 JS backend's own "function not exposed" fallback below.
+    /// 🖱️ On-demand context menu rows for the given surface hit and selection snapshot, asked of the guest through `AppCommand::ContextMenu`.
     pub async fn context_menu(&self, instance_id: u32, request: serde_json::Value) -> Result<Vec<semio_ui_declaration::ui::ContextMenuItemSpec>, ProgramFault> {
         match &self.backend {
             #[cfg(target_arch = "wasm32")]
             ProgramBridgeBackend::Js(handle) => context_menu_js(handle, instance_id, &request).await.map_err(ProgramFault::from),
             #[cfg(not(target_arch = "wasm32"))]
-            ProgramBridgeBackend::Wasm { .. } => {
-                let _ = (instance_id, request);
-                Ok(Vec::new())
-            }
+            ProgramBridgeBackend::Wasm { client, .. } => native_handle_doors::context_menu(client, instance_id, request).await,
         }
     }
 
@@ -294,7 +312,14 @@ impl ProgramBridgeEntry {
     /// 26/09/30/NON-DESTRUCTIVE-HISTORY-EDITING), the one whole-document load: a long history folds across turns and a cancel
     /// leaves the previous document.
     pub async fn load_app_document_pack(&self, instance_id: u32, pack: &[u8], spr: &[u8]) -> Result<(), ProgramFault> {
-        self.load_app_document_archive(instance_id, &protocol::DocumentArchivePack { parent_pack: pack.to_vec(), parent_spr: spr.to_vec(), members: Vec::new() }).await
+        let loaded = self.load_app_document_archive(instance_id, &protocol::DocumentArchivePack { parent_pack: pack.to_vec(), parent_spr: spr.to_vec(), members: Vec::new() }).await;
+        #[cfg(not(target_arch = "wasm32"))]
+        {
+            if loaded.is_ok() {
+                native_handle_doors::remember_document_pack(instance_id, pack, spr);
+            }
+        }
+        loaded
     }
 
     /// 🪪️ Scalar document ownership query shared by native and browser bridges.
@@ -337,6 +362,25 @@ impl ProgramBridgeEntry {
     ) -> Result<NativeSaveOutcome, String> {
         let ProgramBridgeBackend::Wasm { client, .. } = &self.backend;
         native_save::save_media(client, owner, declaration, destination, cancelled, progress).await
+    }
+
+    /// 📏 The largest natural file the format's import command admits, as the browser bridge reports it.
+    #[cfg(target_arch = "wasm32")]
+    pub async fn natural_file_maximum_bytes(&self, format_kind: &str) -> Result<usize, String> {
+        let ProgramBridgeBackend::Js(handle) = &self.backend;
+        let answer = call_js(handle, "naturalFileMaximumBytes", &Array::of1(&JsValue::from_str(format_kind))).await?;
+        answer.as_f64().filter(|bytes| bytes.is_finite() && *bytes >= 0.0).map(|bytes| bytes as usize).ok_or_else(|| "naturalFileMaximumBytes returned no byte count".to_string())
+    }
+
+    /// 📥 Imports one picked natural file into a fresh instance through the browser bridge's typed media door.
+    #[cfg(target_arch = "wasm32")]
+    pub async fn import_natural_file(&self, instance_id: u32, format_kind: &str, bytes: &[u8]) -> Result<(), String> {
+        let ProgramBridgeBackend::Js(handle) = &self.backend;
+        let args = Array::new();
+        args.push(&JsValue::from_f64(f64::from(instance_id)));
+        args.push(&JsValue::from_str(format_kind));
+        args.push(&js_sys::Uint8Array::from(bytes));
+        call_js(handle, "importNaturalFile", &args).await.map(|_| ())
     }
 
     /// 📥 Imports natural binary input through the mounted program's typed media door.
@@ -487,7 +531,48 @@ impl ProgramBridgeEntry {
             #[cfg(target_arch = "wasm32")]
             ProgramBridgeBackend::Js(handle) => render_with_document_js(handle, instance_id, surface_id, body_key, view_state, document_dsl, refresh_effects).await.map_err(ProgramFault::from),
             #[cfg(not(target_arch = "wasm32"))]
-            ProgramBridgeBackend::Wasm { client, .. } => wasm_program_exchange::render_with_document(client, instance_id, surface_id, body_key, view_state, document_dsl, refresh_effects).await,
+            ProgramBridgeBackend::Wasm { client, .. } => {
+                let mut effects = Vec::new();
+                let lease = wasm_program_exchange::render_with_document(client, instance_id, surface_id, body_key, view_state, document_dsl, Some(&mut effects)).await?;
+                let lease = extension_splice::splice_native_extensions(lease, instance_id, view_state, Some(&mut effects)).await?;
+                if let Some(sink) = refresh_effects {
+                    sink.append(&mut effects);
+                }
+                Ok(lease)
+            }
+        }
+    }
+
+    /// 🧩️ Activates this extension program in the kernel beside the live instance `parent_instance` of plugin `parent_plugin` — no parent re-creation — and answers the extension's own instance id.
+    #[cfg(not(target_arch = "wasm32"))]
+    pub(super) async fn activate_extension_instance(&self, parent_instance: u32, parent_plugin: &str, capabilities: &[String]) -> Result<u32, ProgramFault> {
+        let ProgramBridgeBackend::Wasm { client, wasm_path } = &self.backend;
+        let activation = semio_renderer_wgpu_kernel_protocol::ExtensionActivation { parent_instance, parent_plugin: parent_plugin.to_string(), extension: semio_renderer_wgpu_kernel_protocol::ExtensionRecord::installed(&self.plugin_id, capabilities) };
+        client.activate_extension(wasm_path, activation).await
+    }
+
+    /// 🗑️ Begins retiring this extension's kernel instance (the ordinary app close).
+    #[cfg(not(target_arch = "wasm32"))]
+    pub(super) fn begin_retire_extension_instance(&self, instance: u32) -> Result<semio_renderer_wgpu_kernel_protocol::KernelCloseHandle, String> {
+        let ProgramBridgeBackend::Wasm { client, .. } = &self.backend;
+        client.begin_destroy_app(instance)
+    }
+
+    /// 🧩️ This program's own (non-splicing) render as the records and root id an extension host splices into its parent, with the effects the render raised; `None` when the render fails or publishes nothing.
+    pub(super) async fn render_extension_records(&self, instance_id: u32, extension: &str, view_state: &ViewModel) -> Option<(Vec<ui_contract::UiNodeRecord>, u64, Vec<Effect>)> {
+        match &self.backend {
+            #[cfg(target_arch = "wasm32")]
+            ProgramBridgeBackend::Js(handle) => {
+                let (document, effects) = render_browser_document(handle, instance_id, extension, extension, view_state).await.ok()?;
+                Some((document.nodes, document.root?, effects))
+            }
+            #[cfg(not(target_arch = "wasm32"))]
+            ProgramBridgeBackend::Wasm { client, .. } => {
+                let mut effects = Vec::new();
+                let lease = wasm_program_exchange::render_with_document(client, instance_id, extension, extension, view_state, None, Some(&mut effects)).await.ok()?;
+                let (header, nodes) = extension_splice::lease_records(&lease)?;
+                Some((nodes, header.root.0, effects))
+            }
         }
     }
 

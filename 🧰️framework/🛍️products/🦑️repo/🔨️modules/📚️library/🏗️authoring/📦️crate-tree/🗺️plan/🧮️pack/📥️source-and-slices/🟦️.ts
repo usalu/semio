@@ -54,7 +54,7 @@ export function buildCarveSlices({ convert, lib, rootSource, readText, baseOverl
   for (const [file, text] of [...(family?.edits ?? []), ...(family?.creates ?? [])]) baseOverlay.set(file, text);
   const detaching = new Set<string>((family?.aggregates ?? []).filter((aggregate) => (family?.converted.length ?? 0) > 0).map((aggregate) => aggregate.name));
   const declTree = collectDecls(lib.entry, rootSource, readText);
-  const built = buildSlices(declTree, readText, undefined, { detachTestsMentioning: detaching, detachAllTests: options.weave !== false });
+  const built = buildSlices(declTree, readText, undefined, { detachTestsMentioning: detaching, detachAllTests: options.weave !== false, detachWithoutHostUse: options.carved != null, keepNamespaceKids: options.carved != null });
   const rootRelatives = new Set(declTree.roots);
   const keptModules = tree.modules.filter((node) => !node.inline).map((node) => node.name);
   const shims = rootAliasModules(rootSource, tree.modules);

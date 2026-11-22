@@ -112,3 +112,23 @@ test("duplicate lock rows: a repeated registry row keeps one copy, a repeated pa
  expect(result.dropped).toEqual(["a","serde"]);expect(result.text).toBe(head+row("serde",crates)+row("b"));
  expect(cargoLockDeduplicatedV1(result.text!).text).toBeNull();
 });
+
+/** ♻️ A refresh whose resolved graph is unchanged writes nothing: the lock keeps its bytes and its modification time, no resolving `update` runs, and a repeat costs no Cargo call at all. */
+test("a refresh of a current lock is a no-op: no write, no resolving update, no call on repeat",async()=>{
+ const{mkdtempSync,statSync,utimesSync}=await import("node:fs"),root=mkdtempSync(join(tmpdir(),"semio-lock-noop-")),lock=join(root,"Cargo.lock"),manifest=join(root,"Cargo.toml"),receipts=join(root,".receipts");
+ try{
+  writeFileSync(manifest,'[workspace]\nmembers = []\n');writeFileSync(lock,"# lock\nversion = 4\n");utimesSync(lock,new Date(1_000_000),new Date(1_000_000));
+  const before={bytes:readFileSync(lock,"utf8"),mtimeMs:statSync(lock).mtimeMs},calls:string[][]=[];
+  const port:CargoLockPortV1={
+   async run(args){calls.push([...args]);if(args[0]==="locate-project")return{status:0,stdout:manifest+"\n",stderr:""};if(args[0]==="metadata")return{status:0,stdout:JSON.stringify({packages:[]}),stderr:""};return{status:args[0]==="update"&&args.includes("--locked")?0:1,stdout:"",stderr:""};},
+   async tryHold(){return{release(){}};},pause:async()=>{},report:()=>{},
+  };
+  const request={workspaceRoot:root,manifest,receiptDirectory:receipts,language:"en" as const,offline:true,force:false};
+  expect(await ensureCargoLockV1(request,port)).toBe("current");
+  expect(calls.filter(call=>call[0]==="update").every(call=>call.includes("--locked"))).toBe(true);
+  expect({bytes:readFileSync(lock,"utf8"),mtimeMs:statSync(lock).mtimeMs}).toEqual(before);
+  calls.length=0;
+  expect(await ensureCargoLockV1(request,port)).toBe("current");expect(calls).toEqual([]);
+  expect({bytes:readFileSync(lock,"utf8"),mtimeMs:statSync(lock).mtimeMs}).toEqual(before);
+ }finally{rmSync(root,{recursive:true,force:true});}
+});

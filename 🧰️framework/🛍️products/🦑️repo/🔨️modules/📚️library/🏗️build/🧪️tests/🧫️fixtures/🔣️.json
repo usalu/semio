@@ -2,8 +2,8 @@
   "version": 1,
   "entry": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📜️script.ts",
   "targets": {
-    "build-storybook": "build storybook",
-    "build-canvas-font-assets": "build canvas fonts"
+    "build-storybook": {"project": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📖️storybook", "arguments": "build storybook"},
+    "build-canvas-font-assets": {"project": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript", "arguments": "build canvas fonts"}
   },
   "modes": ["prototype", "release"],
   "invalidModes": ["dev", "ship", "", null],

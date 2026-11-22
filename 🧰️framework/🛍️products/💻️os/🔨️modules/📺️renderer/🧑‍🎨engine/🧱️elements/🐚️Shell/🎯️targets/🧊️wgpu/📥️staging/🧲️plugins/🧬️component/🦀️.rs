@@ -35,7 +35,6 @@ pub struct PluginState {
     pub active_example_id: Option<String>,
     /// 📥️ Extension invocations the guest asked for, parked until a flush that owns `&mut self`
     /// can run them AND fold their answers' own effects back in — see `flush_deferred_actions`.
-    #[cfg(target_arch = "wasm32")]
     pub pending_extension_invocations: Vec<PendingExtensionInvocation>,
     /// 👁️✏️ Pinned default app per `"<dialectCoordinate>/<role>"` — the projection React reads
     /// off `OpeningPreferences`, each value `"<pluginId> <appId>"` or `"none"`.

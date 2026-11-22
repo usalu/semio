@@ -7435,7 +7435,6 @@ dependencies = [
  "semio-framework-value",
  "semio-framework-value-native-owned",
  "semio-framework-value-persistent",
- "semio-framework-value-snapshot-read",
  "semio-os-directory",
  "semio-os-spr",
  "semio-os-store-backbone",
@@ -7444,6 +7443,7 @@ dependencies = [
  "semio-os-store-engine-bundle",
  "semio-os-store-engine-close",
  "semio-os-store-engine-core",
+ "semio-os-store-engine-derived",
  "semio-os-store-engine-live",
  "semio-os-store-engine-owners",
  "semio-os-store-engine-stage",
@@ -7598,6 +7598,25 @@ dependencies = [
  "semio-os-store-text-io",
  "semio-os-vcs",
  "serde",
+]
+
+[[package]]
+name = "semio-os-store-engine-derived"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-value",
+ "semio-framework-value-native-owned",
+ "semio-framework-value-snapshot-read",
+ "semio-os-spr",
+ "semio-os-store-engine-core",
+ "semio-os-store-engine-live",
+ "semio-os-store-ledger",
+ "semio-os-store-operation-wire",
+ "semio-os-store-read",
+ "semio-os-store-replay",
+ "semio-os-store-replay-operation",
+ "semio-os-store-space-schema",
+ "semio-os-vcs",
 ]
 
 [[package]]
@@ -10352,6 +10371,7 @@ dependencies = [
  "semio-plugin-reactor-lifecycle",
  "semio-plugin-runtime-instances",
  "semio-plugin-runtime-ops-document",
+ "semio-plugin-runtime-ops-raw-media",
  "semio-plugin-runtime-ops-surface",
  "semio-plugin-runtime-ops-wire",
  "semio-plugin-window-config",
@@ -10386,6 +10406,19 @@ dependencies = [
  "semio-plugin-reactor-lifecycle",
  "semio-plugin-runtime-instances",
  "semio-plugin-runtime-ops-wire",
+]
+
+[[package]]
+name = "semio-plugin-runtime-ops-raw-media"
+version = "0.1.0"
+dependencies = [
+ "semio-framework",
+ "semio-framework-job",
+ "semio-framework-value",
+ "semio-os-kernel",
+ "semio-plugin-decl-media",
+ "semio-plugin-reactor-app",
+ "semio-plugin-reactor-lifecycle",
 ]
 
 [[package]]
@@ -15669,6 +15702,7 @@ dependencies = [
  "semio-os-kernel",
  "semio-plugin",
  "semio-s-artifact-stdio-contract",
+ "semio-s-artifact-stdio-jpg-inferences",
  "semio-s-artifact-stdio-pdf-inferences",
  "semio-s-artifact-stdio-pdf-mut-family-8",
  "semio-s-artifact-stdio-pdf-snapshot-2",
@@ -15778,6 +15812,7 @@ dependencies = [
  "semio-framework-hash",
  "semio-framework-pack",
  "semio-framework-pack-json",
+ "semio-framework-pack-source",
  "semio-framework-pixels",
  "semio-framework-schema",
  "semio-framework-schema-composition",
@@ -17367,12 +17402,14 @@ dependencies = [
  "semio-s-artifact-stdio-pdf-mut-family-14",
  "semio-s-artifact-stdio-pdf-mut-family-8",
  "semio-s-artifact-stdio-pdf-native-save",
+ "semio-s-artifact-stdio-pdf-page-editor-authoring",
  "semio-s-artifact-stdio-pdf-schema-3",
  "semio-s-artifact-stdio-pdf-schema-4",
  "semio-s-artifact-stdio-pdf-snapshot",
  "semio-s-artifact-stdio-pdf-snapshot-2",
  "semio-s-artifact-stdio-pdf-tests",
  "semio-s-artifact-stdio-pdf-tests-2",
+ "semio-s-artifact-stdio-pdf-view-lane",
  "semio-ui-contract",
  "semio-ui-locale",
  "serde_json",
@@ -17598,6 +17635,40 @@ dependencies = [
  "semio-s-artifact-stdio-pdf-mut-family-11",
  "semio-s-artifact-stdio-pdf-mut-family-8",
  "semio-s-artifact-stdio-pdf-mut-vt",
+ "semio-s-artifact-stdio-pdf-page-editor",
+ "semio-s-artifact-stdio-pdf-snapshot-2",
+ "semio-ui-contract",
+ "semio-ui-locale",
+ "serde_json",
+]
+
+[[package]]
+name = "semio-s-artifact-stdio-pdf-view-lane"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-2d",
+ "semio-framework-action-bus",
+ "semio-framework-artifact-reference",
+ "semio-framework-async",
+ "semio-framework-diagnostic",
+ "semio-framework-dsl",
+ "semio-framework-dsl-record",
+ "semio-framework-dsl-record-derive",
+ "semio-framework-machine",
+ "semio-framework-pack",
+ "semio-framework-pack-json",
+ "semio-framework-schema",
+ "semio-framework-schema-composition",
+ "semio-framework-schema-registry",
+ "semio-framework-schema-state",
+ "semio-framework-value",
+ "semio-framework-value-derive",
+ "semio-framework-value-snapshot-projection",
+ "semio-os-command",
+ "semio-os-kernel",
+ "semio-os-store-one-item",
+ "semio-plugin",
+ "semio-s-artifact-stdio-contract",
  "semio-s-artifact-stdio-pdf-page-editor",
  "semio-s-artifact-stdio-pdf-snapshot-2",
  "semio-ui-contract",
@@ -19625,6 +19696,7 @@ dependencies = [
  "semio-ui-contract-text",
  "semio-ui-contract-text-edit",
  "semio-ui-contract-values",
+ "semio-ui-contract-window-resource",
  "semio-ui-styling",
  "serde",
 ]
@@ -19738,6 +19810,10 @@ dependencies = [
  "semio-ui-contract-text",
  "serde",
 ]
+
+[[package]]
+name = "semio-ui-contract-window-resource"
+version = "0.1.0"
 
 [[package]]
 name = "semio-ui-declaration"

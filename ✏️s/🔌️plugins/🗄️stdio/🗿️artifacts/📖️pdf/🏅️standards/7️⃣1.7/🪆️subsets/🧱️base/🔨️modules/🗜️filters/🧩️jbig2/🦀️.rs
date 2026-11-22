@@ -5,6 +5,10 @@ use super::arithmetic::{Context, MqDecoder};
 use super::ccitt::{self, CcittParameters};
 use super::{Control, RasterError};
 
+#[path = "🔣️huffman/🦀️.rs"]
+mod huffman;
+use huffman::{BitSource, Table};
+
 const MAX_PIXELS: u64 = 1 << 28;
 
 /// 🧩️ A decoded bi-level page; one byte per pixel, 1 is black.
@@ -239,10 +243,84 @@ fn refinement_region(data: &[u8], page: Option<&Bitmap>) -> Result<(Region, Bitm
     Ok((region, bitmap))
 }
 
-fn symbol_dictionary(segment: &Segment<'_>, inputs: Vec<Bitmap>) -> Result<Dictionary, RasterError> {
+fn selected(tables: &mut std::vec::IntoIter<Table>, selector: u16, standard: &[usize]) -> Result<Table, RasterError> {
+    match standard.get(selector as usize) {
+        Some(&number) if selector != 3 => Table::standard(number).ok_or(RasterError::Malformed("JBIG2 Huffman table number")),
+        _ => tables.next().ok_or(RasterError::Malformed("missing JBIG2 custom Huffman table")),
+    }
+}
+
+fn mmr_bitmap(data: &[u8], width: usize, height: usize) -> Result<Bitmap, RasterError> {
+    let packed = ccitt::decode(data, &CcittParameters { k: -1, columns: width as u32, rows: height as u32, black_is_1: true, byte_align: false }, &mut |_| true)?;
+    let mut bitmap = Bitmap::new(width, height, 0)?;
+    let stride = width.div_ceil(8);
+    for y in 0..height { for x in 0..width { bitmap.pixels[y * width + x] = packed.get(y * stride + x / 8).copied().unwrap_or(0) >> (7 - (x & 7)) & 1; } }
+    Ok(bitmap)
+}
+
+fn huffman_dictionary(data: &[u8], flags: u16, inputs: Vec<Bitmap>, tables: Vec<Table>) -> Result<Dictionary, RasterError> {
+    if flags & 2 != 0 { return Err(RasterError::Unsupported("Huffman-coded JBIG2 refinement aggregate symbols")); }
+    let mut custom = tables.into_iter();
+    let height_table = selected(&mut custom, (flags >> 2) & 3, &[4, 5])?;
+    let width_table = selected(&mut custom, (flags >> 4) & 3, &[2, 3])?;
+    let size_table = if flags & 0x40 == 0 { Table::standard(1).unwrap() } else { custom.next().ok_or(RasterError::Malformed("missing JBIG2 custom Huffman table"))? };
+    let run_table = Table::standard(1).unwrap();
+    let new_count = u32_at(data, 6)? as usize;
+    if new_count > 1 << 20 { return Err(RasterError::TooLarge); }
+    let mut bits = BitSource { data, position: 10 * 8 };
+    let mut symbols = inputs;
+    let input_count = symbols.len();
+    let mut height = 0i64;
+    while symbols.len() - input_count < new_count {
+        height += i64::from(height_table.decode(&mut bits)?.ok_or(RasterError::Malformed("JBIG2 height class delta"))?);
+        let (mut width, mut total, mut widths) = (0i64, 0i64, Vec::new());
+        loop {
+            let Some(delta) = width_table.decode(&mut bits)? else { break };
+            width += i64::from(delta);
+            if width < 0 || height < 0 || symbols.len() - input_count + widths.len() >= new_count { return Err(RasterError::Malformed("invalid JBIG2 symbol size")); }
+            total += width;
+            widths.push(width as usize);
+        }
+        let size = size_table.decode(&mut bits)?.ok_or(RasterError::Malformed("JBIG2 bitmap size"))?.max(0) as usize;
+        bits.align();
+        let start = bits.position / 8;
+        let (total, height) = (total as usize, height as usize);
+        let collective = if size == 0 {
+            let stride = total.div_ceil(8);
+            let bytes = data.get(start..start + stride * height).ok_or(RasterError::Malformed("truncated JBIG2 symbol bitmap"))?;
+            let mut bitmap = Bitmap::new(total, height, 0)?;
+            for y in 0..height { for x in 0..total { bitmap.pixels[y * total + x] = bytes[y * stride + x / 8] >> (7 - (x & 7)) & 1; } }
+            bits.position += stride * height * 8;
+            bitmap
+        } else {
+            let bitmap = mmr_bitmap(data.get(start..start + size).ok_or(RasterError::Malformed("truncated JBIG2 symbol bitmap"))?, total, height)?;
+            bits.position += size * 8;
+            bitmap
+        };
+        let mut x0 = 0;
+        for width in widths {
+            let mut symbol = Bitmap { width, height, pixels: vec![0; width * height] };
+            for y in 0..height { for x in 0..width { symbol.pixels[y * width + x] = collective.pixels[y * total + x0 + x]; } }
+            x0 += width;
+            symbols.push(symbol);
+        }
+    }
+    let mut flags_out = vec![false; symbols.len()];
+    let (mut index, mut current) = (0usize, false);
+    while index < symbols.len() {
+        let run = run_table.decode(&mut bits)?.ok_or(RasterError::Malformed("JBIG2 export run"))?.max(0) as usize;
+        for slot in flags_out.iter_mut().skip(index).take(run) { *slot = current; }
+        index += run;
+        current = !current;
+        if run == 0 && index >= symbols.len() { break; }
+    }
+    Ok(Dictionary { exported: symbols.into_iter().zip(flags_out).filter_map(|(symbol, keep)| keep.then_some(symbol)).collect() })
+}
+
+fn symbol_dictionary(segment: &Segment<'_>, inputs: Vec<Bitmap>, tables: Vec<Table>) -> Result<Dictionary, RasterError> {
     let data = segment.data;
     let flags = u16_at(data, 0)?;
-    if flags & 1 == 1 { return Err(RasterError::Unsupported("Huffman-coded JBIG2 symbol dictionaries")); }
+    if flags & 1 == 1 { return huffman_dictionary(data, flags, inputs, tables); }
     let (refagg, template, rtemplate) = (flags & 2 != 0, ((flags >> 10) & 3) as u8, ((flags >> 12) & 1) as u8);
     let at_count = if template == 0 { 4 } else { 1 };
     let at = at_pairs(data, 2, at_count)?;
@@ -252,13 +330,14 @@ fn symbol_dictionary(segment: &Segment<'_>, inputs: Vec<Bitmap>) -> Result<Dicti
     cursor += 8;
     if new_count > 1 << 20 { return Err(RasterError::TooLarge); }
     let mut mq = MqDecoder::new(&data[cursor..]);
-    let (mut dh, mut dw, mut ex, mut ai, mut rdx, mut rdy) = (IntContexts::new(), IntContexts::new(), IntContexts::new(), IntContexts::new(), IntContexts::new(), IntContexts::new());
+    let (mut dh, mut dw, mut ex, mut ai) = (IntContexts::new(), IntContexts::new(), IntContexts::new(), IntContexts::new());
     let code_length = ((inputs.len() + new_count).max(2) as f64).log2().ceil() as u32;
     let mut id_contexts = vec![Context::default(); 1 << (code_length + 1)];
     let mut generic = vec![Context::default(); 1 << 16];
     let mut refinement = vec![Context::default(); 1 << 13];
     let mut symbols: Vec<Bitmap> = inputs;
     let input_count = symbols.len();
+    let mut aggregate = TextState::new();
     let mut height = 0i64;
     while symbols.len() - input_count < new_count {
         height += i64::from(decode_int(&mut mq, &mut dh).ok_or(RasterError::Malformed("JBIG2 height class delta"))?);
@@ -270,9 +349,15 @@ fn symbol_dictionary(segment: &Segment<'_>, inputs: Vec<Bitmap>) -> Result<Dicti
             let bitmap = if !refagg {
                 decode_generic(&mut mq, &mut generic, symbol_width as usize, height as usize, template, false, &at, None)?
             } else {
-                if decode_int(&mut mq, &mut ai).unwrap_or(0) != 1 { return Err(RasterError::Unsupported("JBIG2 aggregate symbols with several instances")); }
+                let instances = decode_int(&mut mq, &mut ai).unwrap_or(0).max(0) as usize;
+                if instances > 1 {
+                    let parameters = TextParameters { width: symbol_width as usize, height: height as usize, instances, refine: true, log_strips: 0, corner: 1, transposed: false, operator: 0, default_pixel: 0, offset: 0, rtemplate, rat: rat.clone(), code_length };
+                    let result = text_arithmetic(&mut mq, &mut aggregate, &mut id_contexts, &mut refinement, &symbols, &parameters);
+                    symbols.push(result?);
+                    continue;
+                }
                 let id = decode_id(&mut mq, &mut id_contexts, code_length);
-                let (dx, dy) = (decode_int(&mut mq, &mut rdx).unwrap_or(0), decode_int(&mut mq, &mut rdy).unwrap_or(0));
+                let (dx, dy) = (decode_int(&mut mq, &mut aggregate.rdx).unwrap_or(0), decode_int(&mut mq, &mut aggregate.rdy).unwrap_or(0));
                 let reference = symbols.get(id).ok_or(RasterError::Malformed("JBIG2 refinement symbol id"))?.clone();
                 decode_refinement(&mut mq, &mut refinement, symbol_width as usize, height as usize, rtemplate, &reference, i64::from(dx), i64::from(dy), false, &rat)?
             };
@@ -321,7 +406,6 @@ fn halftone_region(data: &[u8], patterns: &[Bitmap]) -> Result<(Region, Bitmap),
     let region = region_info(data)?;
     let flags = *data.get(17).ok_or(RasterError::Malformed("truncated JBIG2 halftone"))?;
     let (mmr, template, skip_enabled, operator, default_pixel) = (flags & 1 == 1, (flags >> 1) & 3, flags & 8 != 0, (flags >> 4) & 7, flags >> 7);
-    if mmr { return Err(RasterError::Unsupported("MMR-coded JBIG2 halftone gray-scale planes")); }
     let (grid_w, grid_h) = (u32_at(data, 18)? as usize, u32_at(data, 22)? as usize);
     let (gx, gy) = (i64::from(u32_at(data, 26)? as i32), i64::from(u32_at(data, 30)? as i32));
     let (rx, ry) = (i64::from(u16_at(data, 34)?), i64::from(u16_at(data, 36)?));
@@ -342,8 +426,18 @@ fn halftone_region(data: &[u8], patterns: &[Bitmap]) -> Result<(Region, Bitmap),
     let mut contexts = vec![Context::default(); 1 << 16];
     let mut gray = vec![0u32; grid_w * grid_h];
     let mut previous: Option<Bitmap> = None;
+    let mut consumed = 38usize;
     for _ in 0..planes {
-        let mut plane = decode_generic(&mut mq, &mut contexts, grid_w, grid_h, template, false, &at, skip_enabled.then_some(&skip))?;
+        let mut plane = if mmr {
+            let (packed, used) = ccitt::decode_consumed(data.get(consumed..).unwrap_or(&[]), &CcittParameters { k: -1, columns: grid_w as u32, rows: grid_h as u32, black_is_1: true, byte_align: false }, &mut |_| true)?;
+            consumed += used;
+            let mut bitmap = Bitmap::new(grid_w, grid_h, 0)?;
+            let stride = grid_w.div_ceil(8);
+            for y in 0..grid_h { for x in 0..grid_w { bitmap.pixels[y * grid_w + x] = packed[y * stride + x / 8] >> (7 - (x & 7)) & 1; } }
+            bitmap
+        } else {
+            decode_generic(&mut mq, &mut contexts, grid_w, grid_h, template, false, &at, skip_enabled.then_some(&skip))?
+        };
         if let Some(above) = &previous { for (bit, upper) in plane.pixels.iter_mut().zip(&above.pixels) { *bit ^= upper; } }
         for (value, bit) in gray.iter_mut().zip(&plane.pixels) { *value = *value << 1 | u32::from(*bit); }
         previous = Some(plane);
@@ -358,11 +452,100 @@ fn halftone_region(data: &[u8], patterns: &[Bitmap]) -> Result<(Region, Bitmap),
     Ok((region, page))
 }
 
-fn text_region(segment: &Segment<'_>, symbols: &[Bitmap]) -> Result<(Region, Bitmap), RasterError> {
+fn huffman_text_region(data: &[u8], region: Region, flags: u16, symbols: &[Bitmap], tables: Vec<Table>) -> Result<(Region, Bitmap), RasterError> {
+    let refine = flags & 2 != 0;
+    let rtemplate = ((flags >> 15) & 1) as u8;
+    let (log_strips, corner, transposed, operator, default_pixel) = ((flags >> 2) & 3, (flags >> 4) & 3, flags & 0x40 != 0, ((flags >> 7) & 3) as u8, ((flags >> 9) & 1) as u8);
+    let mut offset = ((flags >> 10) & 31) as i32;
+    if offset > 15 { offset -= 32; }
+    let selectors = u16_at(data, 19)?;
+    let mut custom = tables.into_iter();
+    let first_table = selected(&mut custom, selectors & 3, &[6, 7])?;
+    let delta_table = selected(&mut custom, (selectors >> 2) & 3, &[8, 9, 10])?;
+    let strip_table = selected(&mut custom, (selectors >> 4) & 3, &[11, 12, 13])?;
+    let (rdw_table, rdh_table, rdx_table, rdy_table, size_table) = if refine {
+        (selected(&mut custom, (selectors >> 6) & 3, &[14, 15])?, selected(&mut custom, (selectors >> 8) & 3, &[14, 15])?, selected(&mut custom, (selectors >> 10) & 3, &[14, 15])?, selected(&mut custom, (selectors >> 12) & 3, &[14, 15])?,
+         if selectors & 0x4000 == 0 { Table::standard(1).unwrap() } else { custom.next().ok_or(RasterError::Malformed("missing JBIG2 custom Huffman table"))? })
+    } else { (Table::new(Vec::new()), Table::new(Vec::new()), Table::new(Vec::new()), Table::new(Vec::new()), Table::new(Vec::new())) };
+    let mut cursor = 21;
+    let rat = if refine && rtemplate == 0 { let pairs = at_pairs(data, cursor, 2)?; cursor += 4; pairs } else { vec![(-1, -1), (-1, -1)] };
+    let instances = u32_at(data, cursor)? as usize;
+    let mut refinement = vec![Context::default(); 1 << 13];
+    let mut bits = BitSource { data, position: (cursor + 4) * 8 };
+    let run_lines: Vec<huffman::Line> = (0..35).map(|index| Ok(huffman::Line { prefix_length: bits.bits(4)? as u8, range_length: 0, range_low: index, kind: huffman::Kind::Ordinary })).collect::<Result<_, RasterError>>()?;
+    let run_table = Table::new(run_lines);
+    let mut lengths: Vec<u8> = Vec::with_capacity(symbols.len());
+    while lengths.len() < symbols.len() {
+        match run_table.decode(&mut bits)?.ok_or(RasterError::Malformed("JBIG2 symbol code length"))? {
+            code @ 0..=31 => lengths.push(code as u8),
+            32 => { let previous = *lengths.last().ok_or(RasterError::Malformed("JBIG2 symbol code repeat"))?; for _ in 0..3 + bits.bits(2)? { lengths.push(previous); } }
+            33 => for _ in 0..3 + bits.bits(3)? { lengths.push(0); },
+            _ => for _ in 0..11 + bits.bits(7)? { lengths.push(0); },
+        }
+    }
+    lengths.truncate(symbols.len());
+    bits.align();
+    let id_table = Table::new(lengths.iter().enumerate().map(|(index, &length)| huffman::Line { prefix_length: length, range_length: 0, range_low: index as i32, kind: huffman::Kind::Ordinary }).collect());
+    let strips = 1i64 << log_strips;
+    let mut page = Bitmap::new(region.width, region.height, default_pixel)?;
+    let mut stripe_t = -i64::from(strip_table.decode(&mut bits)?.ok_or(RasterError::Malformed("JBIG2 strip delta"))?) * strips;
+    let (mut first_s, mut done) = (0i64, 0usize);
+    while done < instances {
+        stripe_t += i64::from(strip_table.decode(&mut bits)?.ok_or(RasterError::Malformed("JBIG2 strip delta"))?) * strips;
+        let (mut first, mut current_s) = (true, 0i64);
+        loop {
+            if first {
+                first_s += i64::from(first_table.decode(&mut bits)?.ok_or(RasterError::Malformed("JBIG2 first S"))?);
+                current_s = first_s;
+                first = false;
+            } else {
+                let Some(delta) = delta_table.decode(&mut bits)? else { break };
+                current_s += i64::from(delta) + i64::from(offset);
+            }
+            let current_t = if strips == 1 { 0 } else { i64::from(bits.bits(log_strips as u32)?) };
+            let id = id_table.decode(&mut bits)?.ok_or(RasterError::Malformed("JBIG2 symbol id"))? as usize;
+            let base = symbols.get(id).ok_or(RasterError::Malformed("JBIG2 symbol id out of range"))?;
+            let bitmap = if refine && bits.bit()? == 1 {
+                let missing = RasterError::Malformed("JBIG2 refinement delta");
+                let (w, h) = (rdw_table.decode(&mut bits)?.ok_or(missing.clone())?, rdh_table.decode(&mut bits)?.ok_or(missing.clone())?);
+                let (x, y) = (rdx_table.decode(&mut bits)?.ok_or(missing.clone())?, rdy_table.decode(&mut bits)?.ok_or(missing)?);
+                let size = size_table.decode(&mut bits)?.ok_or(RasterError::Malformed("JBIG2 refinement size"))?.max(0) as usize;
+                bits.align();
+                let start = bits.position / 8;
+                let chunk = data.get(start..start + size).ok_or(RasterError::Malformed("truncated JBIG2 refinement data"))?;
+                let (width, height) = ((base.width as i64 + i64::from(w)).max(0) as usize, (base.height as i64 + i64::from(h)).max(0) as usize);
+                let refined = decode_refinement(&mut MqDecoder::new(chunk), &mut refinement, width, height, rtemplate, base, i64::from(w.div_euclid(2) + x), i64::from(h.div_euclid(2) + y), false, &rat)?;
+                bits.position += size * 8;
+                refined
+            } else { base.clone() };
+            place(&mut page, &bitmap, corner, transposed, operator, &mut current_s, stripe_t + current_t);
+            done += 1;
+            if done >= instances { break; }
+        }
+    }
+    Ok((region, page))
+}
+
+fn place(page: &mut Bitmap, bitmap: &Bitmap, corner: u16, transposed: bool, operator: u8, current_s: &mut i64, ti: i64) {
+    let (wi, hi) = (bitmap.width as i64, bitmap.height as i64);
+    if !transposed && corner >= 2 { *current_s += wi - 1; }
+    if transposed && (corner == 0 || corner == 2) { *current_s += hi - 1; }
+    let si = *current_s;
+    let (x, y) = if !transposed {
+        match corner { 1 => (si, ti), 3 => (si - wi + 1, ti), 0 => (si, ti - hi + 1), _ => (si - wi + 1, ti - hi + 1) }
+    } else {
+        match corner { 1 => (ti, si), 3 => (ti - wi + 1, si), 0 => (ti, si - hi + 1), _ => (ti - wi + 1, si - hi + 1) }
+    };
+    page.combine(bitmap, x, y, operator);
+    if !transposed && (corner == 0 || corner == 1) { *current_s += wi - 1; }
+    if transposed && (corner == 1 || corner == 3) { *current_s += hi - 1; }
+}
+
+fn text_region(segment: &Segment<'_>, symbols: &[Bitmap], tables: Vec<Table>) -> Result<(Region, Bitmap), RasterError> {
     let data = segment.data;
     let region = region_info(data)?;
     let flags = u16_at(data, 17)?;
-    if flags & 1 == 1 { return Err(RasterError::Unsupported("Huffman-coded JBIG2 text regions")); }
+    if flags & 1 == 1 { return huffman_text_region(data, region, flags, symbols, tables); }
     let (refine, log_strips, corner, transposed, operator, default_pixel) = (flags & 2 != 0, (flags >> 2) & 3, (flags >> 4) & 3, flags & 0x40 != 0, ((flags >> 7) & 3) as u8, ((flags >> 9) & 1) as u8);
     let mut offset = ((flags >> 10) & 31) as i32;
     if offset > 15 { offset -= 32; }
@@ -371,56 +554,58 @@ fn text_region(segment: &Segment<'_>, symbols: &[Bitmap]) -> Result<(Region, Bit
     let rat = if refine && rtemplate == 0 { let pairs = at_pairs(data, cursor, 2)?; cursor += 4; pairs } else { vec![(-1, -1), (-1, -1)] };
     let instances = u32_at(data, cursor)? as usize;
     cursor += 4;
-    let strips = 1i64 << log_strips;
     let mut mq = MqDecoder::new(&data[cursor..]);
-    let (mut dt, mut fs, mut ds, mut it, mut ri, mut rdw, mut rdh, mut rdx, mut rdy) = (IntContexts::new(), IntContexts::new(), IntContexts::new(), IntContexts::new(), IntContexts::new(), IntContexts::new(), IntContexts::new(), IntContexts::new(), IntContexts::new());
     let code_length = (symbols.len().max(2) as f64).log2().ceil() as u32;
-    let mut id_contexts = vec![Context::default(); 1 << (code_length + 1)];
-    let mut refinement = vec![Context::default(); 1 << 13];
-    let mut page = Bitmap::new(region.width, region.height, default_pixel)?;
-    let mut stripe_t = -i64::from(decode_int(&mut mq, &mut dt).ok_or(RasterError::Malformed("JBIG2 strip delta"))?) * strips;
+    let parameters = TextParameters { width: region.width, height: region.height, instances, refine, log_strips, corner, transposed, operator, default_pixel, offset, rtemplate, rat, code_length };
+    let page = text_arithmetic(&mut mq, &mut TextState::new(), &mut vec![Context::default(); 1 << (code_length + 1)], &mut vec![Context::default(); 1 << 13], symbols, &parameters)?;
+    Ok((region, page))
+}
+
+struct TextState { dt: IntContexts, fs: IntContexts, ds: IntContexts, it: IntContexts, ri: IntContexts, rdw: IntContexts, rdh: IntContexts, rdx: IntContexts, rdy: IntContexts }
+
+impl TextState {
+    fn new() -> Self {
+        Self { dt: IntContexts::new(), fs: IntContexts::new(), ds: IntContexts::new(), it: IntContexts::new(), ri: IntContexts::new(), rdw: IntContexts::new(), rdh: IntContexts::new(), rdx: IntContexts::new(), rdy: IntContexts::new() }
+    }
+}
+
+struct TextParameters { width: usize, height: usize, instances: usize, refine: bool, log_strips: u16, corner: u16, transposed: bool, operator: u8, default_pixel: u8, offset: i32, rtemplate: u8, rat: Vec<(i8, i8)>, code_length: u32 }
+
+fn text_arithmetic(mq: &mut MqDecoder<'_>, state: &mut TextState, id_contexts: &mut [Context], refinement: &mut [Context], symbols: &[Bitmap], p: &TextParameters) -> Result<Bitmap, RasterError> {
+    let strips = 1i64 << p.log_strips;
+    let mut page = Bitmap::new(p.width, p.height, p.default_pixel)?;
+    let mut stripe_t = -i64::from(decode_int(mq, &mut state.dt).ok_or(RasterError::Malformed("JBIG2 strip delta"))?) * strips;
     let (mut first_s, mut done) = (0i64, 0usize);
-    while done < instances {
-        stripe_t += i64::from(decode_int(&mut mq, &mut dt).ok_or(RasterError::Malformed("JBIG2 strip delta"))?) * strips;
+    while done < p.instances {
+        stripe_t += i64::from(decode_int(mq, &mut state.dt).ok_or(RasterError::Malformed("JBIG2 strip delta"))?) * strips;
         let mut first = true;
         let mut current_s = 0i64;
         loop {
             if first {
-                first_s += i64::from(decode_int(&mut mq, &mut fs).ok_or(RasterError::Malformed("JBIG2 first S"))?);
+                first_s += i64::from(decode_int(mq, &mut state.fs).ok_or(RasterError::Malformed("JBIG2 first S"))?);
                 current_s = first_s;
                 first = false;
             } else {
-                let Some(delta) = decode_int(&mut mq, &mut ds) else { break };
-                current_s += i64::from(delta) + i64::from(offset);
+                let Some(delta) = decode_int(mq, &mut state.ds) else { break };
+                if done >= p.instances { break; }
+                current_s += i64::from(delta) + i64::from(p.offset);
             }
-            let current_t = if strips == 1 { 0 } else { i64::from(decode_int(&mut mq, &mut it).unwrap_or(0)) };
+            let current_t = if strips == 1 { 0 } else { i64::from(decode_int(mq, &mut state.it).unwrap_or(0)) };
             let ti = stripe_t + current_t;
-            let id = decode_id(&mut mq, &mut id_contexts, code_length);
-            let refined = refine && decode_int(&mut mq, &mut ri).unwrap_or(0) == 1;
+            let id = decode_id(mq, id_contexts, p.code_length);
+            let refined = p.refine && decode_int(mq, &mut state.ri).unwrap_or(0) == 1;
             let base = symbols.get(id).ok_or(RasterError::Malformed("JBIG2 symbol id out of range"))?;
             let bitmap = if refined {
-                let (w, h) = (decode_int(&mut mq, &mut rdw).unwrap_or(0), decode_int(&mut mq, &mut rdh).unwrap_or(0));
-                let (x, y) = (decode_int(&mut mq, &mut rdx).unwrap_or(0), decode_int(&mut mq, &mut rdy).unwrap_or(0));
+                let (w, h) = (decode_int(mq, &mut state.rdw).unwrap_or(0), decode_int(mq, &mut state.rdh).unwrap_or(0));
+                let (x, y) = (decode_int(mq, &mut state.rdx).unwrap_or(0), decode_int(mq, &mut state.rdy).unwrap_or(0));
                 let (width, height) = ((base.width as i64 + i64::from(w)).max(0) as usize, (base.height as i64 + i64::from(h)).max(0) as usize);
-                decode_refinement(&mut mq, &mut refinement, width, height, rtemplate, base, i64::from(w.div_euclid(2) + x), i64::from(h.div_euclid(2) + y), false, &rat)?
+                decode_refinement(mq, refinement, width, height, p.rtemplate, base, i64::from(w.div_euclid(2) + x), i64::from(h.div_euclid(2) + y), false, &p.rat)?
             } else { base.clone() };
-            let (wi, hi) = (bitmap.width as i64, bitmap.height as i64);
-            if !transposed && corner >= 2 { current_s += wi - 1; }
-            if transposed && (corner == 0 || corner == 2) { current_s += hi - 1; }
-            let si = current_s;
-            let (x, y) = if !transposed {
-                match corner { 1 => (si, ti), 3 => (si - wi + 1, ti), 0 => (si, ti - hi + 1), _ => (si - wi + 1, ti - hi + 1) }
-            } else {
-                match corner { 1 => (ti, si), 3 => (ti - wi + 1, si), 0 => (ti, si - hi + 1), _ => (ti - wi + 1, si - hi + 1) }
-            };
-            page.combine(&bitmap, x, y, operator);
-            if !transposed && (corner == 0 || corner == 1) { current_s += wi - 1; }
-            if transposed && (corner == 1 || corner == 3) { current_s += hi - 1; }
+            place(&mut page, &bitmap, p.corner, p.transposed, p.operator, &mut current_s, ti);
             done += 1;
-            if done >= instances && instances > 0 { break; }
         }
     }
-    Ok((region, page))
+    Ok(page)
 }
 
 /// 🧩️ Decodes the segments of an embedded JBIG2 stream (and its optional globals) into the page bitmap.
@@ -431,14 +616,17 @@ pub fn decode(globals: Option<&[u8]>, data: &[u8], control: Control<'_>) -> Resu
     let mut dictionaries: Vec<(u32, Dictionary)> = Vec::new();
     let mut page: Option<Bitmap> = None;
     let mut patterns: Vec<Bitmap> = Vec::new();
+    let mut custom: Vec<(u32, Table)> = Vec::new();
     let total = all.len().max(1);
     for (index, segment) in all.iter().enumerate() {
         if !control(index as f32 / total as f32) { return Err(RasterError::Cancelled); }
         let referenced = |dictionaries: &[(u32, Dictionary)]| -> Vec<Bitmap> {
             segment.referred.iter().flat_map(|number| dictionaries.iter().filter(move |(id, _)| id == number).flat_map(|(_, dictionary)| dictionary.exported.iter().cloned())).collect()
         };
+        let tables_for = |custom: &[(u32, Table)]| -> Vec<Table> { segment.referred.iter().flat_map(|number| custom.iter().filter(move |(id, _)| id == number).map(|(_, table)| table.clone())).collect() };
         match segment.kind {
-            0 => { let dictionary = symbol_dictionary(segment, referenced(&dictionaries))?; dictionaries.push((segment.number, dictionary)); }
+            53 => custom.push((segment.number, Table::custom(segment.data)?)),
+            0 => { let dictionary = symbol_dictionary(segment, referenced(&dictionaries), tables_for(&custom))?; dictionaries.push((segment.number, dictionary)); }
             48 => {
                 let flags = *segment.data.get(16).ok_or(RasterError::Malformed("truncated JBIG2 page information"))?;
                 let width = u32_at(segment.data, 0)? as usize;
@@ -448,7 +636,7 @@ pub fn decode(globals: Option<&[u8]>, data: &[u8], control: Control<'_>) -> Resu
             }
             4 | 6 | 7 | 36 | 38 | 39 | 40 | 42 | 43 => {
                 let (region, bitmap) = match segment.kind {
-                    4 | 6 | 7 => text_region(segment, &referenced(&dictionaries))?,
+                    4 | 6 | 7 => text_region(segment, &referenced(&dictionaries), tables_for(&custom))?,
                     36 | 38 | 39 => generic_region(segment.data)?,
                     _ => refinement_region(segment.data, page.as_ref())?,
                 };

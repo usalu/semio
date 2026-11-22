@@ -71,23 +71,23 @@ fn instance_lifetime_ui_document_aliases_preserve_complete_multibyte_readers() {
 fn instance_lifetime_ui_document_claim_survives_global_close_and_cancellation() {
     let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let mut owner = lease();
-    let handle = owner.handle.unwrap();
+    let handle = arena_testkit::handle(&owner).unwrap();
     assert!(owner.close_step_with_grant(1, 1).unwrap().progressed);
-    assert!(owner.claimed);
+    assert!(arena_testkit::lease_state(&owner).2);
     for _ in 0..64 {
         close_ui_document_page_with_grant(1, 1).unwrap();
     }
-    assert!(with_ui_document_arena(|arena| arena.slot(handle).is_some_and(|slot| slot.retirement_claimed && slot.nodes.len() == 1)));
+    assert!(arena_testkit::slot_retirement_claimed_with_len(handle, 1));
     assert!(matches!(owner.read_node_page(0), Err(UiDocumentLeaseError::Closing)));
     for _ in 0..40 {
         owner.close_step_with_grant(1, 1).unwrap();
     }
     drop(owner);
-    assert!(with_ui_document_arena(|arena| arena.slot(handle).is_some()) && DOCUMENT_HANDBACKS.has_slot_pending(handle.slot));
+    assert!(arena_testkit::slot_present(handle) && arena_testkit::handback_pending(handle));
     for _ in 0..100_000 {
         let step = close_ui_document_page_with_grant(1, 1).unwrap();
         assert!(step.released_items <= 1 && step.released_bytes <= 1);
-        if !with_ui_document_arena(|arena| arena.active(handle)) {
+        if !arena_testkit::slot_active(handle) {
             return;
         }
         if !step.progressed {
@@ -105,17 +105,17 @@ fn instance_lifetime_ui_document_contention_preserves_claim_and_zero_progress() 
         if started {
             owner.close_step_with_grant(1, 1).unwrap();
         }
-        let before = (owner.handle, owner.released, owner.claimed);
+        let before = arena_testkit::lease_state(&owner);
         let (ready_tx, ready_rx) = std::sync::mpsc::channel();
         let (release_tx, release_rx) = std::sync::mpsc::channel();
         let holder = std::thread::spawn(move || {
-            let _guard = UI_DOCUMENT_ARENA.lock().unwrap();
+            let _guard = arena_testkit::hold_document_arena();
             ready_tx.send(()).unwrap();
             let _ = release_rx.recv_timeout(std::time::Duration::from_millis(200));
         });
         ready_rx.recv().unwrap();
         let blocked = owner.close_step_with_grant(1, 1).unwrap();
-        let after = (owner.handle, owner.released, owner.claimed);
+        let after = arena_testkit::lease_state(&owner);
         let _ = release_tx.send(());
         holder.join().unwrap();
         close(&mut owner, 4096);
@@ -127,10 +127,10 @@ fn instance_lifetime_ui_document_contention_preserves_claim_and_zero_progress() 
 #[test]
 fn instance_lifetime_ui_document_drop_hands_back_without_waiting_for_arena() {
     let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
-    let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../♻️retirement/🌳️typed/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../../../♻️retirement/🌳️typed/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     for started in [false, true] {
         let mut owner = lease();
-        let handle = owner.handle.unwrap();
+        let handle = arena_testkit::handle(&owner).unwrap();
         if started {
             owner.close_step_with_grant(1, 1).unwrap();
         }
@@ -139,7 +139,7 @@ fn instance_lifetime_ui_document_drop_hands_back_without_waiting_for_arena() {
         let released = std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false));
         let holder_released = released.clone();
         let holder = std::thread::spawn(move || {
-            let _guard = UI_DOCUMENT_ARENA.lock().unwrap();
+            let _guard = arena_testkit::hold_document_arena();
             ready_tx.send(()).unwrap();
             let _ = release_rx.recv_timeout(std::time::Duration::from_millis(200));
             holder_released.store(true, std::sync::atomic::Ordering::Release);
@@ -149,15 +149,15 @@ fn instance_lifetime_ui_document_drop_hands_back_without_waiting_for_arena() {
         let waited = released.load(std::sync::atomic::Ordering::Acquire);
         let _ = release_tx.send(());
         holder.join().unwrap();
-        let retained = with_ui_document_arena(|arena| arena.active(handle));
+        let retained = arena_testkit::slot_active(handle);
         for _ in 0..100_000 {
             close_ui_document_page_with_grant(1, 4096).unwrap();
-            if !with_ui_document_arena(|arena| arena.active(handle)) {
+            if !arena_testkit::slot_active(handle) {
                 break;
             }
         }
         assert!(retained);
-        assert!(!with_ui_document_arena(|arena| arena.active(handle)));
+        assert!(!arena_testkit::slot_active(handle));
         assert_eq!(waited, fixture["ownership"]["dropWaitsForArena"].as_bool().unwrap());
     }
 }

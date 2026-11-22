@@ -4,9 +4,9 @@ use semio_framework_io_base64::{base64_standard_decode_controlled, base64_standa
 use semio_plugin::Fault;
 use semio_s_artifact_stdio_pdf_editor_document::{fault, none_if_empty};
 use semio_s_artifact_stdio_pdf_io_export::standards::v1_7::subsets::base::io::{export::encode_pdf, import::decode_pdf, mutation_bridge::apply_pdf_mutation};
-use semio_s_artifact_stdio_pdf_mut_family_8::standards::v1_7::subsets::base::schema::mutations::{InsertAnnotation, InsertPage, PdfMutation, RemoveNamedDestination, ReplacePage, SetNamedDestination, SetOutlines, SetAcroForm, SetAnnotation, SetColorSpace, SetExtGState, SetFont, SetForm, SetImage, SetPattern, SetProperties, SetShading};
+use semio_s_artifact_stdio_pdf_mut_family_8::standards::v1_7::subsets::base::schema::mutations::{InsertAnnotation, InsertPage, PdfMutation, RemoveCatalogEntry, RemoveTrailerEntry, SetCatalogEntry, SetInfo, SetTrailerEntry, SetViewerPreferences, RemoveNamedDestination, ReplacePage, SetNamedDestination, SetOutlines, SetAcroForm, SetAnnotation, SetColorSpace, SetExtGState, SetFont, SetForm, SetImage, SetPattern, SetProperties, SetShading};
 use semio_s_artifact_stdio_pdf_snapshot_2::standards::v1_7::subsets::base::schema::snapshot::{
-    PdfAcroForm, PdfAnnotation, PdfAnnotationKind, PdfAppearance, PdfAppearanceEntry, PdfAppearanceState, PdfBorderStyle, PdfDestination, PdfDestinationFit, PdfExtGState, PdfFont, PdfFontKind, PdfFormField, PdfFormFieldKind, PdfFormXObject, PdfNamedDestination, PdfOp, PdfOutlineItem, PdfPage, PdfPattern, PdfPatternKind, PdfPropertyList, PdfRect, PdfSnapshot, PdfSoftMask, PdfTextString,
+    PdfAcroForm, PdfAnnotation, PdfAnnotationKind, PdfAppearance, PdfAppearanceEntry, PdfAppearanceState, PdfBorderStyle, PdfDestination, PdfDestinationFit, PdfExtGState, PdfFont, PdfFontKind, PdfFormField, PdfFormFieldKind, PdfDictEntry, PdfFormXObject, PdfNamedDestination, PdfObject, PdfOp, PdfViewerPreferences, PdfOutlineItem, PdfPage, PdfPattern, PdfPatternKind, PdfPropertyList, PdfRect, PdfSnapshot, PdfSoftMask, PdfTextString,
 };
 use serde_json::json;
 use std::collections::HashSet;
@@ -648,96 +648,300 @@ pub fn import_pages(snapshot: &PdfSnapshot, source: &PdfSnapshot, picks: &[usize
 
 /// 📚 Like [`import_pages`], reporting [`Progress`] and stopping with a fault as soon as `control` returns false; nothing is applied then.
 pub fn import_pages_controlled(snapshot: &PdfSnapshot, source: &PdfSnapshot, picks: &[usize], target: ImportTarget, prefix: Option<&str>, control: Control<'_>) -> Result<Vec<PdfMutation>, Fault> {
-    if picks.iter().any(|pick| *pick >= source.pages.len()) {
-        return Err(fault("the picked pdf does not have that page"));
-    }
-    let prefix = prefix.map_or_else(|| unused_prefix(snapshot), str::to_string);
-    let (start, replacing) = match target {
-        ImportTarget::Insert(at) => (at.min(snapshot.pages.len()), false),
-        ImportTarget::Replace(page) if page < snapshot.pages.len() && picks.len() == 1 => (page, true),
-        ImportTarget::Replace(_) => return Err(fault("replace needs one existing page and one picked page")),
-    };
-    let mut pages: Vec<PdfPage> = picks.iter().map(|pick| source.pages[*pick].clone()).collect();
     step(control, "scan", 0, picks.len())?;
-    let used = used_resources(source, &pages);
-    let total = used.len() + pages.len();
-    let mut rename = |kind: Kind, name: &mut String| {
-        if used.contains(&(kind, name.clone())) {
-            *name = format!("{prefix}{name}");
+    let mut plan = ImportPlan::new(snapshot, std::sync::Arc::new(source.clone()), picks, target, prefix)?;
+    while !plan.resources_done() {
+        step(control, "resources", plan.done(), plan.total())?;
+        plan.advance(1);
+    }
+    step(control, "pages", plan.done(), plan.total())?;
+    Ok(plan.finish(snapshot))
+}
+
+enum Task {
+    Font(usize),
+    Image(usize),
+    Form(usize),
+    State(usize),
+    Shading(usize),
+    Pattern(usize),
+    Space(usize),
+    Props(usize),
+}
+
+/// 📚 A resumable page import: one resource per [`ImportPlan::advance`] unit, so a retained job can yield, report progress and stop between units.
+pub struct ImportPlan {
+    source: std::sync::Arc<PdfSnapshot>,
+    picks: Vec<usize>,
+    start: usize,
+    replacing: bool,
+    prefix: String,
+    used: HashSet<(Kind, String)>,
+    pages: Vec<PdfPage>,
+    positions: Vec<Option<u32>>,
+    tasks: Vec<Task>,
+    cursor: usize,
+    mutations: Vec<PdfMutation>,
+}
+
+impl ImportPlan {
+    pub fn new(snapshot: &PdfSnapshot, source: std::sync::Arc<PdfSnapshot>, picks: &[usize], target: ImportTarget, prefix: Option<&str>) -> Result<Self, Fault> {
+        if picks.iter().any(|pick| *pick >= source.pages.len()) {
+            return Err(fault("the picked pdf does not have that page"));
         }
-    };
-    let positions: Vec<Option<u32>> = (0..source.pages.len()).map(|index| picks.iter().position(|pick| *pick == index).map(|position| (start + position) as u32)).collect();
-    for page in &mut pages {
-        visit_page(page, &mut rename);
-        page_destination(page, &positions);
+        let prefix = prefix.map_or_else(|| unused_prefix(snapshot), str::to_string);
+        let (start, replacing) = match target {
+            ImportTarget::Insert(at) => (at.min(snapshot.pages.len()), false),
+            ImportTarget::Replace(page) if page < snapshot.pages.len() && picks.len() == 1 => (page, true),
+            ImportTarget::Replace(_) => return Err(fault("replace needs one existing page and one picked page")),
+        };
+        let mut pages: Vec<PdfPage> = picks.iter().map(|pick| source.pages[*pick].clone()).collect();
+        let used = used_resources(&source, &pages);
+        let positions: Vec<Option<u32>> = (0..source.pages.len()).map(|index| picks.iter().position(|pick| *pick == index).map(|position| (start + position) as u32)).collect();
+        {
+            let mut rename = |kind: Kind, name: &mut String| {
+                if used.contains(&(kind, name.clone())) {
+                    *name = format!("{prefix}{name}");
+                }
+            };
+            for page in &mut pages {
+                visit_page(page, &mut rename);
+                page_destination(page, &positions);
+            }
+        }
+        let named = |kind: Kind, name: &str| used.contains(&(kind, name.to_string()));
+        let mut tasks = Vec::new();
+        tasks.extend(source.fonts.iter().enumerate().filter(|(_, item)| named(Kind::Font, &item.id)).map(|(index, _)| Task::Font(index)));
+        tasks.extend(source.images.iter().enumerate().filter(|(_, item)| named(Kind::XObject, &item.id)).map(|(index, _)| Task::Image(index)));
+        tasks.extend(source.forms.iter().enumerate().filter(|(_, item)| named(Kind::XObject, &item.id)).map(|(index, _)| Task::Form(index)));
+        tasks.extend(source.ext_g_states.iter().enumerate().filter(|(_, item)| named(Kind::GState, &item.id)).map(|(index, _)| Task::State(index)));
+        tasks.extend(source.shadings.iter().enumerate().filter(|(_, item)| named(Kind::Shading, &item.id)).map(|(index, _)| Task::Shading(index)));
+        tasks.extend(source.patterns.iter().enumerate().filter(|(_, item)| named(Kind::Pattern, &item.id)).map(|(index, _)| Task::Pattern(index)));
+        tasks.extend(source.color_spaces.iter().enumerate().filter(|(_, item)| named(Kind::Space, &item.name)).map(|(index, _)| Task::Space(index)));
+        tasks.extend(source.properties.iter().enumerate().filter(|(_, item)| named(Kind::Props, &item.name)).map(|(index, _)| Task::Props(index)));
+        Ok(Self { source, picks: picks.to_vec(), start, replacing, prefix, used, pages, positions, tasks, cursor: 0, mutations: Vec::new() })
     }
-    let named = |kind: Kind, name: &str| used.contains(&(kind, name.to_string()));
-    let mut mutations = Vec::new();
-    for font in source.fonts.iter().filter(|font| named(Kind::Font, &font.id)) {
-        step(control, "resources", mutations.len(), total)?;
-        let mut font = font.clone();
-        visit_font(&mut font, &mut rename);
-        font.id = format!("{prefix}{}", font.id);
-        mutations.push(PdfMutation::SetFont(SetFont { font, index: None }));
+
+    pub fn total(&self) -> usize {
+        self.tasks.len() + self.pages.len()
     }
-    for image in source.images.iter().filter(|image| named(Kind::XObject, &image.id)) {
-        step(control, "resources", mutations.len(), total)?;
-        let mut image = image.clone();
-        image.soft_mask = image.soft_mask.map(|mask| if named(Kind::XObject, &mask) { format!("{prefix}{mask}") } else { mask });
-        image.id = format!("{prefix}{}", image.id);
-        mutations.push(PdfMutation::SetImage(SetImage { image, index: None }));
+
+    pub fn done(&self) -> usize {
+        self.cursor
     }
-    for form in source.forms.iter().filter(|form| named(Kind::XObject, &form.id)) {
-        step(control, "resources", mutations.len(), total)?;
-        let mut form = form.clone();
-        visit_ops(&mut form.content, &mut rename);
-        form.id = format!("{prefix}{}", form.id);
-        mutations.push(PdfMutation::SetForm(SetForm { form, index: None }));
+
+    pub fn resources_done(&self) -> bool {
+        self.cursor >= self.tasks.len()
     }
-    for state in source.ext_g_states.iter().filter(|state| named(Kind::GState, &state.id)) {
-        step(control, "resources", mutations.len(), total)?;
-        let mut state = state.clone();
-        visit_state(&mut state, &mut rename);
-        state.id = format!("{prefix}{}", state.id);
-        mutations.push(PdfMutation::SetExtGState(SetExtGState { state, index: None }));
+
+    /// ▶️ Copies up to `units` resources; each unit renames one resource and the references it holds.
+    pub fn advance(&mut self, units: usize) {
+        let Self { source, used, prefix, tasks, cursor, mutations, .. } = self;
+        let mut rename = |kind: Kind, name: &mut String| {
+            if used.contains(&(kind, name.clone())) {
+                *name = format!("{prefix}{name}");
+            }
+        };
+        let renamed = |id: &str| format!("{prefix}{id}");
+        for _ in 0..units {
+            let Some(task) = tasks.get(*cursor) else { return };
+            *cursor += 1;
+            mutations.push(match task {
+                Task::Font(index) => {
+                    let mut font = source.fonts[*index].clone();
+                    visit_font(&mut font, &mut rename);
+                    font.id = renamed(&font.id);
+                    PdfMutation::SetFont(SetFont { font, index: None })
+                }
+                Task::Image(index) => {
+                    let mut image = source.images[*index].clone();
+                    image.soft_mask = image.soft_mask.map(|mask| if used.contains(&(Kind::XObject, mask.clone())) { renamed(&mask) } else { mask });
+                    image.id = renamed(&image.id);
+                    PdfMutation::SetImage(SetImage { image, index: None })
+                }
+                Task::Form(index) => {
+                    let mut form = source.forms[*index].clone();
+                    visit_ops(&mut form.content, &mut rename);
+                    form.id = renamed(&form.id);
+                    PdfMutation::SetForm(SetForm { form, index: None })
+                }
+                Task::State(index) => {
+                    let mut state = source.ext_g_states[*index].clone();
+                    visit_state(&mut state, &mut rename);
+                    state.id = renamed(&state.id);
+                    PdfMutation::SetExtGState(SetExtGState { state, index: None })
+                }
+                Task::Shading(index) => {
+                    let mut shading = source.shadings[*index].clone();
+                    shading.id = renamed(&shading.id);
+                    PdfMutation::SetShading(SetShading { shading, index: None })
+                }
+                Task::Pattern(index) => {
+                    let mut pattern = source.patterns[*index].clone();
+                    visit_pattern(&mut pattern, &mut rename);
+                    pattern.id = renamed(&pattern.id);
+                    PdfMutation::SetPattern(SetPattern { pattern, index: None })
+                }
+                Task::Space(index) => {
+                    let mut color_space = source.color_spaces[*index].clone();
+                    color_space.name = renamed(&color_space.name);
+                    PdfMutation::SetColorSpace(SetColorSpace { color_space, index: None })
+                }
+                Task::Props(index) => {
+                    let mut properties = source.properties[*index].clone();
+                    properties.name = renamed(&properties.name);
+                    PdfMutation::SetProperties(SetProperties { properties, index: None })
+                }
+            });
+        }
     }
-    for shading in source.shadings.iter().filter(|shading| named(Kind::Shading, &shading.id)) {
-        step(control, "resources", mutations.len(), total)?;
-        let mut shading = shading.clone();
-        shading.id = format!("{prefix}{}", shading.id);
-        mutations.push(PdfMutation::SetShading(SetShading { shading, index: None }));
+
+    /// 🏁 Adds the pages, renumbered links and merged form fields and returns every planned mutation.
+    pub fn finish(mut self, snapshot: &PdfSnapshot) -> Vec<PdfMutation> {
+        let incoming = merged_form(snapshot, &self.source, &self.positions, self.start, self.picks.len(), self.replacing, &mut self.pages);
+        let (start, replacing, count) = (self.start, self.replacing, self.picks.len());
+        let mut mutations = self.mutations;
+        for (offset, page) in self.pages.into_iter().enumerate() {
+            mutations.push(if replacing { PdfMutation::ReplacePage(ReplacePage { index: start, page }) } else { PdfMutation::InsertPage(InsertPage { index: start + offset, page }) });
+        }
+        if !replacing {
+            mutations.extend(retarget_documents(snapshot, &insert_page_map(start, count)));
+        }
+        if let Some(form) = incoming {
+            mutations.push(PdfMutation::SetAcroForm(SetAcroForm { form: Some(form) }));
+        }
+        mutations
     }
-    for pattern in source.patterns.iter().filter(|pattern| named(Kind::Pattern, &pattern.id)) {
-        step(control, "resources", mutations.len(), total)?;
-        let mut pattern = pattern.clone();
-        visit_pattern(&mut pattern, &mut rename);
-        pattern.id = format!("{prefix}{}", pattern.id);
-        mutations.push(PdfMutation::SetPattern(SetPattern { pattern, index: None }));
+}
+
+/// 📥 A resumable merge or replace from a picked PDF: read the base64, decode through the paged natural decoder, then plan resource by resource.
+pub struct ImportJob {
+    payload: String,
+    selection: String,
+    page: usize,
+    replace: bool,
+    bytes: Option<Vec<u8>>,
+    decoder: Option<Box<dyn semio_plugin::NaturalFileDecodeCursor<PdfSnapshot>>>,
+    plan: Option<ImportPlan>,
+}
+
+fn natural_contract() -> semio_plugin::ToolExecutionContract {
+    semio_plugin::ToolExecutionContract::bounded_first_step(MAX_SOURCE_BYTES as usize, 4_096, 1, MAX_SOURCE_BYTES as usize, 7_500)
+}
+
+impl ImportJob {
+    pub fn new(page: usize, payload: &str, selection: &str, replace: bool) -> Self {
+        Self { payload: payload.to_string(), selection: selection.to_string(), page, replace, bytes: None, decoder: None, plan: None }
     }
-    for space in source.color_spaces.iter().filter(|space| named(Kind::Space, &space.name)) {
-        step(control, "resources", mutations.len(), total)?;
-        let mut space = space.clone();
-        space.name = format!("{prefix}{}", space.name);
-        mutations.push(PdfMutation::SetColorSpace(SetColorSpace { color_space: space, index: None }));
+
+    pub fn stage(&self) -> &'static str {
+        match (&self.plan, &self.decoder, &self.bytes) {
+            (Some(_), _, _) => "resources",
+            (None, Some(_), _) => "decode",
+            (None, None, Some(_)) => "open",
+            _ => "read",
+        }
     }
-    for properties in source.properties.iter().filter(|properties| named(Kind::Props, &properties.name)) {
-        step(control, "resources", mutations.len(), total)?;
-        let mut properties = properties.clone();
-        properties.name = format!("{prefix}{}", properties.name);
-        mutations.push(PdfMutation::SetProperties(SetProperties { properties, index: None }));
+
+    fn plan_from(&mut self, snapshot: &PdfSnapshot, source: PdfSnapshot) -> Result<(), Fault> {
+        let picks = if self.selection.is_empty() { if self.replace { vec![0] } else { (0..source.pages.len()).collect() } } else { parse_page_selection(&self.selection, source.pages.len())? };
+        let target = if self.replace { ImportTarget::Replace(self.page) } else { ImportTarget::Insert(self.page) };
+        self.plan = Some(ImportPlan::new(snapshot, std::sync::Arc::new(source), &picks, target, None)?);
+        Ok(())
     }
-    step(control, "pages", mutations.len(), total)?;
-    let incoming = merged_form(snapshot, source, &positions, start, picks.len(), replacing, &mut pages);
-    for (offset, page) in pages.into_iter().enumerate() {
-        mutations.push(if replacing { PdfMutation::ReplacePage(ReplacePage { index: start, page }) } else { PdfMutation::InsertPage(InsertPage { index: start + offset, page }) });
+
+    /// ▶️ One bounded unit of work; `Some` carries the finished mutations. With a step context the source is decoded by the paged natural decoder, one governed turn at a time.
+    pub fn advance(&mut self, snapshot: &PdfSnapshot, units: usize, context: Option<&mut semio_plugin::__job::StepContext<'_>>) -> Result<Option<Vec<PdfMutation>>, Fault> {
+        if self.plan.is_none() {
+            if let Some(decoder) = self.decoder.as_mut() {
+                let context = context.ok_or_else(|| fault("the paged decoder needs a step context"))?;
+                match decoder.advance(context).map_err(|error| fault(format!("the picked pdf is not a valid pdf: {error:?}")))? {
+                    semio_plugin::NaturalFileDecodeStep::Complete { snapshot: source, .. } => {
+                        self.decoder = None;
+                        self.plan_from(snapshot, source)?;
+                    }
+                    semio_plugin::NaturalFileDecodeStep::Yield | semio_plugin::NaturalFileDecodeStep::Progress(_) => {}
+                }
+                return Ok(None);
+            }
+            if let Some(bytes) = self.bytes.take() {
+                if context.is_none() {
+                    let source = decode_pdf(&bytes).map_err(|error| fault(format!("the picked pdf is not a valid pdf: {error}")))?;
+                    self.plan_from(snapshot, source)?;
+                    return Ok(None);
+                }
+                match semio_s_artifact_stdio_pdf_io_export::standards::v1_7::subsets::base::io::import::build_pdf_natural_decode(bytes, natural_contract()).map_err(|error| fault(format!("the picked pdf could not be opened: {error:?}")))? {
+                    semio_plugin::NaturalFileDecodeOwner::Controlled(cursor) => self.decoder = Some(cursor),
+                    semio_plugin::NaturalFileDecodeOwner::Synchronous(bytes) => {
+                        let source = decode_pdf(&bytes).map_err(|error| fault(format!("the picked pdf is not a valid pdf: {error}")))?;
+                        self.plan_from(snapshot, source)?;
+                    }
+                }
+                return Ok(None);
+            }
+            let encoded = self.payload.split_once("base64,").map_or(self.payload.as_str(), |(_, rest)| rest).trim().to_string();
+            let mut progress = never_cancelled;
+            self.bytes = Some(base64_standard_decode_controlled(encoded.as_bytes(), &mut Base64Control { maximum_output_bytes: MAX_SOURCE_BYTES as usize, progress: &mut progress }).map_err(|error| fault(format!("the picked pdf is not readable: {error}")))?);
+            self.payload = String::new();
+            return Ok(None);
+        }
+        let Some(plan) = self.plan.as_mut() else { return Ok(None) };
+        if !plan.resources_done() {
+            plan.advance(units);
+            return Ok(None);
+        }
+        Ok(self.plan.take().map(|plan| plan.finish(snapshot)))
     }
-    if !replacing {
-        mutations.extend(retarget_documents(snapshot, &insert_page_map(start, picks.len())));
+}
+
+/// ✂️ A resumable extraction of one page selection to PDF bytes.
+pub struct ExtractJob {
+    source: std::sync::Arc<PdfSnapshot>,
+    picks: Vec<usize>,
+    out: PdfSnapshot,
+    plan: Option<ImportPlan>,
+    pending: std::collections::VecDeque<PdfMutation>,
+    assembling: bool,
+}
+
+impl ExtractJob {
+    pub fn new(source: std::sync::Arc<PdfSnapshot>, selection: &str) -> Result<Self, Fault> {
+        let picks = parse_page_selection(selection, source.pages.len())?;
+        let mut out = PdfSnapshot::default();
+        out.info = source.info.clone();
+        out.language = source.language.clone();
+        Ok(Self { source, picks, out, plan: None, pending: Default::default(), assembling: false })
     }
-    if let Some(form) = incoming {
-        mutations.push(PdfMutation::SetAcroForm(SetAcroForm { form: Some(form) }));
+
+    pub fn stage(&self) -> &'static str {
+        if self.plan.is_none() && !self.assembling { "scan" } else if self.assembling { "assemble" } else { "resources" }
     }
-    Ok(mutations)
+
+    pub fn advance(&mut self, units: usize) -> Result<Option<Vec<u8>>, Fault> {
+        if self.assembling {
+            for _ in 0..units {
+                let Some(mutation) = self.pending.pop_front() else {
+                    if self.out.pages.len() != self.picks.len() {
+                        return Err(fault("the extracted pages could not be assembled"));
+                    }
+                    return encode_pdf(&self.out).map(Some).map_err(|error| fault(format!("the extracted pdf could not be written: {error}")));
+                };
+                let _ = apply_pdf_mutation(&mut self.out, &mutation);
+            }
+            return Ok(None);
+        }
+        let Some(plan) = self.plan.as_mut() else {
+            self.plan = Some(ImportPlan::new(&self.out, self.source.clone(), &self.picks, ImportTarget::Insert(0), Some(""))?);
+            return Ok(None);
+        };
+        if !plan.resources_done() {
+            plan.advance(units);
+            return Ok(None);
+        }
+        self.pending = self.plan.take().map(|plan| plan.finish(&self.out)).unwrap_or_default().into();
+        self.assembling = true;
+        Ok(None)
+    }
 }
 
 fn merged_form(snapshot: &PdfSnapshot, source: &PdfSnapshot, positions: &[Option<u32>], start: usize, added: usize, replacing: bool, pages: &mut [PdfPage]) -> Option<PdfAcroForm> {
@@ -777,26 +981,41 @@ pub fn extract_pdf(snapshot: &PdfSnapshot, picks: &[usize]) -> Result<Vec<u8>, F
 
 /// ✂️ Like [`extract_pdf`], reporting [`Progress`] and stopping as soon as `control` returns false.
 pub fn extract_pdf_controlled(snapshot: &PdfSnapshot, picks: &[usize], control: Control<'_>) -> Result<Vec<u8>, Fault> {
-    let mut out = PdfSnapshot::default();
-    out.info = snapshot.info.clone();
-    out.language = snapshot.language.clone();
-    let planned = import_pages_controlled(&out, snapshot, picks, ImportTarget::Insert(0), Some(""), control)?;
-    let total = planned.len();
-    for (done, mutation) in planned.into_iter().enumerate() {
-        step(control, "assemble", done, total)?;
-        let _ = apply_pdf_mutation(&mut out, &mutation);
+    let selection = picks.iter().map(|pick| (pick + 1).to_string()).collect::<Vec<_>>().join(",");
+    let mut job = ExtractJob::new(std::sync::Arc::new(snapshot.clone()), &selection)?;
+    loop {
+        step(control, job.stage(), 0, picks.len())?;
+        if let Some(bytes) = job.advance(1)? {
+            return Ok(bytes);
+        }
     }
-    if out.pages.len() != picks.len() {
-        return Err(fault("the extracted pages could not be assembled"));
-    }
-    step(control, "encode", total, total)?;
-    encode_pdf(&out).map_err(|error| fault(format!("the extracted pdf could not be written: {error}")))
 }
 
-fn split_effect(name: &str, bytes: &[u8]) -> Result<semio_plugin::Effect, Fault> {
+pub fn download_effect(name: &str, bytes: &[u8]) -> Result<semio_plugin::Effect, Fault> {
     let mut progress = never_cancelled;
     let data = base64_standard_encode_controlled(bytes, &mut Base64Control { maximum_output_bytes: (MAX_SOURCE_BYTES as usize).div_ceil(3) * 4 * 4, progress: &mut progress }).map_err(|error| fault(format!("the extracted pdf is too large: {error}")))?;
     Ok(semio_plugin::Effect::DownloadMediaExport { filename: name.to_string(), mime_type: "application/pdf".into(), data, encoding: Some("base64".into()) })
+}
+
+/// 🏷️ The file name of the `number`th (0-based) extracted selection.
+pub fn extract_file_name(number: usize, group: &str) -> String {
+    format!("pages-{}-{}.pdf", number + 1, group.replace(['-', ','], "_"))
+}
+
+/// 🧾 The page-edit payload fields the retained authoring work reads.
+pub struct Fields {
+    pub page: usize,
+    pub text: String,
+    pub extra: String,
+    pub width: f64,
+    pub height: f64,
+}
+
+pub fn fields(payload: &str) -> Result<Fields, Fault> {
+    let value: serde_json::Value = serde_json::from_str(payload).map_err(|error| fault(error.to_string()))?;
+    let text = |key: &str| value.get(key).and_then(serde_json::Value::as_str).unwrap_or("").to_string();
+    let number = |key: &str| value.get(key).and_then(serde_json::Value::as_f64).unwrap_or(0.0);
+    Ok(Fields { page: number("page") as usize, text: text("text"), extra: text("extra"), width: number("width"), height: number("height") })
 }
 
 /// ✂️ Extracts each `;`-separated page selection into its own PDF download.
@@ -805,7 +1024,7 @@ pub fn extract_effects(snapshot: &PdfSnapshot, selections: &str) -> Result<Vec<s
     if groups.is_empty() {
         return Err(fault("extract needs a page selection"));
     }
-    groups.iter().enumerate().map(|(number, group)| split_effect(&format!("pages-{}-{}.pdf", number + 1, group.replace(['-', ','], "_")), &extract_pdf(snapshot, &parse_page_selection(group, snapshot.pages.len())?)?)).collect()
+    groups.iter().enumerate().map(|(number, group)| download_effect(&extract_file_name(number, group), &extract_pdf(snapshot, &parse_page_selection(group, snapshot.pages.len())?)?)).collect()
 }
 
 /// 📥 Asks the host for a PDF and re-dispatches `action` with its data URL and `page`.
@@ -839,4 +1058,157 @@ pub fn replace_page_with(snapshot: &PdfSnapshot, page: usize, payload: &str, sel
     let picks = if selection.is_empty() { vec![0] } else { parse_page_selection(selection, source.pages.len())? };
     import_pages(snapshot, &source, &picks, ImportTarget::Replace(page), None)
 }
+/// 🗝️ The document key-value families the generic entry form edits; see [`set_entry`].
+pub const ENTRY_FAMILIES: [&str; 4] = ["catalog", "trailer", "info", "viewer"];
+
+fn upsert_name(entries: &mut Vec<PdfDictEntry>, key: &str, value: &str) {
+    entries.retain(|entry| entry.key != key);
+    if !value.is_empty() {
+        entries.push(PdfDictEntry::new(key, PdfObject::Name(value.to_string())));
+    }
+}
+
+/// 🗝️ Sets (or, with an empty value, removes) one name-valued entry of a document dictionary family; with an empty `key` the `value` reads `key=value`.
+pub fn set_entry(snapshot: &PdfSnapshot, family: &str, key: &str, value: &str) -> Result<Vec<PdfMutation>, Fault> {
+    let (key, value) = if key.is_empty() {
+        let (key, value) = value.split_once('=').ok_or_else(|| fault("an entry needs key=value"))?;
+        (key.trim().to_string(), value.trim().to_string())
+    } else {
+        (key.to_string(), value.to_string())
+    };
+    if key.is_empty() {
+        return Err(fault("an entry needs a key"));
+    }
+    Ok(vec![match family {
+        "catalog" if value.is_empty() => PdfMutation::RemoveCatalogEntry(RemoveCatalogEntry { key }),
+        "catalog" => PdfMutation::SetCatalogEntry(SetCatalogEntry { key, value: PdfObject::Name(value), index: None }),
+        "trailer" if value.is_empty() => PdfMutation::RemoveTrailerEntry(RemoveTrailerEntry { key }),
+        "trailer" => PdfMutation::SetTrailerEntry(SetTrailerEntry { key, value: PdfObject::Name(value), index: None }),
+        "info" => {
+            let mut info = snapshot.info.clone();
+            upsert_name(&mut info.extra, &key, &value);
+            PdfMutation::SetInfo(SetInfo { info })
+        }
+        "viewer" => {
+            let mut preferences = snapshot.viewer_preferences.clone().unwrap_or_default();
+            upsert_name(&mut preferences.extra, &key, &value);
+            PdfMutation::SetViewerPreferences(SetViewerPreferences { preferences: (preferences != PdfViewerPreferences::default()).then_some(preferences) })
+        }
+        other => return Err(fault(format!("unknown entry family '{other}'"))),
+    }])
+}
+
+/// 🗝️ The current entries of one family as `(key, editable name value or read-only summary, editable)`.
+pub fn entry_rows(snapshot: &PdfSnapshot, family: &str) -> Vec<(String, String, bool)> {
+    let entries: &[PdfDictEntry] = match family {
+        "catalog" => &snapshot.catalog_extra,
+        "trailer" => &snapshot.trailer,
+        "info" => &snapshot.info.extra,
+        "viewer" => snapshot.viewer_preferences.as_ref().map_or(&[], |preferences| &preferences.extra),
+        _ => &[],
+    };
+    entries.iter().map(|entry| match &entry.value {
+        PdfObject::Name(name) => (entry.key.clone(), name.clone(), true),
+        other => (entry.key.clone(), format!("{other:?}").chars().take(60).collect(), false),
+    }).collect()
+}
 //#endregion ✍️Authoring
+
+//#region ✍️Work
+use semio_plugin::__job::{OriginalTurnFailure, StepContext};
+use semio_plugin::retained_command::{ArtifactCommandInputs, ArtifactCommandWork, ArtifactCommandWorkStep};
+use semio_plugin::ArtifactApp;
+
+pub const TOOLS: [&str; 3] = ["merge-document", "replace-page", "extract-pages"];
+const UNITS: usize = 8;
+
+/// 🧵 Retained work for merge, replace-from-PDF and extract: one bounded unit per scheduler step with progress, fuel yielding and cancellation between units.
+enum Job {
+    Import(ImportJob),
+    Extract { groups: std::collections::VecDeque<(usize, String)>, current: Option<ExtractJob>, effects: Vec<semio_plugin::Effect> },
+}
+
+pub struct PageAuthoringWork<A: ArtifactApp> {
+    tool: &'static str,
+    payload: fn(&A::Command) -> Option<&str>,
+    maximum_items: usize,
+    job: Option<Job>,
+}
+
+impl<A: ArtifactApp> PageAuthoringWork<A> {
+    /// 🧵 `payload` reads the page-edit payload out of the editor's command; `maximum_items` is the editor's declared retained extent.
+    pub fn new(tool: &'static str, payload: fn(&A::Command) -> Option<&str>, maximum_items: usize) -> Self {
+        Self { tool, payload, maximum_items, job: None }
+    }
+}
+
+fn refused(message: &str) -> OriginalTurnFailure {
+    Fault::from(message).into()
+}
+
+impl<A: ArtifactApp<Snapshot = PdfSnapshot, Mutation = PdfMutation>> ArtifactCommandWork<A> for PageAuthoringWork<A> {
+    fn tool_id(&self) -> &'static str {
+        self.tool
+    }
+
+    fn extent(&self, command: &A::Command, _snapshot: &PdfSnapshot, _interaction: &semio_plugin::InteractionState, _context: Option<&semio_plugin::app::ArtifactOwnedToolJobContext<A>>) -> Option<usize> {
+        (self.payload)(command).map(|_| self.maximum_items)
+    }
+
+    fn step(&mut self, input: &ArtifactCommandInputs<'_, A>, cx: &mut StepContext<'_>) -> Result<ArtifactCommandWorkStep<A>, OriginalTurnFailure> {
+        if cx.is_cancelled() {
+            return Err(refused("pdf-authoring-cancelled"));
+        }
+        let Some(payload) = (self.payload)(input.command) else { return Err(refused("pdf-authoring-command-mismatch")) };
+        if cx.fuel_remaining() < UNITS as u64 {
+            return Ok(ArtifactCommandWorkStep::Pending { stage: "authoring-yield", preview: b"" });
+        }
+        cx.consume_fuel(UNITS as u64);
+        let snapshot = input.snapshot;
+        let outcome: Result<ArtifactCommandWorkStep<A>, semio_plugin::Fault> = (|| {
+            let Fields { page, text, extra, width, height } = fields(payload)?;
+            if self.job.is_none() {
+                self.job = Some(match self.tool {
+                    "extract-pages" => Job::Extract { groups: extra.split(';').map(str::trim).filter(|group| !group.is_empty()).map(str::to_string).enumerate().collect(), current: None, effects: Vec::new() },
+                    "replace-page" if text.is_empty() => {
+                        let mutations = replace_page_with(snapshot, page, "", "", width, height)?;
+                        return Ok(ArtifactCommandWorkStep::Complete(semio_plugin::Emit { artifact_mutations: mutations, ..Default::default() }));
+                    }
+                    other => Job::Import(ImportJob::new(page, &text, &extra, other == "replace-page")),
+                });
+            }
+            match self.job.as_mut().expect("authoring job") {
+                Job::Import(job) => match job.advance(snapshot, UNITS, Some(&mut *cx))? {
+                    Some(mutations) => Ok(ArtifactCommandWorkStep::Complete(semio_plugin::Emit { artifact_mutations: mutations, ..Default::default() })),
+                    None => Ok(ArtifactCommandWorkStep::Progress { stage: job.stage(), preview: b"" }),
+                },
+                Job::Extract { groups, current, effects } => {
+                    if current.is_none() {
+                        let Some((_, group)) = groups.front() else {
+                            let effects = std::mem::take(effects);
+                            if effects.is_empty() {
+                                return Err(Fault::from("extract needs a page selection"));
+                            }
+                            return Ok(ArtifactCommandWorkStep::Complete(semio_plugin::Emit { effects, ..Default::default() }));
+                        };
+                        let source = input.snapshot_owner.cloned().unwrap_or_else(|| std::sync::Arc::new(snapshot.clone()));
+                        *current = Some(ExtractJob::new(source, group)?);
+                    }
+                    let job = current.as_mut().expect("extract job");
+                    match job.advance(UNITS)? {
+                        Some(bytes) => {
+                            let (number, group) = groups.pop_front().expect("extract group");
+                            effects.push(download_effect(&extract_file_name(number, &group), &bytes)?);
+                            *current = None;
+                            Ok(ArtifactCommandWorkStep::Progress { stage: "encode", preview: b"" })
+                        }
+                        None => Ok(ArtifactCommandWorkStep::Progress { stage: job.stage(), preview: b"" }),
+                    }
+                }
+            }
+        })();
+        outcome.map_err(OriginalTurnFailure::from)
+    }
+
+}
+//#endregion ✍️Work

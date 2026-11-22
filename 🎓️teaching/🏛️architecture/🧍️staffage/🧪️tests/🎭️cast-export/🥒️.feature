@@ -8,7 +8,7 @@ Feature: A cast manifest becomes figure-only frames
   Scenario: The manifest schema is enforced by two implementations
     Given the fixture manifest, the course manifest and the invalid casts of the fixture
     When each is validated by ajv and by the dependency-free twin
-    Then both accept the valid manifests and both reject every invalid cast, including unknown viewpoints, scales, frame rates, transport layers and timelines
+    Then both accept the valid manifests and both reject every invalid cast, including unknown viewpoints, scales, frame rates, flow layers (the layers and options of the retired transport overlay among them), flow options without their layers and timelines
 
   Scenario: A clip yields durationS times fps frames and a pose one frame
     Given a looping walk cycle at 15 fps and a plain radiator pose
@@ -39,6 +39,19 @@ Feature: A cast manifest becomes figure-only frames
     Given a thermal radiator cast in the dark and in the light theme
     When the casts are exported
     Then the dark cast draws the dark-theme ink only and the light cast the light-theme ink only
+
+  Scenario: The air of a cast is drawn by the flow view
+    Given a breathing figure with the flow layers streams, moisture and pathlines after 3 s of developed air, and the same figure without flow
+    When the casts are exported
+    Then every frame of the first holds stream lines, vapour clouds and parcel paths and no mark of a layer it did not ask for, no emitter marker and no text
+    And the provenance names the flow layers, the figure bounds, parts and height equal those of the cast without flow, and maxPaths counts the paths of its fullest frame
+
+  Scenario: The air is developed before the first frame
+    Given looping casts of a breathing figure with pathlines after 0.001 s and after 5 s of developed air, and a pose with streams and pathlines after 5 s
+    When the casts are exported
+    Then the first has no path in frame 0, the others have, the pose in its single frame
+    And flowStrokeMm widens the paths in proportion, flowSpacingMm thins them, flowTrailS fades them in four steps of opacity
+    And a cast with flow layers and no flowDevelopS is refused
 
   Scenario: A cancelled export stops between frames and leaves the output untouched
     Given the cancellation fixture with one quick cast and three slow thermal casts of 600 frames each, the quick cast already exported

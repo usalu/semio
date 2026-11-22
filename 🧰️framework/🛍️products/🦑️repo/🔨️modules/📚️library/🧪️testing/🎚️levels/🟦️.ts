@@ -1,4 +1,4 @@
-import { activeTestLevel, budgetStretchV1, sharedHostContentionV1, TEST_LEVELS, type TestLevel, testLevelBudgetMs } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
+import { activeTestLevel, sharedHostContentionV1, stretchedBudgetMillisecondsV1, TEST_LEVELS, type TestLevel, testLevelBudgetMs } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
 
 /** 🐌️ The contention of this host at launch (the shared load-aware budget clock source): inner tool timeouts count at its stretch so a busy host does not kill a run that fits its budget on an idle one.
  * @see ../../../../../../🔨️modules/🏃️process/🧪️testing/🎚️budget/⏲️contention/🟦️.ts */
@@ -6,9 +6,14 @@ export function launchContentionRatioV1(): number {
   return sharedHostContentionV1()().ratio;
 }
 
+/** 🧮️ Any budget in milliseconds stretched by the contention `ratio` (this host right now when none is given), clamped to the budget clock's policy bounds: the per-test timeout of a test whose work scales with the load of the host. */
+export function stretchedMillisecondsV1(milliseconds: number, ratio: number = launchContentionRatioV1()): number {
+  return stretchedBudgetMillisecondsV1(milliseconds, ratio);
+}
+
 /** ⏱️ The level budget in milliseconds stretched by the contention `ratio`, clamped to the budget clock's policy bounds (an idle host keeps the plain budget). */
 export function stretchedLevelBudgetMsV1(level: TestLevel, ratio: number): number {
-  return Math.ceil(testLevelBudgetMs(level) * budgetStretchV1(ratio));
+  return stretchedMillisecondsV1(testLevelBudgetMs(level), ratio);
 }
 
 function levelsAbove(level: TestLevel): readonly TestLevel[] {

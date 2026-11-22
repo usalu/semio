@@ -33,7 +33,7 @@ fn provisional_transforms_equal_original_central_operations_with_one_fuel_and_ph
   let expected_wire=semio_framework_pack_json::to_json_string(&oracle);assert_eq!(expected_wire,semio_framework_pack_json::to_json_string(&expected),"{}",case["name"]);expected.retire_cold();oracle.retire_cold();
   let((mut source,mutation),seed)=semio_framework_trace::observe_heap_allocations_on_this_thread(||{
    let source:FlowHostSnapshot=semio_framework_pack_json::from_json_str(&before_wire,semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
-   let mutation:super::Generation3dMutation=semio_framework_pack_json::from_json_str(&mutation_wire,semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();(source,mutation)
+   let mutation:Generation3dMutation=semio_framework_pack_json::from_json_str(&mutation_wire,semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();(source,mutation)
   });assert!(!seed.overflowed);
   let mut caller=ScratchCaller::new(&policy,items,seed.requested_bytes.checked_sub(seed.released_bytes).unwrap());
   let mut work=caller.turn(|cx|{let Ok(NativeProvisionalFold::Additional(P3ProvisionalFold::Transform(work)))=<super::retained_provisional_dispatch::ProvisionalFolds as NativeProvisionalFolds<Generation3dMutation>>::into_fold_original(mutation,OriginalSourceBinding::borrow(cx))else{panic!("transform fixture dispatch")};Ok(work)});

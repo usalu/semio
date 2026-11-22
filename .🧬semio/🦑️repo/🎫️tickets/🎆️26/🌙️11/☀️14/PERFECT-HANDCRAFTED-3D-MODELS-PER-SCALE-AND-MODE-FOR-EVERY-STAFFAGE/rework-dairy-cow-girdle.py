@@ -2,7 +2,7 @@
 
 Usage: python3 rework-dairy-cow-girdle.py <asset document> (in place, after the rig, body and structure chisels)
 Hand-chosen numbers: dorsal border of the scapula 0.09 m beside the median plane, shoulder joint 0.198 m, sacroiliac joint 0.07 m beside the plane and 0.235 m up the pelvis bone, hip joint 0.15 m (0.30 m between the acetabula).
-The scapula bone itself stays parallel to the median plane (`INCLINED_SCAPULA = False`): inclined by its true 14 degrees the validator rejects the flat 2D shapes of the blade and, with the pose offsets that keep the limb upright, of every bone below it (`lateral-ambiguous`); the shoulder joint is therefore placed 0.108 m beside the blade's tip.
+The scapula bone is inclined outwards by its true 14 degrees (`INCLINED_SCAPULA = True`): it runs from the dorsal border 0.09 m beside the plane to the shoulder joint at 0.198 m and swings in its own plane, so a protracted limb circumducts slightly as in the animal; the poses are not compensated (`UPRIGHT = False`), which keeps the flat limb drawings within the print minimum. The walk advance is the planted travel measured with this placement.
 Every solid keeps its world place: its coordinates are re-expressed in the new frame of its bone (see `rig-lateral-rest.md`, 1.6).
 """
 import copy
@@ -13,7 +13,8 @@ import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 SCAPULA_TOP, SHOULDER, SACROILIAC, SACROILIAC_UP, HIP = 0.09, 0.198, 0.07, 0.235, 0.15
-INCLINED_SCAPULA = False
+INCLINED_SCAPULA = True
+UPRIGHT = False
 helper = {"math": math}
 text = open(os.path.join(HERE, "rig-lateral-standing-adult.py"), encoding="utf-8").read()
 exec(text[text.index("\nDEG = "): text.index("\ndef convert(")], helper)
@@ -32,7 +33,8 @@ def main():
         scapula, humerus = by["scapula-f" + tag], by["humerus-f" + tag]
         scapula["z"] = sign * SCAPULA_TOP
         if INCLINED_SCAPULA:
-            scapula["abductionDeg"] = round(sign * math.degrees(math.asin((SHOULDER - SCAPULA_TOP) / scapula["lengthM"])), 4)
+            scapula["abductionDeg"] = round(sign * math.degrees(math.atan((SHOULDER - SCAPULA_TOP) / scapula["lengthM"])), 4)
+            scapula["lengthM"] = round(math.hypot(scapula["lengthM"], SHOULDER - SCAPULA_TOP), 5)
         now = frames(bones)
         blade = now["scapula-f" + tag]
         joint = [blade[0][i] + apply(blade[1], [scapula["lengthM"], 0, 0])[i] for i in range(3)]
@@ -112,16 +114,19 @@ def main():
     poses = {}
     for pose in asset["poses"]:
         poses[pose["id"]] = copy.deepcopy(pose["bones"])
-        if INCLINED_SCAPULA:
+        if INCLINED_SCAPULA and UPRIGHT:
             upright(pose["bones"])
     for clip in asset["clips"]:
         for key in clip["keys"]:
-            if not INCLINED_SCAPULA or not key.get("bones") or not any(name.startswith(("scapula-", "humerus-")) for name in key["bones"]):
+            if not (INCLINED_SCAPULA and UPRIGHT) or not key.get("bones") or not any(name.startswith(("scapula-", "humerus-")) for name in key["bones"]):
                 continue
             merged = upright({**copy.deepcopy(poses[key["pose"]]), **copy.deepcopy(key["bones"])})
             for name in ("humerus-fn", "humerus-ff"):
                 if name in merged:
                     key["bones"][name] = merged[name]
+    for clip in asset["clips"]:
+        if INCLINED_SCAPULA and clip["id"] == "walk-cycle":
+            clip["advanceM"] = 1.0259
     with open(path, "w", encoding="utf-8") as handle:
         json.dump(document, handle, ensure_ascii=False, indent=2)
         handle.write("\n")

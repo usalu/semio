@@ -1,0 +1,56 @@
+{
+  "id": "fig-tree",
+  "category": "vegetation",
+  "title": {
+    "en": "Fig Tree, Multi-Stem",
+    "de": "Feigenbaum, mehrstämmig"
+  },
+  "heightM": 5.141,
+  "widthM": 7.021,
+  "powerW": 0,
+  "poses": [
+    "calm",
+    "windy",
+    "fruit-laden",
+    "storm"
+  ],
+  "clips": [
+    "wind-sway",
+    "gust",
+    "diurnal-transpiration"
+  ],
+  "representations": {
+    "50": "authored",
+    "100": "authored",
+    "200": "authored",
+    "500": "authored"
+  },
+  "symbols": [
+    "fig-tree-symbol",
+    "tree-sign"
+  ],
+  "analytics": [
+    "thermal",
+    "transport",
+    "structural"
+  ],
+  "exports": [
+    "svg",
+    "pdf",
+    "dxf",
+    "dwg",
+    "png-sequence",
+    "mp4",
+    "webm",
+    "component",
+    "glb",
+    "fbx",
+    "model",
+    "model-zip"
+  ],
+  "distinction": {
+    "en": "A multi-stemmed common fig with smooth silver-grey stems and a broad, dense, rounded crown of large lobed leaves; the late-summer crop of figs is carried as a pose and load.",
+    "de": "Ein mehrstämmiger Echter Feigenbaum mit glatten silbergrauen Stämmen und einer breiten, dichten, runden Krone aus großen gelappten Blättern; der spätsommerliche Feigenbehang wird als Pose und Last geführt."
+  },
+  "completion": "authored"
+}

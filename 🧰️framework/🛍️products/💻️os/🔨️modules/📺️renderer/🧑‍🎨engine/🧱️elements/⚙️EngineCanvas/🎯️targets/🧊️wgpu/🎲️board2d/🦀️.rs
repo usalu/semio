@@ -711,6 +711,27 @@ pub fn board2d_hover_into(surface_id: &str, controller_id: &str, input: &mut sem
     Ok(true)
 }
 
+/// 💡️ Who owns the open handle-suggestions menu: its `windowId` (`""` when it names none, so any pane owns it), `None` while it is closed or unreadable — React's `parseBoard2dSuggestionMenu` plus `board2dSuggestionMenuOwnsWindow`.
+pub fn board2d_suggestion_menu_owner(menu_json: Option<&str>) -> Option<String> {
+    let menu: serde_json::Value = serde_json::from_str(menu_json?).ok()?;
+    (menu.get("open")? == &serde_json::Value::Bool(true)).then(|| menu.get("windowId").and_then(serde_json::Value::as_str).unwrap_or_default().to_owned())
+}
+
+/// 🔦️ Focuses the ONE trace footprint a hovered suggestion row stands for on the board `surface_id` (`None` restores the whole search) — React's `ToolRunTrace2dLayer` `focus`.
+pub fn board2d_set_suggestion_focus(surface_id: &str, focus: Option<u64>) {
+    ENGINE_SURFACES.with(|cell| {
+        if let Some(entry) = cell.borrow_mut().get_mut(surface_id) {
+            entry.board_trace.focus = focus;
+            entry.scene_revision = entry.scene_revision.wrapping_add(1);
+        }
+    });
+}
+
+/// 💡️ The open handle-suggestions menu of the board `surface_id`, as its scene published it.
+pub fn board2d_suggestion_menu_json(surface_id: &str) -> Option<String> {
+    ENGINE_SURFACES.with(|cell| cell.borrow().get(surface_id)?.board_sync_cache.suggestion_menu_json.clone())
+}
+
 /// ⌨️ Board2d's keyboard chords, the wgpu twin of React's two `Board2dHost` keydown listeners:
 /// `Escape` cancels an in-flight area-select (`🟦️.tsx:1292-1313`, `session.cancelAreaSelect`), and
 /// `Tab`/`shift+Tab` walk the open brush slot's candidates forward/back (`🟦️.tsx:1338-1339`, a
@@ -721,24 +742,24 @@ pub fn board2d_hover_into(surface_id: &str, controller_id: &str, input: &mut sem
 /// Returns `true` when the chord was consumed and must NOT fall through to the shell's keybinding
 /// dispatch — the Rust equivalent of React's `event.preventDefault()`.
 ///
-/// 🪟️ React gates both listeners on `hoverActiveRef.current` (the pointer is over THIS pane) and
-/// on `scene.interactive`; the pointer-inside witness is this target's equivalent.
-pub fn board2d_key_into(surface_id: &str, controller_id: &str, key: &KeyAction, modifiers: &PointerModifiers, input: &mut semio_ui_wgpu_input::InputState<ActionDescriptor>) -> Result<bool, semio_ui_action::BoundedActionFault> {
-    let armed = ENGINE_SURFACES.with(|cell| {
+/// 🪟️ React gates `Escape` on `hoverActiveRef.current` (the pointer is over THIS pane) and `Tab` on that same witness
+/// while the brush is armed, otherwise on `window_id` owning the open suggestion menu (`🖥️Board2dHost/👆️board-pointer-and-keyboard`).
+pub fn board2d_key_into(surface_id: &str, controller_id: &str, window_id: &str, key: &KeyAction, modifiers: &PointerModifiers, input: &mut semio_ui_wgpu_input::InputState<ActionDescriptor>) -> Result<bool, semio_ui_action::BoundedActionFault> {
+    let gate = ENGINE_SURFACES.with(|cell| {
         let map = cell.borrow();
         let entry = map.get(surface_id)?;
-        entry.board_pointer_inside.then_some(entry.board_sync_cache.active_utility.clone().unwrap_or_else(|| "select".into()))
+        let cache = &entry.board_sync_cache;
+        let brush_armed = cache.active_utility.as_deref() == Some("brush");
+        let owns_menu = board2d_suggestion_menu_owner(cache.suggestion_menu_json.as_deref()).is_some_and(|owner| owner.is_empty() || owner == window_id);
+        Some(if matches!(key, KeyAction::Tab) && !brush_armed { owns_menu } else { entry.board_pointer_inside })
     });
-    let Some(active_utility) = armed else {
+    if gate != Some(true) {
         return Ok(false);
-    };
+    }
     settle_board_pointer_authority_into(surface_id, input)?;
     let acted = match key {
         KeyAction::Escape => with_board_host_mut(surface_id, |host| host.cancel_area_select()).unwrap_or(false),
         KeyAction::Tab => {
-            if active_utility != "brush" {
-                return Ok(false);
-            }
             with_board_host_mut(surface_id, |host| {
                 host.brush_cycle_candidate(!modifiers.shift);
                 true
@@ -884,3 +905,16 @@ pub fn board2d_wheel_into(surface_id: &str, controller_id: &str, inner: Rect, x:
 
 //#endregion Board2d
 
+#[cfg(test)]
+mod suggestion_menu_owner_tests {
+    use super::board2d_suggestion_menu_owner;
+
+    #[test]
+    fn the_owner_is_the_named_window_any_pane_when_unnamed_and_nobody_when_closed() {
+        assert_eq!(board2d_suggestion_menu_owner(Some(r#"{"open":true,"windowId":"w1"}"#)).as_deref(), Some("w1"));
+        assert_eq!(board2d_suggestion_menu_owner(Some(r#"{"open":true}"#)).as_deref(), Some(""));
+        assert_eq!(board2d_suggestion_menu_owner(Some(r#"{"open":false,"windowId":"w1"}"#)), None);
+        assert_eq!(board2d_suggestion_menu_owner(Some("not json")), None);
+        assert_eq!(board2d_suggestion_menu_owner(None), None);
+    }
+}

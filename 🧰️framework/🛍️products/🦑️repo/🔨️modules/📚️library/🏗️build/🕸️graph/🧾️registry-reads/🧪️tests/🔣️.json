@@ -1,0 +1,233 @@
+{
+ "registry": {
+  "version": 1,
+  "owners": [
+   {
+    "name": "workspace",
+    "root": ".",
+    "manifest": "📋️project.json",
+    "packages": [
+     "workspace"
+    ]
+   },
+   {
+    "name": "@semio-tech/alpha",
+    "root": "🧰️alpha",
+    "manifest": "🧰️alpha/📋️project.json",
+    "packages": [
+     "@semio-tech/alpha",
+     "alpha-core"
+    ]
+   },
+   {
+    "name": "@semio-tech/alpha-sub",
+    "root": "🧰️alpha/🧩️sub",
+    "manifest": "🧰️alpha/🧩️sub/📋️project.json",
+    "packages": []
+   },
+   {
+    "name": "@semio-tech/beta-rs",
+    "root": "🌎️beta/📦️rust",
+    "manifest": "🌎️beta/📦️rust/Cargo.toml",
+    "packages": [],
+    "nativeRoots": [
+     "🌎️beta/🦀️native",
+     "🌎️beta/🦀️native-two"
+    ]
+   },
+   {
+    "name": "@semio-tech/gamma",
+    "root": "✏️s/gamma",
+    "manifest": "✏️s/gamma/📋️project.json",
+    "packages": [
+     "gamma"
+    ]
+   },
+   {
+    "name": "semio-delta",
+    "root": "✏️s/🧑‍💻delta",
+    "manifest": "✏️s/🧑‍💻delta/Cargo.toml",
+    "packages": []
+   },
+   {
+    "name": "@semio-tech/epsilon",
+    "root": "🪐️eps",
+    "manifest": "🪐️eps/📋️project.json",
+    "packages": [
+     "epsilon"
+    ]
+   }
+  ],
+  "catalogProviders": [
+   {
+    "ownerRoot": "✏️s",
+    "sourcePath": "✏️s/🧑‍💻delta/📣️publication.ts",
+    "consumerRoots": [
+     "✏️s/gamma",
+     "🧰️alpha"
+    ]
+   }
+  ]
+ },
+ "selection": {
+  "kind": "owners",
+  "projects": [
+   "@semio-tech/beta-rs",
+   "@semio-tech/alpha"
+  ],
+  "exclude": [],
+  "targets": [
+   "build"
+  ]
+ },
+ "questions": [
+  [
+   "row",
+   "@semio-tech/alpha"
+  ],
+  [
+   "row",
+   "@semio-tech/gamma"
+  ],
+  [
+   "row",
+   "@semio-tech/zeta"
+  ],
+  [
+   "package",
+   "alpha-core"
+  ],
+  [
+   "package",
+   "epsilon"
+  ],
+  [
+   "package",
+   "nothing"
+  ],
+  [
+   "root",
+   "🌎️beta/🦀️native"
+  ],
+  [
+   "root",
+   "🪐️eps"
+  ],
+  [
+   "root",
+   "🧰️alpha/🧩️sub"
+  ],
+  [
+   "within",
+   "🧰️alpha/🧩️sub/src/deep"
+  ],
+  [
+   "within",
+   "🧰️alpha/src"
+  ],
+  [
+   "within",
+   "✏️s/gamma/x"
+  ],
+  [
+   "within",
+   "🪐️eps"
+  ],
+  [
+   "within",
+   "README"
+  ],
+  [
+   "within",
+   "unknown/place"
+  ],
+  [
+   "providers",
+   "✏️s/gamma",
+   true,
+   []
+  ],
+  [
+   "providers",
+   "🪐️eps",
+   true,
+   []
+  ],
+  [
+   "providers",
+   "🪐️eps",
+   false,
+   [
+    "{workspaceRoot}/✏️s/🧑‍💻delta/📣️publication.ts"
+   ]
+  ],
+  [
+   "candidates"
+  ],
+  [
+   "digest"
+  ]
+ ],
+ "edits": [
+  {
+   "name": "root of an unrelated owner",
+   "op": "root",
+   "owner": "@semio-tech/epsilon",
+   "value": "🪐️eps2"
+  },
+  {
+   "name": "packages of epsilon",
+   "op": "packages",
+   "owner": "@semio-tech/epsilon",
+   "value": [
+    "epsilon",
+    "epsilon-extra"
+   ]
+  },
+  {
+   "name": "reorder lists of alpha and beta",
+   "op": "reorder",
+   "owner": "@semio-tech/alpha"
+  },
+  {
+   "name": "reorder native roots of beta",
+   "op": "reorder",
+   "owner": "@semio-tech/beta-rs"
+  },
+  {
+   "name": "add a rust owner elsewhere",
+   "op": "add",
+   "row": {
+    "name": "@semio-tech/zeta-rs",
+    "root": "🌱️zeta/📦️rust",
+    "manifest": "🌱️zeta/📦️rust/Cargo.toml",
+    "packages": []
+   }
+  },
+  {
+   "name": "add an owner below alpha",
+   "op": "add",
+   "row": {
+    "name": "@semio-tech/alpha-deep",
+    "root": "🧰️alpha/🧩️sub/src/deep",
+    "manifest": "🧰️alpha/🧩️sub/src/deep/📋️project.json",
+    "packages": []
+   }
+  },
+  {
+   "name": "remove gamma",
+   "op": "remove",
+   "owner": "@semio-tech/gamma"
+  },
+  {
+   "name": "new consumer root of the provider",
+   "op": "provider",
+   "index": 0,
+   "value": [
+    "✏️s/gamma",
+    "🧰️alpha",
+    "🪐️eps"
+   ]
+  }
+ ]
+}

@@ -9,6 +9,36 @@ description = "Component crate of semio-s-artifact-stdio-pdf: mut-base"
 [package.metadata.semio]
 role = "library"
 
+[package.metadata.semio.carve]
+owned = [
+  "standards::v1_7::subsets::base::io::binary::mutations::insert_content",
+  "standards::v1_7::subsets::base::io::binary::mutations::remove_color_space",
+  "standards::v1_7::subsets::base::io::binary::mutations::remove_font",
+  "standards::v1_7::subsets::base::io::binary::mutations::remove_properties",
+  "standards::v1_7::subsets::base::io::binary::mutations::replace_page",
+  "standards::v1_7::subsets::base::io::binary::mutations::set_document_id",
+  "standards::v1_7::subsets::base::io::binary::mutations::set_info",
+  "standards::v1_7::subsets::base::io::binary::mutations::set_optional_content",
+  "standards::v1_7::subsets::base::io::binary::mutations::set_page_box",
+  "standards::v1_7::subsets::base::io::binary::mutations::set_page_content",
+  "standards::v1_7::subsets::base::io::binary::mutations::set_page_labels",
+  "standards::v1_7::subsets::base::io::binary::mutations::set_page_mode",
+  "standards::v1_7::subsets::base::io::text::mutations::insert_object",
+  "standards::v1_7::subsets::base::io::text::mutations::move_page",
+  "standards::v1_7::subsets::base::io::text::mutations::remove_page",
+  "standards::v1_7::subsets::base::io::text::mutations::remove_pattern",
+  "standards::v1_7::subsets::base::io::text::mutations::remove_shading",
+  "standards::v1_7::subsets::base::io::text::mutations::set_color_space",
+  "standards::v1_7::subsets::base::io::text::mutations::set_language",
+  "standards::v1_7::subsets::base::io::text::mutations::set_open_action",
+  "standards::v1_7::subsets::base::io::text::mutations::set_page_crop_box",
+  "standards::v1_7::subsets::base::io::text::mutations::set_page_media_box",
+  "standards::v1_7::subsets::base::io::text::mutations::set_page_rotation",
+  "standards::v1_7::subsets::base::io::text::mutations::set_page_user_unit",
+  "standards::v1_7::subsets::base::io::text::mutations::set_pattern",
+  "standards::v1_7::subsets::base::io::text::mutations::set_viewer_preferences",
+]
+
 [lints]
 workspace = true
 

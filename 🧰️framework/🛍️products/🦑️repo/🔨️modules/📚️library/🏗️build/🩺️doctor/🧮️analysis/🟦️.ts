@@ -243,7 +243,7 @@ function analyzeProcesses(facts:DoctorFactsV1,policy:DoctorPolicyV1,commandOf:(p
   const parentGone=row.parent<=1,service=services.some(pattern=>pattern.test(row.command));
   if(own===undefined&&via===undefined&&parentGone&&!service&&row.ageSeconds>=policy.processes.orphanAgeSeconds&&matches(row))phase="orphan";
   rows.push(Object.freeze({pid:row.pid,parent:row.parent,ageSeconds:row.ageSeconds,rssMegabytes:row.rssMegabytes,cpuPercent:tenth(row.cpuPercent),phase,via:own===undefined?via??null:null,command:commandOf(row.pid)}));
-  if(own!==undefined&&row.parent===1&&row.ageSeconds>=policy.processes.orphanAgeSeconds&&matches(row)){
+  if(own!==undefined&&row.parent===1&&row.ageSeconds>=policy.processes.orphanAgeSeconds&&matches(row)&&treeCpu(row.pid)<policy.processes.idleCpuPercent){
    const holds=[...(leases?.holders??[])].filter(item=>item.pid===row.pid).length+(admitted.has(row.pid)?1:0);
    if(holds>0)add("processes.orphan","warn",String(row.pid),{pid:row.pid,ageSeconds:row.ageSeconds,command:commandOf(row.pid),holds});
   }

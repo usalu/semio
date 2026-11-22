@@ -43,6 +43,18 @@ pub fn expand(input:&DeriveInput)->syn::Result<proc_macro2::TokenStream>{
  let initial_positions=flattened.iter().map(|flatten|if *flatten{quote!(Some(usize::MAX))}else{quote!(None)}).collect::<Vec<_>>();
  let births=flattened.iter().map(|flatten|if *flatten{quote!(#tree::NativeReceiveSlot::original_record_subset())}else{quote!(#tree::NativeReceiveSlot::default())}).collect::<Vec<_>>();
  let state=format_ident!("{}NativeReceivingState",name);
+ let seed_fields=[(quote!(state.binding),quote!(None)),(quote!(state.positions),quote!([#(#initial_positions),*]))].into_iter()
+  .chain(slots.iter().zip(births.iter()).zip(pending.iter()).flat_map(|((slot,birth),pending)|[(quote!(state.#slot),birth.clone()),(quote!(state.#pending),quote!(::std::mem::ManuallyDrop::new(None)))]))
+  .chain(defaults.iter().zip(required.iter()).filter(|(_,required)|!**required).map(|(id,_)|(quote!(state.#id),quote!(#owner::NativeDefaultSlot::new()))))
+  .chain([
+   (quote!(state.partial),quote!(#owner::NativeRecordStorage::empty(#count))),(quote!(state.output),quote!(::std::mem::ManuallyDrop::new(None))),(quote!(state.source),quote!(::std::mem::ManuallyDrop::new(None))),(quote!(state.initialized),quote!([false;#count])),
+   (quote!(state.matcher),quote!(None)),(quote!(state.projection),quote!(Default::default())),(quote!(state.retirement),quote!(Default::default())),(quote!(state.total),quote!(None)),
+   (quote!(state.scan),quote!(0)),(quote!(state.field),quote!(0)),(quote!(state.close_field),quote!(0)),(quote!(state.phase),quote!(0)),(quote!(state.stage),quote!(0)),(quote!(state.closing),quote!(false)),(quote!(state.subset),quote!(SUBSET)),
+   (quote!(effect),quote!(Default::default())),(quote!(retirement_effect),quote!(Default::default())),
+  ]).collect::<Vec<_>>();
+ let seed_count=seed_fields.len();
+ let seed_sizes=seed_fields.iter().enumerate().map(|(index,(field,_))|quote!(#index=>size(::std::ptr::addr_of_mut!((*target).#field)))).collect::<Vec<_>>();
+ let seed_writes=seed_fields.iter().enumerate().map(|(index,(field,value))|quote!(#index=>::std::ptr::addr_of_mut!((*target).#field).write(#value))).collect::<Vec<_>>();
 
  let get_child=if tuple{quote!(original.sequence_child(index))}else{quote!(original.record_child(index))};
  let field_plans=indices.iter().map(|i|{
@@ -108,7 +120,14 @@ pub fn expand(input:&DeriveInput)->syn::Result<proc_macro2::TokenStream>{
  #vis struct #receiver<I:#tree::NativeValueSource+?Sized>where #(#bounds,)*{state:#state<I>,effect:#native::native_decoding::NativeReceivingEffect,retirement_effect:#native::native_decoding::NativeReceivingEffect<#value::OriginalRetirementFailure>}
  struct #state<I:#tree::NativeValueSource+?Sized>where #(#bounds,)*{binding:Option<#value::retained_clone::RetainedCloneBinding>,positions:[Option<usize>;#count],#(#slots:#tree::NativeReceiveSlot<dyn #tree::NativeValueSource,#types>,#pending: ::std::mem::ManuallyDrop<Option<#types>>,)*#(#default_fields,)*partial:#owner::NativeRecordStorage<#name>,output: ::std::mem::ManuallyDrop<Option<#name>>,source: ::std::mem::ManuallyDrop<Option<#value::retained_clone::RetainedOwnedProjection<dyn #tree::NativeValueSource>>>,initialized:[bool;#count],matcher:Option<#owner::NativeRecordMatcher<I>>,projection:#value::retained_clone::RetainedOwnedProjectionAdmission<dyn #tree::NativeValueSource>,retirement:#value::retained_clone::RetainedCloneClose,total:Option<usize>,scan:usize,field:usize,close_field:usize,phase:u8,stage:u8,closing:bool,subset:bool}
  unsafe impl #owner::NativeRecordFields for #name{fn native_schema_count()->usize{#count}fn native_schema_field(index:usize)->Option<#owner::NativeRecordSchema>{match index{#(#descriptors,)*_=>None}}}
- impl<I:#tree::NativeValueSource+?Sized>#native::native_decoding::NativeReceive<I>for #name #implementation_where{type Receiver=#receiver<I>;fn receiver()->Self::Receiver{#receiver{state:#state{binding:None,positions:[#(#initial_positions),*],#(#slots:#births,#pending: ::std::mem::ManuallyDrop::new(None),)*#(#default_births,)*partial:#owner::NativeRecordStorage::empty(#count),output: ::std::mem::ManuallyDrop::new(None),source: ::std::mem::ManuallyDrop::new(None),initialized:[false;#count],matcher:None,projection:Default::default(),retirement:Default::default(),total:None,scan:0,field:0,close_field:0,phase:0,stage:0,closing:false,subset:false},effect:Default::default(),retirement_effect:Default::default()}}fn record_subset_receiver()->Option<Self::Receiver>{let mut receiver=Self::receiver();receiver.state.subset=true;Some(receiver)}}
+ impl<I:#tree::NativeValueSource+?Sized>#native::native_decoding::NativeReceive<I>for #name #implementation_where{type Receiver=#receiver<I>;fn receiver()->Self::Receiver{#receiver{state:#state{binding:None,positions:[#(#initial_positions),*],#(#slots:#births,#pending: ::std::mem::ManuallyDrop::new(None),)*#(#default_births,)*partial:#owner::NativeRecordStorage::empty(#count),output: ::std::mem::ManuallyDrop::new(None),source: ::std::mem::ManuallyDrop::new(None),initialized:[false;#count],matcher:None,projection:Default::default(),retirement:Default::default(),total:None,scan:0,field:0,close_field:0,phase:0,stage:0,closing:false,subset:false},effect:Default::default(),retirement_effect:Default::default()}}fn record_subset_receiver()->Option<Self::Receiver>{let mut receiver=Self::receiver();receiver.state.subset=true;Some(receiver)}
+  fn receiver_template(subset:bool)->Option<#native::native_decoding::NativeSeedTemplate<Self::Receiver>>{let write:unsafe fn(*mut ::std::mem::MaybeUninit<Self::Receiver>,usize)->bool=if subset{#receiver::<I>::write_seed_field::<true>}else{#receiver::<I>::write_seed_field::<false>};Some(unsafe{#native::native_decoding::NativeSeedTemplate::fields(#seed_count,#receiver::<I>::seed_field_size,write)})}}
+ impl<I:#tree::NativeValueSource+?Sized>#receiver<I>where #(#bounds,)*{
+  /// 📐️ Quotes one independent vacant receiver field in uninitialized resident storage, so a large record receiver seeds in field-sized parts.
+  unsafe fn seed_field_size(target:*mut ::std::mem::MaybeUninit<Self>,index:usize)->Option<usize>{fn size<T>(_:*mut T)->usize{::std::mem::size_of::<T>()}let target=target.cast::<Self>();Some(unsafe{match index{#(#seed_sizes,)*_=>return None}})}
+  /// 🌾️ Initializes the quoted vacant field at its resident address; `SUBSET` seeds the record subset receiver.
+  unsafe fn write_seed_field<const SUBSET:bool>(target:*mut ::std::mem::MaybeUninit<Self>,index:usize)->bool{let target=target.cast::<Self>();unsafe{match index{#(#seed_writes,)*_=>return false}}true}
+ }
  impl<I:#tree::NativeValueSource+?Sized>#state<I>where #(#bounds,)*{
 
 

@@ -791,7 +791,7 @@ pub struct WorldSubElementPaint {
 /// 🚫️ Why one scene mesh was refused instead of published.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum WorldMeshRefusalReason {
-    /// Vertices without indices, edges or topological vertex ids: the mesh authority admits no unlabelled point mesh, so such points belong in the `pointsJson` lane.
+    /// 🔺️ Vertices without indices, edges or topological vertex ids: the mesh authority admits no unlabelled point mesh, so such points belong in the `pointsJson` lane.
     UnlabelledPointsOnly,
 }
 
@@ -823,6 +823,13 @@ pub struct WorldSessionState {
 
     /// 🎯️ The bound domain's granularity id for a plain (non-component) pick/hover hit.
     pub bound_domain_granularity_id: Option<String>,
+
+    /// 🎣️ The guest's `interaction.suggestionMenu` record as JSON (`None` while no menu is published) and its `brushCandidateIndex`, kept for the shell's context-menu "suggest" submenu; `suggestion_source` is the digest of the interaction record they were read from.
+    pub suggestion_menu_json: Option<String>,
+
+    pub brush_candidate_index: i64,
+
+    pub suggestion_source: u64,
 
     pub active_utility: String,
 
@@ -880,6 +887,9 @@ impl WorldSessionState {
             pick_bounds: Rect::default(),
             bound_domain_id: None,
             bound_domain_granularity_id: None,
+            suggestion_menu_json: None,
+            brush_candidate_index: 0,
+            suggestion_source: 0,
             active_utility: "select".into(),
             declared_action_ids: Vec::new(),
             presentation: World3dPresentation::default(),

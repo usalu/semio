@@ -1,0 +1,10 @@
+[
+{"op":"region-set","id":"easel","set":{"areaM2":1.006}},
+{"op":"region-set","id":"brush","set":{"areaM2":0.01008}},
+{"op":"set","path":["poses",{"id":"painting"},"thermal","regions","easel","exposedFraction"],"value":0.6163},
+{"op":"set","path":["poses",{"id":"mixing-paint"},"thermal","regions","easel","exposedFraction"],"value":0.6163},
+{"op":"set","path":["poses",{"id":"stepping-back-to-look"},"thermal","regions","easel","exposedFraction"],"value":0.6163},
+{"op":"set","path":["poses",{"id":"painting"},"thermal","regions","brush","exposedFraction"],"value":0.7143},
+{"op":"set","path":["poses",{"id":"mixing-paint"},"thermal","regions","brush","exposedFraction"],"value":0.7143},
+{"op":"set","path":["poses",{"id":"stepping-back-to-look"},"thermal","regions","brush","exposedFraction"],"value":0.7143}
+]

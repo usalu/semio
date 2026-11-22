@@ -26,3 +26,4 @@ include!("🏁️lane-priority-epoch-yield-and-rings/🦀️.rs");
 include!("🔁️terminal-overflow-credit-and-lifecycle-authorities/🦀️.rs");
 include!("🧱️replay-owners-close-funnel-and-mounted-cancel/🦀️.rs");
 include!("🎯️wake-host-dispatch-refusal-and-services-recipient/🦀️.rs");
+include!("💼️child-process-job-wire/🦀️.rs");

@@ -9,6 +9,38 @@ description = "Component crate of semio-s-artifact-stdio-pdf: tests"
 [package.metadata.semio]
 role = "library"
 
+[package.metadata.semio.carve]
+owned = [
+  "examples::demo::tests",
+  "standards::v1_4::subsets::a::schema::mutations::set_page_text",
+  "standards::v1_4::subsets::base::schema::diff::tests",
+  "standards::v1_4::subsets::base::schema::inferences::outline::tests",
+  "standards::v1_4::subsets::base::schema::inferences::tests",
+  "standards::v1_4::subsets::base::schema::mutations::move_page",
+  "standards::v1_4::subsets::base::schema::mutations::replace_page_text",
+  "standards::v1_4::subsets::base::schema::mutations::resize_page",
+  "standards::v1_4::subsets::x::schema::mutations::set_page_size",
+  "standards::v1_7::subsets::base::io::sqlite::snapshot::admission",
+  "standards::v1_7::subsets::base::io::sqlite::snapshot::admission::annotations",
+  "standards::v1_7::subsets::base::io::sqlite::snapshot::admission::colors",
+  "standards::v1_7::subsets::base::io::sqlite::snapshot::admission::forms",
+  "standards::v1_7::subsets::base::io::sqlite::snapshot::admission::glyphs",
+  "standards::v1_7::subsets::base::io::sqlite::snapshot::admission::meta",
+  "standards::v1_7::subsets::base::io::sqlite::snapshot::admission::nav",
+  "standards::v1_7::subsets::base::io::sqlite::snapshot::admission::objects",
+  "standards::v1_7::subsets::base::io::sqlite::snapshot::admission::render",
+  "standards::v1_7::subsets::base::io::sqlite::snapshot::admission::resources",
+  "standards::v1_7::subsets::base::io::sqlite::snapshot::reader",
+  "viewer::pdf14::modes::view",
+  "viewer::pdf14::modes::view::windows",
+  "viewer::pdf14::modes::view::windows::main",
+  "viewer::pdf14::modes::view::windows::main::tests",
+  "viewer::pdf14a::modes::view",
+  "viewer::pdf14a::modes::view::windows",
+  "viewer::pdf14a::modes::view::windows::main",
+  "viewer::pdf14a::modes::view::windows::main::tests",
+]
+
 [lints]
 workspace = true
 

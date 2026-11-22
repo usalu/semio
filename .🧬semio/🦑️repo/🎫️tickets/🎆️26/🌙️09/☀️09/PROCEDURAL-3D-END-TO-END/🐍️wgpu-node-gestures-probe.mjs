@@ -11,7 +11,7 @@
  * `Target|Any`, different nodes, acyclic) — a legitimate no-op that proves nothing.
  *
  * The direction is derived here from the SAME committed fixture the renderer's own law is driven by,
- * `⚙️EngineCanvas/🧫️fixtures/🕸️wgpu-node-graph/🔣️.json` — generation3d's flow payload for
+ * `⚙️EngineCanvas/🧪️tests/🧫️fixtures/🕸️wgpu-node-graph/🔣️.json` — generation3d's flow payload for
  * `hexagonal-mushroom-column`, the very example this probe boots. Two rules, both purely structural:
  *
  *   • a widget's `inputPorts[]` are that node's INPUT port ids;
@@ -84,7 +84,7 @@ const sweepDwellMs = Number(process.env.SEMIO_SWEEP_DWELL ?? 150);
 mkdirSync(outDir, { recursive: true });
 
 //#region 🧬️FixtureDerivation
-const fixturePath = resolve(import.meta.dir, "../../../../../../..", "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/⚙️EngineCanvas/🧫️fixtures/🕸️wgpu-node-graph/🔣️.json");
+const fixturePath = resolve(import.meta.dir, "../../../../../../..", "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/⚙️EngineCanvas/🧪️tests/🧫️fixtures/🕸️wgpu-node-graph/🔣️.json");
 const fixture = JSON.parse(readFileSync(fixturePath, "utf8")).fixture;
 const inputs = new Set();
 const outputs = new Set();

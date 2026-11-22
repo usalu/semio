@@ -106,6 +106,15 @@ test("semio-offload=if-idle answers RESOURCE_EXHAUSTED at once when no machine b
  const table=await fleet.load();expect(row(table,"w0").offloadedOut,"only the action that was really offloaded counts").toBe(1);
 });
 
+test("every worker agent advertises semio-pin=<its origin> without a flag, and a pinned action (semio-offload=queue, semio-pin=<origin>) runs on exactly that worker, never on another and never on its requester; a pin nobody offers fails back at once",async()=>{
+ const fleet=await startFleet(["w0","w1","w2"]),pinned=(pin:string,salt:string)=>fleet.attached.action({arguments:["/bin/sh","-c","echo ok > out.txt"],outputPaths:["out.txt"],salt,platform:[{name:"semio-offload",value:"queue"},{name:"semio-origin",value:"w0"},{name:"semio-pin",value:pin}]});
+ const workers=(await (await fetch(`${fleet.urls.worker}/status`)).json()).workers as {name:string;properties:{name:string;value:string}[]}[];
+ for(const name of ["w0","w1","w2"])expect(workers.find(worker=>worker.name===name)?.properties.find(property=>property.name==="semio-pin")?.value).toBe(name);
+ for(let index=0;index<3;index++)for(const target of ["w1","w2"]){const run=await fleet.attached.execute(await pinned(target,`pin-${target}-${index}`));expect(run.response.status.code).toBe(0);expect(workerOf(run)).toBe(target);}
+ expect((await fleet.attached.execute(await pinned("w0","pin-self"))).response.status.code,"the requester is never its own pin").toBe(14);
+ expect((await fleet.attached.execute(await pinned("w9","pin-none"))).response.status.code,"no machine offers it").toBe(14);
+});
+
 test("an action goes only to workers of the requester's toolchain build: a worker of another build never takes it",async()=>{
  const cluster=await startClusterV1({workers:0,scheduler:{maximumAttempts:2}});clusters.push(cluster);
  const mine=[{name:"Arch",value:"arm64"},{name:"OSFamily",value:"macos"},{name:"semio-toolchain",value:"aaaaaaaaaaaaaaaa"}],other=[{name:"Arch",value:"arm64"},{name:"OSFamily",value:"macos"},{name:"semio-toolchain",value:"bbbbbbbbbbbbbbbb"}];

@@ -40,7 +40,11 @@ impl<'ctx> OverlaysViewCtx<'ctx> {
         }
         let chips = self.as_session().window_pane_chips(window_id);
         let Some((chip, folded, disabled)) = chips.get(cursor.scalar).copied() else {
-            return self.paint_window_time_travel_indicator_step(cursor, draw, atlas, icons, input, theme, window_id, window_rect, chips.len());
+            let indicator = self.history.history_time_travel.is_some();
+            if indicator && cursor.scalar == chips.len() {
+                return self.paint_window_time_travel_indicator_step(cursor, draw, atlas, icons, input, theme, window_id, window_rect, chips.len());
+            }
+            return self.paint_window_unsaved_marker_step(cursor, draw, atlas, icons, input, theme, window_id, window_rect, chips.len() + usize::from(indicator));
         };
         let is_de = self.prefs.locale_id == "de";
         let label = shell_chrome_string(chip.label_key(), is_de);

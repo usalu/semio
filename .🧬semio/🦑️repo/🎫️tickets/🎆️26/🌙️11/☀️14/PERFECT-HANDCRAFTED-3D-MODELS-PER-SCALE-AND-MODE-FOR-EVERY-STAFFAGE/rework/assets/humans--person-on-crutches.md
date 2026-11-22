@@ -66,3 +66,17 @@ Rendered and read after the changes: structure 1:50 (back, right, front, two thr
 1. `🧪️tests/🧊️model-skeleton` ("adultLongBones", subject `person-on-crutches`) demands `femur`, `tibia`, `humerus`, `radius`, `ulna` in the structure list of every scale at their 1:50 section; `volumes-feature` forbids exactly that below the feature size. This asset now follows the validator (`radius-ulna-l` at 1:200 and 1:500, floored shafts), so that test fails for it until rule and test are reconciled. Not run (no `repo` binary), not changed.
 2. `validator.md` has no section "Rule changes authors must know" (searched twice); the rule changes were read from its "Connectivity and per-scale feature" section.
 3. `rig-lateral-rest.md` did not appear during the pass.
+
+## Pass 1 (second round), 2026-11-22 16:30–17:27, cut off; finished by the umbrella finisher 20:50–21:00
+
+The author of this pass was cut off at 17:27 without a report. What the scripts did (all published at 17:27:01, rig and `volumes` source = catalog, candidate under `🗑️generated/rework-person-on-crutches/cand` identical to the catalog asset):
+
+- `rework-person-on-crutches-girdle.py`: clavicles (sternoclavicular to acromioclavicular joint) and hip bones (`ilium-l/-r`, sacroiliac joint to hip joint) on the lateral rest placement, a lumbar bone, shoulder joints 0.366 m and hip joints 0.176 m apart, girdle solids re-bound, long bones of the coarse scales at their true shaft (`slender`), front and plan drawings shifted with the limbs.
+- `rework-person-on-crutches-forefoot.py`: 1:100 skeleton forefoot as tarsus, three metatarsal rays and three toes per foot.
+- `rework-person-on-crutches-fingers.py`: three phalanges per finger and two per thumb as rig bones on both hands (53 bones), the 1:50 phalanx solids of body and structure bound to them.
+
+Proof by the finisher (2026-11-22 20:52): `r3-validate.ts humans/person-on-crutches --catalog-only --volumes` → `VALID humans/person-on-crutches (catalog file as it is): schema 0, validateAsset 0, checkVolumes 0`; check CLI `✓ person-on-crutches (1/1)`, all four scales suitable.
+
+Sheets read at full size by the finisher: 1:50 body `tripod-stand` and `body-swing`, 1:50 and 1:100 structure, 1:500 body, 2D 1:50. Verdict: proportions, shoulder line, hood, orthosis boot and both crutches with cuff and grip read right; the skeleton is complete and connected (skull with mandible, curved spine, ribcage, scapulae, clavicles, pelvis, long bones, both hands and feet); both hands carry the same finger chains; 1:500 is a generalised figure, not a thinned list. Rendered but not read: 1:100 and 1:200 body, 1:50 thermal, 1:500 structure, `crutches-forward`, the front close-up, 2D 1:500.
+
+Remains imperfect: the crutch bones run from the hand to the ground beside the crutch tube (the tube leans, the bone is the load line), which reads as an offset on the sheet; the light-line front elevation at 1:50 shows the hood outline without the face that the light-solid view has; clips were not rendered; thermal was not judged by eye.

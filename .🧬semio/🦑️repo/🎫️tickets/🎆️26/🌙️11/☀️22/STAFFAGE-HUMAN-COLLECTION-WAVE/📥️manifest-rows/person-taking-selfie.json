@@ -1,0 +1,53 @@
+{
+  "id": "person-taking-selfie",
+  "category": "humans",
+  "title": {
+    "en": "Person Taking a Selfie",
+    "de": "Person beim Selfie"
+  },
+  "heightM": 1.714,
+  "widthM": 0.813,
+  "powerW": 141.4,
+  "poses": [
+    "selfie-arm-out",
+    "selfie-high-angle",
+    "selfie-with-backdrop",
+    "checking-photo"
+  ],
+  "clips": [
+    "selfie-posing",
+    "take-and-check",
+    "idle-breathing"
+  ],
+  "representations": {
+    "50": "authored",
+    "100": "authored",
+    "200": "authored",
+    "500": "authored"
+  },
+  "symbols": [],
+  "analytics": [
+    "thermal",
+    "transport",
+    "structural"
+  ],
+  "exports": [
+    "svg",
+    "pdf",
+    "dxf",
+    "dwg",
+    "png-sequence",
+    "mp4",
+    "webm",
+    "component",
+    "glb",
+    "fbx",
+    "model",
+    "model-zip"
+  ],
+  "distinction": {
+    "en": "A 24-year-old woman of 1.69 m in a hooded sweatshirt, slim jeans, canvas sneakers and a 15-litre daypack, holding her smartphone at arm's length with the screen turned to her face and the other hand on the hip: at arm's length, from above, with the sight behind her and checking the photo, with a posing loop, a take-and-check sequence and idle breathing.",
+    "de": "Eine 24-jährige Frau von 1,69 m in Kapuzenpullover, enger Jeans, Stoffsneakern und mit 15-Liter-Tagesrucksack, die ihr Smartphone mit ausgestrecktem Arm hält, den Bildschirm zum Gesicht gedreht, die andere Hand an der Hüfte: mit ausgestrecktem Arm, von oben, mit der Sehenswürdigkeit dahinter und beim Ansehen des Fotos, mit einer Posierschleife, einer Abfolge aus Aufnehmen und Ansehen und ruhigem Atmen."
+  },
+  "completion": "authored"
+}

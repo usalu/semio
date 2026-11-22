@@ -2,6 +2,12 @@
 
 use super::*;
 
+#[path = "🧮️baseline-resource.rs"]
+pub mod baseline_resource;
+
+#[path = "📌️dct-placement.rs"]
+pub mod dct_placement;
+
 /// 📍 Addresses an insertion or one existing image placement in PDF page space.
 #[derive(Clone, Copy)]
 pub enum ImagePlacement {
@@ -64,9 +70,7 @@ fn place_image_bodies(
     snapshot: &PdfSnapshot, placement: ImagePlacement, page: usize, width: u32, height: u32,
     rgb: PdfImageBody, alpha: Option<PdfImageBody>,
 ) -> Result<Vec<PdfMutation>, Fault> {
-    let taken: std::collections::HashSet<_> = snapshot.images.iter().map(|image| image.id.as_str())
-        .chain(snapshot.forms.iter().map(|form| form.id.as_str())).collect();
-    let mut names = (1..).map(|index| format!("SemioImage{index}")).filter(|name| !taken.contains(name.as_str()));
+    let mut names = image_names(snapshot);
     let id = names.next().expect("available image XObject id");
     let alpha = alpha.map(|body| (names.next().expect("available soft mask XObject id"), body));
     place_named_image_bodies(placement, page, width, height, id, rgb, alpha)
@@ -90,15 +94,25 @@ fn place_named_image_bodies(
         changes.push(PdfMutation::SetImage(SetImage { image: alpha_image, index: None }));
     }
     changes.push(PdfMutation::SetImage(SetImage { image, index: None }));
+    changes.push(paint_image(page, placement, id));
+    Ok(changes)
+}
+
+fn image_names(snapshot: &PdfSnapshot) -> impl Iterator<Item = String> + '_ {
+    let taken: std::collections::HashSet<_> = snapshot.images.iter().map(|image| image.id.as_str())
+        .chain(snapshot.forms.iter().map(|form| form.id.as_str())).collect();
+    (1..).map(|index| format!("SemioImage{index}")).filter(move |name| !taken.contains(name.as_str()))
+}
+
+fn paint_image(page: usize, placement: ImagePlacement, id: String) -> PdfMutation {
     let paint = PdfOp::PaintXObject { name: id };
     match placement {
-        ImagePlacement::Insert { matrix, .. } => changes.push(PdfMutation::AppendPageContent(AppendPageContent {
+        ImagePlacement::Insert { matrix, .. } => PdfMutation::AppendPageContent(AppendPageContent {
             index: page,
             content: vec![PdfOp::Save, PdfOp::Transform { matrix }, paint, PdfOp::Restore],
-        })),
-        ImagePlacement::Replace { operator, .. } => changes.push(PdfMutation::ReplaceContent(ReplaceContent { index: page, at: operator, op: paint })),
+        }),
+        ImagePlacement::Replace { operator, .. } => PdfMutation::ReplaceContent(ReplaceContent { index: page, at: operator, op: paint }),
     }
-    Ok(changes)
 }
 
 #[path = "🎛️replace-button.rs"]
@@ -133,9 +147,6 @@ use graph_edit::PngGraphEdit;
 #[path = "📬️format-work.rs"]
 mod format_work;
 pub use format_work::PngFormatWork;
-#[path = "📏️route.rs"]
-mod route;
-pub use route::{select_picked_raster_route, PickedRasterFormat, PickedRasterRoute, PAGED_DCT_MAXIMUM_BYTES, PAGED_DCT_MAXIMUM_PIXELS};
 #[path = "🧵️reserved-picker.rs"]
 mod reserved_picker;
 pub use reserved_picker::PickerPngWork;

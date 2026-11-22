@@ -95,9 +95,9 @@ test("a stage that dies with a raw database error on a full disk is recorded as 
 });
 
 test("the readiness loop survives a failing port: it says so in both languages, waits the back-off and carries on to ready",async()=>{
- const w=world({digestFailures:3,stateWriteFailures:2,stopAfterSleeps:14});
+ const w=world({digestFailures:3,stateWriteFailures:2,stopAfterSleeps:40});
  await runReadyV1(w.ports,w.controller.signal);
- expect(w.sleeps.slice(0,3)).toEqual([30000,60000,120000]);
+ expect(w.sleeps.slice(0,7)).toEqual(Array(7).fill(P.statusHeartbeatMilliseconds));
  const failed=w.updates.filter(update=>update.refusal?.code==="loop-failed");
  expect(failed.length).toBeGreaterThanOrEqual(3);
  expect(failed[0]!.state).toBe("backoff");expect(failed[0]!.refusal!.en).toContain("EIO");expect(failed[0]!.refusal!.de).toContain("Sekunden");
@@ -107,10 +107,11 @@ test("the readiness loop survives a failing port: it says so in both languages, 
 });
 
 test("the loop never gives up: forty failures in a row still back off at most to the maximum and then run",async()=>{
- const w=world({digestFailures:40,stopAfterSleeps:60});
+ const w=world({digestFailures:40,stopAfterSleeps:3000});
  await runReadyV1(w.ports,w.controller.signal);
- expect(w.sleeps.slice(0,40).every(value=>value<=P.backoffMaximumMilliseconds)).toBe(true);
- expect(w.sleeps[39]).toBe(P.backoffMaximumMilliseconds);
+ const pauses=Array.from({length:40},(_,index)=>Math.min(P.backoffMaximumMilliseconds,P.backoffInitialMilliseconds*2**index));
+ const slices=pauses.reduce((sum,value)=>sum+Math.ceil(value/P.statusHeartbeatMilliseconds),0);
+ expect(w.sleeps.slice(0,slices)).toEqual(Array(slices).fill(P.statusHeartbeatMilliseconds));
  expect(w.updates.some(update=>update.ready===true)).toBe(true);
 });
 

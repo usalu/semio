@@ -21,7 +21,7 @@ fn is_live(shell: &ShellState) -> bool {
 #[cfg(not(target_arch = "wasm32"))]
 fn frame_pump(shell: &mut ShellState) -> usize {
     let advanced = semio_renderer_wgpu_host_base::pump_renderer_io_sessions(1);
-    let _ = semio_framework_job_worker::pump_worker_job_retirements(1, 1, semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES);
+    let _ = semio_renderer_wgpu_ui_engine_tests::fixture_original_turn::FixtureTurnV1::new(ui_contract::UI_WORKER_RETIREMENT_POLICY).turn(|cx| semio_framework_job_worker::pump_worker_job_retirements(1, cx));
     drive(PointerCtx::of(&mut shell).pump_sync_events());
     shell.sync.request_presence_preview(&mut shell.chrome);
     if shell.chrome.chrome_present.maintenance.presence_requested {
@@ -49,7 +49,7 @@ struct OpenFrames {
 /// settle lane has rendered what it owed, timing every frame. Like the present loop, it idles only when
 /// no renderer I/O session advanced. A settled failure or cancellation is left for the caller to assert.
 #[cfg(not(target_arch = "wasm32"))]
-fn settle_document_opening(shell: &mut ShellState) -> OpenFrames {
+fn settle_document_opening(mut shell: &mut ShellState) -> OpenFrames {
     let started = std::time::Instant::now();
     let mut frames = OpenFrames::default();
     while shell.opening.document_opening.as_ref().is_some_and(ShellDocumentOpening::running) && started.elapsed() < std::time::Duration::from_secs(180) {
@@ -92,13 +92,13 @@ fn pump_pair(a: &mut ShellState, b: &mut ShellState, budget: std::time::Duration
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-fn applied_edits(shell: &mut ShellState) -> Vec<(String, bool)> {
+fn applied_edits(mut shell: &mut ShellState) -> Vec<(String, bool)> {
     drive(SessionCtx::of(&mut shell).refresh_history_snapshot());
     history_rows_oldest_first(&shell.history.history_entries).into_iter().filter(|entry| entry.kind == "mutation").map(|entry| (entry.action_id.clone(), entry.applied)).collect()
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-fn author_edit(shell: &mut ShellState, action: &str) -> (Result<(), String>, std::time::Duration) {
+fn author_edit(mut shell: &mut ShellState, action: &str) -> (Result<(), String>, std::time::Duration) {
     let controller_id = shell.docs.session.as_ref().map(|session| session.app.controller_id.clone()).unwrap_or_default();
     let started = std::time::Instant::now();
     let outcome = drive(ActionsCtx::of(&mut shell).dispatch_action(ActionDescriptor { controller_id, action: action.to_string(), args: None }));

@@ -322,6 +322,25 @@ pub struct ChromeParityStatusStacks {
     pub install_max_width_fraction: f32,
 }
 
+/// ⌨️ The selected-and-focused label underline — [`ChromeParityConstants::focus`].
+#[derive(Clone, Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ChromeParityFocus {
+    pub underline_thickness_px: f32,
+    pub underline_offset_em: f32,
+}
+
+/// 📏️ The extents React's panes, palette dialog and bands take — [`ChromeParityConstants::sizes`].
+#[derive(Clone, Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ChromeParitySizes {
+    pub panel_default_px: f32,
+    pub window_pane_default_px: f32,
+    pub palette_dialog_max_width_rem: f32,
+    pub time_travel_band_max_width_fraction: f32,
+    pub folder_band_max_width_fraction: f32,
+}
+
 /// 📐️ The geometry constants React's chrome and this target both read from one file,
 /// `🖱️ui/🧬️schema/📐️chrome-parity-constants/🧮️values.json` (schema: the `🔣️.json` beside it).
 #[derive(Clone, Debug, Deserialize)]
@@ -331,6 +350,8 @@ pub struct ChromeParityConstants {
     pub panel_drop: ChromeParityPanelDrop,
     pub toast: ChromeParityToast,
     pub status_stacks: ChromeParityStatusStacks,
+    pub focus: ChromeParityFocus,
+    pub sizes: ChromeParitySizes,
 }
 
 /// 📐️ The parsed [`ChromeParityConstants`], read once from the shared values file.

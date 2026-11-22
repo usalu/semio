@@ -7,18 +7,20 @@ pub struct FixtureTurnV1 {
     decoder:OriginalJobDecodeOwner,
     epoch:u64,
     surfaces:Vec<String>,
+    _arena:semio_ui_contract_values::testkit::UiArenaFixture,
 }
 
 impl FixtureTurnV1 {
     pub fn new(grant:RetainedCloneGrant)->Self{Self::with_identity(grant,OperationId(41),Generation(7))}
     pub fn with_identity(grant:RetainedCloneGrant,operation:OperationId,generation:Generation)->Self{
+        let arena=semio_ui_contract_values::testkit::UiArenaFixture::new();
         let policy:serde_json::Value=serde_json::from_str(include_str!("🔣️.json")).expect("original renderer fixture declaration");
         let stock:RetainedCloneGrant=serde_json::from_value(policy["grant"].clone()).unwrap();
         let mut caller = OriginalJobFixtureCaller::admit(operation, generation, stock, ||Some(0), u64::MAX, policy["fuel"].as_u64().unwrap());
         let mut decoder = OriginalJobDecodeOwner::empty();
         let admitted = (0..64).any(|_| caller.turn(stock, |cx| decoder.admit_step(cx)).expect("original renderer fixture decoder admission"));
         assert!(admitted, "original renderer fixture decoder admission must complete");
-        Self { grant, caller: Some(caller), decoder, epoch: 1, surfaces: Vec::new() }
+        Self { grant, caller: Some(caller), decoder, epoch: 1, surfaces: Vec::new(), _arena: arena }
     }
     pub fn receipt(&self)->semio_framework_job::RetainedCloneProgress{self.caller.as_ref().unwrap().receipt()}
     pub fn alias(&mut self)->CancelToken{self.caller.as_mut().unwrap().admit_alias(self.grant)}
@@ -51,3 +53,16 @@ impl FixtureTurnV1 {
     pub fn finish(mut self){self.close();}
 }
 impl Drop for FixtureTurnV1{fn drop(&mut self){if !std::thread::panicking(){self.close();}}}
+
+#[cfg(test)]
+mod arena_lifetime_laws{
+    use super::*;
+    #[test]
+    fn a_fixture_turn_registers_the_ui_arena_lifetime_for_its_whole_scope_and_composes_with_an_explicit_scope(){
+        let fixture=FixtureTurnV1::new(ui_contract::UI_WORKER_RETIREMENT_POLICY);
+        assert!(semio_ui_contract_values::ui_value_arena_registry().borrow().expect("registered").is_some(),"shell fixtures own an accepting UI arena lifetime");
+        drop(semio_ui_contract_values::testkit::UiArenaFixture::new());assert!(semio_ui_contract_values::ui_value_arena_registry().borrow().expect("registered").is_some(),"an explicit scope on the same thread nests instead of deadlocking");
+        fixture.finish();
+        assert!(semio_ui_contract_values::ui_value_arena_registry().borrow().is_err(),"closing the fixture closes the lifetime");
+    }
+}

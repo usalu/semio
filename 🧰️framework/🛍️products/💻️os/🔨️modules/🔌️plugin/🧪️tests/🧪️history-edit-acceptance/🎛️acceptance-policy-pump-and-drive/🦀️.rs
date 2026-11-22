@@ -139,11 +139,9 @@ where
         }
         for (index, op) in ops.iter().enumerate() {
             let applied = app.stores.store.mutation_ops().map_or(0, |applied| applied.len());
-            // 🎟️ Native operation encoding runs on the caller's original work loan; the dispatch future never suspends, so it settles inside that loan.
             let (fuel, deadline) = (cx.fuel_remaining().min(1 << 24), cx.original_absolute_deadline_us());
             let mut dispatched = None;
             cx.with_original_work_loan(fuel, deadline, |loaned| {
-                // 🎟️ Authored operation identities commit under the loan's own Work, as the production reserved-commit route lends it; what the hops performed is charged back to the loan.
                 let mut work = loaned.native_encoder_work();
                 let mut observer = |_: semio_framework_value::native_encoding::NativeEncodeProgress| true;
                 let observer: &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_> = &mut observer;
@@ -168,9 +166,6 @@ where
     match seeded {
         Ok(()) => Ok(app),
         Err(reason) => {
-            if let AcceptanceSeedFault::Original(error) = &reason {
-                eprintln!("[DEBUG] history acceptance seed failed before close: {error}");
-            }
             Box::pin(acceptance_close(&mut app,cx)).await;
             Err(reason)
         }

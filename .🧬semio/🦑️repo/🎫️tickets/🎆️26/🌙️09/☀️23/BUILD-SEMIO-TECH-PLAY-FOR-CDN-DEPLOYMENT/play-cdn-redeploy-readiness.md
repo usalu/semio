@@ -34,4 +34,9 @@ The fixes are numbered 155 to 169 in [📓️2026-11-17-redeploy.md](📓️2026
 
 ## Status
 
-See the section at the end of this file.
+As of 2026-11-22 17:00, no release cohort has been published yet.
+
+- Supervisor 4139 is running. It is at about 650 units in the job stage, cold because the target dirs were re-keyed.
+- The furthest an attempt has got: every WASM job passed and the Vite bundle ran (it now builds standalone), with 1 of 73 components staged.
+- Everything after the component phase was preflighted, and two publication defects were fixed.
+- Handoff: [📓️2026-11-22-handoff.md](📓️2026-11-22-handoff.md).

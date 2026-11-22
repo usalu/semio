@@ -58,7 +58,7 @@
       "const": 0
     },
     "bindWork": {
-      "const": 1
+      "const": 0
     },
     "cachedWork": {
       "const": 0

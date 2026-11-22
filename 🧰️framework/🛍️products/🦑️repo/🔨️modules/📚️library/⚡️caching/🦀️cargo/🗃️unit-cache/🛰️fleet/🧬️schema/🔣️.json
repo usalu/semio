@@ -7,8 +7,9 @@
       "const": {
         "version": 1,
         "namespace": "semio.cargo.unit-cache.fleet/v1",
-        "layout": { "state": "fl", "fallbacks": "fb", "spool": "up", "costs": "cost", "down": "down", "denied": "denied", "noClaims": "noclaims", "reachable": "reachable", "uploader": "uploader.lock", "spawned": "uploader.spawned" },
-        "tokens": { "cwd": "@@semio-cwd@@", "workspace": "@@semio-ws@@" },
+        "layout": { "state": "fl", "fallbacks": "fb", "spool": "up", "costs": "cost",
+          "gaps": "gaps", "down": "down", "denied": "denied", "noClaims": "noclaims", "reachable": "reachable", "uploader": "uploader.lock", "spawned": "uploader.spawned" },
+        "tokens": { "cwd": "@@semio-cwd@@", "workspace": "@@semio-ws@@", "cargoHome": "@@semio-cargo-home@@", "rustupHome": "@@semio-rustup-home@@", "sysroot": "@@semio-sysroot@@" },
         "slotType": "type.semio.tech/semio.cargo.unit-cache.slot.v1",
         "worker": "semio-unit-cache",
         "slotHeader": "x-semio-slot",
@@ -26,8 +27,8 @@
         },
         "breaker": { "downFaults": 2, "downMilliseconds": 15000, "deniedMilliseconds": 15000, "noClaimsMilliseconds": 600000, "reachableMilliseconds": 300000 },
         "claim": { "ttlMilliseconds": 30000, "heartbeatMilliseconds": 8000, "finalTtlMilliseconds": 90000, "minimumWaitMilliseconds": 30000, "maximumWaitMilliseconds": 1200000, "defaultExpectedMilliseconds": 90000, "waitFactor": 2, "maximumRounds": 40, "retries": 2, "retryBackoffMilliseconds": 750 },
-        "limits": { "maximumEntryBytes": 268435456, "maximumBlobBytes": 268435456, "maximumBlobs": 64, "maximumManifestBytes": 4194304, "maximumDownloadConcurrency": 4, "maximumUploadConcurrency": 3, "maximumSpool": 512 },
-        "uploader": { "heartbeatMilliseconds": 2000, "staleMilliseconds": 10000, "idleMilliseconds": 15000, "pollMilliseconds": 200, "spawnThrottleMilliseconds": 3000, "jobMilliseconds": 120000, "maximumJobAgeMilliseconds": 600000, "maximumAttempts": 4, "retryBackoffMilliseconds": 15000 },
+        "limits": { "maximumEntryBytes": 268435456, "maximumBlobBytes": 268435456, "maximumBlobs": 64, "maximumManifestBytes": 4194304, "maximumDownloadConcurrency": 4, "maximumUploadConcurrency": 3, "maximumUploadJobs": 8, "maximumSpool": 4096 },
+        "uploader": { "heartbeatMilliseconds": 2000, "staleMilliseconds": 10000, "idleMilliseconds": 15000, "pollMilliseconds": 200, "spawnThrottleMilliseconds": 3000, "jobMilliseconds": 120000, "maximumJobAgeMilliseconds": 3600000, "maximumAttempts": 4, "retryBackoffMilliseconds": 15000 },
         "linkedCrateTypes": ["proc-macro", "bin", "cdylib", "dylib", "staticlib"],
         "hostIndependent": { "targetPrefixes": ["wasm32-"], "crateTypes": ["lib", "rlib"], "token": "any" }
       }
@@ -93,7 +94,8 @@
         },
         "outputs": { "type": "array", "minItems": 1, "maxItems": 64, "items": { "$ref": "#/definitions/Output" } },
         "stdout": { "anyOf": [{ "$ref": "#/definitions/Digest" }, { "type": "null" }] },
-        "stderr": { "anyOf": [{ "$ref": "#/definitions/Digest" }, { "type": "null" }] }
+        "stderr": { "anyOf": [{ "$ref": "#/definitions/Digest" }, { "type": "null" }] },
+        "retention": { "description": "What the unit was built from (a Declaration of the slot schema, checked by the code that writes it): the server reads it when the unit arrives and judges the unit against its synchronized tree.", "type": "object" }
       }
     },
     "SpoolJob": {
@@ -112,6 +114,17 @@
         "owner": { "type": "string" },
         "claimed": { "type": "boolean" },
         "offer": { "type": "boolean" },
+        "run": { "description": "The unit is the run of a package's build script (its OUT_DIR and output streams), not a compilation: the worker reads it from the local run store and the manifest carries its facts as `run.json`.", "type": "boolean" },
+        "tools": {
+          "description": "The tool roots of the machine that built the unit (Cargo home, rustup home, the compiler's sysroot when it lies outside the rustup home), so the worker tokenises their paths exactly as the key did.",
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "cargoHome": { "type": "string", "minLength": 1 },
+            "rustupHome": { "type": "string", "minLength": 1 },
+            "sysroot": { "type": "string", "minLength": 1 }
+          }
+        },
         "hint": {
           "description": "The root hint of a unit that was compiled while the cache was unreachable and holds directories of this machine: the neutral key and the kinds; the upload worker publishes the hint before it uploads the unit under its root key.",
           "type": "object",
@@ -187,7 +200,7 @@
         },
         "keySamples": { "$ref": "#/definitions/KeySamplesRef" },
         "skipReasons": {
-          "description": "Units compiled here and not shared with the fleet, by reason name; the counts add up to unit.skipped (units counted before their reason was recorded appear as unrecorded).",
+          "description": "Units compiled here and not shared with the fleet, by reason name; the counts add up to unit.skipped, which is their sum.",
           "type": "object",
           "propertyNames": { "pattern": "^[a-z][a-z0-9-]{0,40}$" },
           "additionalProperties": { "type": "integer", "minimum": 1 }

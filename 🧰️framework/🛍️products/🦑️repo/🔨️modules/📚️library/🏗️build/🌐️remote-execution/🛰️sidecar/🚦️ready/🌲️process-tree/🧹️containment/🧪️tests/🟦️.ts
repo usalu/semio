@@ -222,7 +222,7 @@ test("the registry root is the registry's own answer on every platform and the C
 posix("the lease registry writes the owner token of its environment into the entry of a process that holds a lease, and none without one",async()=>{
  expect(LEASE_OWNER_ENVIRONMENT_V1).toBe(C.ownerEnvironment);
  const module=fileURLToPath(new URL("../../../../../../../../../../../🔨️modules/🏃️process/🔒️leases/🧭️order/🗂️registry/🟦️.ts",import.meta.url));
- const script=`const {leaseRegistryV1}=await import(${JSON.stringify(module)});const directory="/x/.cache/b/l/m/data";leaseRegistryV1.attach({snapshot:()=>({holds:[{directory,resource:"r",mode:"exclusive",atMs:Date.now(),task:1}],waits:[]}),cycle:()=>undefined});leaseRegistryV1.changed(directory,{registry:{flushMilliseconds:0,maximumEntryBytes:65536}},true);await new Promise(done=>setTimeout(done,60000));`;
+ const script=`const {leaseRegistryV1}=await import(${JSON.stringify(module)});const directory="/x/.cache/b/l/m/data";leaseRegistryV1.attach({snapshot:()=>({holds:[{directory,resource:"r",mode:"exclusive",atMs:Date.now(),task:1}],waits:[]}),cycle:()=>undefined});leaseRegistryV1.changed(directory,{registry:{flushMilliseconds:0,maximumEntryBytes:65536,prune:{delayMilliseconds:3600000}}},true);await new Promise(done=>setTimeout(done,60000));`;
  for(const owner of["ready:abc:tools:1",undefined]){
   const registry=temp("owner"),environment:Record<string,string>={...process.env as Record<string,string>,SEMIO_LEASE_REGISTRY_DIRECTORY:registry};delete environment[C.ownerEnvironment];
   if(owner!==undefined)environment[C.ownerEnvironment]=owner;

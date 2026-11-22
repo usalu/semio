@@ -1,0 +1,7 @@
+{
+  "name": "@semio-tech/plugin-tests-mounted-grant-rs",
+  "tags": [
+    "scope:framework",
+    "language:rust"
+  ]
+}

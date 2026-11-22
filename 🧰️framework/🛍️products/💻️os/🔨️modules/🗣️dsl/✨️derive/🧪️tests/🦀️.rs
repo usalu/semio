@@ -4,7 +4,7 @@ use super::*;
 use super::document_diff_and_composite_expansion::{diff_binary_tokens, diff_text_tokens, expand_composite_mutation, expand_derive_composite_mutation, expand_diff_binary, expand_diff_text, expand_dsl_document, parse_composite_attrs};
 use super::mutation_leaf_attrs_and_schema_index::{MutationLeafAttrs, expand_mutation_leaf, mutation_leaf_payload_schema_path, mutation_leaf_portable_path, mutation_leaf_withdraw_only, mutation_leaf_workspace_token, mutation_schema_document_index, parse_mutation_leaf_attrs};
 use super::mutations_expansion::{expand_derive_mutations, expand_mutations, parse_mutations_attrs};
-use super::source_authority::{MUTATION_AUTHORITY_LOCATOR, MUTATION_AUTHORITY_SCHEMA, mutation_authority_aggregate_sources, mutation_authority_common, mutation_authority_domain_owners, mutation_authority_segment};
+use super::source_authority::{MUTATION_AUTHORITY_LOCATOR, MUTATION_AUTHORITY_SCHEMA, mutation_authority_aggregate_sources, mutation_authority_common, mutation_authority_domain_owners, mutation_authority_raw_no_follow, mutation_authority_segment};
 
 /// 🔍️ The derive resolves `$id` documents from the generated index and ignores schema files the index does not list.
 #[test]

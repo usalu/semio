@@ -1,0 +1,33 @@
+[package]
+workspace = "../../../../../../../../../../.."
+name = "semio-renderer-wgpu-video-render-host"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "Native video export host: media.video-render programs painted through the wgpu rasterizer, encoded by the framework AVC encoder and muxed as MP4 under an event-sourced job"
+
+[package.metadata.semio]
+role = "framework"
+id = "os-renderer-wgpu-video-render-host"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-geometry = { path = "../../../../../../../../../../🔨️modules/📐️geometry/📦️packages/🦀️rust" }
+semio-framework-io-base64 = { path = "../../../../../../../../../../🔨️modules/🚪️io/🔤️base64/📦️packages/🦀️rust" }
+semio-framework-kernel-media-jobs = { path = "../../../../../../../../../../🔨️modules/🎠️kernel/🎞️media-jobs/📦️packages/🦀️rust" }
+semio-framework-pixels = { path = "../../../../../../../../../../🔨️modules/🔲️pixels/📦️packages/🦀️rust" }
+semio-framework-raster = { path = "../../../../../../../../../../🔨️modules/🖌️raster/📦️packages/🦀️rust" }
+
+[dev-dependencies]
+semio-framework-async-macros = { workspace = true }
+serde_json = "1.0.140"

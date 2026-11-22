@@ -129,6 +129,42 @@ fn an_independent_decoder_job_cancels_a_ready_response_before_host_handback() {
     decoder_worker_boundary(true);
 }
 
+/// 🧾️ A checked-out worker turn hands its sole physical receipt over before the owner resumes, so a contended resume is pending and never an invariant fault.
+#[cfg(not(target_arch = "wasm32"))]
+#[test]
+fn a_checked_out_decoder_turn_hands_over_its_receipt_before_resume() {
+    use std::time::{Duration, Instant};
+    let bytes = b"<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"1\" height=\"1\"></svg>";
+    let mut authority = WorldAssetIoAuthority::default();
+    authority.reserve(1, 1, WorldAssetRequestKind::ReferenceImage, "receipt.svg", bytes.len()).unwrap();
+    let mut owner = authority.take_next().unwrap();
+    owner.push_page(WorldAssetResponsePage::try_from_owned(bytes.to_vec()).unwrap()).unwrap();
+    owner.seal().unwrap();
+    authority.return_owner(owner).unwrap();
+    let owner = (0..infinite_world::world::WORLD_ASSET_REQUEST_CAPACITY).find_map(|_| authority.take_next_completed_step()).unwrap();
+    let mut caller = OriginalRendererFixture::new();
+    let mut decoder = caller.turn(|cx| Ok(RendererAssetDecodeSession::new(RendererAssetProbe::new(RendererAssetFetchOwner::Shared(owner)), cx))).unwrap();
+    let deadline = Instant::now() + Duration::from_secs(10);
+    let mut checked_out_turns = 0;
+    while decoder.boundary.is_none() && Instant::now() < deadline {
+        caller.turn(|cx| decoder.pump_one(cx)).expect("a pending resume is retried, never an invariant fault");
+        if let Some(session) = decoder.session.as_ref().filter(|session| session.checked_out_job().is_some()) {
+            checked_out_turns += 1;
+            assert!(session.checked_out_retained_step_receipt().is_none());
+        }
+        std::thread::yield_now();
+    }
+    assert!(decoder.boundary.is_some() && checked_out_turns > 0);
+    let (probe, _) = {
+        while (decoder.session.is_some() || decoder.source.is_some()) && Instant::now() < deadline {
+            caller.turn(|cx| decoder.pump_one(cx)).unwrap();
+            std::thread::yield_now();
+        }
+        decoder.take_boundary().expect("the exact worker returns its response")
+    };
+    close_owned_decoder_fixture(authority, probe, &mut caller);
+}
+
 /// 📬️ Session metadata retirement preserves a successful worker result when no cancellation occurred.
 #[cfg(not(target_arch = "wasm32"))]
 #[test]

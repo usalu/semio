@@ -357,28 +357,28 @@
     {
       "peaks": [],
       "kloc": 0,
-      "componentFinal": false,
-      "bytes": 644245094
+      "bytes": 644245094,
+      "component": null
     },
     {
       "peaks": [],
       "kloc": 125.5,
-      "componentFinal": false,
-      "bytes": 5908096614
+      "bytes": 5908096614,
+      "component": null
     },
     {
       "peaks": [],
       "kloc": 3,
-      "componentFinal": true,
-      "bytes": 6442450944
+      "bytes": 6442450944,
+      "component": []
     },
     {
       "peaks": [
         100000000
       ],
       "kloc": 0,
-      "componentFinal": false,
-      "bytes": 268435456
+      "bytes": 268435456,
+      "component": null
     },
     {
       "peaks": [
@@ -387,8 +387,8 @@
         6000000000
       ],
       "kloc": 0,
-      "componentFinal": false,
-      "bytes": 6785000000
+      "bytes": 6785000000,
+      "component": null
     },
     {
       "peaks": [
@@ -404,8 +404,8 @@
         10000000000
       ],
       "kloc": 0,
-      "componentFinal": false,
-      "bytes": 11097500000
+      "bytes": 11097500000,
+      "component": null
     },
     {
       "peaks": [
@@ -415,8 +415,76 @@
         14100000000
       ],
       "kloc": 0,
-      "componentFinal": false,
-      "bytes": 16077000000
+      "bytes": 16077000000,
+      "component": null
+    },
+    {
+      "peaks": [],
+      "kloc": 0,
+      "component": [
+        1000000000,
+        2000000000,
+        3000000000
+      ],
+      "bytes": 2300000000
+    },
+    {
+      "peaks": [],
+      "kloc": 0,
+      "component": [
+        4000000000,
+        1000000000,
+        3000000000,
+        2000000000
+      ],
+      "bytes": 2875000000
+    },
+    {
+      "peaks": [],
+      "kloc": 0,
+      "component": [
+        1000000000,
+        2000000000
+      ],
+      "bytes": 6442450944
+    },
+    {
+      "peaks": [],
+      "kloc": 0,
+      "component": [
+        7000000000,
+        8000000000,
+        9000000000
+      ],
+      "bytes": 9200000000
+    },
+    {
+      "peaks": [],
+      "kloc": 0,
+      "component": [
+        1000000,
+        1000000,
+        1000000
+      ],
+      "bytes": 268435456
+    },
+    {
+      "peaks": [
+        1000000000
+      ],
+      "kloc": 0,
+      "component": [
+        9000000000,
+        9000000000,
+        9000000000
+      ],
+      "bytes": 1150000000
+    },
+    {
+      "peaks": [],
+      "kloc": 0,
+      "component": null,
+      "bytes": 644245094
     }
   ],
   "walls": [
@@ -1044,5 +1112,103 @@
         "--bins"
       ]
     }
-  ]
+  ],
+  "componentPools": [
+    {
+      "profile": "release",
+      "history": {
+        "a@a|wasm32-wasip2|release|cdylib": [
+          1000000000,
+          3000000000
+        ],
+        "b@b|wasm32-wasip2|release|cdylib": [
+          2000000000
+        ],
+        "c@c|wasm32-wasip2|prototype|cdylib": [
+          5000000000
+        ],
+        "d@d|host|release|cdylib": [
+          6000000000
+        ],
+        "e@e|wasm32-wasip2|release|lib": [
+          7000000000
+        ],
+        "f@f|wasm32-wasip2|release|cdylib,lib": [
+          4000000000
+        ]
+      },
+      "peaks": [
+        1000000000,
+        3000000000,
+        2000000000,
+        4000000000
+      ]
+    }
+  ],
+  "journal": {
+    "rows": [
+      {
+        "v": 1,
+        "key": "a@a|host|dev|lib",
+        "peakRssBytes": 100,
+        "outputBytes": 10,
+        "wallMs": 5,
+        "cpuMs": 5,
+        "remainingMs": 5,
+        "atMs": 1
+      },
+      {
+        "v": 1,
+        "key": "b@b|host|dev|lib",
+        "peakRssBytes": 200,
+        "outputBytes": 10,
+        "wallMs": 5,
+        "cpuMs": 5,
+        "remainingMs": 5,
+        "atMs": 2
+      },
+      {
+        "v": 1,
+        "key": "a@a|host|dev|lib",
+        "peakRssBytes": 100,
+        "outputBytes": 10,
+        "wallMs": 5,
+        "cpuMs": 5,
+        "remainingMs": 70,
+        "atMs": 1
+      },
+      {
+        "v": 1,
+        "key": "a@a|host|dev|lib",
+        "peakRssBytes": 300,
+        "outputBytes": 10,
+        "wallMs": 5,
+        "cpuMs": 5,
+        "remainingMs": 3,
+        "atMs": 3
+      }
+    ],
+    "refined": {
+      "a@a|host|dev|lib": [
+        {
+          "atMs": 1,
+          "peakRssBytes": 100,
+          "remainingMs": 70
+        },
+        {
+          "atMs": 3,
+          "peakRssBytes": 300,
+          "remainingMs": 3
+        }
+      ],
+      "b@b|host|dev|lib": [
+        {
+          "atMs": 2,
+          "peakRssBytes": 200,
+          "remainingMs": 5
+        }
+      ]
+    },
+    "invalidTerminated": "{\"v\":1,\"key\":\"torn"
+  }
 }

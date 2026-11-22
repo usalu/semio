@@ -1,0 +1,56 @@
+{
+  "id": "postal-carrier",
+  "category": "humans",
+  "title": {
+    "en": "Postal Carrier",
+    "de": "Postzustellende Person"
+  },
+  "heightM": 1.805,
+  "widthM": 0.442,
+  "powerW": 143.2,
+  "poses": [
+    "standing",
+    "handing-over-letter",
+    "reading-address",
+    "contact-left",
+    "passing-right"
+  ],
+  "clips": [
+    "delivery-walk",
+    "hand-over-letter",
+    "idle-breathing"
+  ],
+  "representations": {
+    "50": "authored",
+    "100": "authored",
+    "200": "authored",
+    "500": "authored"
+  },
+  "symbols": [
+    "walking-direction-marker"
+  ],
+  "analytics": [
+    "thermal",
+    "transport",
+    "structural"
+  ],
+  "exports": [
+    "svg",
+    "pdf",
+    "dxf",
+    "dwg",
+    "png-sequence",
+    "mp4",
+    "webm",
+    "component",
+    "glb",
+    "fbx",
+    "model",
+    "model-zip"
+  ],
+  "distinction": {
+    "en": "A letter carrier of 1.78 m and 72 kg on the walking round in a knee-length weatherproof service coat and scarf, with a 7 kg canvas mail satchel at the right hip and the next letter in the right hand: standing, handing the letter over at arm's length, reading the address and walking heel to toe, with a delivery walk, a read-and-hand-over sequence and waiting at the door.",
+    "de": "Eine Briefzustellerin oder ein Briefzusteller von 1,78 m und 72 kg auf dem Zustellgang, in knielangem Wetterschutzmantel der Dienstkleidung und Schal, mit einer 7 kg schweren Posttasche aus Segeltuch an der rechten Hüfte und dem nächsten Brief in der rechten Hand: stehend, den Brief mit gestrecktem Arm übergebend, die Anschrift lesend und von der Ferse zur Zehe gehend, mit einem Zustellgang, einer Abfolge aus Lesen und Übergeben und dem Warten an der Tür."
+  },
+  "completion": "authored"
+}

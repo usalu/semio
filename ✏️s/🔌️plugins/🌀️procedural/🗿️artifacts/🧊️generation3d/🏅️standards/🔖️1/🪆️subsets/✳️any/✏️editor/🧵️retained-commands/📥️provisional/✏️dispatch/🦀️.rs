@@ -9,7 +9,7 @@ use super::retained_typed_input::{P3ProvisionalFold,ProvisionalTypedInputWork};
 /// 🧵️ Routes every original 3d mutation into its retained domain producer.
 pub struct ProvisionalFolds;
 impl NativeProvisionalFolds<Generation3dMutation> for ProvisionalFolds{
- type Additional=super::retained_typed_input::P3ProvisionalFold;
+ type Additional=P3ProvisionalFold;
  fn into_fold_original(mutation:Generation3dMutation,original:OriginalSourceBinding)->Result<NativeProvisionalFold<Self::Additional>,Generation3dMutation>{
   let host=|edit|Ok(NativeProvisionalFold::Host(HostScratchWork::new_original(edit,HostScratchDomain::Generation3d,original)));
   let generation=|input|Ok(NativeProvisionalFold::Generation(GenerationFoldWork::new_original(input,original)));

@@ -223,6 +223,246 @@ fn segmented_accessibility_nodes(record: &ui_contract::UiNodeRecord, depth: usiz
         .collect()
 }
 
+/// 🧩️ What a virtual key under a record that mounts synthesized children (an icon selector's four cells, an extension host's rows) names: the child control, and for a `<child>::option::<value>` key the option of that child's select it picks.
+pub fn accessibility_cell(tree: &UiTree, owner: semio_ui_arena::NodeId, key: &str) -> Option<(semio_ui_arena::NodeId, Option<String>)> {
+    if let Some((_, index)) = key.split_once(PICKER_KEY_INFIX) {
+        let cell_key = format!("picker.{index}");
+        let mut child = tree.node(owner)?.first_child;
+        while let Some(candidate) = child {
+            let node = tree.node(candidate)?;
+            if matches!(&node.key, semio_ui_retained_tree::tree::NodeKey::Explicit(existing) if *existing == cell_key) {
+                return Some((candidate, None));
+            }
+            child = node.next_sibling;
+        }
+        return None;
+    }
+    let (cell_key, option) = match key.split_once(SELECT_OPTION_KEY_INFIX) {
+        Some((cell, value)) => (cell, Some(value)),
+        None => (key, None),
+    };
+    let mut child = tree.node(owner)?.first_child;
+    while let Some(candidate) = child {
+        let node = tree.node(candidate)?;
+        if matches!(&node.key, semio_ui_retained_tree::tree::NodeKey::Explicit(existing) if existing == cell_key) {
+            let value = match (option, &node.spec.0) {
+                (None, _) => None,
+                (Some(value), semio_ui_declaration::ui::UiNode::Select(select)) if node.state.open && select.items.iter().any(|item| item.value == value) => Some(value.to_string()),
+                _ => return None,
+            };
+            return Some((candidate, value));
+        }
+        child = node.next_sibling;
+    }
+    None
+}
+
+/// 🖼️ The synthesized children `keys` of `owner` as the controls React renders — a select as a combobox (with its listbox and options while open), an input as a textbox, a button by its text, text as text — in order, named by the owner's own label where React labels a field by its owner; children the sync pass has not minted yet are skipped.
+fn cell_accessibility_nodes(tree: &UiTree, owner: semio_ui_arena::NodeId, keys: &[String], depth: usize, record: &AccessibilityProjectionNode) -> Vec<AccessibilityProjectionNode> {
+    use semio_ui_declaration::ui::UiNode;
+    let origin = record.rect.map_or((0.0, 0.0), |rect| (rect[0], rect[1]));
+    let mut nodes = Vec::new();
+    for key in keys {
+        let Some((id, _)) = accessibility_cell(tree, owner, key) else { continue };
+        let Some(cell) = tree.node(id) else { continue };
+        let mut node = record.clone();
+        node.key = key.clone();
+        node.depth = depth.saturating_add(1);
+        node.description = None;
+        node.shortcut = None;
+        node.value_text = None;
+        node.rect = Some([origin.0 + cell.layout.x, origin.1 + cell.layout.y, cell.layout.width, cell.layout.height]);
+        node.focused = cell.flags.contains(NodeFlags::FOCUSED);
+        node.focusable = !record.disabled;
+        node.tabbable = node.focusable;
+        node.actionable = node.focusable;
+        match &cell.spec.0 {
+            UiNode::Select(select) => {
+                node.role = "combobox".to_string();
+                node.expanded = Some(cell.state.open);
+                node.value_text = select.items.iter().find(|item| item.value == select.value).map(|item| item.label.as_str().to_string());
+                nodes.push(node.clone());
+                if cell.state.open {
+                    let mut listbox = node.clone();
+                    listbox.key = format!("{key}{SELECT_LISTBOX_KEY_SUFFIX}");
+                    listbox.role = "listbox".to_string();
+                    listbox.focusable = false;
+                    listbox.tabbable = false;
+                    listbox.actionable = false;
+                    listbox.focused = false;
+                    listbox.expanded = None;
+                    listbox.value_text = None;
+                    listbox.rect = None;
+                    nodes.push(listbox.clone());
+                    for item in &select.items {
+                        let mut option = listbox.clone();
+                        option.key = format!("{key}{SELECT_OPTION_KEY_INFIX}{}", item.value);
+                        option.role = "option".to_string();
+                        option.depth = listbox.depth.saturating_add(1);
+                        option.label = Some(item.label.as_str().to_string());
+                        option.actionable = !record.disabled;
+                        option.selected = Some(item.value == select.value);
+                        option.value_text = Some(item.value.clone());
+                        nodes.push(option);
+                    }
+                }
+                continue;
+            }
+            UiNode::Input(input) => {
+                node.role = "textbox".to_string();
+                node.editable = !record.disabled;
+                node.multiline = input.input_kind == "longText";
+                node.value_text = Some(cell.state.edit.as_ref().map_or_else(|| input.value.clone(), |edit| edit.text.clone()));
+            }
+            UiNode::Button(button) => {
+                node.role = "button".to_string();
+                node.label = Some(button.label.as_str().to_string());
+            }
+            UiNode::Text(text) => {
+                node.role = "text".to_string();
+                node.label = Some(text.value.as_str().to_string());
+                node.focusable = false;
+                node.tabbable = false;
+                node.actionable = false;
+            }
+            _ => continue,
+        }
+        nodes.push(node);
+    }
+    nodes
+}
+
+/// 🗓️ The infix of a picker cell's projection key: `<input key>::picker.<index>`, which `accessibility_cell` resolves back to the popup's `picker.<index>` child.
+pub const PICKER_KEY_INFIX: &str = "::picker.";
+
+/// 🗓️ An open date or colour popup as the roles the browser's pickers expose: a calendar as `grid` > `row` > `gridcell` (each day named by its ISO date, the field's day `selected`) with previous and next month buttons named in the host language; a colour popup as a `listbox` of `option` swatches (named by hex, the current colour `selected`) with the hex and channel fields as text boxes. Cells the sync pass has not minted yet are skipped.
+fn picker_accessibility_nodes(tree: &UiTree, owner: semio_ui_arena::NodeId, depth: usize, record: &AccessibilityProjectionNode) -> Vec<AccessibilityProjectionNode> {
+    use semio_ui_declaration::ui::UiNode;
+    let Some(owner_node) = tree.node(owner) else { return Vec::new() };
+    let UiNode::Input(input) = &owner_node.spec.0 else { return Vec::new() };
+    if !owner_node.state.open || !semio_ui_wgpu_layout::date_picker::is_picker_kind(&input.input_kind) {
+        return Vec::new();
+    }
+    let names = owner_node.state.picker_names.unwrap_or(["", "", ""]);
+    let origin = record.rect.map_or((0.0, 0.0), |rect| (rect[0], rect[1]));
+    let base = |suffix: &str, role: &str, extra: usize| {
+        let mut node = record.clone();
+        node.key = format!("{}{PICKER_KEY_INFIX}{suffix}", record.key);
+        node.role = role.to_string();
+        node.depth = depth.saturating_add(1 + extra);
+        node.description = None;
+        node.shortcut = None;
+        node.value_text = None;
+        node.expanded = None;
+        node.selected = None;
+        node.focused = false;
+        node.editable = false;
+        node.focusable = false;
+        node.tabbable = false;
+        node.actionable = false;
+        node
+    };
+    let cell = |index: usize| {
+        let mut child = tree.node(owner)?.first_child;
+        while let Some(candidate) = child {
+            let node = tree.node(candidate)?;
+            if matches!(&node.key, semio_ui_retained_tree::tree::NodeKey::Explicit(existing) if *existing == format!("picker.{index}")) {
+                return Some(node);
+            }
+            child = node.next_sibling;
+        }
+        None
+    };
+    let place = |node: &mut AccessibilityProjectionNode, cell: &semio_ui_retained_tree::tree::Node| {
+        node.rect = Some([origin.0 + cell.layout.x, origin.1 + cell.layout.y, cell.layout.width, cell.layout.height]);
+    };
+    let label_of = |cell: &semio_ui_retained_tree::tree::Node| match &cell.spec.0 {
+        UiNode::Button(button) => button.label.as_str().to_string(),
+        UiNode::Input(input) => input.value.clone(),
+        _ => String::new(),
+    };
+    let mut nodes = Vec::new();
+    if input.input_kind == "date" {
+        for (index, name) in [(1, names[0]), (2, names[1])] {
+            let Some(cell_node) = cell(index) else { continue };
+            let mut node = base(&index.to_string(), "button", 0);
+            node.label = Some(name.to_string());
+            node.focusable = !record.disabled;
+            node.actionable = !record.disabled;
+            place(&mut node, cell_node);
+            nodes.push(node);
+        }
+        let mut grid = base("grid", "grid", 0);
+        grid.label = cell(3).map(label_of);
+        if let Some(panel) = cell(0) {
+            place(&mut grid, panel);
+        }
+        nodes.push(grid);
+        for row in 0..semio_ui_wgpu_layout::date_picker::DATE_GRID_ROWS {
+            let mut row_node = base(&format!("row.{row}"), "row", 1);
+            row_node.label = None;
+            nodes.push(row_node);
+            for column in 0..semio_ui_wgpu_layout::date_picker::DATE_GRID_COLUMNS {
+                let index = 4 + row * semio_ui_wgpu_layout::date_picker::DATE_GRID_COLUMNS + column;
+                let Some(cell_node) = cell(index) else { continue };
+                let UiNode::Button(button) = &cell_node.spec.0 else { continue };
+                let mut node = base(&index.to_string(), "gridcell", 2);
+                node.label = Some(button.action.args.as_ref().and_then(|args| args.get("value")).and_then(semio_framework_value::DslValue::as_str).map_or_else(|| button.label.as_str().to_string(), str::to_string));
+                node.selected = Some(button.presence.selected);
+                node.focusable = !record.disabled;
+                node.actionable = !record.disabled;
+                place(&mut node, cell_node);
+                nodes.push(node);
+            }
+        }
+    } else {
+        let mut listbox = base("listbox", "listbox", 0);
+        listbox.label = Some(names[2].to_string());
+        if let Some(panel) = cell(0) {
+            place(&mut listbox, panel);
+        }
+        nodes.push(listbox);
+        let current = ui_contract::parse_ui_color_hex(&input.value).map(|rgba| ui_contract::ui_color_hex(&rgba, false));
+        for index in 2..2 + semio_ui_wgpu_layout::colour_picker::COLOUR_SWATCHES.len() {
+            let Some(cell_node) = cell(index) else { continue };
+            let mut node = base(&index.to_string(), "option", 1);
+            node.label = Some(label_of(cell_node));
+            node.selected = Some(current.as_deref() == Some(label_of(cell_node).as_str()));
+            node.focusable = !record.disabled;
+            node.actionable = !record.disabled;
+            place(&mut node, cell_node);
+            nodes.push(node);
+        }
+        for (index, name) in [(18, "Hex"), (19, "R"), (20, "G"), (21, "B")] {
+            let Some(cell_node) = cell(index) else { continue };
+            let mut node = base(&index.to_string(), "textbox", 0);
+            node.label = Some(name.to_string());
+            node.value_text = Some(cell_node.state.edit.as_ref().map_or_else(|| label_of(cell_node), |edit| edit.text.clone()));
+            node.editable = !record.disabled;
+            node.focusable = !record.disabled;
+            node.tabbable = node.focusable;
+            node.focused = cell_node.flags.contains(NodeFlags::FOCUSED);
+            place(&mut node, cell_node);
+            nodes.push(node);
+        }
+    }
+    nodes
+}
+
+/// 🖼️ An icon selector's four cells (`<id>.mode`, `.field`, `.import`, `.clear`) as [`cell_accessibility_nodes`].
+fn icon_select_accessibility_nodes(tree: &UiTree, selector: semio_ui_arena::NodeId, depth: usize, owner: &AccessibilityProjectionNode) -> Vec<AccessibilityProjectionNode> {
+    let Some(semio_ui_declaration::ui::UiNode::IconSelect(select)) = tree.node(selector).map(|node| &node.spec.0) else { return Vec::new() };
+    let keys: Vec<String> = (0..semio_ui_retained_tree::reconcile::ICON_SELECT_CELLS).map(|index| semio_ui_retained_tree::reconcile::icon_select_cell_key(select, index)).collect();
+    cell_accessibility_nodes(tree, selector, &keys, depth, owner)
+}
+
+/// 🔌️ A hosted extension's rows as [`cell_accessibility_nodes`], so what its host renders is reachable like any control.
+fn extension_accessibility_nodes(tree: &UiTree, slot: semio_ui_arena::NodeId, depth: usize, owner: &AccessibilityProjectionNode) -> Vec<AccessibilityProjectionNode> {
+    let Some(semio_ui_declaration::ui::UiNode::ExternalSlot(external)) = tree.node(slot).map(|node| &node.spec.0) else { return Vec::new() };
+    let keys: Vec<String> = (0..semio_ui_retained_tree::reconcile::extension_host_rows(&external.body_key, &external.params_json).len()).map(|index| semio_ui_retained_tree::reconcile::extension_row_key(&external.body_key, index)).collect();
+    cell_accessibility_nodes(tree, slot, &keys, depth, owner)
+}
+
 /// 🌳️ The accessibility tree ONE window's retained document publishes, in pre-order — the reading
 /// order an assistive technology walks.
 ///
@@ -294,7 +534,7 @@ pub fn accessibility_projection(tree: &UiTree) -> Vec<AccessibilityProjectionNod
                     node.selected = node.selected.or(Some(arena_node.spec.0.presence().selected));
                 }
                 match &arena_node.spec.0 {
-                    semio_ui_declaration::ui::UiNode::ExternalSlot(slot) if slot.body_key == semio_ui_retained_tree::reconcile::MEDIA_TRANSPORT_EXTENSION_ID => {
+                    semio_ui_declaration::ui::UiNode::ExternalSlot(slot) if slot.host_status.is_some() => {
                         node.role = "status".to_string();
                         node.label = slot.host_status.clone();
                         node.focusable = false;
@@ -307,6 +547,9 @@ pub fn accessibility_projection(tree: &UiTree) -> Vec<AccessibilityProjectionNod
                         node.value_text = Some(arena_node.state.edit.as_ref().map(|edit| edit.text.clone()).unwrap_or_else(|| input.value.clone()));
                         if input.input_kind == "number" {
                             node.value_now = arena_node.state.edit.as_ref().and_then(|edit| edit.text.parse().ok()).or(node.value_now);
+                        }
+                        if semio_ui_wgpu_layout::date_picker::is_picker_kind(&input.input_kind) {
+                            node.expanded = Some(arena_node.state.open);
                         }
                         if input.input_kind == "longText" {
                             node.multiline = true;
@@ -391,6 +634,20 @@ pub fn accessibility_projection(tree: &UiTree) -> Vec<AccessibilityProjectionNod
         }
         if select_open && !segmented {
             for virtual_node in select_accessibility_nodes(record, pending.depth, &node) {
+                if projection.len() >= UI_DOCUMENT_NODES {
+                    break;
+                }
+                projection.push(virtual_node);
+            }
+        }
+        if let Some(mounted) = tree.document_node(pending.id) {
+            let cells = match record.component {
+                ui_contract::Component::IconSelect(_) => icon_select_accessibility_nodes(tree, mounted, pending.depth, &node),
+                ui_contract::Component::Extension(_) => extension_accessibility_nodes(tree, mounted, pending.depth, &node),
+                ui_contract::Component::Input(_) => picker_accessibility_nodes(tree, mounted, pending.depth, &node),
+                _ => Vec::new(),
+            };
+            for virtual_node in cells {
                 if projection.len() >= UI_DOCUMENT_NODES {
                     break;
                 }

@@ -356,6 +356,58 @@
           "type": "boolean"
         }
       }
+    },
+    "UnbornReservationRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "state",
+        "directory",
+        "childPresent",
+        "namespaceDirectoryPresent"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "state": {
+          "$ref": "https://semio.tech/framework/process/native-storage/v1#/definitions/State"
+        },
+        "directory": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "childPresent": {
+          "type": "boolean"
+        },
+        "namespaceDirectoryPresent": {
+          "type": "boolean"
+        }
+      }
+    },
+    "UnbornReservationRetirement": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "ids"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "ids": {
+          "type": "array",
+          "maxItems": 64,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{32}$"
+          }
+        }
+      }
     }
   },
   "$ref": "#/definitions/State"

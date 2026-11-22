@@ -1,6 +1,6 @@
 import {existsSync} from "node:fs";
 import {readFile,stat} from "node:fs/promises";
-import {repositoryCacheBudgetV1} from "../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/🟦️.ts";
+import {repositoryCacheBudgetV1,type RepositoryCachePartitionIdV1} from "../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/🟦️.ts";
 import budgetPolicy from "../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/🔣️policy.json" with {type:"json"};
 import {join} from "node:path";
 import {CACHE_GC_LIMITS_V1} from "../🧬️schema/🟦️.ts";
@@ -124,7 +124,7 @@ async function collectMachineBoundsOfCommandV1(context:CacheCommandContextV1,lan
 
 /** 🚰️ Binds the graph reclaim to the real retained graph partition, its free space and the two shared scoped recoveries. */
 async function graphReclaim(root:string,dryRun:boolean,language:CacheLanguageV1,phaseControl:import("../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts").ResourceLeaseControl,leases:typeof import("../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts"),opening:typeof import("../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🟦️.ts"),partitions:typeof import("../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/♻️reset/🟦️.ts"),headroom:typeof import("../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🧹️headroom/🟦️.ts")):Promise<string>{
- const{reclaimGraphOptionalV1}=await import("../🚰️reclaim/🟦️.ts"),{nativeImageSpaceV1}=await import("../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts"),directory=opening.repositoryLeaseDirectoryV1(root);
+ const{reclaimGraphOptionalV1,graphProducerPublicationsV1}=await import("../🚰️reclaim/🟦️.ts"),{nativeImageSpaceV1}=await import("../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts"),directory=opening.repositoryLeaseDirectoryV1(root);
  type Image=Awaited<ReturnType<typeof partitions.openRepositoryCachePartitionV1>>;
  const exclusive=async(resource:string)=>{try{return await leases.acquireResourceLease({directory,resource,mode:"exclusive",signal:phaseControl.signal,control:phaseControl,timeoutMs:0});}catch(error){if(/timed out/iu.test(String((error as Error).message)))return undefined;throw error;}};
  return reclaimGraphOptionalV1(root,cacheLedgerV1(),dryRun,language,{
@@ -134,6 +134,7 @@ async function graphReclaim(root:string,dryRun:boolean,language:CacheLanguageV1,
   index:async image=>{const scan=await import("../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/🗂️members/🔎️scan/🟦️.ts"),{buildGraphWriterResourceV1}=await import("../../📥️inputs/💾️storage/🔒️writer/🟨️.mjs"),{resolve}=await import("node:path"),imageRoot=(image as Image).root;return scan.indexBuildGraphMembersV1(imageRoot,{lease:(kind,identity)=>exclusive(kind==="canonical"?"repository-graph-facts:"+resolve(root):buildGraphWriterResourceV1(root,kind,identity)),read:scan.closureReadChildPortV1(imageRoot,phaseControl)},{cancelled:()=>phaseControl.signal.aborted,progress:()=>{}});},
   closures:async(image,dryRun)=>{const scan=await import("../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/🗂️members/🔎️scan/🟦️.ts"),{buildGraphWriterResourceV1}=await import("../../📥️inputs/💾️storage/🔒️writer/🟨️.mjs"),{resolve}=await import("node:path"),imageRoot=(image as Image).root;const resourceOf=(kind:"selection"|"dataset"|"canonical",identity:string)=>kind==="canonical"?"repository-graph-facts:"+resolve(root):buildGraphWriterResourceV1(root,kind,identity),{randomBytes}=await import("node:crypto");return scan.supersedeBuildGraphClosuresV1(imageRoot,{lease:(kind,identity)=>exclusive(resourceOf(kind,identity)),queue:async(kind,identity)=>{try{return await leases.acquireQueuedResourceLease({directory,resource:resourceOf(kind,identity),mode:"exclusive",owner:randomBytes(8).toString("hex"),signal:phaseControl.signal,control:phaseControl,timeoutMs:CACHE_GC_LIMITS_V1.graphLeaseWaitMilliseconds});}catch(error){if(/timed out/iu.test(String((error as Error).message)))return undefined;throw error;}},read:scan.closureReadChildPortV1(imageRoot,phaseControl)},{cancelled:()=>phaseControl.signal.aborted,progress:()=>{}},{dryRun});},
   closureStores:async image=>{const{readdir}=await import("node:fs/promises"),{join}=await import("node:path"),{collectClosureStoreV1}=await import("../../🕸️graph/📥️inference/🧭️script-inputs/🧹️retention/🟨️.mjs"),{INFERENCE_LIMITS_V1}=await import("../../🕸️graph/📥️inference/🧬️schema/🟨️.mjs"),base=join((image as Image).root,"inference","selections"),total={stores:0,entries:0,layers:0,values:0,kept:0,bytes:0,graceMilliseconds:INFERENCE_LIMITS_V1.closureStoreGraceMilliseconds,cancelled:false};for(const id of await readdir(base).catch(()=>[] as string[])){const report=await collectClosureStoreV1({directory:join(base,id,"ce"),graceMilliseconds:INFERENCE_LIMITS_V1.closureStoreGraceMilliseconds,dryRun,cancelled:()=>phaseControl.signal.aborted});if(report.cancelled){total.cancelled=true;break;}total.stores++;total.entries+=report.removed!.entries;total.layers+=report.removed!.layers;total.values+=report.removed!.values;total.kept+=report.kept!.entries;total.bytes+=report.bytes!;}return total;},
+  publications:async(image,dryRun)=>graphProducerPublicationsV1((image as Image).root,dryRun,phaseControl.signal),
   lru:async(image,dryRun)=>{const scan=await import("../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/🗂️members/🔎️scan/🟦️.ts"),{buildGraphWriterResourceV1}=await import("../../📥️inputs/💾️storage/🔒️writer/🟨️.mjs"),{resolve}=await import("node:path");return scan.retireBuildGraphOptionalGroupsLruV1((image as Image).root,{lease:(kind,identity)=>exclusive(kind==="canonical"?"repository-graph-facts:"+resolve(root):buildGraphWriterResourceV1(root,kind,identity))},{cancelled:()=>phaseControl.signal.aborted,progress:()=>{}},{dryRun});},
   free:async image=>{const space=nativeImageSpaceV1((image as Image).root,(image as Image).filesystemBytes);return space.bavail*space.bsize;},
   selected:(image,request)=>headroom.recoverRepositoryCachePartitionSelectedHeadroomV1(root,image as Image,phaseControl,request),
@@ -141,12 +142,12 @@ async function graphReclaim(root:string,dryRun:boolean,language:CacheLanguageV1,
  });
 }
 
-/** 🌱️ Collects (or, in a dry run, only reports) what the mounted rust image can give back, least recently used first: the Cargo incremental sessions, then the component runs a newer run supersedes, then the stale build units; lock-aware (compiler locks, build leases, running builds). It frees what the image needs to reach its free-space target and what its machine quota exceeds (`machine`), whichever is more, the pressure rule measured on the image itself. */
+/** 🌱️ Collects (or, in a dry run, only reports) what the mounted rust image can give back, least recently used first, with the same single-flight reclaim the automatic gate of the Cargo admission runs (`collectRustImageV1`, under the claim it shares); lock-aware (compiler locks, build leases, running builds). It frees what the image needs to reach its free-space target and what its machine quota exceeds (`machine`), whichever is more, the pressure rule measured on the honest available space of the image. */
 async function cargoIncrementalReclaim(root:string,dryRun:boolean,language:CacheLanguageV1,ports:CacheRunnerPortsV1,machine:MachinePlanV1|null):Promise<string>{
  const{existsSync}=await import("node:fs"),{join}=await import("node:path"),ledger=cacheLedgerV1(),area=ledger.areas.find(row=>row.id==="rust")!,directory=cacheAreaDirectoryV1(root,ledger,area),store=directory===null?null:join(directory,"m");
  if(store===null||!existsSync(store))return cacheTextV1(language,"gc.imageAbsent",{id:"cargo-store"});
- const{collectIncrementalV1}=await import("../../../⚡️caching/🦀️cargo/🗃️unit-cache/🧹️gc/🌱️incremental/🟦️.ts"),{gcNeedBytesV1,measureVolumeV1,unitBudgetBytesV1}=await import("../../../⚡️caching/🦀️cargo/🗃️unit-cache/🧹️gc/🟦️.ts"),{collectComponentRunsV1}=await import("../../../⚡️caching/🦀️cargo/🗃️unit-cache/🧹️gc/🧩️runs/🟦️.ts"),{collectUnitsV1}=await import("../../../⚡️caching/🦀️cargo/🗃️unit-cache/🧹️gc/🧱️units/🟦️.ts"),volume=measureVolumeV1(store,1),quotaBytes=machine?.stores.find(row=>row.id==="rust")?.evictBytes??0,need=Math.max(gcNeedBytesV1(volume.volumeBytes,volume.freeBytes),quotaBytes),lines:string[]=[],report={language,write:(line:string)=>{lines.push(line);}};
- const remaining=(planned:number):number=>{if(dryRun)return Math.max(0,need-planned);const now=measureVolumeV1(store,1);return Math.max(gcNeedBytesV1(now.volumeBytes,now.freeBytes),quotaBytes-(now.freeBytes-volume.freeBytes),0);};
+ const{collectRustImageV1,autoReclaimTextV1,RUST_IMAGE_RECLAIM_POLICY_V1}=await import("../../../⚡️caching/🦀️cargo/🗃️unit-cache/🧹️gc/♻️auto-reclaim/🟦️.ts"),{unitBudgetBytesV1}=await import("../../../⚡️caching/🦀️cargo/🗃️unit-cache/🧹️gc/🟦️.ts"),{createHonestMeasureV1}=await import("../../../⚡️caching/🦀️cargo/🗃️unit-cache/🧹️gc/🏦️headroom/🟦️.ts"),{tryClaimWithBallastV1}=await import("../../../⚡️caching/🦀️cargo/🗃️unit-cache/🧹️gc/🛟️ballast/🟦️.ts"),{UNIT_CACHE_POLICY_V1}=await import("../../../⚡️caching/🦀️cargo/🗃️unit-cache/🔏️key/🟦️.ts");
+ const honest=createHonestMeasureV1(),measure=()=>honest(store,1),quotaBytes=machine?.stores.find(row=>row.id==="rust")?.evictBytes??0,lines:string[]=[];
  const control=(collector:string):CargoGcControlV1=>{
   let sequence=0;
   const last=new Map<string,number>();
@@ -159,16 +160,11 @@ async function cargoIncrementalReclaim(root:string,dryRun:boolean,language:Cache
   };
   return {signal:ports.signal,progress:(_done,_total,stage)=>progress(stage),remove:path=>removeCacheTreeV1(path,{...ports,progress},"deleting")};
  };
- const sessions=await collectIncrementalV1(store,{dryRun,volumeBytes:volume.volumeBytes,needBytes:()=>need,satisfied:()=>need>0&&measureVolumeV1(store,1).freeBytes-volume.freeBytes>=need,report,...control("incremental")});
- const afterSessions=dryRun?volume:measureVolumeV1(store,1),needRuns=remaining(sessions.freedBytes);
- const runs=await collectComponentRunsV1(store,{dryRun,needBytes:()=>needRuns,satisfied:()=>{
-  const current=measureVolumeV1(store,1);
-  return afterSessions.unmeasured||current.unmeasured?undefined:current.freeBytes-afterSessions.freeBytes>=needRuns;
- },report,...control("runs")});
- const afterRuns=dryRun?volume:measureVolumeV1(store,1),needUnits=remaining(sessions.freedBytes+runs.freedBytes);
- await collectUnitsV1(store,{dryRun,needBytes:()=>needUnits,budgetBytes:unitBudgetBytesV1(repositoryCacheBudgetV1(root).partitions.rust.capacityBytes),satisfied:()=>needUnits>0&&measureVolumeV1(store,1).freeBytes-afterRuns.freeBytes>=needUnits,report,...control("units")});
- const{fillRatesV1,fillReportV1,readFillSamplesV1}=await import("../../../⚡️caching/🦀️cargo/🗃️unit-cache/🧹️gc/📈️fill/🟦️.ts"),current=measureVolumeV1(store,1);
- lines.push(fillReportV1(fillRatesV1(readFillSamplesV1(join(store,"u")),Date.now()),current.freeBytes,language));
+ const run=()=>collectRustImageV1(store,{dryRun,language,demandBytes:0,quotaBytes,unitBudgetBytes:unitBudgetBytesV1(repositoryCacheBudgetV1(root).partitions.rust.capacityBytes),measure,control,write:line=>{lines.push(line);}});
+ if(dryRun){await run();return lines.join("\n");}
+ const claim=tryClaimWithBallastV1(join(store,"u",UNIT_CACHE_POLICY_V1.layout.locks),RUST_IMAGE_RECLAIM_POLICY_V1.claim);
+ if(!claim)return autoReclaimTextV1("joined",{free:(measure().freeBytes/1024**3).toFixed(1)},language);
+ try{await run();}finally{claim.release();}
  return lines.join("\n");
 }
 
@@ -214,23 +210,33 @@ export async function runCacheLedgerV1(root:string,args:readonly string[],invoca
    if(owner==="graph"&&id==="graph-inference")return routing.withRequestedIssuedResourceControlV1(phaseControl,CACHE_GC_LIMITS_V1.phaseBudgetMilliseconds,control=>graphReclaim(root,dryRun,language,control,leases,opening,partitions,headroom));
    if(owner==="cargo"&&id==="cargo-store")return cargoIncrementalReclaim(root,dryRun,language,{...ports,signal:phaseControl.signal},context?.machine??null).catch(error=>{if(phaseControl.signal.aborted)throw error;return "failed: "+String((error as Error).message);});
    if(owner==="test-evidence"&&id==="test-runs")return testRunsReclaim(root,dryRun,language,phaseControl,invocation).catch(error=>"failed: "+String((error as Error).message));
-   if(owner==="remote-execution")return import("../../🌐️remote-execution/👷️worker/🟦️.ts").then(module=>module.collectRemoteExecutionForLedgerV1(root,dryRun,phaseControl.signal)).catch(error=>"failed: "+String((error as Error).message));
+   if(owner==="remote-execution")return import("../../🌐️remote-execution/👷️worker/🟦️.ts").then(module=>module.collectRemoteExecutionForLedgerV1(root,dryRun,phaseControl.signal,id)).catch(error=>"failed: "+String((error as Error).message));
    if(owner==="remote-cache")return import("../../🌐️remote-cache/⌨️command/🟦️.ts").then(module=>module.collectRemoteCacheForLedgerV1(root,dryRun,phaseControl.signal)).catch(error=>"failed: "+String((error as Error).message));
    return import("../../🔌️backends/🟦️.ts").then(async registry=>registry.buildBackendIdsV1().includes(owner)?routing.withRequestedIssuedResourceControlV1(phaseControl,CACHE_GC_LIMITS_V1.phaseBudgetMilliseconds,async control=>(await(await import("../../🔌️backends/🚚️loading/🟦️.ts")).loadBuildBackendV1(owner)).collectCache?.({root,invocation,phase:control,dryRun,signal:control.signal,area:id,language})):undefined);
   }
  });
  const verify=async(control:import("../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/🗂️members/🔎️scan/🟦️.ts").MemberScanControlV1)=>{const scan=await import("../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/🗂️members/🔎️scan/🟦️.ts"),image=await partitions.openRepositoryCachePartitionV1(root,"graph",phaseControl);try{return await scan.verifyBuildGraphMembersDeepV1(image.root,control);}finally{await image.close();}};
  const wholeGc=args[0]==="gc"&&!args.some(arg=>arg==="--area"||arg.startsWith("--area="));
- const idleOnly=args.includes("--idle"),reclaimImages=async(order:readonly("rust"|"dependencies"|"graph"|"products"|"tools"|"diagnostics"|"nx")[])=>{
+ const dependencyArea=args.some(arg=>arg.startsWith("--area=")&&arg.slice(7).split(",").includes("dependencies")),collectDependencies=async(dryRun:boolean,bounded:boolean):Promise<void>=>{
+  const{collectUnpinnedDependencyGenerationsV1}=await import("../../../⚡️caching/🚀️bootstrap/📦️dependencies/♻️collection/🟦️.ts"),{concurrentPinResourceV1}=await import("../../../⚡️caching/🚀️bootstrap/📦️dependencies/🚦️concurrent/🟦️.ts"),{resolve:resolvePath}=await import("node:path"),store=join(root,...budgetPolicy.partitions.dependencies.directory.split("/"),"m");
+  if(!existsSync(store))return;
+  try{
+   const result=await collectUnpinnedDependencyGenerationsV1(store,{dryRun,signal:invocation.control.signal,...bounded?{maximumMilliseconds:CACHE_GC_LIMITS_V1.idleCompactionMaximumMilliseconds}:{},progress:row=>routing.advanceScriptInvocation(invocation,"cache:dependencies-"+row.phase+"-"+row.done+"-"+row.total+"-"+row.entries,"running"),acquire:async key=>{try{return await leases.acquireResourceLease({directory,resource:concurrentPinResourceV1(resolvePath(root),key),mode:"exclusive",signal:invocation.control.signal,control:phaseControl,timeoutMs:0});}catch(error){if(/timed out/iu.test(String((error as Error).message)))return null;throw error;}}});
+   if(result.refused!==undefined)writeResultLineV1("Dependency generations kept: "+result.refused+" / Abhängigkeits-Generationen behalten: "+result.refused);
+   else if(result.retired.length>0||result.finished.length>0){const finished=result.finished.length>0?" and "+(dryRun?"would finish ":"finished ")+result.finished.length+" interrupted removal(s)":"",fertig=result.finished.length>0?" und "+result.finished.length+" unterbrochene Entfernung(en) "+(dryRun?"würden beendet":"beendet"):"";writeResultLineV1((dryRun?"Would retire ":"Retired ")+result.retired.length+" dependency generation(s)"+finished+(result.pressure?" (image under pressure)":"")+" / "+result.retired.length+" Abhängigkeits-Generation(en) "+(dryRun?"würden entfernt":"entfernt")+fertig+(result.pressure?" (Image unter Druck)":""));}
+   if(result.more)writeResultLineV1("More dependency generations follow in the next pass / Weitere Abhängigkeits-Generationen folgen im nächsten Durchgang");
+  }catch(error){if(invocation.control.signal.aborted)throw error;writeResultLineV1("Dependency generations not collected: "+String((error as Error).message)+" / Abhängigkeits-Generationen nicht gesammelt: "+String((error as Error).message));}
+ };
+ const idleOnly=args.includes("--idle"),reclaimImages=async(order:readonly RepositoryCachePartitionIdV1[])=>{
   const reclaimDue=(await import("../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/🟦️.ts")).repositoryPartitionReclaimDueV1,{createHash}=await import("node:crypto"),{tmpdir}=await import("node:os"),{mkdirSync,readFileSync,writeFileSync}=await import("node:fs"),{compactOnIdleV1}=await import("../🛌️idle/🟦️.ts");
   const stamps=join(tmpdir(),"semio-idle-compaction-"+createHash("sha256").update(root).digest("hex").slice(0,16));
   if(args.includes("--dry-run")){for(const partition of order)if(reclaimDue(root,partition))writeResultLineV1("Would reclaim the host blocks of image "+partition);return;}
   const results=await compactOnIdleV1({partitions:order,minimumIntervalMilliseconds:idleOnly?CACHE_GC_LIMITS_V1.idleCompactionIntervalMilliseconds:0,maximumMilliseconds:CACHE_GC_LIMITS_V1.idleCompactionMaximumMilliseconds,signal:invocation.control.signal,ports:{
-   now:Date.now,due:partition=>reclaimDue(root,partition),
+   now:Date.now,due:partition=>reclaimDue(root,partition as RepositoryCachePartitionIdV1),
    lastAt:partition=>{try{return (JSON.parse(readFileSync(join(stamps,partition+".json"),"utf8")) as {at:number}).at;}catch{return undefined;}},
    stamp:(partition,at)=>{try{mkdirSync(stamps,{recursive:true});writeFileSync(join(stamps,partition+".json"),JSON.stringify({at}));}catch{}},
    reclaim:async partition=>{
-    const outcome=await partitions.reclaimImageIfQuiescentV1(invocation,phaseControl,partition,(done,total)=>routing.advanceScriptInvocation(invocation,"cache:reclaim-"+partition+"-"+done+"-"+total,"running"));
+    const outcome=await partitions.reclaimImageIfQuiescentV1(invocation,phaseControl,partition as RepositoryCachePartitionIdV1,(done,total)=>routing.advanceScriptInvocation(invocation,"cache:reclaim-"+partition+"-"+done+"-"+total,"running"));
     return outcome.outcome==="skipped"?{outcome:"skipped",reason:outcome.reason}:{outcome:"reclaimed",beforeBytes:outcome.beforeBytes,afterBytes:outcome.afterBytes};
    }}});
   for(const row of results){
@@ -238,9 +244,16 @@ export async function runCacheLedgerV1(root:string,args:readonly string[],invoca
    else if(row.result==="busy"||row.result==="failed")writeResultLineV1("Image "+row.partition+" not compacted: "+(row.message??row.result)+" / Image "+row.partition+" nicht verdichtet: "+(row.message??row.result));
   }
  };
- if(idleOnly){await reclaimImages(["rust","dependencies","graph","products","tools","diagnostics","nx"]);return;}
+ const retireIdle=async():Promise<void>=>{
+  const signal=invocation.control.signal;
+  await import("../../🌐️remote-execution/👷️worker/🟦️.ts").then(async module=>writeResultLineV1("Remote execution worker home: "+await module.collectRemoteExecutionForLedgerV1(root,false,signal,"remote-execution-worker")),()=>undefined).catch(()=>undefined);
+  const registry=await import("../../../../../../../🔨️modules/🏃️process/🔒️leases/🧭️order/🗂️registry/🟦️.ts"),order=await import("../../../../../../../🔨️modules/🏃️process/🔒️leases/🧭️order/🟦️.ts");
+  const pruned=await registry.pruneLeaseRegistryIfDueV1(registry.leaseRegistryRootV1(),order.leaseOrderPolicyV1(process.env),Date.now(),signal).catch(()=>undefined);
+  if(pruned!==undefined)writeResultLineV1("Lease registry: removed "+pruned.removedFolders+" folders and "+pruned.removedEntries+" rows"+(pruned.more?" (more follow)":"")+" / Lease-Register: "+pruned.removedFolders+" Ordner und "+pruned.removedEntries+" Zeilen entfernt"+(pruned.more?" (weitere folgen)":""));
+ };
+ if(idleOnly){await collectDependencies(false,true);await retireIdle();await reclaimImages(["rust","dependencies","graph","products","tools","diagnostics","nx"]);return;}
  if(wholeGc&&!args.includes("--dry-run"))await reclaimImages(["rust"]);
  const code=await runCacheLedgerCommandV1(args,{workspace:root,environment:process.env,write:writeResultLineV1,verify},ports);
  if(code!==0)process.exitCode=code;
- else if(wholeGc)await reclaimImages(["rust","dependencies","graph","products","tools","diagnostics","nx"]);
+ else if(wholeGc||dependencyArea){await collectDependencies(args.includes("--dry-run"),false);if(wholeGc)await reclaimImages(["rust","dependencies","graph","products","tools","diagnostics","nx"]);}
 }

@@ -21,10 +21,14 @@ Feature: Apply every typed XLSX ECMA-376 mutation to a real-world workbook
   `t="s"` shared-string reference and a `t="inlineStr"` literal into the same resolved value.
   `rust_xlsxwriter` 0.96 can only assemble a brand-new package, never open and patch the original,
   and its own shared-string table is populated ONLY as a byproduct of `write_string` on a cell — there
-  is no API to insert, remove or target a pool entry independent of a cell write. Five of the nine
+  is no API to insert, remove or target a pool entry independent of a cell write. Six of the nine
   declared kinds are fully representable as "read the whole workbook into a grid, change the grid,
   rebuild the whole workbook from it", which is a genuine second producer, so they stay
-  `@mode-differential`: `insert-sheet`, `remove-sheet`, `rename-sheet`, `set-cell`, `remove-cell`.
+  `@mode-differential`: `insert-sheet`, `remove-sheet`, `rename-sheet`, `set-cell`, `insert-cell`, `remove-cell`.
+  `insert-cell` addresses a revision-bound vacancy of the worksheet's `sheetData` (the real
+  workbook's own, revision `ecd99b57eb5d4205`) and writes the number 42 into the row below the
+  survey's last, A52; the reference resolves the vacancy through its own XML reader, refuses an
+  occupied coordinate, and edits the grid there.
 
   THE REMAINING THREE HAVE A SECOND PRODUCER TOO, AND IT IS NOT THAT PAIRING. `insert-shared-string`,
   `remove-shared-string` and `set-shared-string` address the pool by an INDEX independent of any cell
@@ -36,7 +40,10 @@ Feature: Apply every typed XLSX ECMA-376 mutation to a real-world workbook
   run on. The three pool kinds now read the real 229-entry pool out of the package, edit it by index,
   rewrite the part and reassemble the whole container from its parts — and the projection reads the
   result back out of the bytes, entry by entry. Nothing about the pool is adapter-tracked any more,
-  and all nine kinds are `@mode-differential`.
+  and the pool kinds are held in-role to a second, third-party law: `calamine` resolves every
+  shared-string cell through the pool it parses itself, so a `set-shared-string` must change exactly
+  the resolved cells that carried the old text, and an `insert-shared-string` or
+  `remove-shared-string` of an unreferenced entry must change none.
 
   ONE KIND RUNS ON AN ARRANGED PRE-STATE, AND THAT IS RECORDED RATHER THAN HIDDEN. The vocabulary
   refuses to remove a pool entry a cell still references — the entry would dangle — and every one of
@@ -89,6 +96,7 @@ Feature: Apply every typed XLSX ECMA-376 mutation to a real-world workbook
       | rename-sheet | {"name":"Länderübersicht","newName":"Länder"} |
       | set-cell     | {"address":{"partPath":"xl/worksheets/sheet1.xml","nodePath":[3,2,2],"namespaceUri":"http://schemas.openxmlformats.org/spreadsheetml/2006/main","localName":"c","revision":"c10cb4fa36844692"},"value":{"kind":"inlineString","value":"Restado (überarbeitet)"}} |
       | remove-cell  | {"address":{"partPath":"xl/worksheets/sheet1.xml","nodePath":[3,5,7],"namespaceUri":"http://schemas.openxmlformats.org/spreadsheetml/2006/main","localName":"c","revision":"b2b766d8b96c5b6b"}} |
+      | insert-cell  | {"address":{"worksheet":{"partPath":"xl/worksheets/sheet1.xml","nodePath":[3],"namespaceUri":"http://schemas.openxmlformats.org/spreadsheetml/2006/main","localName":"sheetData","revision":"ecd99b57eb5d4205"},"row":52,"column":0},"value":{"kind":"number","value":42}} |
 
   @id-mutate
   @level-exhaustive
@@ -124,6 +132,7 @@ Feature: Apply every typed XLSX ECMA-376 mutation to a real-world workbook
       | rename-sheet         | {"name":"Länderübersicht","newName":"Länder"} |
       | set-cell             | {"address":{"partPath":"xl/worksheets/sheet1.xml","nodePath":[3,2,2],"namespaceUri":"http://schemas.openxmlformats.org/spreadsheetml/2006/main","localName":"c","revision":"c10cb4fa36844692"},"value":{"kind":"inlineString","value":"Restado (überarbeitet)"}} |
       | remove-cell          | {"address":{"partPath":"xl/worksheets/sheet1.xml","nodePath":[3,5,7],"namespaceUri":"http://schemas.openxmlformats.org/spreadsheetml/2006/main","localName":"c","revision":"b2b766d8b96c5b6b"}} |
+      | insert-cell          | {"address":{"worksheet":{"partPath":"xl/worksheets/sheet1.xml","nodePath":[3],"namespaceUri":"http://schemas.openxmlformats.org/spreadsheetml/2006/main","localName":"sheetData","revision":"ecd99b57eb5d4205"},"row":52,"column":0},"value":{"kind":"number","value":42}} |
       | insert-shared-string | {"value":"Ökobau Referenzquelle 2024"} |
       | remove-shared-string | {"index":229} |
       | set-shared-string    | {"index":0,"value":"Aktualisierter Quellwert"} |

@@ -56,7 +56,7 @@ await routing.receiveScriptProcessInvocation(process.env,async invocation=>{
               SEMIO_TWO_HUMAN_USER1_PASSWORD:defaults.COLLAB_E2E_USER1_PASSWORD,SEMIO_TWO_HUMAN_USER2_PASSWORD:defaults.COLLAB_E2E_USER2_PASSWORD,
             });
             const png = resolve(process.argv[3] ?? join(import.meta.dir,"🗑️generated","large-picked","large-picked.png"));
-            await runOwnedCommand(process.execPath,[join(import.meta.dir,"📜️pdf-hub-image-check-in.ts"),local(hubPort),local(firstPort),output,png,local(peerPort)],root,
+            await runOwnedCommand(process.execPath,[join(import.meta.dir,process.env.PDF_HUB_SCRIPT ?? "📜️pdf-hub-image-check-in.ts"),local(hubPort),local(firstPort),output,png,local(peerPort)],root,
               "pdf:authenticated-check-in",0,{env,signal:actual.control.signal,deadline:actual.control,stdout:"inherit"});
           } finally {
             owner.live = false;

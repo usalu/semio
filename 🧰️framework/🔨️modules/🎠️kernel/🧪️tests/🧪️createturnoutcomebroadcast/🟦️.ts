@@ -267,7 +267,6 @@ async function registerTests3(vitest: Vitest, dependencies: Pick<typeof import("
     });
   });
 
-  //#region 🧪️ExtensionCascadeTests
   /** 📚️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (terra-extension-activation): a minimal `PluginCatalog`
    * with ONE plugin (`p1`) and ONE extension (`p1-ext`) whose `dependsOn: ["p1"]` names it as the
    * parent — exactly the shape `registerCatalog`'s own `extensionsByParent` index groups by. */
@@ -352,6 +351,63 @@ async function registerTests3(vitest: Vitest, dependencies: Pick<typeof import("
       expect(registry.isResident("actor-1::p1-ext")).toBe(true);
     });
 
+    describe("law: an extension never exceeds its host's grants on any activation path", () => {
+      const grant = (id: string): ShardCapabilityGrant => ({ id, token: "t", scope: "s", expiresMs: null });
+      const setup = () => {
+        const shardClient = fakeShardClient();
+        const activate = vi.spyOn(shardClient, "activate");
+        const registry = new ActivationRegistry({ shardClient, defaultBudget: BUDGET_FIXTURE, fetchAssets: async () => [] });
+        registry.registerManifest({ pluginId: "host", moduleUrl: "https://x/host.js", caps: [grant("fs.read"), grant("net.fetch")] });
+        const grantedTo = (actorId: string): string[] => (activate.mock.calls.find((call) => call[0] === actorId)?.[2] ?? []).map((g) => g.id);
+        return { registry, grantedTo };
+      };
+      const requested = [grant("fs.read"), grant("fs.admin")];
+
+      it("dynamic install (declared host, no cascade index): the request actor holds host ∩ requested", async () => {
+        const { registry, grantedTo } = setup();
+        registry.registerManifest({ pluginId: "ext", moduleUrl: "https://x/ext.js", caps: requested, host: "host" });
+        await registry.activate("ext", "ext#request", "manual");
+        expect(grantedTo("ext#request")).toEqual(["fs.read"]);
+      });
+
+      it("cascade, resume and a catalog-indexed direct activation all scope identically", async () => {
+        const { registry, grantedTo } = setup();
+        registry.registerManifest({ pluginId: "ext", moduleUrl: "https://x/ext.js", caps: requested });
+        registry.registerExtension("host", "ext");
+        await registry.activate("host", "h1", "manual");
+        await registry.activate("ext", "ext#request", "manual");
+        expect(grantedTo("h1::ext")).toEqual(["fs.read"]);
+        expect(grantedTo("ext#request")).toEqual(["fs.read"]);
+        await registry.suspend("ext#request");
+        await registry.resume("ext#request");
+        const resumed = grantedTo("ext#request");
+        expect(resumed).toEqual(["fs.read"]);
+      });
+
+      it("a host that is unknown, empty or part of a cycle grants nothing; a plain plugin keeps its own", async () => {
+        const { registry, grantedTo } = setup();
+        registry.registerManifest({ pluginId: "orphan", moduleUrl: "https://x/o.js", caps: requested, host: "missing" });
+        registry.registerManifest({ pluginId: "a", moduleUrl: "https://x/a.js", caps: requested, host: "b" });
+        registry.registerManifest({ pluginId: "b", moduleUrl: "https://x/b.js", caps: requested, host: "a" });
+        for (const id of ["orphan", "a", "b"]) await registry.activate(id, `${id}#1`, "manual");
+        await registry.activate("host", "h#1", "manual");
+        expect([grantedTo("orphan#1"), grantedTo("a#1"), grantedTo("b#1")]).toEqual([[], [], []]);
+        expect(grantedTo("h#1")).toEqual(["fs.read", "net.fetch"]);
+      });
+
+      it("nested extensions are capped by the whole chain", async () => {
+        const { registry, grantedTo } = setup();
+        registry.registerManifest({ pluginId: "mid", moduleUrl: "https://x/m.js", caps: [grant("net.fetch"), grant("fs.read")], host: "host" });
+        registry.registerManifest({ pluginId: "leaf", moduleUrl: "https://x/l.js", caps: [grant("net.fetch"), grant("fs.admin")], host: "mid" });
+        registry.registerManifest({ pluginId: "weak", moduleUrl: "https://x/w.js", caps: [grant("fs.read")], host: "host" });
+        registry.registerManifest({ pluginId: "leaf2", moduleUrl: "https://x/l2.js", caps: [grant("net.fetch"), grant("fs.read")], host: "weak" });
+        await registry.activate("leaf", "leaf#1", "manual");
+        await registry.activate("leaf2", "leaf2#1", "manual");
+        expect(grantedTo("leaf#1")).toEqual(["net.fetch"]);
+        expect(grantedTo("leaf2#1")).toEqual(["fs.read"]);
+      });
+    });
+
     it("cancel() on the parent takes its extension down too — permanently, zero orphans", async () => {
       const shardClient = fakeShardClient();
       const registry = new ActivationRegistry({ shardClient, defaultBudget: BUDGET_FIXTURE, fetchAssets: async () => [] });
@@ -387,9 +443,7 @@ async function registerTests3(vitest: Vitest, dependencies: Pick<typeof import("
       expect(sentCaps.get("actor-1::p1-ext")?.map((g) => g.id)).toEqual(["fs.read"]);
     });
   });
-  //#endregion 🧪️ExtensionCascadeTests
 
-  //#region 🧪️TurnDispatchTests
   describe("ActivationRegistry.enqueueTurn lane priority", () => {
     it("dispatches turns by lane priority end-to-end through the registry, not enqueue order", async () => {
       const shardClient = fakeShardClient();
@@ -428,9 +482,7 @@ async function registerTests3(vitest: Vitest, dependencies: Pick<typeof import("
       expect(delivered).toEqual([]);
     });
   });
-  //#endregion 🧪️TurnDispatchTests
 
-  //#region 🧪️ShardLossRestoreTests
   describe("ActivationRegistry.handleShardLost / restoreActors", () => {
     it("is a valid ShardClientOptions.onShardLost value", () => {
       let registry!: ActivationRegistry;
@@ -487,9 +539,7 @@ async function registerTests3(vitest: Vitest, dependencies: Pick<typeof import("
       expect(delivered).toEqual(["delivered"]);
     });
   });
-  //#endregion 🧪️ShardLossRestoreTests
 
-  //#region 🧪️MemoryPressureCapTests
   describe("residentActorCapFromMemory", () => {
     it("derives the cap from deviceMemoryGiB when present, clamped to [4, 96]", () => {
       expect(residentActorCapFromMemory({ deviceMemoryGiB: 1 })).toBe(6);
@@ -527,9 +577,7 @@ async function registerTests3(vitest: Vitest, dependencies: Pick<typeof import("
       expect(resident).toBe(10);
     });
   });
-  //#endregion 🧪️MemoryPressureCapTests
 
-  //#region 🧪️MetricsBusTests
   describe("ActivationRegistry.metricsBus (autoStartMetricsPublisher)", () => {
     it("publishes os.runtime.metrics as a CustomEvent on metricsBus at the 2Hz interval, driven by the injected clock, and dispose() stops it", () => {
       vi.useFakeTimers();
@@ -578,7 +626,6 @@ async function registerTests3(vitest: Vitest, dependencies: Pick<typeof import("
       }
     });
   });
-  //#endregion 🧪️MetricsBusTests
 
 }
 

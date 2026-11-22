@@ -76,6 +76,10 @@ export type RendererBindings = RuntimeAssetBindings & {
   /** 🫥️ The window-blur door (`🐚️Shell/🎯️targets/🧊️wgpu/🦀️.rs` `semioWgpuHostWindowBlur`): the page's `window` lost focus, so
    * every open typing run ends (`blur`) and the shell blurs the focused pane for its program on the next frame turn. */
   semioWgpuHostWindowBlur?: () => void;
+  /** 🛬️ The file-drop door (`🐚️Shell/🎯️targets/🧊️wgpu/🦀️.rs` `semioWgpuHostFileDrop`): the JSON list of OS files the page holds, each opened like Open File on the next frame turn. */
+  /** 🗂️ The local-catalog door (`🐚️Shell/🎯️targets/🧊️wgpu/🦀️.rs` `semioWgpuHostLocalCatalog`): the catalog snapshot JSON the page's facet client holds, listed by the shell as "Files on this device". */
+  semioWgpuHostLocalCatalog?: (catalogJson: string) => void;
+  semioWgpuHostFileDrop?: (filesJson: string) => void;
   /** 🛰️ The agent-bridge door (`🐚️Shell/🎯️targets/🧊️wgpu/🦀️.rs` `semioWgpuSetAgentBridgeConfig`): the page's discovered
    * offer; an empty url clears it and parks the bridge in `Disabled`. */
   semioWgpuSetAgentBridgeConfig?: (url: string, admissionProof: string) => void;

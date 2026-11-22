@@ -61,7 +61,7 @@ export function defaultCiSuitePortsV1(environment:Readonly<Record<string,string|
     return {exitCode:0,timedOut:false};
    }catch(error){
     if(error instanceof OwnedCommandFailure)return {exitCode:error.outcome.status,timedOut:false};
-    return {exitCode:null,timedOut:/stopped: timeout/u.test(String((error as Error).message))};
+    return {exitCode:null,timedOut:(error as {code?:string}).code==="timeout"||/stopped: timeout/u.test(String((error as Error).message))};
    }
   },
   sample:async()=>{

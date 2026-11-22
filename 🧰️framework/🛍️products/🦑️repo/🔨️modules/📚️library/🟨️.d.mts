@@ -13,7 +13,7 @@ export function nxBuildEngineFilesDigestV1(root:string,files:readonly string[],i
 export function nxBuildEngineDigestV1(family?:"generic"|"native"):string;
 export function nxBuildEngineInputsV1(family?:"generic"|"native"):readonly unknown[];
 export function nxOutputsCacheableV1(outputs:readonly unknown[]):boolean;
-export function projectBuildTargetForNxV1(target:BuildTargetV1):NxProjectedTargetV1;
+export function projectBuildTargetForNxV1(target:BuildTargetV1,name?:string):NxProjectedTargetV1;
 export function liftNxNamedInputReferencesV1<T extends Record<string,{namedInputs?:Record<string,unknown[]>;targets?:Record<string,{inputs?:unknown[]}>}>>(projects:T):T;
 export function shareNxProjectInputsV1<T extends Record<string,{namedInputs:Record<string,unknown[]>}>>(projects:T):T;
 export function projectBuildGraphForNxV1(graph:BuildGraphV1):NxProjectedGraphV1;

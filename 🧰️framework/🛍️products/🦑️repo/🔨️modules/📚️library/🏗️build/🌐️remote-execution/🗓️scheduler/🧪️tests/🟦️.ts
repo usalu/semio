@@ -29,7 +29,7 @@ const resultOf=(exit=0,extra:object={}):RemoteExecutionTaskResultV1=>({version:1
 function harness(extra:Partial<RemoteExecutionSchedulerOptionsV1>={}){
  let now=1_000_000;const memory=new Memory(),events:string[]=[];
  const scheduler=new RemoteExecutionSchedulerV1({content:memory,unmatchedSeconds:30,lingerSeconds:0.05,leaseSeconds:10,maximumAttempts:3,defaultActionSeconds:60,maximumActionSeconds:600,maximumQueued:100,heartbeatSeconds:2,pollSeconds:5,loadExpireSeconds:15,refusalCooldownSeconds:2,cache:{url:"http://c",relative:false},language:"none",sweepMilliseconds:0,now:()=>now,onEvent:event=>events.push(`${event.stage} ${event.detail}`),...extra});
- return {memory,scheduler,events,advance:(seconds:number)=>{now+=seconds*1000;scheduler.sweep();}};
+ return {memory,scheduler,events,advance:(seconds:number)=>{now+=seconds*1000;scheduler.sweep();},elapse:(seconds:number)=>{now+=seconds*1000;}};
 }
 const drain=async(stream:AsyncGenerator<RemoteExecutionSnapshotV1>)=>{const rows:RemoteExecutionSnapshotV1[]=[];for await(const row of stream)rows.push(row);return rows;};
 const submit=(scheduler:RemoteExecutionSchedulerV1,action:RemoteExecutionDigestV1,abort=new AbortController())=>{
@@ -207,4 +207,76 @@ test("an offloaded action that a worker refuses for lack of headroom goes to ano
  const next=await polled(scheduler,other.id,2000);expect(next.task,"the other machine got it").not.toBeNull();expect(taker).toBeUndefined();
  scheduler.report(other.id,next.task!.id,{version:1,outcome:"refused",refusal:"memory",status:{code:0,message:""},actionResult:null} as never);
  await run.done;expect(run.rows.at(-1)!.outcome!.status.code,"nobody else: declined").toBe(8);
+});
+
+test("an action that waits for a machine (semio-offload=queue) is queued where an if-idle action is declined, and is given to a worker as soon as one has headroom",async()=>{
+ const T="aaaaaaaaaaaaaaaa",properties=[{name:"Arch",value:"arm64"},{name:"OSFamily",value:"macos"},{name:"semio-toolchain",value:T},{name:"semio-target",value:"aarch64-apple-darwin"},{name:"semio-offload-format",value:"argv-1"}];
+ const report=(origin:string,headroom:boolean):Parameters<RemoteExecutionSchedulerV1["acceptLoad"]>[0]=>({version:1,origin,platform:{key:`macos-arm64-${T}`,os:"macos",arch:"arm64",toolchain:T,target:"aarch64-apple-darwin"},capacity:{cores:8,memoryMegabytes:16384},running:0,queued:0,pressure:"normal",freeMegabytes:8000,load:1,headroom,wallMs:1_000_000,worker:{state:"idle",concurrency:2,running:0,sandbox:null,confinement:null,network:null},counters:{unit:{localHit:0,remoteHit:0,miss:0,stored:0},offload:{out:0,refused:0,fellBack:0}}});
+ const control=(value:string)=>[{name:"semio-offload",value},{name:"semio-origin",value:"requester"},{name:"semio-offload-format",value:"argv-1"}];
+ const {memory,scheduler,events}=harness();
+ scheduler.acceptLoad(report("requester",true));scheduler.acceptLoad(report("worker-a",false));
+ const worker=scheduler.register({...profile("a",properties,2),origin:"worker-a"} as RemoteExecutionWorkerRegistrationV1);
+ const idle=submit(scheduler,memory.action(control("if-idle"),"idle"));await Bun.sleep(30);
+ expect(idle.rows.at(-1)?.outcome?.status.code,"declined at once").toBe(8);
+ const queued=submit(scheduler,memory.action(control("queue"),"queue"));await Bun.sleep(30);
+ expect(queued.rows.at(-1)?.outcome,"no outcome while nobody has headroom").toBeUndefined();expect(queued.rows.at(-1)?.stage).toBe("QUEUED");
+ expect(events.filter(line=>line.startsWith("declined")).length,"only the if-idle action was declined").toBe(1);
+ scheduler.acceptLoad(report("worker-a",true));
+ const given=await polled(scheduler,worker.id,2000);expect(given.task,"the waiting action goes out once a machine has headroom").not.toBeNull();
+ queued.abort.abort();await queued.done.catch(()=>undefined);
+ const never=submit(scheduler,memory.action([...control("queue"),{name:"OSFamily",value:"plan9"}],"never"));await Bun.sleep(30);
+ expect(never.rows.at(-1)?.outcome?.status.code,"a queued action that no machine could ever take fails back at once").toBe(14);
+ never.abort.abort();await never.done.catch(()=>undefined);
+});
+
+test("a pinned action (semio-pin=<origin>) goes only to the worker that offers that origin, never to its requester, and fails back at once when that worker is gone or is the requester",async()=>{
+ const T="aaaaaaaaaaaaaaaa",properties=(origin:string)=>[{name:"Arch",value:"arm64"},{name:"OSFamily",value:"macos"},{name:"semio-toolchain",value:T},{name:"semio-target",value:"aarch64-apple-darwin"},{name:"semio-offload-format",value:"argv-1"},{name:"semio-pin",value:origin}];
+ const report=(origin:string):Parameters<RemoteExecutionSchedulerV1["acceptLoad"]>[0]=>({version:1,origin,platform:{key:`macos-arm64-${T}`,os:"macos",arch:"arm64",toolchain:T,target:"aarch64-apple-darwin"},capacity:{cores:8,memoryMegabytes:16384},running:0,queued:0,pressure:"normal",freeMegabytes:8000,load:1,headroom:true,wallMs:1_000_000,worker:{state:"idle",concurrency:2,running:0,sandbox:null,confinement:null,network:null},counters:{unit:{localHit:0,remoteHit:0,miss:0,stored:0},offload:{out:0,refused:0,fellBack:0}}});
+ const control=(pin:string)=>[{name:"semio-offload",value:"queue"},{name:"semio-origin",value:"requester"},{name:"semio-offload-format",value:"argv-1"},{name:"semio-pin",value:pin}];
+ const {memory,scheduler}=harness();
+ for(const origin of ["requester","worker-a","worker-b"])scheduler.acceptLoad(report(origin));
+ const a=scheduler.register({...profile("a",properties("worker-a"),2),origin:"worker-a"} as RemoteExecutionWorkerRegistrationV1),b=scheduler.register({...profile("b",properties("worker-b"),2),origin:"worker-b"} as RemoteExecutionWorkerRegistrationV1);
+ const run=submit(scheduler,memory.action(control("worker-b"),"pin-b"));await Bun.sleep(30);
+ expect((await polled(scheduler,a.id,150)).task,"the other machine is not given a pinned action").toBeNull();
+ expect((await polled(scheduler,b.id,2000)).task,"the pinned machine is").not.toBeNull();
+ run.abort.abort();await run.done.catch(()=>undefined);
+ for(const pin of ["worker-z","requester"]){
+  const failed=submit(scheduler,memory.action(control(pin),"pin-"+pin));await Bun.sleep(30);
+  expect(failed.rows.at(-1)?.outcome?.status.code,pin).toBe(14);
+  failed.abort.abort();await failed.done.catch(()=>undefined);
+ }
+});
+
+test("a machine that registers again under the same name keeps its one entry and its id: no orphan entry that nothing heartbeats is left to be reported as lost",async()=>{
+ const {scheduler,events,advance}=harness(),first=scheduler.register(profile("one")),second=scheduler.register(profile("one")),third=scheduler.register(profile("one"));
+ expect(second.id).toBe(first.id);expect(third.id).toBe(first.id);
+ expect(scheduler.status().workers).toHaveLength(1);
+ expect(scheduler.status().counters.workersReused).toBe(2);
+ expect(events.filter(event=>event.startsWith("worker-joined"))).toHaveLength(1);
+ scheduler.heartbeat(first.id,[]);advance(5);scheduler.heartbeat(first.id,[]);advance(5);
+ expect(events.filter(event=>event.startsWith("worker-lost"))).toHaveLength(0);
+ const other=scheduler.register(profile("two"));expect(other.id).not.toBe(first.id);expect(scheduler.status().workers).toHaveLength(2);
+});
+
+test("a beat of the sweep timer that came back far too late judges no worker, because the heartbeats wait unread in a stalled process; the next beat judges on fresh marks",async()=>{
+ const {scheduler,events,elapse}=harness(),alive=scheduler.register(profile("alive")),silent=scheduler.register(profile("silent"));
+ elapse(40);scheduler.tick(1000);
+ expect(scheduler.status().workers).toHaveLength(2);expect(scheduler.status().counters.sweepStalls).toBe(1);expect(events.filter(event=>event.startsWith("worker-lost"))).toHaveLength(0);
+ scheduler.heartbeat(alive.id,[]);elapse(1);scheduler.tick(1000);
+ expect(scheduler.status().workers.map(row=>row.id)).toEqual([alive.id]);expect(silent.id).not.toBe(alive.id);
+ expect(events.filter(event=>event.startsWith("worker-lost"))).toHaveLength(1);expect(scheduler.status().counters.sweepStalls).toBe(1);
+});
+
+test("an action whose requester is gone is not placed during the linger and is counted as cancelled before start, not logged per cancel; the waits of placed actions are measured",async()=>{
+ const {memory,scheduler,events,elapse}=harness({lingerSeconds:0.4}),gone=memory.action([],"gone"),kept=memory.action([],"kept"),run=submit(scheduler,gone);
+ await Bun.sleep(20);run.abort.abort();await run.done;
+ const worker=scheduler.register(profile("w"));
+ expect((await polled(scheduler,worker.id,30)).task).toBeNull();
+ await Bun.sleep(500);
+ expect(scheduler.status().counters).toMatchObject({cancelled:1,cancelledQueued:1,cancelledExecuting:0});
+ expect(events.some(event=>event.startsWith("cancelled"))).toBe(false);
+ const next=submit(scheduler,kept);await Bun.sleep(20);elapse(3);
+ const task=(await polled(scheduler,worker.id)).task!;expect(task.action).toEqual(kept);
+ expect(scheduler.status().counters).toMatchObject({queueWaitSamples:1,queueWaitP50Milliseconds:3000,queueWaitP90Milliseconds:3000,queueWaitMaxMilliseconds:3000});
+ expect(scheduler.report(worker.id,task.id,resultOf())).toBe(true);await next.done;
 });

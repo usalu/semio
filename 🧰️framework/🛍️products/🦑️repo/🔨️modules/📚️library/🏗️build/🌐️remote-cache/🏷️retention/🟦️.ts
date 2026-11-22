@@ -1,12 +1,12 @@
 import {createHash} from "node:crypto";
 import {mkdir,open,readdir,readFile,rename,unlink,writeFile} from "node:fs/promises";
 import {dirname,join} from "node:path";
-import {requireSlotShapeV1} from "../../🪢️slots/🟦️.ts";
+import {requireSlotShapeV1,type DeclarationV1} from "../../🪢️slots/🟦️.ts";
 import {parseRemoteCacheTreeV1,type RemoteCacheDigestV1} from "../🔬️action-result/🟦️.ts";
 
-/** 🏷️ The retention sidecar of one server entry (`Meta` in the slot schema): its slot, when it was stored or last claimed (server clock) and the blobs it references.
+/** 🏷️ The retention sidecar of one server entry (`Meta` in the slot schema): its slot (a dedupe hint, never an authority), when it was stored or last claimed (server clock), the blobs it references and what it declared it was built from.
  * @see ../../🪢️slots/🧬️schema/🔣️.json */
-export type RemoteCacheMetaV1=Readonly<{version:1;slot:string;storedAt:number;refs:readonly string[]}>;
+export type RemoteCacheMetaV1=Readonly<{version:1;slot:string;storedAt:number;refs:readonly string[];declaration?:DeclarationV1}>;
 
 /** 📁️ Where sidecars live below a store root: a dot directory, so the entry scan never sees them. */
 export const REMOTE_CACHE_META_DIRECTORY_V1=".meta";
@@ -86,16 +86,15 @@ export async function readRemoteCacheReferencesV1(path:string,kind:"ac"|"cas"|"n
  return [...refs];
 }
 
-/** 🔍️ Audits a store directory against the keys the current worktree state needs: an entry with a slot that is not among them and neither the newest key of its slot nor within the grace is stray. An empty `stray` list means the store holds the synchronized state (plus what the grace keeps) only; entries without a slot are counted, not judged. The current keys come from outside (for Nx the task hashes of the worktree), so this is an oracle that does not use the supersession rule. */
+/** 🔍️ Audits a store directory against the keys the current worktree state needs: an entry with a sidecar that is not among them and was not stored within the grace is stray. An empty `stray` list means the store holds the synchronized state (plus what the grace keeps) only; entries without a sidecar are counted, not judged. The current keys come from outside (for Nx the task hashes of the worktree), so this is an oracle that does not use the staleness rule. */
 export async function auditRemoteCacheDirectoryV1(root:string,currentKeys:ReadonlySet<string>,options:Readonly<{graceMilliseconds:number;now?:number;signal?:AbortSignal}>):Promise<Readonly<{version:1;cache:string;current:number;grace:number;stray:readonly string[];unslotted:number}>>{
- const {scanRemoteCacheDirectoryV1}=await import("../🧹️collector/🟦️.ts"),{classifySlotsV1}=await import("../../🪢️slots/🟦️.ts"),index=await scanRemoteCacheDirectoryV1(root,options.signal?{signal:options.signal}:{}),metas=await scanRemoteCacheMetaV1(root,index,options.signal),now=options.now??Date.now();
- const verdicts=classifySlotsV1([...index].map(([key,row])=>{const meta=metas.get(key);return {key,slot:meta?.slot??null,storedAt:meta?.storedAt??0,accessed:row.accessed,size:row.size};}),{now,graceMilliseconds:options.graceMilliseconds});
+ const {scanRemoteCacheDirectoryV1}=await import("../🧹️collector/🟦️.ts"),index=await scanRemoteCacheDirectoryV1(root,options.signal?{signal:options.signal}:{}),metas=await scanRemoteCacheMetaV1(root,index,options.signal),now=options.now??Date.now();
  let current=0,grace=0,unslotted=0;const stray:string[]=[];
  for(const[key]of index){
-  const verdict=verdicts.get(key)!,name=key.split("/").pop()!,needed=currentKeys.has(name);
-  if(verdict.state==="unslotted"){unslotted++;continue;}
-  if(needed)current++;
-  else if(verdict.state==="retained"||metas.get(key)!==undefined&&now-metas.get(key)!.storedAt<options.graceMilliseconds)grace++;
+  const meta=metas.get(key),name=key.split("/").pop()!;
+  if(meta===undefined){unslotted++;continue;}
+  if(currentKeys.has(name))current++;
+  else if(now-meta.storedAt<options.graceMilliseconds)grace++;
   else stray.push(key);
  }
  return Object.freeze({version:1,cache:root,current,grace,stray:Object.freeze(stray.sort()),unslotted});

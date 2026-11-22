@@ -6653,6 +6653,7 @@ version = "0.1.0"
 dependencies = [
  "semio-framework-artifact-reference",
  "semio-framework-async",
+ "semio-framework-deflate",
  "semio-framework-diagnostic",
  "semio-framework-io-control",
  "semio-framework-io-schema",
@@ -10223,6 +10224,7 @@ dependencies = [
  "semio-plugin-reactor-lifecycle",
  "semio-plugin-runtime-instances",
  "semio-plugin-runtime-ops-document",
+ "semio-plugin-runtime-ops-raw-media",
  "semio-plugin-runtime-ops-surface",
  "semio-plugin-runtime-ops-wire",
  "semio-plugin-window-config",
@@ -10257,6 +10259,19 @@ dependencies = [
  "semio-plugin-reactor-lifecycle",
  "semio-plugin-runtime-instances",
  "semio-plugin-runtime-ops-wire",
+]
+
+[[package]]
+name = "semio-plugin-runtime-ops-raw-media"
+version = "0.1.0"
+dependencies = [
+ "semio-framework",
+ "semio-framework-job",
+ "semio-framework-value",
+ "semio-os-kernel",
+ "semio-plugin-decl-media",
+ "semio-plugin-reactor-app",
+ "semio-plugin-reactor-lifecycle",
 ]
 
 [[package]]
@@ -10332,6 +10347,7 @@ dependencies = [
  "semio-plugin-mounted-owner",
  "semio-plugin-ownership",
  "semio-plugin-reactor-app",
+ "semio-plugin-reactor-jobs",
  "semio-plugin-testing-laws",
  "semio-plugin-time-travel",
  "semio-plugin-window-config",

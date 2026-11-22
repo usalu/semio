@@ -15,7 +15,13 @@ use std::sync::Arc;
 pub mod frame_job;
 #[path = "../../../🪙️authority/🖼️frame/🦀️.rs"]
 pub mod frame_authority;
+#[path = "🚦️frame-demand/🦀️.rs"]
+pub mod frame_demand;
 
 #[cfg(test)]
 #[path = "🧪️tests/🦀️.rs"]
 mod tests;
+
+#[cfg(test)]
+#[path = "../../../🧪️tests/🚦️frame-demand-and-traces/🦀️.rs"]
+mod frame_demand_and_traces_tests;

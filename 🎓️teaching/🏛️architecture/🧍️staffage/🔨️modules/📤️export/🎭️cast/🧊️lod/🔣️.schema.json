@@ -24,7 +24,7 @@
     "Level": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["title", "frames", "roles", "patterns", "transportDensity", "strokeMin"],
+      "required": ["title", "frames", "roles", "patterns", "flowSpacingFactor", "strokeMin"],
       "properties": {
         "title": { "type": "object", "additionalProperties": false, "required": ["en", "de"], "properties": { "en": { "type": "string", "minLength": 1 }, "de": { "type": "string", "minLength": 1 } } },
         "frames": {
@@ -40,7 +40,7 @@
         },
         "roles": { "description": "The shape roles that are drawn; paper extents still reach every shape.", "type": "array", "uniqueItems": true, "minItems": 1, "items": { "enum": ["body", "detail", "texture", "glazing", "ground"] } },
         "patterns": { "description": "Colour-independent hatch cues of the analytic views.", "type": "boolean" },
-        "transportDensity": { "description": "The fraction of the parcels and pathlines drawn: every ceil(1 / density)-th, deterministic by emission index.", "type": "number", "exclusiveMinimum": 0, "maximum": 1 },
+        "flowSpacingFactor": { "description": "The factor on the paper spacing of the flow marks of a cast (streams, puffs, paths): 1 draws the generalisation of the cast scale, 2 keeps marks twice as far apart, about a quarter of them. The same field, thinned by the same rule as a smaller drawing scale; never a different physics.", "type": "number", "minimum": 1 },
         "strokeMin": { "description": "The thinnest stroke the Manim bridge draws, in Manim stroke-width units.", "type": "number", "exclusiveMinimum": 0 }
       }
     }

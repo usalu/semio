@@ -1,0 +1,555 @@
+{
+ "used-backrest-park-bench": {
+  "row": "01",
+  "before": "published; full proof VALID (schema 0, validateAsset 0, checkVolumes 0), check CLI ✓, catalog copy equal to the candidate, manifest row equal and member of `used-park-objects`.",
+  "after": "unchanged; proven as above, catalog copy VALID with `--catalog-only`.",
+  "changed": [],
+  "powerW": 0,
+  "reactions": [],
+  "verify": "ok (candidate = catalog copy, manifest row = recomputed row, member of the collection)",
+  "sheets": "Opened by the finisher as a contact sheet of the final document: the three-quarter view of every authored scale and list (body, thermal, structure), of every non-default pose and of two instants of every clip at 1:50 (tiles of 320 px; the six-view sheets at full resolution were not opened one by one). The contact sheet of the product's 2D drawings (line and solid rows; elevation, front, plan) of every authored scale was opened too.",
+  "opened": true,
+  "imperfect": [
+   "Reactions of the lifting pose were already exact (416.5 N per sling): the footings are massless, so the ledger's proposal to add a hook force did not apply.",
+   "Lifting gear, workers and users are not drawn: the schema has no per-pose presence of solids (request filed in the umbrella `requests.md`); they exist as loads and in the texts only.",
+   "Wear below the smallest feature (scratches, stickers, moss, graffiti, gum) is 2D strokes only, by the rule of the brief; the 3D body shows only the wear above the feature.",
+   "No author's reference table exists; the model was not measured against outside sources in the finishing session."
+  ]
+ },
+ "used-basketball-hoop": {
+  "row": "22",
+  "before": "published; full proof VALID (schema 0, validateAsset 0, checkVolumes 0), check CLI ✓, catalog copy equal to the candidate, manifest row equal and member of `used-park-objects`.",
+  "after": "unchanged; proven as above, catalog copy VALID with `--catalog-only`.",
+  "changed": [],
+  "powerW": 0,
+  "reactions": [],
+  "verify": "ok (candidate = catalog copy, manifest row = recomputed row, member of the collection)",
+  "sheets": "Opened by the finisher as a contact sheet of the final document: the three-quarter view of every authored scale and list (body, thermal, structure), of every non-default pose and of two instants of every clip at 1:50 (tiles of 320 px; the six-view sheets at full resolution were not opened one by one). The contact sheet of the product's 2D drawings (line and solid rows; elevation, front, plan) of every authored scale was opened too.",
+  "opened": true,
+  "imperfect": [
+   "The chain net is rigid and tilts with the ring (ledger); the lowering pose was already statically separate (hinge pin 463.2 N, sling 858.8 N).",
+   "Lifting gear, workers and users are not drawn: the schema has no per-pose presence of solids (request filed in the umbrella `requests.md`); they exist as loads and in the texts only.",
+   "Wear below the smallest feature (scratches, stickers, moss, graffiti, gum) is 2D strokes only, by the rule of the brief; the 3D body shows only the wear above the feature.",
+   "No author's reference table exists; the model was not measured against outside sources in the finishing session."
+  ]
+ },
+ "used-beer-garden-set": {
+  "row": "06",
+  "before": "published; full proof VALID (schema 0, validateAsset 0, checkVolumes 0), check CLI ✓, catalog copy equal to the candidate, manifest row equal and member of `used-park-objects`.",
+  "after": "unchanged; proven as above, catalog copy VALID with `--catalog-only`.",
+  "changed": [],
+  "powerW": 0,
+  "reactions": [],
+  "verify": "ok (candidate = catalog copy, manifest row = recomputed row, member of the collection)",
+  "sheets": "Opened by the finisher as a contact sheet of the final document: the three-quarter view of every authored scale and list (body, thermal, structure), of every non-default pose and of two instants of every clip at 1:50 (tiles of 320 px; the six-view sheets at full resolution were not opened one by one). The contact sheet of the product's 2D drawings (line and solid rows; elevation, front, plan) of every authored scale was opened too.",
+  "opened": true,
+  "imperfect": [
+   "Open plan strokes of the table top show mirrored in the plan of the turned-over table (request carried over).",
+   "In the stacked and maintenance poses the set is solved as one rigid body (solver request).",
+   "Lifting gear, workers and users are not drawn: the schema has no per-pose presence of solids (request filed in the umbrella `requests.md`); they exist as loads and in the texts only.",
+   "Wear below the smallest feature (scratches, stickers, moss, graffiti, gum) is 2D strokes only, by the rule of the brief; the 3D body shows only the wear above the feature.",
+   "No author's reference table exists; the model was not measured against outside sources in the finishing session."
+  ]
+ },
+ "used-bicycle-shelter": {
+  "row": "29",
+  "before": "catalog file present and equal to the candidate, but no manifest row and no membership of `used-park-objects` (ledger `running`: interrupted at publish); full proof VALID, check CLI ✓.",
+  "after": "corrected (see below), full proof VALID, check CLI ✓, re-published through `publish.ts`, catalog copy VALID with `--catalog-only`.",
+  "changed": [
+   "Published for the first time (manifest row inserted, collection now 29 assets); the author had stopped after writing `distinction.json`.",
+   "Lifting pose corrected: the hold of the two workers on the slid-out sheet is an applied force of the statics of the lifted part alone instead of a support that shared the weight of the whole rig (147 N per hand before, 17.7 N per hand, a quarter of the 7.2 kg sheet each, its rear edge on the glazing bars after; `lift_statics.py`, `reactions.ts`)."
+  ],
+  "powerW": 0,
+  "reactions": [
+   "used-bicycle-shelter maintenance: weight 3513.6 N (358.3 kg),\nbase-a: fx -0.0 fy 254.7 fz 0.0\nbase-b: fx -0.0 fy 269.2 fz 0.0\nbase-c: fx -0.0 fy 283.7 fz 0.0\nstand-1-rear: fx -0.0 fy 242.4 fz 0.0\nstand-1-front: fx -0.0 fy 220.1 fz -0.0\nstand-2-rear: fx -0.0 fy 249.7 fz 0.0\nstand-2-front: fx -0.0 fy 227.3 fz -0.0\nstand-3-rear: fx -0.0 fy 256.9 fz 0.0\nstand-3-front: fx -0.0 fy 234.6 fz -0.0\nstand-4-rear: fx -0.0 fy 264.2 fz 0.0\nstand-4-front: fx -0.0 fy 241.9 fz -0.0\nbike-rear-tyre: fx 0.0 fy 258.9 fz 0.0\nbike-front-tyre: fx 0.0 fy 223.9 fz -0.0\nbike-kickstand: fx 0.0 fy 250.8 fz 0.0"
+  ],
+  "verify": "ok (candidate = catalog copy, manifest row = recomputed row, member of the collection)",
+  "sheets": "Opened by the finisher as a contact sheet of the final document: the three-quarter view of every authored scale and list (body, thermal, structure), of every non-default pose and of two instants of every clip at 1:50 (tiles of 320 px; the six-view sheets at full resolution were not opened one by one). The contact sheet of the product's 2D drawings (line and solid rows; elevation, front, plan) of every authored scale was opened too.",
+  "opened": true,
+  "imperfect": [
+   "The post footings are not modelled (stated in the structure assumptions); bicycle, stands and frames are solved as one rigid body (solver request).",
+   "The dimension of the height reads 2.60 to 2.63 m between the scales (coarser gutter and sheets).",
+   "Lifting gear, workers and users are not drawn: the schema has no per-pose presence of solids (request filed in the umbrella `requests.md`); they exist as loads and in the texts only.",
+   "Wear below the smallest feature (scratches, stickers, moss, graffiti, gum) is 2D strokes only, by the rule of the brief; the 3D body shows only the wear above the feature.",
+   "No author's reference table exists; the model was not measured against outside sources in the finishing session."
+  ]
+ },
+ "used-bollard-light": {
+  "row": "13",
+  "before": "published; full proof VALID (schema 0, validateAsset 0, checkVolumes 0), check CLI ✓, catalog copy equal to the candidate, manifest row equal and member of `used-park-objects`.",
+  "after": "unchanged; proven as above, catalog copy VALID with `--catalog-only`.",
+  "changed": [],
+  "powerW": 15,
+  "reactions": [],
+  "verify": "ok (candidate = catalog copy, manifest row = recomputed row, member of the collection)",
+  "sheets": "Opened by the finisher as a contact sheet of the final document: the three-quarter view of every authored scale and list (body, thermal, structure), of every non-default pose and of two instants of every clip at 1:50 (tiles of 320 px; the six-view sheets at full resolution were not opened one by one). The contact sheet of the product's 2D drawings (line and solid rows; elevation, front, plan) of every authored scale was opened too.",
+  "opened": true,
+  "imperfect": [
+   "Lifting pose already exact (75.5 N per grip).",
+   "Lifting gear, workers and users are not drawn: the schema has no per-pose presence of solids (request filed in the umbrella `requests.md`); they exist as loads and in the texts only.",
+   "Wear below the smallest feature (scratches, stickers, moss, graffiti, gum) is 2D strokes only, by the rule of the brief; the 3D body shows only the wear above the feature.",
+   "No author's reference table exists; the model was not measured against outside sources in the finishing session."
+  ]
+ },
+ "used-bubbler-stone-fountain": {
+  "row": "26",
+  "before": "published; full proof VALID (schema 0, validateAsset 0, checkVolumes 0), check CLI ✓, catalog copy equal to the candidate, manifest row equal and member of `used-park-objects`.",
+  "after": "unchanged; proven as above, catalog copy VALID with `--catalog-only`.",
+  "changed": [],
+  "powerW": 80,
+  "reactions": [],
+  "verify": "ok (candidate = catalog copy, manifest row = recomputed row, member of the collection)",
+  "sheets": "Opened by the finisher as a contact sheet of the final document: the three-quarter view of every authored scale and list (body, thermal, structure), of every non-default pose and of two instants of every clip at 1:50 (tiles of 320 px; the six-view sheets at full resolution were not opened one by one). The contact sheet of the product's 2D drawings (line and solid rows; elevation, front, plan) of every authored scale was opened too.",
+  "opened": true,
+  "imperfect": [
+   "The boulder is smooth; limescale, moss and algae are strokes only.",
+   "Lifting gear, workers and users are not drawn: the schema has no per-pose presence of solids (request filed in the umbrella `requests.md`); they exist as loads and in the texts only.",
+   "Wear below the smallest feature (scratches, stickers, moss, graffiti, gum) is 2D strokes only, by the rule of the brief; the 3D body shows only the wear above the feature.",
+   "No author's reference table exists; the model was not measured against outside sources in the finishing session."
+  ]
+ },
+ "used-chess-table": {
+  "row": "08",
+  "before": "published; full proof VALID (schema 0, validateAsset 0, checkVolumes 0), check CLI ✓, catalog copy equal to the candidate, manifest row equal and member of `used-park-objects`.",
+  "after": "corrected (see below), full proof VALID, check CLI ✓, re-published through `publish.ts`, catalog copy VALID with `--catalog-only`.",
+  "changed": [
+   "Lifting pose corrected: the pair of round slings is an applied force of the statics of the lifted part alone instead of a support that shared the weight of the whole rig (3269.7 N on each of two slings and two soil contacts before, 1222.4 N per sling, soil 2 x 5316.9 N after; `lift_statics.py`, `reactions.ts`). Key pose `slings-taut` added to the clip `relevel`; lifting anchors are `load` anchors; reference EN 1492-2 added."
+  ],
+  "powerW": 0,
+  "reactions": [
+   "used-chess-table maintenance: weight 13078.6 N (1333.6 kg),\nsoil-white: fx 0.0 fy 5316.9 fz 0.0\nsoil-black: fx 0.0 fy 5316.9 fz 0.0"
+  ],
+  "verify": "ok (candidate = catalog copy, manifest row = recomputed row, member of the collection)",
+  "sheets": "Opened by the finisher as a contact sheet of the final document: the three-quarter view of every authored scale and list (body, thermal, structure), of every non-default pose and of two instants of every clip at 1:50 (tiles of 320 px; the six-view sheets at full resolution were not opened one by one). The contact sheet of the product's 2D drawings (line and solid rows; elevation, front, plan) of every authored scale was opened too.",
+  "opened": true,
+  "imperfect": [
+   "In `maintenance` the table hangs 60 mm above its bed with no sling drawn.",
+   "Lifting gear, workers and users are not drawn: the schema has no per-pose presence of solids (request filed in the umbrella `requests.md`); they exist as loads and in the texts only.",
+   "Wear below the smallest feature (scratches, stickers, moss, graffiti, gum) is 2D strokes only, by the rule of the brief; the 3D body shows only the wear above the feature.",
+   "No author's reference table exists; the model was not measured against outside sources in the finishing session."
+  ]
+ },
+ "used-climbing-net-pyramid": {
+  "row": "20",
+  "before": "published; full proof VALID (schema 0, validateAsset 0, checkVolumes 0), check CLI ✓, catalog copy equal to the candidate, manifest row equal and member of `used-park-objects`.",
+  "after": "unchanged; proven as above, catalog copy VALID with `--catalog-only`.",
+  "changed": [],
+  "powerW": 0,
+  "reactions": [],
+  "verify": "ok (candidate = catalog copy, manifest row = recomputed row, member of the collection)",
+  "sheets": "Opened by the finisher as a contact sheet of the final document: the three-quarter view of every authored scale and list (body, thermal, structure), of every non-default pose and of two instants of every clip at 1:50 (tiles of 320 px; the six-view sheets at full resolution were not opened one by one). The contact sheet of the product's 2D drawings (line and solid rows; elevation, front, plan) of every authored scale was opened too.",
+  "opened": true,
+  "imperfect": [
+   "The net faces are rigid; at 1:500 the light-line drawing of the net is dense (ropes close to the print floor).",
+   "Mass markers lie up to 0.1 m off the member centres (ledger, not re-measured).",
+   "Lifting gear, workers and users are not drawn: the schema has no per-pose presence of solids (request filed in the umbrella `requests.md`); they exist as loads and in the texts only.",
+   "Wear below the smallest feature (scratches, stickers, moss, graffiti, gum) is 2D strokes only, by the rule of the brief; the 3D body shows only the wear above the feature.",
+   "No author's reference table exists; the model was not measured against outside sources in the finishing session."
+  ]
+ },
+ "used-concrete-bench-block": {
+  "row": "02",
+  "before": "published; full proof VALID (schema 0, validateAsset 0, checkVolumes 0), check CLI ✓, catalog copy equal to the candidate, manifest row equal and member of `used-park-objects`.",
+  "after": "unchanged; proven as above, catalog copy VALID with `--catalog-only`.",
+  "changed": [],
+  "powerW": 0,
+  "reactions": [],
+  "verify": "ok (candidate = catalog copy, manifest row = recomputed row, member of the collection)",
+  "sheets": "Opened by the finisher as a contact sheet of the final document: the three-quarter view of every authored scale and list (body, thermal, structure), of every non-default pose and of two instants of every clip at 1:50 (tiles of 320 px; the six-view sheets at full resolution were not opened one by one). The contact sheet of the product's 2D drawings (line and solid rows; elevation, front, plan) of every authored scale was opened too.",
+  "opened": true,
+  "imperfect": [
+   "Lifting pose already exact (5061.2 N per socket).",
+   "Lifting gear, workers and users are not drawn: the schema has no per-pose presence of solids (request filed in the umbrella `requests.md`); they exist as loads and in the texts only.",
+   "Wear below the smallest feature (scratches, stickers, moss, graffiti, gum) is 2D strokes only, by the rule of the brief; the 3D body shows only the wear above the feature.",
+   "No author's reference table exists; the model was not measured against outside sources in the finishing session."
+  ]
+ },
+ "used-concrete-table-tennis": {
+  "row": "07",
+  "before": "published; full proof VALID (schema 0, validateAsset 0, checkVolumes 0), check CLI ✓, catalog copy equal to the candidate, manifest row equal and member of `used-park-objects`.",
+  "after": "corrected (see below), full proof VALID, check CLI ✓, re-published through `publish.ts`, catalog copy VALID with `--catalog-only`.",
+  "changed": [
+   "Footing treatment made the same as rows 01 and 05: the two strip footings are massless bones `footing-a`, `footing-b` with body, thermal (`footings` region, 7.52 m2) and structure solids at all four scales and filled cut shapes in elevation and front (before: thin ground outlines in 2D only at 1:50 and 1:100, nothing in 3D); they stay behind in `maintenance`. A straight ground line was added at 1:200 and 1:500; the front hollow line that would cross the footing was removed.",
+   "Footing depth set to the frost-free 0.80 m (author: 0.40 m). `dimensions.heightM` is now 1.7125 m (0.9125 m above ground plus 0.80 m of footing), as the product's extent rules demand; the true-extent symbol and `distinction.json` follow.",
+   "With 0.40 m depth the full proof reported `volumes-silhouette` 1:50 front p95M 48.8 mm; the finding is an artefact of the banded raster (it disappears at 0.30, 0.50, 0.60 and 0.80 m with nothing else changed; request filed)."
+  ],
+  "powerW": 0,
+  "reactions": [],
+  "verify": "ok (candidate = catalog copy, manifest row = recomputed row, member of the collection)",
+  "sheets": "Opened by the finisher as a contact sheet of the final document: the three-quarter view of every authored scale and list (body, thermal, structure), of every non-default pose and of two instants of every clip at 1:50 (tiles of 320 px; the six-view sheets at full resolution were not opened one by one). The contact sheet of the product's 2D drawings (line and solid rows; elevation, front, plan) of every authored scale was opened too.",
+  "opened": true,
+  "imperfect": [
+   "`dimensions.heightM` 1.7125 m includes the footings below ground; the height above ground (0.9125 m) is in the texts only.",
+   "Lifting gear, workers and users are not drawn: the schema has no per-pose presence of solids (request filed in the umbrella `requests.md`); they exist as loads and in the texts only.",
+   "Wear below the smallest feature (scratches, stickers, moss, graffiti, gum) is 2D strokes only, by the rule of the brief; the 3D body shows only the wear above the feature.",
+   "No author's reference table exists; the model was not measured against outside sources in the finishing session."
+  ]
+ },
+ "used-dog-waste-station": {
+  "row": "10",
+  "before": "published; full proof VALID (schema 0, validateAsset 0, checkVolumes 0), check CLI ✓, catalog copy equal to the candidate, manifest row equal and member of `used-park-objects`.",
+  "after": "corrected (see below), full proof VALID, check CLI ✓, re-published through `publish.ts`, catalog copy VALID with `--catalog-only`.",
+  "changed": [
+   "Bag slot lowered from 1.16 m to 1.05 m (bag tab gripped at 1.01 m) so that it lies inside the reach range of 0.85 to 1.05 m of DIN 18040-1 that the asset itself cites; the whole dispenser (housing, mount, clamps, lid, roll, tab, lock, strokes, anchors, bones) moved down by 0.11 m at all four scales.",
+   "Consequence: the rain hood of the bin can open only 45 degrees under the dispenser (20 mm clear) instead of 85; joint limit, the poses `maintenance` and `lids-open` and their texts changed accordingly."
+  ],
+  "powerW": 0,
+  "reactions": [],
+  "verify": "ok (candidate = catalog copy, manifest row = recomputed row, member of the collection)",
+  "sheets": "Opened by the finisher as a contact sheet of the final document: the three-quarter view of every authored scale and list (body, thermal, structure), of every non-default pose and of two instants of every clip at 1:50 (tiles of 320 px; the six-view sheets at full resolution were not opened one by one). The contact sheet of the product's 2D drawings (line and solid rows; elevation, front, plan) of every authored scale was opened too.",
+  "opened": true,
+  "imperfect": [
+   "The hood opens only 45 degrees; emptying is through the front under the hood.",
+   "Lifting gear, workers and users are not drawn: the schema has no per-pose presence of solids (request filed in the umbrella `requests.md`); they exist as loads and in the texts only.",
+   "Wear below the smallest feature (scratches, stickers, moss, graffiti, gum) is 2D strokes only, by the rule of the brief; the 3D body shows only the wear above the feature.",
+   "No author's reference table exists; the model was not measured against outside sources in the finishing session."
+  ]
+ },
+ "used-double-swing": {
+  "row": "14",
+  "before": "published; full proof VALID (schema 0, validateAsset 0, checkVolumes 0), check CLI ✓, catalog copy equal to the candidate, manifest row equal and member of `used-park-objects`.",
+  "after": "corrected (see below), full proof VALID, check CLI ✓, re-published through `publish.ts`, catalog copy VALID with `--catalog-only`.",
+  "changed": [
+   "Lifting pose corrected: the resting point of the unshackled flat seat is an applied force of the statics of the lifted part alone instead of a support that shared the weight of the whole rig (293.2 N under the seat before, 38.7 N under the seat, the weight of the seat after; `lift_statics.py`, `reactions.ts`)."
+  ],
+  "powerW": 0,
+  "reactions": [
+   "used-double-swing maintenance: weight 1497.2 N (152.7 kg),\nfoot-back-l: fx 0.0 fy 362.2 fz 0.0\nfoot-back-r: fx 0.0 fy 367.4 fz 0.0\nfoot-front-l: fx 0.0 fy 361.8 fz 0.0\nfoot-front-r: fx 0.0 fy 367.0 fz 0.0"
+  ],
+  "verify": "ok (candidate = catalog copy, manifest row = recomputed row, member of the collection)",
+  "sheets": "Opened by the finisher as a contact sheet of the final document: the three-quarter view of every authored scale and list (body, thermal, structure), of every non-default pose and of two instants of every clip at 1:50 (tiles of 320 px; the six-view sheets at full resolution were not opened one by one). The contact sheet of the product's 2D drawings (line and solid rows; elevation, front, plan) of every authored scale was opened too.",
+  "opened": true,
+  "imperfect": [
+   "The post foundations below the gravel are not modelled; the gravel sample (about 1.6 t) is not in `massKg`; the gravel mesh is large (ledger: 1.8 MB).",
+   "Lifting gear, workers and users are not drawn: the schema has no per-pose presence of solids (request filed in the umbrella `requests.md`); they exist as loads and in the texts only.",
+   "Wear below the smallest feature (scratches, stickers, moss, graffiti, gum) is 2D strokes only, by the rule of the brief; the 3D body shows only the wear above the feature.",
+   "No author's reference table exists; the model was not measured against outside sources in the finishing session."
+  ]
+ },
+ "used-football-goal": {
+  "row": "23",
+  "before": "published; full proof VALID (schema 0, validateAsset 0, checkVolumes 0), check CLI ✓, catalog copy equal to the candidate, manifest row equal and member of `used-park-objects`.",
+  "after": "unchanged; proven as above, catalog copy VALID with `--catalog-only`.",
+  "changed": [],
+  "powerW": 0,
+  "reactions": [],
+  "verify": "ok (candidate = catalog copy, manifest row = recomputed row, member of the collection)",
+  "sheets": "Opened by the finisher as a contact sheet of the final document: the three-quarter view of every authored scale and list (body, thermal, structure), of every non-default pose and of two instants of every clip at 1:50 (tiles of 320 px; the six-view sheets at full resolution were not opened one by one). The contact sheet of the 2D drawings was rendered but NOT opened by the finisher; for the 2D the ledger of the interrupted wave is the only record of what its author saw.",
+  "opened": false,
+  "imperfect": [
+   "The mesh net is opaque in the 3D sheets (ledger).",
+   "Lifting gear, workers and users are not drawn: the schema has no per-pose presence of solids (request filed in the umbrella `requests.md`); they exist as loads and in the texts only.",
+   "Wear below the smallest feature (scratches, stickers, moss, graffiti, gum) is 2D strokes only, by the rule of the brief; the 3D body shows only the wear above the feature.",
+   "No author's reference table exists; the model was not measured against outside sources in the finishing session."
+  ]
+ },
+ "used-litter-bin-post": {
+  "row": "09",
+  "before": "published; full proof VALID (schema 0, validateAsset 0, checkVolumes 0), check CLI ✓, catalog copy equal to the candidate, manifest row equal and member of `used-park-objects`.",
+  "after": "unchanged; proven as above, catalog copy VALID with `--catalog-only`.",
+  "changed": [],
+  "powerW": 0,
+  "reactions": [],
+  "verify": "ok (candidate = catalog copy, manifest row = recomputed row, member of the collection)",
+  "sheets": "Opened by the finisher as a contact sheet of the final document: the three-quarter view of every authored scale and list (body, thermal, structure), of every non-default pose and of two instants of every clip at 1:50 (tiles of 320 px; the six-view sheets at full resolution were not opened one by one). The contact sheet of the 2D drawings was rendered but NOT opened by the finisher; for the 2D the ledger of the interrupted wave is the only record of what its author saw.",
+  "opened": false,
+  "imperfect": [
+   "Ledger points not re-worked: the tipped liner is approximate in the front view, the liner slides on its axis, the dent is stepped.",
+   "Lifting gear, workers and users are not drawn: the schema has no per-pose presence of solids (request filed in the umbrella `requests.md`); they exist as loads and in the texts only.",
+   "Wear below the smallest feature (scratches, stickers, moss, graffiti, gum) is 2D strokes only, by the rule of the brief; the 3D body shows only the wear above the feature.",
+   "No author's reference table exists; the model was not measured against outside sources in the finishing session."
+  ]
+ },
+ "used-outdoor-fitness-station": {
+  "row": "21",
+  "before": "published; full proof VALID (schema 0, validateAsset 0, checkVolumes 0), check CLI ✓, catalog copy equal to the candidate, manifest row equal and member of `used-park-objects`.",
+  "after": "corrected (see below), full proof VALID, check CLI ✓, re-published through `publish.ts`, catalog copy VALID with `--catalog-only`.",
+  "changed": [
+   "Lifting pose corrected: the pair of workers' hands under the high bar is an applied force of the statics of the lifted part alone instead of a support that shared the weight of the whole rig (2926.2 N and 3092.5 N on the hands before, 14.0 N per worker after; `lift_statics.py`, `reactions.ts`). Key pose `hands-on` added to the clip `bar-change`."
+  ],
+  "powerW": 0,
+  "reactions": [
+   "used-outdoor-fitness-station maintenance: weight 27178.8 N (2771.5 kg),\nsoil-a: fx 0.0 fy 5434.4 fz 0.0\nsoil-b: fx 0.0 fy 4982.3 fz 0.0\nsoil-dip-front: fx 0.0 fy 4756.2 fz 0.0\nsoil-dip-rear: fx -0.0 fy 4304.1 fz 0.0\nsoil-bench-low: fx -0.0 fy 4006.7 fz 0.0\nsoil-bench-high: fx -0.0 fy 3667.2 fz 0.0"
+  ],
+  "verify": "ok (candidate = catalog copy, manifest row = recomputed row, member of the collection)",
+  "sheets": "Opened by the finisher as a contact sheet of the final document: the three-quarter view of every authored scale and list (body, thermal, structure), of every non-default pose and of two instants of every clip at 1:50 (tiles of 320 px; the six-view sheets at full resolution were not opened one by one). The contact sheet of the 2D drawings was rendered but NOT opened by the finisher; for the 2D the ledger of the interrupted wave is the only record of what its author saw.",
+  "opened": false,
+  "imperfect": [
+   "At 1:500 the bench legs are slender (ledger).",
+   "Lifting gear, workers and users are not drawn: the schema has no per-pose presence of solids (request filed in the umbrella `requests.md`); they exist as loads and in the texts only.",
+   "Wear below the smallest feature (scratches, stickers, moss, graffiti, gum) is 2D strokes only, by the rule of the brief; the 3D body shows only the wear above the feature.",
+   "No author's reference table exists; the model was not measured against outside sources in the finishing session."
+  ]
+ },
+ "used-park-armchair": {
+  "row": "04",
+  "before": "published; full proof VALID (schema 0, validateAsset 0, checkVolumes 0), check CLI ✓, catalog copy equal to the candidate, manifest row equal and member of `used-park-objects`.",
+  "after": "unchanged; proven as above, catalog copy VALID with `--catalog-only`.",
+  "changed": [],
+  "powerW": 0,
+  "reactions": [],
+  "verify": "ok (candidate = catalog copy, manifest row = recomputed row, member of the collection)",
+  "sheets": "Opened by the finisher as a contact sheet of the final document: the three-quarter view of every authored scale and list (body, thermal, structure), of every non-default pose and of two instants of every clip at 1:50 (tiles of 320 px; the six-view sheets at full resolution were not opened one by one). The contact sheet of the 2D drawings was rendered but NOT opened by the finisher; for the 2D the ledger of the interrupted wave is the only record of what its author saw.",
+  "opened": false,
+  "imperfect": [
+   "Perforation is a hatch; the slender-tube request stays open. The ledger's point about oversized rust discs at 1:500 is stale: the document has no such shapes.",
+   "Lifting gear, workers and users are not drawn: the schema has no per-pose presence of solids (request filed in the umbrella `requests.md`); they exist as loads and in the texts only.",
+   "Wear below the smallest feature (scratches, stickers, moss, graffiti, gum) is 2D strokes only, by the rule of the brief; the 3D body shows only the wear above the feature.",
+   "No author's reference table exists; the model was not measured against outside sources in the finishing session."
+  ]
+ },
+ "used-park-lantern": {
+  "row": "12",
+  "before": "published; full proof VALID (schema 0, validateAsset 0, checkVolumes 0), check CLI ✓, catalog copy equal to the candidate, manifest row equal and member of `used-park-objects`.",
+  "after": "corrected (see below), full proof VALID, check CLI ✓, re-published through `publish.ts`, catalog copy VALID with `--catalog-only`.",
+  "changed": [
+   "Lifting pose corrected: the lawn mat under the eave of the lowered column is an applied force of the statics of the lifted part alone instead of a support that shared the weight of the whole rig (224.7 N on the mat before, 197.4 N on the mat by moments about the hinge pin, foundation 607.4 N after; `lift_statics.py`, `reactions.ts`)."
+  ],
+  "powerW": 30,
+  "reactions": [
+   "used-park-lantern maintenance: weight 804.8 N (82.1 kg),\nfoundation-support: fx 0.0 fy 607.4 fz 0.0"
+  ],
+  "verify": "ok (candidate = catalog copy, manifest row = recomputed row, member of the collection)",
+  "sheets": "Opened by the finisher as a contact sheet of the final document: the three-quarter view of every authored scale and list (body, thermal, structure), of every non-default pose and of two instants of every clip at 1:50 (tiles of 320 px; the six-view sheets at full resolution were not opened one by one). The contact sheet of the 2D drawings was rendered but NOT opened by the finisher; for the 2D the ledger of the interrupted wave is the only record of what its author saw.",
+  "opened": false,
+  "imperfect": [
+   "While the column is lowered, the fading mat force stands for the rope; struts are approximate in the front view of the tilted pose and the rear door shows in the front view (ledger, not re-worked).",
+   "Lifting gear, workers and users are not drawn: the schema has no per-pose presence of solids (request filed in the umbrella `requests.md`); they exist as loads and in the texts only.",
+   "Wear below the smallest feature (scratches, stickers, moss, graffiti, gum) is 2D strokes only, by the rule of the brief; the 3D body shows only the wear above the feature.",
+   "No author's reference table exists; the model was not measured against outside sources in the finishing session."
+  ]
+ },
+ "used-park-noticeboard": {
+  "row": "27",
+  "before": "published; full proof VALID (schema 0, validateAsset 0, checkVolumes 0), check CLI ✓, catalog copy equal to the candidate, manifest row equal and member of `used-park-objects`.",
+  "after": "unchanged; proven as above, catalog copy VALID with `--catalog-only`.",
+  "changed": [],
+  "powerW": 0,
+  "reactions": [],
+  "verify": "ok (candidate = catalog copy, manifest row = recomputed row, member of the collection)",
+  "sheets": "Opened by the finisher as a contact sheet of the final document: the three-quarter view of every authored scale and list (body, thermal, structure), of every non-default pose and of two instants of every clip at 1:50 (tiles of 320 px; the six-view sheets at full resolution were not opened one by one). The contact sheet of the 2D drawings was rendered but NOT opened by the finisher; for the 2D the ledger of the interrupted wave is the only record of what its author saw.",
+  "opened": false,
+  "imperfect": [
+   "At 1:200 and 1:500 glass and pinboard are thicker in the thermal list (ledger); the reading clip barely moves.",
+   "Lifting gear, workers and users are not drawn: the schema has no per-pose presence of solids (request filed in the umbrella `requests.md`); they exist as loads and in the texts only.",
+   "Wear below the smallest feature (scratches, stickers, moss, graffiti, gum) is 2D strokes only, by the rule of the brief; the 3D body shows only the wear above the feature.",
+   "No author's reference table exists; the model was not measured against outside sources in the finishing session."
+  ]
+ },
+ "used-playground-roundabout": {
+  "row": "18",
+  "before": "published; full proof VALID (schema 0, validateAsset 0, checkVolumes 0), check CLI ✓, catalog copy equal to the candidate, manifest row equal and member of `used-park-objects`.",
+  "after": "unchanged; proven as above, catalog copy VALID with `--catalog-only`.",
+  "changed": [],
+  "powerW": 0,
+  "reactions": [],
+  "verify": "ok (candidate = catalog copy, manifest row = recomputed row, member of the collection)",
+  "sheets": "Opened by the finisher as a contact sheet of the final document: the three-quarter view of every authored scale and list (body, thermal, structure), of every non-default pose and of two instants of every clip at 1:50 (tiles of 320 px; the six-view sheets at full resolution were not opened one by one). The contact sheet of the 2D drawings was rendered but NOT opened by the finisher; for the 2D the ledger of the interrupted wave is the only record of what its author saw.",
+  "opened": false,
+  "imperfect": [
+   "At 1:50 the rim is a 60 x 60 mm envelope (ledger).",
+   "Lifting gear, workers and users are not drawn: the schema has no per-pose presence of solids (request filed in the umbrella `requests.md`); they exist as loads and in the texts only.",
+   "Wear below the smallest feature (scratches, stickers, moss, graffiti, gum) is 2D strokes only, by the rule of the brief; the 3D body shows only the wear above the feature.",
+   "No author's reference table exists; the model was not measured against outside sources in the finishing session."
+  ]
+ },
+ "used-pump-drinking-fountain": {
+  "row": "24",
+  "before": "published; full proof VALID (schema 0, validateAsset 0, checkVolumes 0), check CLI ✓, catalog copy equal to the candidate, manifest row equal and member of `used-park-objects`.",
+  "after": "corrected (see below), full proof VALID, check CLI ✓, re-published through `publish.ts`, catalog copy VALID with `--catalog-only`.",
+  "changed": [
+   "Lifting pose corrected: the crane hook on the pump head is an applied force of the statics of the lifted part alone instead of a support that shared the weight of the whole rig (5263.5 N on the hook before, 399.6 N on the hook, slab 10590.5 N after; `lift_statics.py`, `reactions.ts`). Key pose `sling-taut` added to the clip `maintenance`."
+  ],
+  "powerW": 0,
+  "reactions": [
+   "used-pump-drinking-fountain maintenance: weight 10990.1 N (1120.7 kg),\nslab-base: fx 0.0 fy 10590.5 fz 0.0"
+  ],
+  "verify": "ok (candidate = catalog copy, manifest row = recomputed row, member of the collection)",
+  "sheets": "Opened by the finisher as a contact sheet of the final document: the three-quarter view of every authored scale and list (body, thermal, structure), of every non-default pose and of two instants of every clip at 1:50 (tiles of 320 px; the six-view sheets at full resolution were not opened one by one). The contact sheet of the 2D drawings was rendered but NOT opened by the finisher; for the 2D the ledger of the interrupted wave is the only record of what its author saw.",
+  "opened": false,
+  "imperfect": [
+   "The head's centre of mass lies 32 mm beside the single lifting point; the jet is three slices that jump (ledger).",
+   "Lifting gear, workers and users are not drawn: the schema has no per-pose presence of solids (request filed in the umbrella `requests.md`); they exist as loads and in the texts only.",
+   "Wear below the smallest feature (scratches, stickers, moss, graffiti, gum) is 2D strokes only, by the rule of the brief; the 3D body shows only the wear above the feature.",
+   "No author's reference table exists; the model was not measured against outside sources in the finishing session."
+  ]
+ },
+ "used-recycling-bin-cluster": {
+  "row": "11",
+  "before": "published; full proof VALID (schema 0, validateAsset 0, checkVolumes 0), check CLI ✓, catalog copy equal to the candidate, manifest row equal and member of `used-park-objects`.",
+  "after": "unchanged; proven as above, catalog copy VALID with `--catalog-only`.",
+  "changed": [],
+  "powerW": 0,
+  "reactions": [],
+  "verify": "ok (candidate = catalog copy, manifest row = recomputed row, member of the collection)",
+  "sheets": "Opened by the finisher as a contact sheet of the final document: the three-quarter view of every authored scale and list (body, thermal, structure), of every non-default pose and of two instants of every clip at 1:50 (tiles of 320 px; the six-view sheets at full resolution were not opened one by one). The contact sheet of the 2D drawings was rendered but NOT opened by the finisher; for the 2D the ledger of the interrupted wave is the only record of what its author saw.",
+  "opened": false,
+  "imperfect": [
+   "The lid held open in `maintenance` is a load of the worker's hand (already the applied-force pattern).",
+   "Lifting gear, workers and users are not drawn: the schema has no per-pose presence of solids (request filed in the umbrella `requests.md`); they exist as loads and in the texts only.",
+   "Wear below the smallest feature (scratches, stickers, moss, graffiti, gum) is 2D strokes only, by the rule of the brief; the 3D body shows only the wear above the feature.",
+   "No author's reference table exists; the model was not measured against outside sources in the finishing session."
+  ]
+ },
+ "used-sandpit-digger": {
+  "row": "19",
+  "before": "published; full proof VALID (schema 0, validateAsset 0, checkVolumes 0), check CLI ✓, catalog copy equal to the candidate, manifest row equal and member of `used-park-objects`.",
+  "after": "corrected (see below), full proof VALID, check CLI ✓, re-published through `publish.ts`, catalog copy VALID with `--catalog-only`.",
+  "changed": [
+   "Lifting pose corrected: the crane hook in the eye nut is an applied force of the statics of the lifted part alone instead of a support that shared the weight of the whole rig (4132.6 N on the hook before, 276.1 N on the hook after; `lift_statics.py`, `reactions.ts`). Key pose `hook-taut` added to the clip `maintenance-lift`."
+  ],
+  "powerW": 0,
+  "reactions": [
+   "used-sandpit-digger maintenance: weight 29696.2 N (3028.2 kg),\ncorner-front-left: fx 0.0 fy 5270.1 fz 0.0\ncorner-front-right: fx 0.0 fy 5269.5 fz 0.0\ncorner-back-left: fx 0.0 fy 4570.4 fz -0.0\ncorner-back-right: fx 0.0 fy 4569.8 fz -0.0\nsand-bed: fx 0.0 fy 4920.0 fz 0.0\nsleeve-foundation: fx -0.0 fy 4820.3 fz -0.0"
+  ],
+  "verify": "ok (candidate = catalog copy, manifest row = recomputed row, member of the collection)",
+  "sheets": "Opened by the finisher as a contact sheet of the final document: the three-quarter view of every authored scale and list (body, thermal, structure), of every non-default pose and of two instants of every clip at 1:50 (tiles of 320 px; the six-view sheets at full resolution were not opened one by one). The contact sheet of the 2D drawings was rendered but NOT opened by the finisher; for the 2D the ledger of the interrupted wave is the only record of what its author saw.",
+  "opened": false,
+  "imperfect": [
+   "The eye nut stands 0.12 m behind the centre of mass of the folded digger (stated in the assumptions); in service the post socket, sand and edging are solved as one rigid body on seven supports (solver request); no lever linkage (ledger).",
+   "Lifting gear, workers and users are not drawn: the schema has no per-pose presence of solids (request filed in the umbrella `requests.md`); they exist as loads and in the texts only.",
+   "Wear below the smallest feature (scratches, stickers, moss, graffiti, gum) is 2D strokes only, by the rule of the brief; the 3D body shows only the wear above the feature.",
+   "No author's reference table exists; the model was not measured against outside sources in the finishing session."
+  ]
+ },
+ "used-seesaw": {
+  "row": "16",
+  "before": "published; full proof VALID (schema 0, validateAsset 0, checkVolumes 0), check CLI ✓, catalog copy equal to the candidate, manifest row equal and member of `used-park-objects`.",
+  "after": "corrected (see below), full proof VALID, check CLI ✓, re-published through `publish.ts`, catalog copy VALID with `--catalog-only`.",
+  "changed": [
+   "Lifting pose corrected: the pair of round slings on the beam is an applied force of the statics of the lifted part alone instead of a support that shared the weight of the whole rig (233.0 N on each of five supports before, 380.6 N per sling, 134.6 N on each of footing and tyres after; `lift_statics.py`, `reactions.ts`)."
+  ],
+  "powerW": 0,
+  "reactions": [
+   "used-seesaw maintenance: weight 1105.2 N (112.7 kg),\nfooting-anchor: fx -0.0 fy 134.6 fz 0.0\ntyre-fore-ground: fx 0.0 fy 134.6 fz 0.0\ntyre-aft-ground: fx 0.0 fy 134.6 fz 0.0"
+  ],
+  "verify": "ok (candidate = catalog copy, manifest row = recomputed row, member of the collection)",
+  "sheets": "Opened by the finisher as a contact sheet of the final document: the three-quarter view of every authored scale and list (body, thermal, structure), of every non-default pose and of two instants of every clip at 1:50 (tiles of 320 px; the six-view sheets at full resolution were not opened one by one). The contact sheet of the 2D drawings was rendered but NOT opened by the finisher; for the 2D the ledger of the interrupted wave is the only record of what its author saw.",
+  "opened": false,
+  "imperfect": [
+   "Lawn hollows are text only (ledger).",
+   "Lifting gear, workers and users are not drawn: the schema has no per-pose presence of solids (request filed in the umbrella `requests.md`); they exist as loads and in the texts only.",
+   "Wear below the smallest feature (scratches, stickers, moss, graffiti, gum) is 2D strokes only, by the rule of the brief; the 3D body shows only the wear above the feature.",
+   "No author's reference table exists; the model was not measured against outside sources in the finishing session."
+  ]
+ },
+ "used-slide-tower": {
+  "row": "15",
+  "before": "published; full proof VALID (schema 0, validateAsset 0, checkVolumes 0), check CLI ✓, catalog copy equal to the candidate, manifest row equal and member of `used-park-objects`.",
+  "after": "corrected (see below), full proof VALID, check CLI ✓, re-published through `publish.ts`, catalog copy VALID with `--catalog-only`.",
+  "changed": [
+   "Lifting pose corrected: the four tie beam ends of the dismantled roof (crane sling, then lawn) is an applied force of the statics of the lifted part alone instead of a support that shared the weight of the whole rig (1155 to 1344 N per rest before, 230.4 N per rest after; `lift_statics.py`, `reactions.ts`). Key pose `roof-on-crane` added: in the clip `dismantle-roof` the crane now carries the roof from 1 s on instead of the tower supports."
+  ],
+  "powerW": 0,
+  "reactions": [
+   "used-slide-tower maintenance: weight 16469.3 N (1679.4 kg),\nsupport-fl: fx -35.5 fy 2320.3 fz 0.3\nsupport-fr: fx -35.3 fy 2316.9 fz 0.3\nsupport-bl: fx -35.5 fy 2715.1 fz 0.1\nsupport-br: fx -35.3 fy 2711.7 fz 0.1\nladder-foot: fx 30.4 fy 2912.9 fz -0.5\nslide-foot: fx -2.5 fy 1387.5 fz 0.4\ntiles-ground: fx 113.9 fy 1183.4 fz -0.7"
+  ],
+  "verify": "ok (candidate = catalog copy, manifest row = recomputed row, member of the collection)",
+  "sheets": "Opened by the finisher as a contact sheet of the final document: the three-quarter view of every authored scale and list (body, thermal, structure), of every non-default pose and of two instants of every clip at 1:50 (tiles of 320 px; the six-view sheets at full resolution were not opened one by one). The contact sheet of the 2D drawings was rendered but NOT opened by the finisher; for the 2D the ledger of the interrupted wave is the only record of what its author saw.",
+  "opened": false,
+  "imperfect": [
+   "The sliding child is a moving load only (ledger).",
+   "Lifting gear, workers and users are not drawn: the schema has no per-pose presence of solids (request filed in the umbrella `requests.md`); they exist as loads and in the texts only.",
+   "Wear below the smallest feature (scratches, stickers, moss, graffiti, gum) is 2D strokes only, by the rule of the brief; the 3D body shows only the wear above the feature.",
+   "No author's reference table exists; the model was not measured against outside sources in the finishing session."
+  ]
+ },
+ "used-spring-rocker": {
+  "row": "17",
+  "before": "published; full proof VALID (schema 0, validateAsset 0, checkVolumes 0), check CLI ✓, catalog copy equal to the candidate, manifest row equal and member of `used-park-objects`.",
+  "after": "corrected (see below), full proof VALID, check CLI ✓, re-published through `publish.ts`, catalog copy VALID with `--catalog-only`.",
+  "changed": [
+   "Lifting pose corrected: the four-leg sling is an applied force of the statics of the lifted part alone instead of a support that shared the weight of the whole rig (510 to 546 N per leg before, 50.1 N per handle leg and 82.5 N per rear leg, 265.2 N in all, footing 2424.8 N after; `lift_statics.py`, `reactions.ts`).",
+   "Real defect found by the statics: both sling pairs (handle ends x 0.27 m, footrest ends x 0.13 m) lay ahead of the centre of mass of the lifted part (x 0.027 m), so the rocker would have tipped backwards on the hook. The rear pair is now choked round the rear spacer under the seat (x -0.1205 m); anchors `lift-foot-*` renamed `lift-rear-*`; key pose `slings-taut` added."
+  ],
+  "powerW": 0,
+  "reactions": [
+   "used-spring-rocker maintenance: weight 2690.0 N (274.3 kg),\nfooting-ground: fx 0.0 fy 2424.8 fz 0.0"
+  ],
+  "verify": "ok (candidate = catalog copy, manifest row = recomputed row, member of the collection)",
+  "sheets": "Opened by the finisher as a contact sheet of the final document: the three-quarter view of every authored scale and list (body, thermal, structure), of every non-default pose and of two instants of every clip at 1:50 (tiles of 320 px; the six-view sheets at full resolution were not opened one by one). The contact sheet of the 2D drawings was rendered but NOT opened by the finisher; for the 2D the ledger of the interrupted wave is the only record of what its author saw.",
+  "opened": false,
+  "imperfect": [
+   "1:500 is unavailable (2.4 mm on paper); the 1 degree rest lean of the spring is ignored (ledger).",
+   "Lifting gear, workers and users are not drawn: the schema has no per-pose presence of solids (request filed in the umbrella `requests.md`); they exist as loads and in the texts only.",
+   "Wear below the smallest feature (scratches, stickers, moss, graffiti, gum) is 2D strokes only, by the rule of the brief; the 3D body shows only the wear above the feature.",
+   "No author's reference table exists; the model was not measured against outside sources in the finishing session."
+  ]
+ },
+ "used-sun-lounger-bench": {
+  "row": "05",
+  "before": "published; full proof VALID (schema 0, validateAsset 0, checkVolumes 0), check CLI ✓, catalog copy equal to the candidate, manifest row equal and member of `used-park-objects`.",
+  "after": "unchanged; proven as above, catalog copy VALID with `--catalog-only`.",
+  "changed": [],
+  "powerW": 0,
+  "reactions": [],
+  "verify": "ok (candidate = catalog copy, manifest row = recomputed row, member of the collection)",
+  "sheets": "Opened by the finisher as a contact sheet of the final document: the three-quarter view of every authored scale and list (body, thermal, structure), of every non-default pose and of two instants of every clip at 1:50 (tiles of 320 px; the six-view sheets at full resolution were not opened one by one). The contact sheet of the 2D drawings was rendered but NOT opened by the finisher; for the 2D the ledger of the interrupted wave is the only record of what its author saw.",
+  "opened": false,
+  "imperfect": [
+   "Lifting pose already exact (226.0 and 200.1 N per sling); the worn lawn is not drawn (ledger).",
+   "Lifting gear, workers and users are not drawn: the schema has no per-pose presence of solids (request filed in the umbrella `requests.md`); they exist as loads and in the texts only.",
+   "Wear below the smallest feature (scratches, stickers, moss, graffiti, gum) is 2D strokes only, by the rule of the brief; the 3D body shows only the wear above the feature.",
+   "No author's reference table exists; the model was not measured against outside sources in the finishing session."
+  ]
+ },
+ "used-tree-surround-bench": {
+  "row": "03",
+  "before": "published; full proof VALID (schema 0, validateAsset 0, checkVolumes 0), check CLI ✓, catalog copy equal to the candidate, manifest row equal and member of `used-park-objects`.",
+  "after": "corrected (see below), full proof VALID, check CLI ✓, re-published through `publish.ts`, catalog copy VALID with `--catalog-only`.",
+  "changed": [
+   "Lifting pose corrected: the pair of hands at the outer slat ends of segment 1 is an applied force of the statics of the lifted part alone instead of a support that shared the weight of the whole rig (179 N per hand before, 63.6 N per hand after; `lift_statics.py`, `reactions.ts`). Key pose `hands-on` added to the clip `segment-lift-out`."
+  ],
+  "powerW": 0,
+  "reactions": [
+   "used-tree-surround-bench maintenance: weight 3242.2 N (330.6 kg),\nfoot-0-i: fx 0.3 fy 244.1 fz 0.0\nfoot-0-o: fx -0.0 fy 236.6 fz 0.0\nfoot-1-i: fx -0.0 fy 259.5 fz -0.0\nfoot-1-o: fx -0.0 fy 259.4 fz -0.0\nfoot-2-i: fx -0.0 fy 274.9 fz -0.0\nfoot-2-o: fx -0.0 fy 282.4 fz -0.0\nfoot-3-i: fx -0.0 fy 275.1 fz -0.0\nfoot-3-o: fx -0.0 fy 282.6 fz -0.0\nfoot-4-i: fx -0.0 fy 259.7 fz -0.0\nfoot-4-o: fx -0.0 fy 259.7 fz -0.0\nfoot-5-i: fx -0.0 fy 244.2 fz 0.0\nfoot-5-o: fx -0.0 fy 236.7 fz 0.0"
+  ],
+  "verify": "ok (candidate = catalog copy, manifest row = recomputed row, member of the collection)",
+  "sheets": "Opened by the finisher as a contact sheet of the final document: the three-quarter view of every authored scale and list (body, thermal, structure), of every non-default pose and of two instants of every clip at 1:50 (tiles of 320 px; the six-view sheets at full resolution were not opened one by one). The contact sheet of the 2D drawings was rendered but NOT opened by the finisher; for the 2D the ledger of the interrupted wave is the only record of what its author saw.",
+  "opened": false,
+  "imperfect": [
+   "No tree trunk is drawn; the 1:50 plan is dense (ledger).",
+   "Lifting gear, workers and users are not drawn: the schema has no per-pose presence of solids (request filed in the umbrella `requests.md`); they exist as loads and in the texts only.",
+   "Wear below the smallest feature (scratches, stickers, moss, graffiti, gum) is 2D strokes only, by the rule of the brief; the 3D body shows only the wear above the feature.",
+   "No author's reference table exists; the model was not measured against outside sources in the finishing session."
+  ]
+ },
+ "used-water-play-table": {
+  "row": "25",
+  "before": "published; full proof VALID (schema 0, validateAsset 0, checkVolumes 0), check CLI ✓, catalog copy equal to the candidate, manifest row equal and member of `used-park-objects`.",
+  "after": "unchanged; proven as above, catalog copy VALID with `--catalog-only`.",
+  "changed": [],
+  "powerW": 0,
+  "reactions": [],
+  "verify": "ok (candidate = catalog copy, manifest row = recomputed row, member of the collection)",
+  "sheets": "Opened by the finisher as a contact sheet of the final document: the three-quarter view of every authored scale and list (body, thermal, structure), of every non-default pose and of two instants of every clip at 1:50 (tiles of 320 px; the six-view sheets at full resolution were not opened one by one). The contact sheet of the 2D drawings was rendered but NOT opened by the finisher; for the 2D the ledger of the interrupted wave is the only record of what its author saw.",
+  "opened": false,
+  "imperfect": [
+   "No moving water stream; the screw flights are static in 2D; five permanent supports share by equal stiffness (ledger, a true indeterminate case).",
+   "Lifting gear, workers and users are not drawn: the schema has no per-pose presence of solids (request filed in the umbrella `requests.md`); they exist as loads and in the texts only.",
+   "Wear below the smallest feature (scratches, stickers, moss, graffiti, gum) is 2D strokes only, by the rule of the brief; the 3D body shows only the wear above the feature.",
+   "No author's reference table exists; the model was not measured against outside sources in the finishing session."
+  ]
+ },
+ "used-wayfinding-signpost": {
+  "row": "28",
+  "before": "published; full proof VALID (schema 0, validateAsset 0, checkVolumes 0), check CLI ✓, catalog copy equal to the candidate, manifest row equal and member of `used-park-objects`.",
+  "after": "corrected (see below), full proof VALID, check CLI ✓, re-published through `publish.ts`, catalog copy VALID with `--catalog-only`.",
+  "changed": [
+   "Lifting pose corrected: the pair of hands under finger 2 is an applied force of the statics of the lifted part alone instead of a support that shared the weight of the whole rig (840.5 N and 807.6 N on the hands before, 6.6 N per hand, footing 2543.4 N after; `lift_statics.py`, `reactions.ts`). The hands were moved to lie either side of the finger's centre of mass (local x 0.20 and 0.413 m instead of 0.30 and 0.52 m, which put 97 % on one hand); key pose `hands-under` added."
+  ],
+  "powerW": 0,
+  "reactions": [
+   "used-wayfinding-signpost maintenance: weight 2556.6 N (260.7 kg),\nfooting-base: fx 0.0 fy 2543.4 fz 0.0"
+  ],
+  "verify": "ok (candidate = catalog copy, manifest row = recomputed row, member of the collection)",
+  "sheets": "Opened by the finisher as a contact sheet of the final document: the three-quarter view of every authored scale and list (body, thermal, structure), of every non-default pose and of two instants of every clip at 1:50 (tiles of 320 px; the six-view sheets at full resolution were not opened one by one). The contact sheet of the 2D drawings was rendered but NOT opened by the finisher; for the 2D the ledger of the interrupted wave is the only record of what its author saw.",
+  "opened": false,
+  "imperfect": [
+   "The swap slides the finger only 85 mm; at 1:500 the fingers are 75 mm (ledger).",
+   "Lifting gear, workers and users are not drawn: the schema has no per-pose presence of solids (request filed in the umbrella `requests.md`); they exist as loads and in the texts only.",
+   "Wear below the smallest feature (scratches, stickers, moss, graffiti, gum) is 2D strokes only, by the rule of the brief; the 3D body shows only the wear above the feature.",
+   "No author's reference table exists; the model was not measured against outside sources in the finishing session."
+  ]
+ }
+}

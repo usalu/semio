@@ -68,3 +68,11 @@ Scripts (hand-stated numbers): `T/rework-city-car-bay.py`, then `T/rework-city-c
 
 - `T/validator.md` has no section "Rule changes authors must know" and `T/rig-lateral-rest.md` does not exist, although the author task refers to both; authors cannot tell which rule defects are open or how laterally resting bones are meant to be used in 2D (what `evaluate` draws for a bone turning about a vertical axis in elevation, front and plan).
 - No tool tiles several sheets into one image (no PIL, ImageMagick or `rsvg-convert` on the host): every sheet costs one read, which is what limits how many of the 12 scale × list sheets plus poses an author can look at per pass.
+
+## Repair by the umbrella finisher, 2026-11-22 22:15
+
+Found by the catalog sweep of 22:10: `INVALID … validateAsset 8`, all `volumes-feature`: the 12 mm plain brake discs (`rl-disc`, `rr-disc` at 1:100 and 1:200, all four at 1:500) are below the smallest feature of their scale (the per-scale feature rule of 2026-11-22; the asset was `VALID` when pass 1 reported).
+
+`rework-city-car-coarse-discs.py` (new, one-shot on the volumes source): rear discs 15 mm at 1:100 and 30 mm at 1:200 (as the front discs already are), at 1:500 each brake one 75 mm body between the faces of the disc hat (−45 to +30 mm), radii 75 to 150 mm unchanged; one decision sentence per scale (en, de). Published with `volumes-insert.py`.
+
+Proof: `r3-validate.ts vehicles/city-car --volumes` and, after publishing, `--catalog-only --volumes` → `VALID vehicles/city-car (catalog file as it is): schema 0, validateAsset 0, checkVolumes 0`; check CLI `✓ city-car (1/1)`, four scales suitable. Sheet read: 1:500 body six views (the brakes stay hidden behind the wheel discs; the car reads as before). Rendered, not read: 1:100 body `--cut`. The open list of pass 1 (steering bones and the rest) is untouched.

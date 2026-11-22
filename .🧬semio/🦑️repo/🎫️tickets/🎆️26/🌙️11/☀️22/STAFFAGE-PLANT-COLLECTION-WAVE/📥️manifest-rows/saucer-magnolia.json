@@ -1,0 +1,56 @@
+{
+ "id": "saucer-magnolia",
+ "category": "vegetation",
+ "title": {
+  "en": "Saucer Magnolia, Multi-Stem, in Bloom",
+  "de": "Tulpen-Magnolie, mehrstämmig, in Blüte"
+ },
+ "heightM": 6.051,
+ "widthM": 6.498,
+ "powerW": 0,
+ "poses": [
+  "late-bloom",
+  "bloom-breeze",
+  "spring-gale",
+  "wet-snow"
+ ],
+ "clips": [
+  "wind-sway",
+  "gust",
+  "diurnal-transpiration"
+ ],
+ "representations": {
+  "50": "authored",
+  "100": "authored",
+  "200": "authored",
+  "500": "authored"
+ },
+ "symbols": [
+  "saucer-magnolia-symbol",
+  "tree-sign"
+ ],
+ "analytics": [
+  "thermal",
+  "transport",
+  "structural"
+ ],
+ "exports": [
+  "svg",
+  "pdf",
+  "dxf",
+  "dwg",
+  "png-sequence",
+  "mp4",
+  "webm",
+  "component",
+  "glb",
+  "fbx",
+  "model",
+  "model-zip"
+ ],
+ "distinction": {
+  "en": "A mature saucer magnolia (Magnolia × soulangeana) of four smooth grey stems from one root crown, low and wider than high, in late bloom: upright goblet flowers of 14 cm, white inside and flushed purple-pink outside, stand on the branch tips while the first leaves unfold.",
+  "de": "Eine ausgewachsene Tulpen-Magnolie (Magnolia × soulangeana) aus vier glatten grauen Stämmen aus einem Wurzelstock, niedrig und breiter als hoch, in später Blüte: aufrechte, kelchförmige Blüten von 14 cm, innen weiß und außen purpurrosa überhaucht, stehen auf den Zweigspitzen, während sich die ersten Blätter entfalten."
+ },
+ "completion": "authored"
+}

@@ -1,3 +1,4 @@
+import { S_FORMAT_CATALOG_V1 } from "../../../🚀️entry/🧭️format-catalog/🟦️.ts";
 import { composeSpecificOsCatalogV1 } from "@semio-tech/s-dev-catalog-ts";
 import { bootFrameworkOsDev } from "@semio-tech/framework-os-dev";
 const operation = new AbortController();
@@ -17,6 +18,6 @@ const admission = {
 };
 const variant = import.meta.env.VITE_SEMIO_PLUGIN;
 if (variant !== "process3d") throw new Error("Process Dev entry requires its explicit selected variant");
-const mounted = await bootFrameworkOsDev({ variant, admission, catalogRows: composeSpecificOsCatalogV1(window.location.href, admission).rows, brands: [] });
+const mounted = await bootFrameworkOsDev({ formatCatalog: S_FORMAT_CATALOG_V1, variant, admission, catalogRows: composeSpecificOsCatalogV1(window.location.href, admission).rows, brands: [] });
 if (operation.signal.aborted) mounted.dispose();
 else operation.signal.addEventListener("abort", () => mounted.dispose(), { once: true });

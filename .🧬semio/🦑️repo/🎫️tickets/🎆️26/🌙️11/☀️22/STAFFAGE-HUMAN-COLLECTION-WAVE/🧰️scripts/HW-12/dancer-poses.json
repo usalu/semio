@@ -1,0 +1,343 @@
+{
+ "arabesque": {
+  "pelvis": {
+   "angleDeg": -36
+  },
+  "torso": {
+   "angleDeg": 12
+  },
+  "chest": {
+   "angleDeg": 5
+  },
+  "neck": {
+   "angleDeg": 2
+  },
+  "head": {
+   "angleDeg": 4
+  },
+  "thigh-r": {
+   "angleDeg": -50,
+   "twistDeg": 20
+  },
+  "shank-r": {
+   "angleDeg": -2
+  },
+  "foot-r": {
+   "angleDeg": -45
+  },
+  "toe-r": {
+   "angleDeg": 0
+  },
+  "upper-arm-l": {
+   "angleDeg": 95,
+   "abductionDeg": 8,
+   "twistDeg": 10
+  },
+  "forearm-l": {
+   "angleDeg": 8
+  },
+  "hand-l": {
+   "angleDeg": -5
+  },
+  "upper-arm-r": {
+   "angleDeg": 12,
+   "abductionDeg": -82,
+   "twistDeg": -15
+  },
+  "forearm-r": {
+   "angleDeg": 10
+  },
+  "hand-r": {
+   "angleDeg": -5
+  },
+  "thigh-l": {
+   "angleDeg": 47.142,
+   "abductionDeg": -8.884
+  },
+  "shank-l": {
+   "angleDeg": -5.027
+  },
+  "foot-l": {
+   "angleDeg": -13.4,
+   "abductionDeg": 156.802
+  },
+  "toe-l": {
+   "angleDeg": 0
+  }
+ },
+ "passe": {
+  "upper-arm-l": {
+   "angleDeg": 38,
+   "abductionDeg": 12,
+   "twistDeg": 25
+  },
+  "thigh-r": {
+   "angleDeg": 72,
+   "abductionDeg": -42,
+   "twistDeg": 40
+  },
+  "shank-r": {
+   "angleDeg": -118
+  },
+  "foot-r": {
+   "angleDeg": -40
+  },
+  "forearm-l": {
+   "angleDeg": 62,
+   "abductionDeg": -15
+  },
+  "hand-l": {
+   "angleDeg": 5
+  },
+  "upper-arm-r": {
+   "angleDeg": 38,
+   "abductionDeg": -12,
+   "twistDeg": -25
+  },
+  "forearm-r": {
+   "angleDeg": 62,
+   "abductionDeg": 15
+  },
+  "hand-r": {
+   "angleDeg": 5
+  },
+  "thigh-l": {
+   "angleDeg": -4.975,
+   "abductionDeg": -2.803
+  },
+  "shank-l": {
+   "angleDeg": -0.942
+  },
+  "foot-l": {
+   "angleDeg": -16.637,
+   "abductionDeg": -18.608
+  },
+  "toe-l": {
+   "angleDeg": 0
+  }
+ },
+ "prep": {
+  "thigh-r": {
+   "angleDeg": 11.735,
+   "twistDeg": 25
+  },
+  "shank-r": {
+   "angleDeg": -17.138
+  },
+  "foot-r": {
+   "angleDeg": 6.603
+  },
+  "upper-arm-l": {
+   "angleDeg": 38,
+   "abductionDeg": 12,
+   "twistDeg": 25
+  },
+  "forearm-l": {
+   "angleDeg": 62,
+   "abductionDeg": -15
+  },
+  "hand-l": {
+   "angleDeg": 5
+  },
+  "upper-arm-r": {
+   "angleDeg": 18,
+   "abductionDeg": -78,
+   "twistDeg": -15
+  },
+  "forearm-r": {
+   "angleDeg": 12
+  },
+  "hand-r": {
+   "angleDeg": 0
+  },
+  "thigh-l": {
+   "angleDeg": -8.075,
+   "abductionDeg": -5.484
+  },
+  "shank-l": {
+   "angleDeg": -1.549
+  },
+  "foot-l": {
+   "angleDeg": 9.66
+  },
+  "toe-r": {
+   "angleDeg": 0.013
+  }
+ },
+ "armsFirst": {
+  "upper-arm-l": {
+   "angleDeg": 38,
+   "abductionDeg": 12,
+   "twistDeg": 25
+  },
+  "forearm-l": {
+   "angleDeg": 62,
+   "abductionDeg": -15
+  },
+  "hand-l": {
+   "angleDeg": 5
+  },
+  "upper-arm-r": {
+   "angleDeg": 38,
+   "abductionDeg": -12,
+   "twistDeg": -25
+  },
+  "forearm-r": {
+   "angleDeg": 62,
+   "abductionDeg": 15
+  },
+  "hand-r": {
+   "angleDeg": 5
+  }
+ },
+ "armsLow": {
+  "upper-arm-l": {
+   "angleDeg": 8,
+   "abductionDeg": 6,
+   "twistDeg": 20
+  },
+  "forearm-l": {
+   "angleDeg": 30,
+   "abductionDeg": -10
+  },
+  "hand-l": {
+   "angleDeg": 5
+  },
+  "upper-arm-r": {
+   "angleDeg": 8,
+   "abductionDeg": -6,
+   "twistDeg": -20
+  },
+  "forearm-r": {
+   "angleDeg": 30,
+   "abductionDeg": 10
+  },
+  "hand-r": {
+   "angleDeg": 5
+  }
+ },
+ "armsHigh": {
+  "upper-arm-l": {
+   "angleDeg": 150,
+   "abductionDeg": 18,
+   "twistDeg": 30
+  },
+  "forearm-l": {
+   "angleDeg": 38,
+   "abductionDeg": -20
+  },
+  "hand-l": {
+   "angleDeg": 5
+  },
+  "upper-arm-r": {
+   "angleDeg": 150,
+   "abductionDeg": -18,
+   "twistDeg": -30
+  },
+  "forearm-r": {
+   "angleDeg": 38,
+   "abductionDeg": 20
+  },
+  "hand-r": {
+   "angleDeg": 5
+  }
+ },
+ "armsSecond": {
+  "upper-arm-l": {
+   "angleDeg": 18,
+   "abductionDeg": 78,
+   "twistDeg": 15
+  },
+  "forearm-l": {
+   "angleDeg": 12
+  },
+  "hand-l": {
+   "angleDeg": 0
+  },
+  "upper-arm-r": {
+   "angleDeg": 18,
+   "abductionDeg": -78,
+   "twistDeg": -15
+  },
+  "forearm-r": {
+   "angleDeg": 12
+  },
+  "hand-r": {
+   "angleDeg": 0
+  }
+ },
+ "firstFlat": {
+  "thigh-l": {
+   "angleDeg": 0,
+   "twistDeg": -28
+  },
+  "thigh-r": {
+   "angleDeg": 0,
+   "twistDeg": 28
+  },
+  "shank-l": {
+   "angleDeg": -1
+  },
+  "shank-r": {
+   "angleDeg": -1
+  },
+  "foot-l": {
+   "angleDeg": 1
+  },
+  "foot-r": {
+   "angleDeg": 1
+  }
+ },
+ "plie": {
+  "thigh-l": {
+   "angleDeg": 30,
+   "twistDeg": -28,
+   "abductionDeg": 6
+  },
+  "thigh-r": {
+   "angleDeg": 30,
+   "twistDeg": 28,
+   "abductionDeg": -6
+  },
+  "shank-l": {
+   "angleDeg": -58
+  },
+  "shank-r": {
+   "angleDeg": -58
+  },
+  "foot-l": {
+   "angleDeg": 28
+  },
+  "foot-r": {
+   "angleDeg": 28
+  }
+ },
+ "releve": {
+  "thigh-l": {
+   "angleDeg": 0,
+   "twistDeg": -28
+  },
+  "thigh-r": {
+   "angleDeg": 0,
+   "twistDeg": 28
+  },
+  "shank-l": {
+   "angleDeg": 0
+  },
+  "shank-r": {
+   "angleDeg": 0
+  },
+  "foot-l": {
+   "angleDeg": -38
+  },
+  "foot-r": {
+   "angleDeg": -38
+  },
+  "toe-l": {
+   "angleDeg": 38
+  },
+  "toe-r": {
+   "angleDeg": 38
+  }
+ }
+}

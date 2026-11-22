@@ -1,0 +1,36 @@
+[package]
+workspace = "../../../../../../../../.."
+name = "semio-s-artifact-stdio-pdf14-canvas"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "PDF 1.4 page canvas: the resolved 1.4 pages lifted into the shared 1.7 page model"
+
+[package.metadata.semio]
+role = "library"
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-value = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-pdf-graph-projection = { path = "../../../../../../../../7️⃣1.7/🪆️subsets/🧱️base/🧬️schema/🔎️graph-projection/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-pdf-mut-base = { path = "../../../../../📦️packages/🦀️rust" }
+semio-s-artifact-stdio-pdf-mut-family-11 = { path = "../../../../../../../../7️⃣1.7/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/🪄️replace-page/🧪️tests/🔬️unit/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-pdf-page-editor = { path = "../../../../../../../../7️⃣1.7/🪆️subsets/🧱️base/✏️editor/🖼️page/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-pdf-presence-lane = { path = "../../../../../../../../7️⃣1.7/🪆️subsets/🧱️base/✏️editor/👥️presence/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-pdf-snapshot = { path = "../../../../../🧬️schema/📸️snapshot/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-pdf-snapshot-2 = { path = "../../../../../../../../7️⃣1.7/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-pdf-view-lane = { path = "../../../../../../../../7️⃣1.7/🪆️subsets/🧱️base/✏️editor/🫧️transient/📦️packages/🦀️rust" }
+semio-ui-locale = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
+semio-os-kernel = { workspace = true }
+semio-plugin = { workspace = true }
+semio-s-artifact-stdio-contract = { workspace = true }
+semio-ui-contract = { workspace = true }
+serde_json = { workspace = true }
+
+[dev-dependencies]
+semio-plugin = { workspace = true, features = ["artifact-app-testing"] }

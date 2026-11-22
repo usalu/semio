@@ -1,0 +1,55 @@
+{
+  "id": "pampas-grass",
+  "category": "vegetation",
+  "title": {
+    "en": "Pampas Grass",
+    "de": "Pampasgras"
+  },
+  "heightM": 2.5,
+  "widthM": 2.2,
+  "powerW": 0,
+  "poses": [
+    "calm",
+    "windy",
+    "storm",
+    "snow"
+  ],
+  "clips": [
+    "wind-sway",
+    "gust",
+    "diurnal-transpiration"
+  ],
+  "representations": {
+    "50": "authored",
+    "100": "authored",
+    "200": "authored",
+    "500": "authored"
+  },
+  "symbols": [
+    "pampas-grass-symbol"
+  ],
+  "analytics": [
+    "thermal",
+    "transport",
+    "structural"
+  ],
+  "exports": [
+    "svg",
+    "pdf",
+    "dxf",
+    "dwg",
+    "png-sequence",
+    "mp4",
+    "webm",
+    "component",
+    "glb",
+    "fbx",
+    "model",
+    "model-zip"
+  ],
+  "distinction": {
+    "en": "The tallest grass of the catalog: a stout evergreen tussock with eight dense, upright, silvery plumes high above a fountain of sharp blades; heavy plumes swing slowly and hold snow in winter.",
+    "de": "Das höchste Gras des Katalogs: ein kräftiger, wintergrüner Horst mit acht dichten, aufrechten, silbrigen Wedeln hoch über einer Fontäne scharfer Blätter; die schweren Wedel schwingen langsam und halten im Winter Schnee."
+  },
+  "completion": "authored"
+}

@@ -1,0 +1,53 @@
+{
+  "id": "traveller-with-rolling-suitcase",
+  "category": "humans",
+  "title": {
+    "en": "Traveller with Rolling Suitcase",
+    "de": "Reisende Person mit Rollkoffer"
+  },
+  "heightM": 1.841,
+  "widthM": 1.214,
+  "powerW": 171.8,
+  "poses": [
+    "pulling-suitcase",
+    "standing-with-suitcase",
+    "tilting-suitcase",
+    "ready-to-walk"
+  ],
+  "clips": [
+    "pull-walk",
+    "tilt-and-go",
+    "idle-breathing"
+  ],
+  "representations": {
+    "50": "authored",
+    "100": "authored",
+    "200": "authored",
+    "500": "authored"
+  },
+  "symbols": [],
+  "analytics": [
+    "thermal",
+    "transport",
+    "structural"
+  ],
+  "exports": [
+    "svg",
+    "pdf",
+    "dxf",
+    "dwg",
+    "png-sequence",
+    "mp4",
+    "webm",
+    "component",
+    "glb",
+    "fbx",
+    "model",
+    "model-zip"
+  ],
+  "distinction": {
+    "en": "A traveller in a light camel overcoat and scarf with a shoulder bag walking heel to toe and pulling a hard-shell cabin trolley behind the left hand: the suitcase tilts back about its axle onto two wheels that roll with the distance, with standing beside the upright case and the tilt-and-go start.",
+    "de": "Eine reisende Person in hellem kamelfarbenem Mantel und Schal mit Umhängetasche geht im Fersen-Zehen-Gang und zieht einen Hartschalen-Kabinentrolley hinter der linken Hand her: Der Koffer kippt um seine Achse auf zwei Rollen, die mit der Strecke rollen, dazu das Stehen neben dem aufrechten Koffer und der Start mit Ankippen."
+  },
+  "completion": "authored"
+}

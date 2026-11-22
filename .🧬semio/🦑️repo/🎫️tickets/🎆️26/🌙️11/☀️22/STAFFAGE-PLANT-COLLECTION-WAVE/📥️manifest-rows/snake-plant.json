@@ -1,0 +1,56 @@
+{
+ "id": "snake-plant",
+ "category": "vegetation",
+ "title": {
+  "en": "Snake Plant in a Pot",
+  "de": "Bogenhanf im Topf"
+ },
+ "heightM": 0.887,
+ "widthM": 0.352,
+ "powerW": 0,
+ "poses": [
+  "still-air",
+  "ventilation-draught",
+  "freshly-watered",
+  "drought-stressed",
+  "night-stomata-open"
+ ],
+ "clips": [
+  "wind-sway",
+  "gust",
+  "diurnal-transpiration"
+ ],
+ "representations": {
+  "50": "authored",
+  "100": "authored",
+  "200": "authored",
+  "500": "unavailable"
+ },
+ "symbols": [
+  "snake-plant-plan-symbol"
+ ],
+ "analytics": [
+  "thermal",
+  "transport",
+  "structural"
+ ],
+ "exports": [
+  "svg",
+  "pdf",
+  "dxf",
+  "dwg",
+  "png-sequence",
+  "mp4",
+  "webm",
+  "component",
+  "glb",
+  "fbx",
+  "model",
+  "model-zip"
+ ],
+ "distinction": {
+  "en": "A potted snake plant (Dracaena trifasciata) 0.9 m high: ten stiff, banded sword leaves in three rosettes in a 0.25 m glazed stoneware pot on a saucer; a CAM succulent that transpires at night.",
+  "de": "Ein Bogenhanf (Dracaena trifasciata) im Topf, 0,9 m hoch: zehn steife, gebänderte Schwertblätter in drei Rosetten in einem glasierten Steinzeugtopf von 0,25 m auf einem Untersetzer; eine CAM-Sukkulente, die nachts transpiriert."
+ },
+ "completion": "authored"
+}

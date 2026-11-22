@@ -1,7 +1,9 @@
 //! 🎞️ Admits Image XObjects and their independent native stream roles.
 
 use super::{dict_get, dict_name, PdfDictEntry, PdfImage, PdfImageSampleCursor, PdfObject, PdfStreamFilter};
-use crate::standards::v1_7::subsets::base::io::foreign_artifacts::PdfDctResourceIdentity;
+use crate::standards::v1_7::subsets::base::io::foreign_artifacts::{
+    INLINE_IMAGE_SAMPLES_MAXIMUM_BYTES, PdfDctResourceIdentity, PdfSampledResourceIdentity, qualified_image_dictionary,
+};
 use crate::standards::v1_7::subsets::base::modules::lexer::{CosGrant, CosReceipt, CosStatus};
 use crate::standards::v1_7::subsets::base::schema::snapshot::{PdfColorSpace, PdfImageBody};
 use super::sample_receipt;
@@ -11,6 +13,7 @@ const DEPTH: u32 = 8;
 enum ImageBacking {
     Samples { cursors: [PdfImageSampleCursor; 2], next: usize },
     Dct { identity: PdfDctResourceIdentity, bytes: usize },
+    SampledArtifact { identity: PdfSampledResourceIdentity, bytes: usize },
 }
 
 /// 🎬️ Resolves sampled or encoded native content into two independently owned image roles.
@@ -26,7 +29,7 @@ impl ControlledImageCursor {
     /// 🔍️ Qualifies a typed native stream without acquiring sample backing.
     pub(super) fn new(value: &PdfObject) -> Result<Option<Self>, &'static str> {
         let PdfObject::Stream { dict, data, filters } = value else { return Ok(None); };
-        if !matches!(filters.as_slice(), [] | [PdfStreamFilter::Flate { .. } | PdfStreamFilter::Dct { .. }]) || !qualified_dictionary(dict) { return Ok(None); }
+        if !matches!(filters.as_slice(), [] | [PdfStreamFilter::Flate { .. } | PdfStreamFilter::Dct { .. }]) || !qualified_image_dictionary(dict) { return Ok(None); }
         let Some(gray) = dict_name(dict, "ColorSpace").and_then(|name| match name {
             "DeviceGray" => Some(true),
             "DeviceRGB" => Some(false),
@@ -45,7 +48,12 @@ impl ControlledImageCursor {
                 let sample_cursor = || PdfImageSampleCursor::checked_new(width, height, components, DEPTH);
                 let first = sample_cursor()?;
                 if first.packed_length != data.len() { return Err("image packed body does not match its declared geometry"); }
-                ImageBacking::Samples { cursors: [first, sample_cursor()?], next: 0 }
+                if first.sample_count * std::mem::size_of::<u32>() > INLINE_IMAGE_SAMPLES_MAXIMUM_BYTES {
+                    let Some(identity) = PdfSampledResourceIdentity::new(filters) else { return Ok(None); };
+                    ImageBacking::SampledArtifact { identity, bytes: data.len() }
+                } else {
+                    ImageBacking::Samples { cursors: [first, sample_cursor()?], next: 0 }
+                }
             }
             [PdfStreamFilter::Dct { color_transform }] => {
                 if !data.starts_with(&[0xff, 0xd8]) || !data.ends_with(&[0xff, 0xd9]) { return Ok(None); }
@@ -61,18 +69,23 @@ impl ControlledImageCursor {
         match &self.backing {
             ImageBacking::Samples { cursors, next } => *next == cursors.len(),
             ImageBacking::Dct { identity, bytes } => identity.complete(*bytes),
+            ImageBacking::SampledArtifact { identity, bytes } => identity.complete(*bytes),
         }
     }
 
     fn reference_bytes(&self) -> usize {
-        if matches!(&self.backing, ImageBacking::Dct { .. }) { 2 * PdfDctResourceIdentity::REFERENCE_BYTES } else { 0 }
+        match &self.backing {
+            ImageBacking::Samples { .. } => 0,
+            ImageBacking::Dct { .. } => 2 * PdfDctResourceIdentity::REFERENCE_BYTES,
+            ImageBacking::SampledArtifact { .. } => 2 * PdfSampledResourceIdentity::REFERENCE_BYTES,
+        }
     }
 
     /// 📐️ Distinguishes allocation of empty sample capacity from writes into that capacity.
     pub(super) fn reserving_samples(&self) -> bool {
         match &self.backing {
             ImageBacking::Samples { cursors, next } => cursors.get(*next).is_some_and(|cursor| cursor.output.capacity() == 0),
-            ImageBacking::Dct { .. } => false,
+            ImageBacking::Dct { .. } | ImageBacking::SampledArtifact { .. } => false,
         }
     }
 
@@ -95,6 +108,11 @@ impl ControlledImageCursor {
                 let work = identity.advance(data, grant.work);
                 sample_receipt(Ok(CosStatus::More), work)
             }
+            ImageBacking::SampledArtifact { identity, bytes } => {
+                if *bytes != data.len() { return sample_receipt(Err("qualified sampled image stream changed extent"), 1); }
+                let work = identity.advance(data, grant.work);
+                sample_receipt(Ok(CosStatus::More), work)
+            }
         }
     }
 
@@ -107,6 +125,10 @@ impl ControlledImageCursor {
                     .map(|values| PdfImageBody::Samples { values })
             }
             ImageBacking::Dct { identity, .. } => {
+                let reference = identity.reference();
+                [reference.clone(), reference].map(|reference| PdfImageBody::Artifact { reference })
+            }
+            ImageBacking::SampledArtifact { identity, .. } => {
                 let reference = identity.reference();
                 [reference.clone(), reference].map(|reference| PdfImageBody::Artifact { reference })
             }
@@ -141,20 +163,6 @@ impl ControlledImageCursor {
         }
         turn
     }
-}
-
-fn qualified_dictionary(dict: &[PdfDictEntry]) -> bool {
-    dict.len() <= 8 && dict.iter().enumerate().all(|(index, entry)| {
-        !dict[..index].iter().any(|previous| previous.key == entry.key) && match entry.key.as_str() {
-            "Type" => entry.value.as_name() == Some("XObject"),
-            "Subtype" => entry.value.as_name() == Some("Image"),
-            "BitsPerComponent" => entry.value == PdfObject::Int(i64::from(DEPTH)),
-            "ImageMask" => entry.value.as_bool() == Some(false),
-            "Interpolate" => entry.value.as_bool().is_some(),
-            "Width" | "Height" | "ColorSpace" => true,
-            _ => false,
-        }
-    }) && dict_name(dict, "Subtype") == Some("Image") && dict_get(dict, "BitsPerComponent").is_some()
 }
 
 //#region 🔖️Image resources

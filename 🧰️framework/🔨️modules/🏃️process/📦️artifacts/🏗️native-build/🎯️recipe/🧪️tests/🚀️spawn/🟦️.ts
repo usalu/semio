@@ -1,8 +1,7 @@
 import {expect,test} from "bun:test";
 import {Database} from "bun:sqlite";
-import {readFileSync} from "node:fs";
 import {join,dirname,relative,resolve,sep} from "node:path";
-import ts from "typescript";
+import {loadProductFunctionsV1} from "../../../../../🧪️testing/🧩️extracted-function/🟦️.ts";
 import {cargoRecipeInputsV1} from "../../../../../🦀️cargo-workspace/🔒️lock/📐️closure/🟦️.ts";
 import {ConcurrentEditErrorV1,concurrentEditV1} from "../../../../../../📁️filesystem/🧾️observation/🔁️churn/🟦️.ts";
 import {describeCompileUnitsV1} from "../../../../../🏗️build/🎟️capacity/🟦️.ts";
@@ -10,9 +9,6 @@ import {nativeProgressLanguagesV1} from "../../../../../🎛️owned-execution/�
 import corpus from "./🔣️.json" with {type:"json"};
 
 test("actual Cargo capture checks the retained recipe after capacity and lock reconciliation",async()=>{
- const tree=ts.createSourceFile("native.ts",readFileSync(new URL("../../../🟦️.ts",import.meta.url),"utf8"),ts.ScriptTarget.Latest,true);
- const definition=tree.statements.find(node=>ts.isFunctionDeclaration(node)&&node.name?.text==="captureCargoArtifacts")!;
- const code=ts.transpileModule(definition.getText(tree),{compilerOptions:{target:ts.ScriptTarget.ESNext}}).outputText;
  const root=resolve("fixture"),lock=join(root,"Cargo.lock"),manifest=join(root,"Cargo.toml"),source=join(root,"lib.rs");
  const db=new Database(":memory:");
  try{
@@ -64,7 +60,7 @@ test("actual Cargo capture checks the retained recipe after capacity and lock re
     cargoTimingsArgumentsV1:()=>[],COMPILER_RESOURCE_DIRECTORY_V1:"resource",
     spawn(){events.push("spawn");throw spawned;},
    };
-   const run=new Function(...Object.keys(ports),code+";return captureCargoArtifacts;")(...Object.values(ports));
+   const run=(await loadProductFunctionsV1(new URL("../../../🟦️.ts",import.meta.url),["captureCargoArtifacts"],ports)).captureCargoArtifacts;
    const recheckRecipe=async()=>{events.push("recipe");await witness.recheck();};
    const expected=row.outcome==="retry"?(usesSource?sourceEdit:concurrentEditV1("input",lock,undefined,"build")):row.outcome==="cancel"?cancelled:spawned;
    let failure:unknown;

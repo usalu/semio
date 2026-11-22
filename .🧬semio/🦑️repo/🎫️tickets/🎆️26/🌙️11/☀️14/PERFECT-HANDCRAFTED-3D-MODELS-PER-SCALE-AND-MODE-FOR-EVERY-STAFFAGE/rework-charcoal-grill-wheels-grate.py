@@ -97,7 +97,7 @@ def wheels(kit, scale):
         for solid in kit.solids(scale, "structure"):
             if solid["id"] == "member-wheel-" + side:
                 solid["member"] = "wheels"
-            if solid["id"] in ("joint-wheel-bearing-" + side, "support-wheel-" + side):
+            if solid["id"] in ("joint-wheel-bearing-" + side, "support-wheel-" + side) and solid["bone"] != "wheels":
                 solid["bone"], solid["member"] = "wheels", "wheels"
                 if "origin" in solid:
                     solid["origin"] = shift(solid["origin"])

@@ -128,6 +128,14 @@ pub use format_registry::*;
 mod format_resolution;
 pub use format_resolution::*;
 
+#[path = "🗜️package-sniff/🦀️.rs"]
+mod package_sniff;
+pub use package_sniff::*;
+
+#[path = "📂️picked-file-routing/🦀️.rs"]
+mod picked_file_routing;
+pub use picked_file_routing::*;
+
 //#endregion 🔖️ErasedRegistry
 //#region 🔖️Tests
 //#endregion 🔖️Tests

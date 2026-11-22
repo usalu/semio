@@ -1,0 +1,53 @@
+{
+  "id": "waiter-with-tray",
+  "category": "humans",
+  "title": {
+    "en": "Waiter with Tray",
+    "de": "Servicekraft mit Tablett"
+  },
+  "heightM": 1.8,
+  "widthM": 0.861,
+  "powerW": 300.8,
+  "poses": [
+    "walking-heel-strike",
+    "walking-midstance",
+    "standing-with-tray",
+    "serving-gesture"
+  ],
+  "clips": [
+    "walk-with-tray",
+    "idle-breathing",
+    "serve-at-table"
+  ],
+  "representations": {
+    "50": "authored",
+    "100": "authored",
+    "200": "authored",
+    "500": "authored"
+  },
+  "symbols": [],
+  "analytics": [
+    "thermal",
+    "transport",
+    "structural"
+  ],
+  "exports": [
+    "svg",
+    "pdf",
+    "dxf",
+    "dwg",
+    "png-sequence",
+    "mp4",
+    "webm",
+    "component",
+    "glb",
+    "fbx",
+    "model",
+    "model-zip"
+  ],
+  "distinction": {
+    "en": "A waiter in black waistcoat, white shirt sleeves and a long black bistro apron walking with a round tray held palm-up at shoulder height on the left hand, a beer glass, a wine glass and a tumbler on it; the tray stays level against the sway of the gait, with a waiting loop and a serving bow.",
+    "de": "Eine Servicekraft in schwarzer Weste, weißen Hemdsärmeln und langer schwarzer Bistroschürze geht mit einem runden Tablett, das die linke Hand mit der Handfläche nach oben auf Schulterhöhe trägt, darauf ein Bierglas, ein Weinglas und ein Wasserglas; das Tablett bleibt gegen das Wiegen des Gangs waagrecht, dazu eine Warteschleife und eine Verbeugung beim Servieren."
+  },
+  "completion": "authored"
+}

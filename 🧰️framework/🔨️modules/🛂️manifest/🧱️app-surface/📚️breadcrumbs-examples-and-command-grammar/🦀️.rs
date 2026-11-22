@@ -88,6 +88,66 @@ pub fn examples_for_app<'a>(examples: &'a [ExampleDefinition], app: &AppDefiniti
     examples_for_dialect(examples, &app.dialect)
 }
 
+/// 🗣️ Which per-id map of the app labels overlay a label is read from; the Rust twin of `resolveAppLabel`'s `kind`.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum AppLabelKind {
+    WindowKind,
+    PanelTab,
+    Mode,
+    Action,
+    Utility,
+    Example,
+    ActionArg,
+    Dialog,
+    Introduction,
+    Group,
+}
+
+/// 🔖️ The locale-aware label patch the program publishes beside its bodies (the `labels` refresh section), one id-keyed map per kind; Rust twin of `PluginAppLabelsOverlay` and `normalizeAppLabelsOverlay`, pinned by `🧫️fixtures/🏷️app-labels-overlay.json`.
+#[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct AppLabelsOverlay {
+    #[serde(default)]
+    pub window_kind_labels: std::collections::BTreeMap<String, String>,
+    #[serde(default)]
+    pub panel_tab_labels: std::collections::BTreeMap<String, String>,
+    #[serde(default)]
+    pub mode_labels: std::collections::BTreeMap<String, String>,
+    #[serde(default)]
+    pub action_labels: std::collections::BTreeMap<String, String>,
+    #[serde(default)]
+    pub utility_labels: std::collections::BTreeMap<String, String>,
+    #[serde(default)]
+    pub example_labels: std::collections::BTreeMap<String, String>,
+    #[serde(default)]
+    pub action_arg_labels: std::collections::BTreeMap<String, String>,
+    #[serde(default)]
+    pub dialog_labels: std::collections::BTreeMap<String, String>,
+    #[serde(default)]
+    pub introduction_labels: std::collections::BTreeMap<String, String>,
+    #[serde(default)]
+    pub group_labels: std::collections::BTreeMap<String, String>,
+}
+
+impl AppLabelsOverlay {
+    /// 🗣️ The overlay's label for `id` under `kind`, else `fallback` — React's `resolveAppLabel`.
+    pub fn resolve(&self, kind: AppLabelKind, id: &str, fallback: &str) -> String {
+        let map = match kind {
+            AppLabelKind::WindowKind => &self.window_kind_labels,
+            AppLabelKind::PanelTab => &self.panel_tab_labels,
+            AppLabelKind::Mode => &self.mode_labels,
+            AppLabelKind::Action => &self.action_labels,
+            AppLabelKind::Utility => &self.utility_labels,
+            AppLabelKind::Example => &self.example_labels,
+            AppLabelKind::ActionArg => &self.action_arg_labels,
+            AppLabelKind::Dialog => &self.dialog_labels,
+            AppLabelKind::Introduction => &self.introduction_labels,
+            AppLabelKind::Group => &self.group_labels,
+        };
+        map.get(id).cloned().unwrap_or_else(|| fallback.to_owned())
+    }
+}
+
 //#region 🔖️MediaVocabulary
 //#region 🔖️ConfigSpec
 /// 🧮️ An app's full typed configuration record — the manifest-level declaration

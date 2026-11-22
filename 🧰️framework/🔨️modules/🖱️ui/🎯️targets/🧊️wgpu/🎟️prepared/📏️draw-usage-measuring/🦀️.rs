@@ -15,7 +15,7 @@ impl PreparedRenderJob {
                 (PreparedRenderUsage { draw_items: 1, draw_bytes: size_of::<DrawLayer>(), ..PreparedRenderUsage::default() }, next)
             }
             DrawMeasureCursor::GroupBegin(layer) => (PreparedRenderUsage { draw_items: 1, ..PreparedRenderUsage::default() }, Self::after_layer_header(draw, layer)),
-            DrawMeasureCursor::GroupEnd(layer) => (PreparedRenderUsage { draw_items: 1, ..PreparedRenderUsage::default() }, DrawMeasureCursor::LayerHeader(layer + 1)),
+            DrawMeasureCursor::GroupEnd(layer, left) => (PreparedRenderUsage { draw_items: 1, ..PreparedRenderUsage::default() }, if left > 1 { DrawMeasureCursor::GroupEnd(layer, left - 1) } else { DrawMeasureCursor::LayerHeader(layer + 1) }),
             DrawMeasureCursor::LayerUi { layer, item, overlay } => {
                 let value = &draw.layers[layer];
                 let items = if overlay { &value.overlay_ui_instances } else { &value.ui_instances };
@@ -249,14 +249,15 @@ impl PreparedRenderJob {
         }
     }
 
-    /// 🫥️ Leaving `layer`: a group's last layer first closes the group (composites its offscreen target).
+    /// 🫥️ Leaving `layer`: every group the next layer is not inside closes first (composites its offscreen target), innermost first.
     fn layer_exit(draw: &DrawList, layer: usize) -> DrawMeasureCursor {
-        let member = draw.layers.get(layer).is_some_and(|value| value.group.is_some());
-        let continues = draw.layers.get(layer + 1).is_some_and(|next| next.group.is_some_and(|group| !group.begin));
-        if member && !continues {
-            DrawMeasureCursor::GroupEnd(layer)
-        } else {
-            DrawMeasureCursor::LayerHeader(layer + 1)
+        let level = |index: usize| draw.layers.get(index).and_then(|value| value.group).map_or((0, false), |group| (group.depth, group.begin));
+        let (depth, _) = level(layer);
+        let (next, begins) = level(layer + 1);
+        let kept = if begins { next.saturating_sub(1) } else { next };
+        match depth.saturating_sub(kept) {
+            0 => DrawMeasureCursor::LayerHeader(layer + 1),
+            closing => DrawMeasureCursor::GroupEnd(layer, closing),
         }
     }
 

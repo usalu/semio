@@ -178,6 +178,7 @@
               "new",
               "funded",
               "stale",
+              "orphan",
               "protected"
             ]
           },

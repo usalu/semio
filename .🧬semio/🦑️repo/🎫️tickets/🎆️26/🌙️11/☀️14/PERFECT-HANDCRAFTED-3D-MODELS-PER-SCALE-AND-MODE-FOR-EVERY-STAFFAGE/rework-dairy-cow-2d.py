@@ -1,6 +1,6 @@
 """📐 Dairy cow 2D carry: re-cuts the limb shapes of every drawing from the rebuilt body with `r3-project2d.ts` as the ruler and adds the pastern shapes of the new pastern bones.
 
-Usage: python3 rework-dairy-cow-2d.py [--scales 50,100] [--views elevation,front,plan]
+Usage: python3 rework-dairy-cow-2d.py [--scales 50,100] [--views elevation,front,plan] [--bones neck,head,jaw]
 Elevation is written first; front and plan take their depth from the elevation twin. The catalog file is re-read right before each write and only `representations` changes.
 """
 import glob
@@ -32,6 +32,7 @@ def main():
     def option(name, default):
         return args[args.index(name) + 1] if name in args else default
 
+    limbs = option("--bones", ",".join(LIMBS)).split(",")
     for scale in option("--scales", "50,100,200,500").split(","):
         for view in option("--views", "elevation,front,plan").split(","):
             measured = ruler(scale, view)
@@ -52,7 +53,7 @@ def main():
                         log.append("%s %s %s" % (shape["id"], shape.get("kind"), moved or "NOT MOVED"))
             for entry in measured["bones"]:
                 bone, outlines = entry["bone"], entry["shapes"]
-                if bone not in LIMBS or not outlines:
+                if bone not in limbs or not outlines:
                     continue
                 side = "near" if bone.endswith("n") else "far"
                 if entry.get("replaces"):

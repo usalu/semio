@@ -228,7 +228,7 @@ impl MountedLayoutJob {
             LayoutNodeKind::OverlayRow { rect: FlexRect { x: node.layout.x, y: node.layout.y, width: node.layout.width, height: node.layout.height } }
         } else {
             if tree_detail {
-                LayoutNodeKind::TreeDetail { height: TREE_DETAIL_HEIGHT }
+                LayoutNodeKind::TreeDetail { height: if matches!(parent_kind, Some(LayoutNodeKind::TreeRow { expanded: true, .. })) { TREE_DETAIL_HEIGHT } else { 0.0 } }
             } else {
                 match &node.spec.0 {
                     UiNode::Text(_) => LayoutNodeKind::Text,
@@ -257,7 +257,10 @@ impl MountedLayoutJob {
                     UiNode::IconSelect(select) => LayoutNodeKind::Control { height: semio_ui_wgpu_layout::layout::icon_select_height(semio_ui_declaration::ui::UiIconSelectNode::decode_mode(&select.value).0.editor_rows()), label_padding: None },
                     UiNode::Toggle(_) | UiNode::Slider(_) | UiNode::NumberStepper(_) => LayoutNodeKind::Control { height: self.theme.control_height, label_padding: None },
                     UiNode::ExternalSlot(slot) if slot.body_key == semio_ui_retained_tree::reconcile::MEDIA_TRANSPORT_EXTENSION_ID => LayoutNodeKind::HostContent { height: host_content_height(&slot.params_json, &self.theme) },
-                    UiNode::ExternalSlot(_) => LayoutNodeKind::Control { height: self.theme.control_height_small, label_padding: None },
+                    UiNode::ExternalSlot(slot) => match semio_ui_retained_tree::reconcile::extension_host_rows(&slot.body_key, &slot.params_json).len() {
+                        0 => LayoutNodeKind::Control { height: self.theme.control_height_small, label_padding: None },
+                        rows => LayoutNodeKind::HostContent { height: semio_ui_wgpu_layout::layout::extension_rows_height(rows, self.theme.control_height_small, self.theme.gap_standard) },
+                    },
                     UiNode::ComponentScene(_) => LayoutNodeKind::EngineSurface,
                     UiNode::Progress(_) => LayoutNodeKind::Control { height: semio_ui_wgpu_layout::chrome::SIZE_TINY, label_padding: None },
                     _ => LayoutNodeKind::Leaf,

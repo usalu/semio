@@ -8,8 +8,8 @@ export type FreeSpaceV1=Readonly<{availableBytes:number;totalBytes:number|undefi
 export type FreeSpaceRowV1=Readonly<{bsize:number|bigint;blocks:number|bigint;bavail:number|bigint;files?:number|bigint;ffree?:number|bigint}>;
 /** 🕳️ Why a volume could not be measured: the reader failed (`unreadable`), the path is not there (`missing`), the row has no usable block size or available count (`incoherent-row`), the row reports nothing at all, as a runtime without `statfs` on a host does (`empty-row`), or the Windows call failed or answered nonsense (`host-call`). */
 export type FreeSpaceUnknownReasonV1="unreadable"|"missing"|"incoherent-row"|"empty-row"|"host-call";
-/** 🔎️ What a measurement of a volume says: the bytes available to the caller, the size of the volume when the host reports it, the free inodes (`null` on a filesystem without an inode table, as NTFS, btrfs or a network share, never 0) and where the number came from; or that it is unknown, with the reason and a short detail. Unknown is never a number: a caller decides what it means (refuse, warn, treat as pressure). */
-export type FreeSpaceFactsV1=Readonly<{known:true;availableBytes:number;totalBytes:number|undefined;freeInodes:number|null;source:"statfs"|"win32-host"|"reader"}>|Readonly<{known:false;reason:FreeSpaceUnknownReasonV1;detail:string}>;
+/** 🔎️ What a measurement of a volume says: the bytes available to the caller, the size of the volume when the host reports it, the free inodes and, with them, the size of the inode table (`null` free inodes on a filesystem without an inode table, as NTFS, btrfs or a network share, never 0) and where the number came from; or that it is unknown, with the reason and a short detail. Unknown is never a number: a caller decides what it means (refuse, warn, treat as pressure). */
+export type FreeSpaceFactsV1=Readonly<{known:true;availableBytes:number;totalBytes:number|undefined;freeInodes:number|null;totalInodes?:number;source:"statfs"|"win32-host"|"reader"}>|Readonly<{known:false;reason:FreeSpaceUnknownReasonV1;detail:string}>;
 
 /** 🎛️ How a measurement is made: `nearest` lets the nearest existing ancestor answer for a path that is not there yet, `platform` stands for the host (default: this process), `read` replaces the reader (a statfs row or an already judged answer), `windowsAvailableBytes` replaces the Windows volume call with caller bytes or both caller counters. */
 export type FreeSpaceOptionsV1=Readonly<{nearest?:boolean;platform?:string;read?:(path:string)=>FreeSpaceRowV1|FreeSpaceV1;windowsAvailableBytes?:(path:string)=>number|FreeSpaceV1}>;
@@ -24,7 +24,7 @@ export function judgeFreeSpaceRowV1(row:FreeSpaceRowV1):FreeSpaceFactsV1{
  if(!(bsize>=1)||!(bavail>=0)||!Number.isFinite(available))return unknown("incoherent-row",`bsize ${String(row.bsize)}, blocks ${String(row.blocks)}, bavail ${String(row.bavail)}`);
  if(!(blocks>0)&&bavail===0)return unknown("empty-row",`bsize ${String(row.bsize)}, blocks ${String(row.blocks)}, bavail 0`);
  const files=count(row.files),ffree=count(row.ffree);
- return Object.freeze({known:true as const,availableBytes:available,totalBytes:blocks>0&&blocks>=bavail&&Number.isFinite(blocks*bsize)?blocks*bsize:undefined,freeInodes:files!==undefined&&files>0&&ffree!==undefined&&ffree<=files?ffree:null,source:"statfs" as const});
+ return Object.freeze({known:true as const,availableBytes:available,totalBytes:blocks>0&&blocks>=bavail&&Number.isFinite(blocks*bsize)?blocks*bsize:undefined,freeInodes:files!==undefined&&files>0&&ffree!==undefined&&ffree<=files?ffree:null,...files!==undefined&&files>0&&ffree!==undefined&&ffree<=files?{totalInodes:files}:{},source:"statfs" as const});
 }
 
 /** 🧪️ Judges one statfs row as the byte answer alone: `undefined` ("unknown") where `judgeFreeSpaceRowV1` is unknown. */

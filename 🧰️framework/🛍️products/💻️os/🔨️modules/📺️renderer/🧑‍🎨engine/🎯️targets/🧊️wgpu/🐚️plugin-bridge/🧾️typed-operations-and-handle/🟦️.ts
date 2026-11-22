@@ -296,6 +296,8 @@ export interface WgpuPluginHandle extends MediaTransportPort {
   /** 🗃️ Restores one encoded document archive — the one whole-document load (a plain document is an archive without members):
    * stepped admit, poll and acknowledge through `AppChannelClient.loadDocumentArchive`, so a long history folds across turns. */
   readonly loadAppDocumentArchive: (instanceId: number, archive: Uint8Array) => Promise<void>;
+  /** 📂️ Delivers declared media (`AppCommand::MediaIn`) and waits for its mutation commit: how a picked natural file enters a fresh instance. */
+  readonly importAppMedia: (instanceId: number, port: string, descriptor: unknown, data: Uint8Array) => Promise<void>;
   /** 📚️ Captures the complete drawing, history and owned members before a surface transfer. */
   readonly readAppDocumentArchive: (instanceId: number) => Promise<Uint8Array>;
   /** 🧾️ The instance's whole history projection (`AppCommand::ReadHistory` → `HistorySnapshot`), the browser twin of the

@@ -1,0 +1,10 @@
+[
+{"op":"region-set","id":"basket","set":{"areaM2":1.426}},
+{"op":"region-set","id":"basket-laundry","set":{"areaM2":0.8829}},
+{"op":"set","path":["poses",{"id":"pegging-shirt"},"thermal","regions","basket","exposedFraction"],"value":0.533},
+{"op":"set","path":["poses",{"id":"shaking-out"},"thermal","regions","basket","exposedFraction"],"value":0.533},
+{"op":"set","path":["poses",{"id":"lifting-from-basket"},"thermal","regions","basket","exposedFraction"],"value":0.533},
+{"op":"set","path":["poses",{"id":"pegging-shirt"},"thermal","regions","basket-laundry","exposedFraction"],"value":0.1359},
+{"op":"set","path":["poses",{"id":"shaking-out"},"thermal","regions","basket-laundry","exposedFraction"],"value":0.1359},
+{"op":"set","path":["poses",{"id":"lifting-from-basket"},"thermal","regions","basket-laundry","exposedFraction"],"value":0.1359}
+]

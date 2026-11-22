@@ -5,9 +5,10 @@ import {isAbsolute,join} from "node:path";
 import schema from "../🧬️schema/🔣️.json" with {type:"json"};
 import {validateJsonSchemaSubset} from "../../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import {dependencyClosureV1,walkFilesV1} from "../🌳️inputs/🟦️.ts";
-import {includedSourcesV1,offloadRealTextV1,planOffloadV1,type OffloadPlanV1} from "../🗺️paths/🟦️.ts";
-import {OFFLOAD_POLICY_V1,extractOffloadFlagV1,offloadModeV1,offloadTextV1} from "../📐️policy/🟦️.ts";
-import {offloadCommandV1,offloadPlatformV1,parseRustcIdentityV1} from "../📜️action/🟦️.ts";
+import {includedSourcesV1,offloadRealTextV1,planOffloadV1,semioEnvironmentReadV1,type OffloadPlanV1} from "../🗺️paths/🟦️.ts";
+import {parseDepInfoV1} from "../../../../⚡️caching/🦀️cargo/🗃️unit-cache/🔏️key/🟦️.ts";
+import {OFFLOAD_POLICY_V1,extractOffloadFlagV1,offloadLinksNativelyV1,offloadModeV1,offloadPinV1,offloadSettingV1,offloadTextV1} from "../📐️policy/🟦️.ts";
+import {offloadRustcCommandV1,offloadPlatformV1,parseRustcIdentityV1} from "../📜️action/🟦️.ts";
 import {placementIdleCountV1,RemoteExecutionLoadTableV1,type PlacementWorkerV1} from "../../🗓️scheduler/⚖️placement/🟦️.ts";
 import type {RemoteExecutionLoadReportV1} from "../../🌡️load/🟦️.ts";
 import {remoteExecutionMatchPropertiesV1,remoteExecutionPlatformMatchesV1} from "../../🟦️.ts";
@@ -17,6 +18,8 @@ import {mkdirSync,mkdtempSync,readFileSync,realpathSync,renameSync,rmSync,writeF
 import {availableParallelism,tmpdir} from "node:os";
 import {BUILD_HOST_CAPACITY_POLICY_V1} from "../../../🌡️host-capacity/🎛️control/🟦️.ts";
 import {fleetHeadroomV1,localUnitAdmissionV1,offloadFanOutJobsV1,readUnitCostV1,workspaceRootFromV1,worthARoundTripV1,writeUnitCostV1,readOffloadMemoV1,slotQueueMillisecondsV1,writeOffloadMemoV1} from "../🚦️admission/🟦️.ts";
+import {declineOffloadV1,detectWorkerRustcV1} from "../🟦️.ts";
+import {offloadSdkIdentityV1} from "../🧰️toolchain/🟦️.ts";
 import {releaseImplicitTokenV1} from "../🎟️token/🟦️.ts";
 import {bumpOffloadCountersV1,readOffloadCountersV1,readOffloadReasonCountersV1} from "../📊️counters/🟦️.ts";
 import {tryClaimV1} from "../../../../⚡️caching/🦀️cargo/🗃️unit-cache/🔒️lock/🟦️.ts";
@@ -46,9 +49,37 @@ test("the policy and the messages validate against the closed schema, in both va
  expect(ajv.validate({$ref:`${schema.$id}#/definitions/Event`},{version:1,atMs:1,pid:2,kind:"offload-run",crate:"a",key:null,milliseconds:3,waitedMs:0,origin:"w"})).toBe(true);
 });
 
-test("the mode reads always, auto and never and falls back to auto",()=>{
- expect(offloadModeV1({SEMIO_OFFLOAD:"always"})).toBe("always");expect(offloadModeV1({SEMIO_OFFLOAD:"never"})).toBe("never");
- expect(offloadModeV1({})).toBe("auto");expect(offloadModeV1({SEMIO_OFFLOAD:"sometimes"})).toBe("auto");
+test("the setting reads never, distribute and pin:<origin>, and every other value, including the removed always and auto, is the default distribute",()=>{
+ expect(offloadSettingV1({SEMIO_OFFLOAD:"never"})).toEqual({mode:"never"});expect(offloadSettingV1({SEMIO_OFFLOAD:"distribute"})).toEqual({mode:"distribute"});
+ expect(offloadSettingV1({SEMIO_OFFLOAD:"pin:g1-m06"})).toEqual({mode:"pin",pin:"g1-m06"});expect(offloadPinV1({SEMIO_OFFLOAD:"pin:g1-m06"})).toBe("g1-m06");expect(offloadPinV1({SEMIO_OFFLOAD:"distribute"})).toBeUndefined();
+ for(const value of [undefined,"","sometimes","always","auto","pin:","pin:-x","pin:a b","pin:"+"a".repeat(65)])expect(offloadModeV1({SEMIO_OFFLOAD:value}),String(value)).toBe("distribute");
+ expect(OFFLOAD_POLICY_V1.mode.default).toBe("distribute");
+});
+
+test("a unit that the host linker links requires a worker with the same SDK: workers offer semio-sdk=<SDK directory name> by themselves, the requester asks for its own, and WebAssembly units and plain libraries ask for none",()=>{
+ expect(offloadLinksNativelyV1(["bin"],undefined)).toBe(true);expect(offloadLinksNativelyV1(["proc-macro"],undefined)).toBe(true);expect(offloadLinksNativelyV1(["lib","cdylib"],"aarch64-apple-darwin")).toBe(true);
+ expect(offloadLinksNativelyV1(["lib"],undefined)).toBe(false);expect(offloadLinksNativelyV1(["rlib"],undefined)).toBe(false);expect(offloadLinksNativelyV1(["cdylib"],"wasm32-wasip2")).toBe(false);expect(offloadLinksNativelyV1(["bin"],"wasm32-unknown-unknown")).toBe(false);
+ expect(offloadSdkIdentityV1({SDKROOT:"/Library/Developer/CommandLineTools/SDKs/MacOSX15.4.sdk"},"darwin")).toBe("MacOSX15.4.sdk");
+ expect(offloadSdkIdentityV1({SDKROOT:"/opt/x/MacOSX15.4.sdk"},"linux")).toBeUndefined();
+ const identity={commit:"0".repeat(40),host:"aarch64-apple-darwin",digest:"a".repeat(16),targets:[]},host=[{name:"OSFamily",value:"macos"},{name:"Arch",value:"arm64"}];
+ const required=remoteExecutionMatchPropertiesV1(offloadPlatformV1(host,identity,undefined,"g1-m03",0,{sdk:"MacOSX15.4.sdk"})),offered=(sdk:string|undefined)=>[...host,{name:"semio-target",value:identity.host},{name:"semio-toolchain",value:identity.digest},{name:"semio-offload-format",value:"argv-1"},...sdk===undefined?[]:[{name:"semio-sdk",value:sdk}]];
+ expect(remoteExecutionPlatformMatchesV1(required,offered("MacOSX15.4.sdk"))).toBe(true);expect(remoteExecutionPlatformMatchesV1(required,offered("MacOSX14.5.sdk"))).toBe(false);expect(remoteExecutionPlatformMatchesV1(required,offered(undefined))).toBe(false);
+ expect(remoteExecutionPlatformMatchesV1(remoteExecutionMatchPropertiesV1(offloadPlatformV1(host,identity,undefined,"g1-m03")),offered("MacOSX14.5.sdk")),"a plain library asks for no SDK").toBe(true);
+ if(process.platform==="darwin"){const offer=detectWorkerRustcV1(process.cwd(),testRustEnvironmentV1());if(offer)expect(offer.properties.find(row=>row.name==="semio-sdk")?.value).toBe(offloadSdkIdentityV1(testRustEnvironmentV1()));}
+});
+
+test("a unit that is pinned asks for the queue and for the one machine that offers its origin; an unpinned unit that waits only asks for the queue; every other unit is declined when nobody has room",()=>{
+ const identity={commit:"0".repeat(40),host:"aarch64-apple-darwin",digest:"a".repeat(16),targets:[]},host=[{name:"OSFamily",value:"macos"},{name:"Arch",value:"arm64"}],value=(rows:readonly {name:string;value:string}[],name:string)=>rows.find(row=>row.name===name)?.value;
+ const idle=offloadPlatformV1(host,identity,undefined,"g1-m03"),queued=offloadPlatformV1(host,identity,undefined,"g1-m03",0,{queue:true}),pinned=offloadPlatformV1(host,identity,undefined,"g1-m03",0,{queue:true,pin:"g1-m06"});
+ expect(value(idle,"semio-offload")).toBe("if-idle");expect(value(idle,"semio-pin")).toBeUndefined();
+ expect(value(queued,"semio-offload")).toBe("queue");expect(value(queued,"semio-pin")).toBeUndefined();
+ expect(value(pinned,"semio-offload")).toBe("queue");expect(value(pinned,"semio-pin")).toBe("g1-m06");
+ expect(pinned.map(row=>row.name)).toEqual([...pinned.map(row=>row.name)].sort());
+ const required=remoteExecutionMatchPropertiesV1(pinned);
+ expect(required.some(row=>row.name==="semio-pin"&&row.value==="g1-m06")).toBe(true);expect(required.some(row=>row.name==="semio-offload")).toBe(false);
+ expect(remoteExecutionPlatformMatchesV1(required,[...host,{name:"semio-target",value:identity.host},{name:"semio-toolchain",value:identity.digest},{name:"semio-offload-format",value:"argv-1"},{name:"semio-pin",value:"g1-m06"}])).toBe(true);
+ expect(remoteExecutionPlatformMatchesV1(required,[...host,{name:"semio-target",value:identity.host},{name:"semio-toolchain",value:identity.digest},{name:"semio-offload-format",value:"argv-1"},{name:"semio-pin",value:"g1-m08"}])).toBe(false);
+ expect(remoteExecutionPlatformMatchesV1(required,[...host,{name:"semio-target",value:identity.host},{name:"semio-toolchain",value:identity.digest},{name:"semio-offload-format",value:"argv-1"}])).toBe(false);
 });
 
 test("the compiler identity is the commit, the host and the first 16 hex of the sha-256 of the exact text; platform properties are sorted and carry the scheduler's control properties",()=>{
@@ -95,6 +126,41 @@ test("offload preserves each Cargo search root and ships only metadata-reached a
  }finally{rmSync(checkout.base,{recursive:true,force:true});}
 });
 
+test("the transitive extern closure is complete: rustc itself compiles the planned unit from the shipped files alone, with the dependency of a dependency in a second search root, and a dependency that only one file of an artifact names is followed too",()=>{
+ const checkout=chain("closure-oracle"),scratchRoot=mkdtempSync(join(checkout.base,"worker-"));
+ try{
+  const transitive=join(checkout.target,"transitive","out");mkdirSync(transitive,{recursive:true});
+  for(const extension of ["rlib","rmeta"]){const file=`liba-${externHash("a")}.${extension}`;renameSync(join(checkout.deps,file),join(transitive,file));}
+  const args=checkout.arguments("c",["b"],["-L",`dependency=${transitive}`]);
+  const result=planOffloadV1({args,environment:checkout.environment("c"),cwd:checkout.root});
+  if("declined" in result)throw Error(result.declined+" "+result.detail);
+  for(const [path,real] of result.files){const target=join(scratchRoot,path);mkdirSync(join(target,".."),{recursive:true});writeFileSync(target,readFileSync(real));}
+  mkdirSync(join(scratchRoot,OFFLOAD_POLICY_V1.virtual.out),{recursive:true});
+  const run=spawnSync("rustc",result.arguments as string[],{cwd:scratchRoot,encoding:"utf8",env:testRustEnvironmentV1({...checkout.environment("c"),CARGO_MANIFEST_DIR:join(scratchRoot,"pk","c")})});
+  expect(run.status,run.stderr.slice(0,600)).toBe(0);
+  expect(readdirSync(join(scratchRoot,OFFLOAD_POLICY_V1.virtual.out)).some(name=>name===`libc-${externHash("c")}.rmeta`)).toBe(true);
+  const stub=join(checkout.base,"stub");mkdirSync(stub,{recursive:true});
+  writeFileSync(join(stub,"libx-0123456789abcdef.rmeta"),"nothing");writeFileSync(join(stub,"libx-0123456789abcdef.rlib"),"refers to -fedcba9876543210 here");writeFileSync(join(stub,"liby-fedcba9876543210.rmeta"),"leaf");
+  expect(dependencyClosureV1([stub],[join(stub,"libx-0123456789abcdef.rlib")])!.get(stub)).toEqual(["libx-0123456789abcdef.rlib","libx-0123456789abcdef.rmeta","liby-fedcba9876543210.rmeta"]);
+ }finally{rmSync(checkout.base,{recursive:true,force:true});}
+});
+
+test("a unit whose sources read a SEMIO_ variable that the requester has set stays here instead of compiling differently on a machine that never receives it; one that reads an unset variable, or none, is planned",()=>{
+ const checkout=chain("semio-read");
+ try{
+  const source=join(checkout.root,"pk","c","src","lib.rs");
+  writeFileSync(source,'pub fn c()->Option<&\'static str>{option_env!("SEMIO_BUILD_FLAVOUR")}\n');
+  const plan_=(extra:Record<string,string>)=>planOffloadV1({args:checkout.arguments("c",["b"]),environment:{...checkout.environment("c"),...extra},cwd:checkout.root});
+  const refused=plan_({SEMIO_BUILD_FLAVOUR:"x"});
+  expect(refused).toMatchObject({declined:"not-portable"});expect((refused as {detail:string}).detail).toContain("SEMIO_BUILD_FLAVOUR");
+  expect("declined" in plan_({}),"unset: the compile sees the same on both machines").toBe(false);
+  expect("declined" in plan_({SEMIO_OTHER:"x"}),"a variable the sources never read is not carried and not a reason").toBe(false);
+  expect(semioEnvironmentReadV1([source],{SEMIO_BUILD_FLAVOUR:"x"})).toBe("SEMIO_BUILD_FLAVOUR");expect(semioEnvironmentReadV1([source],{})).toBeUndefined();
+  expect(semioEnvironmentReadV1(["x.txt"],{SEMIO_BUILD_FLAVOUR:"x"},()=>'env!("SEMIO_BUILD_FLAVOUR")'),"only Rust files are read").toBeUndefined();
+  expect(semioEnvironmentReadV1(["x.rs"],{SEMIO_A:"1"},()=>'const A:&str=env!("SEMIO_A");')).toBe("SEMIO_A");
+ }finally{rmSync(checkout.base,{recursive:true,force:true});}
+});
+
 test("walking a package is ordered, skips ignored directories and refuses beyond its bounds",()=>{
  const checkout=chain("walk"),files=walkFilesV1(join(checkout.root,"pk","c"),["target"])!;
  expect([...files.keys()]).toEqual(["Cargo.toml","src/lib.rs"]);
@@ -123,11 +189,12 @@ test("a plan is path-independent: two checkouts at different absolute paths yiel
 test("units that cannot be made path-independent are declined with a reason instead of being half-mapped",()=>{
  const checkout=chain("decline"),base={environment:checkout.environment("c"),cwd:checkout.root};
  const declined=(args:readonly string[],environment=base.environment)=>{const result=planOffloadV1({args,environment,cwd:checkout.root});return "declined" in result?result.declined:"planned";};
- expect(declined([...checkout.arguments("c",["b"]),"-l","static=foo"])).toBe("not-portable");
- expect(declined([...checkout.arguments("c",["b"]),"-L","native=/x"])).toBe("not-portable");
+ expect(declined([...checkout.arguments("c",["b"]),"-l","dylib=foo"])).toBe("not-portable");
+ expect(declined([...checkout.arguments("c",["b"]),"-L","native=/opt/homebrew/lib"])).toBe("not-portable");
+ expect(declined([...checkout.arguments("c",["b"]),"-L","crate=/x"])).toBe("not-portable");
  expect(declined([...checkout.arguments("c",["b"]),"-o","/x"])).toBe("unmapped-path");
  expect(declined([...checkout.arguments("c",["b"]),"-C","linker=/Users/x/ld"])).toBe("unmapped-path");
- expect(declined([...checkout.arguments("c",["b"]),"-C",`link-arg=${checkout.root}/x`])).toBe("unmapped-path");
+ expect(declined([...checkout.arguments("c",["b"]),"-C",`link-arg=${checkout.root}/x`])).toBe("not-portable");
  expect(declined(checkout.arguments("c",["b"]),{...base.environment,SOMETHING:`${checkout.root}/x`})).toBe("unmapped-path");
  expect(declined(checkout.arguments("c",["b"]),{...base.environment,CARGO_MANIFEST_DIR:undefined as never})).toBe("unmapped-path");
  expect(declined(checkout.arguments("c",["missing"]))).toBe("unreadable-input");
@@ -208,6 +275,21 @@ test("every decline and fall-back is counted under its reason beside the three t
  rmSync(root,{recursive:true,force:true});
 });
 
+test("an eligibility refusal is one offload-declined event with its reason and detail and one counter, in English and German; a unit that is only cheaper than a round trip is counted without an event",()=>{
+ const root=realpathSync(mkdtempSync(join(process.env.SEMIO_TEST_ARTIFACT_DIR??tmpdir(),"offload-declines-"))),cache=join(root,"cache");
+ const environment={SEMIO_UNIT_CACHE_WORKSPACE_ROOT:root};
+ declineOffloadV1(cache,environment,{lane:"t",crate:"k",key:"abc",reason:"crate-type",detail:"staticlib"});
+ declineOffloadV1(cache,environment,{crate:"s",key:null,reason:"source-kind",detail:"-"});
+ declineOffloadV1(cache,environment,{crate:"s",key:null,reason:"cheap",silent:true});declineOffloadV1(cache,environment,{crate:"s",key:null,reason:"cheap",silent:true});
+ const rows=readFileSync(join(cache,"x","offload.jsonl"),"utf8").split("\n").filter(Boolean).map(line=>JSON.parse(line));
+ expect(rows.map(row=>[row.kind,row.reason,row.detail,row.crate])).toEqual([["offload-declined","crate-type","staticlib","k"],["offload-declined","source-kind","-","s"]]);
+ for(const row of rows)expect(ajv.validate({$ref:`${schema.$id}#/definitions/Event`},row),JSON.stringify(ajv.errors)).toBe(true);
+ const lines=readFileSync(join(cache,"x","offload.progress"),"utf8").split("\n").filter(Boolean);
+ expect(lines).toEqual(["Unit k stays here: its crate type is linked here.","Einheit k bleibt hier: sein Crate-Typ wird hier gelinkt.","Unit s stays here: its source is not a Rust file.","Einheit s bleibt hier: seine Quelle ist keine Rust-Datei."]);
+ expect(readOffloadReasonCountersV1(root)).toEqual({"crate-type":1,"source-kind":1,cheap:2});expect(readOffloadCountersV1(root)).toEqual({out:0,refused:0,fellBack:0});
+ rmSync(root,{recursive:true,force:true});
+});
+
 test("counters add up concurrent events exactly and keep the unit cache fields of the shared file",async()=>{
  const root=realpathSync(mkdtempSync(join(process.env.SEMIO_TEST_ARTIFACT_DIR??tmpdir(),"offload-counters-"))),file=join(root,".cache","f","build-counters.json");
  mkdirSync(join(root,".cache","f"),{recursive:true});writeFileSync(file,JSON.stringify({version:1,wallMs:5,unit:{localHit:1,remoteHit:2,miss:3,stored:4},offload:{out:0,refused:0,fellBack:0}}));
@@ -220,16 +302,17 @@ test("counters add up concurrent events exactly and keep the unit cache fields o
 });
 
 test("the --offload flag is taken out before the delimiter, in both spellings, and refused when unknown or repeated",()=>{
- expect(extractOffloadFlagV1(["run","x:build","--offload=always","--","--offload=never"])).toEqual({args:["run","x:build","--","--offload=never"],mode:"always"});
+ expect(extractOffloadFlagV1(["run","x:build","--offload=distribute","--","--offload=never"])).toEqual({args:["run","x:build","--","--offload=never"],mode:"distribute"});
+ expect(extractOffloadFlagV1(["run","--offload=pin:g1-m06","y"])).toEqual({args:["run","y"],mode:"pin:g1-m06"});
  expect(extractOffloadFlagV1(["run","--offload","never","y"])).toEqual({args:["run","y"],mode:"never"});
  expect(extractOffloadFlagV1(["run","y"])).toEqual({args:["run","y"]});
- for(const bad of [["--offload=sometimes"],["--offload"],["--offload=auto","--offload=never"]])expect(()=>extractOffloadFlagV1(bad)).toThrow(/--offload takes always, auto or never, once\.\n--offload nimmt always, auto oder never, genau einmal\./u);
+ for(const bad of [["--offload=sometimes"],["--offload"],["--offload=always"],["--offload=auto"],["--offload=pin:"],["--offload=distribute","--offload=never"]])expect(()=>extractOffloadFlagV1(bad),bad.join(" ")).toThrow(/--offload takes never, distribute or pin:<origin>, once\.\n--offload nimmt never, distribute oder pin:<Ursprung>, genau einmal\./u);
 });
 
 test("repo run and repo cargo take --offload out of their arguments and hand the mode to the build environment",async()=>{
  const {resolveBuildModeV1}=await import("../../../🧭️invocation/🟦️.ts");
- const resolved=resolveBuildModeV1({args:["cargo","--store=shared","--offload=always","--configuration=prototype","--","check","-p","x","--offload=never"],env:{}},{});
- expect(resolved.env.SEMIO_OFFLOAD).toBe("always");expect(resolved.args).toEqual(["cargo","--store=shared","--configuration=prototype","--","check","-p","x","--offload=never"]);
+ const resolved=resolveBuildModeV1({args:["cargo","--store=shared","--offload=pin:g1-m06","--configuration=prototype","--","check","-p","x","--offload=never"],env:{}},{});
+ expect(resolved.env.SEMIO_OFFLOAD).toBe("pin:g1-m06");expect(resolved.args).toEqual(["cargo","--store=shared","--configuration=prototype","--","check","-p","x","--offload=never"]);
  const plain=resolveBuildModeV1({args:["cargo","--store=shared","--configuration=prototype","--","check"],env:{}},{});
  expect(plain.env.SEMIO_OFFLOAD).toBeUndefined();
  expect(()=>resolveBuildModeV1({args:["run","a:build","--offload=maybe"],env:{}},{})).toThrow(/--offload nimmt/u);
@@ -379,10 +462,11 @@ test("the fleet fanout ceiling is available with offload enabled, a published sc
  expect(await offloadFanOutJobsV1(scheduler,{...busy,fleet:{fetch:(async()=>{throw Error("down");}) as unknown as typeof fetch}}),"an unreachable scheduler keeps the caller waiting").toBeUndefined();
  expect(await offloadFanOutJobsV1({...scheduler,SEMIO_OFFLOAD:"never"},busy)).toBeUndefined();
  expect(await offloadFanOutJobsV1({...scheduler,SEMIO_REMOTE_EXECUTION_ENDPOINT:""},busy),"no scheduler published").toBeUndefined();
- expect(await offloadFanOutJobsV1({...scheduler,SEMIO_OFFLOAD:"always"},busy)).toBeGreaterThan(1);
+ expect(await offloadFanOutJobsV1({...scheduler,SEMIO_OFFLOAD:"distribute"},busy)).toBeGreaterThan(1);
+ expect(await offloadFanOutJobsV1({...scheduler,SEMIO_OFFLOAD:"pin:g1-m06"},quiet),"a pinned build queues on one machine whatever this one is doing").toBe(Math.min(OFFLOAD_POLICY_V1.limits.fanOutJobs,availableParallelism()));
 });
 
-test("a unit whose recorded local cost is below a round trip stays here in auto mode; unknown or costly units go; the workspace root is found from any directory below it",()=>{
+test("a unit whose recorded local cost is below a round trip is not worth a round trip; unknown or costly units go; the workspace root is found from any directory below it",()=>{
  const root=realpathSync(mkdtempSync(join(process.env.SEMIO_TEST_ARTIFACT_DIR??tmpdir(),"cost-")));
  expect(readUnitCostV1(root,"tiny")).toBeUndefined();expect(worthARoundTripV1(root,"tiny"),"no record: the first compile teaches the cost").toBe(true);
  writeUnitCostV1(root,"tiny",300);expect(readUnitCostV1(root,"tiny")).toBe(300);expect(worthARoundTripV1(root,"tiny")).toBe(false);
@@ -453,10 +537,57 @@ test("an environment variable a build script points into OUT_DIR (cranelift's IS
  expect(result.environment.SEMIO_ABSOLUTE.split(" ")).toEqual(expect.arrayContaining(["ISLE_DIR","ISLE_FILE","OUT_DIR"]));
  expect(result.environment.SEMIO_REL_ISLE_DIR).toBe(virtual);expect(result.environment.SEMIO_REL_ISLE_FILE).toBe(`${virtual}/sub/more.rs`);
  expect([...result.files.keys()]).toEqual(expect.arrayContaining([`${virtual}/isle.rs`,`${virtual}/sub/more.rs`]));
- const command=offloadCommandV1(result,"aarch64-apple-darwin");
+ const command=offloadRustcCommandV1(result,"aarch64-apple-darwin");
  for(const name of ["ISLE_DIR","ISLE_FILE","OUT_DIR"]){
   const rows=command.environment.filter(([key])=>key===name);expect(rows.length,name).toBe(1);expect(rows[0]![1].includes(checkout.base),name).toBe(false);expect(rows[0]![1].startsWith("@root/")||rows[0]![1]==="@root","@root placeholder "+name).toBe(true);
  }
  const unmapped=planned({STRAY:generated+"-sibling"});
  expect("declined" in unmapped?unmapped.declined:"planned").toBe("unmapped-path");
+});
+
+test("include_* (plain, raw, concat, include_wgsl) reaches every file rustc reads, and planOffloadV1 of that registry crate ships blit.wgsl plus a non-Rust src file a custom shader_file! macro reads",()=>{
+ const root=realpathSync(mkdtempSync(join(process.env.SEMIO_TEST_ARTIFACT_DIR??tmpdir(),"offload-wgsl-")));
+ try{
+  mkdirSync(join(root,"src"));
+  writeFileSync(join(root,"Cargo.toml"),"[package]\nname = \"wgpu\"\nversion = \"0.1.0\"\n");
+  const lib=(extra:string)=>'macro_rules! include_wgsl { ($p:literal) => { include_str!($p) }; }\nmacro_rules! shader_file { ($p:literal) => { include_str!($p) }; }\nmod blit;\npub const RAW: &str = include_str!(r#"raw.txt"#);\npub const HASHED: &str = include_str!(r##"hashed.wgsl"##);\npub const PACKED: &[u8] = include_bytes!(concat!(env!("CARGO_MANIFEST_DIR"), "/packed.bin"));\n'+extra;
+  writeFileSync(join(root,"src","lib.rs"),lib(""));
+  writeFileSync(join(root,"src","blit.rs"),'pub const SHADER: &str = include_wgsl!("blit.wgsl");\n');
+  writeFileSync(join(root,"src","blit.wgsl"),"@compute fn blit() {}\n");
+  writeFileSync(join(root,"src","raw.txt"),"raw\n");
+  writeFileSync(join(root,"src","hashed.wgsl"),"@fragment fn hashed() {}\n");
+  writeFileSync(join(root,"packed.bin"),"pk");
+  const entry=join(root,"src","lib.rs"),info=join(root,"lib.d"),environment=testRustEnvironmentV1({CARGO_MANIFEST_DIR:root});
+  const compile=()=>spawnSync("rustc",["--crate-type=lib","--crate-name=lib",`--emit=dep-info=${info}`,entry],{encoding:"utf8",cwd:root,env:environment});
+  const dependencies=()=>parseDepInfoV1(readFileSync(info,"utf8").replace(/\\\r?\n/gu," ")).dependencies.map(path=>isAbsolute(path)?path:join(root,path));
+  const oracle=compile();
+  expect(oracle.status,oracle.stderr).toBe(0);
+  const reached=includedSourcesV1(entry,undefined,undefined,root);
+  for(const path of dependencies())if(path!==entry)expect(reached,path).toContain(path);
+  expect(reached).toContain(join(root,"src","blit.wgsl"));
+  writeFileSync(join(root,"src","extra.wgsl"),"@compute fn extra() {}\n");
+  writeFileSync(entry,lib('pub const EXTRA: &str = shader_file!("extra.wgsl");\n'));
+  const again=compile();
+  expect(again.status,again.stderr).toBe(0);
+  expect(dependencies()).toContain(join(root,"src","extra.wgsl"));
+  const planned=planOffloadV1({args:["--crate-name","wgpu","--edition=2021","src/lib.rs","--crate-type","lib","--emit=metadata","--out-dir","out","--remap-path-prefix",`${root}=.`],environment:{CARGO_MANIFEST_DIR:root,CARGO_PKG_NAME:"wgpu",CARGO_PKG_VERSION:"0.1.0",CARGO_CRATE_NAME:"wgpu"},cwd:root});
+  if("declined" in planned)throw Error(planned.declined+" "+planned.detail);
+  const shipped=[...planned.files.values()];
+  expect(shipped).toContain(join(root,"src","blit.wgsl"));
+  expect(shipped).toContain(join(root,"src","extra.wgsl"));
+ }finally{rmSync(root,{recursive:true,force:true});}
+});
+
+test("a unit whose extern is semio_os_kernel_dsl_derive stays local: planOffloadV1 declines it unmapped-path",()=>{
+ const root=realpathSync(mkdtempSync(join(process.env.SEMIO_TEST_ARTIFACT_DIR??tmpdir(),"offload-derive-")));
+ try{
+  mkdirSync(join(root,"src"));
+  writeFileSync(join(root,"src","lib.rs"),"pub fn f() {}\n");
+  writeFileSync(join(root,"Cargo.toml"),"[package]\nname = \"caller\"\nversion = \"0.1.0\"\n");
+  const environment={CARGO_MANIFEST_DIR:root,CARGO_PKG_NAME:"caller",CARGO_PKG_VERSION:"0.1.0",CARGO_CRATE_NAME:"caller"};
+  const base=["--crate-name","caller","--edition=2021","src/lib.rs","--crate-type","lib","--emit=metadata","--out-dir","out","--remap-path-prefix",`${root}=.`];
+  const declined=(externSpec:string)=>{const result=planOffloadV1({args:[...base,"--extern",externSpec],environment,cwd:root});if(!("declined" in result))return "planned";expect(result.detail).toContain("proc-macro source authority");return result.declined;};
+  expect(declined(`semio_os_kernel_dsl_derive=${join(root,"libsemio_os_kernel_dsl_derive.dylib")}`)).toBe("unmapped-path");
+  expect(declined(`other=${join(root,"deps","libsemio_os_kernel_dsl_derive-hash.dylib")}`)).toBe("unmapped-path");
+ }finally{rmSync(root,{recursive:true,force:true});}
 });

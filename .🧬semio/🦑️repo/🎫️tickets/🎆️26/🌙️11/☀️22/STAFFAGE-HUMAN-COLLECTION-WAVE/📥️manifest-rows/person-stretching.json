@@ -1,0 +1,52 @@
+{
+  "id": "person-stretching",
+  "category": "humans",
+  "title": {
+    "en": "Person Stretching",
+    "de": "Person beim Dehnen"
+  },
+  "heightM": 1.7176,
+  "widthM": 0.6994,
+  "powerW": 224,
+  "poses": [
+    "quad-stretch",
+    "side-bend",
+    "hamstring-stretch",
+    "ready"
+  ],
+  "clips": [
+    "stretch-routine",
+    "idle-breathing"
+  ],
+  "representations": {
+    "50": "authored",
+    "100": "authored",
+    "200": "authored",
+    "500": "authored"
+  },
+  "symbols": [],
+  "analytics": [
+    "thermal",
+    "transport",
+    "structural"
+  ],
+  "exports": [
+    "svg",
+    "pdf",
+    "dxf",
+    "dwg",
+    "png-sequence",
+    "mp4",
+    "webm",
+    "component",
+    "glb",
+    "fbx",
+    "model",
+    "model-zip"
+  ],
+  "distinction": {
+    "en": "A runner in hooded training top, track pants and mesh running shoes cooling down: a standing quadriceps stretch balanced on one leg with the heel pulled to the seat, a side bend with the arm over the head and a hamstring stretch, joined in a slow routine loop; the only figure balancing on one leg.",
+    "de": "Eine laufende Person in Kapuzen-Trainingsoberteil, Trainingshose und Mesh-Laufschuhen beim Auslaufen: eine stehende Oberschenkeldehnung auf einem Bein mit der Ferse am Gesäß, eine Seitbeuge mit dem Arm über dem Kopf und eine Dehnung der Oberschenkelrückseite, verbunden in einer langsamen Schleife; die einzige Figur, die auf einem Bein balanciert."
+  },
+  "completion": "authored"
+}

@@ -5,7 +5,7 @@ import {tmpdir} from "node:os";
 import {join} from "node:path";
 import {StringDecoder} from "node:string_decoder";
 import {fileURLToPath} from "node:url";
-import ts from "typescript";
+import {loadProductFunctionsSyncV1} from "../../../🧩️extracted-function/🟦️.ts";
 import {createIssuedResourceControlV1,createScriptProcessEnvelope,requireIssuedResourceControlV1,withIssuedResourceOperationV1,withRequestedIssuedResourceControlV1,withScriptProcessEnvelope} from "../../../../🧭️routing/📥️invocation/🏃️process/🟦️.ts";
 import {acquireQueuedResourceLease,checkResourceLeaseControl,type ResourceLeaseControl} from "../../../../🔒️leases/🟦️.ts";
 import {LeaseOrderErrorV1} from "../../../../🔒️leases/🧭️order/🟦️.ts";
@@ -19,8 +19,7 @@ type Runner=(...values:unknown[])=>Promise<void>;
 
 /** 🧩️ The actual runner text of the Cargo test module, bound to the given ports (the source admission and the compiler child are stubbed, every lease is real). */
 function runner(name:"runCargoTestsV1"|"runCargoLintV1",ports:Readonly<Record<string,unknown>>):Runner{
- const path=fileURLToPath(new URL("../../🟦️.ts",import.meta.url)),source=readFileSync(path,"utf8"),file=ts.createSourceFile(path,source,ts.ScriptTarget.Latest,true,ts.ScriptKind.TS),text=["admitCargoExecutionV1",name].map(item=>{const node=file.statements.find((row):row is ts.FunctionDeclaration=>ts.isFunctionDeclaration(row)&&row.name?.text===item);if(!node)throw Error("Actual Cargo test function required: "+item);return node.getText(file);}).join("\n");
- return new Function(...Object.keys(ports),ts.transpileModule(text,{compilerOptions:{target:ts.ScriptTarget.ESNext,module:ts.ModuleKind.ESNext}}).outputText.replaceAll("export ","")+";return "+name)(...Object.values(ports)) as Runner;
+ return loadProductFunctionsSyncV1(new URL("../../🟦️.ts",import.meta.url),[name],ports)[name] as Runner;
 }
 
 test("Cargo tests and Clippy take the configuration, registry, build-directory and writer leases in the order of the lock policy while it is enforced: the real runners are granted, the retired orders (build lease before the configuration view, a step's configuration under the writer) are refused, and the independent oracle agrees",async()=>{

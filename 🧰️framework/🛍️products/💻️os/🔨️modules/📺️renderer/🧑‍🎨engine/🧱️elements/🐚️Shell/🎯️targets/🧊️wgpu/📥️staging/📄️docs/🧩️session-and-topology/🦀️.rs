@@ -6,15 +6,12 @@ use super::*;
 
 //#region ShellLifecycle
 impl DocumentState {
-    //#region 🏷️LabelResolution
     pub fn chrome_dialog_request(&self, dialog_id: &str, args: Option<DslValue>, prefs: &PrefsState) -> Option<ChromeDialogRequest> {
         let session = self.session.as_ref()?;
         let dialog = session.app.dialogs.iter().find(|dialog| dialog.id == dialog_id)?;
         Some(ChromeDialogRequest::from_definition(&session.app.controller_id, dialog, args, prefs.active_terminology(), prefs.active_locale()))
     }
 
-    //#endregion 🏷️LabelResolution
-    //#region 🏠️🧳️PluginHostConfig
     /// 🕒️ Who a `noteShellCommand` is addressed to: the LIVE session's app first, and only then the
     /// host program's own app — the same order `document_controller_id` resolves a document's action
     /// bindings in, and the one React uses (`noteShellCommand` closes over the mounted app).
@@ -69,7 +66,6 @@ impl DocumentState {
         self.session.as_ref().filter(matches).or(spawned)
     }
 
-    //#endregion 🏠️🧳️PluginHostConfig
     pub fn prepare_hot_reload(&mut self, plugins: Vec<ProgramBridgeEntry>, plugins_state: &mut PluginState, directory: &mut DirectoryState) {
         #[cfg(not(target_arch = "wasm32"))]
         {
@@ -109,7 +105,13 @@ impl DocumentState {
         let Some(plugin) = plugins.plugins.iter().find(|entry| entry.plugin_id == session.plugin_id) else {
             return Vec::new();
         };
-        shell_example_rows(&plugin.manifest.examples, &session.app, plugins.active_example_id.as_deref(), prefs.active_terminology(), prefs.active_locale())
+        shell_overlay_example_rows(shell_example_rows(&plugin.manifest.examples, &session.app, plugins.active_example_id.as_deref(), prefs.active_terminology(), prefs.active_locale()), &self.app_labels_overlay)
+    }
+
+    /// 🏷️ Takes one published `labels` section value as the overlay, the way React's refresh dispatches `SET_APP_LABELS_OVERLAY` after `normalizeAppLabelsOverlay`: absent or malformed is the empty overlay. `true` when the overlay changed, so the caller owes a chrome refresh.
+    pub fn set_app_labels_overlay_section(&mut self, section_json: Option<&str>) -> bool {
+        let next = section_json.and_then(|json| serde_json::from_str(json).ok()).unwrap_or_default();
+        std::mem::replace(&mut self.app_labels_overlay, next) != self.app_labels_overlay
     }
 
     /// 🧰️ The scope a host-effect pass owes ON TOP of what its dispatch declared — the Rust twin of

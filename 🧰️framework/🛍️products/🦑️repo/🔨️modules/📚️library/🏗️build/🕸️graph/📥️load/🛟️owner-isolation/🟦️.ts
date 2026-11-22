@@ -23,7 +23,10 @@ const codeOfV1=(error:unknown)=>String((error as {code?:unknown;name?:unknown}|n
 /** 🔎️ Answers whether a failure is the named failure of an owner. */
 export function isOwnerFailureV1(error:unknown):error is OwnerFailureV1{return (error as {code?:unknown}|null)?.code===ownerIsolationPolicyV1.code&&Array.isArray((error as {owners?:unknown}).owners);}
 
-const registryFaultV1=(code:unknown,message:unknown)=>graphSchema.definitions.OwnerRegistryWorkerFailures.const.some(fault=>fault.code===code&&typeof message==="string"&&message.startsWith(fault.prefix));
+/** 🧭️ The reason of a registry fault (a pending or vanished native owner root) when the code and the message open one of the declared faults; otherwise nothing. */
+export function registryFaultReasonV1(code:unknown,message:unknown):string|undefined{return typeof message==="string"&&graphSchema.definitions.OwnerRegistryWorkerFailures.const.some(fault=>fault.code===code&&message.startsWith(fault.prefix))?message:undefined;}
+
+const registryFaultV1=(code:unknown,message:unknown)=>registryFaultReasonV1(code,message)!==undefined;
 
 /** 🧭️ Whether a failure is a pending or vanished native owner root of the registry (raw, or as the named failure of an owner whose own code and reason are that fault): the registry follow reconciles the named roots and retries it, so it is never an owner's own failure.
  * @see ../🧭️registry-follow/🟦️.ts */

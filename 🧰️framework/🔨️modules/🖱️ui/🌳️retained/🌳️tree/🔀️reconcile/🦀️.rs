@@ -53,7 +53,7 @@ use record_routing_and_actions::{
     record_consumes_subtree, record_intent_bindings, record_presence, row_activation,
     row_verb_action, stack_metrics, surface_kind, surface_plugin_id,
 };
-pub use record_routing_and_actions::{component_scene_host_id, tree_item_drop_action};
+pub use record_routing_and_actions::{component_scene_host_id, tree_drop_action};
 
 #[path = "🖼️surface-scene-and-row-nodes/🦀️.rs"]
 mod surface_scene_and_row_nodes;
@@ -80,7 +80,7 @@ use widget_nodes::{
 #[path = "🎞️media-transport-and-node-from-record/🦀️.rs"]
 mod media_transport_and_node_from_record;
 pub use media_transport_and_node_from_record::{
-    media_transport_contract_valid, ui_node_from_record, MEDIA_TRANSPORT_EXTENSION_ID,
+    extension_host_rows, extension_row_key, media_transport_contract_valid, register_extension_host, retire_extension_host, ui_node_from_record, MEDIA_TRANSPORT_EXTENSION_ID,
 };
 
 #[path = "🌳️ui-tree-reconcile/🦀️.rs"]

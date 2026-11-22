@@ -17,7 +17,7 @@ use semio_renderer_wgpu_engine_registry::engine_surface_registry::FlowPortAddres
 pub enum EngineSurfaceKindDetail {
     NodeGraph,
     TiledMap { selection_method: String },
-    Board2d { snapshot_json: String },
+    Board2d { snapshot_json: String, suggestion_menu_json: Option<String> },
     World3d { status_json: Option<String> },
 }
 

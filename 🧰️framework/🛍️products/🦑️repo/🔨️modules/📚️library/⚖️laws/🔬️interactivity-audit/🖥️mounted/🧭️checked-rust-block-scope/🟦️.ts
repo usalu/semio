@@ -4,15 +4,18 @@ import { policyStripRustCommentsAndStrings } from "../../../../🔍️discovery/
 
 /** 🔎️ Extracts one uniquely declared Rust item through the shared literal/comment-aware block scanner. */
 export function interactivityCheckedRustBlockScope(source: string, marker: string, name: string, failures: string[]): string | undefined {
-  const escaped = marker.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-  const declarations = [...source.matchAll(new RegExp(`^[\\t ]*${escaped}`, "gmu"))];
+  const bare = marker.replace(/^(?:pub(?:\([^)]*\))?\s+)/, "");
+  const escaped = bare.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const tail = bare.endsWith("(") ? "" : "(?![A-Za-z0-9_])";
+  const declarations = [...source.matchAll(new RegExp(`^[\\t ]*(?:pub(?:\\([^\\n)]*\\))?\\s+)?${escaped}${tail}`, "gmu"))];
   const stale = `P5a policy boundary is stale: ${name}`;
   if (declarations.length !== 1) {
     if (!failures.includes(stale)) failures.push(stale);
     return undefined;
   }
-  const start = source.indexOf(marker, declarations[0]!.index);
-  const headerEnd = start + marker.length;
+  const found = declarations[0]!;
+  const start = found.index ?? 0;
+  const headerEnd = start + found[0].length;
   const open = source.indexOf("{", headerEnd);
   const semicolon = source.indexOf(";", headerEnd);
   const block = open < 0 || (semicolon >= 0 && semicolon < open) ? undefined : toolJobRustBlock(source, open);

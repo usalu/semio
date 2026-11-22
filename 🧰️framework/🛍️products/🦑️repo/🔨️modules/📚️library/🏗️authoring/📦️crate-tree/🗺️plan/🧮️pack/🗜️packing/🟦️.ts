@@ -3,6 +3,7 @@ import { join, relative } from "node:path";
 import type { PackingStats, PlanOptions, SliceInfo } from "../../🧾️model/🟦️.ts";
 import { type CarveSlice } from "../../../🧱️decl-tree/🟦️.ts";
 import { measureFits } from "../../📏️measure/🟦️.ts";
+import { CRATE_HARD_BUDGET } from "../../💰️budget/🟦️.ts";
 import { MeasureUnion, totalsFit } from "../../../📏️measure-union/🟦️.ts";
 import type { buildCarveSlices, indexRootItems, readCrateSource } from "../📥️source-and-slices/🟦️.ts";
 import type { defineMirrorMeasurement } from "../🧲️slice-ownership/🟦️.ts";
@@ -44,7 +45,11 @@ export function prepareComponentPacking({ componentList, edgesOf, repoRoot, meas
     const owner = new Map<number, number>();
     const pinOwner = new Map<string, number>();
     grouping.forEach((group, i) => { group.components.forEach((c) => owner.set(c, i)); if (group.pin) for (const crate of [group.pin, ...((group as PackedGroup).supersedes ?? [])]) pinOwner.set(crate.name, i); });
-    return grouping.map((group, i) => new Set([...group.components.flatMap((c) => [...componentDeps[c]!].map((dep) => owner.get(dep)!)), ...[group.pin, ...((group as PackedGroup).supersedes ?? [])].flatMap((crate) => (crate ? pinDeps.get(crate.name) ?? [] : []).map((name) => pinOwner.get(name)!))].filter((dep) => dep !== undefined && dep !== i)));
+    const names = (group: { pin?: CarvedCrate }): string[] => [group.pin, ...((group as PackedGroup).supersedes ?? [])].flatMap((crate) => (crate ? [crate.name] : []));
+    const reaches = (from: string, to: string, seen = new Set<string>()): boolean => !seen.has(from) && (seen.add(from), (pinDeps.get(from) ?? []).some((next) => next === to || reaches(next, to, seen)));
+    const reverse = (i: number, j: number): boolean => names(grouping[j]!).some((b) => names(grouping[i]!).some((a) => reaches(b, a)));
+    const detached = (c: number): boolean => componentList[c]!.every((member) => member.slice.attach.every((decl) => decl.testOnly));
+    return grouping.map((group, i) => new Set([...group.components.flatMap((c) => (detached(c) && group.pin ? [] : [...componentDeps[c]!]).map((dep) => owner.get(dep)!)).filter((dep) => dep === undefined || !(group.pin && grouping[dep]?.pin && reverse(i, dep))), ...[group.pin, ...((group as PackedGroup).supersedes ?? [])].flatMap((crate) => (crate ? pinDeps.get(crate.name) ?? [] : []).map((name) => pinOwner.get(name)!))].filter((dep) => dep !== undefined && dep !== i)));
   };
   const acyclic = (grouping: readonly { components: number[]; pin?: CarvedCrate }[]): boolean => {
     const edges = groupEdges(grouping);
@@ -65,7 +70,8 @@ export function prepareComponentPacking({ componentList, edgesOf, repoRoot, meas
   const declOwner = new Map<string, CarvedCrate>();
   const allInfos = componentList.flat();
   for (const info of allInfos) {
-    const crates = [...new Set(info.slice.decls.map((decl) => ownerOf.get(decl.eff.join("::"))).filter((entry): entry is CarvedCrate => entry !== undefined))];
+    const named = (decls: readonly { eff: readonly string[] }[]): CarvedCrate[] => [...new Set(decls.map((decl) => ownerOf.get(decl.eff.join("::"))).filter((entry): entry is CarvedCrate => entry !== undefined))];
+    const crates = named(info.slice.attach).length ? named(info.slice.attach) : named(info.slice.decls);
     if (crates.length) { slicePin.set(info.slice.id, crates); for (const decl of info.slice.decls) declOwner.set(decl.id, crates[0]!); }
   }
   for (let changed = true; changed;) {
@@ -88,6 +94,20 @@ export function prepareComponentPacking({ componentList, edgesOf, repoRoot, meas
     if (!components) continue;
     const group = startGroup(components[0]!, componentList[components[0]!]!);
     for (const index of components.slice(1)) { group.components.push(index); group.infos.push(...componentList[index]!); group.lib.add(componentList[index]!.map((member) => member.lib!.entries)); group.test.add(componentList[index]!.map((member) => member.test!.entries)); }
+    const hard = options.hard ?? CRATE_HARD_BUDGET;
+    const limit = { ...hard, files: hard.files - 1 };
+    const fits = (g: PackedGroup): boolean => totalsFit(g.lib.peek([]), limit) && totalsFit(g.test.peek([]), limit);
+    let kept = [...components];
+    let current = group;
+    while (options.tight?.includes(crate.name) && !fits(current) && kept.length > 1) {
+      const testOnly = (index: number): number => Number(componentList[index]!.every((m) => m.slice.attach.every((d) => d.testOnly)));
+      const drop = [...kept].sort((a, b) => testOnly(b) - testOnly(a) || b - a)[0]!;
+      kept = kept.filter((index) => index !== drop);
+      current = startGroup(kept[0]!, componentList[kept[0]!]!);
+      for (const index of kept.slice(1)) { current.components.push(index); current.infos.push(...componentList[index]!); current.lib.add(componentList[index]!.map((member) => member.lib!.entries)); current.test.add(componentList[index]!.map((member) => member.test!.entries)); }
+    }
+    Object.assign(group, current);
+    components.splice(0, components.length, ...kept);
     group.pin = crate;
     group.supersedes = carved.filter((other) => other !== crate && rootOf(other) === crate);
     groups.push(group);
@@ -133,13 +153,14 @@ export async function packComponents({ order, componentList, sliceOfDecl, groupO
     const candidates = groups.map((group, i) => i).sort((a, b) => affinity(b) - affinity(a) || b - a);
     for (const candidate of candidates) {
       const group = groups[candidate]!;
-      if (incremental && (!totalsFit(group.lib.peek(members.map((member) => member.lib!.entries)), target) || !totalsFit(group.test.peek(members.map((member) => member.test!.entries)), target))) { packing.pruned += 1; continue; }
+      const limit = group.pin ? { ...target, files: target.files - 2 } : target;
+      if (incremental && (!totalsFit(group.lib.peek(members.map((member) => member.lib!.entries)), limit) || !totalsFit(group.test.peek(members.map((member) => member.test!.entries)), limit))) { packing.pruned += 1; continue; }
       const trial = groups.map((entry, i) => ({ ...entry, components: i === candidate ? [...entry.components, index] : entry.components }));
       if (!acyclic(trial)) continue;
       const merged = [...group.infos, ...members].map((info) => info.slice);
       if (!mirrorValid(merged)) continue;
       packing.measured += 1;
-      if (!measureFits(await measureMembers(merged, false), target) || !measureFits(await measureMembers(merged, true), target)) continue;
+      if (!measureFits(await measureMembers(merged, false), limit) || !measureFits(await measureMembers(merged, true), limit)) continue;
       packing.merged += 1;
       group.components.push(index);
       group.infos.push(...members);

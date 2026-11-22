@@ -44,6 +44,8 @@ pub struct UiTree {
     /// `UiPresenceOverlayEntry.notes` ("Ada is editing this in time travel"). Presence, never document state: a tree row
     /// paints and announces them after its own description, and a reconcile leaves them alone.
     presence_notes: Vec<(String, String)>,
+    /// 🫳️ The drag in flight that may drop on a tree: `(owning tree, dragged row)`. Every other row and section of that tree paints React's drop-ready fill (`isDropReady`). Ephemeral gesture state the router stamps, never document state.
+    drop_ready: Option<(NodeId, NodeId)>,
 }
 
 /// 🧱️ The ceiling on synthesized composite rows held at once. One open popup at a time is the shell's
@@ -69,6 +71,23 @@ impl UiTree {
             return false;
         }
         self.presence_notes = notes.to_vec();
+        if let Some(root) = self.root {
+            self.mark_dirty(root, NodeFlags::DIRTY_PAINT);
+        }
+        true
+    }
+
+    /// 🫳️ The `(tree, dragged row)` pair whose rows and sections show the drop-ready highlight, if a drag is in flight.
+    pub fn drop_ready(&self) -> Option<(NodeId, NodeId)> {
+        self.drop_ready
+    }
+
+    /// 🫳️ Sets the drop-ready drag and marks the root for repaint when it changed; `true` when it did.
+    pub fn set_drop_ready(&mut self, drop_ready: Option<(NodeId, NodeId)>) -> bool {
+        if self.drop_ready == drop_ready {
+            return false;
+        }
+        self.drop_ready = drop_ready;
         if let Some(root) = self.root {
             self.mark_dirty(root, NodeFlags::DIRTY_PAINT);
         }

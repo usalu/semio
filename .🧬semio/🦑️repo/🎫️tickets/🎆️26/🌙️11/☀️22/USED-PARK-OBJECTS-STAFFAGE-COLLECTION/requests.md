@@ -1,0 +1,20 @@
+
+## used-chess-table — structure solver: indeterminate contacts shared equally
+
+Measured: in pose `maintenance` the set (13.1 kN) stands on two soil contacts and hangs on two sling contacts under the table top (the table alone is 2.44 kN). `solveStructure` treats the whole rig as one rigid body on supports of equal normalised stiffness and reports 3.27 kN at each of the four contacts, so the slings appear to lift the footing too. A prismatic column joint does not separate the lifted body. Proposal: solve each subtree that is connected to its parent only through a non-fixed joint and carries its own active contacts as a separate body (or let a pose release a joint). Worked around: none, documented in `structure.assumptions` and the report.
+
+## used-park-armchair — volumes-silhouette with slender curved tubes (C24 `followedWidth`)
+
+Measured 2026-11-22: a bent Ø25 armrest tube (loft over two 60 mm bends) declared `slender: true` at 1:200 and 1:500 and drawn as a true-width (25 mm) filled outline made the elevation IoU drop to 0.698 (1:200) and 0.789 (1:500). `followedWidth` measures a filled strip by `stripOf` (principal axis and the extent across it), so the U-shaped outline of tube plus both bends reads as a ~70 mm wide strip and the slender tube is widened to that. Proposal: measure a filled strip's width along the solid's own centre line (distance of the outline to the centre line), not across the principal axis of the whole outline. Worked around without touching shared code: the tubes are not declared slender at 1:200/1:500; `volumes-feature` accepts their true 25 mm because the 2D draws them at 25 mm (C13). Result: VALID at every scale.
+
+## used-beer-garden-set — open detail strokes on a part that a pose turns over
+
+Measured 2026-11-22: in pose `maintenance` the table is turned 180 degrees about its long axis (bone `table`, an in-plane `angleDeg` of the end elevation). Its plan strokes (glue joints, three beer rings, carved initials, checks: open polylines without `solid`) are carried by the bone and drawn on top of the plan, mirrored, although they now lie on the hidden underside (`r3-2d.ts --pose maintenance --scale 50`, plan panel). Filled shapes are depth-sorted correctly; strokes have no face. Proposal: give a stroke the depth of its bone's elevation silhouette at the stroke's own side (or an optional `face: "+v" | "-v" | …`) and drop it when that face looks away from the viewpoint. Worked around: none; noted in the report as a remaining imperfection.
+
+## used-bubbler-stone-fountain — structure solver: a lifting rope beside a heavy footing (same defect as used-chess-table)
+
+Measured by construction: in pose `maintenance` the 8.6 kg pump (85 N) hangs on its service rope while the 864 kg boulder (8.5 kN) rests through slab and shaft on the soil contact `shaft-soil`. Declaring the rope anchor `pump-eye` as a support beside `shaft-soil` makes `solveStructure` treat the whole rig as one rigid body on two equally stiff supports, so the rope would be assigned several kN of the boulder's weight. Worked around: the rope is an applied upward load of the pump's weight (`rope`, +85.1 N at `pump-eye`), documented in `structure.assumptions`. Proposal as in the chess-table request: solve a subtree joined to its parent only by a non-fixed joint (here the prismatic `pump`) as its own body when it carries its own active support.
+
+## Carried over on 2026-11-22 (finisher)
+
+The four sections above, re-measured where possible, and three new ones (banded silhouette raster on `used-concrete-table-tennis`, per-pose presence of solids and shapes, manifest rows lost under the replica) are filed in `../GET-STAFFAGE-RUNNING-END-TO-END-AND-FINISH-ALL-STAFFAGE-TICKETS/requests.md` under `## USED-PARK-OBJECTS-STAFFAGE-COLLECTION — …`. The solver sections of `used-chess-table` and `used-bubbler-stone-fountain` are worked around in twelve more assets by applied lifting forces (`lift_statics.py`, `reactions.ts`, `lift-loads.ts`); the defect itself stays open.

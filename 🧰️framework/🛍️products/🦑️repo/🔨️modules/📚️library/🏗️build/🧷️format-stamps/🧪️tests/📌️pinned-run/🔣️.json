@@ -1,0 +1,10 @@
+{
+ "version": 1,
+ "cases": [
+  {"id": "pinned-yield-completes-with-start-stamp", "pinned": true, "kind": "yield", "edits": ["B"], "outcome": "completes", "published": ["A"]},
+  {"id": "pinned-run-survives-repeated-edits", "pinned": true, "kind": "yield", "edits": ["B", "C", "D"], "outcome": "completes", "published": ["A"]},
+  {"id": "unpinned-yield-is-refused", "pinned": false, "kind": "yield", "edits": ["B"], "outcome": "stale", "published": []},
+  {"id": "pinned-refusal-of-a-newer-store-stays", "pinned": true, "kind": "refuse", "edits": ["B"], "outcome": "stale", "published": []},
+  {"id": "pinned-without-edit-completes", "pinned": true, "kind": "yield", "edits": [], "outcome": "completes", "published": ["A"]}
+ ]
+}

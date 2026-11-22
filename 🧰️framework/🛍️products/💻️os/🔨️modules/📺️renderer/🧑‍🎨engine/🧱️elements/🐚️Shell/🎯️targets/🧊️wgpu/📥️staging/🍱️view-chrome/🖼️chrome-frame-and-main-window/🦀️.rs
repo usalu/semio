@@ -352,7 +352,7 @@ impl<'ctx> ChromeViewCtx<'ctx> {
             if !self.dock.dock_tabs.tabs(anchor).is_empty() {
                 continue;
             }
-            let zone = semio_renderer_wgpu_shell_dock::empty_anchor_drop_zone_rect(anchor, body, theme);
+            let zone = semio_renderer_wgpu_shell_dock::empty_anchor_drop_zone_rect(anchor, anchor_panel_rect(anchor, self.dock.anchor_state(anchor).size, Some(theme.control_height), 1, 0, body, theme), theme);
             draw.push_solid([zone.x, zone.y, zone.w, zone.h], theme.celebrate[1]);
             let tint = if hovered == Some(anchor) { theme.accent } else { theme.border_emphasized };
             chrome_icon(draw, icons, "grip-vertical", zone.x + (zone.w - PANEL_CHROME_GRIP_SIZE) * 0.5, zone.y + (zone.h - PANEL_CHROME_GRIP_SIZE) * 0.5, PANEL_CHROME_GRIP_SIZE, tint);
@@ -414,6 +414,8 @@ impl<'ctx> ChromeViewCtx<'ctx> {
                 let icon_id = if node.is_branch() && self.dock.dock_branch_collapsed(anchor, &node.id) { "chevron-right" } else { node.icon_id.as_str() };
                 chrome_icon(draw, icons, icon_id, chip.x + theme.padding_standard, chip.y + (chip.h - PANEL_CHROME_ICON_TINY) * 0.5, PANEL_CHROME_ICON_TINY, fg);
                 chrome_text(draw, atlas, input, theme, &node.label, chip.x + theme.padding_standard + PANEL_CHROME_ICON_TINY + theme.gap_standard, chip.y + (chip.h + theme.font_size_small) * 0.5 - 1.0, theme.font_size_small, fg);
+                let label_x = chip.x + theme.padding_standard + PANEL_CHROME_ICON_TINY + theme.gap_standard;
+                note_chrome_label_span(&node.id, atlas, &node.label, label_x, chip.y + (chip.h + theme.font_size_small) * 0.5 - 1.0, (chip.x + chip.w - theme.padding_standard - PANEL_CHROME_GRIP_SIZE - theme.gap_standard - label_x).max(1.0), theme.font_size_small, fg, is_active);
                 chrome_icon(draw, icons, "grip-vertical", chip.x + chip.w - theme.padding_standard - PANEL_CHROME_GRIP_SIZE, chip.y + (chip.h - PANEL_CHROME_GRIP_SIZE) * 0.5, PANEL_CHROME_GRIP_SIZE, fg);
                 let left = chip.x.max(row_rect.x);
                 let top = chip.y.max(row_rect.y);
@@ -732,6 +734,8 @@ impl<'ctx> ChromeViewCtx<'ctx> {
             chrome_icon(draw, icons, node.icon_id.as_str(), chip.x + theme.padding_standard, chip.y + (chip.h - CHROME_ICON_TINY) * 0.5, CHROME_ICON_TINY, fg);
             chrome_text(draw, atlas, input, theme, &node.label, chip.x + theme.padding_standard + CHROME_ICON_TINY + theme.gap_standard, chip.y + (chip.h + theme.font_size_small) * 0.5 - 1.0, theme.font_size_small, fg);
             let control_id = format!("shell.panel.tab.mobile.{}", node.id);
+            let label_x = chip.x + theme.padding_standard + CHROME_ICON_TINY + theme.gap_standard;
+            note_chrome_label_span(&control_id, atlas, &node.label, label_x, chip.y + (chip.h + theme.font_size_small) * 0.5 - 1.0, (chip.x + chip.w - theme.padding_standard - label_x).max(1.0), theme.font_size_small, fg, is_active);
             note_chrome_group_item(&ChromeGroupItem { control_id: &control_id, icon_id: None, label: Some(&node.label), active: is_active, disabled: false, kind: HitKind::PanelTab });
             input.register_hit(HitTarget { rect: chip, event: None, control_id: Some(control_id), kind: HitKind::PanelTab, drag_axis: None, drag_data: None });
             x += chip_w + theme.gap_standard;

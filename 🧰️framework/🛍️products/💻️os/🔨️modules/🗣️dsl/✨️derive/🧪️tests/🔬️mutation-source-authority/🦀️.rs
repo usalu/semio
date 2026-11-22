@@ -269,3 +269,24 @@ fn mutation_authority_locator_names_the_committed_projection_of_this_workspace()
     mutation_authority_domain_owners(&projection, &collection).unwrap();
     mutation_authority_aggregate_sources(&projection, &collection).unwrap();
 }
+
+#[cfg(unix)]
+#[test]
+fn raw_no_follow_refusal_names_the_path_component_and_io_error_kind() {
+    use std::os::unix::fs::PermissionsExt;
+    let base = std::env::temp_dir().join(format!("semio-raw-refusal-{}", std::process::id()));
+    let _ = fs::remove_dir_all(&base);
+    fs::create_dir_all(&base).unwrap();
+    let root = fs::canonicalize(&base).unwrap();
+    let locked = root.join("locked");
+    fs::create_dir_all(&locked).unwrap();
+    fs::write(locked.join("🦀️.rs"), "").unwrap();
+    fs::set_permissions(&locked, fs::Permissions::from_mode(0o000)).unwrap();
+    let denied = mutation_authority_raw_no_follow(&locked.join("🦀️.rs"));
+    fs::set_permissions(&locked, fs::Permissions::from_mode(0o755)).unwrap();
+    let missing = mutation_authority_raw_no_follow(&root.join("absent").join("🦀️.rs"));
+    fs::remove_dir_all(&root).unwrap();
+    let missing = missing.unwrap_err();
+    assert!(missing.contains("absent") && missing.contains("[NotFound]"), "{missing}");
+    if let Err(denied) = denied { assert!(denied.contains("locked") && denied.contains("[PermissionDenied]"), "{denied}"); }
+}

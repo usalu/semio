@@ -1,0 +1,56 @@
+{
+  "id": "dancer",
+  "category": "humans",
+  "title": {
+    "en": "Dancer",
+    "de": "Tänzer"
+  },
+  "heightM": 1.778,
+  "widthM": 2.031,
+  "powerW": 391.6,
+  "poses": [
+    "arabesque",
+    "releve-first",
+    "passe-releve",
+    "preparation-fourth",
+    "first-position"
+  ],
+  "clips": [
+    "pirouette",
+    "plies-and-rises",
+    "idle-breathing"
+  ],
+  "representations": {
+    "50": "authored",
+    "100": "authored",
+    "200": "authored",
+    "500": "authored"
+  },
+  "symbols": [
+    "runner-direction-mark"
+  ],
+  "analytics": [
+    "thermal",
+    "transport",
+    "structural"
+  ],
+  "exports": [
+    "svg",
+    "pdf",
+    "dxf",
+    "dwg",
+    "png-sequence",
+    "mp4",
+    "webm",
+    "component",
+    "glb",
+    "fbx",
+    "model",
+    "model-zip"
+  ],
+  "distinction": {
+    "en": "A contemporary and ballet dancer of 1.82 m and 72 kg in a fitted top, dance shorts and split-sole jazz shoes: first arabesque on the flat foot, relevé in first position, passé on demi-pointe, preparation in fourth and first position, with a full pirouette about the ball of the supporting foot, a plié-and-relevé exercise and idle breathing; the arabesque reaches 2.03 m from fingertip to toe.",
+    "de": "Ein Tänzer des zeitgenössischen Tanzes und Balletts von 1,82 m und 72 kg in engem Oberteil, Tanzshorts und Jazzschuhen mit geteilter Sohle: erste Arabesque auf dem flachen Fuß, Relevé in der ersten Position, Passé auf halber Spitze, Vorbereitung in der vierten und erste Position, mit einer ganzen Pirouette um den Ballen des Standfußes, einer Übung aus Plié und Relevé und ruhigem Atmen; die Arabesque reicht 2,03 m von der Fingerspitze bis zur Zehe."
+  },
+  "completion": "authored"
+}

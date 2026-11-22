@@ -3,7 +3,6 @@ use semio_os_flow::neural::ColdRetire as _;
 use semio_framework_value::FromValue as _;
 use super::*;
 use super::super::retained_scratch_testing::ScratchCaller;
-use semio_framework_value::retirement::RetireOwned;
 use semio_framework_value::RetainedCloneGrant;
 use semio_framework_value_testing_effect_bank::{EffectBank,Wallet};
 fn policy()->serde_json::Value{serde_json::from_str(include_str!("../../../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️testing/🎟️caller/🧪️tests/🧫️fixtures/🎟️caller.json")).unwrap()}

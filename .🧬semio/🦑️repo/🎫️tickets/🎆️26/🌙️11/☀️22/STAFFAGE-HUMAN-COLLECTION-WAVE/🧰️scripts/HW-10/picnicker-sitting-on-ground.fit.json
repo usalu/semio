@@ -1,0 +1,461 @@
+{
+ "cross-legged-resting": {
+  "hip-lift": {
+   "dy": -0.571
+  },
+  "pelvis": {
+   "angleDeg": 14
+  },
+  "torso": {
+   "angleDeg": -16
+  },
+  "neck": {
+   "angleDeg": -6
+  },
+  "head": {
+   "angleDeg": -6
+  },
+  "index-proximal-r": {
+   "angleDeg": 30
+  },
+  "index-middle-r": {
+   "angleDeg": 45
+  },
+  "index-distal-r": {
+   "angleDeg": 25
+  },
+  "middle-proximal-r": {
+   "angleDeg": 35
+  },
+  "middle-middle-r": {
+   "angleDeg": 50
+  },
+  "middle-distal-r": {
+   "angleDeg": 29
+  },
+  "ring-proximal-r": {
+   "angleDeg": 40
+  },
+  "ring-middle-r": {
+   "angleDeg": 55
+  },
+  "ring-distal-r": {
+   "angleDeg": 33
+  },
+  "little-proximal-r": {
+   "angleDeg": 45
+  },
+  "little-middle-r": {
+   "angleDeg": 60
+  },
+  "little-distal-r": {
+   "angleDeg": 37
+  },
+  "thumb-proximal-r": {
+   "angleDeg": 20
+  },
+  "thumb-distal-r": {
+   "angleDeg": 15
+  },
+  "index-proximal-l": {
+   "angleDeg": 9.0
+  },
+  "index-middle-l": {
+   "angleDeg": 13.5
+  },
+  "index-distal-l": {
+   "angleDeg": 7.5
+  },
+  "middle-proximal-l": {
+   "angleDeg": 10.5
+  },
+  "middle-middle-l": {
+   "angleDeg": 15.0
+  },
+  "middle-distal-l": {
+   "angleDeg": 8.7
+  },
+  "ring-proximal-l": {
+   "angleDeg": 12.0
+  },
+  "ring-middle-l": {
+   "angleDeg": 16.5
+  },
+  "ring-distal-l": {
+   "angleDeg": 9.9
+  },
+  "little-proximal-l": {
+   "angleDeg": 13.5
+  },
+  "little-middle-l": {
+   "angleDeg": 18.0
+  },
+  "little-distal-l": {
+   "angleDeg": 11.1
+  },
+  "thumb-proximal-l": {
+   "angleDeg": 6.0
+  },
+  "thumb-distal-l": {
+   "angleDeg": 4.5
+  },
+  "upper-arm-r": {
+   "angleDeg": 5.101,
+   "abductionDeg": -30.198,
+   "twistDeg": -8.972
+  },
+  "forearm-r": {
+   "angleDeg": 77.543,
+   "twistDeg": 3.371
+  },
+  "hand-r": {
+   "angleDeg": 16.845,
+   "abductionDeg": 2.314
+  },
+  "upper-arm-l": {
+   "angleDeg": 13.168,
+   "abductionDeg": 28.781,
+   "twistDeg": 17.492
+  },
+  "forearm-l": {
+   "angleDeg": 67.22,
+   "twistDeg": -0.268
+  },
+  "hand-l": {
+   "angleDeg": -1.956,
+   "abductionDeg": 1.534
+  },
+  "thigh-l": {
+   "angleDeg": 93.31,
+   "abductionDeg": 34.352,
+   "twistDeg": -65.586
+  },
+  "shank-l": {
+   "angleDeg": -132.696
+  },
+  "foot-l": {
+   "angleDeg": -47.934,
+   "abductionDeg": -11.623,
+   "twistDeg": -6.884
+  },
+  "thigh-r": {
+   "angleDeg": 92.177,
+   "abductionDeg": -33.037,
+   "twistDeg": 67.015
+  },
+  "shank-r": {
+   "angleDeg": -139.012
+  },
+  "foot-r": {
+   "angleDeg": -43.642,
+   "abductionDeg": 10.963,
+   "twistDeg": 6.949
+  }
+ },
+ "leaning-back": {
+  "hip-lift": {
+   "dy": -0.571
+  },
+  "pelvis": {
+   "angleDeg": 18
+  },
+  "torso": {
+   "angleDeg": 2
+  },
+  "neck": {
+   "angleDeg": -6
+  },
+  "head": {
+   "angleDeg": -4
+  },
+  "index-proximal-r": {
+   "angleDeg": 30
+  },
+  "index-middle-r": {
+   "angleDeg": 45
+  },
+  "index-distal-r": {
+   "angleDeg": 25
+  },
+  "middle-proximal-r": {
+   "angleDeg": 35
+  },
+  "middle-middle-r": {
+   "angleDeg": 50
+  },
+  "middle-distal-r": {
+   "angleDeg": 29
+  },
+  "ring-proximal-r": {
+   "angleDeg": 40
+  },
+  "ring-middle-r": {
+   "angleDeg": 55
+  },
+  "ring-distal-r": {
+   "angleDeg": 33
+  },
+  "little-proximal-r": {
+   "angleDeg": 45
+  },
+  "little-middle-r": {
+   "angleDeg": 60
+  },
+  "little-distal-r": {
+   "angleDeg": 37
+  },
+  "thumb-proximal-r": {
+   "angleDeg": 20
+  },
+  "thumb-distal-r": {
+   "angleDeg": 15
+  },
+  "index-proximal-l": {
+   "angleDeg": 0.0
+  },
+  "index-middle-l": {
+   "angleDeg": 0.0
+  },
+  "index-distal-l": {
+   "angleDeg": 0.0
+  },
+  "middle-proximal-l": {
+   "angleDeg": 0.0
+  },
+  "middle-middle-l": {
+   "angleDeg": 0.0
+  },
+  "middle-distal-l": {
+   "angleDeg": 0.0
+  },
+  "ring-proximal-l": {
+   "angleDeg": 0.0
+  },
+  "ring-middle-l": {
+   "angleDeg": 0.0
+  },
+  "ring-distal-l": {
+   "angleDeg": 0.0
+  },
+  "little-proximal-l": {
+   "angleDeg": 0.0
+  },
+  "little-middle-l": {
+   "angleDeg": 0.0
+  },
+  "little-distal-l": {
+   "angleDeg": 0.0
+  },
+  "thumb-proximal-l": {
+   "angleDeg": 0.0
+  },
+  "thumb-distal-l": {
+   "angleDeg": 0.0
+  },
+  "thigh-l": {
+   "angleDeg": 124.472,
+   "abductionDeg": 6.313,
+   "twistDeg": 1.653
+  },
+  "shank-l": {
+   "angleDeg": -111.301
+  },
+  "foot-l": {
+   "angleDeg": -17.89,
+   "abductionDeg": 0.649,
+   "twistDeg": -0.922
+  },
+  "thigh-r": {
+   "angleDeg": 125,
+   "abductionDeg": -3.913,
+   "twistDeg": -4.505
+  },
+  "shank-r": {
+   "angleDeg": -114.895
+  },
+  "foot-r": {
+   "angleDeg": -14.971,
+   "abductionDeg": -1.717,
+   "twistDeg": 0.165
+  },
+  "upper-arm-l": {
+   "angleDeg": -27.804,
+   "abductionDeg": 9.36,
+   "twistDeg": 2.581
+  },
+  "forearm-l": {
+   "angleDeg": 0,
+   "twistDeg": 2.571
+  },
+  "hand-l": {
+   "angleDeg": -65,
+   "abductionDeg": 35.622
+  },
+  "upper-arm-r": {
+   "angleDeg": 6.232,
+   "abductionDeg": -13.93,
+   "twistDeg": -17.515
+  },
+  "forearm-r": {
+   "angleDeg": 107.251,
+   "twistDeg": 5.559
+  },
+  "hand-r": {
+   "angleDeg": 20.937,
+   "abductionDeg": 1.574
+  }
+ },
+ "cross-legged-eating": {
+  "hip-lift": {
+   "dy": -0.571
+  },
+  "pelvis": {
+   "angleDeg": 14
+  },
+  "torso": {
+   "angleDeg": -12
+  },
+  "neck": {
+   "angleDeg": -4
+  },
+  "head": {
+   "angleDeg": 2
+  },
+  "index-proximal-r": {
+   "angleDeg": 30
+  },
+  "index-middle-r": {
+   "angleDeg": 45
+  },
+  "index-distal-r": {
+   "angleDeg": 25
+  },
+  "middle-proximal-r": {
+   "angleDeg": 35
+  },
+  "middle-middle-r": {
+   "angleDeg": 50
+  },
+  "middle-distal-r": {
+   "angleDeg": 29
+  },
+  "ring-proximal-r": {
+   "angleDeg": 40
+  },
+  "ring-middle-r": {
+   "angleDeg": 55
+  },
+  "ring-distal-r": {
+   "angleDeg": 33
+  },
+  "little-proximal-r": {
+   "angleDeg": 45
+  },
+  "little-middle-r": {
+   "angleDeg": 60
+  },
+  "little-distal-r": {
+   "angleDeg": 37
+  },
+  "thumb-proximal-r": {
+   "angleDeg": 20
+  },
+  "thumb-distal-r": {
+   "angleDeg": 15
+  },
+  "index-proximal-l": {
+   "angleDeg": 9.0
+  },
+  "index-middle-l": {
+   "angleDeg": 13.5
+  },
+  "index-distal-l": {
+   "angleDeg": 7.5
+  },
+  "middle-proximal-l": {
+   "angleDeg": 10.5
+  },
+  "middle-middle-l": {
+   "angleDeg": 15.0
+  },
+  "middle-distal-l": {
+   "angleDeg": 8.7
+  },
+  "ring-proximal-l": {
+   "angleDeg": 12.0
+  },
+  "ring-middle-l": {
+   "angleDeg": 16.5
+  },
+  "ring-distal-l": {
+   "angleDeg": 9.9
+  },
+  "little-proximal-l": {
+   "angleDeg": 13.5
+  },
+  "little-middle-l": {
+   "angleDeg": 18.0
+  },
+  "little-distal-l": {
+   "angleDeg": 11.1
+  },
+  "thumb-proximal-l": {
+   "angleDeg": 6.0
+  },
+  "thumb-distal-l": {
+   "angleDeg": 4.5
+  },
+  "upper-arm-r": {
+   "angleDeg": 43.654,
+   "abductionDeg": 0.919,
+   "twistDeg": -36.288
+  },
+  "forearm-r": {
+   "angleDeg": 133.613,
+   "twistDeg": 20.862
+  },
+  "hand-r": {
+   "angleDeg": 8.821,
+   "abductionDeg": -8.516
+  },
+  "upper-arm-l": {
+   "angleDeg": 15.516,
+   "abductionDeg": 26.243,
+   "twistDeg": 18.9
+  },
+  "forearm-l": {
+   "angleDeg": 58.296,
+   "twistDeg": -0.202
+  },
+  "hand-l": {
+   "angleDeg": -1.838,
+   "abductionDeg": 1.157
+  },
+  "thigh-l": {
+   "angleDeg": 91.337,
+   "abductionDeg": 34.456,
+   "twistDeg": -65.336
+  },
+  "shank-l": {
+   "angleDeg": -132.688
+  },
+  "foot-l": {
+   "angleDeg": -47.973,
+   "abductionDeg": -12.052,
+   "twistDeg": -6.993
+  },
+  "thigh-r": {
+   "angleDeg": 90.143,
+   "abductionDeg": -33.128,
+   "twistDeg": 66.451
+  },
+  "shank-r": {
+   "angleDeg": -139.007
+  },
+  "foot-r": {
+   "angleDeg": -43.695,
+   "abductionDeg": 11.554,
+   "twistDeg": 7.038
+  }
+ }
+}

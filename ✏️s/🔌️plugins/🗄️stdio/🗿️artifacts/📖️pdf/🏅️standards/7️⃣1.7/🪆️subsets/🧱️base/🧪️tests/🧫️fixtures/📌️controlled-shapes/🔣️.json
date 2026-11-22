@@ -1,0 +1,195 @@
+{
+  "resources": {
+    "objects": [
+      [
+        1,
+        0,
+        "<< /Type /Catalog /Pages 2 0 R >>"
+      ],
+      [
+        2,
+        0,
+        "<< /Type /Pages /Kids [3 0 R] /Count 1 >>"
+      ],
+      [
+        3,
+        0,
+        "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 200 200] /Contents 4 0 R /Resources << /Font << /F1 5 0 R >> /XObject << /Im1 6 0 R >> >> /Annots [7 0 R] >>"
+      ],
+      [
+        4,
+        0,
+        "<< /Length 75 >>\nstream\nBT /F1 12 Tf 20 100 Td (Resource page) Tj ET q 40 0 0 40 20 20 cm /Im1 Do Q\nendstream"
+      ],
+      [
+        5,
+        0,
+        "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>"
+      ],
+      [
+        6,
+        0,
+        "<< /Length 12 /Type /XObject /Subtype /Image /Width 2 /Height 2 /ColorSpace /DeviceRGB /BitsPerComponent 8 >>\nstream\nABCDEFGHIJKL\nendstream"
+      ],
+      [
+        7,
+        0,
+        "<< /Type /Annot /Subtype /Text /Rect [10 10 30 30] /Contents (Note) /C [1 1 0] >>"
+      ]
+    ],
+    "projection": {
+      "reader": "pikepdf",
+      "pages": [
+        {
+          "mediaBox": [
+            0.0,
+            0.0,
+            200.0,
+            200.0
+          ],
+          "rotate": 0,
+          "operators": [
+            "BT",
+            "Tf",
+            "Td",
+            "Tj",
+            "ET",
+            "q",
+            "cm",
+            "Do",
+            "Q"
+          ],
+          "fonts": [
+            "/F1"
+          ],
+          "xobjects": [
+            "/Im1"
+          ],
+          "annotations": [
+            "/Text"
+          ]
+        }
+      ]
+    }
+  },
+  "text-program": {
+    "objects": [
+      [
+        1,
+        0,
+        "<< /Type /Catalog /Pages 2 0 R >>"
+      ],
+      [
+        2,
+        0,
+        "<< /Type /Pages /Kids [3 0 R] /Count 1 >>"
+      ],
+      [
+        3,
+        0,
+        "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 200 100] /Contents 4 0 R /Resources << /Font << /F2 5 0 R >> >> >>"
+      ],
+      [
+        4,
+        0,
+        "<< /Length 59 >>\nstream\nBT /F2 14 Tf 10 50 Td [(Kern) -120 (ing)] TJ T* (next) ' ET\nendstream"
+      ],
+      [
+        5,
+        0,
+        "<< /Type /Font /Subtype /TrueType /BaseFont /Courier-Bold /FirstChar 32 /LastChar 33 /Widths [600 600] /Encoding /WinAnsiEncoding >>"
+      ]
+    ],
+    "projection": {
+      "reader": "pikepdf",
+      "pages": [
+        {
+          "mediaBox": [
+            0.0,
+            0.0,
+            200.0,
+            100.0
+          ],
+          "rotate": 0,
+          "operators": [
+            "BT",
+            "Tf",
+            "Td",
+            "TJ",
+            "T*",
+            "'",
+            "ET"
+          ],
+          "fonts": [
+            "/F2"
+          ],
+          "xobjects": [],
+          "annotations": []
+        }
+      ]
+    }
+  },
+  "roles": {
+    "objects": [
+      [
+        1,
+        0,
+        "<< /Type /Catalog /Pages 2 0 R >>"
+      ],
+      [
+        2,
+        0,
+        "<< /Type /Pages /Kids [3 0 R] /Count 1 /MediaBox [0 0 150 60] /Resources << >> /Rotate 90 >>"
+      ],
+      [
+        3,
+        0,
+        "<< /Type /Page /Parent 2 0 R /Contents [4 0 R 5 0 R] >>"
+      ],
+      [
+        4,
+        0,
+        "<< /Length 6 0 R >>\nstream\nq 1 0 0 rg 0 0 50 50 re f Q \nendstream"
+      ],
+      [
+        5,
+        0,
+        "<< /Length 28 >>\nstream\nq 0 0 1 rg 60 0 50 50 re f Q\nendstream"
+      ],
+      [
+        6,
+        0,
+        "28"
+      ]
+    ],
+    "projection": {
+      "reader": "pikepdf",
+      "pages": [
+        {
+          "mediaBox": [
+            0.0,
+            0.0,
+            150.0,
+            60.0
+          ],
+          "rotate": 90,
+          "operators": [
+            "q",
+            "rg",
+            "re",
+            "f",
+            "Q",
+            "q",
+            "rg",
+            "re",
+            "f",
+            "Q"
+          ],
+          "fonts": [],
+          "xobjects": [],
+          "annotations": []
+        }
+      ]
+    }
+  }
+}

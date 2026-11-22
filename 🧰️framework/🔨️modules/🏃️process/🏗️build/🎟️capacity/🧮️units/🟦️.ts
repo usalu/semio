@@ -15,8 +15,15 @@ export type CompileUnitsIntentV1=Readonly<{needed:number|null}>;
 /** ⚖️ The planned units: ask for up to `preferred` cores, start as soon as `minimum` are free; `budgetMegabytes` is the memory the compile may hold under its machine admission (null without one), which bounds the memory-admitting compiler broker. */
 export type CompileUnitsDecisionV1=Readonly<{preferred:number;minimum:number;reason:CompileUnitsReasonV1;budgetMegabytes:number|null}>;
 
+/** 🛰️ Why a build is sized below every idle fleet slot: no fleet known, the authored cap, the memory the light remote jobs may hold here or raised memory pressure. */
+export type FleetJobsReasonV1="fleet-local-only"|"fleet-all"|"fleet-cap"|"fleet-memory"|"fleet-pressure";
+/** 🌐️ What one fleet-sized plan reads: the cores this machine granted (`local`), the idle worker slots of the same platform and toolchain the scheduler reports (`fleetIdle`, `null` when no fleet answers) and the live memory facts of this machine. */
+export type FleetJobsHostV1=Readonly<{local:number;fleetIdle:number|null;availableMegabytes:number|null;pressure:"normal"|"warn"|"critical"|null;unitMegabytes:number}>;
+/** 🎟️ The planned jobs of one build: `jobs` is cargo's `-j` (`local` + `remote`), `local` the compile slots and CPU/memory grant of this machine, `remote` the light jobs that only ship inputs and wait for a worker. */
+export type FleetJobsDecisionV1=Readonly<{jobs:number;local:number;remote:number;reason:FleetJobsReasonV1}>;
+
 /** 🛂️ Requires one closed definition of the compile units schema. */
-function requireDefinition<T>(definition:"Host"|"Intent"|"Decision",value:unknown):T{
+function requireDefinition<T>(definition:"Host"|"Intent"|"Decision"|"FleetHost"|"FleetDecision",value:unknown):T{
  const errors=validateJsonSchemaSubset({definitions:schema.definitions,$ref:`#/definitions/${definition}`},value);
  if(errors.length)throw Error(fill(schema.definitions.Messages.const.en.errors.definitionRequired,{detail:errors[0]!}));
  return value as T;
@@ -66,6 +73,21 @@ export function planCompileUnitsV1(hostValue:CompileUnitsHostV1,intentValue:Comp
  return Object.freeze(requireDefinition<CompileUnitsDecisionV1>("Decision",{preferred:units,minimum:Math.max(1,Math.ceil(units*policy.minimumShareBasisPoints/10000)),reason,budgetMegabytes:host.grantedMegabytes===null?null:Math.max(1,host.grantedMegabytes,units*host.unitMegabytes)}));
 }
 
+/** 🛰️ Sizes the jobs of one build to the fleet: the local grant plus the idle fleet slots, bounded by the authored cap (`fleetJobsMaximum`) and by the memory the light remote jobs (`lightUnitMegabytes` each, the wait and the input shipping, not a compile) may hold here beside the local compiles; none under critical memory pressure and half under raised pressure. Chosen once at the start of a build (cargo's jobserver cannot change its size while it runs); the wrapper places each unit, so a fleet that shrinks later only makes remote units compile here or wait.
+ * @see ./🧬️schema/🔣️.json
+ * @see ./🧪️tests/🛰️fleet-jobs/🐍️oracle/🐍️.py */
+export function planFleetJobsV1(hostValue:FleetJobsHostV1):FleetJobsDecisionV1{
+ const host=requireDefinition<FleetJobsHostV1>("FleetHost",hostValue);
+ if(host.fleetIdle===null||host.fleetIdle===0)return Object.freeze(requireDefinition<FleetJobsDecisionV1>("FleetDecision",{jobs:host.local,local:host.local,remote:0,reason:"fleet-local-only"}));
+ let remote=host.fleetIdle,reason:FleetJobsReasonV1="fleet-all";
+ const limit=(value:number,why:FleetJobsReasonV1)=>{if(value<remote){remote=Math.max(0,value);reason=why;}};
+ limit(Math.max(0,policy.fleetJobsMaximum-host.local),"fleet-cap");
+ if(host.availableMegabytes!==null)limit(Math.floor(Math.max(0,host.availableMegabytes-policy.reserveMegabytes-host.local*host.unitMegabytes)/policy.lightUnitMegabytes),"fleet-memory");
+ if(host.pressure==="critical")limit(0,"fleet-pressure");
+ else if(host.pressure==="warn")limit(Math.floor(remote/policy.pressureWarnDivisor),"fleet-pressure");
+ return Object.freeze(requireDefinition<FleetJobsDecisionV1>("FleetDecision",{jobs:host.local+remote,local:host.local,remote,reason}));
+}
+
 /** 📬️ Turns a plan into the lease request of the counted capacity: bounded cores, started at `minimum`. */
 export function compileUnitsRequestV1(decision:CompileUnitsDecisionV1):CompilerCapacityRequestV1{
  const plan=requireDefinition<CompileUnitsDecisionV1>("Decision",decision);
@@ -90,7 +112,7 @@ export async function compileUnitsForHostV1(options:Readonly<{environment?:Reado
 }
 
 /** 🖨️ Describes a plan, a wait or a grant in the given language (English first, German second); unknown placeholders stay visible. */
-export function describeCompileUnitsV1(language:"en"|"de",name:"planned"|"waiting"|"granted"|"leased",values:Readonly<Record<string,string|number>>):string{
+export function describeCompileUnitsV1(language:"en"|"de",name:"planned"|"waiting"|"granted"|"leased"|"fleet",values:Readonly<Record<string,string|number>>):string{
  const catalogue=schema.definitions.Messages.const[language],reason=values.reason;
  return fill(catalogue[name],{...values,...typeof reason==="string"&&reason in catalogue.reasons?{reason:catalogue.reasons[reason as keyof typeof catalogue.reasons]}:{}});
 }

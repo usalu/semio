@@ -82,3 +82,50 @@ impl<'ctx> ActionsCtx<'ctx> {
 }
 //#endregion 🖼️IconImport
 
+//#region 📎️InputFilePick
+/// 📎️ The change action a picked file answers on: the picked file's NAME (React's `InputView` commits `files[0].name`), merged over the authored args of the input's own change action. `None` when nothing was picked.
+fn input_file_answer(pick: &ActionDescriptor, names: impl IntoIterator<Item = String>) -> Option<ActionDescriptor> {
+    semio_ui_declaration::ui::UiIconSelectNode::imported_value_action(pick, &names.into_iter().next()?)
+}
+
+fn input_file_accept(pick: &ActionDescriptor) -> String {
+    pick.args.as_ref().and_then(|args| args.get("accept")).and_then(semio_framework_value::DslValue::as_str).unwrap_or_default().to_string()
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+async fn pick_input_file_names(accept: &str) -> Vec<String> {
+    let extensions: Vec<String> = accept.split(',').filter_map(|entry| entry.trim().strip_prefix('.').map(str::to_string)).collect();
+    ui_host::select_native_paths(ui_host::NativeFileDialogRequest::open(extensions, false)).await.into_iter().filter_map(|path| path.file_name().map(|name| name.to_string_lossy().to_string())).collect()
+}
+
+#[cfg(target_arch = "wasm32")]
+async fn pick_input_file_names(accept: &str) -> Vec<String> {
+    request_file_open(accept, None, false, None).await.into_iter().map(|file| file.name).collect()
+}
+
+impl<'ctx> ActionsCtx<'ctx> {
+    /// 📎️ A `file` input's press: opens the host's file picker (native dialog or the page's file input) and answers the input's change action with the picked file's name. In a browser the picker is parked for the gesture lane (`drain_gesture_bound_work`), natively it runs as an I/O-lane future that settles as an action.
+    pub async fn framework_pick_input_file(&mut self, action: &ActionDescriptor) -> Result<(), String> {
+        #[cfg(target_arch = "wasm32")]
+        {
+            self.prefs.pending_icon_import = Some(action.clone());
+        }
+        #[cfg(not(target_arch = "wasm32"))]
+        {
+            let pick = action.clone();
+            self.settle.submit_shell_io_future(async move { ShellIoCompletion::Actions(input_file_answer(&pick, pick_input_file_names(&input_file_accept(&pick)).await).into_iter().collect()) });
+        }
+        Ok(())
+    }
+
+    /// 📎️ The parked input-file picker, opened inside the gesture that asked for it.
+    #[cfg(target_arch = "wasm32")]
+    pub async fn run_input_file_request(&mut self, pick: ActionDescriptor) {
+        let Some(answer) = input_file_answer(&pick, pick_input_file_names(&input_file_accept(&pick)).await) else { return };
+        if let Err(error) = self.dispatch_action(answer).await {
+            debug_log(&format!("[TRACE] wgpu-shell input file pick failed: {error}"));
+        }
+    }
+}
+//#endregion 📎️InputFilePick
+

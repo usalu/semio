@@ -1,13 +1,14 @@
+import {spawn,spawnSync} from "node:child_process";
 import {statSync} from "node:fs";
 import {nativeImageVolumeUsedBytesSyncV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🍎️image/⚖️availability/🟦️.ts";
-import {chmod,lstat,mkdir,readdir,readFile,rename,rmdir,stat,unlink,utimes,writeFile} from "node:fs/promises";
+import {chmod,lstat,mkdir,readdir,readFile,realpath,rename,rmdir,stat,unlink,utimes,writeFile} from "node:fs/promises";
 import {nativeDirectoryProtocolV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/📁️directory/🟦️.ts";
 import {nativePartitionOfV1,nativeStatfsV1,nativeStorageBackendOfDirectoryV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts";
 import {isAbsolute,join,relative,resolve,sep} from "node:path";
 import {CACHE_GC_LIMITS_V1} from "../🧬️schema/🟦️.ts";
 import ticket from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🧬️schema/📜️ticket/🔣️json/🟦️.ts";
 import budgetPolicy from "../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/🔣️policy.json" with {type:"json"};
-import {CACHE_ROOT_IDS_V1,CACHE_RUNTIME_V1,CACHE_SIZE_FILE_V1,cacheAreaBudgetBytesV1,cacheAreaDirectoryV1,cacheRootDirectoryV1,cacheTextV1,classifyCachePathV1,formatCacheBytesV1,cacheRecencyMsV1,formatCacheReasonV1,planCacheCollectionV1,readCacheSizeLedgerV1,type CacheAreaRowV1,type CacheEntryRowV1,type CacheLanguageV1,type CacheLedgerV1,type CachePartitionBudgetsV1,type CachePartitionRowV1,type CacheRemovalV1,type CacheReportV1,type CacheRootIdV1,type CacheSizeLedgerV1,type CacheSizeRecordV1,type CacheSourceV1,type CacheTargetPlanV1,type CacheTargetV1,type CacheUnitV1} from "../../../⚡️caching/💾️storage/🧾️ledger/🟦️.ts";
+import {CACHE_ROOT_IDS_V1,CACHE_RUNTIME_V1,CACHE_SIZE_FILE_V1,cacheAreaBudgetBytesV1,cacheAreaDirectoryV1,cacheRootDirectoryV1,cacheStrayNamesV1,cacheTextV1,classifyCachePathV1,formatCacheBytesV1,cacheRecencyMsV1,formatCacheReasonV1,planCacheCollectionV1,readCacheSizeLedgerV1,type CacheAreaRowV1,type CacheEntryRowV1,type CacheLanguageV1,type CacheLedgerV1,type CachePartitionBudgetsV1,type CachePartitionRowV1,type CacheRemovalV1,type CacheReportV1,type CacheRootIdV1,type CacheSizeLedgerV1,type CacheSizeRecordV1,type CacheSourceV1,type CacheTargetPlanV1,type CacheTargetV1,type CacheUnitV1} from "../../../⚡️caching/💾️storage/🧾️ledger/🟦️.ts";
 import {formatMachinePlanV1,planMachineBudgetV1,splitMachineBudgetV1,type MachinePlanV1,type MachinePolicyV1,type MachineSourceV1,type MachineUseV1} from "../../../⚡️caching/💾️storage/🧾️ledger/🎚️machine/🟦️.ts";
 import { SqliteDatabaseV1 } from "../../../../../../../📦️packages/🟦️typescript/⚙️runtime/🗃️sqlite/🟦️.ts";
 import {nativeFreeSpaceSyncV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts";
@@ -23,6 +24,8 @@ export type CacheRunnerPortsV1=Readonly<{
  alive(pid:number):boolean;
  sqliteFree(file:string):Promise<boolean>;
  atimeReliable?(directory:string):Promise<boolean>;
+ strays?(workspace:string,ledger:CacheLedgerV1):Promise<readonly string[]>;
+ mountPoints?():Promise<readonly string[]>;
  platform?:NodeJS.Platform;
  delegate?(owner:string,areaId:string,dryRun:boolean,language:CacheLanguageV1,context?:Readonly<{machine:MachinePlanV1|null;selected:boolean}>):Promise<string|undefined>;
 }>;
@@ -30,6 +33,31 @@ export type CacheRunnerPortsV1=Readonly<{
 /** 🧟️ Asks the operating system whether a process still exists; a process we may not signal still exists. */
 export function cachePidAliveV1(pid:number):boolean{
  try{process.kill(pid,0);return true;}catch(error){return (error as NodeJS.ErrnoException).code==="EPERM";}
+}
+
+/** 🥀️ Asks git for the ignored directories of the checkout and keeps those that carry a cache root name below a member directory (never the root itself, never inside an ignored segment or an excluded directory, never a link); git absent, too slow or cancelled means none were found. */
+export async function cacheStrayRootsV1(workspace:string,ledger:CacheLedgerV1,signal:AbortSignal):Promise<readonly string[]>{
+ const rule=ledger.strays;if(rule===undefined||signal.aborted)return[];
+ const names=new Set(cacheStrayNamesV1(ledger)),listing=await new Promise<string>(settle=>{
+  const chunks:Buffer[]=[];let child:ReturnType<typeof spawn>|undefined;
+  const finish=(text:string):void=>{clearTimeout(timer);signal.removeEventListener("abort",stop);settle(text);},stop=():void=>{child?.kill();finish("");},timer=setTimeout(stop,CACHE_GC_LIMITS_V1.strayScanMilliseconds);
+  signal.addEventListener("abort",stop,{once:true});
+  try{child=spawn("git",["-c","core.quotepath=off","ls-files","-z","--others","--ignored","--exclude-standard","--directory"],{cwd:workspace,stdio:["ignore","pipe","ignore"],windowsHide:true});}catch{finish("");return;}
+  child.stdout!.on("data",(chunk:Buffer)=>{chunks.push(chunk);});
+  child.on("error",()=>finish(""));child.on("close",code=>finish(code===0?Buffer.concat(chunks).toString("utf8"):""));
+ });
+ return Object.freeze(listing.split("\0").filter(entry=>entry.endsWith("/")).map(entry=>entry.slice(0,-1)).filter(entry=>{
+  const parts=entry.split("/");
+  return parts.length>1&&names.has(parts.at(-1)!)&&!parts.some(part=>rule.ignoredSegments.includes(part))&&!rule.excludedDirectories.includes(parts[0]!);
+ }).sort());
+}
+
+/** ⛰️ Lists every mount point of the machine, so no directory that has a volume mounted below it is ever emptied; platforms without a mount table list none. */
+export async function cacheMountPointsV1(platform:NodeJS.Platform=process.platform):Promise<readonly string[]>{
+ if(platform==="win32")return[];
+ if(platform==="linux")return Object.freeze((await readFile("/proc/self/mounts","utf8").catch(()=>"")).split("\n").map(line=>line.split(" ")[1]?.replace(/\\([0-7]{3})/gu,(_,code:string)=>String.fromCharCode(parseInt(code,8)))).filter((point):point is string=>!!point));
+ const table=spawnSync("mount",{encoding:"utf8",timeout:10000}).stdout??"";
+ return Object.freeze(table.split("\n").map(line=>/^.+? on (.+) \([^()]*\)$/u.exec(line)?.[1]).filter((point):point is string=>!!point));
 }
 
 /** 🔐️ Proves a SQLite lease file is unheld: an exclusive transaction without waiting only succeeds when no process holds a shared or exclusive lock; the probe gives the file its times back, so asking never counts as using it. */
@@ -345,6 +373,17 @@ export async function collectCacheV1(workspace:string,ledger:CacheLedgerV1,reque
    try{names=await readdir(base);}catch{continue;}
    resolved.push({target:{id:retirement.root+":"+retirement.directory,kind:"retired",budgetBytes:null,unusedAgeMs:0,quietMs:retirement.quietMs,units:await observe(base,names,retirement.directory,"quiet",ports)},base,prefix:[],unusedAgeMs:0});
   }
+  if(ledger.strays!==undefined&&(request.only===undefined||request.only.has("retired"))){
+   const found=await(ports.strays?.(workspace,ledger)??cacheStrayRootsV1(workspace,ledger,ports.signal)),mounts=found.length?await(ports.mountPoints?.()??cacheMountPointsV1(ports.platform)):[];
+   if(found.length)notes.push(ledger.strays.reason[output.language]);
+   for(const stray of found){
+    ports.signal.throwIfAborted();
+    const base=join(workspace,...stray.split("/")),real=await realpath(base).catch(()=>base),mounted=mounts.find(point=>[base,real].some(path=>point===path||point.startsWith(path+sep)));
+    if(mounted!==undefined){notes.push(text("gc.held",{path:"stray:"+stray,holder:"mount:"+mounted}));continue;}
+    if(!(await lstat(base).catch(()=>undefined))?.isDirectory())continue;
+    resolved.push({target:{id:"stray:"+stray,kind:"retired",budgetBytes:null,unusedAgeMs:0,quietMs:ledger.strays.quietMs,units:await observe(base,await readdir(base).catch(()=>[] as string[]),"stray:"+stray,"quiet",ports)},base,prefix:[],unusedAgeMs:0});
+   }
+  }
   if(request.only===undefined||request.only.has("undeclared"))for(const root of CACHE_ROOT_IDS_V1){
    const base=cacheRootDirectoryV1(workspace,ledger,root),names=await undeclaredEntriesV1(workspace,ledger,root);
    if(names.length)resolved.push({target:{id:root+":undeclared",kind:"undeclared",budgetBytes:null,unusedAgeMs:ledger.roots[root].undeclaredUnusedAgeMs,quietMs:ledger.roots[root].undeclaredQuietMs,units:await observe(base,names,root+":undeclared","quiet",ports)},base,prefix:[],unusedAgeMs:ledger.roots[root].undeclaredUnusedAgeMs,loose:true});
@@ -410,7 +449,7 @@ export async function collectCacheV1(workspace:string,ledger:CacheLedgerV1,reque
   for(const[index,plan]of plans.entries()){
    const row=resolved[index]!;if(row.target.heldBy!==undefined)continue;
    if(row.target.kind==="area")updates[row.target.id]=record(plan.totalBytes-(gone.get(plan.id)??0));
-   else if(row.target.kind==="retired")updates["retired:"+row.target.id]=row.target.units.every(unit=>goneNames.has(plan.id+"/"+unit.name))?null:record(plan.totalBytes-(gone.get(plan.id)??0));
+   else if(row.target.kind==="retired"){if(!row.target.id.startsWith("stray:"))updates["retired:"+row.target.id]=row.target.units.every(unit=>goneNames.has(plan.id+"/"+unit.name))?null:record(plan.totalBytes-(gone.get(plan.id)??0));}
    else for(const unit of row.target.units)updates["undeclared:"+row.target.id.slice(0,row.target.id.indexOf(":"))+":"+unit.name]=goneNames.has(plan.id+"/"+unit.name)?null:record(unit.bytes);
   }
   if(!request.dryRun)await recordCacheSizesV1(workspace,ledger,updates);

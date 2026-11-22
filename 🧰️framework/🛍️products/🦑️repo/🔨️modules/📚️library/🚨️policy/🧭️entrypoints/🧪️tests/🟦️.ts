@@ -4,7 +4,8 @@ import Ajv from "ajv";
 import {dirname,join} from "node:path";
 import {fileURLToPath} from "node:url";
 import {testPythonV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";
-import {dispatchPolicyArgv,dispatchSubcommand} from "../🟦️.ts";
+import {dispatchPolicyArgv} from "../🟦️.ts";
+import {dispatchSubcommand} from "../../🔀️subcommand/🟦️.ts";
 import corpus from "./🔣️.json";
 import schema from "./🧬️schema/🔣️.json";
 

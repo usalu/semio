@@ -98,18 +98,17 @@ impl protocol::OpText for RecursiveFixtureMutation {
 
 impl protocol::OpBinary for RecursiveFixtureMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        let mut bytes = vec![0x72];
-        bytes.extend_from_slice(&self.value.to_be_bytes());
-        Ok(bytes)
+        Ok(store::pack_rt::encode_pack_value(&semio_framework_value::ToValue::to_value(self)))
     }
 
     fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        if bytes.len() != 5 || bytes.first() != Some(&0x72) {
-            return Err(protocol::ProtocolError::Malformed { what: "recursive-fixture-mutation", offset: 0, detail: "expected tag 0x72 and four i32 bytes".into() });
-        }
-        Ok(Self { value: i32::from_be_bytes(bytes[1..].try_into().expect("exact recursive i32 width")) })
+        let malformed = |detail: String| protocol::ProtocolError::Malformed { what: "recursive-fixture-mutation", offset: 0, detail };
+        let value = store::pack_rt::decode_pack_value(bytes).map_err(|error| malformed(error.to_string()))?;
+        semio_framework_value::FromValue::from_value(store::pack_rt::renormalize_whole_number_floats(value)).map_err(|error| malformed(error.to_string()))
     }
 }
+
+semio_os_kernel::original_pack_value_operation_receiving!(RecursiveFixtureMutation);
 
 const RECURSIVE_FIXTURE_MUTATION_DESCRIPTOR: protocol::MutationLeafDescriptor = protocol::MutationLeafDescriptor {
     schema_version: 1,
@@ -129,7 +128,8 @@ const RECURSIVE_FIXTURE_MUTATION_DESCRIPTOR: protocol::MutationLeafDescriptor = 
 };
 
 #[derive(Clone, Debug, Default, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
-struct ComposedParentDiff {
+#[doc(hidden)]
+pub struct ComposedParentDiff {
     pub revision: Option<i32>,
 }
 

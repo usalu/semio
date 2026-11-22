@@ -335,7 +335,9 @@ impl<'ctx> PointerCtx<'ctx> {
                 ContextMenuKeyOutcome::Ignored | ContextMenuKeyOutcome::CloseMenu => {}
                 ContextMenuKeyOutcome::Consumed => return Ok(()),
                 ContextMenuKeyOutcome::Activate(descriptor) => {
-                    self.as_actions().dispatch_action(descriptor).await?;
+                    if !self.input.claim_text_selection_action(&descriptor) {
+                        self.as_actions().dispatch_action(descriptor).await?;
+                    }
                     return Ok(());
                 }
             }

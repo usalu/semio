@@ -103,3 +103,32 @@ Script (the chisel): `T/rework-charcoal-grill-wheels-grate.py` (uses `T/rework_1
 - **Structure**: `member-wheel-*`, `joint-wheel-bearing-*` and `support-wheel-*` belong to `wheels` (bearing joint on the axle, support pad under the tread); references to removed bars removed.
 - **2D**: `wheel`, `wheel-hub` (elevation, bone-local now), `wheel-l/r`, `wheel-hub-l/r` (front, plan) bound to `wheels`; five rib capsules in the 1:50 elevation; an `axle` twin in the elevation of 1:50, 1:100, 1:200 (hidden behind the wheel) so the front and plan axle is carried at its true depth when the root tilts (without it the axle rose to the top of the wheels in the front view of `wheeled-tilted`).
 - **Decisions**: one sentence pair per scale (en, de).
+- **Clip** `tilt-on-wheels` (6 s loop: `cold-closed`, 2 s to `wheeled-tilted`, hold 2 s, back), contacts only the two wheels.
+- One slip of my own, repaired: the second `--apply` (for the clip) shifted the wheel bearing joints and support pads a second time (15 measured findings, pads 76 mm under ground). The source values were put back by hand (bearing at the bone origin, pads 0.072 / 0.0685 / 0.061 / 0.0385 m under it) and the script now shifts only solids that are still on `bowl`, so it can be run again.
+
+### Validation
+
+`r3-validate.ts objects/charcoal-grill --catalog-only --volumes` on the published catalog after the last change (2026-11-22): `VALID objects/charcoal-grill (catalog file as it is): schema 0, validateAsset 0, checkVolumes 0`.
+
+One measured finding on the way, taken as a statement about the model and not worked around: 13 instead of 27 grate rods at 1:100 gave 0.177 m2 rod surface against 0.3 m2, so 1:100 keeps the true rods.
+
+Rendered and read after the changes: body, thermal (`--cut`) and structure sheets of 1:50, 1:100, 1:200, 1:500 in the default pose; 1:50 poses `cold-closed`, `lit-lid-open`, `embers-vents-low`, `wheeled-tilted` (six views and a close-up of the wheel); clips `light-and-close` at 100 s and 303 s, `lid-lift-cycle` at 3 s and 10 s, `tilt-on-wheels` at 1 s and 3 s; 1:500 `lit-lid-open`; structure sheets of all four scales again after the repair, structure and thermal in `wheeled-tilted`; 2D drawings of 1:50 (default and `wheeled-tilted`), 1:200, 1:500. Not read: the 2D drawing of 1:100 (rendered, same change as 1:50 without ribs) and the poses at 1:100 and 1:200 other than `lit-lid-open` before the change.
+
+### What remains imperfect (open list for the next pass)
+
+1. **1:500 body, `lid-handle`**: the 80 x 84 x 160 mm block still reaches 34 mm through the shell into the lid (visible inside the raised lid in a 3D viewer). The grip with its straps is 50 mm high; `volumes-feature` asks 75 mm for the bone, the region `handle-wood` must be drawn, and the true top (0.292 m, the measured height of the asset) was kept, so the 25 mm went inward. Standing the block on the dome would make the 1:500 silhouette 25 mm too tall. Decided for the true silhouette; not right inside.
+2. **1:500 thermal, `th-vents` and `lid-vent-flue-outlet`**: 75 mm cylinders reaching 57 mm into the lid (kept from the first pass, same conflict as item 1).
+3. **2D of `wheeled-tilted`, front and plan**: the product carries a front or plan shape at the depth of its elevation twin, so under a tilted root the plan shows lid and bowl as two outlines about 20 mm apart and the front view carries shapes without a twin at depth 0. The axle got its twin; the other bowl shapes (pan, hangers, triangle, legs) did not. Elevation is exact.
+4. **Structure in `wheeled-tilted`**: the support pad of the front foot rides up with the leg (it is a solid of `bowl`); the pose declares only the two wheel contacts.
+5. **1:50 body, wheels**: plain tread (ribs of the real tyre are 3 mm, below the feature); spoke ribs only on the outer web.
+6. **Lid**: modelled as hinged at the rear rim (the real lid lifts off and hangs on a hook); 242 mm high is on the tall side of the class; the dome mesh of the first pass is stretched on the front side (visible as larger facets at 1:500).
+7. **1:200 and 1:500 body**: the lid shell keeps its three 12 mm vent holes under the dial (below the feature).
+8. **1:500 structure**: the `ash-damper` mass marker shows as a 75 mm ball under the bowl.
+9. **Height**: 1.03 m kept as in-class; a pass that wants the 1.00 m Original exactly has to lower bowl, lid, grates and sockets by 27 mm in every list and drawing.
+
+### Fundamental issues (outside this asset), second round
+
+- `volumes-feature` takes as limit the thinnest filled 2D shape of the bone: moving the 10 mm `axle` front shape from `bowl` to another bone raised the limit of every `bowl` solid at 1:100 from 10 to 15 mm (13 findings on untouched solids). The coupling of a 3D limit to one unrelated 2D shape of the same bone is surprising; the message should name the shape that set the limit.
+- Front and plan shapes under a tilted `root`: one depth per shape (the elevation twin) cannot carry a body of revolution; a pose with `root.angleDeg` needs the plan and front regenerated from the solids.
+- `rework_15_kit.py` `finish` writes its candidate to `🗑️generated/rework-15-<slug>` whatever the caller; the script here moves it.
+- `r3-validate.ts --volumes` takes 7 to 8 minutes on this asset; four full runs were the largest cost of this pass.

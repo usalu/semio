@@ -4,6 +4,24 @@
 
 use super::*;
 
+/// 💾️ The ONE saved state every surface reads — React's `SavedStateV1`: it follows the acknowledged write, never a draft and never the remote link.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum ShellSavedState {
+    Unknown,
+    Saved,
+    Unsaved { pending: usize, failure: Option<(String, Option<String>)> },
+}
+
+/// 🚪️ Where a held window close stands (React's `ClosePromptV1.phase`).
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub enum ShellCloseGuard {
+    Saving { since_ms: f64 },
+    Confirm,
+}
+
+/// ⏱️ How long a close waits for the store to acknowledge before asking (`DOCUMENT_CLOSE_FLUSH_TIMEOUT_MS_V1`).
+pub const SHELL_CLOSE_FLUSH_TIMEOUT_MS: f64 = 10_000.0;
+
 /// 🔃️ `SyncState`: the document sync backbone, channel, status, link, hub documents, reseed and auto check-in.
 ///
 /// Fields keep the names they had on the former `ShellState`; the composer owns one value of this struct as `sync`.
@@ -21,6 +39,8 @@ pub struct SyncState {
     pub sync_terminal_fault: Option<String>,
     /// 🚦️ Latest sync health for the active document's status badge.
     pub sync_status: Option<ArtifactSyncStatus>,
+    /// 🚪️ The window close the shell is holding: waiting for the store to acknowledge, or asking before a discard.
+    pub close_guard: Option<ShellCloseGuard>,
     /// 🔌️ The hub link of the document this shell last attached ([`store_sync::sync::DocumentLink`]'s status):
     /// the Sync card speaks it while it is short and after it turned terminal, until the next open.
     pub sync_link: DocumentLinkStatus,
@@ -28,6 +48,8 @@ pub struct SyncState {
     /// status events and browser-host publications enter through the same bounded projection.
     pub hub_documents: BTreeMap<String, ShellHubRemoteV1>,
     pub sync_bootstrap_progress: Option<(u64, u64, u32, u32)>,
+    /// 🛑️ The bootstrap notice's cancel: the pump retires the attached document, as React's `closeDocument` does.
+    pub sync_bootstrap_cancel: bool,
     /// 🛟️ The canonical-pair reseed a rebootstrapping hub document is waiting for ([`ShellState::advance_sync_reseed`]).
     pub sync_reseed: Option<ShellSyncReseed>,
     /// 📌️ Ms-since-epoch of the last uncommitted-count CHANGE (any direction — mirrors

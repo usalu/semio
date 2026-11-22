@@ -1,6 +1,7 @@
 //! 🧩️ The xlsx ecma-376 transitional subset: composer, builder and analyzer, conversions, editor, viewer and examples.
 
 #![allow(async_fn_in_trait)]
+#![recursion_limit = "256"]
 extern crate semio_os_kernel as dsl;
 extern crate semio_os_kernel as protocol;
 extern crate semio_os_kernel as store;

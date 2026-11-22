@@ -245,9 +245,10 @@ impl PreparedCompositeTarget {
         );
     }
 
-    pub fn copy_to_postprocess_scene_scratch(&self, encoder: &mut gpu_device::CommandEncoder) {
+    /// 🫥️ Copies `source` (the open group's target, else the composite itself) into the postprocess scene scratch.
+    pub fn copy_to_postprocess_scene_scratch(&self, encoder: &mut gpu_device::CommandEncoder, source: Option<&gpu_device::Texture>) {
         encoder.copy_texture_to_texture(
-            gpu_device::TexelCopyTextureInfo { texture: &self.texture, mip_level: 0, origin: gpu_device::Origin3d::ZERO, aspect: gpu_device::TextureAspect::All },
+            gpu_device::TexelCopyTextureInfo { texture: source.unwrap_or(&self.texture), mip_level: 0, origin: gpu_device::Origin3d::ZERO, aspect: gpu_device::TextureAspect::All },
             gpu_device::TexelCopyTextureInfo { texture: &self.postprocess_scene_scratch, mip_level: 0, origin: gpu_device::Origin3d::ZERO, aspect: gpu_device::TextureAspect::All },
             gpu_device::Extent3d { width: self.width, height: self.height, depth_or_array_layers: 1 },
         );
@@ -271,11 +272,12 @@ impl PreparedCompositeTarget {
         self.postprocess_background_scratch = Some((texture, view));
     }
 
-    pub fn copy_to_postprocess_background_scratch(&mut self, device: &gpu_device::Device, encoder: &mut gpu_device::CommandEncoder) {
+    /// 🫥️ Copies `source` (the open group's target, else the composite itself) into the postprocess background scratch.
+    pub fn copy_to_postprocess_background_scratch(&mut self, device: &gpu_device::Device, encoder: &mut gpu_device::CommandEncoder, source: Option<&gpu_device::Texture>) {
         self.ensure_postprocess_background_scratch(device);
         let texture = &self.postprocess_background_scratch.as_ref().expect("background scratch was ensured").0;
         encoder.copy_texture_to_texture(
-            gpu_device::TexelCopyTextureInfo { texture: &self.texture, mip_level: 0, origin: gpu_device::Origin3d::ZERO, aspect: gpu_device::TextureAspect::All },
+            gpu_device::TexelCopyTextureInfo { texture: source.unwrap_or(&self.texture), mip_level: 0, origin: gpu_device::Origin3d::ZERO, aspect: gpu_device::TextureAspect::All },
             gpu_device::TexelCopyTextureInfo { texture, mip_level: 0, origin: gpu_device::Origin3d::ZERO, aspect: gpu_device::TextureAspect::All },
             gpu_device::Extent3d { width: self.width, height: self.height, depth_or_array_layers: 1 },
         );
@@ -290,6 +292,7 @@ impl PreparedCompositeTarget {
 pub struct PreparedGroupTarget {
     pub texture: gpu_device::Texture,
     pub view: gpu_device::TextureView,
+    pub world_encoded_view: gpu_device::TextureView,
     pub sampler: gpu_device::Sampler,
     pub layout: gpu_device::BindGroupLayout,
     pub pipeline: gpu_device::RenderPipeline,
@@ -313,9 +316,10 @@ impl PreparedGroupTarget {
             sample_count: 1,
             dimension: gpu_device::TextureDimension::D2,
             format: world_encoded_format,
-            usage: gpu_device::TextureUsages::RENDER_ATTACHMENT | gpu_device::TextureUsages::TEXTURE_BINDING,
+            usage: gpu_device::TextureUsages::RENDER_ATTACHMENT | gpu_device::TextureUsages::TEXTURE_BINDING | gpu_device::TextureUsages::COPY_SRC,
             view_formats: &[format, world_encoded_format],
         });
+        let world_encoded_view = texture.create_view(&gpu_device::TextureViewDescriptor { label: Some("prepared_group_world_encoded_view"), format: Some(world_encoded_format), dimension: Some(gpu_device::TextureViewDimension::D2), ..Default::default() });
         let view = texture.create_view(&gpu_device::TextureViewDescriptor { label: Some("prepared_group_color_view"), format: Some(format), dimension: Some(gpu_device::TextureViewDimension::D2), ..Default::default() });
         let sampler = device.create_sampler(&gpu_device::SamplerDescriptor { label: Some("prepared_group_sampler"), mag_filter: gpu_device::FilterMode::Nearest, min_filter: gpu_device::FilterMode::Nearest, ..Default::default() });
         let layout = device.create_bind_group_layout(&gpu_device::BindGroupLayoutDescriptor {
@@ -345,7 +349,7 @@ impl PreparedGroupTarget {
             multiview_mask: None,
             cache: None,
         });
-        *target = Some(Self { texture, view, sampler, layout, pipeline, uniform, width, height });
+        *target = Some(Self { texture, view, world_encoded_view, sampler, layout, pipeline, uniform, width, height });
     }
 }
 

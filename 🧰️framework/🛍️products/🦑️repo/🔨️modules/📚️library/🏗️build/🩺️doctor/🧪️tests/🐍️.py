@@ -360,7 +360,7 @@ def analyze_processes(policy, facts, add):
         if own is None and via is None and gone_parent and not service and row["ageSeconds"] >= pr["orphanAgeSeconds"] and rel:
             phase = "orphan"
         rows.append([pid, phase, None if own else via, row["ageSeconds"]])
-        if own and row["parent"] == 1 and row["ageSeconds"] >= pr["orphanAgeSeconds"] and rel:
+        if own and row["parent"] == 1 and row["ageSeconds"] >= pr["orphanAgeSeconds"] and rel and tree_cpu(pid) < pr["idleCpuPercent"]:
             holds = len([h for h in holders if h["pid"] == pid]) + (1 if pid in admitted else 0)
             if holds > 0:
                 add("processes.orphan", "warn", str(pid))

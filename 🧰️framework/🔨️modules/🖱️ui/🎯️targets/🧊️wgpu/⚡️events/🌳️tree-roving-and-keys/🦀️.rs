@@ -36,7 +36,7 @@ pub(super) fn tree_ordered_items(spec: &semio_ui_declaration::ui::UiTreeNode) ->
     out
 }
 
-fn tree_spec(tree: &UiTree, owner: NodeId) -> Option<&semio_ui_declaration::ui::UiTreeNode> {
+pub(super) fn tree_spec(tree: &UiTree, owner: NodeId) -> Option<&semio_ui_declaration::ui::UiTreeNode> {
     match &tree.node(owner)?.spec.0 {
         UiNode::Tree(spec) => Some(spec),
         _ => None,
@@ -136,9 +136,9 @@ impl EventRouter {
                     if rows[index].1.expanded.is_some() {
                         let _ = self.toggle_disclosure(tree, rows[index].0);
                     }
-                    self.select_tree_row(tree, owner, rows[index].0, focus_before.as_deref(), merge, true, out);
+                    self.select_tree_row(tree, owner, rows[index].0, focus_before.as_deref(), merge, true, true, out);
                 }
-                TreeIntent::Pick { index, merge } => self.select_tree_row(tree, owner, rows[index].0, focus_before.as_deref(), merge, false, out),
+                TreeIntent::Pick { index, merge } => self.select_tree_row(tree, owner, rows[index].0, focus_before.as_deref(), merge, false, true, out),
                 TreeIntent::DoubleClick(_) => {}
             }
         }
@@ -157,7 +157,7 @@ impl EventRouter {
     /// ☑️ What picking `row` sends. A row with its own activation fires it (React: `activateBinding ? dispatchTrigger : pickClick`); a row of a
     /// domain-bound tree sends `interactionSelect` with the selection the merge makes of the current one; a plain row sends nothing.
     #[allow(clippy::too_many_arguments, reason = "one pick: where, which row, how it merges and whether it is a click")]
-    fn select_tree_row(&mut self, tree: &mut UiTree, owner: NodeId, row: NodeId, focus_before: Option<&str>, merge: TreeMerge, activating: bool, out: &mut Vec<UiCommand>) {
+    pub(super) fn select_tree_row(&mut self, tree: &mut UiTree, owner: NodeId, row: NodeId, focus_before: Option<&str>, merge: TreeMerge, activating: bool, anchor: bool, out: &mut Vec<UiCommand>) {
         let activation = tree.node(row).and_then(|node| match &node.spec.0 {
             UiNode::Stack(stack) => stack.activate.as_ref().and_then(|action| bare_action(action, Trigger::Activate)),
             _ => None,
@@ -173,8 +173,8 @@ impl EventRouter {
         let current = TreeSelection { ids: items.iter().filter(|(_, _, selected)| *selected).map(|(row, _, _)| row.id.clone()).collect(), anchor: self.focus.tree_anchor.get(&owner).cloned() };
         let multiple = tree_is_multiple(tree, owner);
         let next = tree_selection(&ordered, &current, focus_before, &target, merge, multiple);
-        if let Some(anchor) = next.anchor.clone() {
-            self.focus.tree_anchor.insert(owner, anchor);
+        if let Some(next_anchor) = next.anchor.clone().filter(|_| anchor) {
+            self.focus.tree_anchor.insert(owner, next_anchor);
         }
         let (verb, ids) = match merge {
             TreeMerge::Invertive if multiple => ("invertive", vec![target]),

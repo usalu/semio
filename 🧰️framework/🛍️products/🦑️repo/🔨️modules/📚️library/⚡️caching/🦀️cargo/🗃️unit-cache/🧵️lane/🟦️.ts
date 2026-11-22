@@ -82,15 +82,18 @@ export function incrementalDirectoriesV1(build:string):string[]{
  walk(build,0);return found;
 }
 
+/** 🛡️ Whether a lane is a retained product lane: a stable product workspace used within `retainMilliseconds` belongs to a release generation that is still open, so neither the pool nor the collector evicts it for its count or byte share (only free-space pressure may, after every other lane). */
+export function laneRetainedV1(id:string,lastUsedMs:number,nowMs:number):boolean{return id.startsWith(policy.pool.product.prefix)&&nowMs-lastUsedMs<policy.pool.product.retainMilliseconds;}
+
 /** 🧬️ The identifiers of the lanes that exist in a cache root. */
 export function laneIdsV1(root:string):string[]{try{return readdirSync(join(root,layout.lanes)).filter(name=>idPattern.test(name)).sort();}catch{return[];}}
 
 /** 🔭️ Measures every lane of a cache root for the garbage collector (logical bytes; reflinked files count in full, which only makes collection earlier) and records each size beside the lane, where the pool reads it. */
-export function listLanesV1(root:string,nowMs:number):{id:string;bytes:number;incrementalBytes:number;lastUsedMs:number;live:boolean}[]{
+export function listLanesV1(root:string,nowMs:number):{id:string;bytes:number;incrementalBytes:number;lastUsedMs:number;live:boolean;retained:boolean}[]{
  const base=join(root,layout.lanes);let ids:string[];try{ids=readdirSync(base).filter(name=>idPattern.test(name)&&!policy.pool.reserved.includes(name));}catch{return[];}
  return ids.map(id=>{const paths=lanePathsV1(root,id),limit={files:2_000_000};let lastUsedMs=0;try{lastUsedMs=Math.floor(statSync(paths.metadata).mtimeMs);}catch{}
   const incrementalBytes=incrementalDirectoriesV1(paths.build).reduce((sum,path)=>sum+treeBytes(path,limit),0),bytes=treeBytes(paths.base,limit);recordLaneSizeV1(root,id,bytes,incrementalBytes,nowMs);
-  return{id,bytes,incrementalBytes,lastUsedMs,live:laneLiveV1(paths,nowMs)};});
+  return{id,bytes,incrementalBytes,lastUsedMs,live:laneLiveV1(paths,nowMs),retained:laneRetainedV1(id,lastUsedMs,nowMs)};});
 }
 
 /** 📐️ The logical bytes a lane holds right now, measured with the same bound as the collector's measurement; `0` for a lane that does not exist. */

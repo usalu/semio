@@ -77,7 +77,7 @@ impl TimeTravelReceivingFailure{fn progress(&self)->RetainedCloneProgress{match 
 /// 🫴️ Runs one receiving step in a local scope and posts its actual progress; `None` means the turn could not fund it and nothing ran.
 pub fn receive_step<T>(cx:&mut semio_framework_job::StepContext<'_>,run:impl FnOnce(&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>,u64)->T,progress:impl FnOnce(&T)->RetainedCloneProgress)->Result<Option<T>,Fault>{
     let mut scope=None;let mut stepped=None;
-    if !cx.with_native_receiving_work(&mut scope,|native,_,work|{stepped=Some(run(native,work));Ok(())}).map_err(refused)?{return Ok(None)}
+    if !cx.with_native_receiving_work(&mut scope, Default::default(), |native,_,work|{stepped=Some(run(native,work));Ok(())}).map_err(refused)?{return Ok(None)}
     let stepped=stepped.ok_or_else(||ValueError::invariant("original history receiving step vanished").into_fault())?;
     let progress=progress(&stepped);match cx.receiving_issued_grant(){Some(issued)=>cx.consume_receiving_retained(issued,progress),None=>cx.consume_retained(progress)}.map_err(ValueError::into_fault)?;
     let scope=scope.ok_or_else(||ValueError::invariant("original history receiving scope vanished").into_fault())?;
@@ -475,7 +475,8 @@ where
                 let cx=receiving.ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"history replay requires its original Job receiving issuer").into_fault())?;
                 let stepped=receive_step(cx,|native,work|self.step_replay(store,deadline_us,clock,grant,native,work),|result|match result{Ok(TimeTravelReplayStep::Pending{ownership,..}|TimeTravelReplayStep::Completed(_,ownership))=>*ownership,Ok(TimeTravelReplayStep::Refused(error))=>error.retained_progress(),Err(fault)=>fault.retained_progress,_=>Default::default()})?;
                 match stepped{Some(result)=>{if let Some(work)=self.replay.as_mut().and_then(|replay|replay.take_preparation_work()){cx.consume_fuel(work)}TimeTravelStoreOutput::Stepped(result?)},None=>TimeTravelStoreOutput::Stepped(TimeTravelReplayStep::Unfunded)}
-            },            TimeTravelStoreCommand::CloseCommit=>match receiving{Some(cx)=>{self.commit_closing=true;match self.step_commit(store,cx){Ok(outcome)=>TimeTravelStoreOutput::Committed(outcome),Err(failure)=>TimeTravelStoreOutput::CommitRefused(failure)}},None=>TimeTravelStoreOutput::CommitRefused(ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"completed replay close requires its original Job continuation").into())},
+            },
+            TimeTravelStoreCommand::CloseCommit=>match receiving{Some(cx)=>{self.commit_closing=true;match self.step_commit(store,cx){Ok(outcome)=>TimeTravelStoreOutput::Committed(outcome),Err(failure)=>TimeTravelStoreOutput::CommitRefused(failure)}},None=>TimeTravelStoreOutput::CommitRefused(ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"completed replay close requires its original Job continuation").into())},
             TimeTravelStoreCommand::StepCommit=>match receiving{Some(cx)=>match self.step_commit(store,cx){Ok(outcome)=>TimeTravelStoreOutput::Committed(outcome),Err(failure)=>TimeTravelStoreOutput::CommitRefused(failure)},None=>TimeTravelStoreOutput::CommitRefused(ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"completed replay publication requires its original Job continuation").into())},
             TimeTravelStoreCommand::Read(stage) => TimeTravelStoreOutput::Read(match self.shown(stage) {
                 Some(shown) => Some((store.snapshot_read_derived(shown).map_err(|error| error.into_fault())?, store.content_revision())),

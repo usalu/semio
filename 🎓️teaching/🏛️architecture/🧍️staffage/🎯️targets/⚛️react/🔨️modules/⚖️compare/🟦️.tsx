@@ -2,6 +2,7 @@
  *
  * The opened page reads and writes its state in the address (`#/compare?p=walking-commuter~thermal~clip.walk-cycle&scale=50&t=1.2`); the page behind the glass shows a cheap default built from real ready assets and does not touch the address.
  * All panes follow one `StaffageClock`: seeking, stepping or changing the rate moves every figure on the same frame.
+ * A pane in the thermal view shows the air flow of its asset in the asset's own environment, with every layer and the default conditions; its tracers move with the same clock, and the shared frame of the panes leaves the room the flow needs.
  *
  * @see ./🧮️panes/🟦️.ts — the pure rules
  * @see ../⏯️transport/🟦️.tsx — the transport
@@ -16,7 +17,8 @@ import { useArchive, useRows } from "../🧭️context/🟦️.tsx";
 import { Bar, Button, Cell, Column, Note, Notice, NumberField, PageFrame, ProgressNotice, SelectField, Segmented, Tag, asCells } from "../🪟️chrome/🟦️.tsx";
 import { FigureBoundary, RowPreview, UnavailableNotice, useDarkSurface } from "../🖼️previews/🟦️.tsx";
 import { StaffageFigure } from "../🧍️figure/🟦️.tsx";
-import { depictionOptions, evaluateState, frameOf, sceneOf, type SceneFrame } from "../🧮️pipeline/🟦️.ts";
+import { SHOWN_FLOW_LAYERS, flowFrameOf, flowsIn, unionFrame } from "../🌊️flow/🟦️.ts";
+import { depictionOptions, evaluateState, sceneExtent, sceneOf, type SceneFrame } from "../🧮️pipeline/🟦️.ts";
 import { VIEW_NAMES, valueText } from "../🗣️labels/🟦️.ts";
 import { Transport } from "../⏯️transport/🟦️.tsx";
 import { useAssetLoading } from "../📚️catalog/🟦️.ts";
@@ -74,7 +76,7 @@ function ComparePaneCard(props: PaneProps): ReactElement {
           <RowPreview row={row!} viewpoint={pane.viewpoint} view={pane.view} scale={scale} {...(previewPose === undefined ? {} : { query: previewPose })} compact />
         ) : (
           <FigureBoundary resetKey={asset} fallback={(message) => <Notice kind="error" compact plain title={title}>{message}</Notice>}>
-            <StaffageFigure asset={asset} {...(query === undefined ? {} : { query })} clock={clock} view={pane.view} viewpoint={pane.viewpoint} scale={{ denominator: scale }} language={language} theme={theme} {...(frame === undefined ? {} : { frame })} fit="contain" onInspect={(value, item) => setInspected(value === null ? null : { value, item: item?.region ?? item?.bone ?? "" })} />
+            <StaffageFigure asset={asset} {...(query === undefined ? {} : { query })} clock={clock} view={pane.view} viewpoint={pane.viewpoint} scale={{ denominator: scale }} language={language} theme={theme} {...(frame === undefined ? {} : { frame })} fit="contain" flow={SHOWN_FLOW_LAYERS} onInspect={(value, item) => setInspected(value === null ? null : { value, item: item?.region ?? item?.bone ?? "" })} />
           </FigureBoundary>
         )}
       </div>
@@ -154,13 +156,15 @@ export function ComparePage(props: { readonly view: PaneView }): ReactElement {
   const frame = useMemo(() => {
     if (!view.opened) return undefined;
     try {
-      const scenes = panes.flatMap((pane) => {
+      const frames = panes.flatMap((pane) => {
         const asset = find(pane.asset);
         if (asset === undefined || !resolveViewpoint(asset, pane.viewpoint, scale, language).available) return [];
         const query = paneQuery(asset, pane.selection) ?? { kind: "clip" as const, clip: asset.presentation.defaultClip, timeS: 0 };
-        return [sceneOf(evaluateState(asset, query), depictionOptions({ view: pane.view, viewpoint: pane.viewpoint, scale: { denominator: scale }, language, theme, transparent: true }))];
+        const state = evaluateState(asset, query);
+        const scene = sceneOf(state, depictionOptions({ view: pane.view, viewpoint: pane.viewpoint, scale: { denominator: scale }, language, theme, transparent: true }));
+        return [flowsIn(asset, pane.view) ? unionFrame(sceneExtent(scene), flowFrameOf(state, pane.viewpoint, scene.metadata.mmPerMetre)) : sceneExtent(scene)];
       });
-      return scenes.length === 0 ? undefined : frameOf(scenes);
+      return frames.length === 0 ? undefined : frames.reduce(unionFrame);
     } catch {
       return undefined;
     }

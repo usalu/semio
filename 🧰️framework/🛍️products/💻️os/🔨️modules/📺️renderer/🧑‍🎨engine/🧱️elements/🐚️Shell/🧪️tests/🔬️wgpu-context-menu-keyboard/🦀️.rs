@@ -83,3 +83,52 @@ fn render_context_menu_level_flips_a_submenu_left_when_it_would_overflow_the_rig
     let child_hit = input.staged_hits().iter().find(|hit| hit.control_id.as_deref() == Some("child-1")).expect("submenu row registers a hit");
     assert!(child_hit.rect.x < parent_w, "expected the submenu to flip left of the parent row, got x={}", child_hit.rect.x);
 }
+
+fn text_selection_schema() -> serde_json::Value {
+    serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🖱️ui/🧬️schema/📝️text-selection-menu/🔣️.json")).expect("text-selection menu schema")
+}
+
+/// ⚖️ LAW: an editable selection offers every row of the shared text-selection schema in its order, with the schema's chords, icons and en and de labels.
+#[test]
+fn the_text_selection_menu_offers_the_shared_schemas_rows() {
+    let schema = text_selection_schema();
+    for is_de in [false, true] {
+        let items = semio_renderer_wgpu_shell_input::text_selection_menu_items((10.0, 20.0), true, true, is_de, |keys| keys.to_string());
+        let rows = schema["rows"].as_array().expect("rows");
+        assert_eq!(items.iter().map(|item| item.id.as_str()).collect::<Vec<_>>(), rows.iter().map(|row| row["id"].as_str().unwrap()).collect::<Vec<_>>());
+        for (item, row) in items.iter().zip(rows) {
+            assert_eq!(item.separator, row["verb"].is_null());
+            if item.separator {
+                continue;
+            }
+            assert_eq!(item.label, row["label"][if is_de { "de" } else { "en" }].as_str().unwrap());
+            assert_eq!(item.shortcut.as_deref(), row["chord"].as_str());
+            assert_eq!(item.icon.as_deref(), row["icon"].as_str());
+            assert!(!item.disabled);
+        }
+    }
+}
+
+/// ⚖️ LAW: a readable target offers only Copy and Select all, and Copy and Cut are disabled without a selection while Paste and Select all stay enabled.
+#[test]
+fn the_text_selection_menu_gates_rows_by_editability_and_selection() {
+    let readable = semio_renderer_wgpu_shell_input::text_selection_menu_items((0.0, 0.0), false, false, false, |keys| keys.to_string());
+    assert_eq!(readable.iter().filter(|item| !item.separator).map(|item| item.id.as_str()).collect::<Vec<_>>(), ["text-copy", "text-select-all"]);
+    assert!(readable.iter().find(|item| item.id == "text-copy").unwrap().disabled);
+    assert!(!readable.iter().find(|item| item.id == "text-select-all").unwrap().disabled);
+    let editable = semio_renderer_wgpu_shell_input::text_selection_menu_items((0.0, 0.0), true, false, false, |keys| keys.to_string());
+    assert!(editable.iter().find(|item| item.id == "text-cut").unwrap().disabled);
+    assert!(!editable.iter().find(|item| item.id == "text-paste").unwrap().disabled);
+}
+
+/// ⚖️ LAW: every row's action names its verb and carries the press point; no other action is mistaken for a text-selection verb.
+#[test]
+fn a_text_selection_row_names_its_verb_and_carries_the_press_point() {
+    let items = semio_renderer_wgpu_shell_input::text_selection_menu_items((3.0, 4.0), true, true, false, |keys| keys.to_string());
+    let verbs: Vec<_> = items.iter().filter_map(|item| item.action.as_ref()).map(|action| {
+        assert_eq!((action.args.as_ref().and_then(|args| args.get("x")).and_then(DslValue::as_f64), action.args.as_ref().and_then(|args| args.get("y")).and_then(DslValue::as_f64)), (Some(3.0), Some(4.0)));
+        format!("{:?}", semio_renderer_wgpu_shell_input::text_selection_verb_of(action))
+    }).collect();
+    assert_eq!(verbs, ["Some(Cut)", "Some(Copy)", "Some(Paste)", "Some(SelectAll)"]);
+    assert_eq!(semio_renderer_wgpu_shell_input::text_selection_verb_of(&ActionDescriptor { controller_id: "framework".into(), action: "copy".into(), args: None }), None);
+}

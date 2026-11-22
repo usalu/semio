@@ -201,6 +201,23 @@ impl Ui {
     /// A point on chrome inside the scene's own subtree still answers that scene, because the walk
     /// climbs `parent` links until it finds one — the same rule React's `onContextMenu` gets for free
     /// from DOM event bubbling.
+    /// 📖️ The text field under a point and its selected text (empty while collapsed, or before the field was focused): the read-only query a secondary press needs to offer Cut, Copy, Paste and Select all for a field, as the browser's own input menu does. Number fields count; a password field never reveals its selection.
+    pub fn text_input_at(&self, window_id: &str, x: f32, y: f32) -> Option<(NodeId, String)> {
+        let window = self.windows.get(window_id).filter(|window| window.closing.is_none())?;
+        let tree = if window.presented_ready { &window.presented_tree } else { &window.tree };
+        let mut cursor = Some(semio_ui_wgpu_events::hit_test(tree, tree.root?, x, y)?);
+        while let Some(id) = cursor {
+            let node = tree.node(id)?;
+            if let UiNode::Input(input) = &node.spec.0 {
+                if !matches!(input.input_kind.as_str(), "text" | "longText" | "number") { return None; }
+                let selection = node.state.edit.as_ref().filter(|edit| edit.anchor != edit.caret).and_then(|edit| edit.text.get(edit.anchor.min(edit.caret)..edit.anchor.max(edit.caret))).unwrap_or_default();
+                return Some((id, selection.to_owned()));
+            }
+            cursor = node.parent;
+        }
+        None
+    }
+
     pub fn scene_at(&self, window_id: &str, x: f32, y: f32) -> Option<UiSceneHit> {
         let window = self.windows.get(window_id).filter(|window| window.closing.is_none())?;
         let tree = if window.presented_ready { &window.presented_tree } else { &window.tree };

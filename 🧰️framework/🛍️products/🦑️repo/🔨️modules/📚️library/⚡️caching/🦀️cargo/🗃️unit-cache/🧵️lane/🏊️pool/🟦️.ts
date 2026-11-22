@@ -1,14 +1,14 @@
 import {randomBytes} from "node:crypto";
 import {mkdirSync,statSync} from "node:fs";
 import {join} from "node:path";
-import {claimHeldV1,sleepV1,tryClaimV1} from "../../🔒️lock/🟦️.ts";
+import {claimHeldV1,claimHolderV1,sleepV1,tryClaimV1} from "../../🔒️lock/🟦️.ts";
 import {UNIT_CACHE_POLICY_V1} from "../../🔏️key/🟦️.ts";
 import {retainRemovedLaneV1} from "../📤️retention/🟦️.ts";
-import {crateKeyV1,enterLaneV1,laneIdsV1,laneLiveV1,lanePathsV1,readLaneSizeV1,readLaneV1,removeLaneV1,type LaneOwnerV1} from "../🟦️.ts";
+import {crateKeyV1,enterLaneV1,laneIdsV1,laneLiveV1,lanePathsV1,laneRetainedV1,readLaneSizeV1,readLaneV1,removeLaneV1,type LaneOwnerV1} from "../🟦️.ts";
 
 const rules=UNIT_CACHE_POLICY_V1.pool,layout=UNIT_CACHE_POLICY_V1.layout;
 /** 🏊️ One lane as the pool sees it: whether a live process holds it, when it was last used, the crate set it was last built for (`""` when unknown) and its recorded size without its Cargo incremental sessions (`null` until the collector measured it): the sessions are bounded by the collector's own incremental share, so a lane that keeps a crate's incremental state warm is not evicted for holding it. */
-export type PoolLaneV1=Readonly<{id:string;claimed:boolean;lastUsedMs:number;crateKey:string;bytes:number|null;product?:boolean}>;
+export type PoolLaneV1=Readonly<{id:string;claimed:boolean;lastUsedMs:number;crateKey:string;bytes:number|null;product?:boolean;retained?:boolean}>;
 /** 📐️ The bounds of the pool: the idle lanes are trimmed to `maximumLanes` lanes and `quotaBytes` recorded bytes, live lanes may exceed them up to `maximumLiveLanes`. */
 export type PoolBoundsV1=Readonly<{maximumLanes:number;maximumLiveLanes:number;quotaBytes:number}>;
 /** 🎯️ What an acquisition does: take the newest free lane of the same crate set (`warm`), start a lane (`new`), take the least recently used free lane (`lru`) or wait (`busy`). */
@@ -23,6 +23,9 @@ export function poolQuotaBytesV1(capacityBytes:number,machineStoreQuotaBytes:num
 
 /** 🪣️ The bounds of the pool for a byte quota. */
 export function poolBoundsV1(quotaBytes:number):PoolBoundsV1{return Object.freeze({maximumLanes:rules.maximumLanes,maximumLiveLanes:rules.maximumLiveLanes,quotaBytes});}
+
+/** 🛡️ The lanes the pool bounds apply to: a retained product lane (see `laneRetainedV1`) is neither counted against the lane and byte bounds nor ever a victim of a trim. Pure. */
+export function boundedPoolV1(lanes:readonly PoolLaneV1[]):PoolLaneV1[]{return lanes.filter(lane=>!lane.retained);}
 
 /** 🧭️ Chooses the lane of one acquisition. Pure and deterministic. The newest free lane built for the same crate set keeps its incremental state warm; otherwise the pool grows while it is inside its bounds, else the least recently used free lane is reused, else (every lane live) the pool grows beyond its bounds up to the live maximum and only then waits. Waiting holds nothing, so no wait chain exists. */
 export function planPoolAcquireV1(lanes:readonly PoolLaneV1[],request:Readonly<{crateKey:string}>,bounds:PoolBoundsV1):PoolChoiceV1{
@@ -49,20 +52,26 @@ export function readPoolV1(root:string,nowMs:number):PoolLaneV1[]{
  const locks=join(root,layout.locks);
  return laneIdsV1(root).filter(id=>!rules.reserved.includes(id)).map(id=>{
   const paths=lanePathsV1(root,id);let lastUsedMs=0;try{lastUsedMs=Math.floor(statSync(paths.metadata).mtimeMs);}catch{}
-  return Object.freeze({id,product:id.startsWith(rules.product.prefix),claimed:claimHeldV1(locks,"lane-"+id)||laneLiveV1(paths,nowMs),lastUsedMs,crateKey:readLaneV1(root,id)?.crateKey??"",bytes:(size=>size?size.bytes-size.incrementalBytes:null)(readLaneSizeV1(root,id))});
+  return Object.freeze({id,product:id.startsWith(rules.product.prefix),retained:laneRetainedV1(id,lastUsedMs,nowMs),claimed:claimHeldV1(locks,"lane-"+id)||laneLiveV1(paths,nowMs),lastUsedMs,crateKey:readLaneV1(root,id)?.crateKey??"",bytes:(size=>size?size.bytes-size.incrementalBytes:null)(readLaneSizeV1(root,id))});
  });
+}
+
+/** 🪪️ Names who holds the given lanes for a wait message: process id, agent and session of each claimed lane (at most `listedHolders`, the rest counted), `nobody readable` when no claim names a holder. */
+export function laneHoldersV1(root:string,ids:readonly string[],nowMs:number):string{
+ const locks=join(root,layout.locks),named=ids.flatMap(id=>{const holder=claimHolderV1(locks,"lane-"+id);if(!holder)return[];const lane=readLaneV1(root,id);return[`${id}: pid ${holder.pid}${lane?.agent?`, agent ${lane.agent}`:""}${lane?.session?`, session ${lane.session}`:""}, ${Math.max(0,Math.round((nowMs-holder.atMs)/60000))} min`];});
+ return named.length===0?"nobody readable":named.slice(0,rules.listedHolders).join("; ")+(named.length>rules.listedHolders?`; and ${named.length-rules.listedHolders} more`:"");
 }
 
 /** 🧹️ Removes the idle lanes the pool must shed. Every removal takes the lane's own claim first, so a lane that was taken since the plan survives, and publishes authenticated binding evidence and every owned receipt before the lane goes; unresolved custody keeps it; returns what was removed. */
 export function trimPoolV1(root:string,bounds:PoolBoundsV1,nowMs:number,report?:PoolReportV1):Readonly<{removed:number;freedBytes:number}>{
- const lanes=readPoolV1(root,nowMs),size=new Map(lanes.map(lane=>[lane.id,lane.bytes??0]));let removed=0,freedBytes=0;
+ const lanes=boundedPoolV1(readPoolV1(root,nowMs)),size=new Map(lanes.map(lane=>[lane.id,lane.bytes??0]));let removed=0,freedBytes=0;
  const retain=(paths:ReturnType<typeof lanePathsV1>):boolean=>{const conflicts=retainRemovedLaneV1(paths);if(conflicts.length)report?.("retentionConflict",{lane:paths.id,count:conflicts.length,names:conflicts.slice(0,4).join(", ")});return conflicts.length===0;};
  for(const id of planPoolTrimV1(lanes,bounds))if(removeLaneV1(root,id,"lane",nowMs,retain)){removed++;freedBytes+=size.get(id)!;}
  return Object.freeze({removed,freedBytes});
 }
 
 /** 📣️ What the pool tells its caller, to be rendered in the caller's language. */
-export type PoolReportV1=(kind:"overflow"|"trimmed"|"poolBusy"|"retentionConflict",parameters:Readonly<Record<string,string|number>>)=>void;
+export type PoolReportV1=(kind:"overflow"|"trimmed"|"poolBusy"|"productLaneHeld"|"retentionConflict",parameters:Readonly<Record<string,string|number>>)=>void;
 /** 🎒️ A lane taken from the pool: its directories, how it was chosen and the release that frees it. */
 export type PooledLaneV1=Readonly<{paths:ReturnType<typeof lanePathsV1>;choice:"warm"|"lru"|"new";release():void}>;
 
@@ -78,9 +87,9 @@ export async function acquirePooledLaneV1(root:string,request:Readonly<{crates:r
   if(!catalog){await sleepV1(poll,options.signal);continue;}
   let acquired:PooledLaneV1|undefined;
   try{acquired=(()=>{
-  const lanes=readPoolV1(root,now()),choice=planPoolAcquireV1(lanes,{crateKey:key},bounds);
+  const lanes=boundedPoolV1(readPoolV1(root,now())),choice=planPoolAcquireV1(lanes,{crateKey:key},bounds);
   if(choice.kind==="busy"){
-   if(!reported){reported=true;options.report?.("poolBusy",{live:lanes.length,maximum:bounds.maximumLiveLanes});}
+   if(!reported){reported=true;options.report?.("poolBusy",{live:lanes.length,maximum:bounds.maximumLiveLanes,holders:laneHoldersV1(root,lanes.map(lane=>lane.id),now())});}
    return undefined;
   }
   const id=choice.id??"p"+randomBytes(3).toString("hex"),claim=tryClaimV1(locks,"lane-"+id);

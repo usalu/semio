@@ -265,10 +265,10 @@ pub fn export_process3d_model(scene: &ProcessWorkingScene, resolved_up_to: Optio
 
 pub use semio_s_artifact_process_process3d_model::snapshot::{PROCESS3D_MODEL_DATA_URL_BYTES, PROCESS3D_MODEL_FILE_BYTES};
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub enum Process3dImportError {
     InputTooLarge,
-    InvalidData,
+    InvalidData(String),
     UnsupportedFormat,
     UnsupportedStepUnits,
     MissingSolid,
@@ -280,7 +280,7 @@ impl std::fmt::Display for Process3dImportError {
     fn fmt(&self, output: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Self::InputTooLarge => write!(output, "Select a model file up to {PROCESS3D_MODEL_FILE_BYTES} bytes."),
-            Self::InvalidData => output.write_str("The model file could not be decoded."),
+            Self::InvalidData(cause) => write!(output, "The model file could not be decoded: {cause}"),
             Self::UnsupportedFormat => output.write_str("Select a STEP, OBJ, STL, or GLB model."),
             Self::UnsupportedStepUnits => output.write_str("The STEP model must declare one supported metric length unit."),
             Self::MissingSolid => output.write_str("The model does not contain a closed solid."),
@@ -297,7 +297,7 @@ pub fn import_process3d_model(name: &str, data_url: &str) -> Result<Process3dSna
     if data_url.len() > PROCESS3D_MODEL_DATA_URL_BYTES {
         return Err(Process3dImportError::InputTooLarge);
     }
-    let bytes = decode_process3d_model_data_url(data_url).ok_or(Process3dImportError::InvalidData)?;
+    let bytes = decode_process3d_model_data_url(data_url).ok_or_else(|| Process3dImportError::InvalidData("the data URL carries no base64 payload".into()))?;
     if bytes.len() > PROCESS3D_MODEL_FILE_BYTES as usize {
         return Err(Process3dImportError::InputTooLarge);
     }
@@ -311,15 +311,19 @@ pub fn import_process3d_model(name: &str, data_url: &str) -> Result<Process3dSna
     };
 
     let scale = if matches!(&importer, ProcessSolidImporter::Step(_)) {
-        let source = std::str::from_utf8(&bytes).map_err(|_| Process3dImportError::InvalidData)?;
+        let source = std::str::from_utf8(&bytes).map_err(|error| Process3dImportError::InvalidData(error.to_string()))?;
         semio_s_artifact_stdio_step::step_length_in_metres(source).ok().flatten().ok_or(Process3dImportError::UnsupportedStepUnits)?
     } else {
         1.0
     };
     let mut kernel = Brep::new();
-    let handles = ::semio_framework_async::poll::resolve_ready(importer.import(&mut kernel, &bytes, PROCESS3D_TESSELLATION_TOLERANCE));
+    let handles = match ::semio_framework_async::poll::resolve_ready(importer.import(&mut kernel, &bytes, PROCESS3D_TESSELLATION_TOLERANCE)) {
+        Ok(handles) => handles,
+        Err(_) if matches!(importer, ProcessSolidImporter::Glb(_)) => Vec::new(),
+        Err(error) => return Err(Process3dImportError::InvalidData(error.to_string())),
+    };
     let handle = {
-        let mut solids = handles.unwrap_or_default().into_iter().filter(|handle| kernel.geometry_solid(handle).is_ok());
+        let mut solids = handles.into_iter().filter(|handle| kernel.geometry_solid(handle).is_ok());
         let first = solids.next();
         if solids.next().is_some() {
             return Err(Process3dImportError::MultipleSolids);
@@ -327,11 +331,11 @@ pub fn import_process3d_model(name: &str, data_url: &str) -> Result<Process3dSna
         first
     };
     let solid = if let Some(handle) = handle {
-        let handle = if scale == 1.0 { handle } else { kernel.scale_sync(&handle, scale, [0.0; 3]).map_err(|_| Process3dImportError::InvalidData)? };
-        let shape = kernel.export_shape(&handle).map_err(|_| Process3dImportError::InvalidData)?;
+        let handle = if scale == 1.0 { handle } else { kernel.scale_sync(&handle, scale, [0.0; 3]).map_err(|error| Process3dImportError::InvalidData(error.to_string()))? };
+        let shape = kernel.export_shape(&handle).map_err(|error| Process3dImportError::InvalidData(error.to_string()))?;
         capture_imported_brep(&shape).ok_or(Process3dImportError::SolidTooLarge)?
     } else if matches!(importer, ProcessSolidImporter::Glb(_)) {
-        semio_framework::mesh_io::GlbImporter.import(&bytes).map_err(|_| Process3dImportError::InvalidData)?;
+        semio_framework::mesh_io::GlbImporter.import(&bytes).map_err(Process3dImportError::InvalidData)?;
         WorkingSolid::ImportedMesh { mesh_url: data_url.into() }
     } else {
         return Err(Process3dImportError::MissingSolid);

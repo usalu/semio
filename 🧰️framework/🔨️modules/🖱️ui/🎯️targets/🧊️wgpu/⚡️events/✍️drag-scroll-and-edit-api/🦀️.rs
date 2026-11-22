@@ -5,7 +5,6 @@ use super::*;
 // #region events
 //#region 🔖️UiCommand
 impl EventRouter {
-    //#region 🔖️ScrollApi
     /// 📜️ A press on a scrollbar of `from`'s nearest scroll host: on a thumb it starts a thumb drag, beside it the host pages one viewport towards the press. `false` when the press is not on a scrollbar.
     pub(super) fn press_scrollbar(&mut self, tree: &mut UiTree, from: NodeId, x: f32, y: f32, pointer_id: u64) -> bool {
         let Some(scrollable) = nearest_scrollable_ancestor(tree, from) else { return false };
@@ -57,9 +56,7 @@ impl EventRouter {
         node.state.scroll_offset = if vertical { (start_x, bar.offset_for_thumb_drag(start_y, y - origin_y)) } else { (bar.offset_for_thumb_drag(start_x, x - origin_x), start_y) };
         tree.mark_dirty(scrollable, NodeFlags::DIRTY_PAINT);
     }
-    //#endregion 🔖️ScrollApi
 
-    //#region 🔖️EditApi
     /// 🛞️ A wheel turn over a textarea that holds a laid-out text, focused or not, scrolls it while it has room that way.
     pub(super) fn scroll_text_area(&mut self, tree: &mut UiTree, id: NodeId, delta_y: f32) -> bool {
         let Some(node) = tree.node_mut(id) else { return false };
@@ -407,6 +404,16 @@ impl EventRouter {
     /// and clipboard shortcuts for the focused node's `EditState`. A no-operation if nothing is focused or
     /// the focused node has no `EditState` (isn't a `UiNode::Input`, or hasn't been focused since
     /// `FocusState::set_focus` seeded one).
+    /// 📋️ Runs one text-selection menu verb on the text field `id`: focuses it, then answers the verb's own chord (`a`, `c`, `x`, `v` with the command modifier) through the field's edit key route, so a menu row and the typed chord share one body and the field's Copy, Cut and Paste commands.
+    pub fn run_text_selection_verb(&mut self, tree: &mut UiTree, id: NodeId, key: &str) -> Vec<UiCommand> {
+        let mut out = Vec::new();
+        if let Some((blurred, fired)) = self.focus.set_focus(tree, Some(id), true) {
+            self.push_app_command(tree, blurred, fired, &mut out);
+        }
+        out.extend(self.route_edit_key(tree, key, EventModifiers { shift: false, ctrl: true, alt: false, meta: false }));
+        out
+    }
+
     pub(super) fn route_edit_key(&mut self, tree: &mut UiTree, key: &str, modifiers: EventModifiers) -> Vec<UiCommand> {
         let mut out = Vec::new();
         let Some(id) = self.focus.focused else { return out };
@@ -612,7 +619,6 @@ impl EventRouter {
         }
         out
     }
-    //#endregion 🔖️EditApi
 
 }
 //#endregion 🔖️UiCommand

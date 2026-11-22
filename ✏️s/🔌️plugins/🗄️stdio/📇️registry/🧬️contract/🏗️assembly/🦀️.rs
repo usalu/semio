@@ -618,7 +618,7 @@ fn violations(source: &Source) -> Vec<PluginAssemblyError> {
     }
     for item in &source.conformance_suites {
         check((|| {
-            if item.status != "unimplemented" {
+            if !matches!(item.status.as_str(), "unimplemented" | "implemented" | "verified") {
                 return Err(failure(format!("invalid conformance suite {}", item.id)));
             }
             child(&item.id, &owner, "conformance-suite")?;

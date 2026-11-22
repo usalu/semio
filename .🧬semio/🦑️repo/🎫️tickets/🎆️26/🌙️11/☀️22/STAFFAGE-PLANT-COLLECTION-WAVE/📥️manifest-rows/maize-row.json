@@ -1,0 +1,55 @@
+{
+ "id": "maize-row",
+ "category": "vegetation",
+ "title": {
+  "en": "Maize Row",
+  "de": "Maisreihe"
+ },
+ "heightM": 2.5,
+ "widthM": 2.35573,
+ "powerW": 0,
+ "poses": [
+  "tasseling-calm",
+  "windy",
+  "storm",
+  "ripe-ears"
+ ],
+ "clips": [
+  "wind-sway",
+  "gust",
+  "diurnal-transpiration"
+ ],
+ "representations": {
+  "50": "authored",
+  "100": "authored",
+  "200": "authored",
+  "500": "authored"
+ },
+ "symbols": [
+  "maize-row-symbol"
+ ],
+ "analytics": [
+  "thermal",
+  "transport",
+  "structural"
+ ],
+ "exports": [
+  "svg",
+  "pdf",
+  "dxf",
+  "dwg",
+  "png-sequence",
+  "mp4",
+  "webm",
+  "component",
+  "glb",
+  "fbx",
+  "model",
+  "model-zip"
+ ],
+ "distinction": {
+  "en": "A field row of six maize plants (Zea mays) at tasseling on an earthed-up ridge, 2.5 m high: arching strap leaves in alternating ranks, ears in husk with silk and branched tassels. A C4 crop.",
+  "de": "Eine Feldreihe aus sechs Maispflanzen (Zea mays) zur Rispenblüte auf einem angehäufelten Damm, 2,5 m hoch: überhängende Bandblätter in wechselnden Zeilen, Kolben in Lieschen mit Narbenfäden und verzweigte Rispen. Eine C4-Kultur."
+ },
+ "completion": "authored"
+}

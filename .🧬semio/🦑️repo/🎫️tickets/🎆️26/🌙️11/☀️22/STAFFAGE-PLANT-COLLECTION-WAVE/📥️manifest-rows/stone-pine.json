@@ -1,0 +1,55 @@
+{
+  "id": "stone-pine",
+  "category": "vegetation",
+  "title": {
+    "en": "Stone Pine, Umbrella Crown",
+    "de": "Pinie, Schirmkrone"
+  },
+  "heightM": 20.494,
+  "widthM": 14.452,
+  "powerW": 0,
+  "poses": [
+    "calm",
+    "windy",
+    "storm",
+    "snow"
+  ],
+  "clips": [
+    "wind-sway",
+    "gust",
+    "diurnal-transpiration"
+  ],
+  "representations": {
+    "50": "authored",
+    "100": "authored",
+    "200": "authored",
+    "500": "authored"
+  },
+  "symbols": [
+    "stone-pine-symbol"
+  ],
+  "analytics": [
+    "thermal",
+    "transport",
+    "structural"
+  ],
+  "exports": [
+    "svg",
+    "pdf",
+    "dxf",
+    "dwg",
+    "png-sequence",
+    "mp4",
+    "webm",
+    "component",
+    "glb",
+    "fbx",
+    "model",
+    "model-zip"
+  ],
+  "distinction": {
+    "en": "A tall Mediterranean stone pine with a long, straight bole in red-brown plated bark and a dense, flat-topped umbrella crown on a few rising limbs.",
+    "de": "Eine hohe mediterrane Pinie mit langem, geradem Stamm in rotbrauner Plattenborke und einer dichten, flachen Schirmkrone auf wenigen aufsteigenden Ästen."
+  },
+  "completion": "authored"
+}

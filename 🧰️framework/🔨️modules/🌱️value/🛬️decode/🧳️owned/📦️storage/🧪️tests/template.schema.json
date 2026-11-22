@@ -10,7 +10,7 @@
     "typedBeforeComplete",
     "partialDestructorCalls",
     "completeDestructorCalls",
-    "foreignWorkAccepted",
+    "rebindWorkAccepted",
     "foreignTemplateAccepted",
     "zeroWorkMutation",
     "stock",
@@ -43,8 +43,8 @@
     "completeDestructorCalls": {
       "const": 1
     },
-    "foreignWorkAccepted": {
-      "const": false
+    "rebindWorkAccepted": {
+      "const": true
     },
     "foreignTemplateAccepted": {
       "const": false
@@ -73,7 +73,8 @@
           4,
           9
         ],
-        "typedBeforeAllParts": false
+        "typedBeforeAllParts": false,
+        "worksAcrossParts": 2
       }
     }
   }

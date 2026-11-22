@@ -1,0 +1,57 @@
+{
+  "id": "sweetgum",
+  "category": "vegetation",
+  "title": {
+    "en": "Sweetgum",
+    "de": "Amberbaum"
+  },
+  "heightM": 18,
+  "widthM": 9.443,
+  "powerW": 0,
+  "poses": [
+    "calm",
+    "windy",
+    "storm",
+    "autumn-colour",
+    "wet-snow"
+  ],
+  "clips": [
+    "wind-sway",
+    "gust",
+    "diurnal-transpiration"
+  ],
+  "representations": {
+    "50": "authored",
+    "100": "authored",
+    "200": "authored",
+    "500": "authored"
+  },
+  "symbols": [
+    "sweetgum-symbol",
+    "tree-sign"
+  ],
+  "analytics": [
+    "thermal",
+    "transport",
+    "structural"
+  ],
+  "exports": [
+    "svg",
+    "pdf",
+    "dxf",
+    "dwg",
+    "png-sequence",
+    "mp4",
+    "webm",
+    "component",
+    "glb",
+    "fbx",
+    "model",
+    "model-zip"
+  ],
+  "distinction": {
+    "en": "An 18 m sweetgum (Liquidambar styraciflua) with a dominant central leader and twelve spiral limbs: a dense, tall pyramidal crown about 9.5 m wide of star-shaped leaves, the most colourful autumn tree of the avenues.",
+    "de": "Ein 18 m hoher Amberbaum (Liquidambar styraciflua) mit durchgehender Stammverlängerung und zwölf spiralig gestellten Ästen: eine dichte, hohe Pyramidenkrone von etwa 9,5 m Breite aus sternförmigen Blättern, der farbigste Herbstbaum der Alleen."
+  },
+  "completion": "authored"
+}

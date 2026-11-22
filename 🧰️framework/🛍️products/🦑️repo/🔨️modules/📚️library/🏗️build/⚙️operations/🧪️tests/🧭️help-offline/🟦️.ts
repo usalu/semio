@@ -5,7 +5,7 @@ import catalog from "../../🔣️catalog.json" with { type: "json" };
 const root = resolve(import.meta.dir, "../../../../../../../../.."), entry = resolve(import.meta.dir, "../../../📜️script.ts");
 const environment = Object.fromEntries(Object.entries(process.env).filter(([key]) => !key.startsWith("SEMIO_SCRIPT") && !key.startsWith("SEMIO_BUILD_INV") && key !== "SEMIO_LANGUAGE"));
 
-const concurrency = 6;
+const concurrency = 3;
 
 const help = async (operation: string, language: string): Promise<string> => {
   const child = Bun.spawn([process.execPath, entry, "repo", operation, "--help", `--lang=${language}`], { cwd: root, env: environment, stdout: "pipe", stderr: "pipe" }), timer = setTimeout(() => child.kill(), 120_000);

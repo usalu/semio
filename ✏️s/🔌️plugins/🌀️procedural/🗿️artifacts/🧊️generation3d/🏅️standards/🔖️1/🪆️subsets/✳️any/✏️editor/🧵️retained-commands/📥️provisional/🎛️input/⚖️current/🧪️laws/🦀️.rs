@@ -6,7 +6,6 @@ use super::retained_scratch_testing::ScratchCaller;
 use semio_s_artifact_procedural_3d_mutations::{WidgetInputValue,ChangeWidgetInput};
 use semio_framework_artifact_flow_flow::{Widget,neural::{Value,Atom,Dictionary}};
 use semio_framework_job::close_original_effect_step;
-use semio_framework_value::retirement::RetireOwned;
 fn original(current:&Value,input:&WidgetInputValue)->ProvisionalInputMatch{
  let widget=Widget::Neuron{id:"n".into(),neuron_kind:"fixture".into(),params:Dictionary::new().insert("value",current.clone()),input_ports:Vec::new(),output_ports:Vec::new(),preview:true};
  let payload=ChangeWidgetInput{id:"n".into(),channel:"value".into(),input:input.clone()};

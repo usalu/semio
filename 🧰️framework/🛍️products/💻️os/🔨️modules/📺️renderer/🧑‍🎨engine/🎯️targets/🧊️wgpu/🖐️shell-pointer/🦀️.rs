@@ -15,7 +15,7 @@ use semio_renderer_wgpu_shell_doc_open::{IconExportBatch, OpeningState};
 use semio_renderer_wgpu_shell_dock::{ShellDockState, ShellKeyboardStop, dock_window_order, retained_event_modifiers, retained_pointer_button};
 use semio_renderer_wgpu_shell_docs::{DocumentState, FRAMEWORK_CHAT_PANEL_ID, FRAMEWORK_COMMAND_CATEGORY_TAB_PREFIX, FRAMEWORK_SYNC_PANEL_TAB_ID, FRAMEWORK_TOOL_PANEL_TAB_PREFIX, command_host_platform, key_event_matches_chord, note_shell_command_action};
 use semio_renderer_wgpu_shell_history::HistoryState;
-use semio_renderer_wgpu_shell_input::{ContextMenuItem, ContextMenuKeyOutcome, ContextMenuState, ContextMenuSurfaceResolution, OverlayState, PointerHitOwner, RightClickState, ShellInputState, ShellPaletteKind, context_menu_item_at_path, context_menu_path_for_item_id, tree_drag_handle_item_id, tree_hit_item_id};
+use semio_renderer_wgpu_shell_input::{set_submenu_children, suggestion_rows, suggestion_submenu_target, with_suggestion_submenu, suggestion_popup_owns_window, suggestion_popup_title, SuggestionHover, SuggestionKind, SuggestionSearch, SUGGESTION_SUBMENU_CLOSE_ACTION, SUGGESTION_SUBMENU_OPEN_ACTION, ContextMenuItem, ContextMenuKeyOutcome, ContextMenuState, ContextMenuSurfaceResolution, OverlayState, PointerHitOwner, RightClickState, ShellInputState, ShellPaletteKind, context_menu_item_at_path, context_menu_path_for_item_id, text_selection_menu_items, tree_drag_handle_item_id, tree_hit_item_id};
 use semio_renderer_wgpu_shell_plugins::{PluginState, flatten_panel_tab_leaves};
 #[cfg(target_arch = "wasm32")]
 use semio_renderer_wgpu_shell_plugins::PendingExtensionInvocation;
@@ -23,7 +23,7 @@ use semio_renderer_wgpu_shell_prefs::{PrefsState, TimeTravelVerb, command_addres
 use semio_renderer_wgpu_shell_session::{FRAMEWORK_CATEGORY_COMMAND_ID, SessionCtx, ShellShortcut, claim_app_catalogue_fetch, import_transfer_notice, mobile_panel_reconcile_path, panel_state_from_view, resident_census};
 use semio_renderer_wgpu_shell_state::{SHELL_DISPATCH_ORIGIN_USER, ShellState};
 use semio_renderer_wgpu_shell_surfaces::{SettleState, ShellDetached, ShellRenderedRefresh, ShellSettleStep, SurfaceState, TutorialPendingDocOp, TutorialState, World3dComputeStatus, world3d_compute_status};
-use semio_renderer_wgpu_shell_sync::{ShellSyncReseed, SyncState, shell_hub_document_key, shell_sync_channel_owner};
+use semio_renderer_wgpu_shell_sync::{SHELL_CLOSE_FLUSH_TIMEOUT_MS, ShellCloseGuard, ShellSavedState, ShellSyncReseed, SyncState, shell_hub_document_key, shell_sync_channel_owner};
 use semio_renderer_wgpu_shell_window_actions::{HOST_WINDOW_BLUR_PENDING, IMPORT_TRANSFER_TURN_MS, KEYBINDING_UNOWNED_CODE, SHELL_DEFERRED_CHAIN_ROUNDS, SHELL_DISPATCH_ORIGIN_GESTURE, SHELL_SETTLE_STALL_STEPS, SYNC_COMMAND_TRANSFORMED_NOTICE_CODE, ShellSettleVerdict, WindowActionsCtx, WindowScopeInstanceV1, WindowScopeTargetKindV1, merge_committed_args, parse_dock_tab_action_id, retained_router_owns_pointer, route_document_backbone_effects, scope_action_to_window, shell_hub_remote, shell_sync_link_after_status, shell_sync_link_terminal, shell_sync_owner_matches, window_action_definition};
 use semio_renderer_wgpu_shell_windows::{PanelAnchor, WINDOW_PANE_CHIP_PARENT, WORLD_PROJECTION_PANE_PARENT, WindowState, window_host_event_action};
 use semio_framework::ViewModel;

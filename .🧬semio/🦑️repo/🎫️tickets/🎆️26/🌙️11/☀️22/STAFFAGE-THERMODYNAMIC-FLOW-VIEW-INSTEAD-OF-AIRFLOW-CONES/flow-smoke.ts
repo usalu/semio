@@ -25,9 +25,9 @@ for (const target of targets.length > 0 ? targets : ["👤️humans/standing-adu
     const environment = env === "own" ? asset.thermal.environment : { ...asset.thermal.environment, ...presets.find((p) => p.id === env)!.environment };
     const t0 = performance.now();
     let slices = 0;
-    const field = await transport.developTransport(asset, { ...query, timeS: developS }, environment, { maxAgeS: developS, flow: true, pathlines: false, streamlines: false, progress: () => void slices++ });
+    const field = await transport.developTransport(asset, { ...query, timeS: developS }, environment, { maxAgeS: developS, flow: true, pathlines: false, progress: () => void slices++ });
     const t1 = performance.now();
-    const again = transport.solveTransport(asset, { ...query, timeS: field.timeS + 1 / 30 }, environment, { maxAgeS: developS, flow: true, pathlines: false, streamlines: false });
+    const again = transport.solveTransport(asset, { ...query, timeS: field.timeS + 1 / 30 }, environment, { maxAgeS: developS, flow: true, pathlines: false });
     const t2 = performance.now();
     const flow = field.flow!;
     const speeds = flow.streams.flatMap((s: { speedMS: number[] }) => s.speedMS);

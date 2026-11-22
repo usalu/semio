@@ -26,6 +26,10 @@ name = "format_resolution"
 path = "../../🧪️tests/🧭️format-resolution/🦀️.rs"
 
 [[test]]
+name = "package_routing"
+path = "../../🧪️tests/🗜️package-routing/🦀️.rs"
+
+[[test]]
 name = "owned_serializer_rejections"
 path = "../../📤️serialization/📦️owned/🧪️tests/🦀️.rs"
 
@@ -37,6 +41,7 @@ semio-os-store-space-history = { path = "../../../🏪️store/📜️space-hist
 semio-os-store-text-io = { path = "../../../🏪️store/🚪️io/📦️packages/🦀️rust" }
 semio-framework-artifact-reference = { workspace = true }
 semio-framework-async = { workspace = true, features = ["entrypoint"] }
+semio-framework-deflate = { path = "../../../../../../🔨️modules/🗜️deflate/📦️packages/🦀️rust" }
 semio-framework-diagnostic = { path = "../../../../../../🔨️modules/⚠️diagnostic/📦️packages/🦀️rust" }
 semio-framework-io-control = { path = "../../../../../../🔨️modules/🚪️io/⏱️control/📦️packages/🦀️rust" }
 semio-framework-io-schema = { path = "../../../../../../🔨️modules/🚪️io/🧬️schema/📦️packages/🦀️rust" }
@@ -54,6 +59,7 @@ semio-framework-value-native-owned = { path = "../../../../../../🔨️modules/
 semio-framework-value = { path = "../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust", features = ["testkit"] }
 semio-framework-async-macros = { path = "../../../../../../🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }
 serde_json = "1.0.140"
+zip = { version = "2.4", default-features = false, features = ["deflate"] }
 semio-framework-trace = { workspace = true }
 semio-framework-trace-memory-testing = { path = "../../../../../../🔨️modules/⏱️trace/🧮️memory/🧪️testing/📥️requests/📦️packages/🦀️rust" }
 semio-framework-value-snapshot-read = { path = "../../../../../../🔨️modules/🌱️value/📸️snapshot/👁️read/📦️packages/🦀️rust" }

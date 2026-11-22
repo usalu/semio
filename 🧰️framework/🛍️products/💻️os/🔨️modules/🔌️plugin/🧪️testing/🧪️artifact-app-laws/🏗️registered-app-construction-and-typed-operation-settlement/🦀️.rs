@@ -278,7 +278,7 @@ pub async fn settle_registered_typed_operation<P: PluginApp>(app: &mut P, receiv
     let (fresh_fuel,fresh_grant)=(OriginalFixtureCaller::turn_fuel(),cx.retained_grant());let(mut idle,maximum_idle)=(0usize,OriginalFixtureCaller::maximum_idle_turns());
     crate::artifact_app_laws::ensure_fixture_cancellation_issuer(app,cx)?;
     retain_registered_ownership_receipts(app, mounted_policy, &mut receipt)?;
-    while app.has_pending_typed_operations() || !app.maintenance_terminal_is_empty() {
+    while app.has_pending_typed_operations() || !app.maintenance_quiescent_under_live_preview() {
         fixture_renew_turn(cx,fresh_fuel,fresh_grant)?;
         if cx.should_yield() || turns >= maximum_turns {
             return Err(typed_operation_settlement_refusal(app, cx, mounted_policy.maintenance, turns));
@@ -528,6 +528,6 @@ pub fn close_registered_fixture_app<A: PluginApp>(app: &mut A, mounted_policy: s
         }
         close_turn = close_turn.saturating_add(1);
     }
-    assert!(app.close_terminal_is_empty(), "registered fixture did not reach its exact terminal-empty witness after {close_turn} turns ({active_turns} active, {idle_streak} consecutive idle){}{}", pending_authority.map(|reason| format!(", last pending close authority: {reason}")).unwrap_or_default(), last_quote.map(|(demand, grant, fuel)| format!(", last close quote {demand:?} against remaining grant {grant:?} and {fuel} fuel on rung {}", app.close_diagnostic())).unwrap_or_default());
+    assert!(app.close_terminal_is_empty(), "registered fixture did not reach its exact terminal-empty witness after {close_turn} turns ({active_turns} active, {idle_streak} consecutive idle){}{}", pending_authority.map(|reason| format!(", last pending close authority: {reason}")).unwrap_or_default(), last_quote.map(|(demand, grant, fuel)| format!(", last close quote {demand:?} against remaining grant {grant:?} and {fuel} fuel on rung {}; source total {:?}, spent {:?}", app.close_diagnostic(), cx.original_source_total_grant(), cx.retained_progress())).unwrap_or_default());
     Ok(ownership_receipts)
 }

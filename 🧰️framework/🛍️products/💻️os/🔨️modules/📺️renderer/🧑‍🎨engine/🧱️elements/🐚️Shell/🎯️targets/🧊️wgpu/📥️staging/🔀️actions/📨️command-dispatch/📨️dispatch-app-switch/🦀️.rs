@@ -332,23 +332,15 @@ impl<'ctx> ActionsCtx<'ctx> {
     }
 
     pub async fn install_extension_from_store(&mut self, request: serde_json::Value) -> Result<bool, String> {
-        #[cfg(target_arch = "wasm32")]
-        {
-            let answer = extension_store_answer(request).await?;
-            if answer.get("cancelled").and_then(serde_json::Value::as_bool) == Some(true) {
-                return Ok(false);
-            }
-            let record: ShellExtensionStoreRecord = serde_json::from_value(answer.get("extension").cloned().ok_or("extension store install missing extension")?).map_err(|error| error.to_string())?;
-            let load = self.plugins.load_extension_record(record).await;
-            self.as_window_actions().push_contributions().await?;
-            self.as_window_actions().refresh_ui(UiDirtyScope::Full).await?;
-            load.map(|_| true)
+        let answer = self.plugins.extension_store(request).await?;
+        if answer.get("cancelled").and_then(serde_json::Value::as_bool) == Some(true) {
+            return Ok(false);
         }
-        #[cfg(not(target_arch = "wasm32"))]
-        {
-            let _ = request;
-            Err("native extension installation is unavailable".into())
-        }
+        let record: ShellExtensionStoreRecord = serde_json::from_value(answer.get("extension").cloned().ok_or("extension store install missing extension")?).map_err(|error| error.to_string())?;
+        let load = self.plugins.load_extension_record(record).await;
+        self.as_window_actions().push_contributions().await?;
+        self.as_window_actions().refresh_ui(UiDirtyScope::Full).await?;
+        load.map(|_| true)
     }
 
     pub fn set_extension_enabled<'a>(&'a mut self, extension_id: &'a str, enabled: bool) -> ShellTurn<'a, Result<bool, String>> {
@@ -357,6 +349,12 @@ impl<'ctx> ActionsCtx<'ctx> {
             let Some(index) = self.plugins.extensions.iter().position(|entry| entry.record.extension_id == extension_id) else { return Ok(false) };
             let program = self.plugins.extensions[index].program.clone();
             self.plugins.extensions[index].enabled = enabled;
+            semio_renderer_wgpu_program_bridge::set_extension_program_enabled(extension_id, enabled);
+            if enabled {
+                semio_ui_retained_tree::reconcile::register_extension_host(extension_id, &self.plugins.extensions[index].record.label, |_| Vec::new());
+            } else {
+                semio_ui_retained_tree::reconcile::retire_extension_host(extension_id);
+            }
             self.plugins.plugins.retain(|entry| entry.plugin_id != extension_id);
             if enabled {
                 if let Some(program) = program {
@@ -372,40 +370,41 @@ impl<'ctx> ActionsCtx<'ctx> {
     }
 
     pub async fn uninstall_extension(&mut self, extension_id: &str) -> Result<bool, String> {
-        #[cfg(not(target_arch = "wasm32"))]
-        {
-            let _ = extension_id;
-            return Err("native extension uninstallation is unavailable".into());
-        }
+        let Some(index) = self.plugins.extensions.iter().position(|entry| entry.record.extension_id == extension_id) else { return Ok(false) };
+        let record = self.plugins.extensions[index].record.clone();
+        self.plugins.plugins.retain(|entry| entry.plugin_id != extension_id);
+        semio_ui_retained_tree::reconcile::retire_extension_host(extension_id);
+        semio_renderer_wgpu_program_bridge::unregister_extension_program(extension_id);
+        self.as_window_actions().push_contributions().await?;
+        self.as_window_actions().refresh_ui(UiDirtyScope::Full).await?;
         #[cfg(target_arch = "wasm32")]
-        {
-            let Some(index) = self.plugins.extensions.iter().position(|entry| entry.record.extension_id == extension_id) else { return Ok(false) };
-            let record = self.plugins.extensions[index].record.clone();
-            self.plugins.plugins.retain(|entry| entry.plugin_id != extension_id);
+        let retired = semio_renderer_wgpu_program_bridge::retire_js_extension(extension_id).await;
+        #[cfg(not(target_arch = "wasm32"))]
+        let retired: Result<(), String> = {
+            semio_renderer_wgpu_program_bridge::retire_native_extension(extension_id);
+            Ok(())
+        };
+        if let Err(error) = retired {
+            let recovery = self.plugins.load_extension_record(record.clone()).await;
             self.as_window_actions().push_contributions().await?;
             self.as_window_actions().refresh_ui(UiDirtyScope::Full).await?;
-            if let Err(error) = semio_renderer_wgpu_program_bridge::retire_js_extension(extension_id).await {
-                let recovery = self.plugins.load_extension_record(record.clone()).await;
-                self.as_window_actions().push_contributions().await?;
-                self.as_window_actions().refresh_ui(UiDirtyScope::Full).await?;
-                if let Err(recovery) = recovery {
-                    return Err(format!("{error}; recovery failed: {recovery}"));
-                }
-                return Err(error);
+            if let Err(recovery) = recovery {
+                return Err(format!("{error}; recovery failed: {recovery}"));
             }
-            if let Err(error) = extension_store_answer(serde_json::json!({ "op": "extension-store-uninstall", "extensionId": extension_id })).await {
-                let recovery = self.plugins.load_extension_record(record).await;
-                self.as_window_actions().push_contributions().await?;
-                self.as_window_actions().refresh_ui(UiDirtyScope::Full).await?;
-                if let Err(recovery) = recovery {
-                    return Err(format!("{error}; recovery failed: {recovery}"));
-                }
-                return Err(error);
-            }
-            self.plugins.extensions.remove(index);
-            self.as_window_actions().refresh_ui(UiDirtyScope::Full).await?;
-            Ok(true)
+            return Err(error);
         }
+        if let Err(error) = self.plugins.extension_store(serde_json::json!({ "op": "extension-store-uninstall", "extensionId": extension_id })).await {
+            let recovery = self.plugins.load_extension_record(record).await;
+            self.as_window_actions().push_contributions().await?;
+            self.as_window_actions().refresh_ui(UiDirtyScope::Full).await?;
+            if let Err(recovery) = recovery {
+                return Err(format!("{error}; recovery failed: {recovery}"));
+            }
+            return Err(error);
+        }
+        self.plugins.extensions.remove(index);
+        self.as_window_actions().refresh_ui(UiDirtyScope::Full).await?;
+        Ok(true)
     }
 
     /// 📇️ ticket §5/§6 — "/spaces/{id}/studio" keeps the pre-existing studio behaviour (the ONLY

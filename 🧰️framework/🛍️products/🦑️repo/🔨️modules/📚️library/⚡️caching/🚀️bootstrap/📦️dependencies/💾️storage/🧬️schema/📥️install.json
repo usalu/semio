@@ -2645,6 +2645,15 @@
             "retention": "self-managed"
           },
           {
+            "name": "hold",
+            "kind": "directory",
+            "writer": {
+              "en": "Generation holds of running installers and readers (hold/<generation>.<pid>); the dependency collector never retires a held generation, and a dead holder's record is ignored.",
+              "de": "Generations-Haltemarken laufender Installierer und Leser (hold/<Generation>.<PID>); der Abhängigkeits-Sammler zieht eine gehaltene Generation nie ein, und die Marke eines toten Halters wird ignoriert."
+            },
+            "retention": "self-managed"
+          },
+          {
             "name": "bazel",
             "kind": "directory",
             "writer": {
@@ -6204,6 +6213,8 @@
       "const": {
         "maximumBytes": 4096,
         "maximumLines": 16,
+        "maximumHeadLines": 4,
+        "maximumHeadBytes": 1024,
         "minimumRedactedTokenLength": 24,
         "mirroredMaximumBytes": 400,
         "mirroredPrefix": "[DATA] Store dependency installer stderr "
@@ -6222,6 +6233,7 @@
         "stderrBytes",
         "stdoutSha256",
         "stderrSha256",
+        "stderrHead",
         "stderrTail",
         "stderrTruncated"
       ],
@@ -6265,6 +6277,10 @@
         "stderrSha256": {
           "type": "string",
           "pattern": "^[a-f0-9]{64}$"
+        },
+        "stderrHead": {
+          "type": "string",
+          "maxLength": 1024
         },
         "stderrTail": {
           "type": "string",

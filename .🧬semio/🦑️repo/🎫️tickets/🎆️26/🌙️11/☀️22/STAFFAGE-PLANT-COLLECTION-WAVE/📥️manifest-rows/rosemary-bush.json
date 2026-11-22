@@ -1,0 +1,55 @@
+{
+ "id": "rosemary-bush",
+ "category": "vegetation",
+ "title": {
+  "en": "Rosemary",
+  "de": "Rosmarin"
+ },
+ "heightM": 1.2219,
+ "widthM": 0.8468,
+ "powerW": 0,
+ "poses": [
+  "calm",
+  "windy",
+  "storm",
+  "snow"
+ ],
+ "clips": [
+  "wind-sway",
+  "gust",
+  "diurnal-transpiration"
+ ],
+ "representations": {
+  "50": "authored",
+  "100": "authored",
+  "200": "authored",
+  "500": "authored"
+ },
+ "symbols": [
+  "rosemary-bush-symbol"
+ ],
+ "analytics": [
+  "thermal",
+  "transport",
+  "structural"
+ ],
+ "exports": [
+  "svg",
+  "pdf",
+  "dxf",
+  "dwg",
+  "png-sequence",
+  "mp4",
+  "webm",
+  "component",
+  "glb",
+  "fbx",
+  "model",
+  "model-zip"
+ ],
+ "distinction": {
+  "en": "An upright evergreen herb shrub of nine woody stems with columnar needle-leaved shoots and axillary flowers, whose stiff shoots sway little and splay under wet snow.",
+  "de": "Aufrechter immergrüner Kräuterstrauch aus neun verholzten Trieben mit säulenförmigen, nadelblättrigen Sprossen und Blüten in den Blattachseln, dessen steife Sprosse wenig schwingen und sich unter Nassschnee spreizen."
+ },
+ "completion": "authored"
+}

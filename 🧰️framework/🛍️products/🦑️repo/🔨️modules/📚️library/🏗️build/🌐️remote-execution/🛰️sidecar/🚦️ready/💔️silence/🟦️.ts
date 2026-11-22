@@ -13,7 +13,8 @@ export function readySidecarSilenceV1(input:Readonly<{status:unknown;nowMs:numbe
  const {ready,state,updatedMs,beatMilliseconds}=row as {ready?:unknown;state?:unknown;updatedMs?:unknown;beatMilliseconds?:unknown};
  if(typeof updatedMs!=="number"||!Number.isFinite(updatedMs))return{state:"absent",missedBeats:0,ageMs:0};
  const declared=typeof beatMilliseconds==="number"&&Number.isFinite(beatMilliseconds)&&beatMilliseconds>0?Math.min(beatMilliseconds,policy.offlineMilliseconds/policy.silentBeatsMaximum):policy.statusHeartbeatMilliseconds,ageMs=Math.max(0,input.nowMs-updatedMs),missedBeats=Math.floor(ageMs/declared);
- if(ready!==false||state!=="running"&&state!=="waiting"&&state!=="backoff")return{state:"idle",missedBeats,ageMs};
+ const refreshing=ready===true&&state==="ready"&&(row as {refreshing?:unknown}).refreshing===true;
+ if(!refreshing&&(ready!==false||state!=="running"&&state!=="waiting"&&state!=="backoff"))return{state:"idle",missedBeats,ageMs};
  return{state:missedBeats>=policy.silentBeatsMaximum?"silent":"fresh",missedBeats,ageMs};
 }
 
@@ -43,6 +44,6 @@ export function readyWorkerLivenessV1(input:Readonly<{status:unknown;heartbeatMs
  if(silence.state==="absent")return{liveness:"absent",ageMs:null,heartbeatAgeMs,missedBeats:0};
  const newest=Math.min(silence.ageMs,heartbeatAgeMs??Infinity);
  if(newest>=policy.offlineMilliseconds)return{liveness:"offline",ageMs:silence.ageMs,heartbeatAgeMs,missedBeats:silence.missedBeats};
- const ready=(input.status as {ready?:unknown}).ready===true,liveness=silence.state==="silent"?"silent":silence.state==="fresh"?"working":ready?"ready":"idle";
+ const ready=(input.status as {ready?:unknown}).ready===true,liveness=silence.state==="silent"?"silent":silence.state==="fresh"&&!ready?"working":ready?"ready":"idle";
  return{liveness,ageMs:silence.ageMs,heartbeatAgeMs,missedBeats:silence.missedBeats};
 }

@@ -396,7 +396,6 @@ impl<PA: PluginApp> PluginBuilder<Ready, PA> {
         self
     }
 
-    //#region 🔖️Surfaces
     /// 👁️ Declares a typed viewer app factory (read-only surface) — the `ArtifactViewer` twin of
     /// `document_app` (ticket 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET contract §2.4/§2.6).
     /// `def` is `Viewer::builder(V::DIALECT)...build_definition()` — already carries the derived id,
@@ -528,9 +527,7 @@ impl<PA: PluginApp> PluginBuilder<Ready, PA> {
         self.owner_mutation_rosters.push(owner_mutation_roster::<E>);
         self
     }
-    //#endregion 🔖️Surfaces
 
-    //#region 🔖️Descriptor
     /// 🚀️ Declares one activation event — when the host should spin up an instance of this plugin
     /// (`📓️design-abi.md` §2/§3). Repeatable; idempotent for a byte-identical event.
 pub fn activation(mut self, event: ActivationEvent) -> Self {
@@ -591,7 +588,6 @@ pub fn asset(mut self, declaration: AssetDeclaration) -> Self {
         }
         self
     }
-    //#endregion 🔖️Descriptor
 
     /// 📚️ Assembles a library-only plugin through the typed boundary.
     pub fn try_library(self) -> Result<Plugin<PA>, PluginAssemblyError> {
@@ -720,12 +716,11 @@ pub fn asset(mut self, declaration: AssetDeclaration) -> Self {
             contributed_mutation_runtime.extend(mutation_runtime);
         }
         semio_plugin_decl_registry::artifact_registration::register_contributions(&plugin_id, &dependencies, &contribution_descriptors).map_err(|error| PluginAssemblyError::new("plugin-assembly.contribution-gate", error.to_string()))?;
-        runtime.extend_contributions(contributed_inference_services, &owner_mutation_rosters, contributed_mutation_runtime)?;
-
         semio_plugin_extension::commit_artifact_declarations(&plugin_id, &declared_artifacts)?;
         runtime.retain_document_bindings(semio_plugin_decl_registry::declarations::artifact_declaration_bindings(&plugin_id, &declared_artifacts));
         runtime.share_schema_documents(schema_documents.into_iter().map(|(_, documents)| documents).collect());
         runtime.publish_declared_catalogs()?;
+        runtime.extend_contributions(contributed_inference_services, &owner_mutation_rosters, contributed_mutation_runtime)?;
 
         let mut plugin = Plugin::new(plugin_id.clone(), label, version).with_runtime_registry(runtime);
         plugin.manifest.dependencies = dependencies;

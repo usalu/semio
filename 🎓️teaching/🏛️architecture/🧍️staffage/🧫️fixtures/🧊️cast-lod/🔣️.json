@@ -18,10 +18,10 @@
     { "name": "an absurd output rate", "lod": "preview", "outputFps": 1000, "message": "output frame rate" }
   ],
   "resolved": [
-    { "lod": "preview", "outputFps": 15, "fpsCap": 7.5, "revision": "1b3820e5" },
-    { "lod": "preview", "outputFps": 30, "fpsCap": 15, "revision": "a64af1a0" },
-    { "lod": "full", "outputFps": 15, "fpsCap": null, "revision": "a771260f" },
-    { "lod": "poster", "outputFps": 15, "fpsCap": null, "revision": "54ed46e7" }
+    { "lod": "preview", "outputFps": 15, "fpsCap": 7.5, "revision": "727c84a7" },
+    { "lod": "preview", "outputFps": 30, "fpsCap": 15, "revision": "f99afa0e" },
+    { "lod": "full", "outputFps": 15, "fpsCap": null, "revision": "52e82838" },
+    { "lod": "poster", "outputFps": 15, "fpsCap": null, "revision": "2d5019e4" }
   ],
   "roles": {
     "full": ["body", "detail", "texture", "glazing", "ground"],

@@ -1,5 +1,5 @@
 import {createHash} from "node:crypto";
-import {fetchGraphEntryV1,publishGraphEntryOutcomeV1,publishGraphEntryV1,type GraphDocumentV1,type GraphFleetClientV1,type GraphPutTimeoutV1,type GraphRefusalV1} from "../../../../🪪️graph-state/🛰️exchange/🟦️.ts";
+import {fetchGraphEntryV1,publishGraphEntryOutcomeV1,publishGraphEntryV1,tryGraphEntryV1,type GraphDocumentV1,type GraphFleetClientV1,type GraphPutTimeoutV1,type GraphRefusalV1} from "../../../../🪪️graph-state/🛰️exchange/🟦️.ts";
 import type {GraphStateV1} from "../../../../🪪️graph-state/🟦️.ts";
 import type {ProjectClaimV1} from "../../../../🪪️graph-state/📦️project-records/🟦️.ts";
 import schema from "./🧬️schema/🔣️.json" with {type:"json"};
@@ -105,7 +105,9 @@ export function ownerPoolOpenWavesV1(waves:readonly OwnerPoolWaveV1[],now:number
 /** 🧾️ The stage and closed cache refusal of a wave offer. */
 export type OwnerPoolPublishRefusalV1=Readonly<{stage:(typeof schema.definitions.PublishStage.enum)[number];code:GraphRefusalV1["code"]|"unavailable";status:number|null;transient:boolean;timeout?:GraphPutTimeoutV1}>;
 
-/** ⬆️ Publishes the pool of a wave to the fleet cache: the manifest first, then the pointer with this wave added to the waves that are open (a swap against the pointer read just before, so a wave of another machine is kept and nobody replaces anybody), so a puller that sees the pointer finds the manifest and a new wave never makes a puller drop the wave it is working on. `false` when the fleet refuses (nothing is lost: the publisher infers every owner itself). */
+const WRITTEN=new Set<string>();
+
+/** ⬆️ Publishes the pool of a wave to the fleet cache: the manifest first, then the pointer with this wave added to the waves that are open (a swap against the pointer read just before, so a wave of another machine is kept and nobody replaces anybody; the id of a wave is the digest of its owners, so a manifest that is stored already is verified and never written a second time by another machine: its head, session and cost sheet are the first writer's, a second write would only be refused as a divergence after its upload, and machines that publish the same owners at once take turns by the claim of the manifest state; a machine that wrote the manifest itself renews it by writing it again), so a puller that sees the pointer finds the manifest and a new wave never makes a puller drop the wave it is working on. `false` when the fleet refuses (nothing is lost: the publisher infers every owner itself). */
 export async function publishOwnerPoolV1(input:Readonly<{client:GraphFleetClientV1;owner:string;manifest:OwnerPoolManifestV1;now?:()=>number;onRefused?:(refusal:OwnerPoolPublishRefusalV1)=>void}>):Promise<boolean>{
  const {client,owner,manifest}=input,{head}=manifest,now=(input.now??Date.now)();
  const refused=(stage:OwnerPoolPublishRefusalV1["stage"],why?:GraphRefusalV1,timeout?:GraphPutTimeoutV1)=>{
@@ -113,12 +115,21 @@ export async function publishOwnerPoolV1(input:Readonly<{client:GraphFleetClient
   input.onRefused?.({stage,code:why?.code??"unavailable",status:why?.status??null,transient:why?.transient??true,...(evidence?{timeout:{request:timeout.request,deadlineMilliseconds:timeout.deadlineMilliseconds}}:{})});
   return false;
  };
- const stored=await publishGraphEntryOutcomeV1({client,state:ownerPoolStateV1("manifest",head.id),owner,documents:[{name:P.headName,bytes:encode(head)},{name:P.sessionName,bytes:manifest.session},{name:P.unitsName,bytes:encode(manifest.units)}]});
- if(!stored.stored){
-  if(stored.refusal?.status!==409||ownerPoolIdV1(head,manifest.units)!==head.id)return refused("manifest",stored.refusal,stored.timeout);
-  const present=await readOwnerPoolV1(client,head.id);
-  if(!present||ownerPoolIdV1(present.head,present.units)!==head.id)return refused("manifest-verification",stored.refusal);
+ const state=ownerPoolStateV1("manifest",head.id),site=client.settings.endpoint+"\u0000"+client.settings.instance+"\u0000"+owner+"\u0000"+head.id,intact=async():Promise<boolean>=>{const present=await readOwnerPoolV1(client,head.id);return present!==undefined&&ownerPoolIdV1(present.head,present.units)===head.id;};
+ let hold:Awaited<ReturnType<typeof tryGraphEntryV1>>|undefined,found=false;
+ if(!WRITTEN.has(site)){
+  hold=await tryGraphEntryV1({client,state,owner,expectedMilliseconds:P.manifestExpectedMilliseconds});
+  for(let wait=0;hold.outcome==="held"&&!found&&wait<P.manifestWaitPolls;wait++){await new Promise<void>(done=>setTimeout(done,P.manifestPollMilliseconds));found=await intact();}
+  if(hold.outcome==="stored")found=await intact();
  }
+ if(!found){
+  const stored=await publishGraphEntryOutcomeV1({client,state,owner,...hold?.outcome==="granted"?{hold:hold.hold}:{},documents:[{name:P.headName,bytes:encode(head)},{name:P.sessionName,bytes:manifest.session},{name:P.unitsName,bytes:encode(manifest.units)}]});
+  if(!stored.stored){
+   if(stored.refusal?.status!==409||ownerPoolIdV1(head,manifest.units)!==head.id)return refused("manifest",stored.refusal,stored.timeout);
+   if(!await intact())return refused("manifest-verification",stored.refusal);
+  }
+ }
+ WRITTEN.add(site);if(WRITTEN.size>P.wavesKept*8)WRITTEN.delete(WRITTEN.values().next().value as string);
  for(let attempt=0;attempt<4;attempt++){
   let current:Awaited<ReturnType<typeof readPointerRaw>>;
   try{current=await readPointerRaw(client);}catch{return refused("pointer-read");}

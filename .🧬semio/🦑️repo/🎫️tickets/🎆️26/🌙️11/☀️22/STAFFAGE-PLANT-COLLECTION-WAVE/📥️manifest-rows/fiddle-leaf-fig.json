@@ -1,0 +1,55 @@
+{
+ "id": "fiddle-leaf-fig",
+ "category": "vegetation",
+ "title": {
+  "en": "Fiddle-Leaf Fig in a Pot",
+  "de": "Geigenfeige im Topf"
+ },
+ "heightM": 1.797,
+ "widthM": 0.772,
+ "powerW": 0,
+ "poses": [
+  "still-air",
+  "ventilation-draught",
+  "freshly-watered",
+  "drought-drooping"
+ ],
+ "clips": [
+  "wind-sway",
+  "gust",
+  "diurnal-transpiration"
+ ],
+ "representations": {
+  "50": "authored",
+  "100": "authored",
+  "200": "authored",
+  "500": "unavailable"
+ },
+ "symbols": [
+  "fiddle-leaf-fig-plan-symbol"
+ ],
+ "analytics": [
+  "thermal",
+  "transport",
+  "structural"
+ ],
+ "exports": [
+  "svg",
+  "pdf",
+  "dxf",
+  "dwg",
+  "png-sequence",
+  "mp4",
+  "webm",
+  "component",
+  "glb",
+  "fbx",
+  "model",
+  "model-zip"
+ ],
+ "distinction": {
+  "en": "A potted fiddle-leaf fig (Ficus lyrata) 1.8 m high: a slender single trunk with twenty-two large, leathery violin-shaped leaves in a spiral, in a 0.32 m terracotta pot on a saucer.",
+  "de": "Eine Geigenfeige (Ficus lyrata) im Topf, 1,8 m hoch: ein schlanker einzelner Stamm mit zweiundzwanzig großen, ledrigen, geigenförmigen Blättern in einer Spirale, in einem Terrakottatopf von 0,32 m auf einem Untersetzer."
+ },
+ "completion": "authored"
+}

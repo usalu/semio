@@ -259,7 +259,7 @@ def joints(scale, solids):
             out.append({"id": f"malleolus-lateral-{side}", "kind": "ellipsoid", "bone": f"shank-{side}", **K.BONE, "radii": [0.014, 0.011, 0.009], "transform": {"translation": [0.418, -0.008, 0.026 * k]}, **K.member(f"shank-{side}")})
         if scale != "500":
             out.append({"id": f"talus-{side}", "kind": "ellipsoid", "bone": f"foot-{side}", **K.BONE, "radii": [0.018, 0.018, 0.018], "transform": {"translation": [0.0, 0.0, 0.0]}, **K.member(f"foot-{side}")})
-        if scale == "500":
+        if scale == "500" and tib["sections"][0]["at"][0] > 0.01:
             head = copy.deepcopy(tib["sections"][0])
             head["at"], head["rx"], head["ry"] = [0.004, 0.0, -0.005 * k], 0.019, 0.019
             tib["sections"].insert(0, head)
@@ -269,15 +269,19 @@ def joints(scale, solids):
     if scale in ("200", "500"):
         for q in by["sternum"]["sections"]:
             q["rx"], q["ry"] = 0.012, 0.006
-    if scale == "500":
+    if scale == "500" and by["spine"]["sections"][0]["at"][0] > 0:
         low = copy.deepcopy(by["spine"]["sections"][0])
         low["at"] = [-0.035, 0.022, 0.0]
         by["spine"]["sections"].insert(0, low)
     if scale == "200":
         out.append(K.ellipsoid(TORSO, "manubrium", "torso", [0.015, 0.022, 0.03], [0.045, 1.385, 0.0], K.member("torso")))
+    if scale == "100":
+        like = by["spine"]["sections"][0]
+        by["spine"]["sections"] = [{**like, "at": [x, y, 0.0], "rx": r, "ry": r} for (x, y), r in zip(SPINE, SPINE_RADII)]
     if scale == "100" and "member-cane-grip" not in by:
         out.append({"id": "member-cane-grip", "of": "cane-grip", "member": "cane", "part": "member"})
-    return solids + out
+    fresh = {o["id"] for o in out}
+    return [s for s in solids if s["id"] not in fresh] + out
 
 
 def body(asset):
@@ -290,6 +294,31 @@ def body(asset):
             s["p1"] = [1.186, 0, 0]
 
 
+METATARSALS = [(1, -0.02, -0.03, 0.15, 0.0065), (2, -0.01, -0.014, 0.151, 0.0045), (3, 0.0, 0.002, 0.147, 0.0045), (4, 0.01, 0.016, 0.141, 0.0045), (5, 0.02, 0.03, 0.134, 0.0045)]
+TOES = [(1, -0.03, -0.027, 0.056, 0.0075, 0.006), (2, -0.014, -0.013, 0.05, 0.0048, 0.004), (3, 0.002, 0.002, 0.045, 0.0046, 0.004), (4, 0.016, 0.015, 0.038, 0.0045, 0.004), (5, 0.03, 0.027, 0.03, 0.0045, 0.004)]
+
+
+def feet(solids):
+    """🦶 The foot of 1:50 in the frames of the foot bone (u from the ankle to the ball, v dorsal, w left) and the toe bone: tarsus, five metatarsals fanning to the ball, five toes; the first ray is the medial one."""
+    by = {s["id"]: s for s in solids}
+    out = []
+    for side, k in (("l", 1), ("r", -1)):
+        mid = by.get(f"midfoot-{side}")
+        if mid is None or len(mid["sections"]) != 4:
+            continue
+        mid["sections"] = mid["sections"][:2]
+        end = copy.deepcopy(mid["sections"][1])
+        end["at"], end["rx"], end["ry"] = [0.078, 0.004, 0.0], 0.031, 0.015
+        mid["sections"].append(end)
+        ph = by[f"phalanges-{side}"]
+        solids.remove(ph)
+        for n, w0, w1, x1, r in METATARSALS:
+            out.append({"id": f"metatarsal-{n}-{side}", "kind": "capsule", "bone": f"foot-{side}", **K.BONE, "p0": [0.07, 0.003, w0 * k], "p1": [x1, 0.0196, w1 * k], "r0": r + 0.001, "r1": r, **K.member(f"foot-{side}")})
+        for n, w0, w1, x1, r0, r1 in TOES:
+            out.append({"id": f"toe-{n}-{side}", "kind": "capsule", "bone": f"toe-{side}", **K.BONE, "p0": [-0.0078, 0.0255, w0 * k], "p1": [x1, 0.0205, w1 * k], "r0": r0, "r1": r1, **K.member(f"toe-{side}")})
+    return solids + out
+
+
 def structure(asset):
     for scale, v in asset["volumes"].items():
         mine = shoulder(scale) + hip(scale)
@@ -299,13 +328,29 @@ def structure(asset):
         kept = [s for s in v["structure"] if s["id"] not in ids]
         if scale == "50":
             for s in kept:
-                if s["id"] in ("spine", "cervical-spine"):
+                if s["id"] in ("spine", "cervical-spine") and s["tone"] != 0.9:
                     s["tone"] = 0.9
                     for q in s["sections"]:
                         q["rx"], q["ry"] = K.r5(q["rx"] * 0.72), K.r5(q["ry"] * 0.72)
         else:
             kept = coarse(scale, kept)
         v["structure"] = joints(scale, kept + mine)
+        if scale == "50":
+            v["structure"] = feet(v["structure"])
+
+
+STALE = ("Skeleton at 1:50 on the girdle", "Girdles at", "Structure at 1:200:", "Structure at 1:500:")
+
+
+def texts(asset):
+    """📝 Decisions of the structure lists, English first and German second, from ./rework-white-cane-texts.json."""
+    with open(os.path.join(K.T, "rework-white-cane-texts.json"), encoding="utf8") as h:
+        mine = json.load(h)
+    for scale, v in asset["volumes"].items():
+        v["decisions"] = [d for d in v["decisions"] if not d["en"].startswith(STALE)] + [mine[scale]]
+
+
+SPINE_RADII = [0.019, 0.0185, 0.018, 0.0165, 0.015, 0.014, 0.013, 0.012, 0.0115]
 
 
 def build():
@@ -314,6 +359,7 @@ def build():
     rig(asset)
     structure(asset)
     body(asset)
+    texts(asset)
     return doc
 
 

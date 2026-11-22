@@ -6,7 +6,7 @@ import {type RustcUnitV1,type unitKeyV1} from "../🔏️key/🟦️.ts";
 import {type UnitEventV1} from "../💾️store/🟦️.ts";
 import {createFleetClientV1,readFleetSettingsV1,type FleetClientV1} from "./📡️client/🟦️.ts";
 import {fleetCacheRootV1,remoteCacheFetchV1} from "../../../../🏗️build/🌐️remote-cache/🛰️fleet/🟦️.ts";
-import {compilerReleaseV1,type CompilerReleaseV1,FLEET_POLICY_V1,hostIndependentV1,neutralReleaseV1,platformOfV1,portableRootsV1,remoteKeyV1,slotIdV1,slotPartsV1,type PlatformV1,type PortableRootV1} from "./🪪️identity/🟦️.ts";
+import {compilerReleaseV1,type CompilerReleaseV1,FLEET_POLICY_V1,hostIndependentV1,neutralReleaseV1,platformOfV1,portableRootsV1,remoteKeyV1,slotIdV1,slotPartsV1,type PlatformV1,type PortableRootV1,type ToolRootsV1} from "./🪪️identity/🟦️.ts";
 import {enqueueUploadV1,markOfferedV1,offeredV1,startUploaderV1} from "./📤️uploader/🟦️.ts";
 import {installFleetUnitV1} from "./📥️adopt/🟦️.ts";
 import {decodeProtobufV1,encodeProtobufV1,REAPI_V1} from "../../../../🏗️build/🌐️remote-execution/📡️wire/📦️protobuf/🟦️.ts";
@@ -16,7 +16,7 @@ const pause=(milliseconds:number):Promise<void>=>new Promise(done=>{setTimeout(d
 type Environment=Readonly<Record<string,string|undefined>>;
 
 /** 🛰️ One unit as the fleet tier sees it: its key and slot, the platform it needs and the roots that make its paths portable. */
-export type FleetUnitV1=Readonly<{client:FleetClientV1;root:string;environment:Environment;localKey:string;key:string;slot:string;slotParts:readonly string[];crate:string;platform:PlatformV1;roots:readonly PortableRootV1[];cwd:string;workspace:string|undefined;laneRoot:string|undefined;owner:string;expected:readonly string[]}>;
+export type FleetUnitV1=Readonly<{client:FleetClientV1;root:string;environment:Environment;localKey:string;key:string;slot:string;slotParts:readonly string[];crate:string;platform:PlatformV1;roots:readonly PortableRootV1[];cwd:string;workspace:string|undefined;laneRoot:string|undefined;owner:string;expected:readonly string[];tools?:ToolRootsV1;run?:true}>;
 
 /** 🏷️ The owner name a process claims under: machine, process and a random suffix, so a restarted process never inherits a dead one's claim. */
 export const fleetOwnerV1=():string=>`${hostname().replace(/[^A-Za-z0-9._-]/gu,"-").slice(0,60)}:${process.pid}:${randomBytes(3).toString("hex")}`;
@@ -48,13 +48,13 @@ export function fleetUnidentifiedReasonV1(root:string,environment:Environment):s
 }
 
 /** 🛰️ Prepares the fleet tier for one cache-eligible unit, also while the breaker is open (lookup and claims then wait for the breaker, the upload of the compiled unit waits in the spool); `undefined` when the tier is off or the unit has no identity. Never throws. */
-export function prepareFleetV1(input:Readonly<{root:string;environment:Environment;basics:UnitBasicsV1;unit:RustcUnitV1;args:readonly string[];cwd:string;laneRoot:string|undefined;localKey:string;keyInput:Parameters<typeof unitKeyV1>[0];toolchain:string;crate:string;sensitive?:readonly string[];expected?:readonly string[]}>,world:Readonly<{client?:FleetClientV1}>={}):FleetUnitV1|undefined{
+export function prepareFleetV1(input:Readonly<{root:string;environment:Environment;basics:UnitBasicsV1;unit:RustcUnitV1;args:readonly string[];cwd:string;laneRoot:string|undefined;localKey:string;keyInput:Parameters<typeof unitKeyV1>[0];toolchain:string;crate:string;sensitive?:readonly string[];expected?:readonly string[];tools?:ToolRootsV1}>,world:Readonly<{client?:FleetClientV1}>={}):FleetUnitV1|undefined{
  try{
   const settings=readFleetSettingsV1(input.root,input.environment);if(!settings)return undefined;
   const workspace=input.environment.SEMIO_UNIT_CACHE_WORKSPACE_ROOT||undefined,identityRoot=workspace??fleetCacheRootV1(input.environment);
   const client=world.client??createFleetClientV1(settings,identityRoot===undefined?{}:{fetch:remoteCacheFetchV1(input.environment,{root:identityRoot})});
-  const platform=platformOfV1({release:input.basics.release,unit:input.unit,args:input.args,environment:input.environment,toolchain:input.toolchain}),roots=portableRootsV1({cwd:input.cwd,workspace,hints:[input.environment.CARGO_MANIFEST_DIR,input.environment.PWD]});
-  return Object.freeze({client,root:input.root,environment:input.environment,localKey:input.localKey,key:remoteKeyV1(platform,input.keyInput,roots,input.sensitive),slot:input.basics.slot,slotParts:input.basics.slotParts,crate:input.crate,platform,roots,cwd:input.cwd,workspace,laneRoot:input.laneRoot,owner:fleetOwnerV1(),expected:input.expected??[]});
+  const platform=platformOfV1({release:input.basics.release,unit:input.unit,args:input.args,environment:input.environment,toolchain:input.toolchain}),roots=portableRootsV1({cwd:input.cwd,workspace,hints:[input.environment.CARGO_MANIFEST_DIR,input.environment.PWD],...input.tools});
+  return Object.freeze({client,root:input.root,environment:input.environment,localKey:input.localKey,key:remoteKeyV1(platform,input.keyInput,roots,input.sensitive),slot:input.basics.slot,slotParts:input.basics.slotParts,crate:input.crate,platform,roots,cwd:input.cwd,workspace,laneRoot:input.laneRoot,owner:fleetOwnerV1(),expected:input.expected??[],...input.tools===undefined?{}:{tools:input.tools}});
  }catch{return undefined;}
 }
 
@@ -192,11 +192,13 @@ export async function obtainFleetUnitV1(unit:FleetUnitV1,event:(kind:UnitEventV1
  }catch{return compile("error");}
 }
 
+const jobExtras=(unit:FleetUnitV1)=>({...unit.run?{run:true as const}:{},...unit.tools===undefined?{}:{tools:{...unit.tools}}});
+
 /** 🎁️ A local hit of a unit this machine never shared: queues it once so a machine that already built something fills the fleet cache too (the worker first asks the server whether it has the unit). Cheap when the unit is settled: one file test. */
 export function offerFleetUnitV1(unit:FleetUnitV1):void{
  try{
   if(!unit.client.settings.upload||offeredV1(unit.root,unit.key))return;
-  enqueueUploadV1(unit.root,{version:1,key:unit.key,localKey:unit.localKey,slot:unit.slot,crate:unit.crate,cwd:unit.cwd,workspace:unit.workspace??null,laneRoot:unit.laneRoot??null,owner:unit.owner,claimed:false,offer:true,costMs:0,platform:unit.platform,queuedMs:Date.now()})&&startUploaderV1(unit.root,unit.environment);
+  enqueueUploadV1(unit.root,{version:1,key:unit.key,localKey:unit.localKey,slot:unit.slot,crate:unit.crate,cwd:unit.cwd,workspace:unit.workspace??null,laneRoot:unit.laneRoot??null,owner:unit.owner,claimed:false,offer:true,costMs:0,platform:unit.platform,queuedMs:Date.now(),...jobExtras(unit)})&&startUploaderV1(unit.root,unit.environment);
  }catch{}
 }
 
@@ -210,7 +212,7 @@ export function shareFleetUnitV1(unit:FleetUnitV1,input:Readonly<{claimed:FleetH
  try{
   rememberCostV1(unit,input.costMs);
   if(!unit.client.settings.upload)return false;
-  const queued=enqueueUploadV1(unit.root,{version:1,key:unit.key,localKey:unit.localKey,slot:unit.slot,crate:unit.crate,cwd:unit.cwd,workspace:unit.workspace??null,laneRoot:unit.laneRoot??null,owner:unit.owner,claimed:input.claimed!==undefined&&!input.claimed.lost(),costMs:Math.round(input.costMs),platform:unit.platform,queuedMs:Date.now(),...input.hint===undefined?{}:{hint:{neutralKey:input.hint.neutralKey,kinds:[...input.hint.kinds]}}});
+  const queued=enqueueUploadV1(unit.root,{version:1,key:unit.key,localKey:unit.localKey,slot:unit.slot,crate:unit.crate,cwd:unit.cwd,workspace:unit.workspace??null,laneRoot:unit.laneRoot??null,owner:unit.owner,claimed:input.claimed!==undefined&&!input.claimed.lost(),costMs:Math.round(input.costMs),platform:unit.platform,queuedMs:Date.now(),...jobExtras(unit),...input.hint===undefined?{}:{hint:{neutralKey:input.hint.neutralKey,kinds:[...input.hint.kinds]}}});
   if(queued){input.claimed?.stop();startUploaderV1(unit.root,unit.environment);}
   return queued;
  }catch{return false;}

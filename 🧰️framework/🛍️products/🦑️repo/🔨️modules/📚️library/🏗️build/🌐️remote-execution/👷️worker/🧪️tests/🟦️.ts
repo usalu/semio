@@ -8,7 +8,7 @@ import type {RemoteExecutionDigestV1} from "../../🟦️.ts";
 import {OFFLOAD_POLICY_V1} from "../../🚀️offload/📐️policy/🟦️.ts";
 import {placeRemoteExecutionLinkV1,remoteExecutionLinkEscapesV1,selectRemoteExecutionSandboxV1} from "../../🔒️sandbox/🟦️.ts";
 import {testScratchRootV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎛️execution/🟦️.ts";
-import {executeRemoteExecutionActionV1,remoteExecutionWorkNameV1} from "../🟦️.ts";
+import {executeRemoteExecutionActionV1,REMOTE_EXECUTION_INPUT_ROOT_ENV_V1,remoteExecutionWorkNameV1} from "../🟦️.ts";
 
 const sha=(data:Uint8Array)=>createHash("sha256").update(data).digest("hex"),scratch:string[]=[];
 afterEach(()=>{for(const path of scratch.splice(0))rmSync(path,{recursive:true,force:true});});
@@ -56,6 +56,12 @@ test("an argv action runs without a shell on this host: the program and its argu
  expect(seen.args[3]).toBe(`--m=${rootReport}=name`);
  expect(seen.e).toBe(join(rootReport,"e","f"));expect(seen.home).toBe(join(rootReport,".tmp"));
  expect(seen.cwd.endsWith(`${sep}r`)).toBe(true);
+});
+
+test("the action learns its real private input root, so a source-reading compiler plug-in never looks above it (the EPERM of an offloaded mutation derive that climbed into the sandbox-hidden worktree)",async()=>{
+ const memory=new Memory(),directory=temporary(),probe="require('fs').mkdirSync('out',{recursive:true});require('fs').writeFileSync('out/r.txt',process.env.SEMIO_OFFLOAD_INPUT_ROOT+'|'+require('fs').realpathSync(process.cwd()));";
+ const result=await run(memory,action(memory,{"p.js":probe},[process.execPath,"p.js"],{},["out/r.txt"]),directory),[root,cwd]=outputOf(memory,result.actionResult,"out/r.txt").split("|");
+ expect(REMOTE_EXECUTION_INPUT_ROOT_ENV_V1).toBe("SEMIO_OFFLOAD_INPUT_ROOT");expect(root!.length).toBeGreaterThan(0);expect(cwd).toBe(root);
 });
 
 test("the private root and the worker directory stay short enough for native Windows: a random 12-character task directory below the worker directory, one-letter root, long host names cut and made unique by a hash",async()=>{

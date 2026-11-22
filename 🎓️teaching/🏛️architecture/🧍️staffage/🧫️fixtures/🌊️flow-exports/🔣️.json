@@ -1,0 +1,61 @@
+{
+  "id": "flow-exports",
+  "oracle": "the written files reopened by third-party readers: svgelements (shape boxes) with the XML parser of the Python standard library (ids, layer groups, paint), numpy (travel time of a point on a stream by projection and linear interpolation), PDFium (rendered pixels, text) and pikepdf (structure), ezdxf (layers, polylines, audit, ACI colours), ezdwg (layers, polylines), PyAV and the pinned ffmpeg (frames of a video); the reference of colours and marks is the library's own flowPaint and flowMarks, which have their own oracles in flow-view and flow-field",
+  "still": {
+    "comment": "a boiling kettle in cool, moist, slowly moving air: a warm plume, vapour and fog",
+    "asset": "electric-kettle",
+    "pose": "boiling",
+    "scale": 20,
+    "language": "en",
+    "conditions": ["--air-temp", "15", "--radiant-temp", "15", "--humidity", "65", "--wind", "0.2", "--wind-direction", "0"],
+    "environment": { "airTempC": 15, "meanRadiantTempC": 15, "relativeHumidity": 0.65, "windMS": 0.2, "windDirectionDeg": 0 },
+    "marks": ["flow-stream-", "flow-arrow-", "flow-tracer-", "flow-tracer-head-", "flow-vapour-", "flow-vapour-line-", "flow-fog-", "flow-fog-rim-", "flow-path-"],
+    "svgLayer": "staffage-field",
+    "legends": ["flow-excess-temperature", "flow-speed", "flow-vapour-excess", "flow-condensate", "flow-path-age"],
+    "play": { "durationS": 1, "fps": 2, "times": [0, 0.5, 1], "developS": 14 },
+    "raster": { "durationS": 0.5, "fps": 4, "frames": 3, "pxPerMm": 3 }
+  },
+  "loop": {
+    "comment": "a standing adult breathing in a 5 s loop: the frame after the last is the first",
+    "asset": "standing-adult",
+    "clip": "idle-breathing",
+    "scale": 50,
+    "durationS": 5,
+    "midS": 2.5
+  },
+  "cad": {
+    "circleSegments": 32,
+    "layers": {
+      "FLOW-STREAMS-WARM": { "aci": 1, "lineweight": 18 },
+      "FLOW-STREAMS-NEUTRAL": { "aci": 8, "lineweight": 18 },
+      "FLOW-STREAMS-COOL": { "aci": 5, "lineweight": 18 },
+      "FLOW-ARROWS-WARM": { "aci": 1, "lineweight": 18 },
+      "FLOW-ARROWS-NEUTRAL": { "aci": 8, "lineweight": 18 },
+      "FLOW-ARROWS-COOL": { "aci": 5, "lineweight": 18 },
+      "FLOW-TRACERS-WARM": { "aci": 1, "lineweight": 25 },
+      "FLOW-TRACERS-NEUTRAL": { "aci": 8, "lineweight": 25 },
+      "FLOW-TRACERS-COOL": { "aci": 5, "lineweight": 25 },
+      "FLOW-PATHS-WARM": { "aci": 1, "lineweight": 13 },
+      "FLOW-PATHS-NEUTRAL": { "aci": 8, "lineweight": 13 },
+      "FLOW-PATHS-COOL": { "aci": 5, "lineweight": 13 },
+      "FLOW-VAPOUR": { "aci": 134, "lineweight": 30 },
+      "FLOW-FOG": { "aci": 4, "lineweight": 30 }
+    },
+    "present": ["FLOW-STREAMS-WARM", "FLOW-STREAMS-NEUTRAL", "FLOW-ARROWS-NEUTRAL", "FLOW-TRACERS-NEUTRAL", "FLOW-VAPOUR", "FLOW-FOG"],
+    "hue": { "WARM": "red above blue", "COOL": "blue above red", "NEUTRAL": "grey", "FLOW-VAPOUR": "green and blue above red", "FLOW-FOG": "green and blue above red" },
+    "sheetPrefixes": ["ELEVATION", "FRONT", "PLAN"]
+  },
+  "pdf": { "dpi": 100, "warm": { "redOverBlue": 60, "minPixels": 40 } },
+  "tolerances": { "paperMm": 0.002, "modelM": 0.000001, "domainMm": 1.5, "travelS": 0.02, "onStreamMm": 0.01, "loopMm": 0.001 },
+  "refusals": [
+    { "flags": ["--view", "dark-line", "--flow", "all"], "says": "--flow draws the air flow of --view thermal only" },
+    { "flags": ["--view", "dark-line", "--wind", "2"], "says": "--wind sets the environment of --view thermal only" },
+    { "flags": ["--view", "dark-line", "--turbulence", "20"], "says": "--turbulence shapes the air flow, which only --view thermal draws" },
+    { "flags": ["--view", "thermal", "--flow", "none", "--flow-spacing", "3"], "says": "--flow-spacing shapes the air flow, which --flow none leaves out" },
+    { "flags": ["--view", "thermal", "--roughness", "0.1"], "says": "--roughness describes the logarithmic wind profile: add --wind-profile logarithmic" },
+    { "flags": ["--view", "thermal", "--humidity", "140"], "says": "--humidity must be a number from 0 to 100 %, got 140" },
+    { "flags": ["--view", "thermal", "--flow-seed", "1.5"], "says": "--flow-seed must be a whole number from 1 to 9999" },
+    { "flags": ["--view", "thermal", "--flow", "smoke"], "says": "--flow is all, none or a comma list of" },
+    { "flags": ["--view", "thermal", "--wind-profile", "spiral"], "says": "--wind-profile must be one of uniform, logarithmic" }
+  ]
+}

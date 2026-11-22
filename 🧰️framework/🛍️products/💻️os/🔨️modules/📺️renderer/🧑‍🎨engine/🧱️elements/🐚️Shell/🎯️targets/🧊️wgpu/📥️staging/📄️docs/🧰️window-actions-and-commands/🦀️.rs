@@ -104,8 +104,6 @@ pub fn key_event_matches_chord(action: &semio_ui_wgpu_input::KeyAction, modifier
 }
 
 impl DocumentState {
-    // #endregion
-    // #region command-registry
     /// 🔌️ The current session's program manifest (for its `commands: Vec<CommandDefinition>` — Plugin-scope
     /// commands apply whenever any of that plugin's apps is focused, mirroring `os-shell.tsx`'s
     /// `activePluginManifest`).
@@ -270,7 +268,6 @@ impl DocumentState {
         debug_log(&format!("[TRACE] wgpu-shell locale resolved={} terminology={} reason={reason} chrome=[{}] windows=[{}] commands=[{}]", prefs.locale_id, prefs.terminology_id, chrome.join(", "), windows.join(", "), commands.join(", ")));
     }
 
-    //#region ShellCommandHistory
     /// 🕒️ Looks up an `os.*` setting command's display label from `build_os_commands`' registry
     /// (`os.setAppearance`/`os.setDriver`/`os.setLocale`/`os.setTerminology`/`os.setThemeId`), falling
     /// back to the theme reset/delete buttons' own `shell_chrome_string` i18n labels for the two
@@ -295,7 +292,6 @@ impl DocumentState {
         settle.deferred_actions.push(note_shell_command_action(&controller_id, command_id, &label, detail));
     }
 
-    //#endregion ShellCommandHistory
     /// 🧾️ Every SHELL-OWNED panel leaf id this frame publishes a retained document for — the Command
     /// categories, the five Settings leaves, the Marketplace leaf, each mode tool's leaf and the chat
     /// transcript. Derived from `default_dock`'s own sources, so a leaf can never be dockable without
@@ -310,6 +306,7 @@ impl DocumentState {
         leaves.push(FRAMEWORK_TASK_MANAGER_PANEL_ID.to_string());
         leaves.push(FRAMEWORK_CHAT_PANEL_ID.to_string());
         leaves.push(ROUTE_NOT_FOUND_PANEL_ID.to_string());
+        leaves.push(PLUGIN_RECOVERY_PANEL_ID.to_string());
         leaves.push(semio_renderer_wgpu_hub_workspace::hub_connection::FRAMEWORK_HUB_PANEL_ID.to_string());
         leaves.extend(self.tool_panel_tabs(prefs).into_iter().map(|tab| tab.id));
         leaves

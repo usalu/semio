@@ -881,24 +881,39 @@ fn a_document_whose_root_is_the_engine_surface_reaches_a_painted_frame() {
 //#endregion 🗺️EngineSurfaceRootDocument
 
 #[test]
-fn a_tree_row_declares_its_drop_action_through_its_drop_binding() {
+fn a_tree_row_or_section_drops_through_its_trees_drop_binding() {
     let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let text = |value: &str| ui_contract::UiText::try_from_str(value).expect("text fits");
     let item = || ui_contract::Component::TreeItem(ui_contract::TreeItemProps { label: ui_contract::Label(text("row")), description: None, icon: None, default_open: None, draggable: Some(true), drag_data: None, dimmed: None, selected: None, window: None, granularity: None, inline_toolbar: None, detail: None, row_actions: Default::default(), target: None });
-    let mut droppable = UiNodeRecord::with_component(UiNodeId(2), text("row-b"), item());
-    droppable.bindings.try_push(ui_contract::ActionBinding { trigger: ui_contract::Trigger::Drop, action: ui_contract::ActionId::new(text("ctl"), text("moveEntity"), 1), args: None, capability: None }).ok().expect("binding admits");
-    let plain = UiNodeRecord::with_component(UiNodeId(3), text("row-c"), item());
-    let mut root = UiNodeRecord::with_component(UiNodeId(1), text("root"), item());
-    for child in [UiNodeId(2), UiNodeId(3)] {
-        root.children.try_push(child).ok().expect("child admits");
-    }
-    let header = UiDocumentLeaseHeader { generation: 1, surface: SurfaceId::try_from("drop-law").expect("surface id"), revision: UiRevision(1), root: UiNodeId(1), layout_epoch: 0, node_count: 3 };
+    let section = || ui_contract::Component::TreeSection(ui_contract::TreeSectionProps { label: None, default_open: Some(true), header_toolbar: None, window: None });
+    let bound = |id: u32, key: &str, component, children: &[u32]| {
+        let mut record = UiNodeRecord::with_component(UiNodeId(u64::from(id)), text(key), component);
+        for child in children {
+            record.children.try_push(UiNodeId(u64::from(*child))).ok().expect("child admits");
+        }
+        record
+    };
+    let mut bound_tree = bound(1, "bound", ui_contract::Component::Tree(ui_contract::TreeProps::default()), &[2]);
+    bound_tree.bindings.try_push(ui_contract::ActionBinding { trigger: ui_contract::Trigger::Drop, action: ui_contract::ActionId::new(text("ctl"), text("moveEntity"), 1), args: None, capability: None }).ok().expect("binding admits");
+    let records = [
+        bound(9, "root", ui_contract::Component::Tree(ui_contract::TreeProps::default()), &[1, 5]),
+        bound_tree,
+        bound(2, "bound-section", section(), &[3]),
+        bound(3, "row-b", item(), &[]),
+        bound(5, "plain", ui_contract::Component::Tree(ui_contract::TreeProps::default()), &[6]),
+        bound(6, "plain-section", section(), &[7]),
+        bound(7, "row-c", item(), &[]),
+    ];
+    let header = UiDocumentLeaseHeader { generation: 1, surface: SurfaceId::try_from("drop-law").expect("surface id"), revision: UiRevision(1), root: UiNodeId(9), layout_epoch: 0, node_count: 7 };
     let mut document = UiDocumentTree::new(header).expect("header admits");
-    for record in [root, droppable, plain] {
+    for record in records {
         document.try_upsert_record(record).ok().expect("record admits");
     }
-    let action = tree_item_drop_action(&document, "row-b").expect("the bound row is a drop target");
-    assert_eq!((action.controller_id.as_str(), action.action.as_str()), ("ctl", "moveEntity"));
-    assert!(tree_item_drop_action(&document, "row-c").is_none(), "a row without a drop binding is no target");
-    assert!(tree_item_drop_action(&document, "missing").is_none());
+    for key in ["row-b", "bound-section"] {
+        let action = tree_drop_action(&document, key).expect("a row or section of the bound tree is a drop target");
+        assert_eq!((action.controller_id.as_str(), action.action.as_str()), ("ctl", "moveEntity"));
+    }
+    assert!(tree_drop_action(&document, "row-c").is_none(), "a row of a tree without a drop binding is no target");
+    assert!(tree_drop_action(&document, "bound").is_none(), "the tree itself is no row");
+    assert!(tree_drop_action(&document, "missing").is_none());
 }

@@ -5,7 +5,25 @@ const ROWS: &[(&str, &str, &str)] = &[
     ("status.routeAdmission.awaitSignIn", "Sign in to the hub to open this space.", "Melde dich beim Hub an, um diesen Space zu öffnen."),
     ("status.routeAdmission.applyOffline", "The hub is not answering — this space opens with what this device has.", "Der Hub antwortet nicht — dieser Space öffnet sich mit dem, was dieses Gerät hat."),
     ("status.routeAdmission.signIn", "Sign in", "Anmelden"),
+    ("status.sessionAuthority.pending", "Verifying shared access…", "Gemeinsamen Zugriff prüfen…"),
+    ("status.sessionAuthority.cancel", "Cancel shared access", "Prüfung abbrechen"),
+    ("status.sessionAuthority.unavailable", "Shared access is unavailable. Open a fresh authorized session from the secure launcher.", "Der gemeinsame Zugriff ist nicht verfügbar. Öffne über den sicheren Starter eine neu autorisierte Sitzung."),
+    ("closeGuard.title", "Unsaved changes", "Nicht gespeicherte Änderungen"),
+    ("closeGuard.body", "“{{name}}” has changes that were not saved. Close anyway and lose them?", "„{{name}}“ hat Änderungen, die nicht gespeichert wurden. Trotzdem schließen und sie verlieren?"),
+    ("closeGuard.saving", "Saving “{{name}}” before closing…", "„{{name}}“ wird vor dem Schließen gespeichert…"),
+    ("closeGuard.cancel", "Cancel", "Abbrechen"),
+    ("saveFailure.folder-write-failed", "The folder refused the write.", "Der Ordner hat das Schreiben abgelehnt."),
+    ("saveFailure.folder-unreadable", "The folder could not be read.", "Der Ordner konnte nicht gelesen werden."),
+    ("saveFailure.external-divergence", "The folder changed outside this app.", "Der Ordner wurde außerhalb dieser App geändert."),
+    ("saveFailure.hub-rejected", "The hub rejected the change.", "Der Hub hat die Änderung abgelehnt."),
+    ("saveFailure.quota-exceeded", "The storage quota is exhausted.", "Das Speicherkontingent ist erschöpft."),
+    ("saveFailure.generic", "The save was not acknowledged.", "Das Speichern wurde nicht bestätigt."),
+    ("closeGuard.keep", "Keep editing", "Weiter bearbeiten"),
+    ("closeGuard.discard", "Close and discard", "Schließen und verwerfen"),
+    ("closeGuard.unsaved", "Unsaved changes", "Nicht gespeicherte Änderungen"),
     ("status.bootstrap.rebootstrap", "The server requires a fresh authoritative restore. Stale document UI was discarded while reconnecting.", "Der Server verlangt eine neue autoritative Wiederherstellung. Veraltete Dokumentansichten wurden beim Neuverbinden verworfen."),
+    ("status.bootstrap.progress", "Restoring document: {{received}} of {{total}} bytes; {{chunks}} of {{totalChunks}} chunks.", "Dokument wird wiederhergestellt: {{received}} von {{total}} Bytes; {{chunks}} von {{totalChunks}} Blöcken."),
+    ("status.bootstrap.cancel", "Cancel restore", "Wiederherstellung abbrechen"),
     ("taskManager.columns.actorId", "Actor", "Akteur"),
     ("taskManager.columns.packageId", "Package", "Paket"),
     ("taskManager.columns.lane", "Lane", "Spur"),
@@ -55,6 +73,14 @@ const ROWS: &[(&str, &str, &str)] = &[
     ("taskManager.tasks.progressElapsed", "{{seconds}} s", "{{seconds}} s"),
     ("taskManager.tasks.progressLabel", "Progress of {{task}}", "Fortschritt von {{task}}"),
     ("common.routeNotFound", "Route not found: {{path}}", "Route nicht gefunden: {{path}}"),
+    ("surfaceContextMenu.placementSuggestions", "Placement suggestions", "Platzierungsvorschläge"),
+    ("host.checkingPlacement", "Checking collision-free placements…", "Prüfe kollisionsfreie Platzierungen…"),
+    ("host.noPlacement", "No collision-free placement at this connector", "Keine kollisionsfreie Platzierung an diesem Verbinder"),
+    ("plugins.recovery.title", "Plugin Recovery", "Plugin-Wiederherstellung"),
+    ("plugins.recovery.crashed", "This program crashed.", "Dieses Programm ist abgestürzt."),
+    ("plugins.recovery.quarantined", "This program was quarantined after repeated crashes.", "Dieses Programm wurde nach wiederholten Abstürzen isoliert."),
+    ("plugins.recovery.restartApp", "Restart App", "App neu starten"),
+    ("plugins.recovery.disablePlugin", "Disable Plugin", "Plugin deaktivieren"),
 ];
 
 /// 🧵️ EN/DE lookup of the Task Manager and route-not-found strings; `None` for any other key.
@@ -65,4 +91,16 @@ pub(super) fn shell_chrome_task_manager_and_route(key: &'static str, is_de: bool
 /// 🧵️ A chrome string with its `{{name}}` placeholders filled from `values`.
 pub fn shell_chrome_format(key: &'static str, is_de: bool, values: &[(&str, &str)]) -> String {
     values.iter().fold(super::shell_chrome_string(key, is_de).to_string(), |text, (name, value)| text.replace(&format!("{{{{{name}}}}}"), value))
+}
+
+/// 🧯️ React's `saveFailureTextV1`: a known code in words; any other code reads as the generic failure, followed by the failure's own message when it carries one.
+pub fn shell_save_failure_text(code: &str, message: Option<&str>, is_de: bool) -> String {
+    let known = [("folder-write-failed", "saveFailure.folder-write-failed"), ("folder-unreadable", "saveFailure.folder-unreadable"), ("external-divergence", "saveFailure.external-divergence"), ("hub-rejected", "saveFailure.hub-rejected"), ("quota-exceeded", "saveFailure.quota-exceeded")];
+    match known.iter().find(|(known_code, _)| *known_code == code) {
+        Some((_, key)) => super::shell_chrome_string(key, is_de).to_string(),
+        None => {
+            let generic = super::shell_chrome_string("saveFailure.generic", is_de);
+            message.filter(|message| !message.is_empty()).map_or_else(|| generic.to_string(), |message| format!("{generic} {message}"))
+        }
+    }
 }

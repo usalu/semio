@@ -6,8 +6,8 @@ import source from"../../../🟨️.mjs"with{type:"text"};
 
 test("the stale row line names the owner and the row in English and German",()=>{
  const ledger=createTakeLedgerV1(3),row={kind:"closure",path:"[\"/r\",\"abc\",[\"generated\"]]",fact:"[]"};
- expect(ledger.staleRowLine("en","owner-a",row)).toBe("owner owner-a: the first row of the record from the fleet that does not hold here is closure [\"/r\",\"abc\",[\"generated\"]] (fact [])");
- expect(ledger.staleRowLine("de","owner-a",row)).toContain("Projekt owner-a: die erste Zeile des Eintrags aus der Flotte");
+ expect(ledger.staleRowLine("en","owner-a",row)).toBe("owner owner-a: the first row of its stored record that does not hold here is closure [\"/r\",\"abc\",[\"generated\"]] (fact [])");
+ expect(ledger.staleRowLine("de","owner-a",row)).toContain("Projekt owner-a: die erste Zeile seines gespeicherten Eintrags");
  expect(ledger.staleRowLine("de","owner-a",row)).toContain("(Fakt [])");
 });
 

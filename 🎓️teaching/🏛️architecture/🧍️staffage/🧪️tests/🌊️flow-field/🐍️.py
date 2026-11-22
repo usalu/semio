@@ -1,4 +1,4 @@
-"""🌊️ Independent oracle of the flow field: builds the fixture's plume and jet from the classical similarity solutions (Morton, Taylor & Turner top-hat plume; top-hat round jet), re-implements the documented field (wind, Gaussian mean flow of the slices, entrainment sinks with ground images and far-group aggregation) with numpy, integrates the continuous entrainment line sink with scipy `quad`, the volume flux of the Gaussian profile with numpy, the streams with scipy `solve_ivp` (DOP853) in arc length and the advection of a particle in time.
+"""🌊️ Independent oracle of the flow field: builds the fixture's plume and jet from the classical similarity solutions (Morton, Taylor & Turner top-hat plume; top-hat round jet), re-implements the documented field (wind, Gaussian mean flow of the slices, the mixture of overlapping streams whose profile shares never sum beyond one centreline, entrainment sinks with ground images and far-group aggregation) with numpy, integrates the continuous entrainment line sink with scipy `quad` (its radial inflow beside the plume and the flux it drives through a horizontal disc), the volume flux of the sampled field with numpy, the streams with scipy `solve_ivp` (DOP853) in arc length and the advection of a particle in time.
 
 Run `UV_PROJECT_ENVIRONMENT=<machine cache>/staffage-oracles/geometry uv run --project 🧪️tests/🧰️support/🐍️oracles --locked --only-group geometry python -I 🐍️.py [--write]` (the `geometry` oracle set: numpy, scipy).
 """
@@ -14,7 +14,7 @@ FIXTURE = Path(__file__).resolve().parents[2] / "🧫️fixtures" / "🌊️flow
 G = 9.80665
 ALPHA_JET, ALPHA_PLUME = 0.076, 0.116
 RI_PLUME = 8 * ALPHA_PLUME / 5
-CUT, GROUP, FAR, PASSIVE = 3.5, 12, 6.0, 0.01
+CUT, GROUP, FAR, PASSIVE, CENTRELINE_SHARE = 3.5, 12, 6.0, 0.01, 2.0
 STEPS = {"breath": 4, "plume": 12, "transpiration": 60}
 
 
@@ -106,8 +106,9 @@ class Field:
         point = np.asarray(point, dtype=float)
         v = self.wind.copy()
         scalars = np.zeros(3)
+        share, mixed = 0.0, 0
         for groups in self.plumes:
-            a, s, c = 0.0, np.zeros(3), np.zeros(3)
+            a, s, c, k = 0.0, np.zeros(3), np.zeros(3), 0.0
             for g in groups:
                 if g["q"] > 0:
                     d = point - g["centre"]
@@ -133,12 +134,17 @@ class Field:
                             continue
                         w, profile = math.exp(-(along**2) / (2 * r["h"] ** 2)), 2 * math.exp(-2 * across2 / r["b"] ** 2)
                     a += w
+                    k += w * profile
                     s += w * profile * r["u"]
                     c += w * profile * np.array([r["t"], r["wv"], r["wl"]])
             if a > 0:
                 gain = min(1.0, a) / a
                 v += gain * s
                 scalars += gain * c
+                share += gain * k
+                mixed += 1
+        if mixed > 1 and share > CENTRELINE_SHARE:
+            scalars *= CENTRELINE_SHARE / share
         return v, scalars
 
 
@@ -160,6 +166,26 @@ def line_sink(case, point):
     return sum(quad(radial, ys[0] - half[0], ys[-1] + half[1], args=(m,), epsabs=1e-13, epsrel=1e-11)[0] for m in (1.0, -1.0))
 
 
+def induced_flux(case, height, reach):
+    """Volume flux that the continuous entrainment line sink and its ground image drive through the disc of radius `reach` at `height` (scipy dblquad): sinks above the plane draw air up through it, sinks below and the images draw it down."""
+    a, f0 = ALPHA_PLUME, case["buoyancyFluxM4S3"]
+    k = (9 * a * f0 / (10 * math.pi)) ** (1 / 3)
+    ys = [p["at"]["y"] for p in case["parcels"]]
+    half = [math.hypot(p["velocity"]["y"], 0.03) * tau_of("plume") / 2 for p in (case["parcels"][0], case["parcels"][-1])]
+
+    def through_disc(z, mirror):
+        dy = height - mirror * z
+        strength = 2 * math.pi * (6 * a / 5 * z) * a * (5 / (6 * a) * k * z ** (-1 / 3))
+        return -strength * 0.5 * (math.copysign(1.0, dy) - dy / math.hypot(dy, reach))
+
+    lo, hi = ys[0] - half[0], ys[-1] + half[1]
+    total = 0.0
+    for mirror in (1.0, -1.0):
+        points = [height] if mirror > 0 and lo < height < hi else None
+        total += quad(through_disc, lo, hi, args=(mirror,), points=points, epsabs=1e-13, epsrel=1e-11)[0]
+    return total
+
+
 def compute(fixture):
     out = {}
     for case in fixture["cases"]:
@@ -178,7 +204,7 @@ def compute(fixture):
                 rr = radii[::40]
                 a, f0 = ALPHA_PLUME, case["buoyancyFluxM4S3"]
                 k = (9 * a * f0 / (10 * math.pi)) ** (1 / 3)
-                flux.append({"heightM": z, "sampledM3S": float(np.trapezoid(w * 2 * math.pi * rr, rr)), "similarityM3S": math.pi * (6 * a / 5 * z) ** 2 * 5 / (6 * a) * k * z ** (-1 / 3)})
+                flux.append({"heightM": z, "sampledM3S": float(np.trapezoid(w * 2 * math.pi * rr, rr)), "similarityM3S": math.pi * (6 * a / 5 * z) ** 2 * 5 / (6 * a) * k * z ** (-1 / 3), "inducedM3S": induced_flux(case, z, float(rr[-1]))})
             result["flux"] = flux
         streams = []
         step, count = fixture["stream"]["stepM"], fixture["stream"]["points"]
@@ -202,11 +228,22 @@ def compute(fixture):
 
 def generate(fixture):
     for case in fixture["cases"]:
-        case["parcels"] = plume_parcels(case, fixture["ambient"]) if case["kind"] == "plume" else jet_parcels(case, fixture["ambient"])
+        if case["kind"] == "plume":
+            case["parcels"] = plume_parcels(case, fixture["ambient"])
+        elif case["kind"] == "twin":
+            case["parcels"] = [p for emitter in case["emitters"] for p in jet_parcels({**case, "emitter": emitter}, fixture["ambient"])]
+        else:
+            case["parcels"] = jet_parcels(case, fixture["ambient"])
 
 
 if __name__ == "__main__":
     fixture = json.loads(FIXTURE.read_text(encoding="utf-8"))
+    if "--write-flux" in sys.argv:
+        for case in fixture["cases"]:
+            for row in fixture["expected"][case["id"]].get("flux", []):
+                row["inducedM3S"] = induced_flux(case, row["heightM"], 4 * 6 * ALPHA_PLUME / 5 * row["heightM"])
+        FIXTURE.write_text(json.dumps(fixture, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
+        sys.exit(0)
     if "--write" in sys.argv:
         generate(fixture)
     computed = compute(fixture)

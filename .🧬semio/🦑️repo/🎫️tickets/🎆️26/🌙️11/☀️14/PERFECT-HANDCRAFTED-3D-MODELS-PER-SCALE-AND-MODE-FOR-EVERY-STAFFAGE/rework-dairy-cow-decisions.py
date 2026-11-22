@@ -26,6 +26,25 @@ TEXT = {
     ),
 }
 
+TRUNK = {
+    "50": (
+        "Neck, top line and skull at 1:50: the neck is 0.58 m deep and 0.30 m broad at the shoulder and 0.28 by 0.17 m at the throat, its top line dips 0.08 m between withers and poll and the dewlap hangs from its lower line; the withers rise 0.03 m over the back without a hump, the fore chest ends 0.10 m ahead of the point of the shoulder so that only the brisket shows between the fore legs, the muzzle is 0.17 m broad and the cheek 0.19 m deep. The scapula bone rests inclined 14 degrees outwards from 0.09 m beside the median plane to the shoulder joint at 0.20 m. In the skeleton the skull has zygomatic arches and cheek teeth, each half of the mandible a ramus with condyle and coronoid process and the incisors at the symphysis, the sternum is a flat bar through the ventral ends of the eight sternal ribs and each shoulder blade ends in its glenoid.",
+        "Hals, Rückenlinie und Schädel bei 1:50: Der Hals ist an der Schulter 0,58 m tief und 0,30 m breit und an der Kehle 0,28 mal 0,17 m, seine Oberlinie senkt sich zwischen Widerrist und Genick um 0,08 m, die Wamme hängt an seiner Unterlinie; der Widerrist steht 0,03 m über dem Rücken ohne Buckel, die Vorderbrust endet 0,10 m vor dem Buggelenk, sodass zwischen den Vorderbeinen nur die Brustspitze sichtbar ist, das Flotzmaul ist 0,17 m breit und die Backe 0,19 m tief. Der Schulterblattknochen ruht 14 Grad nach außen geneigt von 0,09 m neben der Medianebene bis zum Schultergelenk bei 0,20 m. Im Skelett hat der Schädel Jochbögen und Backenzähne, jede Unterkieferhälfte einen Ast mit Gelenk- und Kronfortsatz und die Schneidezähne an der Symphyse, das Brustbein ist ein flacher Stab durch die unteren Enden der acht wahren Rippen, und jedes Schulterblatt endet in seiner Gelenkpfanne.",
+    ),
+    "100": (
+        "Neck, top line and skull at 1:100: the same neck with five stations, the withers with four, the fore chest shortened as at 1:50, muzzle and cheek at their true breadth; the skull is one loft of six stations, the mandible one member and the sternum a flat bar through the ventral ends of ribs 1, 3, 5 and 7.",
+        "Hals, Rückenlinie und Schädel bei 1:100: derselbe Hals mit fünf Stationen, der Widerrist mit vier, die Vorderbrust gekürzt wie bei 1:50, Flotzmaul und Backe in wahrer Breite; der Schädel ist ein Körper aus sechs Stationen, der Unterkiefer ein Stab und das Brustbein ein flacher Stab durch die unteren Enden der Rippen 1, 3, 5 und 7.",
+    ),
+    "200": (
+        "Neck, top line and skull at 1:200: the neck has four stations with the dip of its top line, the trunk keeps the withers 0.03 m over the back, the muzzle is 0.17 m broad; the sternum is a flat bar at least 36 mm thick under the typified ribs.",
+        "Hals, Rückenlinie und Schädel bei 1:200: Der Hals hat vier Stationen mit der Senke seiner Oberlinie, der Rumpf hält den Widerrist 0,03 m über dem Rücken, das Flotzmaul ist 0,17 m breit; das Brustbein ist ein mindestens 36 mm starker flacher Stab unter den typisierten Rippen.",
+    ),
+    "500": (
+        "Neck and head at 1:500: the neck is a loft of three stations from the shoulder (0.58 by 0.30 m) to the throat (0.29 by 0.18 m), the head one wedge with the muzzle 0.17 m broad; the coat patches are below the printable sheet thickness and exist only as thermal regions.",
+        "Hals und Kopf bei 1:500: Der Hals ist ein Körper aus drei Stationen von der Schulter (0,58 mal 0,30 m) bis zur Kehle (0,29 mal 0,18 m), der Kopf ein Keil mit 0,17 m breitem Flotzmaul; die Fellflecken liegen unter der druckbaren Blechstärke und bestehen nur als thermische Regionen.",
+    ),
+}
+
 
 def main():
     path = sys.argv[1]
@@ -33,6 +52,7 @@ def main():
     for scale, (en, de) in TEXT.items():
         decisions = document["asset"]["volumes"][scale]["decisions"]
         decisions.append({"en": COMMON_EN + " " + en, "de": COMMON_DE + " " + de})
+        decisions.append({"en": TRUNK[scale][0], "de": TRUNK[scale][1]})
     with open(path, "w", encoding="utf-8") as handle:
         json.dump(document, handle, ensure_ascii=False, indent=2)
         handle.write("\n")

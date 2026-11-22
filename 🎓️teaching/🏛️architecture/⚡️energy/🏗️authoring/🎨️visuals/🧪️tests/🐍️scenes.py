@@ -256,9 +256,9 @@ class SceneScaleTest(unittest.TestCase):
                 self.assertGreaterEqual(label.get_bottom()[1], room["y_f"] + gap)
 
 
-    def test_transport_casts_are_sized_and_floored_by_their_figure(self):
+    def test_flow_casts_are_sized_and_floored_by_their_figure(self):
         shared = importlib.import_module(BASE + "🏗️authoring.🎨️visuals.🐍️")
-        case = CASES["transport_figure"]
+        case = CASES["flow_figure"]
         for cast in case["casts"]:
             with self.subTest(cast=cast):
                 index = shared._staffage._index(shared._staffage.ensure_casts([cast])[cast])
@@ -273,9 +273,9 @@ class SceneScaleTest(unittest.TestCase):
                     self.assertAlmostEqual(group.get_bottom()[1], case["floor_y"], delta=case["tolerance"])
                     self.assertGreater(max(member.get_top()[1] for member in group.family_members_with_points()), group.get_top()[1] + case["tolerance"])
 
-    def test_mirror_flips_every_path_about_the_origin_and_swaps_the_transport_bounds(self):
+    def test_mirror_flips_every_path_about_the_origin_and_swaps_the_bounds_of_a_flow_cast(self):
         shared = importlib.import_module(BASE + "🏗️authoring.🎨️visuals.🐍️")
-        case = CASES["transport_figure"]
+        case = CASES["flow_figure"]
         cast = case["casts"][0]
         figure = shared._staffage._index(shared._staffage.ensure_casts([cast])[cast])["logical"]["figureBoundsM"]
         for mirror in (False, True):

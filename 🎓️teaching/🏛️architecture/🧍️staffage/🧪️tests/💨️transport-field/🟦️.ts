@@ -1,4 +1,4 @@
-/** 💨️ Transport field: world-space parcels (head turn, moving source, wind change), play = scrub bitwise, no teleport, category sources (breath, exhaust, plume, transpiration), streamlines vs pathlines, condensation, cancellation. */
+/** 💨️ Transport field: world-space parcels (head turn, moving source, wind change), play = scrub bitwise, no teleport, category sources (breath, exhaust, plume, transpiration), the streams of the flow field vs the paths of the parcels, condensation as the fog of the flow field, cancellation. */
 import { describe, expect, it } from "vitest";
 import { SCENARIOS, scenario } from "../../🧫️fixtures/💨️transport/🟦️.ts";
 import type { EvaluationQuery, TransportField } from "../../🔨️modules/🔗️contracts/🟦️.ts";
@@ -136,7 +136,7 @@ describe("💨️ world-space parcels", () => {
 
   it("never teleports: per-step displacement is bounded by speed and the turbulent step", () => {
     const s = scenario("human", { ...headTurn, ...walking });
-    const options = { ...s.options, turbulence: { intensity: 0, floorMS: 1e-3, lagrangianTimeS: 1 }, pathlines: false, streamlines: false };
+    const options = { ...s.options, turbulence: { intensity: 0, floorMS: 1e-3, lagrangianTimeS: 1 }, pathlines: false };
     let previous = new Map(solveTransport(s.asset, walk(1.1), calm, options).parcels.map((p) => [p.id, p]));
     let worst = 0;
     for (let n = 1; n <= 160; n++) {
@@ -247,50 +247,69 @@ describe("💨️ category sources", () => {
 
   it("models visible condensation only when the mixture is supersaturated", () => {
     const s = scenario("human");
-    const cold = solveTransport(s.asset, rest(2.6), calm, s.options);
-    expect(cold.condensation.length).toBeGreaterThan(3);
-    expect(cold.condensation.length).toBe(cold.parcels.filter((p) => p.condensateKgPerKg > 0).length);
-    for (const c of cold.condensation) expect(c.condensateKgPerKg).toBeGreaterThan(0);
-    const warm = solveTransport(s.asset, rest(2.6), { ...calm, airTempC: 30, relativeHumidity: 0.5 }, s.options);
-    expect(warm.condensation.length).toBe(0);
+    const room = { domain: { min: { x: -5, y: 0, z: -5 }, max: { x: 5, y: 6, z: 5 } } };
+    const cold = solveTransport(s.asset, rest(2.6), calm, { ...s.options, flow: room });
+    const fog = cold.flow!.puffs.filter((puff) => puff.condensateKgPerKg > 0);
+    expect(fog.length).toBeGreaterThan(3);
+    expect(fog.length).toBe(cold.parcels.filter((p) => p.condensateKgPerKg > 0).length);
+    for (const puff of fog) {
+      const parcel = cold.parcels.find((p) => p.at === puff.at)!;
+      expect(puff).toEqual({ at: parcel.at, radiusM: parcel.radiusM, excessK: parcel.excessK, vapourExcessKgPerKg: parcel.vapourExcessKgPerKg, condensateKgPerKg: parcel.condensateKgPerKg, carries: parcel.carries });
+    }
+    expect(cold.flow!.ambient.dewPointC).toBeLessThan(calm.airTempC);
+    const warm = solveTransport(s.asset, rest(2.6), { ...calm, airTempC: 30, relativeHumidity: 0.5 }, { ...s.options, flow: room });
+    expect(warm.parcels.filter((p) => p.condensateKgPerKg > 0).length).toBe(0);
+    expect(warm.flow!.puffs.length).toBe(warm.parcels.length);
+    expect(warm.flow!.puffs.filter((puff) => puff.condensateKgPerKg > 0).length).toBe(0);
   });
 });
 
-describe("💨️ streamlines are not pathlines", () => {
-  it("traces straight horizontal lines at the wind speed where only wind acts", () => {
+describe("💨️ streams are not paths", () => {
+  it("traces straight horizontal streams at the wind speed where only wind acts", () => {
     const s = scenario("tree");
-    const field = solveTransport(s.asset, { kind: "pose", pose: "summer", timeS: 0 }, { ...SCENARIOS.assets.tree.thermal.environment, windMS: 2, windDirectionDeg: 0 }, { ...s.options, pathlines: false });
-    expect(field.streamlines.length).toBeGreaterThan(3);
-    for (const line of field.streamlines) {
-      for (const p of line.points) expect(p.y).toBeCloseTo(line.seed.y, 12);
-      for (const v of line.speedMS) expect(v).toBeCloseTo(2, 12);
-      for (let i = 1; i < line.points.length; i++) expect(line.points[i]!.x - line.points[i - 1]!.x).toBeCloseTo(0.02, 12);
+    const field = solveTransport(s.asset, { kind: "pose", pose: "summer", timeS: 0 }, { ...SCENARIOS.assets.tree.thermal.environment, windMS: 2, windDirectionDeg: 0 }, { ...s.options, pathlines: false, flow: { obstacles: [], domain: { min: { x: -4, y: 0, z: -4 }, max: { x: 4, y: 8, z: 4 } } } }).flow!;
+    expect(field.puffs.length + field.paths.length).toBe(0);
+    expect(field.streams.length).toBeGreaterThan(3);
+    for (const stream of field.streams) {
+      expect(stream.role).toBe("ambient");
+      for (const p of stream.points) expect(p.y).toBeCloseTo(stream.seed.y, 12);
+      for (const p of stream.points) expect(p.z).toBeCloseTo(stream.seed.z, 12);
+      for (const v of stream.speedMS) expect(v).toBeCloseTo(2, 12);
+      for (const k of stream.excessK) expect(k).toBe(0);
+      for (let i = 1; i < stream.points.length - 1; i++) expect(stream.points[i]!.x - stream.points[i - 1]!.x).toBeCloseTo(field.model.stepM, 12);
+      for (let i = 1; i < stream.points.length - 1; i++) expect(stream.travelS[i]! - stream.travelS[i - 1]!).toBeCloseTo(field.model.stepM / 2, 12);
     }
   });
 
-  it("differs from the pathline of a parcel after a wind change", () => {
+  it("differs from the path of a parcel after a wind change", () => {
     const s = scenario("machine");
-    const field = solveTransport(s.asset, { kind: "pose", pose: "idle", timeS: 9.4 }, SCENARIOS.environments.gust, s.options);
+    const field = solveTransport(s.asset, { kind: "pose", pose: "idle", timeS: 9.4 }, SCENARIOS.environments.gust, { ...s.options, flow: { domain: { min: { x: -30, y: 0, z: -30 }, max: { x: 30, y: 30, z: 30 } } } });
     const line = field.pathlines.filter((l) => l.points.length > 20).sort((a, b) => b.points.length - a.points.length)[0]!;
     const first = angleOf(line.points[0]!, line.points[2]!);
     const last = angleOf(line.points[line.points.length - 3]!, line.points[line.points.length - 1]!);
     expect(Math.abs(first - last)).toBeGreaterThan(10);
-    expect(field.streamlines.length).toBeGreaterThan(0);
-    expect(field.streamlines.some((l) => l.points.length > 10)).toBe(true);
+    const path = field.flow!.paths.find((candidate) => candidate.parcel === line.parcel)!;
+    expect(path.points).toBe(line.points);
+    expect(path.ageS).toBe(line.ages);
+    expect(path.excessK).toBe(field.parcels.find((p) => p.id === line.parcel)!.excessK);
+    expect(field.flow!.paths.length).toBe(field.pathlines.filter((l) => l.points.length > 1).length);
+    expect(field.flow!.streams.length).toBeGreaterThan(0);
+    expect(field.flow!.streams.some((l) => l.points.length > 10)).toBe(true);
+    expect(solveTransport(s.asset, { kind: "pose", pose: "idle", timeS: 9.4 }, SCENARIOS.environments.gust, { ...s.options, pathlines: false, flow: { domain: { min: { x: -30, y: 0, z: -30 }, max: { x: 30, y: 30, z: 30 } } } }).flow!.paths).toEqual([]);
   });
 
-  it("draws streamlines into the nostril during inhalation", () => {
+  it("draws streams into the nostril during inhalation", () => {
     const s = scenario("human");
     const bare = { ...s.asset, thermal: { ...s.asset.thermal, emitters: s.asset.thermal.emitters.filter((e) => e.kind === "breath") } };
-    const field = solveTransport(bare, rest(0.8), calm, { ...s.options, pathlines: false });
+    const field = solveTransport(bare, rest(0.8), calm, { ...s.options, pathlines: false, flow: { obstacles: [], stepM: 0.015, domain: { min: { x: -3, y: 0, z: -3 }, max: { x: 3, y: 4, z: 3 } } } });
     expect(field.respiration!.phase).toBe("inhale");
     const nose = field.emitters.find((e) => e.emitter === "nose")!;
-    const near = field.streamlines.filter((l) => Math.hypot(l.seed.x - nose.at.x, l.seed.y - nose.at.y, l.seed.z - nose.at.z) < 0.05);
+    const distance = (p: { x: number; y: number; z: number }) => Math.hypot(p.x - nose.at.x, p.y - nose.at.y, p.z - nose.at.z);
+    const near = field.flow!.streams.filter((l) => l.role === "inhaled" && distance(l.seed) < 0.05);
     expect(near.length).toBe(6);
-    for (const line of near) {
-      const distance = (p: { x: number; y: number; z: number }) => Math.hypot(p.x - nose.at.x, p.y - nose.at.y, p.z - nose.at.z);
-      expect(distance(line.points[line.points.length - 1]!)).toBeLessThan(distance(line.seed) + 1e-12);
-      expect(distance(line.points[0]!)).toBeGreaterThan(distance(line.seed));
+    for (const stream of near) {
+      expect(distance(stream.points[stream.points.length - 1]!)).toBeLessThan(distance(stream.seed) + 1e-12);
+      expect(distance(stream.points[0]!)).toBeGreaterThan(distance(stream.seed));
     }
   });
 });

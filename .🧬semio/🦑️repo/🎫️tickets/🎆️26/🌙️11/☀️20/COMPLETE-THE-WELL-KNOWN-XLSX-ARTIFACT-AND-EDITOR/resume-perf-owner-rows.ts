@@ -1,0 +1,2 @@
+const memo=JSON.parse(await Bun.file(process.argv[2]).text());const name=process.argv[3];
+for(const o of memo.owners.filter((o:any)=>o.suffix.split("\0")[0]===name)){const kinds:Record<string,number>={},cargo:Record<string,number>={};for(const at of o.rows){const r=memo.observations[at];kinds[r.kind]=(kinds[r.kind]??0)+1;if(r.path.endsWith("Cargo.toml")||r.path.endsWith("Cargo.lock"))cargo[r.kind]=(cargo[r.kind]??0)+1;}console.log(o.suffix.split("\0")[1].slice(0,200),JSON.stringify({rows:o.rows.length,kinds,cargo}));}

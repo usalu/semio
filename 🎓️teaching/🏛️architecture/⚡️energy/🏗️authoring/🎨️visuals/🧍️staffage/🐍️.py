@@ -47,8 +47,9 @@ _VIEWPOINTS = ("elevation", "front", "plan", "axonometric")
 _VIEWS = ("dark-line", "dark-solid", "light-line", "light-solid", "thermal", "forces", "moments")
 _THEMES = ("dark", "light")
 _SCALES = (500, 200, 100, 50)
-_TRANSPORT_LAYERS = ("parcels", "pathlines", "streamlines", "condensation")
-_CAST_KEYS = frozenset(("asset", "pose", "clip", "view", "viewpoint", "scale", "fps", "environment", "timeline", "thermalSpanK", "mirror", "theme", "transport", "transportAgeS", "transportStrokeMm", "transportTrailS"))
+_FLOW_LAYERS = ("streams", "tracers", "moisture", "fog", "pathlines")
+_FLOW_OPTIONS = ("flowDevelopS", "flowTrailS", "flowStrokeMm", "flowSpacingMm")
+_CAST_KEYS = frozenset(("asset", "pose", "clip", "view", "viewpoint", "scale", "fps", "environment", "timeline", "thermalSpanK", "mirror", "theme", "flow", *_FLOW_OPTIONS))
 _BUNDLED = ("🗂️catalog/🖨️print-profiles/🔣️.json",)
 _KEY_LENGTH = 32
 _PUBLISH_ATTEMPTS = 8
@@ -119,7 +120,7 @@ def _entry(cast: str) -> dict:
 
 
 def _imports(root: Path) -> set[Path]:
-    """🕸️ The files the cast exporter reaches through relative imports, transitively: the evaluation, depiction, thermal, transport and structure code it runs, and nothing it never loads (DXF, PDF, video, ZIP, sheets, the command line)."""
+    """🕸️ The files the cast exporter reaches through relative imports, transitively: the evaluation, depiction, thermal, transport, flow and structure code it runs, and nothing it never loads (DXF, PDF, video, ZIP, sheets, the command line)."""
     start = root / "🔨️modules/📤️export/🎭️cast/🟦️.ts"
     seen: set[Path] = set()
     stack = [start]
@@ -262,20 +263,20 @@ def entry_issues(entry, path: str = "cast") -> list[str]:
         issues.append(f"{path}: theme is required")
     elif entry["theme"] not in _THEMES:
         issues.append(f"{path}/theme: must be one of {', '.join(_THEMES)}")
-    layers = entry.get("transport")
-    if "transport" in entry and not (isinstance(layers, list) and all(layer in _TRANSPORT_LAYERS for layer in layers) and len(set(layers)) == len(layers)):
-        issues.append(f"{path}/transport: must be unique layers of {', '.join(_TRANSPORT_LAYERS)}")
-    for key in ("transportAgeS", "transportStrokeMm", "transportTrailS"):
+    layers = entry["flow"] if isinstance(entry.get("flow"), list) else []
+    if "flow" in entry and not (layers and all(isinstance(layer, str) and layer in _FLOW_LAYERS for layer in layers) and len(set(layers)) == len(layers)):
+        issues.append(f"{path}/flow: must be one or more unique layers of {', '.join(_FLOW_LAYERS)}")
+    for key in _FLOW_OPTIONS:
         if key in entry and not positive(entry[key]):
             issues.append(f"{path}/{key}: must be a positive number")
-        if key in entry and "transport" not in entry:
-            issues.append(f"{path}: {key} needs transport layers")
-    if "transportAgeS" in entry and "clip" not in entry:
-        issues.append(f"{path}: transportAgeS needs a clip")
-    if "transport" in entry and "transportAgeS" not in entry:
-        issues.append(f"{path}: transport layers need transportAgeS, the explicit start of the field")
-    if "transport" in entry and entry.get("view") != "thermal":
-        issues.append(f"{path}: transport layers exist for the thermal view only")
+        if key in entry and "flow" not in entry:
+            issues.append(f"{path}: {key} needs flow layers")
+    if "flowTrailS" in entry and "flow" in entry and "pathlines" not in layers:
+        issues.append(f"{path}: flowTrailS needs the flow layer pathlines, the only layer with a trail")
+    if "flow" in entry and "flowDevelopS" not in entry:
+        issues.append(f"{path}: flow layers need flowDevelopS, the seconds the air has developed before every frame")
+    if "flow" in entry and entry.get("view") != "thermal":
+        issues.append(f"{path}: flow layers exist for the thermal view only")
     if entry.get("view") not in _VIEWS:
         issues.append(f"{path}/view: must be one of {', '.join(_VIEWS)}")
     if entry.get("viewpoint") not in _VIEWPOINTS:
@@ -782,7 +783,7 @@ def expected_provenance(cast: str, lod: ResolvedLod, root: Path = _SOURCES) -> d
     }
     if entry["view"] == "thermal":
         revisions = _preset_revisions(entry, root)
-        scenario = {"kind": "thermal", "spanK": entry.get("thermalSpanK"), "transport": entry.get("transport", [])}
+        scenario = {"kind": "thermal", "spanK": entry.get("thermalSpanK"), "flow": entry.get("flow", [])}
         if "timeline" in entry:
             scenario["timeline"] = [{"t": key["t"], "id": key["environment"], "ease": key["ease"], "revision": revisions[key["environment"]]} for key in sorted(entry["timeline"], key=lambda key: key["t"])]
         else:
@@ -1070,7 +1071,7 @@ def _apply(member: _Path, style: tuple[str | None, float, str | None, float, flo
 
 
 def _flipped(parsed: _Frame, mirror: bool) -> _Frame:
-    """🪞 Mirror a parsed frame about the vertical axis of the world origin, exactly the flip the cast exporter applies to a `mirror` cast, so no pixel changes and the asymmetric transport air layer flips with the figure."""
+    """🪞 Mirror a parsed frame about the vertical axis of the world origin, exactly the flip the cast exporter applies to a `mirror` cast, so no pixel changes and the asymmetric air layer of a flow cast flips with the figure."""
     return parsed._replace(points=parsed.points * np.array([-1.0, 1.0])) if mirror else parsed
 
 
@@ -1097,12 +1098,12 @@ def _place(folder: Path, frame: int, unit: float, anchor, color: str | None, opa
 
 
 def staffage_height(cast: str) -> float:
-    """📏 Return the height of a cast in metres: the figure, never the air layer of a transport cast."""
+    """📏 Return the height of a cast in metres: the figure, never the air layer of a flow cast."""
     return float(_index(ensure_casts([cast])[cast])["logical"]["heightM"])
 
 
 def staffage_width(cast: str) -> float:
-    """📏 Return the horizontal paper extent of a cast in metres, the figure without the air layer of a transport cast: the width an elevation or plan figure spans and the depth a front figure spans, read from the exporter's bounds."""
+    """📏 Return the horizontal paper extent of a cast in metres, the figure without the air layer of a flow cast: the width an elevation or plan figure spans and the depth a front figure spans, read from the exporter's bounds."""
     box = _index(ensure_casts([cast])[cast])["logical"]["figureBoundsM"]
     return float(box["maxX"] - box["minX"])
 
@@ -1131,7 +1132,7 @@ def staffage(cast: str, *, unit: float, anchor=ORIGIN, color: str | None = None,
 
 
 class _FigureBounded(VGroup):
-    """🪜 A group whose width, height, top, bottom and centre follow its `probes` when `_figure_only` is set: the logical figure bounds, identical for every level of detail, so neither the air layer of a transport cast nor the paths a level draws size, place or align the group."""
+    """🪜 A group whose width, height, top, bottom and centre follow its `probes` when `_figure_only` is set: the logical figure bounds, identical for every level of detail, so neither the air layer of a flow cast nor the paths a level draws size, place or align the group."""
 
     _figure_only = True
     probes: list

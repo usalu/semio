@@ -348,7 +348,7 @@ async fn member_close_rejects_missing_owner_and_preserves_the_installed_disposer
     let replacement=complete_test_catalog(semio_os_store_testing_doubles::DemoMemberStoreProducer::<_>::new().member_store_owners(physical_test_close_grant()));
     let(error,mut returned)=missing.install_document_store_owners_exact(replacement).expect_err("the original catalog cannot be replaced");
     assert_eq!(error.kind,semio_framework_value::ValueRefusalKind::OwnershipLimit);
-    for _ in 0..10_000 { if returned.uninstalled_owners_terminal_is_empty(){break;}let step=returned.close_uninstalled_owners_step(physical_test_close_grant()).expect("returned original catalog closes under the supplied grant");assert!(step.progress().fits(physical_test_close_grant())); }
+    for _ in 0..10_000 { if returned.uninstalled_owners_terminal_is_empty(){break;}let step=returned.close_uninstalled_owners_step_cold(physical_test_close_grant()).expect("returned original catalog closes under the supplied grant");assert!(step.progress().fits(physical_test_close_grant())); }
     assert!(returned.uninstalled_owners_terminal_is_empty());
     close_member_dialect_fixture(&mut missing);
 }

@@ -1,0 +1,41 @@
+{
+  "version": 1,
+  "description": "Which linked wasm units may be offloaded: the decision of the requester (crate type and target) and of the worker (the whole argument list), the numeric wasm-ld link arguments of the release, and the memory placement reserves. Language neutral: any implementation of the policy must give these answers.",
+  "release": {
+    "linkArguments": ["--max-memory=536870912", "-zstack-size=8388608", "-zstack-size=16777216"],
+    "peakMegabytes": 6144,
+    "actionSeconds": 3600
+  },
+  "requester": [
+    {"id": "wasm-unknown-cdylib", "crateTypes": ["cdylib"], "target": "wasm32-unknown-unknown", "offload": true, "peakMegabytes": 6144, "actionSeconds": 3600},
+    {"id": "wasip2-cdylib", "crateTypes": ["cdylib"], "target": "wasm32-wasip2", "offload": true, "peakMegabytes": 6144, "actionSeconds": 3600},
+    {"id": "wasip2-lib", "crateTypes": ["lib"], "target": "wasm32-wasip2", "offload": true, "peakMegabytes": 0, "actionSeconds": 1200},
+    {"id": "wasm-rlib-and-cdylib", "crateTypes": ["rlib", "cdylib"], "target": "wasm32-wasip2", "offload": true, "peakMegabytes": 6144, "actionSeconds": 3600},
+    {"id": "host-cdylib", "crateTypes": ["cdylib"], "target": null, "offload": true, "peakMegabytes": 0, "actionSeconds": 1200},
+    {"id": "darwin-cdylib", "crateTypes": ["cdylib"], "target": "aarch64-apple-darwin", "offload": true, "peakMegabytes": 0, "actionSeconds": 1200},
+    {"id": "emscripten-cdylib", "crateTypes": ["cdylib"], "target": "wasm32-unknown-emscripten", "offload": false, "peakMegabytes": 0, "actionSeconds": 1200},
+    {"id": "wasm-dylib", "crateTypes": ["dylib"], "target": "wasm32-wasip2", "offload": false, "peakMegabytes": 0, "actionSeconds": 1200},
+    {"id": "wasm-staticlib", "crateTypes": ["staticlib"], "target": "wasm32-wasip2", "offload": false, "peakMegabytes": 0, "actionSeconds": 1200},
+    {"id": "host-bin-default", "crateTypes": [], "target": null, "offload": true, "peakMegabytes": 0, "actionSeconds": 1200},
+    {"id": "host-proc-macro", "crateTypes": ["proc-macro"], "target": null, "offload": true, "peakMegabytes": 0, "actionSeconds": 1200}
+  ],
+  "worker": [
+    {"id": "unknown-cdylib-stack", "crateType": "cdylib", "target": "wasm32-unknown-unknown", "linkArguments": ["-zstack-size=16777216"], "flags": [], "refused": null},
+    {"id": "wasip2-cdylib-release", "crateType": "cdylib", "target": "wasm32-wasip2", "linkArguments": ["--max-memory=536870912", "-zstack-size=8388608"], "flags": [], "refused": null},
+    {"id": "serial-backend", "crateType": "cdylib", "target": "wasm32-wasip2", "linkArguments": [], "flags": ["threads=1", "no-parallel-backend"], "refused": null},
+    {"id": "wasm-lib-with-link-arguments", "crateType": "lib", "target": "wasm32-unknown-unknown", "linkArguments": ["-zstack-size=8388608"], "flags": [], "refused": null},
+    {"id": "wasm-bin", "crateType": "bin", "target": "wasm32-wasip2", "linkArguments": [], "flags": [], "refused": null},
+    {"id": "darwin-cdylib", "crateType": "cdylib", "target": "aarch64-apple-darwin", "linkArguments": [], "flags": [], "refused": null},
+    {"id": "linux-cdylib", "crateType": "cdylib", "target": "x86_64-unknown-linux-gnu", "linkArguments": [], "flags": [], "refused": null},
+    {"id": "emscripten-cdylib", "crateType": "cdylib", "target": "wasm32-unknown-emscripten", "linkArguments": [], "flags": [], "refused": "--crate-type cdylib"},
+    {"id": "wasm-dylib", "crateType": "dylib", "target": "wasm32-wasip2", "linkArguments": [], "flags": [], "refused": "--crate-type dylib"},
+    {"id": "wasm-arguments-on-darwin", "crateType": "lib", "target": "aarch64-apple-darwin", "linkArguments": ["--max-memory=536870912"], "flags": [], "refused": "wasm linker argument"},
+    {"id": "import-memory", "crateType": "cdylib", "target": "wasm32-wasip2", "linkArguments": ["--import-memory"], "flags": [], "refused": "-C link-arg"},
+    {"id": "non-numeric-memory", "crateType": "cdylib", "target": "wasm32-wasip2", "linkArguments": ["--max-memory=lots"], "flags": [], "refused": "-C link-arg"},
+    {"id": "memory-with-trailer", "crateType": "cdylib", "target": "wasm32-wasip2", "linkArguments": ["--max-memory=1,--export-all"], "flags": [], "refused": "-C link-arg"},
+    {"id": "stack-too-many-digits", "crateType": "cdylib", "target": "wasm32-wasip2", "linkArguments": ["-zstack-size=12345678901"], "flags": [], "refused": "-C link-arg"},
+    {"id": "empty-stack", "crateType": "cdylib", "target": "wasm32-wasip2", "linkArguments": ["-zstack-size="], "flags": [], "refused": "-C link-arg"},
+    {"id": "other-linker-flag", "crateType": "cdylib", "target": "wasm32-wasip2", "linkArguments": ["-zstack-size=8388608", "--allow-undefined"], "flags": [], "refused": "-C link-arg"},
+    {"id": "unstable-flag", "crateType": "cdylib", "target": "wasm32-wasip2", "linkArguments": [], "flags": ["share-generics=y"], "refused": "-Z share-generics"}
+  ]
+}

@@ -1048,7 +1048,8 @@
         "🚀️bootstrap/🛠️tools/🔏️authorizers/📦️workspace/🧪️tests/🟦️.ts",
         "🚀️bootstrap/🛠️tools/🔏️authorizers/🧪️tests/📦️compiler-init/🟦️.ts",
         "🚀️bootstrap/🛠️tools/🔏️authorizers/🧪️tests/🧭️closure-law/🟦️.ts",
-        "🚀️bootstrap/🛠️tools/🔏️authorizers/🧭️sites/🧪️tests/🟦️.ts"
+        "🚀️bootstrap/🛠️tools/🔏️authorizers/🧭️sites/🧪️tests/🟦️.ts",
+        "🚀️bootstrap/🛠️tools/🔏️authorizers/📦️bundle/🧪️tests/🟦️.ts"
       ],
       "platforms": [
         "darwin",
@@ -1114,7 +1115,9 @@
         "🚀️bootstrap/🛠️tools/🏗️bazel/🧪️tests/📥️pins/🟦️.ts",
         "🚀️bootstrap/🛠️tools/👷️workers/🧪️tests/🟦️.ts",
         "🚀️bootstrap/🛠️tools/🧪️tests/🟦️.ts",
-        "🚀️bootstrap/🛠️tools/🧰️native/🧪️tests/🟦️.ts"
+        "🚀️bootstrap/🛠️tools/🧰️native/🧪️tests/🟦️.ts",
+        "🚀️bootstrap/🛠️tools/🦀️rustup/🧰️adoption/🧪️tests/🟦️.ts",
+        "🚀️bootstrap/🛠️tools/🧪️tests/🔖️bundle-isolation/🟦️.ts"
       ],
       "platforms": [
         "darwin",
@@ -1153,7 +1156,12 @@
         "🚀️bootstrap/📦️dependencies/💾️storage/🧪️tests/👓️reading/🟦️.ts",
         "🚀️bootstrap/📦️dependencies/🔌️managers/🍞️bun/🧪️tests/🟦️.ts",
         "🚀️bootstrap/📦️dependencies/🔒️lock-sync/🧪️tests/🟦️.ts",
-        "🚀️bootstrap/📦️dependencies/🧪️tests/🟦️.ts"
+        "🚀️bootstrap/📦️dependencies/🧪️tests/🟦️.ts",
+        "🚀️bootstrap/📦️dependencies/♻️collection/🧪️tests/🟦️.ts",
+        "🚀️bootstrap/📦️dependencies/💾️storage/🧪️tests/📤️diagnostics/🟦️.ts",
+        "🚀️bootstrap/📦️dependencies/💾️storage/🧪️tests/🧹️tree-removal/🟦️.ts",
+        "🚀️bootstrap/📦️dependencies/🧾️generation/🧪️tests/🧭️scoping/🟦️.ts",
+        "🚀️bootstrap/📦️dependencies/🧾️generation/🪪️profile/🧪️tests/🟦️.ts"
       ],
       "platforms": [
         "darwin",
@@ -1195,6 +1203,10 @@
         "🚀️bootstrap/🔌️nx-plugin/🧪️tests/🦀️native-dependency-closures/🟦️.ts",
         "🚀️bootstrap/🔌️nx-plugin/🧮️engine-digest/🧪️tests/🟦️.ts"
       ],
+      "fileLaunchers": {
+        "🚀️bootstrap/🔌️nx-plugin/📤️arguments/🧪️tests/📥️native-caller/🟦️.ts": "nx-watcher-namespace",
+        "🚀️bootstrap/🔌️nx-plugin/📤️arguments/🧪️tests/🟦️.ts": "nx-watcher-namespace"
+      },
       "platforms": [
         "darwin",
         "linux",
@@ -1276,6 +1288,9 @@
         "darwin",
         "linux",
         "win32"
+      ],
+      "tools": [
+        "python"
       ]
     },
     {
@@ -1712,7 +1727,23 @@
       ],
       "files": [
         "💾️storage/🧾️ledger/🧪️tests/⚖️law/🌐️native/🟦️.ts",
-        "💾️storage/🧾️ledger/🧪️tests/📐️model/🟦️.ts"
+        "💾️storage/🧾️ledger/🧪️tests/📐️model/🟦️.ts",
+        "💾️storage/🧾️ledger/🧪️tests/🙈️ignored/🟦️.ts"
+      ],
+      "budgetMs": 300000,
+      "typecheck": "none"
+    },
+    {
+      "id": "patch-loader-processes",
+      "platforms": [
+        "darwin",
+        "linux"
+      ],
+      "platformCauses": [
+        "posix-process-control"
+      ],
+      "files": [
+        "🩹️patches/🧪️tests/🔭️loader/🟦️.ts"
       ],
       "budgetMs": 300000,
       "typecheck": "none"

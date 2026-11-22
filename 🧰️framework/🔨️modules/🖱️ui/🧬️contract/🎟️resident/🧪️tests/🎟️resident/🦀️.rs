@@ -5,7 +5,7 @@ use semio_framework_test_fixtures::fixture_text;
 #[test]
 fn retained_resident_fixed_backing_counts_against_the_same_aggregate() {
     let _gate = crate::arena_test_gate();
-    let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../🎟️resident/🗃️fixed/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../../../🎟️resident/🗃️fixed/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     let actual = UiResidentPermit::snapshot().unwrap();
     assert_eq!(actual.bytes > 0, fixture["staticCountsAgainstAggregate"].as_bool().unwrap());
     assert_eq!(actual.bytes, UiResidentPermit::contract_backing_bytes());
@@ -26,13 +26,13 @@ fn retained_resident_fixed_backing_counts_against_the_same_aggregate() {
     assert_eq!(close(&mut root).returned_bytes, 0);
     assert_eq!(close(output.as_mut().unwrap()).returned_bytes, 65536);
     assert_eq!(UiResidentPermit::snapshot().unwrap(), registered);
-    let guard = RESIDENT_LEDGER.lock().unwrap();
+    let guard = arena_testkit::hold_resident_ledger();
     assert_eq!(UiResidentPermit::try_register_runtime_backing(runtime, 32768), Err(UiResidentFault::Contended));
     drop(guard);
 }
 
 fn fixture() -> serde_json::Value {
-    serde_json::from_str(fixture_text!("../../🎟️resident/🧪️tests/🧫️fixtures/🔣️.json")).unwrap()
+    serde_json::from_str(fixture_text!("../../../../🎟️resident/🧪️tests/🧫️fixtures/🔣️.json")).unwrap()
 }
 fn empty_snapshot() -> UiResidentSnapshot {
     UiResidentSnapshot { bytes: UiResidentPermit::fixed_backing_bytes().unwrap(), ..Default::default() }
@@ -91,11 +91,11 @@ fn retained_resident_permit_preserves_existing_capacity_and_paired_final_return(
     }
     let mut slots = (0..64).map(|_| reserve(1, 1)).collect::<Vec<_>>();
     assert_eq!(UiResidentPermit::try_reserve(UiResidentLimits { items: 0, bytes: 0 }, &mut rejected, 32768), Err(UiResidentFault::Capacity));
-    let old = slots[0].key.unwrap();
+    let old = arena_testkit::permit_key(&slots[0]).unwrap();
     close(&mut slots[0]);
     let mut reused = reserve(1, 1);
-    assert_eq!(reused.key.unwrap().slot, old.slot);
-    assert_eq!(reused.key.unwrap().epoch, old.epoch + 1);
+    assert_eq!(arena_testkit::permit_key(&reused).unwrap().0, old.0);
+    assert_eq!(arena_testkit::permit_key(&reused).unwrap().1, old.1 + 1);
     drop(slots.remove(0));
     drain();
     assert_eq!(UiResidentPermit::snapshot().unwrap().used_slots, 64);
@@ -116,7 +116,7 @@ fn retained_resident_permit_contention_keeps_authority_and_deferred_return_does_
     let (entered_tx, entered_rx) = std::sync::mpsc::channel();
     let (release_tx, release_rx) = std::sync::mpsc::channel();
     let holder = std::thread::spawn(move || {
-        let _ledger = RESIDENT_LEDGER.lock().unwrap();
+        let _ledger = arena_testkit::hold_resident_ledger();
         entered_tx.send(()).unwrap();
         release_rx.recv().unwrap();
     });
@@ -142,7 +142,7 @@ fn retained_resident_permit_cross_worker_returns_cannot_release_reused_epoch() {
     let _gate = crate::arena_test_gate();
     for _ in 0..fixture()["crossWorkerRounds"].as_u64().unwrap() {
         let mut root = reserve(1, 4096);
-        let old = root.key.unwrap();
+        let old = arena_testkit::permit_key(&root).unwrap();
         let mut output = None;
         assert!(root.split_output_into(&mut output, 32768).unwrap());
         let barrier = std::sync::Arc::new(std::sync::Barrier::new(3));
@@ -165,8 +165,8 @@ fn retained_resident_permit_cross_worker_returns_cannot_release_reused_epoch() {
             std::thread::yield_now();
         }
         let mut next = reserve(1, 2048);
-        assert_eq!(next.key.unwrap().slot, old.slot);
-        assert_eq!(next.key.unwrap().epoch, old.epoch + 1);
+        assert_eq!(arena_testkit::permit_key(&next).unwrap().0, old.0);
+        assert_eq!(arena_testkit::permit_key(&next).unwrap().1, old.1 + 1);
         first.join().unwrap();
         second.join().unwrap();
         drain();

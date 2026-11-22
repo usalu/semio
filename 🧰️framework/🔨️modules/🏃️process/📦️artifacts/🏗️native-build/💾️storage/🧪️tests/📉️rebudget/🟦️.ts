@@ -2,15 +2,13 @@ import{test,expect}from"bun:test";
 import{Database}from"bun:sqlite";
 import Ajv from"ajv";
 import{nativeStorageEventV1,nativeStorageStateV1,type NativeStorageEventV1,type NativeStorageAllocationV1}from"../../📜️journal/🟦️.ts";
-import{readFileSync}from"node:fs";
 import{createJournalReceiptV1}from"../../📜️journal/🔖️revision/🟦️.ts";
-import ts from"typescript";
+import{loadProductFunctionsSyncV1}from"../../../../../🧪️testing/🧩️extracted-function/🟦️.ts";
 import{readNativeStorageDataV1 as admit,createNativeStorageJournalProjectionV1}from"../../📜️journal/🟦️.ts";
 import schema from"../../🧬️schema/🔣️.json";
 import corpus from"./🔣️.json";
 import corpusSchema from"./🧬️schema.json";
 
-const text=readFileSync(new URL("../../🟦️.ts",import.meta.url),"utf8"),tree=ts.createSourceFile("native.ts",text,ts.ScriptTarget.Latest,true);
 
 test("native committed rebudget CAS agrees with SQLite and survives checkpoint plus unrelated events",()=>{
  const ajv=new Ajv({strict:false});expect(ajv.compile(corpusSchema)(corpus)).toBe(true);ajv.addSchema(schema);const validate=ajv.getSchema(schema.$id+"#/definitions/Event")!,allocation:NativeStorageAllocationV1={id:"a".repeat(32),owner:"products",kind:"artifact-publication",bytes:100,phase:"committed"};
@@ -22,7 +20,7 @@ import faultSchema from"./♻️schema.json";
 import*as issuer from"../../../../../🧭️routing/📥️invocation/🏃️process/🟦️.ts";
 import{checkResourceLeaseControl,type ResourceLeaseControl}from"../../../../../🔒️leases/🟦️.ts";
 
-function actualFunction(name:string,bindings:Record<string,unknown>):Function{const node=tree.statements.find(node=>ts.isFunctionDeclaration(node)&&node.name?.text===name);if(!node)throw Error("Actual Native function required: "+name);return new Function(...Object.keys(bindings),ts.transpileModule(node.getText(tree).replace(/^export /u,""),{compilerOptions:{target:ts.ScriptTarget.ES2022}}).outputText+";return "+name+";")(...Object.values(bindings));}
+function actualFunction(name:string,bindings:Record<string,unknown>):Function{return loadProductFunctionsSyncV1(new URL("../../🟦️.ts",import.meta.url),[name],bindings)[name];}
 /** 🔬️ Executes the current physical-read caller with explicit in-memory observation ports and the genuine pure projector. */
 function actualJournalReader(files:ReadonlyMap<string,string>,projected:string[]=[]):Function{const memo=createNativeStorageJournalProjectionV1();return actualFunction("readCleanupJournal",{requireMaterializedPathV1:(value:string)=>value,join:(...values:string[])=>values.join("/"),nativeStorageStateV1,cleanupProtocol:schema.definitions.CleanupProtocol.const,statCleanupFile:async(path:string)=>{if(!files.has(path))throw Object.assign(Error("Source journal observation absent"),{code:"ENOENT"});return{isFile:()=>true,isSymbolicLink:()=>false,nlink:1,size:Buffer.byteLength(files.get(path)!),dev:1,ino:1,mtimeMs:1,ctimeMs:1};},readPhysicalFileV1:async(path:string,options:{cancelled:()=>boolean})=>{options.cancelled();return{bytes:Buffer.from(files.get(path)!)};},journalProjections:{project:(value:Parameters<typeof memo.project>[0],check:()=>void)=>{const state=memo.project(value,check);projected.push((value as{text:string}).text);return state;}}});}
 test("actual journal transaction preserves undefined and frozen primaries across release faults",async()=>{

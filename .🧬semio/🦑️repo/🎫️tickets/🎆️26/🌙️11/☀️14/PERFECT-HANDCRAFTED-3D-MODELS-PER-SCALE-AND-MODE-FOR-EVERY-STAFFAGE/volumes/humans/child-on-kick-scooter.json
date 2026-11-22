@@ -240,7 +240,21 @@
         "material": "sneaker-textile",
         "role": "body",
         "tone": 0.95,
-        "profile": [[0, -0.062], [0.02, -0.055], [0.029, -0.04], [0.032, -0.01], [0.036, 0.03], [0.043, 0.07], [0.045, 0.1], [-0.038, 0.1], [-0.034, 0.07], [-0.029, 0.03], [-0.029, -0.01], [-0.027, -0.04], [-0.018, -0.055]],
+        "profile": [
+          [0, -0.062],
+          [0.02, -0.055],
+          [0.029, -0.04],
+          [0.032, -0.01],
+          [0.036, 0.03],
+          [0.043, 0.07],
+          [0.045, 0.1],
+          [-0.038, 0.1],
+          [-0.034, 0.07],
+          [-0.029, 0.03],
+          [-0.029, -0.01],
+          [-0.027, -0.04],
+          [-0.018, -0.055]
+        ],
         "plane": "zx",
         "from": -0.063,
         "to": -0.048,
@@ -301,7 +315,20 @@
         "material": "sneaker-textile",
         "role": "body",
         "tone": 0.95,
-        "profile": [[0.045, -0.006], [0.045, 0.008], [0.04, 0.03], [0.03, 0.048], [0.016, 0.06], [0.004, 0.066], [-0.008, 0.066], [-0.022, 0.06], [-0.033, 0.048], [-0.037, 0.03], [-0.038, 0.008], [-0.038, -0.006]],
+        "profile": [
+          [0.045, -0.006],
+          [0.045, 0.008],
+          [0.04, 0.03],
+          [0.03, 0.048],
+          [0.016, 0.06],
+          [0.004, 0.066],
+          [-0.008, 0.066],
+          [-0.022, 0.06],
+          [-0.033, 0.048],
+          [-0.037, 0.03],
+          [-0.038, 0.008],
+          [-0.038, -0.006]
+        ],
         "plane": "zx",
         "from": 0,
         "to": 0.015
@@ -582,7 +609,21 @@
         "material": "sneaker-textile",
         "role": "body",
         "tone": 0.95,
-        "profile": [[0, -0.062], [-0.02, -0.055], [-0.029, -0.04], [-0.032, -0.01], [-0.036, 0.03], [-0.043, 0.07], [-0.045, 0.1], [0.038, 0.1], [0.034, 0.07], [0.029, 0.03], [0.029, -0.01], [0.027, -0.04], [0.018, -0.055]],
+        "profile": [
+          [0, -0.062],
+          [-0.02, -0.055],
+          [-0.029, -0.04],
+          [-0.032, -0.01],
+          [-0.036, 0.03],
+          [-0.043, 0.07],
+          [-0.045, 0.1],
+          [0.038, 0.1],
+          [0.034, 0.07],
+          [0.029, 0.03],
+          [0.029, -0.01],
+          [0.027, -0.04],
+          [0.018, -0.055]
+        ],
         "plane": "zx",
         "from": -0.063,
         "to": -0.048,
@@ -643,7 +684,20 @@
         "material": "sneaker-textile",
         "role": "body",
         "tone": 0.95,
-        "profile": [[-0.045, -0.006], [-0.045, 0.008], [-0.04, 0.03], [-0.03, 0.048], [-0.016, 0.06], [-0.004, 0.066], [0.008, 0.066], [0.022, 0.06], [0.033, 0.048], [0.037, 0.03], [0.038, 0.008], [0.038, -0.006]],
+        "profile": [
+          [-0.045, -0.006],
+          [-0.045, 0.008],
+          [-0.04, 0.03],
+          [-0.03, 0.048],
+          [-0.016, 0.06],
+          [-0.004, 0.066],
+          [0.008, 0.066],
+          [0.022, 0.06],
+          [0.033, 0.048],
+          [0.037, 0.03],
+          [0.038, 0.008],
+          [0.038, -0.006]
+        ],
         "plane": "zx",
         "from": 0,
         "to": 0.015
@@ -2852,7 +2906,57 @@
         "material": "alu-deck",
         "role": "body",
         "tone": 0.2,
-        "profile": [[-0.06626, 0.1281], [-0.06116, 0.13366], [-0.0556, 0.13876], [-0.04961, 0.14336], [-0.04325, 0.14741], [-0.03656, 0.1509], [-0.02958, 0.15378], [-0.02239, 0.15605], [-0.01502, 0.15769], [-0.00754, 0.15867], [0, 0.159], [0.00754, 0.15867], [0.01502, 0.15769], [0.02239, 0.15605], [0.02958, 0.15378], [0.03656, 0.1509], [0.04325, 0.14741], [0.04961, 0.14336], [0.0556, 0.13876], [0.06116, 0.13366], [0.06626, 0.1281], [0.07086, 0.12211], [0.07491, 0.11575], [0.096, 0.097], [0.094, 0.088], [0.086, 0.092], [0.06827, 0.11516], [0.06437, 0.12084], [0.05999, 0.12617], [0.05518, 0.13111], [0.04996, 0.13562], [0.04438, 0.13966], [0.03847, 0.14321], [0.03227, 0.14625], [0.02585, 0.14874], [0.01923, 0.15067], [0.01247, 0.15203], [0.00562, 0.1528], [-0.00128, 0.15299], [-0.00816, 0.15259], [-0.01498, 0.15159], [-0.0217, 0.15002], [-0.02825, 0.14788], [-0.0346, 0.14519], [-0.04069, 0.14196], [-0.04649, 0.13822], [-0.05194, 0.134], [-0.05701, 0.12933], [-0.06167, 0.12424]],
+        "profile": [
+          [-0.06626, 0.1281],
+          [-0.06116, 0.13366],
+          [-0.0556, 0.13876],
+          [-0.04961, 0.14336],
+          [-0.04325, 0.14741],
+          [-0.03656, 0.1509],
+          [-0.02958, 0.15378],
+          [-0.02239, 0.15605],
+          [-0.01502, 0.15769],
+          [-0.00754, 0.15867],
+          [0, 0.159],
+          [0.00754, 0.15867],
+          [0.01502, 0.15769],
+          [0.02239, 0.15605],
+          [0.02958, 0.15378],
+          [0.03656, 0.1509],
+          [0.04325, 0.14741],
+          [0.04961, 0.14336],
+          [0.0556, 0.13876],
+          [0.06116, 0.13366],
+          [0.06626, 0.1281],
+          [0.07086, 0.12211],
+          [0.07491, 0.11575],
+          [0.096, 0.097],
+          [0.094, 0.088],
+          [0.086, 0.092],
+          [0.06827, 0.11516],
+          [0.06437, 0.12084],
+          [0.05999, 0.12617],
+          [0.05518, 0.13111],
+          [0.04996, 0.13562],
+          [0.04438, 0.13966],
+          [0.03847, 0.14321],
+          [0.03227, 0.14625],
+          [0.02585, 0.14874],
+          [0.01923, 0.15067],
+          [0.01247, 0.15203],
+          [0.00562, 0.1528],
+          [-0.00128, 0.15299],
+          [-0.00816, 0.15259],
+          [-0.01498, 0.15159],
+          [-0.0217, 0.15002],
+          [-0.02825, 0.14788],
+          [-0.0346, 0.14519],
+          [-0.04069, 0.14196],
+          [-0.04649, 0.13822],
+          [-0.05194, 0.134],
+          [-0.05701, 0.12933],
+          [-0.06167, 0.12424]
+        ],
         "plane": "xy",
         "from": -0.022,
         "to": 0.022
@@ -2864,7 +2968,30 @@
         "material": "alu-deck",
         "role": "detail",
         "tone": 0.2,
-        "profile": [[-0.03779, 0.14358], [-0.0312, 0.14671], [-0.02434, 0.14923], [-0.01729, 0.15112], [-0.01009, 0.15237], [-0.00281, 0.15295], [0.00449, 0.15287], [0.01176, 0.15214], [0.01893, 0.15074], [0.02594, 0.14871], [0.03274, 0.14604], [0.03152, 0.1433], [0.02498, 0.14587], [0.01822, 0.14783], [0.01132, 0.14917], [0.00433, 0.14988], [-0.0027, 0.14995], [-0.00971, 0.14939], [-0.01664, 0.14819], [-0.02343, 0.14637], [-0.03003, 0.14394], [-0.03638, 0.14093]],
+        "profile": [
+          [-0.03779, 0.14358],
+          [-0.0312, 0.14671],
+          [-0.02434, 0.14923],
+          [-0.01729, 0.15112],
+          [-0.01009, 0.15237],
+          [-0.00281, 0.15295],
+          [0.00449, 0.15287],
+          [0.01176, 0.15214],
+          [0.01893, 0.15074],
+          [0.02594, 0.14871],
+          [0.03274, 0.14604],
+          [0.03152, 0.1433],
+          [0.02498, 0.14587],
+          [0.01822, 0.14783],
+          [0.01132, 0.14917],
+          [0.00433, 0.14988],
+          [-0.0027, 0.14995],
+          [-0.00971, 0.14939],
+          [-0.01664, 0.14819],
+          [-0.02343, 0.14637],
+          [-0.03003, 0.14394],
+          [-0.03638, 0.14093]
+        ],
         "plane": "xy",
         "from": -0.016,
         "to": 0.016,
@@ -3081,7 +3208,18 @@
         "material": "pu-wheel",
         "role": "body",
         "tone": 0.14,
-        "profile": [[-0.015, 0.047], [-0.015, 0.063], [-0.0125, 0.0685], [-0.0075, 0.0715], [0, 0.0725], [0.0075, 0.0715], [0.0125, 0.0685], [0.015, 0.063], [0.015, 0.047], [-0.015, 0.047]],
+        "profile": [
+          [-0.015, 0.047],
+          [-0.015, 0.063],
+          [-0.0125, 0.0685],
+          [-0.0075, 0.0715],
+          [0, 0.0725],
+          [0.0075, 0.0715],
+          [0.0125, 0.0685],
+          [0.015, 0.063],
+          [0.015, 0.047],
+          [-0.015, 0.047]
+        ],
         "axis": [0, 0, 1],
         "origin": [0, 0, 0]
       },
@@ -3131,7 +3269,18 @@
         "material": "pu-wheel",
         "role": "body",
         "tone": 0.14,
-        "profile": [[-0.015, 0.047], [-0.015, 0.063], [-0.0125, 0.0685], [-0.0075, 0.0715], [0, 0.0725], [0.0075, 0.0715], [0.0125, 0.0685], [0.015, 0.063], [0.015, 0.047], [-0.015, 0.047]],
+        "profile": [
+          [-0.015, 0.047],
+          [-0.015, 0.063],
+          [-0.0125, 0.0685],
+          [-0.0075, 0.0715],
+          [0, 0.0725],
+          [0.0075, 0.0715],
+          [0.0125, 0.0685],
+          [0.015, 0.063],
+          [0.015, 0.047],
+          [-0.015, 0.047]
+        ],
         "axis": [0, 0, 1],
         "origin": [0, 0, 0]
       },
@@ -5921,6 +6070,20 @@
         "part": "member"
       },
       {
+        "id": "mandible-condyle-l",
+        "kind": "capsule",
+        "bone": "head",
+        "material": "bone",
+        "role": "body",
+        "tone": 0.92,
+        "p0": [0, -0.01, 0.036],
+        "p1": [0.012, -0.008, 0.04],
+        "r0": 0.005,
+        "r1": 0.005,
+        "member": "head",
+        "part": "member"
+      },
+      {
         "id": "mandible-ramus-r",
         "kind": "loft",
         "bone": "head",
@@ -5949,6 +6112,20 @@
         ],
         "capStart": true,
         "capEnd": true,
+        "member": "head",
+        "part": "member"
+      },
+      {
+        "id": "mandible-condyle-r",
+        "kind": "capsule",
+        "bone": "head",
+        "material": "bone",
+        "role": "body",
+        "tone": 0.92,
+        "p0": [0, -0.01, -0.036],
+        "p1": [0.012, -0.008, -0.04],
+        "r0": 0.005,
+        "r1": 0.005,
         "member": "head",
         "part": "member"
       },
@@ -7320,273 +7497,343 @@
         ]
       },
       {
+        "id": "manubrium",
+        "kind": "ellipsoid",
+        "bone": "torso",
+        "material": "bone",
+        "role": "body",
+        "tone": 0.92,
+        "radii": [0.016, 0.008, 0.022],
+        "transform": {
+          "translation": [0.31, -0.042, 0]
+        },
+        "member": "torso",
+        "part": "member"
+      },
+      {
         "id": "ilium-l",
         "kind": "loft",
-        "bone": "pelvis",
+        "bone": "ilium-l",
         "material": "bone",
         "role": "body",
         "tone": 0.92,
         "sections": [
           {
-            "at": [0.004, 0, 0.069],
+            "at": [0.07059, 0.00549, -0.00045],
             "rx": 0.0222,
             "ry": 0.00814,
-            "rotation": [0.517522, -0.2721495, 0.6912425, -0.424605]
+            "rotation": [0.7594178, -0.0390162, -0.4400198, -0.4776452]
           },
           {
-            "at": [0.02795, 0.0016, 0.077],
+            "at": [0.05462, 0.02472, -0.00441],
             "rx": 0.02671,
             "ry": 0.00592,
-            "rotation": [0.5660435, -0.2966862, 0.6579863, -0.3982789]
+            "rotation": [0.7719689, 0.0069061, -0.4643227, -0.4340745]
           },
           {
-            "at": [0.05918, 0.0034, 0.0793],
+            "at": [0.02994, 0.04282, -0.01125],
             "rx": 0.04828,
             "ry": 0.00481,
-            "rotation": [0.6435005, -0.3462587, 0.5862654, -0.3497212]
+            "rotation": [0.7878798, 0.0825762, -0.5048989, -0.3427881]
           },
           {
-            "at": [0.0822, 0.004, 0.0733],
+            "at": [0.00824, 0.04958, -0.0183],
             "rx": 0.04623,
             "ry": 0.00555,
             "exponent": 2.6,
-            "rotation": [0.6902133, -0.3869035, 0.5254229, -0.3127973]
+            "rotation": [0.7943392, 0.1311027, -0.5300802, -0.2661812]
           }
         ],
         "capStart": true,
         "capEnd": true,
-        "member": "pelvis",
+        "member": "ilium-l",
+        "part": "member"
+      },
+      {
+        "id": "arcuate-line-l",
+        "kind": "capsule",
+        "bone": "ilium-l",
+        "material": "bone",
+        "role": "body",
+        "tone": 0.92,
+        "p0": [-0.008, 0, 0],
+        "p1": [0.07187, 0, 0],
+        "r0": 0.008,
+        "r1": 0.008,
+        "member": "ilium-l",
+        "part": "member"
+      },
+      {
+        "id": "acetabulum-l",
+        "kind": "ellipsoid",
+        "bone": "ilium-l",
+        "material": "bone",
+        "role": "body",
+        "tone": 0.92,
+        "radii": [0.021, 0.021, 0.021],
+        "transform": {
+          "translation": [0.07187, 0, 0]
+        },
+        "member": "ilium-l",
         "part": "member"
       },
       {
         "id": "pubis-l",
         "kind": "loft",
-        "bone": "pelvis",
+        "bone": "ilium-l",
         "material": "bone",
         "role": "body",
         "tone": 0.92,
         "sections": [
           {
-            "at": [-0.006, -0.018, 0.053],
+            "at": [0.07688, -0.01337, -0.01732],
             "rx": 0.00888,
             "ry": 0.00888,
-            "rotation": [0.9461625, -0.0525119, -0.1986456, 0.2501178]
+            "rotation": [0.2138428, 0.8238191, -0.4926677, 0.1813058]
           },
           {
-            "at": [-0.018, -0.0315, 0.02925],
+            "at": [0.0795, -0.03991, -0.03071],
             "rx": 0.00592,
             "ry": 0.00666,
-            "rotation": [0.9502103, -0.0495331, -0.2059198, 0.2285691]
+            "rotation": [0.206781, 0.8143122, -0.5124004, 0.1777158]
           },
           {
-            "at": [-0.03, -0.042, 0.006],
+            "at": [0.08137, -0.06602, -0.04119],
             "rx": 0.00666,
             "ry": 0.01036,
-            "rotation": [0.9540637, -0.0459064, -0.2131849, 0.2054442]
+            "rotation": [0.1990979, 0.8038562, -0.5330687, 0.1732428]
           }
         ],
         "capStart": true,
         "capEnd": true,
-        "member": "pelvis",
+        "member": "ilium-l",
         "part": "member"
       },
       {
         "id": "ischium-l",
         "kind": "loft",
-        "bone": "pelvis",
+        "bone": "ilium-l",
         "material": "bone",
         "role": "body",
         "tone": 0.92,
         "sections": [
           {
-            "at": [-0.012, 0.012, 0.059],
+            "at": [0.07462, -0.01134, 0.01371],
             "rx": 0.00962,
             "ry": 0.00962,
-            "rotation": [-0.050023, -0.803483, -0.0368613, 0.592076]
+            "rotation": [0.5688652, 0.1030408, 0.3799346, 0.7220974]
           },
           {
-            "at": [-0.0312, 0.0144, 0.053],
+            "at": [0.08639, -0.02639, 0.02042],
             "rx": 0.00814,
             "ry": 0.00888,
-            "rotation": [-0.0605856, -0.8123261, -0.0431418, 0.5784415]
+            "rotation": [0.5669042, 0.0846701, 0.3745645, 0.7288018]
           },
           {
-            "at": [-0.052, 0.018, 0.045],
+            "at": [0.09808, -0.04399, 0.02838],
             "rx": 0.01036,
             "ry": 0.01258,
-            "rotation": [-0.0704291, -0.8198977, -0.048626, 0.5660769]
+            "rotation": [0.564866, 0.0679446, 0.3699596, 0.7344657]
           }
         ],
         "capStart": true,
         "capEnd": true,
-        "member": "pelvis",
+        "member": "ilium-l",
         "part": "member"
       },
       {
         "id": "ischiopubic-ramus-l",
         "kind": "loft",
-        "bone": "pelvis",
+        "bone": "ilium-l",
         "material": "bone",
         "role": "body",
         "tone": 0.92,
         "sections": [
           {
-            "at": [-0.048, 0.014, 0.039],
+            "at": [0.09327, -0.04706, 0.02243],
             "rx": 0.00592,
             "ry": 0.00592,
-            "rotation": [0.628326, -0.5599956, 0.4031359, 0.3592949]
+            "rotation": [0.867257, 0.473608, -0.0670462, 0.1380781]
           },
           {
-            "at": [-0.045, -0.012, 0.027],
+            "at": [0.09369, -0.05579, -0.005],
             "rx": 0.00444,
             "ry": 0.00518,
-            "rotation": [0.653036, -0.5793567, 0.3648515, 0.3236869]
+            "rotation": [0.8613294, 0.4651124, -0.1208478, 0.1648575]
           },
           {
-            "at": [-0.042, -0.036, 0.008],
+            "at": [0.09003, -0.0705, -0.03176],
             "rx": 0.00518,
             "ry": 0.00592,
-            "rotation": [0.6742402, -0.5952073, 0.327746, 0.2893284]
+            "rotation": [0.8527153, 0.4559262, -0.1709221, 0.1891918]
           }
         ],
         "capStart": true,
         "capEnd": true,
-        "member": "pelvis",
+        "member": "ilium-l",
         "part": "member"
       },
       {
         "id": "ilium-r",
         "kind": "loft",
-        "bone": "pelvis",
+        "bone": "ilium-r",
         "material": "bone",
         "role": "body",
         "tone": 0.92,
         "sections": [
           {
-            "at": [0.004, 0, -0.069],
+            "at": [0.07059, -0.00549, -0.00045],
             "rx": 0.0222,
             "ry": 0.00814,
-            "rotation": [-0.424605, 0.6912425, -0.2721495, 0.517522]
+            "rotation": [-0.7594178, -0.0390162, 0.4400198, -0.4776452]
           },
           {
-            "at": [0.02795, 0.0016, -0.077],
+            "at": [0.05462, -0.02472, -0.00441],
             "rx": 0.02671,
             "ry": 0.00592,
-            "rotation": [-0.3982789, 0.6579863, -0.2966862, 0.5660435]
+            "rotation": [-0.7719689, 0.0069061, 0.4643227, -0.4340745]
           },
           {
-            "at": [0.05918, 0.0034, -0.0793],
+            "at": [0.02994, -0.04282, -0.01125],
             "rx": 0.04828,
             "ry": 0.00481,
-            "rotation": [-0.3497212, 0.5862654, -0.3462587, 0.6435005]
+            "rotation": [-0.7878798, 0.0825762, 0.5048989, -0.3427881]
           },
           {
-            "at": [0.0822, 0.004, -0.0733],
+            "at": [0.00824, -0.04958, -0.0183],
             "rx": 0.04623,
             "ry": 0.00555,
             "exponent": 2.6,
-            "rotation": [-0.3127973, 0.5254229, -0.3869035, 0.6902133]
+            "rotation": [-0.7943392, 0.1311027, 0.5300802, -0.2661812]
           }
         ],
         "capStart": true,
         "capEnd": true,
-        "member": "pelvis",
+        "member": "ilium-r",
+        "part": "member"
+      },
+      {
+        "id": "arcuate-line-r",
+        "kind": "capsule",
+        "bone": "ilium-r",
+        "material": "bone",
+        "role": "body",
+        "tone": 0.92,
+        "p0": [-0.008, 0, 0],
+        "p1": [0.07187, 0, 0],
+        "r0": 0.008,
+        "r1": 0.008,
+        "member": "ilium-r",
+        "part": "member"
+      },
+      {
+        "id": "acetabulum-r",
+        "kind": "ellipsoid",
+        "bone": "ilium-r",
+        "material": "bone",
+        "role": "body",
+        "tone": 0.92,
+        "radii": [0.021, 0.021, 0.021],
+        "transform": {
+          "translation": [0.07187, 0, 0]
+        },
+        "member": "ilium-r",
         "part": "member"
       },
       {
         "id": "pubis-r",
         "kind": "loft",
-        "bone": "pelvis",
+        "bone": "ilium-r",
         "material": "bone",
         "role": "body",
         "tone": 0.92,
         "sections": [
           {
-            "at": [-0.006, -0.018, -0.053],
+            "at": [0.07688, 0.01337, -0.01732],
             "rx": 0.00888,
             "ry": 0.00888,
-            "rotation": [0.2501178, -0.1986456, -0.0525119, 0.9461625]
+            "rotation": [-0.2138428, 0.8238191, 0.4926677, 0.1813058]
           },
           {
-            "at": [-0.018, -0.0315, -0.02925],
+            "at": [0.0795, 0.03991, -0.03071],
             "rx": 0.00592,
             "ry": 0.00666,
-            "rotation": [0.2285691, -0.2059198, -0.0495331, 0.9502103]
+            "rotation": [-0.206781, 0.8143122, 0.5124004, 0.1777158]
           },
           {
-            "at": [-0.03, -0.042, -0.006],
+            "at": [0.08137, 0.06602, -0.04119],
             "rx": 0.00666,
             "ry": 0.01036,
-            "rotation": [0.2054442, -0.2131849, -0.0459064, 0.9540637]
+            "rotation": [-0.1990979, 0.8038562, 0.5330687, 0.1732428]
           }
         ],
         "capStart": true,
         "capEnd": true,
-        "member": "pelvis",
+        "member": "ilium-r",
         "part": "member"
       },
       {
         "id": "ischium-r",
         "kind": "loft",
-        "bone": "pelvis",
+        "bone": "ilium-r",
         "material": "bone",
         "role": "body",
         "tone": 0.92,
         "sections": [
           {
-            "at": [-0.012, 0.012, -0.059],
+            "at": [0.07462, 0.01134, 0.01371],
             "rx": 0.00962,
             "ry": 0.00962,
-            "rotation": [-0.0368613, -0.592076, -0.050023, 0.803483]
+            "rotation": [0.1030408, 0.5688652, 0.7220974, 0.3799346]
           },
           {
-            "at": [-0.0312, 0.0144, -0.053],
+            "at": [0.08639, 0.02639, 0.02042],
             "rx": 0.00814,
             "ry": 0.00888,
-            "rotation": [-0.0431418, -0.5784415, -0.0605856, 0.8123261]
+            "rotation": [0.0846701, 0.5669042, 0.7288018, 0.3745645]
           },
           {
-            "at": [-0.052, 0.018, -0.045],
+            "at": [0.09808, 0.04399, 0.02838],
             "rx": 0.01036,
             "ry": 0.01258,
-            "rotation": [-0.048626, -0.5660769, -0.0704291, 0.8198977]
+            "rotation": [0.0679446, 0.564866, 0.7344657, 0.3699596]
           }
         ],
         "capStart": true,
         "capEnd": true,
-        "member": "pelvis",
+        "member": "ilium-r",
         "part": "member"
       },
       {
         "id": "ischiopubic-ramus-r",
         "kind": "loft",
-        "bone": "pelvis",
+        "bone": "ilium-r",
         "material": "bone",
         "role": "body",
         "tone": 0.92,
         "sections": [
           {
-            "at": [-0.048, 0.014, -0.039],
+            "at": [0.09327, 0.04706, 0.02243],
             "rx": 0.00592,
             "ry": 0.00592,
-            "rotation": [0.4031359, -0.3592949, 0.628326, 0.5599956]
+            "rotation": [0.473608, 0.867257, 0.1380781, -0.0670462]
           },
           {
-            "at": [-0.045, -0.012, -0.027],
+            "at": [0.09369, 0.05579, -0.005],
             "rx": 0.00444,
             "ry": 0.00518,
-            "rotation": [0.3648515, -0.3236869, 0.653036, 0.5793567]
+            "rotation": [0.4651124, 0.8613294, 0.1648575, -0.1208478]
           },
           {
-            "at": [-0.042, -0.036, -0.008],
+            "at": [0.09003, 0.0705, -0.03176],
             "rx": 0.00518,
             "ry": 0.00592,
-            "rotation": [0.327746, -0.2893284, 0.6742402, 0.5952073]
+            "rotation": [0.4559262, 0.8527153, 0.1891918, -0.1709221]
           }
         ],
         "capStart": true,
         "capEnd": true,
-        "member": "pelvis",
+        "member": "ilium-r",
         "part": "member"
       },
       {
@@ -7632,30 +7879,72 @@
       {
         "id": "scapula-l",
         "kind": "ellipsoid",
-        "bone": "torso",
+        "bone": "clavicle-l",
         "material": "bone",
         "role": "body",
         "tone": 0.92,
         "radii": [0.046, 0.0065, 0.034],
         "transform": {
-          "translation": [0.262, 0.074, 0.072],
-          "rotation": [0, 0, 0.0697565, 0.9975641]
+          "translation": [0.10235, -0.05713, 0.08616],
+          "rotation": [0.6483384, 0.5440227, 0.3861815, 0.3668249]
         },
-        "member": "torso",
+        "member": "clavicle-l",
         "part": "member"
       },
       {
         "id": "clavicle-l",
         "kind": "capsule",
-        "bone": "torso",
+        "bone": "clavicle-l",
         "material": "bone",
         "role": "body",
         "tone": 0.92,
-        "p0": [0.316, -0.048, 0.014],
-        "p1": [0.322, 0.004, 0.122],
+        "p0": [0.0, 0.0, 0.0],
+        "p1": [0.12002, 0.0, -0.0],
         "r0": 0.006,
         "r1": 0.006,
-        "member": "torso",
+        "member": "clavicle-l",
+        "part": "member"
+      },
+      {
+        "id": "scapular-spine-l",
+        "kind": "capsule",
+        "bone": "clavicle-l",
+        "material": "bone",
+        "role": "body",
+        "tone": 0.92,
+        "p0": [0.08031, -0.02873, 0.09676],
+        "p1": [0.12748, -0.00377, 0.02526],
+        "r0": 0.005,
+        "r1": 0.005,
+        "member": "clavicle-l",
+        "part": "member"
+      },
+      {
+        "id": "acromion-l",
+        "kind": "capsule",
+        "bone": "clavicle-l",
+        "material": "bone",
+        "role": "body",
+        "tone": 0.92,
+        "p0": [0.12748, -0.00377, 0.02526],
+        "p1": [0.13102, 0.00333, -0.00529],
+        "r0": 0.005,
+        "r1": 0.005,
+        "member": "clavicle-l",
+        "part": "member"
+      },
+      {
+        "id": "glenoid-l",
+        "kind": "ellipsoid",
+        "bone": "clavicle-l",
+        "material": "bone",
+        "role": "body",
+        "tone": 0.92,
+        "radii": [0.011, 0.011, 0.011],
+        "transform": {
+          "translation": [0.10625, -0.01892, 0.01771]
+        },
+        "member": "clavicle-l",
         "part": "member"
       },
       {
@@ -8015,7 +8304,7 @@
         "tone": 0.92,
         "radii": [0.014, 0.0075, 0.013],
         "transform": {
-          "translation": [0.3, 0.033, 0]
+          "translation": [0.292, 0.026, 0]
         },
         "member": "thigh-l",
         "part": "member"
@@ -8121,6 +8410,12 @@
             "rx": 0.03,
             "ry": 0.0065,
             "rotation": [0.2091129, -0.6754789, 0.2091129, 0.6754789]
+          },
+          {
+            "at": [0.113, 0.0125, 0],
+            "rx": 0.03,
+            "ry": 0.0065,
+            "rotation": [0.2091129, -0.6754789, 0.2091129, 0.6754789]
           }
         ],
         "capStart": true,
@@ -8163,30 +8458,72 @@
       {
         "id": "scapula-r",
         "kind": "ellipsoid",
-        "bone": "torso",
+        "bone": "clavicle-r",
         "material": "bone",
         "role": "body",
         "tone": 0.92,
         "radii": [0.046, 0.0065, 0.034],
         "transform": {
-          "translation": [0.262, 0.074, -0.072],
-          "rotation": [0, 0, 0.0697565, 0.9975641]
+          "translation": [0.10235, 0.05713, 0.08616],
+          "rotation": [0.3668249, -0.3861815, -0.5440227, 0.6483384]
         },
-        "member": "torso",
+        "member": "clavicle-r",
         "part": "member"
       },
       {
         "id": "clavicle-r",
         "kind": "capsule",
-        "bone": "torso",
+        "bone": "clavicle-r",
         "material": "bone",
         "role": "body",
         "tone": 0.92,
-        "p0": [0.316, -0.048, -0.014],
-        "p1": [0.322, 0.004, -0.122],
+        "p0": [0.0, 0.0, 0.0],
+        "p1": [0.12002, -0.0, -0.0],
         "r0": 0.006,
         "r1": 0.006,
-        "member": "torso",
+        "member": "clavicle-r",
+        "part": "member"
+      },
+      {
+        "id": "scapular-spine-r",
+        "kind": "capsule",
+        "bone": "clavicle-r",
+        "material": "bone",
+        "role": "body",
+        "tone": 0.92,
+        "p0": [0.08031, 0.02873, 0.09676],
+        "p1": [0.12748, 0.00377, 0.02526],
+        "r0": 0.005,
+        "r1": 0.005,
+        "member": "clavicle-r",
+        "part": "member"
+      },
+      {
+        "id": "acromion-r",
+        "kind": "capsule",
+        "bone": "clavicle-r",
+        "material": "bone",
+        "role": "body",
+        "tone": 0.92,
+        "p0": [0.12748, 0.00377, 0.02526],
+        "p1": [0.13102, -0.00333, -0.00529],
+        "r0": 0.005,
+        "r1": 0.005,
+        "member": "clavicle-r",
+        "part": "member"
+      },
+      {
+        "id": "glenoid-r",
+        "kind": "ellipsoid",
+        "bone": "clavicle-r",
+        "material": "bone",
+        "role": "body",
+        "tone": 0.92,
+        "radii": [0.011, 0.011, 0.011],
+        "transform": {
+          "translation": [0.10625, 0.01892, 0.01771]
+        },
+        "member": "clavicle-r",
         "part": "member"
       },
       {
@@ -8546,7 +8883,7 @@
         "tone": 0.92,
         "radii": [0.014, 0.0075, 0.013],
         "transform": {
-          "translation": [0.3, 0.033, 0]
+          "translation": [0.292, 0.026, 0]
         },
         "member": "thigh-r",
         "part": "member"
@@ -8649,6 +8986,12 @@
           },
           {
             "at": [0.1019, 0.01403, 0],
+            "rx": 0.03,
+            "ry": 0.0065,
+            "rotation": [0.2091129, -0.6754789, 0.2091129, 0.6754789]
+          },
+          {
+            "at": [0.113, 0.0125, 0],
             "rx": 0.03,
             "ry": 0.0065,
             "rotation": [0.2091129, -0.6754789, 0.2091129, 0.6754789]
@@ -9110,6 +9453,18 @@
         "part": "member"
       },
       {
+        "id": "st-grip-l",
+        "of": "grip-l",
+        "member": "frame",
+        "part": "member"
+      },
+      {
+        "id": "st-grip-r",
+        "of": "grip-r",
+        "member": "frame",
+        "part": "member"
+      },
+      {
         "id": "st-tyre-rear",
         "of": "tyre-rear",
         "member": "wheel-rear",
@@ -9196,8 +9551,12 @@
         "de": "1:50-Thermik (126 Körper): jede Region ist ihre Körperoberfläche; Jacke, Leggings, Sneaker und Helm sind verschachtelte Schalen, eine je Schicht in echter Dicke (Luft, T-Shirt, Jacke; Luft, Strick; Luft, Socke, Obermaterial; Luftspalt, EPS), das Haar ist seine Haarschicht. Der Atem tritt durch Auslassflächen an Nasenlöchern und Mund aus, die Körperfahne durch eine Fläche auf dem Helmscheitel."
       },
       {
-        "en": "1:50 structure (122 solids): the load path is the skeleton and the scooter frame, never the body: skull and jaw, cervical spine, thoracolumbar spine with lordosis and kyphosis, ribcage, scapulae, clavicles, pelvis, femur with head, neck and condyles, patella, tibia and fibula, tarsus with metatarsals, toes, humerus, radius and ulna, metacarpus and the phalanges round the grip; joints at the rig joints, masses at the centres of mass of pelvis, trunk, head, thighs and scooter; deck, dropouts, axles, folding block, gooseneck, head tube, fork, stem, clamp and handlebar as members, the wheels as members of their own bones and a roller support under each tread patch. Twelve paired ribs follow the vertebrae to the sternum and costal margins. The two lowest pairs end freely.",
-        "de": "1:50-Tragwerk (122 Körper): der Lastpfad ist das Skelett und der Rollerrahmen, nie der Körper: Schädel und Kiefer, Halswirbelsäule, Brust- und Lendenwirbelsäule mit Lordose und Kyphose, Brustkorb, Schulterblätter, Schlüsselbeine, Becken, Oberschenkelknochen mit Kopf, Hals und Kondylen, Kniescheibe, Schien- und Wadenbein, Fußwurzel mit Mittelfuß, Zehen, Oberarmknochen, Speiche und Elle, Mittelhand und die Fingerglieder um den Griff; Gelenke an den Rig-Gelenken, Massen in den Schwerpunkten von Becken, Rumpf, Kopf, Oberschenkeln und Roller; Trittbrett, Ausfallbleche, Achsen, Klappblock, Schwanenhals, Steuerrohr, Gabel, Lenkstange, Klemme und Lenker als Glieder, die Räder als Glieder ihrer eigenen Knochen und je ein Rollenlager unter jeder Aufstandsfläche. Zwölf Rippenpaare folgen den Wirbeln zum Brustbein und zu den Rippenbögen. Die zwei untersten Paare enden frei."
+        "en": "1:50 structure (137 solids): the load path is the skeleton and the scooter frame, never the body: skull and jaw, cervical spine, thoracolumbar spine with lordosis and kyphosis, ribcage, scapulae, clavicles, pelvis, femur with head, neck and condyles, patella, tibia and fibula, tarsus with metatarsals, toes, humerus, radius and ulna, metacarpus and the phalanges round the grip; joints at the rig joints, masses at the centres of mass of pelvis, trunk, head, thighs and scooter; deck, dropouts, axles, folding block, gooseneck, head tube, fork, stem, clamp and handlebar as members, the wheels as members of their own bones and a roller support under each tread patch. Twelve paired ribs follow the vertebrae to the sternum and costal margins. The two lowest pairs end freely.",
+        "de": "1:50-Tragwerk (137 Körper): der Lastpfad ist das Skelett und der Rollerrahmen, nie der Körper: Schädel und Kiefer, Halswirbelsäule, Brust- und Lendenwirbelsäule mit Lordose und Kyphose, Brustkorb, Schulterblätter, Schlüsselbeine, Becken, Oberschenkelknochen mit Kopf, Hals und Kondylen, Kniescheibe, Schien- und Wadenbein, Fußwurzel mit Mittelfuß, Zehen, Oberarmknochen, Speiche und Elle, Mittelhand und die Fingerglieder um den Griff; Gelenke an den Rig-Gelenken, Massen in den Schwerpunkten von Becken, Rumpf, Kopf, Oberschenkeln und Roller; Trittbrett, Ausfallbleche, Achsen, Klappblock, Schwanenhals, Steuerrohr, Gabel, Lenkstange, Klemme und Lenker als Glieder, die Räder als Glieder ihrer eigenen Knochen und je ein Rollenlager unter jeder Aufstandsfläche. Zwölf Rippenpaare folgen den Wirbeln zum Brustbein und zu den Rippenbögen. Die zwei untersten Paare enden frei."
+      },
+      {
+        "en": "The clavicles and hip bones are bones of the rig on a lateral rest placement: each clavicle runs from the manubrium to the acromion and carries scapula, scapular spine, acromion and glenoid; each hip bone runs from the sacroiliac joint along the arcuate line to the acetabulum and carries ilium, pubis and ischium, so a shrug or a pelvic tilt moves the limb with its girdle. The mandibular condyles seat in the skull base, the patella lies in the femoral groove and the metatarsal heads meet the toes. The finger bones bear on the rubber grips, which are members of the frame.",
+        "de": "Schlüsselbeine und Hüftbeine sind Knochen des Rigs in seitlicher Ruhelage: Jedes Schlüsselbein läuft vom Manubrium zum Akromion und trägt Schulterblatt, Schulterblattgräte, Akromion und Gelenkpfanne; jedes Hüftbein läuft vom Iliosakralgelenk entlang der Linea arcuata zur Hüftpfanne und trägt Darmbein, Schambein und Sitzbein, sodass ein Schulterzucken oder eine Beckenneigung die Gliedmaße mit ihrem Gürtel bewegt. Die Kiefergelenkköpfe sitzen in der Schädelbasis, die Kniescheibe liegt in der Furche des Oberschenkelknochens und die Mittelfußköpfe treffen die Zehen. Die Fingerknochen liegen auf den Gummigriffen auf, die Stäbe des Rahmens sind."
       },
       {
         "en": "Each leg retains the femoral shaft and knee, and the tibia and fibula stay separate. The upper arm, radius, ulna and joint shapes follow this child’s own limb lengths and centres. The smaller scales reduce the surface tessellation while keeping the measured shaft and joint contours.",
@@ -10792,7 +11151,33 @@
         "material": "alu-deck",
         "role": "body",
         "tone": 0.2,
-        "profile": [[-0.06626, 0.1281], [-0.05444, 0.13972], [-0.04061, 0.14887], [-0.02529, 0.15522], [-0.00904, 0.15853], [0.00754, 0.15867], [0.02384, 0.15565], [0.03927, 0.14957], [0.05325, 0.14066], [0.06528, 0.12925], [0.07491, 0.11575], [0.096, 0.097], [0.094, 0.088], [0.086, 0.092], [0.06827, 0.11516], [0.05907, 0.1272], [0.04777, 0.13729], [0.03478, 0.1451], [0.02056, 0.15033], [0.00562, 0.1528], [-0.00953, 0.15243], [-0.02434, 0.14923], [-0.03829, 0.14331], [-0.05088, 0.13488], [-0.06167, 0.12424]],
+        "profile": [
+          [-0.06626, 0.1281],
+          [-0.05444, 0.13972],
+          [-0.04061, 0.14887],
+          [-0.02529, 0.15522],
+          [-0.00904, 0.15853],
+          [0.00754, 0.15867],
+          [0.02384, 0.15565],
+          [0.03927, 0.14957],
+          [0.05325, 0.14066],
+          [0.06528, 0.12925],
+          [0.07491, 0.11575],
+          [0.096, 0.097],
+          [0.094, 0.088],
+          [0.086, 0.092],
+          [0.06827, 0.11516],
+          [0.05907, 0.1272],
+          [0.04777, 0.13729],
+          [0.03478, 0.1451],
+          [0.02056, 0.15033],
+          [0.00562, 0.1528],
+          [-0.00953, 0.15243],
+          [-0.02434, 0.14923],
+          [-0.03829, 0.14331],
+          [-0.05088, 0.13488],
+          [-0.06167, 0.12424]
+        ],
         "plane": "xy",
         "from": -0.022,
         "to": 0.022
@@ -10950,7 +11335,18 @@
         "material": "pu-wheel",
         "role": "body",
         "tone": 0.14,
-        "profile": [[-0.015, 0.047], [-0.015, 0.063], [-0.0125, 0.0685], [-0.0075, 0.0715], [0, 0.0725], [0.0075, 0.0715], [0.0125, 0.0685], [0.015, 0.063], [0.015, 0.047], [-0.015, 0.047]],
+        "profile": [
+          [-0.015, 0.047],
+          [-0.015, 0.063],
+          [-0.0125, 0.0685],
+          [-0.0075, 0.0715],
+          [0, 0.0725],
+          [0.0075, 0.0715],
+          [0.0125, 0.0685],
+          [0.015, 0.063],
+          [0.015, 0.047],
+          [-0.015, 0.047]
+        ],
         "axis": [0, 0, 1],
         "origin": [0, 0, 0]
       },
@@ -10983,7 +11379,18 @@
         "material": "pu-wheel",
         "role": "body",
         "tone": 0.14,
-        "profile": [[-0.015, 0.047], [-0.015, 0.063], [-0.0125, 0.0685], [-0.0075, 0.0715], [0, 0.0725], [0.0075, 0.0715], [0.0125, 0.0685], [0.015, 0.063], [0.015, 0.047], [-0.015, 0.047]],
+        "profile": [
+          [-0.015, 0.047],
+          [-0.015, 0.063],
+          [-0.0125, 0.0685],
+          [-0.0075, 0.0715],
+          [0, 0.0725],
+          [0.0075, 0.0715],
+          [0.0125, 0.0685],
+          [0.015, 0.063],
+          [0.015, 0.047],
+          [-0.015, 0.047]
+        ],
         "axis": [0, 0, 1],
         "origin": [0, 0, 0]
       },
@@ -11033,37 +11440,25 @@
       },
       {
         "id": "spoke-front",
-        "kind": "box",
+        "kind": "revolve",
         "bone": "wheel-front",
         "material": "pu-wheel",
         "role": "detail",
         "tone": 0.6,
-        "size": [0.076, 0.009, 0.014],
-        "transform": {
-          "translation": [0, 0, 0]
-        },
-        "repeat": {
-          "count": 3,
-          "rotationAxis": [0, 0, 1],
-          "rotationRad": 1.0471976
-        }
+        "profile": [[-0.0075, 0.012], [-0.0075, 0.038], [0.0075, 0.038], [0.0075, 0.012], [-0.0075, 0.012]],
+        "axis": [0, 0, 1],
+        "origin": [0, 0, 0]
       },
       {
         "id": "spoke-rear",
-        "kind": "box",
+        "kind": "revolve",
         "bone": "wheel-rear",
         "material": "pu-wheel",
         "role": "detail",
         "tone": 0.6,
-        "size": [0.076, 0.009, 0.014],
-        "transform": {
-          "translation": [0, 0, 0]
-        },
-        "repeat": {
-          "count": 3,
-          "rotationAxis": [0, 0, 1],
-          "rotationRad": 1.0471976
-        }
+        "profile": [[-0.0075, 0.012], [-0.0075, 0.038], [0.0075, 0.038], [0.0075, 0.012], [-0.0075, 0.012]],
+        "axis": [0, 0, 1],
+        "origin": [0, 0, 0]
       },
       {
         "id": "fork-crown",
@@ -11682,6 +12077,20 @@
         "part": "member"
       },
       {
+        "id": "mandible-condyle-l",
+        "kind": "capsule",
+        "bone": "head",
+        "material": "bone",
+        "role": "body",
+        "tone": 0.92,
+        "p0": [0, -0.01, 0.036],
+        "p1": [0.012, -0.008, 0.04],
+        "r0": 0.0075,
+        "r1": 0.0075,
+        "member": "head",
+        "part": "member"
+      },
+      {
         "id": "mandible-ramus-r",
         "kind": "loft",
         "bone": "head",
@@ -11710,6 +12119,20 @@
         ],
         "capStart": true,
         "capEnd": true,
+        "member": "head",
+        "part": "member"
+      },
+      {
+        "id": "mandible-condyle-r",
+        "kind": "capsule",
+        "bone": "head",
+        "material": "bone",
+        "role": "body",
+        "tone": 0.92,
+        "p0": [0, -0.01, -0.036],
+        "p1": [0.012, -0.008, -0.04],
+        "r0": 0.0075,
+        "r1": 0.0075,
         "member": "head",
         "part": "member"
       },
@@ -12398,209 +12821,279 @@
         ]
       },
       {
+        "id": "manubrium",
+        "kind": "ellipsoid",
+        "bone": "torso",
+        "material": "bone",
+        "role": "body",
+        "tone": 0.92,
+        "radii": [0.016, 0.008, 0.022],
+        "transform": {
+          "translation": [0.31, -0.042, 0]
+        },
+        "member": "torso",
+        "part": "member"
+      },
+      {
         "id": "ilium-l",
         "kind": "loft",
-        "bone": "pelvis",
+        "bone": "ilium-l",
         "material": "bone",
         "role": "body",
         "tone": 0.92,
         "sections": [
           {
-            "at": [0.004, 0, 0.069],
+            "at": [0.07059, 0.00549, -0.00045],
             "rx": 0.0222,
             "ry": 0.00814,
-            "rotation": [0.517522, -0.2721495, 0.6912425, -0.424605]
+            "rotation": [0.7594178, -0.0390162, -0.4400198, -0.4776452]
           },
           {
-            "at": [0.02795, 0.0016, 0.077],
+            "at": [0.05462, 0.02472, -0.00441],
             "rx": 0.02671,
             "ry": 0.0077,
-            "rotation": [0.5660435, -0.2966862, 0.6579863, -0.3982789]
+            "rotation": [0.7719689, 0.0069061, -0.4643227, -0.4340745]
           },
           {
-            "at": [0.05918, 0.0034, 0.0793],
+            "at": [0.02994, 0.04282, -0.01125],
             "rx": 0.04828,
             "ry": 0.0077,
-            "rotation": [0.6435005, -0.3462587, 0.5862654, -0.3497212]
+            "rotation": [0.7878798, 0.0825762, -0.5048989, -0.3427881]
           },
           {
-            "at": [0.0822, 0.004, 0.0733],
+            "at": [0.00824, 0.04958, -0.0183],
             "rx": 0.04623,
             "ry": 0.0077,
             "exponent": 2.6,
-            "rotation": [0.6902133, -0.3869035, 0.5254229, -0.3127973]
+            "rotation": [0.7943392, 0.1311027, -0.5300802, -0.2661812]
           }
         ],
         "capStart": true,
         "capEnd": true,
-        "member": "pelvis",
+        "member": "ilium-l",
+        "part": "member"
+      },
+      {
+        "id": "arcuate-line-l",
+        "kind": "capsule",
+        "bone": "ilium-l",
+        "material": "bone",
+        "role": "body",
+        "tone": 0.92,
+        "p0": [-0.008, 0, 0],
+        "p1": [0.07187, 0, 0],
+        "r0": 0.008,
+        "r1": 0.008,
+        "member": "ilium-l",
+        "part": "member"
+      },
+      {
+        "id": "acetabulum-l",
+        "kind": "ellipsoid",
+        "bone": "ilium-l",
+        "material": "bone",
+        "role": "body",
+        "tone": 0.92,
+        "radii": [0.021, 0.021, 0.021],
+        "transform": {
+          "translation": [0.07187, 0, 0]
+        },
+        "member": "ilium-l",
         "part": "member"
       },
       {
         "id": "pubis-l",
         "kind": "loft",
-        "bone": "pelvis",
+        "bone": "ilium-l",
         "material": "bone",
         "role": "body",
         "tone": 0.92,
         "sections": [
           {
-            "at": [-0.006, -0.018, 0.053],
+            "at": [0.07688, -0.01337, -0.01732],
             "rx": 0.00888,
             "ry": 0.00888,
-            "rotation": [0.9461625, -0.0525119, -0.1986456, 0.2501178]
+            "rotation": [0.2138428, 0.8238191, -0.4926677, 0.1813058]
           },
           {
-            "at": [-0.018, -0.0315, 0.02925],
+            "at": [0.0795, -0.03991, -0.03071],
             "rx": 0.0077,
             "ry": 0.0077,
-            "rotation": [0.9502103, -0.0495331, -0.2059198, 0.2285691]
+            "rotation": [0.206781, 0.8143122, -0.5124004, 0.1777158]
           },
           {
-            "at": [-0.03, -0.042, 0.006],
+            "at": [0.08137, -0.06602, -0.04119],
             "rx": 0.0077,
             "ry": 0.01036,
-            "rotation": [0.9540637, -0.0459064, -0.2131849, 0.2054442]
+            "rotation": [0.1990979, 0.8038562, -0.5330687, 0.1732428]
           }
         ],
         "capStart": true,
         "capEnd": true,
-        "member": "pelvis",
+        "member": "ilium-l",
         "part": "member"
       },
       {
         "id": "ischium-l",
         "kind": "loft",
-        "bone": "pelvis",
+        "bone": "ilium-l",
         "material": "bone",
         "role": "body",
         "tone": 0.92,
         "sections": [
           {
-            "at": [-0.012, 0.012, 0.059],
+            "at": [0.07462, -0.01134, 0.01371],
             "rx": 0.00962,
             "ry": 0.00962,
-            "rotation": [-0.050023, -0.803483, -0.0368613, 0.592076]
+            "rotation": [0.5688652, 0.1030408, 0.3799346, 0.7220974]
           },
           {
-            "at": [-0.0312, 0.0144, 0.053],
+            "at": [0.08639, -0.02639, 0.02042],
             "rx": 0.00814,
             "ry": 0.00888,
-            "rotation": [-0.0605856, -0.8123261, -0.0431418, 0.5784415]
+            "rotation": [0.5669042, 0.0846701, 0.3745645, 0.7288018]
           },
           {
-            "at": [-0.052, 0.018, 0.045],
+            "at": [0.09808, -0.04399, 0.02838],
             "rx": 0.01036,
             "ry": 0.01258,
-            "rotation": [-0.0704291, -0.8198977, -0.048626, 0.5660769]
+            "rotation": [0.564866, 0.0679446, 0.3699596, 0.7344657]
           }
         ],
         "capStart": true,
         "capEnd": true,
-        "member": "pelvis",
+        "member": "ilium-l",
         "part": "member"
       },
       {
         "id": "ilium-r",
         "kind": "loft",
-        "bone": "pelvis",
+        "bone": "ilium-r",
         "material": "bone",
         "role": "body",
         "tone": 0.92,
         "sections": [
           {
-            "at": [0.004, 0, -0.069],
+            "at": [0.07059, -0.00549, -0.00045],
             "rx": 0.0222,
             "ry": 0.00814,
-            "rotation": [-0.424605, 0.6912425, -0.2721495, 0.517522]
+            "rotation": [-0.7594178, -0.0390162, 0.4400198, -0.4776452]
           },
           {
-            "at": [0.02795, 0.0016, -0.077],
+            "at": [0.05462, -0.02472, -0.00441],
             "rx": 0.02671,
             "ry": 0.0077,
-            "rotation": [-0.3982789, 0.6579863, -0.2966862, 0.5660435]
+            "rotation": [-0.7719689, 0.0069061, 0.4643227, -0.4340745]
           },
           {
-            "at": [0.05918, 0.0034, -0.0793],
+            "at": [0.02994, -0.04282, -0.01125],
             "rx": 0.04828,
             "ry": 0.0077,
-            "rotation": [-0.3497212, 0.5862654, -0.3462587, 0.6435005]
+            "rotation": [-0.7878798, 0.0825762, 0.5048989, -0.3427881]
           },
           {
-            "at": [0.0822, 0.004, -0.0733],
+            "at": [0.00824, -0.04958, -0.0183],
             "rx": 0.04623,
             "ry": 0.0077,
             "exponent": 2.6,
-            "rotation": [-0.3127973, 0.5254229, -0.3869035, 0.6902133]
+            "rotation": [-0.7943392, 0.1311027, 0.5300802, -0.2661812]
           }
         ],
         "capStart": true,
         "capEnd": true,
-        "member": "pelvis",
+        "member": "ilium-r",
+        "part": "member"
+      },
+      {
+        "id": "arcuate-line-r",
+        "kind": "capsule",
+        "bone": "ilium-r",
+        "material": "bone",
+        "role": "body",
+        "tone": 0.92,
+        "p0": [-0.008, 0, 0],
+        "p1": [0.07187, 0, 0],
+        "r0": 0.008,
+        "r1": 0.008,
+        "member": "ilium-r",
+        "part": "member"
+      },
+      {
+        "id": "acetabulum-r",
+        "kind": "ellipsoid",
+        "bone": "ilium-r",
+        "material": "bone",
+        "role": "body",
+        "tone": 0.92,
+        "radii": [0.021, 0.021, 0.021],
+        "transform": {
+          "translation": [0.07187, 0, 0]
+        },
+        "member": "ilium-r",
         "part": "member"
       },
       {
         "id": "pubis-r",
         "kind": "loft",
-        "bone": "pelvis",
+        "bone": "ilium-r",
         "material": "bone",
         "role": "body",
         "tone": 0.92,
         "sections": [
           {
-            "at": [-0.006, -0.018, -0.053],
+            "at": [0.07688, 0.01337, -0.01732],
             "rx": 0.00888,
             "ry": 0.00888,
-            "rotation": [0.2501178, -0.1986456, -0.0525119, 0.9461625]
+            "rotation": [-0.2138428, 0.8238191, 0.4926677, 0.1813058]
           },
           {
-            "at": [-0.018, -0.0315, -0.02925],
+            "at": [0.0795, 0.03991, -0.03071],
             "rx": 0.0077,
             "ry": 0.0077,
-            "rotation": [0.2285691, -0.2059198, -0.0495331, 0.9502103]
+            "rotation": [-0.206781, 0.8143122, 0.5124004, 0.1777158]
           },
           {
-            "at": [-0.03, -0.042, -0.006],
+            "at": [0.08137, 0.06602, -0.04119],
             "rx": 0.0077,
             "ry": 0.01036,
-            "rotation": [0.2054442, -0.2131849, -0.0459064, 0.9540637]
+            "rotation": [-0.1990979, 0.8038562, 0.5330687, 0.1732428]
           }
         ],
         "capStart": true,
         "capEnd": true,
-        "member": "pelvis",
+        "member": "ilium-r",
         "part": "member"
       },
       {
         "id": "ischium-r",
         "kind": "loft",
-        "bone": "pelvis",
+        "bone": "ilium-r",
         "material": "bone",
         "role": "body",
         "tone": 0.92,
         "sections": [
           {
-            "at": [-0.012, 0.012, -0.059],
+            "at": [0.07462, 0.01134, 0.01371],
             "rx": 0.00962,
             "ry": 0.00962,
-            "rotation": [-0.0368613, -0.592076, -0.050023, 0.803483]
+            "rotation": [0.1030408, 0.5688652, 0.7220974, 0.3799346]
           },
           {
-            "at": [-0.0312, 0.0144, -0.053],
+            "at": [0.08639, 0.02639, 0.02042],
             "rx": 0.00814,
             "ry": 0.00888,
-            "rotation": [-0.0431418, -0.5784415, -0.0605856, 0.8123261]
+            "rotation": [0.0846701, 0.5669042, 0.7288018, 0.3745645]
           },
           {
-            "at": [-0.052, 0.018, -0.045],
+            "at": [0.09808, 0.04399, 0.02838],
             "rx": 0.01036,
             "ry": 0.01258,
-            "rotation": [-0.048626, -0.5660769, -0.0704291, 0.8198977]
+            "rotation": [0.0679446, 0.564866, 0.7344657, 0.3699596]
           }
         ],
         "capStart": true,
         "capEnd": true,
-        "member": "pelvis",
+        "member": "ilium-r",
         "part": "member"
       },
       {
@@ -12640,30 +13133,72 @@
       {
         "id": "scapula-l",
         "kind": "ellipsoid",
-        "bone": "torso",
+        "bone": "clavicle-l",
         "material": "bone",
         "role": "body",
         "tone": 0.92,
         "radii": [0.046, 0.0076, 0.034],
         "transform": {
-          "translation": [0.262, 0.074, 0.072],
-          "rotation": [0, 0, 0.0697565, 0.9975641]
+          "translation": [0.10235, -0.05713, 0.08616],
+          "rotation": [0.6483384, 0.5440227, 0.3861815, 0.3668249]
         },
-        "member": "torso",
+        "member": "clavicle-l",
         "part": "member"
       },
       {
         "id": "clavicle-l",
         "kind": "capsule",
-        "bone": "torso",
+        "bone": "clavicle-l",
         "material": "bone",
         "role": "body",
         "tone": 0.92,
-        "p0": [0.316, -0.048, 0.014],
-        "p1": [0.322, 0.004, 0.122],
+        "p0": [0.0, 0.0, 0.0],
+        "p1": [0.12002, 0.0, -0.0],
         "r0": 0.0076,
         "r1": 0.0076,
-        "member": "torso",
+        "member": "clavicle-l",
+        "part": "member"
+      },
+      {
+        "id": "scapular-spine-l",
+        "kind": "capsule",
+        "bone": "clavicle-l",
+        "material": "bone",
+        "role": "body",
+        "tone": 0.92,
+        "p0": [0.08031, -0.02873, 0.09676],
+        "p1": [0.12748, -0.00377, 0.02526],
+        "r0": 0.0075,
+        "r1": 0.0075,
+        "member": "clavicle-l",
+        "part": "member"
+      },
+      {
+        "id": "acromion-l",
+        "kind": "capsule",
+        "bone": "clavicle-l",
+        "material": "bone",
+        "role": "body",
+        "tone": 0.92,
+        "p0": [0.12748, -0.00377, 0.02526],
+        "p1": [0.13102, 0.00333, -0.00529],
+        "r0": 0.0075,
+        "r1": 0.0075,
+        "member": "clavicle-l",
+        "part": "member"
+      },
+      {
+        "id": "glenoid-l",
+        "kind": "ellipsoid",
+        "bone": "clavicle-l",
+        "material": "bone",
+        "role": "body",
+        "tone": 0.92,
+        "radii": [0.011, 0.011, 0.011],
+        "transform": {
+          "translation": [0.10625, -0.01892, 0.01771]
+        },
+        "member": "clavicle-l",
         "part": "member"
       },
       {
@@ -12791,7 +13326,7 @@
         "tone": 0.92,
         "radii": [0.014, 0.0075, 0.013],
         "transform": {
-          "translation": [0.3, 0.033, 0]
+          "translation": [0.292, 0.026, 0]
         },
         "member": "thigh-l",
         "part": "member"
@@ -12852,7 +13387,8 @@
         "r0": 0.0055,
         "r1": 0.0065,
         "member": "shank-l",
-        "part": "member"
+        "part": "member",
+        "slender": true
       },
       {
         "id": "humerus-r",
@@ -12979,7 +13515,7 @@
         "tone": 0.92,
         "radii": [0.014, 0.0075, 0.013],
         "transform": {
-          "translation": [0.3, 0.033, 0]
+          "translation": [0.292, 0.026, 0]
         },
         "member": "thigh-r",
         "part": "member"
@@ -13040,7 +13576,8 @@
         "r0": 0.0055,
         "r1": 0.0065,
         "member": "shank-r",
-        "part": "member"
+        "part": "member",
+        "slender": true
       },
       {
         "id": "joint-arm-l",
@@ -13278,6 +13815,12 @@
             "rx": 0.03,
             "ry": 0.0076,
             "rotation": [0.2091129, -0.6754789, 0.2091129, 0.6754789]
+          },
+          {
+            "at": [0.113, 0.0125, 0],
+            "rx": 0.03,
+            "ry": 0.0076,
+            "rotation": [0.2091129, -0.6754789, 0.2091129, 0.6754789]
           }
         ],
         "capStart": true,
@@ -13320,30 +13863,72 @@
       {
         "id": "scapula-r",
         "kind": "ellipsoid",
-        "bone": "torso",
+        "bone": "clavicle-r",
         "material": "bone",
         "role": "body",
         "tone": 0.92,
         "radii": [0.046, 0.0076, 0.034],
         "transform": {
-          "translation": [0.262, 0.074, -0.072],
-          "rotation": [0, 0, 0.0697565, 0.9975641]
+          "translation": [0.10235, 0.05713, 0.08616],
+          "rotation": [0.3668249, -0.3861815, -0.5440227, 0.6483384]
         },
-        "member": "torso",
+        "member": "clavicle-r",
         "part": "member"
       },
       {
         "id": "clavicle-r",
         "kind": "capsule",
-        "bone": "torso",
+        "bone": "clavicle-r",
         "material": "bone",
         "role": "body",
         "tone": 0.92,
-        "p0": [0.316, -0.048, -0.014],
-        "p1": [0.322, 0.004, -0.122],
+        "p0": [0.0, 0.0, 0.0],
+        "p1": [0.12002, -0.0, -0.0],
         "r0": 0.0076,
         "r1": 0.0076,
-        "member": "torso",
+        "member": "clavicle-r",
+        "part": "member"
+      },
+      {
+        "id": "scapular-spine-r",
+        "kind": "capsule",
+        "bone": "clavicle-r",
+        "material": "bone",
+        "role": "body",
+        "tone": 0.92,
+        "p0": [0.08031, 0.02873, 0.09676],
+        "p1": [0.12748, 0.00377, 0.02526],
+        "r0": 0.0075,
+        "r1": 0.0075,
+        "member": "clavicle-r",
+        "part": "member"
+      },
+      {
+        "id": "acromion-r",
+        "kind": "capsule",
+        "bone": "clavicle-r",
+        "material": "bone",
+        "role": "body",
+        "tone": 0.92,
+        "p0": [0.12748, 0.00377, 0.02526],
+        "p1": [0.13102, -0.00333, -0.00529],
+        "r0": 0.0075,
+        "r1": 0.0075,
+        "member": "clavicle-r",
+        "part": "member"
+      },
+      {
+        "id": "glenoid-r",
+        "kind": "ellipsoid",
+        "bone": "clavicle-r",
+        "material": "bone",
+        "role": "body",
+        "tone": 0.92,
+        "radii": [0.011, 0.011, 0.011],
+        "transform": {
+          "translation": [0.10625, 0.01892, 0.01771]
+        },
+        "member": "clavicle-r",
         "part": "member"
       },
       {
@@ -13467,6 +14052,12 @@
           },
           {
             "at": [0.1019, 0.01403, 0],
+            "rx": 0.03,
+            "ry": 0.0076,
+            "rotation": [0.2091129, -0.6754789, 0.2091129, 0.6754789]
+          },
+          {
+            "at": [0.113, 0.0125, 0],
             "rx": 0.03,
             "ry": 0.0076,
             "rotation": [0.2091129, -0.6754789, 0.2091129, 0.6754789]
@@ -13888,20 +14479,24 @@
     ],
     "decisions": [
       {
-        "en": "1:100 body (60 solids), authored anew for 15 mm: the same child with fewer sections; the fingers are one roll closed round the grip with a separate thumb, the shoe is one upper with its sole and a toe box, the nose a single wedge, the ears thickened to 15 mm; eyes, mouth, buttons, placket, laces, helmet straps and the sternum strap are left out, the front pocket is one plain bulge on the backpack, the shoulder straps stay as bands. Scooter: deck, dropout plates, brake spoon, folding block with gooseneck, plain head tube, fork blades, stem with clamp, handlebar, plain grips, tyre, rim, spokes and hub.",
-        "de": "1:100-Körper (60 Körper), neu für 15 mm modelliert: dasselbe Kind mit weniger Querschnitten; die Finger sind eine um den Griff geschlossene Rolle mit eigenem Daumen, der Schuh ist ein Schaft samt Sohle mit Zehenkappe, die Nase ein einzelner Keil, die Ohren auf 15 mm verstärkt; Augen, Mund, Knöpfe, Leiste, Schnürung, Helmriemen und Brustgurt entfallen, die Vortasche ist eine glatte Wölbung auf dem Rucksack, die Schultergurte bleiben als Bänder. Roller: Trittbrett, Ausfallbleche, Bremslöffel, Klappblock mit Schwanenhals, glattes Steuerrohr, Gabelscheiden, Lenkstange mit Klemme, Lenker, glatte Griffe, Reifen, Felge, Speichen und Nabe."
+        "en": "1:100 body (60 solids), authored anew for 15 mm: the same child with fewer sections; the fingers are one roll closed round the grip with a separate thumb, the shoe is one upper with its sole and a toe box, the nose a single wedge, the ears thickened to 15 mm; eyes, mouth, buttons, placket, laces, helmet straps and the sternum strap are left out, the front pocket is one plain bulge on the backpack, the shoulder straps stay as bands. Scooter: deck, dropout plates, brake spoon, folding block with gooseneck, plain head tube, fork blades, stem with clamp, handlebar, plain grips, tyre, rim, one web disc for the six spoke arms and hub.",
+        "de": "1:100-Körper (60 Körper), neu für 15 mm modelliert: dasselbe Kind mit weniger Querschnitten; die Finger sind eine um den Griff geschlossene Rolle mit eigenem Daumen, der Schuh ist ein Schaft samt Sohle mit Zehenkappe, die Nase ein einzelner Keil, die Ohren auf 15 mm verstärkt; Augen, Mund, Knöpfe, Leiste, Schnürung, Helmriemen und Brustgurt entfallen, die Vortasche ist eine glatte Wölbung auf dem Rucksack, die Schultergurte bleiben als Bänder. Roller: Trittbrett, Ausfallbleche, Bremslöffel, Klappblock mit Schwanenhals, glattes Steuerrohr, Gabelscheiden, Lenkstange mit Klemme, Lenker, glatte Griffe, Reifen, Felge, einer Radscheibe für die sechs Speichenarme und Nabe."
       },
       {
         "en": "1:100 thermal (63 solids): one surface solid per region part, the layers merged into the surface (B2); breath outlets at nose and mouth and the plume patch on the helmet crown.",
         "de": "1:100-Thermik (63 Körper): ein Oberflächenkörper je Regionsteil, die Schichten in der Oberfläche zusammengefasst (B2); Atemauslässe an Nase und Mund und die Fahnenfläche auf dem Helmscheitel."
       },
       {
-        "en": "1:100 structure (101 solids): the skeleton with skull, jaw, spine, ribcage, scapulae, clavicles, pelvis, femur, patella, tibia, fibula, tarsus, toes, humerus, radius, ulna, metacarpus and one phalanx roll, joints, masses, the frame parts and wheels as members and the two roller supports. Six bilateral rib courses mark the aperture, chest wall, costal arch and floating ribs.",
-        "de": "1:100-Tragwerk (101 Körper): das Skelett mit Schädel, Kiefer, Wirbelsäule, Brustkorb, Schulterblättern, Schlüsselbeinen, Becken, Oberschenkelknochen, Kniescheibe, Schienbein, Wadenbein, Fußwurzel, Zehen, Oberarmknochen, Speiche, Elle, Mittelhand und einer Fingergliederrolle, Gelenke, Massen, die Rahmenteile und Räder als Glieder und die beiden Rollenlager. Sechs beidseitige Rippenzüge zeichnen die obere Öffnung, Brustwand, Rippenbögen und freien Rippen."
+        "en": "1:100 structure (114 solids): the skeleton with skull, jaw, spine, ribcage, scapulae, clavicles, pelvis, femur, patella, tibia, fibula, tarsus, toes, humerus, radius, ulna, metacarpus and one phalanx roll, joints, masses, the frame parts and wheels as members and the two roller supports. Six bilateral rib courses mark the aperture, chest wall, costal arch and floating ribs.",
+        "de": "1:100-Tragwerk (114 Körper): das Skelett mit Schädel, Kiefer, Wirbelsäule, Brustkorb, Schulterblättern, Schlüsselbeinen, Becken, Oberschenkelknochen, Kniescheibe, Schienbein, Wadenbein, Fußwurzel, Zehen, Oberarmknochen, Speiche, Elle, Mittelhand und einer Fingergliederrolle, Gelenke, Massen, die Rahmenteile und Räder als Glieder und die beiden Rollenlager. Sechs beidseitige Rippenzüge zeichnen die obere Öffnung, Brustwand, Rippenbögen und freien Rippen."
       },
       {
-        "en": "The 145 × 30 mm wheels retain the rim, hub and six spokes. The front crown spans the blades above the tread and both axles seat in the dropouts.",
-        "de": "Die Räder von 145 × 30 mm behalten Felge, Nabe und sechs Speichen. Die vordere Krone verbindet die Gabelblätter oberhalb des Reifens. Beide Achsen sitzen in den Ausfallenden."
+        "en": "The clavicles and hip bones are bones of the rig on a lateral rest placement: each clavicle runs from the manubrium to the acromion and carries scapula, scapular spine, acromion and glenoid; each hip bone runs from the sacroiliac joint along the arcuate line to the acetabulum and carries ilium, pubis and ischium, so a shrug or a pelvic tilt moves the limb with its girdle. The mandibular condyles seat in the skull base, the patella lies in the femoral groove and the metatarsal heads meet the toes.",
+        "de": "Schlüsselbeine und Hüftbeine sind Knochen des Rigs in seitlicher Ruhelage: Jedes Schlüsselbein läuft vom Manubrium zum Akromion und trägt Schulterblatt, Schulterblattgräte, Akromion und Gelenkpfanne; jedes Hüftbein läuft vom Iliosakralgelenk entlang der Linea arcuata zur Hüftpfanne und trägt Darmbein, Schambein und Sitzbein, sodass ein Schulterzucken oder eine Beckenneigung die Gliedmaße mit ihrem Gürtel bewegt. Die Kiefergelenkköpfe sitzen in der Schädelbasis, die Kniescheibe liegt in der Furche des Oberschenkelknochens und die Mittelfußköpfe treffen die Zehen."
+      },
+      {
+        "en": "The 145 × 30 mm wheels retain tyre, rim and hub; the six 9 mm spoke arms are one 15 mm web disc, because a single arm is below the smallest feature of this scale. The front crown spans the blades above the tread and both axles seat in the dropouts.",
+        "de": "Die Räder 145 × 30 mm behalten Reifen, Felge und Nabe; die sechs 9 mm starken Speichenarme sind eine 15 mm starke Radscheibe, weil ein einzelner Arm unter dem kleinsten Merkmal dieses Maßstabs liegt. Die Gabelkrone überspannt die Gabelblätter über der Lauffläche, beide Achsen sitzen in den Ausfallenden."
       },
       {
         "en": "Each leg retains the femoral shaft and knee, and the tibia and fibula stay separate. The upper arm, radius, ulna and joint shapes follow this child’s own limb lengths and centres. The smaller scales reduce the surface tessellation while keeping the measured shaft and joint contours.",
@@ -14809,7 +15404,20 @@
         "role": "body",
         "tone": 0.3,
         "plane": "zx",
-        "profile": [[-0.0275, -0.023], [-0.031, 0.04], [-0.06, 0.085], [-0.06, 0.415], [0.06, 0.415], [0.06, 0.085], [0.031, 0.04], [0.0275, -0.023], [0.0195, -0.023], [0.0195, 0.082], [-0.0195, 0.082], [-0.0195, -0.023]],
+        "profile": [
+          [-0.0275, -0.023],
+          [-0.031, 0.04],
+          [-0.06, 0.085],
+          [-0.06, 0.415],
+          [0.06, 0.415],
+          [0.06, 0.085],
+          [0.031, 0.04],
+          [0.0275, -0.023],
+          [0.0195, -0.023],
+          [0.0195, 0.082],
+          [-0.0195, 0.082],
+          [-0.0195, -0.023]
+        ],
         "from": 0.055,
         "to": 0.085
       },
@@ -14820,7 +15428,24 @@
         "material": "alu-deck",
         "role": "body",
         "tone": 0.2,
-        "profile": [[-0.06626, 0.1281], [-0.04541, 0.14612], [-0.01995, 0.15667], [0.00754, 0.15867], [0.03426, 0.15193], [0.0575, 0.13712], [0.07491, 0.11575], [0.096, 0.095], [0.088, 0.09], [0.06827, 0.11516], [0.05174, 0.13417], [0.03016, 0.14714], [0.00562, 0.1528], [-0.01947, 0.15061], [-0.04266, 0.14077], [-0.06167, 0.12424]],
+        "profile": [
+          [-0.06626, 0.1281],
+          [-0.04541, 0.14612],
+          [-0.01995, 0.15667],
+          [0.00754, 0.15867],
+          [0.03426, 0.15193],
+          [0.0575, 0.13712],
+          [0.07491, 0.11575],
+          [0.096, 0.095],
+          [0.088, 0.09],
+          [0.06827, 0.11516],
+          [0.05174, 0.13417],
+          [0.03016, 0.14714],
+          [0.00562, 0.1528],
+          [-0.01947, 0.15061],
+          [-0.04266, 0.14077],
+          [-0.06167, 0.12424]
+        ],
         "plane": "xy",
         "from": -0.022,
         "to": 0.022
@@ -14837,28 +15462,16 @@
         "origin": [0.5449, 0.16, 0]
       },
       {
-        "id": "fork-l",
+        "id": "fork",
         "kind": "extrude",
         "bone": "frame",
         "material": "alu-stem",
         "role": "body",
         "tone": 0.7,
-        "profile": [[0.52897, 0.17547], [0.55458, 0.17998], [0.573, 0.0785], [0.573, 0.0665], [0.564, 0.0585], [0.552, 0.0605], [0.546, 0.0725]],
-        "plane": "xy",
-        "from": 0.0195,
-        "to": 0.0275
-      },
-      {
-        "id": "fork-r",
-        "kind": "extrude",
-        "bone": "frame",
-        "material": "alu-stem",
-        "role": "body",
-        "tone": 0.7,
-        "profile": [[0.52897, 0.17547], [0.55458, 0.17998], [0.573, 0.0785], [0.573, 0.0665], [0.564, 0.0585], [0.552, 0.0605], [0.546, 0.0725]],
+        "profile": [[0.526, 0.1745], [0.557, 0.18], [0.575, 0.0785], [0.575, 0.0665], [0.564, 0.0565], [0.55, 0.0585], [0.543, 0.0725]],
         "plane": "xy",
         "from": -0.0275,
-        "to": -0.0195
+        "to": 0.0275
       },
       {
         "id": "neck-arm",
@@ -14933,7 +15546,18 @@
         "material": "pu-wheel",
         "role": "body",
         "tone": 0.14,
-        "profile": [[-0.015, 0.047], [-0.015, 0.063], [-0.0125, 0.0685], [-0.0075, 0.0715], [0, 0.0725], [0.0075, 0.0715], [0.0125, 0.0685], [0.015, 0.063], [0.015, 0.047], [-0.015, 0.047]],
+        "profile": [
+          [-0.015, 0.047],
+          [-0.015, 0.063],
+          [-0.0125, 0.0685],
+          [-0.0075, 0.0715],
+          [0, 0.0725],
+          [0.0075, 0.0715],
+          [0.0125, 0.0685],
+          [0.015, 0.063],
+          [0.015, 0.047],
+          [-0.015, 0.047]
+        ],
         "axis": [0, 0, 1],
         "origin": [0, 0, 0]
       },
@@ -14944,31 +15568,20 @@
         "material": "pu-wheel",
         "role": "body",
         "tone": 0.14,
-        "profile": [[-0.015, 0.047], [-0.015, 0.063], [-0.0125, 0.0685], [-0.0075, 0.0715], [0, 0.0725], [0.0075, 0.0715], [0.0125, 0.0685], [0.015, 0.063], [0.015, 0.047], [-0.015, 0.047]],
+        "profile": [
+          [-0.015, 0.047],
+          [-0.015, 0.063],
+          [-0.0125, 0.0685],
+          [-0.0075, 0.0715],
+          [0, 0.0725],
+          [0.0075, 0.0715],
+          [0.0125, 0.0685],
+          [0.015, 0.063],
+          [0.015, 0.047],
+          [-0.015, 0.047]
+        ],
         "axis": [0, 0, 1],
         "origin": [0, 0, 0]
-      },
-      {
-        "id": "axle-rear",
-        "kind": "revolve",
-        "bone": "frame",
-        "material": "alu-stem",
-        "role": "detail",
-        "tone": 0.5,
-        "profile": [[-0.034, 0], [-0.034, 0.008], [-0.0285, 0.008], [-0.0285, 0.005], [0.0285, 0.005], [0.0285, 0.008], [0.034, 0.008], [0.034, 0]],
-        "axis": [0, 0, 1],
-        "origin": [0, 0.0725, 0]
-      },
-      {
-        "id": "axle-front",
-        "kind": "revolve",
-        "bone": "frame",
-        "material": "alu-stem",
-        "role": "detail",
-        "tone": 0.5,
-        "profile": [[-0.034, 0], [-0.034, 0.008], [-0.0285, 0.008], [-0.0285, 0.005], [0.0285, 0.005], [0.0285, 0.008], [0.034, 0.008], [0.034, 0]],
-        "axis": [0, 0, 1],
-        "origin": [0.56, 0.0725, 0]
       },
       {
         "id": "rim-front",
@@ -14977,35 +15590,7 @@
         "material": "pu-wheel",
         "role": "body",
         "tone": 0.8,
-        "profile": [[-0.012, 0.036], [-0.012, 0.047], [0.012, 0.047], [0.012, 0.036], [-0.012, 0.036]],
-        "axis": [0, 0, 1],
-        "origin": [0, 0, 0]
-      },
-      {
-        "id": "spoke-front",
-        "kind": "box",
-        "bone": "wheel-front",
-        "material": "pu-wheel",
-        "role": "detail",
-        "tone": 0.6,
-        "size": [0.076, 0.009, 0.014],
-        "transform": {
-          "translation": [0, 0, 0]
-        },
-        "repeat": {
-          "count": 3,
-          "rotationAxis": [0, 0, 1],
-          "rotationRad": 1.0471976
-        }
-      },
-      {
-        "id": "hub-front",
-        "kind": "revolve",
-        "bone": "wheel-front",
-        "material": "pu-wheel",
-        "role": "detail",
-        "tone": 0.3,
-        "profile": [[-0.013, 0], [-0.013, 0.014], [0.013, 0.014], [0.013, 0]],
+        "profile": [[-0.015, 0], [-0.015, 0.046], [-0.013, 0.048], [0.013, 0.048], [0.015, 0.046], [0.015, 0]],
         "axis": [0, 0, 1],
         "origin": [0, 0, 0]
       },
@@ -15016,35 +15601,7 @@
         "material": "pu-wheel",
         "role": "body",
         "tone": 0.8,
-        "profile": [[-0.012, 0.036], [-0.012, 0.047], [0.012, 0.047], [0.012, 0.036], [-0.012, 0.036]],
-        "axis": [0, 0, 1],
-        "origin": [0, 0, 0]
-      },
-      {
-        "id": "spoke-rear",
-        "kind": "box",
-        "bone": "wheel-rear",
-        "material": "pu-wheel",
-        "role": "detail",
-        "tone": 0.6,
-        "size": [0.076, 0.009, 0.014],
-        "transform": {
-          "translation": [0, 0, 0]
-        },
-        "repeat": {
-          "count": 3,
-          "rotationAxis": [0, 0, 1],
-          "rotationRad": 1.0471976
-        }
-      },
-      {
-        "id": "hub-rear",
-        "kind": "revolve",
-        "bone": "wheel-rear",
-        "material": "pu-wheel",
-        "role": "detail",
-        "tone": 0.3,
-        "profile": [[-0.013, 0], [-0.013, 0.014], [0.013, 0.014], [0.013, 0]],
+        "profile": [[-0.015, 0], [-0.015, 0.046], [-0.013, 0.048], [0.013, 0.048], [0.015, 0.046], [0.015, 0]],
         "axis": [0, 0, 1],
         "origin": [0, 0, 0]
       },
@@ -15260,13 +15817,8 @@
         "region": "stem"
       },
       {
-        "id": "th-fork-l",
-        "of": "fork-l",
-        "region": "stem"
-      },
-      {
-        "id": "th-fork-r",
-        "of": "fork-r",
+        "id": "th-fork",
+        "of": "fork",
         "region": "stem"
       },
       {
@@ -15360,43 +15912,13 @@
         "region": "jacket"
       },
       {
-        "id": "th-axle-rear",
-        "of": "axle-rear",
-        "region": "deck"
-      },
-      {
-        "id": "th-axle-front",
-        "of": "axle-front",
-        "region": "stem"
-      },
-      {
         "id": "th-rim-front",
         "of": "rim-front",
         "region": "wheels"
       },
       {
-        "id": "th-spoke-front",
-        "of": "spoke-front",
-        "region": "wheels"
-      },
-      {
-        "id": "th-hub-front",
-        "of": "hub-front",
-        "region": "wheels"
-      },
-      {
         "id": "th-rim-rear",
         "of": "rim-rear",
-        "region": "wheels"
-      },
-      {
-        "id": "th-spoke-rear",
-        "of": "spoke-rear",
-        "region": "wheels"
-      },
-      {
-        "id": "th-hub-rear",
-        "of": "hub-rear",
         "region": "wheels"
       },
       {
@@ -15822,6 +16344,11 @@
         "tone": 0.9,
         "sections": [
           {
+            "at": [0.3, -0.04, 0],
+            "rx": 0.0018,
+            "ry": 0.0018
+          },
+          {
             "at": [0.283, -0.039, 0],
             "rx": 0.0018,
             "ry": 0.0018
@@ -15844,81 +16371,151 @@
         "part": "member"
       },
       {
+        "id": "manubrium",
+        "kind": "ellipsoid",
+        "bone": "torso",
+        "material": "bone",
+        "role": "body",
+        "tone": 0.92,
+        "radii": [0.016, 0.015, 0.022],
+        "transform": {
+          "translation": [0.31, -0.042, 0]
+        },
+        "member": "torso",
+        "part": "member"
+      },
+      {
         "id": "ilium-l",
         "kind": "loft",
-        "bone": "pelvis",
+        "bone": "ilium-l",
         "material": "bone",
         "role": "body",
         "tone": 0.92,
         "sections": [
           {
-            "at": [0.004, 0, 0.069],
+            "at": [0.07059, 0.00549, -0.00045],
             "rx": 0.0222,
             "ry": 0.0152,
-            "rotation": [0.517522, -0.2721495, 0.6912425, -0.424605]
+            "rotation": [0.7594178, -0.0390162, -0.4400198, -0.4776452]
           },
           {
-            "at": [0.02795, 0.0016, 0.077],
+            "at": [0.05462, 0.02472, -0.00441],
             "rx": 0.02671,
             "ry": 0.0152,
-            "rotation": [0.5660435, -0.2966862, 0.6579863, -0.3982789]
+            "rotation": [0.7719689, 0.0069061, -0.4643227, -0.4340745]
           },
           {
-            "at": [0.05918, 0.0034, 0.0793],
+            "at": [0.02994, 0.04282, -0.01125],
             "rx": 0.04828,
             "ry": 0.0152,
-            "rotation": [0.6435005, -0.3462587, 0.5862654, -0.3497212]
+            "rotation": [0.7878798, 0.0825762, -0.5048989, -0.3427881]
           },
           {
-            "at": [0.0822, 0.004, 0.0733],
+            "at": [0.00824, 0.04958, -0.0183],
             "rx": 0.04623,
             "ry": 0.0152,
             "exponent": 2.6,
-            "rotation": [0.6902133, -0.3869035, 0.5254229, -0.3127973]
+            "rotation": [0.7943392, 0.1311027, -0.5300802, -0.2661812]
           }
         ],
         "capStart": true,
         "capEnd": true,
-        "member": "pelvis",
+        "member": "ilium-l",
+        "part": "member"
+      },
+      {
+        "id": "arcuate-line-l",
+        "kind": "capsule",
+        "bone": "ilium-l",
+        "material": "bone",
+        "role": "body",
+        "tone": 0.92,
+        "p0": [-0.008, 0, 0],
+        "p1": [0.07187, 0, 0],
+        "r0": 0.015,
+        "r1": 0.015,
+        "member": "ilium-l",
+        "part": "member"
+      },
+      {
+        "id": "acetabulum-l",
+        "kind": "ellipsoid",
+        "bone": "ilium-l",
+        "material": "bone",
+        "role": "body",
+        "tone": 0.92,
+        "radii": [0.021, 0.021, 0.021],
+        "transform": {
+          "translation": [0.07187, 0, 0]
+        },
+        "member": "ilium-l",
         "part": "member"
       },
       {
         "id": "ilium-r",
         "kind": "loft",
-        "bone": "pelvis",
+        "bone": "ilium-r",
         "material": "bone",
         "role": "body",
         "tone": 0.92,
         "sections": [
           {
-            "at": [0.004, 0, -0.069],
+            "at": [0.07059, -0.00549, -0.00045],
             "rx": 0.0222,
             "ry": 0.0152,
-            "rotation": [-0.424605, 0.6912425, -0.2721495, 0.517522]
+            "rotation": [-0.7594178, -0.0390162, 0.4400198, -0.4776452]
           },
           {
-            "at": [0.02795, 0.0016, -0.077],
+            "at": [0.05462, -0.02472, -0.00441],
             "rx": 0.02671,
             "ry": 0.0152,
-            "rotation": [-0.3982789, 0.6579863, -0.2966862, 0.5660435]
+            "rotation": [-0.7719689, 0.0069061, 0.4643227, -0.4340745]
           },
           {
-            "at": [0.05918, 0.0034, -0.0793],
+            "at": [0.02994, -0.04282, -0.01125],
             "rx": 0.04828,
             "ry": 0.0152,
-            "rotation": [-0.3497212, 0.5862654, -0.3462587, 0.6435005]
+            "rotation": [-0.7878798, 0.0825762, 0.5048989, -0.3427881]
           },
           {
-            "at": [0.0822, 0.004, -0.0733],
+            "at": [0.00824, -0.04958, -0.0183],
             "rx": 0.04623,
             "ry": 0.0152,
             "exponent": 2.6,
-            "rotation": [-0.3127973, 0.5254229, -0.3869035, 0.6902133]
+            "rotation": [-0.7943392, 0.1311027, 0.5300802, -0.2661812]
           }
         ],
         "capStart": true,
         "capEnd": true,
-        "member": "pelvis",
+        "member": "ilium-r",
+        "part": "member"
+      },
+      {
+        "id": "arcuate-line-r",
+        "kind": "capsule",
+        "bone": "ilium-r",
+        "material": "bone",
+        "role": "body",
+        "tone": 0.92,
+        "p0": [-0.008, 0, 0],
+        "p1": [0.07187, 0, 0],
+        "r0": 0.015,
+        "r1": 0.015,
+        "member": "ilium-r",
+        "part": "member"
+      },
+      {
+        "id": "acetabulum-r",
+        "kind": "ellipsoid",
+        "bone": "ilium-r",
+        "material": "bone",
+        "role": "body",
+        "tone": 0.92,
+        "radii": [0.021, 0.021, 0.021],
+        "transform": {
+          "translation": [0.07187, 0, 0]
+        },
+        "member": "ilium-r",
         "part": "member"
       },
       {
@@ -15988,17 +16585,31 @@
         "part": "member"
       },
       {
-        "id": "shoulder-girdle",
+        "id": "clavicle-l",
         "kind": "capsule",
-        "bone": "torso",
+        "bone": "clavicle-l",
         "material": "bone",
         "role": "body",
         "tone": 0.92,
-        "p0": [0.318, 0.01, -0.118],
-        "p1": [0.318, 0.01, 0.118],
-        "r0": 0.0152,
-        "r1": 0.0152,
-        "member": "torso",
+        "p0": [0, 0, 0],
+        "p1": [0.12, 0, 0],
+        "r0": 0.015,
+        "r1": 0.015,
+        "member": "clavicle-l",
+        "part": "member"
+      },
+      {
+        "id": "clavicle-r",
+        "kind": "capsule",
+        "bone": "clavicle-r",
+        "material": "bone",
+        "role": "body",
+        "tone": 0.92,
+        "p0": [0, 0, 0],
+        "p1": [0.12, 0, 0],
+        "r0": 0.015,
+        "r1": 0.015,
+        "member": "clavicle-r",
         "part": "member"
       },
       {
@@ -16037,7 +16648,8 @@
         "capStart": true,
         "capEnd": true,
         "member": "arm-l",
-        "part": "member"
+        "part": "member",
+        "slender": true
       },
       {
         "id": "radius-l",
@@ -16051,7 +16663,8 @@
         "r0": 0.0058,
         "r1": 0.0075,
         "member": "forearm-l",
-        "part": "member"
+        "part": "member",
+        "slender": true
       },
       {
         "id": "ulna-l",
@@ -16065,7 +16678,8 @@
         "r0": 0.008,
         "r1": 0.0052,
         "member": "forearm-l",
-        "part": "member"
+        "part": "member",
+        "slender": true
       },
       {
         "id": "femur-l",
@@ -16115,21 +16729,8 @@
         "capStart": true,
         "capEnd": true,
         "member": "thigh-l",
-        "part": "member"
-      },
-      {
-        "id": "patella-l",
-        "kind": "ellipsoid",
-        "bone": "thigh-l",
-        "material": "bone",
-        "role": "body",
-        "tone": 0.92,
-        "radii": [0.014, 0.0075, 0.013],
-        "transform": {
-          "translation": [0.3, 0.033, 0]
-        },
-        "member": "thigh-l",
-        "part": "member"
+        "part": "member",
+        "slender": true
       },
       {
         "id": "tibia-l",
@@ -16173,7 +16774,8 @@
         "capStart": true,
         "capEnd": true,
         "member": "shank-l",
-        "part": "member"
+        "part": "member",
+        "slender": true
       },
       {
         "id": "fibula-l",
@@ -16187,7 +16789,8 @@
         "r0": 0.0055,
         "r1": 0.0065,
         "member": "shank-l",
-        "part": "member"
+        "part": "member",
+        "slender": true
       },
       {
         "id": "humerus-r",
@@ -16225,7 +16828,8 @@
         "capStart": true,
         "capEnd": true,
         "member": "arm-r",
-        "part": "member"
+        "part": "member",
+        "slender": true
       },
       {
         "id": "radius-r",
@@ -16239,7 +16843,8 @@
         "r0": 0.0058,
         "r1": 0.0075,
         "member": "forearm-r",
-        "part": "member"
+        "part": "member",
+        "slender": true
       },
       {
         "id": "ulna-r",
@@ -16253,7 +16858,8 @@
         "r0": 0.008,
         "r1": 0.0052,
         "member": "forearm-r",
-        "part": "member"
+        "part": "member",
+        "slender": true
       },
       {
         "id": "femur-r",
@@ -16303,21 +16909,8 @@
         "capStart": true,
         "capEnd": true,
         "member": "thigh-r",
-        "part": "member"
-      },
-      {
-        "id": "patella-r",
-        "kind": "ellipsoid",
-        "bone": "thigh-r",
-        "material": "bone",
-        "role": "body",
-        "tone": 0.92,
-        "radii": [0.014, 0.0075, 0.013],
-        "transform": {
-          "translation": [0.3, 0.033, 0]
-        },
-        "member": "thigh-r",
-        "part": "member"
+        "part": "member",
+        "slender": true
       },
       {
         "id": "tibia-r",
@@ -16361,7 +16954,8 @@
         "capStart": true,
         "capEnd": true,
         "member": "shank-r",
-        "part": "member"
+        "part": "member",
+        "slender": true
       },
       {
         "id": "fibula-r",
@@ -16375,7 +16969,8 @@
         "r0": 0.0055,
         "r1": 0.0065,
         "member": "shank-r",
-        "part": "member"
+        "part": "member",
+        "slender": true
       },
       {
         "id": "joint-arm-l",
@@ -16384,7 +16979,7 @@
         "material": "bone",
         "role": "body",
         "tone": 0.5,
-        "radii": [0.011, 0.011, 0.011],
+        "radii": [0.016, 0.016, 0.016],
         "transform": {
           "translation": [0, 0, 0]
         },
@@ -16398,7 +16993,7 @@
         "material": "bone",
         "role": "body",
         "tone": 0.5,
-        "radii": [0.011, 0.011, 0.011],
+        "radii": [0.016, 0.016, 0.016],
         "transform": {
           "translation": [0, 0, 0]
         },
@@ -16412,7 +17007,7 @@
         "material": "bone",
         "role": "body",
         "tone": 0.5,
-        "radii": [0.011, 0.011, 0.011],
+        "radii": [0.016, 0.016, 0.016],
         "transform": {
           "translation": [0, 0, 0]
         },
@@ -16426,7 +17021,7 @@
         "material": "bone",
         "role": "body",
         "tone": 0.5,
-        "radii": [0.011, 0.011, 0.011],
+        "radii": [0.016, 0.016, 0.016],
         "transform": {
           "translation": [0, 0, 0]
         },
@@ -16440,7 +17035,7 @@
         "material": "bone",
         "role": "body",
         "tone": 0.5,
-        "radii": [0.011, 0.011, 0.011],
+        "radii": [0.016, 0.016, 0.016],
         "transform": {
           "translation": [0, 0, 0]
         },
@@ -16454,7 +17049,7 @@
         "material": "bone",
         "role": "body",
         "tone": 0.5,
-        "radii": [0.011, 0.011, 0.011],
+        "radii": [0.016, 0.016, 0.016],
         "transform": {
           "translation": [0, 0, 0]
         },
@@ -16468,7 +17063,7 @@
         "material": "bone",
         "role": "body",
         "tone": 0.5,
-        "radii": [0.011, 0.011, 0.011],
+        "radii": [0.016, 0.016, 0.016],
         "transform": {
           "translation": [0, 0, 0]
         },
@@ -16482,7 +17077,7 @@
         "material": "bone",
         "role": "body",
         "tone": 0.5,
-        "radii": [0.011, 0.011, 0.011],
+        "radii": [0.016, 0.016, 0.016],
         "transform": {
           "translation": [0, 0, 0]
         },
@@ -16826,14 +17421,8 @@
         "part": "member"
       },
       {
-        "id": "st-fork-l",
-        "of": "fork-l",
-        "member": "frame",
-        "part": "member"
-      },
-      {
-        "id": "st-fork-r",
-        "of": "fork-r",
+        "id": "st-fork",
+        "of": "fork",
         "member": "frame",
         "part": "member"
       },
@@ -16862,9 +17451,9 @@
         "material": "alu-stem",
         "role": "body",
         "tone": 0.3,
-        "profile": [[-0.01, 0], [-0.01, 0.006], [0.01, 0.006], [0.01, 0]],
+        "profile": [[-0.015, 0], [-0.015, 0.009], [0.015, 0.009], [0.015, 0]],
         "axis": [0, 0, 1],
-        "origin": [0, 0.006, 0],
+        "origin": [0, 0.009, 0],
         "member": "frame",
         "part": "support",
         "anchor": "wheel-rear-contact"
@@ -16876,24 +17465,12 @@
         "material": "alu-stem",
         "role": "body",
         "tone": 0.3,
-        "profile": [[-0.01, 0], [-0.01, 0.006], [0.01, 0.006], [0.01, 0]],
+        "profile": [[-0.015, 0], [-0.015, 0.009], [0.015, 0.009], [0.015, 0]],
         "axis": [0, 0, 1],
-        "origin": [0.56, 0.006, 0],
+        "origin": [0.56, 0.009, 0],
         "member": "frame",
         "part": "support",
         "anchor": "wheel-front-contact"
-      },
-      {
-        "id": "st-axle-rear",
-        "of": "axle-rear",
-        "member": "frame",
-        "part": "member"
-      },
-      {
-        "id": "st-axle-front",
-        "of": "axle-front",
-        "member": "frame",
-        "part": "member"
       },
       {
         "id": "st-rim-front",
@@ -16902,32 +17479,8 @@
         "part": "member"
       },
       {
-        "id": "st-spoke-front",
-        "of": "spoke-front",
-        "member": "wheel-front",
-        "part": "member"
-      },
-      {
-        "id": "st-hub-front",
-        "of": "hub-front",
-        "member": "wheel-front",
-        "part": "member"
-      },
-      {
         "id": "st-rim-rear",
         "of": "rim-rear",
-        "member": "wheel-rear",
-        "part": "member"
-      },
-      {
-        "id": "st-spoke-rear",
-        "of": "spoke-rear",
-        "member": "wheel-rear",
-        "part": "member"
-      },
-      {
-        "id": "st-hub-rear",
-        "of": "hub-rear",
         "member": "wheel-rear",
         "part": "member"
       },
@@ -16940,20 +17493,20 @@
     ],
     "decisions": [
       {
-        "en": "1:200 body (41 solids), authored anew for 30 mm: one loft per limb segment, the hand a closed fist over the grip, shoe and toe as two plain masses, hip and seat merged under the jacket hem, neck with collar, head without nose or ears, helmet, ponytail, one backpack mass. Scooter: slotted deck, brake spoon, one stem tube with the head tube, gooseneck, two fork blades, handlebar with grips, spoked wheels.",
-        "de": "1:200-Körper (41 Körper), neu für 30 mm modelliert: ein Loft je Gliedmaßensegment, die Hand eine geschlossene Faust über dem Griff, Schuh und Zehen als zwei glatte Massen, Hüfte und Gesäß unter dem Jackensaum zusammengefasst, Hals mit Kragen, Kopf ohne Nase und Ohren, Helm, Pferdeschwanz, eine Rucksackmasse. Roller: geschlitztes Trittbrett, Bremslöffel, ein Lenkstangenrohr samt Steuerrohr, Schwanenhals, zwei Gabelscheiden, Lenker mit Griffen, Speichenräder."
+        "en": "1:200 body (34 solids), authored anew for 30 mm: one loft per limb segment, the hand a closed fist over the grip, shoe and toe as two plain masses, hip and seat merged under the jacket hem, neck with collar, head without nose or ears, helmet, ponytail, one backpack mass. Scooter: slotted deck, brake spoon, one stem tube with the head tube, gooseneck, fork crown, one fork solid across both blades with the wheel running in it, handlebar with grips, each wheel a tyre on one centre disc.",
+        "de": "1:200-Körper (34 Körper), neu für 30 mm modelliert: ein Loft je Gliedmaßensegment, die Hand als geschlossene Faust um den Griff, Schuh und Zehen als zwei schlichte Massen, Hüfte und Gesäß unter dem Jackensaum zusammengefasst, Hals mit Kragen, Kopf ohne Nase und Ohren, Helm, Pferdeschwanz, eine Rucksackmasse. Roller: geschlitztes Trittbrett, Löffelbremse, ein Lenkrohr mit Steuerrohr, Rahmenhals, Gabelkrone, ein Gabelkörper über beide Gabelblätter, in dem das Rad läuft, Lenker mit Griffen, jedes Rad ein Reifen auf einer Radscheibe."
       },
       {
-        "en": "1:200 thermal (44 solids): every region keeps its surface solids, layers merged; outlets for breath and plume at the size this scale can show.",
-        "de": "1:200-Thermik (44 Körper): jede Region behält ihre Oberflächenkörper, Schichten zusammengefasst; Auslässe für Atem und Fahne in der Größe, die dieser Maßstab zeigen kann."
+        "en": "1:200 thermal (37 solids): every region keeps its surface solids, layers merged; outlets for breath and plume at the size this scale can show.",
+        "de": "1:200-Thermik (37 Körper): jede Region behält ihre Oberflächenkörper, Schichten zusammengefasst; Auslässe für Atem und Fahne in der Größe, die dieser Maßstab zeigen kann."
       },
       {
-        "en": "1:200 structure (66 solids): skull, jaw, spine, ribcage, scapulae, clavicles, pelvis and one bone per limb segment at 1.25 times its shaft thickness, joints at the large joints, masses, deck, gooseneck, stem, fork, handlebar and wheels as members, two roller supports. Open ribs retain the vertebral and sternal attachments of this figure.",
-        "de": "1:200-Tragwerk (66 Körper): Schädel, Kiefer, Wirbelsäule, Brustkorb, Schulterblätter, Schlüsselbeine, Becken und ein Knochen je Gliedmaßensegment in 1,25-facher Schaftdicke, Gelenke an den großen Gelenken, Massen, Trittbrett, Schwanenhals, Lenkstange, Gabel, Lenker und Räder als Glieder, zwei Rollenlager. Offene Rippenzüge erhalten die Ansätze an Wirbelsäule und Brustbein dieser Figur."
+        "en": "1:200 structure (69 solids): skull, facial skeleton with jaw, spine, open ribs with sternum and manubrium, a clavicle on each clavicle bone, pelvis with ilium, arcuate line and acetabulum on each hip bone, and one bone per limb segment at its true shaft section (declared slender), joints at the large joints, masses, deck, gooseneck, stem, fork, handlebar and wheels as members, two roller supports. The patella is below the feature and left out.",
+        "de": "1:200-Tragwerk (69 Körper): Schädel, Gesichtsschädel mit Kiefer, Wirbelsäule, offene Rippen mit Brustbein und Manubrium, ein Schlüsselbein je Schlüsselbeinknochen, Becken mit Darmbein, Linea arcuata und Hüftpfanne je Hüftbein und ein Knochen je Gliedmaßensegment mit seinem wahren Schaftquerschnitt (als schlank erklärt), Gelenke an den großen Gelenken, Massen, Trittbrett, Rahmenhals, Lenkstange, Gabel, Lenker und Räder als Stäbe, zwei Rollenlager. Die Kniescheibe liegt unter dem kleinsten Merkmal und entfällt."
       },
       {
-        "en": "The 145 × 30 mm wheels retain the rim, hub and six spokes. The front crown spans the blades above the tread and both axles seat in the dropouts.",
-        "de": "Die Räder von 145 × 30 mm behalten Felge, Nabe und sechs Speichen. Die vordere Krone verbindet die Gabelblätter oberhalb des Reifens. Beide Achsen sitzen in den Ausfallenden."
+        "en": "The 145 × 30 mm wheels are a tyre on one centre disc; rim, hub, spokes and axle are below 30 mm and merged into it. The fork is one solid 55 mm wide, the outer width of the two blades.",
+        "de": "Die Räder 145 × 30 mm sind ein Reifen auf einer Radscheibe; Felge, Nabe, Speichen und Achse liegen unter 30 mm und gehen darin auf. Die Gabel ist ein 55 mm breiter Körper, die Außenbreite der beiden Gabelblätter."
       },
       {
         "en": "Each leg retains the femoral shaft and knee, and the tibia and fibula stay separate. The upper arm, radius, ulna and joint shapes follow this child’s own limb lengths and centres. The smaller scales reduce the surface tessellation while keeping the measured shaft and joint contours.",
@@ -17646,7 +18199,20 @@
         "role": "body",
         "tone": 0.3,
         "plane": "zx",
-        "profile": [[-0.0275, -0.02], [-0.031, 0.04], [-0.06, 0.085], [-0.06, 0.415], [0.06, 0.415], [0.06, 0.085], [0.031, 0.04], [0.0275, -0.02], [0.0195, -0.02], [0.0195, 0.082], [-0.0195, 0.082], [-0.0195, -0.02]],
+        "profile": [
+          [-0.0275, -0.02],
+          [-0.031, 0.04],
+          [-0.06, 0.085],
+          [-0.06, 0.415],
+          [0.06, 0.415],
+          [0.06, 0.085],
+          [0.031, 0.04],
+          [0.0275, -0.02],
+          [0.0195, -0.02],
+          [0.0195, 0.082],
+          [-0.0195, 0.082],
+          [-0.0195, -0.02]
+        ],
         "from": 0.055,
         "to": 0.085
       },
@@ -17680,7 +18246,7 @@
         "material": "pu-wheel",
         "role": "body",
         "tone": 0.14,
-        "profile": [[-0.015, 0.047], [-0.015, 0.063], [-0.0125, 0.0685], [-0.0075, 0.0715], [0, 0.0725], [0.0075, 0.0715], [0.0125, 0.0685], [0.015, 0.063], [0.015, 0.047], [-0.015, 0.047]],
+        "profile": [[-0.036, 0], [-0.036, 0.06], [-0.027, 0.0705], [0, 0.0725], [0.027, 0.0705], [0.036, 0.06], [0.036, 0]],
         "axis": [0, 0, 1],
         "origin": [0, 0, 0]
       },
@@ -17691,55 +18257,21 @@
         "material": "pu-wheel",
         "role": "body",
         "tone": 0.14,
-        "profile": [[-0.015, 0.047], [-0.015, 0.063], [-0.0125, 0.0685], [-0.0075, 0.0715], [0, 0.0725], [0.0075, 0.0715], [0.0125, 0.0685], [0.015, 0.063], [0.015, 0.047], [-0.015, 0.047]],
+        "profile": [[-0.036, 0], [-0.036, 0.06], [-0.027, 0.0705], [0, 0.0725], [0.027, 0.0705], [0.036, 0.06], [0.036, 0]],
         "axis": [0, 0, 1],
         "origin": [0, 0, 0]
       },
       {
-        "id": "axle-rear",
-        "kind": "revolve",
-        "bone": "frame",
-        "material": "alu-stem",
-        "role": "detail",
-        "tone": 0.5,
-        "profile": [[-0.034, 0], [-0.034, 0.008], [-0.0285, 0.008], [-0.0285, 0.005], [0.0285, 0.005], [0.0285, 0.008], [0.034, 0.008], [0.034, 0]],
-        "axis": [0, 0, 1],
-        "origin": [0, 0.0725, 0]
-      },
-      {
-        "id": "axle-front",
-        "kind": "revolve",
-        "bone": "frame",
-        "material": "alu-stem",
-        "role": "detail",
-        "tone": 0.5,
-        "profile": [[-0.034, 0], [-0.034, 0.008], [-0.0285, 0.008], [-0.0285, 0.005], [0.0285, 0.005], [0.0285, 0.008], [0.034, 0.008], [0.034, 0]],
-        "axis": [0, 0, 1],
-        "origin": [0.56, 0.0725, 0]
-      },
-      {
-        "id": "fork-l",
+        "id": "fork",
         "kind": "extrude",
         "bone": "frame",
         "material": "alu-stem",
         "role": "body",
         "tone": 0.7,
-        "profile": [[0.52897, 0.17547], [0.55458, 0.17998], [0.573, 0.0785], [0.573, 0.0665], [0.564, 0.0585], [0.552, 0.0605], [0.546, 0.0725]],
-        "plane": "xy",
-        "from": 0.0195,
-        "to": 0.0275
-      },
-      {
-        "id": "fork-r",
-        "kind": "extrude",
-        "bone": "frame",
-        "material": "alu-stem",
-        "role": "body",
-        "tone": 0.7,
-        "profile": [[0.52897, 0.17547], [0.55458, 0.17998], [0.573, 0.0785], [0.573, 0.0665], [0.564, 0.0585], [0.552, 0.0605], [0.546, 0.0725]],
+        "profile": [[0.522, 0.174], [0.559, 0.1805], [0.578, 0.079], [0.578, 0.066], [0.565, 0.055], [0.549, 0.057], [0.54, 0.0725]],
         "plane": "xy",
         "from": -0.0275,
-        "to": -0.0195
+        "to": 0.0275
       },
       {
         "id": "neck-arm",
@@ -17752,98 +18284,6 @@
         "from": -0.016,
         "to": 0.016,
         "profile": [[0.397, 0.061], [0.416, 0.059], [0.551, 0.199], [0.54, 0.219], [0.523, 0.211], [0.435, 0.106], [0.398, 0.084]]
-      },
-      {
-        "id": "rim-front",
-        "kind": "revolve",
-        "bone": "wheel-front",
-        "material": "pu-wheel",
-        "role": "body",
-        "tone": 0.8,
-        "profile": [[-0.012, 0.036], [-0.012, 0.047], [0.012, 0.047], [0.012, 0.036], [-0.012, 0.036]],
-        "axis": [0, 0, 1],
-        "origin": [0, 0, 0]
-      },
-      {
-        "id": "spoke-front",
-        "kind": "box",
-        "bone": "wheel-front",
-        "material": "pu-wheel",
-        "role": "detail",
-        "tone": 0.6,
-        "size": [0.076, 0.009, 0.014],
-        "transform": {
-          "translation": [0, 0, 0]
-        },
-        "repeat": {
-          "count": 3,
-          "rotationAxis": [0, 0, 1],
-          "rotationRad": 1.0471976
-        }
-      },
-      {
-        "id": "hub-front",
-        "kind": "revolve",
-        "bone": "wheel-front",
-        "material": "pu-wheel",
-        "role": "detail",
-        "tone": 0.3,
-        "profile": [[-0.013, 0], [-0.013, 0.014], [0.013, 0.014], [0.013, 0]],
-        "axis": [0, 0, 1],
-        "origin": [0, 0, 0]
-      },
-      {
-        "id": "rim-rear",
-        "kind": "revolve",
-        "bone": "wheel-rear",
-        "material": "pu-wheel",
-        "role": "body",
-        "tone": 0.8,
-        "profile": [[-0.012, 0.036], [-0.012, 0.047], [0.012, 0.047], [0.012, 0.036], [-0.012, 0.036]],
-        "axis": [0, 0, 1],
-        "origin": [0, 0, 0]
-      },
-      {
-        "id": "spoke-rear",
-        "kind": "box",
-        "bone": "wheel-rear",
-        "material": "pu-wheel",
-        "role": "detail",
-        "tone": 0.6,
-        "size": [0.076, 0.009, 0.014],
-        "transform": {
-          "translation": [0, 0, 0]
-        },
-        "repeat": {
-          "count": 3,
-          "rotationAxis": [0, 0, 1],
-          "rotationRad": 1.0471976
-        }
-      },
-      {
-        "id": "hub-rear",
-        "kind": "revolve",
-        "bone": "wheel-rear",
-        "material": "pu-wheel",
-        "role": "detail",
-        "tone": 0.3,
-        "profile": [[-0.013, 0], [-0.013, 0.014], [0.013, 0.014], [0.013, 0]],
-        "axis": [0, 0, 1],
-        "origin": [0, 0, 0]
-      },
-      {
-        "id": "fork-crown",
-        "kind": "box",
-        "bone": "frame",
-        "material": "alu-stem",
-        "role": "body",
-        "tone": 0.7,
-        "size": [0.03, 0.024, 0.06],
-        "cornerRadius": 0.004,
-        "transform": {
-          "translation": [0.54351, 0.16788, 0],
-          "rotation": [0, 0, 0.0871557, 0.9961947]
-        }
       }
     ],
     "thermal": [
@@ -18121,63 +18561,13 @@
         "region": "jacket"
       },
       {
-        "id": "th-axle-rear",
-        "of": "axle-rear",
-        "region": "deck"
-      },
-      {
-        "id": "th-axle-front",
-        "of": "axle-front",
-        "region": "stem"
-      },
-      {
-        "id": "th-fork-l",
-        "of": "fork-l",
-        "region": "stem"
-      },
-      {
-        "id": "th-fork-r",
-        "of": "fork-r",
+        "id": "th-fork",
+        "of": "fork",
         "region": "stem"
       },
       {
         "id": "th-neck-arm",
         "of": "neck-arm",
-        "region": "stem"
-      },
-      {
-        "id": "th-rim-front",
-        "of": "rim-front",
-        "region": "wheels"
-      },
-      {
-        "id": "th-spoke-front",
-        "of": "spoke-front",
-        "region": "wheels"
-      },
-      {
-        "id": "th-hub-front",
-        "of": "hub-front",
-        "region": "wheels"
-      },
-      {
-        "id": "th-rim-rear",
-        "of": "rim-rear",
-        "region": "wheels"
-      },
-      {
-        "id": "th-spoke-rear",
-        "of": "spoke-rear",
-        "region": "wheels"
-      },
-      {
-        "id": "th-hub-rear",
-        "of": "hub-rear",
-        "region": "wheels"
-      },
-      {
-        "id": "th-fork-crown",
-        "of": "fork-crown",
         "region": "stem"
       }
     ],
@@ -18238,38 +18628,6 @@
         "part": "member"
       },
       {
-        "id": "spine-cervical",
-        "kind": "loft",
-        "bone": "neck",
-        "material": "bone",
-        "role": "body",
-        "tone": 0.92,
-        "sections": [
-          {
-            "at": [-0.012, 0.004, 0],
-            "rx": 0.038,
-            "ry": 0.038,
-            "rotation": [0.706673, -0.0247651, 0.706673, 0.0247651]
-          },
-          {
-            "at": [0.045, 0, 0],
-            "rx": 0.038,
-            "ry": 0.038,
-            "rotation": [0.7068443, -0.0192633, 0.7068443, 0.0192633]
-          },
-          {
-            "at": [0.098, -0.002, 0],
-            "rx": 0.038,
-            "ry": 0.038,
-            "rotation": [0.706981, -0.0133345, 0.706981, 0.0133345]
-          }
-        ],
-        "capStart": true,
-        "capEnd": true,
-        "member": "neck",
-        "part": "member"
-      },
-      {
         "id": "spine",
         "kind": "loft",
         "bone": "torso",
@@ -18278,34 +18636,66 @@
         "tone": 0.92,
         "sections": [
           {
-            "at": [-0.012, 0.026, 0],
-            "rx": 0.038,
-            "ry": 0.038,
-            "rotation": [0.7070257, 0.0107101, 0.7070257, -0.0107101]
+            "at": [-0.012, 0.034, 0],
+            "rx": 0.015,
+            "ry": 0.014,
+            "rotation": [0.7027519, -0.0783566, 0.7027519, 0.0783566]
           },
           {
-            "at": [0.12, 0.03, 0],
-            "rx": 0.038,
-            "ry": 0.038,
-            "rotation": [0.7067515, 0.022414, 0.7067515, -0.022414]
+            "at": [0.05, 0.02, 0],
+            "rx": 0.015,
+            "ry": 0.014,
+            "rotation": [0.7070865, -0.0053564, 0.7070865, 0.0053564]
           },
           {
-            "at": [0.24, 0.042, 0],
-            "rx": 0.038,
-            "ry": 0.038,
-            "rotation": [0.7068707, -0.0182689, 0.7068707, 0.0182689]
+            "at": [0.12, 0.032, 0],
+            "rx": 0.015,
+            "ry": 0.014,
+            "rotation": [0.7036655, 0.0696766, 0.7036655, -0.0696766]
+          },
+          {
+            "at": [0.2, 0.05, 0],
+            "rx": 0.015,
+            "ry": 0.014,
+            "rotation": [0.7064736, 0.0299179, 0.7064736, -0.0299179]
+          },
+          {
+            "at": [0.285, 0.046, 0],
+            "rx": 0.015,
+            "ry": 0.014,
+            "rotation": [0.7033047, -0.0732295, 0.7033047, 0.0732295]
           },
           {
             "at": [0.352, 0.018, 0],
-            "rx": 0.038,
-            "ry": 0.038,
-            "rotation": [0.7031718, -0.0744943, 0.7031718, 0.0744943]
+            "rx": 0.015,
+            "ry": 0.014,
+            "rotation": [0.6933017, -0.1390423, 0.6933017, 0.1390423]
+          },
+          {
+            "at": [0.385, 0.006, 0],
+            "rx": 0.013,
+            "ry": 0.012,
+            "rotation": [0.6963642, -0.1227878, 0.6963642, 0.1227878]
+          },
+          {
+            "at": [0.42, 0.001, 0],
+            "rx": 0.012,
+            "ry": 0.011,
+            "rotation": [0.7059346, -0.0403608, 0.7059346, 0.0403608]
+          },
+          {
+            "at": [0.447, 0, 0],
+            "rx": 0.012,
+            "ry": 0.011,
+            "rotation": [0.7071068, 0, 0.7071068, 0]
           }
         ],
         "capStart": true,
         "capEnd": true,
         "member": "torso",
-        "part": "member"
+        "part": "member",
+        "slender": true,
+        "members": ["neck"]
       },
       {
         "id": "open-rib-2-l",
@@ -18537,7 +18927,24 @@
         "capStart": true,
         "capEnd": true,
         "member": "pelvis",
-        "part": "member"
+        "part": "member",
+        "members": ["ilium-l", "ilium-r"]
+      },
+      {
+        "id": "shoulder-girdle",
+        "kind": "capsule",
+        "bone": "torso",
+        "material": "bone",
+        "role": "body",
+        "tone": 0.92,
+        "p0": [0.319, 0.014, -0.122],
+        "p1": [0.319, 0.014, 0.122],
+        "r0": 0.008,
+        "r1": 0.008,
+        "member": "torso",
+        "part": "member",
+        "slender": true,
+        "members": ["clavicle-l", "clavicle-r"]
       },
       {
         "id": "humerus-l",
@@ -18575,7 +18982,8 @@
         "capStart": true,
         "capEnd": true,
         "member": "arm-l",
-        "part": "member"
+        "part": "member",
+        "slender": true
       },
       {
         "id": "radius-l",
@@ -18589,7 +18997,8 @@
         "r0": 0.0058,
         "r1": 0.0075,
         "member": "forearm-l",
-        "part": "member"
+        "part": "member",
+        "slender": true
       },
       {
         "id": "ulna-l",
@@ -18603,7 +19012,8 @@
         "r0": 0.008,
         "r1": 0.0052,
         "member": "forearm-l",
-        "part": "member"
+        "part": "member",
+        "slender": true
       },
       {
         "id": "femur-l",
@@ -18653,21 +19063,8 @@
         "capStart": true,
         "capEnd": true,
         "member": "thigh-l",
-        "part": "member"
-      },
-      {
-        "id": "patella-l",
-        "kind": "ellipsoid",
-        "bone": "thigh-l",
-        "material": "bone",
-        "role": "body",
-        "tone": 0.92,
-        "radii": [0.014, 0.0075, 0.013],
-        "transform": {
-          "translation": [0.3, 0.033, 0]
-        },
-        "member": "thigh-l",
-        "part": "member"
+        "part": "member",
+        "slender": true
       },
       {
         "id": "tibia-l",
@@ -18711,7 +19108,8 @@
         "capStart": true,
         "capEnd": true,
         "member": "shank-l",
-        "part": "member"
+        "part": "member",
+        "slender": true
       },
       {
         "id": "fibula-l",
@@ -18725,7 +19123,8 @@
         "r0": 0.0055,
         "r1": 0.0065,
         "member": "shank-l",
-        "part": "member"
+        "part": "member",
+        "slender": true
       },
       {
         "id": "humerus-r",
@@ -18763,7 +19162,8 @@
         "capStart": true,
         "capEnd": true,
         "member": "arm-r",
-        "part": "member"
+        "part": "member",
+        "slender": true
       },
       {
         "id": "radius-r",
@@ -18777,7 +19177,8 @@
         "r0": 0.0058,
         "r1": 0.0075,
         "member": "forearm-r",
-        "part": "member"
+        "part": "member",
+        "slender": true
       },
       {
         "id": "ulna-r",
@@ -18791,7 +19192,8 @@
         "r0": 0.008,
         "r1": 0.0052,
         "member": "forearm-r",
-        "part": "member"
+        "part": "member",
+        "slender": true
       },
       {
         "id": "femur-r",
@@ -18841,21 +19243,8 @@
         "capStart": true,
         "capEnd": true,
         "member": "thigh-r",
-        "part": "member"
-      },
-      {
-        "id": "patella-r",
-        "kind": "ellipsoid",
-        "bone": "thigh-r",
-        "material": "bone",
-        "role": "body",
-        "tone": 0.92,
-        "radii": [0.014, 0.0075, 0.013],
-        "transform": {
-          "translation": [0.3, 0.033, 0]
-        },
-        "member": "thigh-r",
-        "part": "member"
+        "part": "member",
+        "slender": true
       },
       {
         "id": "tibia-r",
@@ -18899,7 +19288,8 @@
         "capStart": true,
         "capEnd": true,
         "member": "shank-r",
-        "part": "member"
+        "part": "member",
+        "slender": true
       },
       {
         "id": "fibula-r",
@@ -18913,119 +19303,8 @@
         "r0": 0.0055,
         "r1": 0.0065,
         "member": "shank-r",
-        "part": "member"
-      },
-      {
-        "id": "joint-arm-l",
-        "kind": "ellipsoid",
-        "bone": "arm-l",
-        "material": "bone",
-        "role": "body",
-        "tone": 0.5,
-        "radii": [0.011, 0.011, 0.011],
-        "transform": {
-          "translation": [0, 0, 0]
-        },
-        "member": "arm-l",
-        "part": "joint"
-      },
-      {
-        "id": "joint-forearm-l",
-        "kind": "ellipsoid",
-        "bone": "forearm-l",
-        "material": "bone",
-        "role": "body",
-        "tone": 0.5,
-        "radii": [0.011, 0.011, 0.011],
-        "transform": {
-          "translation": [0, 0, 0]
-        },
-        "member": "forearm-l",
-        "part": "joint"
-      },
-      {
-        "id": "joint-thigh-l",
-        "kind": "ellipsoid",
-        "bone": "thigh-l",
-        "material": "bone",
-        "role": "body",
-        "tone": 0.5,
-        "radii": [0.011, 0.011, 0.011],
-        "transform": {
-          "translation": [0, 0, 0]
-        },
-        "member": "thigh-l",
-        "part": "joint"
-      },
-      {
-        "id": "joint-shank-l",
-        "kind": "ellipsoid",
-        "bone": "shank-l",
-        "material": "bone",
-        "role": "body",
-        "tone": 0.5,
-        "radii": [0.011, 0.011, 0.011],
-        "transform": {
-          "translation": [0, 0, 0]
-        },
-        "member": "shank-l",
-        "part": "joint"
-      },
-      {
-        "id": "joint-arm-r",
-        "kind": "ellipsoid",
-        "bone": "arm-r",
-        "material": "bone",
-        "role": "body",
-        "tone": 0.5,
-        "radii": [0.011, 0.011, 0.011],
-        "transform": {
-          "translation": [0, 0, 0]
-        },
-        "member": "arm-r",
-        "part": "joint"
-      },
-      {
-        "id": "joint-forearm-r",
-        "kind": "ellipsoid",
-        "bone": "forearm-r",
-        "material": "bone",
-        "role": "body",
-        "tone": 0.5,
-        "radii": [0.011, 0.011, 0.011],
-        "transform": {
-          "translation": [0, 0, 0]
-        },
-        "member": "forearm-r",
-        "part": "joint"
-      },
-      {
-        "id": "joint-thigh-r",
-        "kind": "ellipsoid",
-        "bone": "thigh-r",
-        "material": "bone",
-        "role": "body",
-        "tone": 0.5,
-        "radii": [0.011, 0.011, 0.011],
-        "transform": {
-          "translation": [0, 0, 0]
-        },
-        "member": "thigh-r",
-        "part": "joint"
-      },
-      {
-        "id": "joint-shank-r",
-        "kind": "ellipsoid",
-        "bone": "shank-r",
-        "material": "bone",
-        "role": "body",
-        "tone": 0.5,
-        "radii": [0.011, 0.011, 0.011],
-        "transform": {
-          "translation": [0, 0, 0]
-        },
-        "member": "shank-r",
-        "part": "joint"
+        "part": "member",
+        "slender": true
       },
       {
         "id": "hand-bones-l",
@@ -19228,9 +19507,9 @@
         "material": "alu-stem",
         "role": "body",
         "tone": 0.3,
-        "profile": [[-0.01, 0], [-0.01, 0.006], [0.01, 0.006], [0.01, 0]],
+        "profile": [[-0.02, 0], [-0.02, 0.015], [0.02, 0.015], [0.02, 0]],
         "axis": [0, 0, 1],
-        "origin": [0, 0.006, 0],
+        "origin": [0, 0.015, 0],
         "member": "frame",
         "part": "support",
         "anchor": "wheel-rear-contact"
@@ -19242,34 +19521,16 @@
         "material": "alu-stem",
         "role": "body",
         "tone": 0.3,
-        "profile": [[-0.01, 0], [-0.01, 0.006], [0.01, 0.006], [0.01, 0]],
+        "profile": [[-0.02, 0], [-0.02, 0.015], [0.02, 0.015], [0.02, 0]],
         "axis": [0, 0, 1],
-        "origin": [0.56, 0.006, 0],
+        "origin": [0.56, 0.015, 0],
         "member": "frame",
         "part": "support",
         "anchor": "wheel-front-contact"
       },
       {
-        "id": "st-axle-rear",
-        "of": "axle-rear",
-        "member": "frame",
-        "part": "member"
-      },
-      {
-        "id": "st-axle-front",
-        "of": "axle-front",
-        "member": "frame",
-        "part": "member"
-      },
-      {
-        "id": "st-fork-l",
-        "of": "fork-l",
-        "member": "frame",
-        "part": "member"
-      },
-      {
-        "id": "st-fork-r",
-        "of": "fork-r",
+        "id": "st-fork",
+        "of": "fork",
         "member": "frame",
         "part": "member"
       },
@@ -19278,70 +19539,28 @@
         "of": "neck-arm",
         "member": "frame",
         "part": "member"
-      },
-      {
-        "id": "st-rim-front",
-        "of": "rim-front",
-        "member": "wheel-front",
-        "part": "member"
-      },
-      {
-        "id": "st-spoke-front",
-        "of": "spoke-front",
-        "member": "wheel-front",
-        "part": "member"
-      },
-      {
-        "id": "st-hub-front",
-        "of": "hub-front",
-        "member": "wheel-front",
-        "part": "member"
-      },
-      {
-        "id": "st-rim-rear",
-        "of": "rim-rear",
-        "member": "wheel-rear",
-        "part": "member"
-      },
-      {
-        "id": "st-spoke-rear",
-        "of": "spoke-rear",
-        "member": "wheel-rear",
-        "part": "member"
-      },
-      {
-        "id": "st-hub-rear",
-        "of": "hub-rear",
-        "member": "wheel-rear",
-        "part": "member"
-      },
-      {
-        "id": "st-fork-crown",
-        "of": "fork-crown",
-        "member": "frame",
-        "part": "member"
       }
     ],
     "decisions": [
       {
-        "en": "1:500 body (35 solids), authored anew for 75 mm: three or four sections per mass; thigh, shank, shoe with toe, upper arm, forearm and fist per side, hip, trunk, shoulders with neck, head, helmet and backpack. The scooter has a slotted deck, two axles, separate front blades, a fork crown, a gooseneck and two spoked wheels.",
-        "de": "1:500-Körper (35 Körper), neu für 75 mm modelliert: drei bis vier Querschnitte je Masse; Oberschenkel, Unterschenkel, Schuh mit Zehen, Oberarm, Unterarm und Faust je Seite, Hüfte, Rumpf, Schultern mit Hals, Kopf, Helm und Rucksack. Der Roller hat ein geschlitztes Trittbrett, zwei Achsen, getrennte Gabelblätter, eine Gabelkrone, einen Rahmenhals und zwei Speichenräder."
+        "en": "1:500 body (25 solids), authored anew for 75 mm: three or four sections per mass; thigh, shank, shoe with toe, upper arm, forearm and fist per side, hip, trunk, shoulders with neck, head, helmet and backpack. The scooter has a slotted deck, a gooseneck, a stem, a handlebar, one fork solid and two disc wheels.",
+        "de": "1:500-Körper (25 Körper), neu für 75 mm modelliert: drei bis vier Querschnitte je Masse; Oberschenkel, Unterschenkel, Schuh mit Zehen, Oberarm, Unterarm und Faust je Seite, Hüfte, Rumpf, Schultern mit Hals, Kopf, Helm und Rucksack. Der Roller hat ein geschlitztes Trittbrett, einen Rahmenhals, eine Lenkstange, einen Lenker, einen Gabelkörper und zwei Scheibenräder."
       },
       {
-        "en": "1:500 thermal (39 solids): one surface solid per region part, layers merged, outlets for breath and plume at the size floor.",
-        "de": "1:500-Thermik (39 Körper): ein Oberflächenkörper je Regionsteil, Schichten zusammengefasst, Auslässe für Atem und Fahne an der Größenuntergrenze."
+        "en": "1:500 thermal (29 solids): one surface solid per region part, layers merged, outlets for breath and plume at the size floor.",
+        "de": "1:500-Thermik (29 Körper): ein Oberflächenkörper je Regionsteil, Schichten zusammengefasst, Auslässe für Atem und Fahne an der Größenuntergrenze."
       },
       {
-        "en": "1:500 structure (47 solids): skull, spine, ribcage, pelvis and one bone per limb segment at 1.6 times its shaft thickness, masses, deck, stem, fork, handlebar and wheels as members, two roller supports; joints are below what the scale shows. Open ribs retain the vertebral and sternal attachments of this figure.",
-        "de": "1:500-Tragwerk (47 Körper): Schädel, Wirbelsäule, Brustkorb, Becken und ein Knochen je Gliedmaßensegment in 1,6-facher Schaftdicke, Massen, Trittbrett, Lenkstange, Gabel, Lenker und Räder als Glieder, zwei Rollenlager; Gelenke liegen unter dem, was der Maßstab zeigt. Offene Rippenzüge erhalten die Ansätze an Wirbelsäule und Brustbein dieser Figur."
+        "en": "1:500 structure (41 solids): skull with facial skeleton, one spine rod at its true section from the sacrum to the atlas (it spans the neck bone), open ribs and sternum, one bar across both clavicles, one pelvis mass that spans both hip bones, humerus, radius, ulna, femur, tibia and fibula at their true shaft sections (declared slender), hand and foot masses, masses, deck, stem, fork, handlebar and wheels as members, two roller supports; joints and patella are below what the scale shows.",
+        "de": "1:500-Tragwerk (41 Körper): Schädel mit Gesichtsschädel, ein Wirbelsäulenstab mit wahrem Querschnitt vom Kreuzbein bis zum Atlas (er überspannt den Halsknochen), offene Rippen und Brustbein, ein Stab über beide Schlüsselbeine, eine Beckenmasse über beide Hüftbeine, Oberarmknochen, Speiche, Elle, Oberschenkelknochen, Schienbein und Wadenbein mit wahren Schaftquerschnitten (als schlank erklärt), Hand- und Fußmassen, Massen, Trittbrett, Lenkstange, Gabel, Lenker und Räder als Stäbe, zwei Rollenlager; Gelenke und Kniescheibe liegen unter dem, was der Maßstab zeigt."
       },
       {
-        "en": "The 145 × 30 mm wheels retain the rim, hub and six spokes. The front crown spans the blades above the tread and both axles seat in the dropouts.",
-        "de": "Die Räder von 145 × 30 mm behalten Felge, Nabe und sechs Speichen. Die vordere Krone verbindet die Gabelblätter oberhalb des Reifens. Beide Achsen sitzen in den Ausfallenden."
+        "en": "Each 145 mm wheel is one disc; rim, hub, spokes, axles and fork crown are merged into wheel and fork.",
+        "de": "Jedes 145-mm-Rad ist eine Scheibe; Felge, Nabe, Speichen, Achsen und Gabelkrone gehen in Rad und Gabel auf."
       },
       {
-        "en": "At 1:500 the printed end and plan views combine the wheels and adjacent fork into a legible mark. The digital tyre retains its physical tread width.",
-        "de": "Bei 1:500 zeigen die gedruckte Stirnansicht und Draufsicht Rad und angrenzende Gabel als ein lesbares Zeichen. Der digitale Reifen behält seine tatsächliche Laufbreite."
+        "en": "At 1:500 the wheel disc is 72 mm wide, the width the drawings of this scale give it (the physical tread is 30 mm), and the fork is one 55 mm solid inside that width.",
+        "de": "Bei 1:500 ist die Radscheibe 72 mm breit, so breit wie die Zeichnungen dieses Maßstabs sie zeigen (die wirkliche Lauffläche misst 30 mm), und die Gabel ist ein 55 mm breiter Körper innerhalb dieser Breite."
       },
       {
         "en": "Each leg retains the femoral shaft and knee, and the tibia and fibula stay separate. The upper arm, radius, ulna and joint shapes follow this child’s own limb lengths and centres. The smaller scales reduce the surface tessellation while keeping the measured shaft and joint contours.",

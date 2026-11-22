@@ -15,7 +15,7 @@ export interface BunWorkspaceControl { readonly signal: AbortSignal; readonly fr
 export type BunWorkspaceOwnershipReport = Readonly<{ version: 1; scopes: readonly Readonly<{ manifest: string; beforeSha256: string; patterns: readonly string[]; packages: readonly string[] }>[]; packages: readonly string[] }>;
 /** 🪢️ Retains original fresh Source observations throughout one controlled callback. */
 /** 🔭️ Reports the exact directory listings, path states and manifest digests one ownership computation retained. */
-export type BunWorkspaceObservedOwnershipV1 = Readonly<{ root: string; paths: readonly Readonly<{ path: string; state: readonly (string | number)[]; list?: readonly Readonly<{ name: string; kind: string }>[] }>[]; texts: readonly Readonly<{ path: string; sha256: string }>[] }>;
+export type BunWorkspaceObservedOwnershipV1 = Readonly<{ root: string; paths: readonly Readonly<{ path: string; state: readonly (string | number)[]; list?: readonly Readonly<{ name: string; kind: string }>[] }>[]; texts: readonly Readonly<{ path: string; sha256: string }>[]; textOwners: Readonly<Record<string, string>> }>;
 export type BunWorkspaceInstallationCustodyV1 = Readonly<{scopes:readonly Readonly<{manifest:string;packages:readonly string[]}>[];recheck:()=>Promise<void>;observed:()=>BunWorkspaceObservedOwnershipV1}>;
 export interface BunWorkspacePhysicalV1 {
   readonly withCurrentBunWorkspaceOwnershipV1:<T>(root:string,selection:BunWorkspaceSelection,control:BunWorkspaceControl,body:(custody:BunWorkspaceInstallationCustodyV1)=>Promise<T>)=>Promise<T>;

@@ -7,6 +7,9 @@ use semio_ui_locale::Locale;
 use semio_ui_theme::geometry::Rect;
 use semio_ui_theme::Theme;
 
+#[path = "🗓️picker-cells/🦀️.rs"]
+pub mod picker_cells;
+
 // #region paint
 //#region 🔖️InteractiveStateSync
 // 🔗️ W2 wiring: a paint-owned pre-pass, mutable (unlike `paint_node`'s own read-only walk below),
@@ -89,6 +92,16 @@ enum RetainedInteractiveSyncPhase {
     IconCellMint,
     /// 🖼️ Write the cell's spec and its explicit rect inside the selector.
     IconCellWrite,
+    /// 🔌️ An extension host's row `cursor.item` has no retained child yet or one to refresh — find it by key.
+    ExtRowScan,
+    /// 🔌️ Synthesize the host's control as a ledgered composite child of the slot.
+    ExtRowMint,
+    /// 🔌️ Write the row's spec and its stacked rect inside the slot.
+    ExtRowWrite,
+    /// 🗓️ A date or colour input's open popup: find cell `cursor.item` by key, synthesize it if absent, write its spec and rect.
+    PickerScan,
+    PickerMint,
+    PickerWrite,
     StackWrite,
     TreeSection,
     TreeItem,
@@ -289,6 +302,7 @@ pub fn sync_interactive_state_node_step(tree: &mut UiTree, id: NodeId, theme: &T
     }
     match cursor.phase {
         RetainedInteractiveSyncPhase::Bind => {
+            sync_date_display(tree, id, locale);
             let Some(node) = tree.node(id) else { return retained_sync_fault(cursor, line!()) };
             match &node.spec.0 {
                 UiNode::Select(select) if node.state.open => {
@@ -316,7 +330,6 @@ pub fn sync_interactive_state_node_step(tree: &mut UiTree, id: NodeId, theme: &T
                     cursor.phase = RetainedInteractiveSyncPhase::SelectItem;
                     RetainedInteractiveSyncStep::Pending
                 }
-                // 🔽️ A closed popup that still owns rows unmounts them before anything else runs.
                 UiNode::Select(_) if tree.composite_rows_of(id) > 0 => {
                     if let Some(node) = tree.node_mut(id) {
                         node.state.scroll_offset = (0.0, 0.0);
@@ -335,6 +348,41 @@ pub fn sync_interactive_state_node_step(tree: &mut UiTree, id: NodeId, theme: &T
                 UiNode::IconSelect(_) => {
                     cursor.item = 0;
                     cursor.phase = RetainedInteractiveSyncPhase::IconCellScan;
+                    RetainedInteractiveSyncStep::Pending
+                }
+                UiNode::ExternalSlot(_) => {
+                    cursor.item = 0;
+                    cursor.phase = RetainedInteractiveSyncPhase::ExtRowScan;
+                    RetainedInteractiveSyncStep::Pending
+                }
+                UiNode::Input(input) if input.input_kind == "file" => {
+                    let chrome = locale.map(|locale| {
+                        let labels = <semio_ui_locale::UiCommonLabels as semio_ui_locale::AppLabels>::labels(locale, semio_ui_locale::Terminology::Native);
+                        (labels.choose_file.as_str(), labels.no_file_chosen.as_str())
+                    });
+                    if let Some(node) = tree.node_mut(id) {
+                        node.state.file_chrome = chrome;
+                    }
+                    cursor.finish()
+                }
+                UiNode::Input(input) if picker_cells::is_picker_kind(&input.input_kind) && node.state.open => {
+                    let monday = locale.and_then(|locale| semio_ui_wgpu_layout::date_picker::date_locale(locale.as_str())).is_none_or(|names| names.week_starts_monday);
+                    if let Some(node) = tree.node_mut(id) {
+                        node.state.picker_week_monday = monday;
+                        node.state.picker_names = locale.map(|locale| {
+                            let labels = <semio_ui_locale::UiCommonLabels as semio_ui_locale::AppLabels>::labels(locale, semio_ui_locale::Terminology::Native);
+                            [labels.previous_month.as_str(), labels.next_month.as_str(), labels.colours.as_str()]
+                        });
+                    }
+                    cursor.item = 0;
+                    cursor.phase = RetainedInteractiveSyncPhase::PickerScan;
+                    RetainedInteractiveSyncStep::Pending
+                }
+                UiNode::Input(input) if picker_cells::is_picker_kind(&input.input_kind) && tree.composite_rows_of(id) > 0 => {
+                    if let Some(node) = tree.node_mut(id) {
+                        node.state.picker_day = None;
+                    }
+                    cursor.phase = RetainedInteractiveSyncPhase::SelectRetire;
                     RetainedInteractiveSyncStep::Pending
                 }
                 UiNode::Stack(_) => {
@@ -359,9 +407,6 @@ pub fn sync_interactive_state_node_step(tree: &mut UiTree, id: NodeId, theme: &T
                 return retained_sync_fault(cursor, line!());
             };
             if cursor.item >= select.items.len() {
-                // 🔽️ A popup whose item list SHRANK still owns rows for items that are gone. Drop
-                // the excess one per step; `SelectScan` re-mints anything it dropped that is still
-                // declared, so this converges instead of oscillating and never leaks an arena slot.
                 if tree.composite_rows_of(id) > select.items.len() {
                     let _ = tree.retire_composite_row_of_step(id);
                     return RetainedInteractiveSyncStep::Pending;
@@ -380,10 +425,6 @@ pub fn sync_interactive_state_node_step(tree: &mut UiTree, id: NodeId, theme: &T
             RetainedInteractiveSyncStep::Pending
         }
         RetainedInteractiveSyncPhase::SelectMint => {
-            // 🔽️ React mounts `SelectContent`'s children when the popup opens; this is that mount.
-            // One row per step, keyed by the item's own `value` so `SelectScan` above finds it again
-            // next frame instead of minting a second copy, and ledgered on the tree so the document
-            // reconcile can retire it before it relinks the arena (`UiTree::mint_composite_row`).
             let row = tree.node(id).and_then(|node| match &node.spec.0 {
                 UiNode::Select(select) => select.items.get(cursor.item).map(|item| (semio_ui_retained_tree::reconcile::select_item_row_committing(select, item, &semio_ui_retained_tree::reconcile::select_commit_value(tree, id, &item.value)), item.value.clone())),
                 _ => None,
@@ -506,6 +547,132 @@ pub fn sync_interactive_state_node_step(tree: &mut UiTree, id: NodeId, theme: &T
             cursor.phase = RetainedInteractiveSyncPhase::IconCellScan;
             RetainedInteractiveSyncStep::Pending
         }
+        RetainedInteractiveSyncPhase::ExtRowScan => {
+            let Some((body_key, params_json)) = tree.node(id).and_then(|node| match &node.spec.0 {
+                UiNode::ExternalSlot(slot) => Some((slot.body_key.clone(), slot.params_json.clone())),
+                _ => None,
+            }) else {
+                return retained_sync_fault(cursor, line!());
+            };
+            if cursor.item >= semio_ui_retained_tree::reconcile::extension_host_rows(&body_key, &params_json).len() {
+                return cursor.finish();
+            }
+            let key = semio_ui_retained_tree::reconcile::extension_row_key(&body_key, cursor.item);
+            let mut found = None;
+            let mut child = tree.node(id).and_then(|node| node.first_child);
+            while let Some(candidate) = child {
+                if matches!(tree.node(candidate).map(|node| &node.key), Some(NodeKey::Explicit(existing)) if *existing == key) {
+                    found = Some(candidate);
+                    break;
+                }
+                child = tree.node(candidate).and_then(|node| node.next_sibling);
+            }
+            cursor.matched = found;
+            cursor.phase = if found.is_some() { RetainedInteractiveSyncPhase::ExtRowWrite } else { RetainedInteractiveSyncPhase::ExtRowMint };
+            RetainedInteractiveSyncStep::Pending
+        }
+        RetainedInteractiveSyncPhase::ExtRowMint => {
+            let key = tree.node(id).and_then(|node| match &node.spec.0 {
+                UiNode::ExternalSlot(slot) => Some(semio_ui_retained_tree::reconcile::extension_row_key(&slot.body_key, cursor.item)),
+                _ => None,
+            });
+            let spec = tree.node(id).and_then(|node| match &node.spec.0 {
+                UiNode::ExternalSlot(slot) => semio_ui_retained_tree::reconcile::extension_host_rows(&slot.body_key, &slot.params_json).into_iter().nth(cursor.item),
+                _ => None,
+            });
+            let (Some(key), Some(spec)) = (key, spec) else { return retained_sync_fault(cursor, line!()) };
+            let Some(minted) = tree.mint_composite_row(id, Node::new(NodeKey::Explicit(key), WidgetSpec(spec))) else {
+                cursor.matched = None;
+                cursor.item = cursor.item.saturating_add(1);
+                cursor.phase = RetainedInteractiveSyncPhase::ExtRowScan;
+                return RetainedInteractiveSyncStep::Pending;
+            };
+            cursor.matched = Some(minted);
+            cursor.phase = RetainedInteractiveSyncPhase::ExtRowWrite;
+            RetainedInteractiveSyncStep::Pending
+        }
+        RetainedInteractiveSyncPhase::ExtRowWrite => {
+            let Some(child) = cursor.matched.take() else { return retained_sync_fault(cursor, line!()) };
+            let spec = tree.node(id).and_then(|node| match &node.spec.0 {
+                UiNode::ExternalSlot(slot) => semio_ui_retained_tree::reconcile::extension_host_rows(&slot.body_key, &slot.params_json).into_iter().nth(cursor.item),
+                _ => None,
+            });
+            let Some(spec) = spec else { return retained_sync_fault(cursor, line!()) };
+            let Some(layout) = tree.accepted_layout(id) else { return retained_sync_fault(cursor, line!()) };
+            let rect = semio_ui_wgpu_layout::layout::extension_row_rect(Rect::new(0.0, 0.0, layout.width, layout.height), cursor.item, theme.control_height_small, theme.gap_standard);
+            let Some(node) = tree.node_mut(child) else { return retained_sync_fault(cursor, line!()) };
+            if node.spec.0 != spec {
+                node.spec = WidgetSpec(spec);
+            }
+            node.layout.x = rect.x;
+            node.layout.y = rect.y;
+            node.layout.width = rect.w;
+            node.layout.height = rect.h;
+            let Some(item) = cursor.item.checked_add(1) else { return retained_sync_fault(cursor, line!()) };
+            cursor.item = item;
+            cursor.phase = RetainedInteractiveSyncPhase::ExtRowScan;
+            RetainedInteractiveSyncStep::Pending
+        }
+        RetainedInteractiveSyncPhase::PickerScan => {
+            let kind = tree.node(id).and_then(|node| match &node.spec.0 {
+                UiNode::Input(input) => Some(input.input_kind.clone()),
+                _ => None,
+            });
+            let Some(kind) = kind else { return retained_sync_fault(cursor, line!()) };
+            if cursor.item >= picker_cells::picker_cell_count(&kind) {
+                return cursor.finish();
+            }
+            let key = picker_cells::picker_cell_key(cursor.item);
+            let mut found = None;
+            let mut child = tree.node(id).and_then(|node| node.first_child);
+            while let Some(candidate) = child {
+                if matches!(tree.node(candidate).map(|node| &node.key), Some(NodeKey::Explicit(existing)) if *existing == key) {
+                    found = Some(candidate);
+                    break;
+                }
+                child = tree.node(candidate).and_then(|node| node.next_sibling);
+            }
+            cursor.matched = found;
+            cursor.phase = if found.is_some() { RetainedInteractiveSyncPhase::PickerWrite } else { RetainedInteractiveSyncPhase::PickerMint };
+            RetainedInteractiveSyncStep::Pending
+        }
+        RetainedInteractiveSyncPhase::PickerMint => {
+            let Some(picker_cells::PickerCell { node: spec, .. }) = picker_cell_of(tree, id, theme, locale, cursor.item) else {
+                cursor.item = cursor.item.saturating_add(1);
+                cursor.phase = RetainedInteractiveSyncPhase::PickerScan;
+                return RetainedInteractiveSyncStep::Pending;
+            };
+            let Some(minted) = tree.mint_composite_row(id, Node::new(NodeKey::Explicit(picker_cells::picker_cell_key(cursor.item)), WidgetSpec(spec))) else {
+                cursor.matched = None;
+                cursor.item = cursor.item.saturating_add(1);
+                cursor.phase = RetainedInteractiveSyncPhase::PickerScan;
+                return RetainedInteractiveSyncStep::Pending;
+            };
+            cursor.matched = Some(minted);
+            cursor.phase = RetainedInteractiveSyncPhase::PickerWrite;
+            RetainedInteractiveSyncStep::Pending
+        }
+        RetainedInteractiveSyncPhase::PickerWrite => {
+            let Some(child) = cursor.matched.take() else { return retained_sync_fault(cursor, line!()) };
+            let Some(picker_cells::PickerCell { node: spec, rect: absolute, focused }) = picker_cell_of(tree, id, theme, locale, cursor.item) else {
+                cursor.item = cursor.item.saturating_add(1);
+                cursor.phase = RetainedInteractiveSyncPhase::PickerScan;
+                return RetainedInteractiveSyncStep::Pending;
+            };
+            let Some(anchor) = tree.absolute_rect(id) else { return retained_sync_fault(cursor, line!()) };
+            let Some(node) = tree.node_mut(child) else { return retained_sync_fault(cursor, line!()) };
+            if node.spec.0 != spec {
+                node.spec = WidgetSpec(spec);
+            }
+            node.flags.set(NodeFlags::PICKER_FOCUS, focused);
+            node.layout.x = absolute.x - anchor.x;
+            node.layout.y = absolute.y - anchor.y;
+            node.layout.width = absolute.w;
+            node.layout.height = absolute.h;
+            cursor.item = cursor.item.saturating_add(1);
+            cursor.phase = RetainedInteractiveSyncPhase::PickerScan;
+            RetainedInteractiveSyncStep::Pending
+        }
         RetainedInteractiveSyncPhase::StackWrite => {
             let accepts_drop = tree.node(id).and_then(|node| match &node.spec.0 {
                 UiNode::Stack(stack) => Some(stack.drop_action.is_some()),
@@ -596,6 +763,28 @@ pub fn sync_interactive_state_node_step(tree: &mut UiTree, id: NodeId, theme: &T
             }
         }
     }
+}
+
+/// 📅️ Keeps a `date` input's field text in the host language's format; the stored value stays `YYYY-MM-DD`.
+fn sync_date_display(tree: &mut UiTree, id: NodeId, locale: Option<Locale>) {
+    let text = tree.node(id).and_then(|node| match &node.spec.0 {
+        UiNode::Input(input) if input.input_kind == "date" => semio_ui_wgpu_layout::date_picker::CivilDate::parse_iso(&input.value).zip(locale.and_then(|locale| semio_ui_wgpu_layout::date_picker::date_locale(locale.as_str()))).map(|(date, names)| names.format(date)),
+        _ => None,
+    });
+    if let Some(node) = tree.node_mut(id) {
+        if node.state.date_display != text {
+            node.state.date_display = text;
+        }
+    }
+}
+
+/// 🗓️ Cell `index` of the open picker `id`: its node and absolute rect, placed below the field (above it when the viewport has no room).
+fn picker_cell_of(tree: &UiTree, id: NodeId, theme: &Theme, locale: Option<Locale>, index: usize) -> Option<picker_cells::PickerCell> {
+    let node = tree.node(id)?;
+    let UiNode::Input(input) = &node.spec.0 else { return None };
+    let anchor = tree.absolute_rect(id)?;
+    let viewport_h = tree.root.and_then(|root| tree.accepted_layout(root)).map_or(0.0, |layout| layout.height);
+    picker_cells::picker_cell(input, node.state.picker_day, node.state.highlighted, anchor, viewport_h, theme, locale, index)
 }
 
 /// 📐️ One popup row's `(x, y, w, h)` **relative to the `Select`'s own top-left** — shared by

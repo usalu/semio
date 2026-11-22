@@ -86,3 +86,36 @@ test("while the cache is unreachable a queued unit waits untouched and is not co
  expect(await drainUploadsV1(root,environment,{idleMilliseconds:0})).toMatchObject({uploaded:0,dropped:1});
  expect(readBuildCountersV1(workspace).skipReasons).toEqual({"upload-expired":1});
 },120000);
+
+test("offers of local hits fill at most half of the spool, so a unit compiled meanwhile is still queued; at the full spool a compiled unit is refused",()=>{
+ const root=directory("cap"),half=fleet.limits.maximumSpool/2;
+ const key=(index:number)=>index.toString(16).padStart(16,"0").padEnd(64,"0");
+ for(let index=0;index<half;index++)expect(enqueueUploadV1(root,job({key:key(index),offer:true,claimed:false,queuedMs:1000+index}))).toBe(true);
+ expect(enqueueUploadV1(root,job({key:key(half),offer:true,claimed:false}))).toBe(false);
+ for(let index=half;index<fleet.limits.maximumSpool;index++)expect(enqueueUploadV1(root,job({key:key(index+1),queuedMs:5000+index}))).toBe(true);
+ expect(spoolLengthV1(root)).toBe(fleet.limits.maximumSpool);
+ expect(enqueueUploadV1(root,job({key:key(fleet.limits.maximumSpool+2),queuedMs:9999}))).toBe(false);
+ expect(fleet.limits.maximumSpool).toBe(4096);
+});
+
+test("one stalled upload does not stall the others: the drain runs a sliding pool, so units behind a slow one are uploaded while it hangs",async()=>{
+ const server=await startRemoteCacheServerV1({directory:directory("srv3"),host:"127.0.0.1",port:0,maximumBytes:2**30,maximumEntryBytes:2**28,maximumAgeDays:30,defaultInstance:"main",tokens:{write:"w-token"}});servers.push(server);
+ const slow="a".repeat(64),stallMs=2500;let finishedWhileStalled=0,stalled=false;
+ const proxy=Bun.serve({port:0,async fetch(request){
+  const url=new URL(request.url),body=request.method==="GET"||request.method==="HEAD"?undefined:await request.arrayBuffer();
+  const isResult=request.method==="PUT"&&url.pathname.includes("/ac/");
+  if(isResult&&url.pathname.includes(slow)){stalled=true;await new Promise(done=>setTimeout(done,stallMs));stalled=false;}
+  const answer=await fetch(server.url+url.pathname+url.search,{method:request.method,headers:request.headers,body});
+  if(isResult&&stalled&&!url.pathname.includes(slow))finishedWhileStalled++;
+  return answer;
+ }});proxies.push(proxy);
+ const cas=directory("cas3"),root=directory("cache3"),out=directory("out3");
+ const environment={SEMIO_REMOTE_CACHE_ENDPOINT:`http://127.0.0.1:${proxy.port}`,SEMIO_REMOTE_CACHE_INSTANCE:"main",SEMIO_REMOTE_CACHE_ACCESS:"read-write",SEMIO_REMOTE_CACHE_TOKEN:"w-token",SEMIO_CAS_ROOT:cas};
+ process.env.SEMIO_CAS_ROOT=cas;
+ writeFileSync(join(out,"libcore-1.rlib"),"rlib bytes");writeFileSync(join(out,"core-1.d"),`${out}/core-1.d: ${out}/lib.rs\n`);writeFileSync(join(out,"lib.rs"),"pub fn id()->u32{1}\n");
+ const localKey="9".repeat(64);publishUnitV1(root,{key:localKey,crate:"core",cwd:out,outDir:out,laneRoot:undefined,outputs:[join(out,"libcore-1.rlib"),join(out,"core-1.d")],stdout:"",stderr:"",stampDirectory:undefined});
+ expect(enqueueUploadV1(root,job({key:slow,localKey,cwd:out,queuedMs:Date.now(),claimed:false}))).toBe(true);
+ for(let index=1;index<=7;index++)expect(enqueueUploadV1(root,job({key:index.toString(16).padStart(16,"b").padEnd(64,"c"),localKey,cwd:out,queuedMs:Date.now()+index,claimed:false}))).toBe(true);
+ const started=Date.now(),result=await drainUploadsV1(root,environment,{idleMilliseconds:0});
+ expect(result).toMatchObject({uploaded:8,failed:0});expect(finishedWhileStalled,"all seven others finished while the slow one hung").toBe(7);expect(Date.now()-started).toBeGreaterThanOrEqual(stallMs-100);
+},120000);

@@ -1,0 +1,53 @@
+{
+ "id": "person-sweeping",
+ "category": "humans",
+ "title": {
+  "en": "Person Sweeping",
+  "de": "Kehrende Person"
+ },
+ "heightM": 1.688,
+ "widthM": 1.39,
+ "powerW": 321.4,
+ "poses": [
+  "push-start",
+  "pushing",
+  "push-end",
+  "broom-lifted",
+  "resting-on-broom"
+ ],
+ "clips": [
+  "sweep-stroke",
+  "idle-breathing"
+ ],
+ "representations": {
+  "50": "authored",
+  "100": "authored",
+  "200": "authored",
+  "500": "authored"
+ },
+ "symbols": [],
+ "analytics": [
+  "thermal",
+  "transport",
+  "structural"
+ ],
+ "exports": [
+  "svg",
+  "pdf",
+  "dxf",
+  "dwg",
+  "png-sequence",
+  "mp4",
+  "webm",
+  "component",
+  "glb",
+  "fbx",
+  "model",
+  "model-zip"
+ ],
+ "distinction": {
+  "en": "A 1.69 m adult in fleece sweatshirt, jeans and sneakers sweeping a floor with a 400 mm push broom at 3.3 met: stroke start, push, stroke end, the lifted return and a rest with the broom upright; the bristles stand on the floor as a contact and the broom head swivels flat.",
+  "de": "Eine erwachsene Person von 1,69 m in Fleece-Sweatshirt, Jeans und Sneakern, die bei 3,3 met mit einem 400 mm breiten Schiebebesen einen Boden kehrt: Strichbeginn, Schieben, Strichende, das angehobene Zurückführen und eine Pause mit aufrechtem Besen; die Borsten stehen als Kontakt auf dem Boden, der Besenkopf liegt im Gelenk flach auf."
+ },
+ "completion": "authored"
+}

@@ -4,6 +4,7 @@ import {GRAPH_LIMITS_V1} from "../../🔐️authority/🟦️.ts";
 import {readBuildOwnerRegistryV1} from "../../🚪️admission/🟦️.ts";
 import graphSchema from "../../🧬️schema/🔣️.json" with{type:"json"};
 import {emitGraphPassNoticeV1} from "../♻️pass-reuse/🟦️.ts";
+import {isOwnerFailureV1,registryFaultReasonV1} from "../🛟️owner-isolation/🟦️.ts";
 
 /** 🪪️ The native roots a refused inference names because no registry row owns them yet (the two refusals of the native closure), whatever wrapper carried the message across the worker farm. */
 export function pendingOwnerRootsV1(message:string):string[]{
@@ -34,6 +35,15 @@ export function ownerRegistryRefusalV1(input:{roots:readonly string[];rounds:num
   return Object.assign(new Error(fill(text.en)+" | "+fill(text.de),{cause:input.cause}),{code:text.code,roots:[...input.roots]});
 }
 
+/** 🧾️ The text that names the pending or vanished owner roots of a registry fault: the raw fault itself, or the reasons of a named failure whose owners all failed on a registry fault (a failure that also holds a real owner fault is never a registry fault). */
+export function registryFaultTextV1(error:Error):string|undefined{
+  if(isOwnerFailureV1(error)){
+    const reasons=error.owners.map(owner=>registryFaultReasonV1(owner.code,owner.reason));
+    return reasons.every(reason=>reason!==undefined)?reasons.join("\n"):undefined;
+  }
+  return registryFaultReasonV1("code"in error?error.code:undefined,error.message);
+}
+
 type RegistryCustodyOutcomeV1<T>={kind:"result";value:T}|{kind:"invalidated";fault:Error};
 
 class ClosedOwnerRegistryInvalidationV1 extends Error{
@@ -51,7 +61,7 @@ export async function withOwnerRegistryCustodyV1<T>(signal:AbortSignal,hold:(con
   const outcome=await hold(async run=>{
     try{return {kind:"result",value:await run()};}
     catch(error){
-      if(signal.aborted||!(error instanceof Error)||!graphSchema.definitions.OwnerRegistryWorkerFailures.const.some(({code,prefix})=>"code"in error&&error.code===code&&error.message.startsWith(prefix)))throw error;
+      if(signal.aborted||!(error instanceof Error)||registryFaultTextV1(error)===undefined)throw error;
       return {kind:"invalidated",fault:error};
     }
   });
@@ -68,22 +78,20 @@ export async function settleOwnerRegistryV1<T>(root:string,attempt:()=>Promise<T
     try{return await attempt();}
     catch(error){
       if(!(error instanceof ClosedOwnerRegistryInvalidationV1))throw error;
-      const fault=error.fault,message=fault.message,pending=pendingOwnerRootsV1(message),vanished=vanishedOwnerRootsV1(message);
+      const fault=error.fault,message=registryFaultTextV1(fault)??fault.message,pending=pendingOwnerRootsV1(message),vanished=vanishedOwnerRootsV1(message);
       const roots=[...new Set([...pending,...vanished])];
       if(roots.length===0||options.aborted?.())throw fault;
       const current=readBuildOwnerRegistrySourceV1(root,"current");
-      let moved=current!==before;
+      let moved=current!==before,adopted=false;
       if(round>=GRAPH_LIMITS_V1.repairRounds)throw ownerRegistryRefusalV1({roots,rounds:round,moved,cause:fault});
-      let adopted=false;
+      let unresolved:readonly string[]=roots;
       try{
-        let unresolved:readonly string[]=roots;
-        if(moved){
-          const {owners}=readBuildOwnerRegistryV1(JSON.parse(current));
-          const owned=(path:string)=>owners.some(owner=>owner.root===path||owner.nativeRoots?.includes(path));
-          unresolved=[...pending.filter(path=>!owned(path)),...vanished.filter(owned)];
-        }
-        adopted=adoptOwnerRegistryRootsV1(root,unresolved);
-      }catch{}
+        const {owners}=readBuildOwnerRegistryV1(JSON.parse(current));
+        const owned=(path:string)=>owners.some(owner=>owner.root===path||owner.nativeRoots?.includes(path));
+        unresolved=[...pending.filter(path=>!owned(path)),...vanished.filter(owned)];
+        if(unresolved.length<roots.length)moved=true;
+      }catch{moved=true;}
+      try{adopted=adoptOwnerRegistryRootsV1(root,moved?unresolved:roots);}catch{}
       if(!moved&&!adopted)moved=readBuildOwnerRegistrySourceV1(root,"current")!==before;
       if(!moved&&!adopted)throw ownerRegistryRefusalV1({roots,rounds:round,moved,cause:fault});
       clearPinnedAuthorityV1();

@@ -1729,23 +1729,36 @@
     },
     {
      "id": "trivet-legs-front",
-     "kind": "box",
+     "kind": "extrude",
      "bone": "trivet",
      "material": "cast-iron",
      "role": "body",
      "tone": 0.45,
-     "size": [
-      0.01,
-      0.037,
-      0.01
-     ],
-     "transform": {
-      "translation": [
-       -0.13,
-       0.0185,
-       -0.1
+     "profile": [
+      [
+       0.0,
+       -0.105
+      ],
+      [
+       0.0,
+       -0.096
+      ],
+      [
+       0.022,
+       -0.095
+      ],
+      [
+       0.037,
+       -0.083
+      ],
+      [
+       0.037,
+       -0.105
       ]
-     },
+     ],
+     "plane": "yz",
+     "from": -0.135,
+     "to": -0.125,
      "repeat": {
       "count": 2,
       "translation": [
@@ -1753,28 +1766,40 @@
        0,
        0
       ]
-     },
-     "cornerRadius": 0.0015
+     }
     },
     {
      "id": "trivet-legs-back",
-     "kind": "box",
+     "kind": "extrude",
      "bone": "trivet",
      "material": "cast-iron",
      "role": "body",
      "tone": 0.45,
-     "size": [
-      0.01,
-      0.037,
-      0.01
-     ],
-     "transform": {
-      "translation": [
-       -0.13,
-       0.0185,
-       0.16
+     "profile": [
+      [
+       0.0,
+       0.165
+      ],
+      [
+       0.037,
+       0.165
+      ],
+      [
+       0.037,
+       0.143
+      ],
+      [
+       0.022,
+       0.155
+      ],
+      [
+       0.0,
+       0.156
       ]
-     },
+     ],
+     "plane": "yz",
+     "from": -0.135,
+     "to": -0.125,
      "repeat": {
       "count": 2,
       "translation": [
@@ -1782,8 +1807,7 @@
        0,
        0
       ]
-     },
-     "cornerRadius": 0.0015
+     }
     },
     {
      "id": "trivet-fingers",
@@ -1798,28 +1822,24 @@
        0.0482
       ],
       [
-       0.064,
+       0.039,
        0.0482
       ],
       [
-       0.0625,
-       0.0475
+       0.0365,
+       0.0468
       ],
       [
-       0.062,
-       0.0455
+       0.036,
+       0.0445
       ],
       [
-       0.0622,
-       0.0355
+       0.0365,
+       0.0412
       ],
       [
-       0.0635,
-       0.034
-      ],
-      [
-       0.067,
-       0.0338
+       0.039,
+       0.0402
       ],
       [
        0.12,
@@ -2809,8 +2829,8 @@
    ],
    "decisions": [
     {
-     "en": "Body: the real table-top hob. A pressed housing of 0.28 m by 0.484 m and 50 mm height with a stiffening bead and nine vent slots on the fascia and eleven on each side stands on four rubber feet of 20 mm; on it lies the 10 mm enamelled top, one pressed piece without a seam, of 0.30 m by 0.497 m, flush with the fascia at the front and 10 mm proud at the sides and back, with a pressed spill well of 0.15 m around the burner. The brass burner is turned from its real section: cup on the well floor, crown with 36 flame ports, cap of 96 mm. The flame is the inner-cone ring at the ports and 24 tongues of 7.5 mm (lofts square to their curved centre lines) leaning outwards and up to 22 mm; the front and back tongues sit on the stretching flame-tip bone. The cast-iron pan support is a 0.27 m square frame of cast bars 10 mm wide and 12 mm deep (the section of the BSH domino grates) on four legs with four fingers that droop towards the burner; the bakelite knob of 37 mm on its 42 mm skirt with grip ridge and pointer turns on the 50 mm fascia, which is as tall as a real table-top cooker needs to hold the tap; the R 1/2 gas inlet sits on the back wall under the overhang of the top, and a spark electrode and a thermocouple stand in the well beside the crown.",
-     "de": "Körper: das reale Tischkochfeld. Ein gepresstes Gehäuse von 0,28 m mal 0,484 m und 50 mm Höhe mit Versteifungssicke und neun Lüftungsschlitzen an der Blende und elf an jeder Seite steht auf vier Gummifüßen von 20 mm; darauf liegt die 10 mm starke emaillierte Platte, ein gepresstes Stück ohne Naht, von 0,30 m mal 0,497 m, vorn bündig mit der Blende und seitlich und hinten 10 mm überstehend, mit einer gepressten Überlaufmulde von 0,15 m um den Brenner. Der Messingbrenner ist aus seinem realen Querschnitt gedreht: Topf auf dem Muldenboden, Brennerkrone mit 36 Flammenöffnungen, Deckel von 96 mm. Die Flamme ist der Ring der inneren Kegel an den Öffnungen und 24 Zungen von 7,5 mm (Lofts quer zu ihrer gekrümmten Mittellinie), die sich nach außen und bis 22 mm hoch neigen; die vordere und hintere Zunge sitzen auf dem streckbaren Knochen der Flammenspitze. Der gusseiserne Pfannenträger ist ein quadratischer Rahmen von 0,27 m aus gegossenen Stäben von 10 mm Breite und 12 mm Höhe (der Querschnitt der BSH-Domino-Roste) auf vier Beinen mit vier Fingern, die sich zum Brenner neigen; der Bakelit-Knebel von 37 mm auf seiner 42-mm-Rosette mit Griffsteg und Zeiger dreht sich an der 50 mm hohen Blende, die so hoch ist, wie ein echter Tischkocher für den Hahn braucht; der R-1/2-Gasanschluss sitzt an der Rückwand unter dem Überstand der Platte, und eine Zündelektrode und ein Thermoelement stehen in der Mulde neben der Krone."
+     "en": "Body: the real table-top hob. A pressed housing of 0.28 m by 0.484 m and 50 mm height with a stiffening bead and nine vent slots on the fascia and eleven on each side stands on four rubber feet of 20 mm; on it lies the 10 mm enamelled top, one pressed piece without a seam, of 0.30 m by 0.497 m, flush with the fascia at the front and 10 mm proud at the sides and back, with a pressed spill well of 0.15 m around the burner. The brass burner is turned from its real section: cup on the well floor, crown with 36 flame ports, cap of 96 mm. The flame is the inner-cone ring at the ports and 24 tongues of 7.5 mm (lofts square to their curved centre lines) leaning outwards and up to 22 mm; the front and back tongues sit on the stretching flame-tip bone. The cast-iron pan support is a 0.27 m square frame of cast bars 10 mm wide and 12 mm deep (the section of the BSH domino grates) on four cast legs, webs of 9 mm at the foot with a gusset under the side rail, with four fingers that reach over the flame crown to 36 mm from the burner axis, so that a 0.1 m pot stands on them, and thin out from 12 mm at the frame to 8 mm at the tip; the bakelite knob of 37 mm on its 42 mm skirt with grip ridge and pointer turns on the 50 mm fascia, which is as tall as a real table-top cooker needs to hold the tap; the R 1/2 gas inlet sits on the back wall under the overhang of the top, and a spark electrode and a thermocouple stand in the well beside the crown.",
+     "de": "Körper: das reale Tischkochfeld. Ein gepresstes Gehäuse von 0,28 m mal 0,484 m und 50 mm Höhe mit Versteifungssicke und neun Lüftungsschlitzen an der Blende und elf an jeder Seite steht auf vier Gummifüßen von 20 mm; darauf liegt die 10 mm starke emaillierte Platte, ein gepresstes Stück ohne Naht, von 0,30 m mal 0,497 m, vorn bündig mit der Blende und seitlich und hinten 10 mm überstehend, mit einer gepressten Überlaufmulde von 0,15 m um den Brenner. Der Messingbrenner ist aus seinem realen Querschnitt gedreht: Topf auf dem Muldenboden, Brennerkrone mit 36 Flammenöffnungen, Deckel von 96 mm. Die Flamme ist der Ring der inneren Kegel an den Öffnungen und 24 Zungen von 7,5 mm (Lofts quer zu ihrer gekrümmten Mittellinie), die sich nach außen und bis 22 mm hoch neigen; die vordere und hintere Zunge sitzen auf dem streckbaren Knochen der Flammenspitze. Der gusseiserne Pfannenträger ist ein quadratischer Rahmen von 0,27 m aus gegossenen Stäben von 10 mm Breite und 12 mm Höhe (der Querschnitt der BSH-Domino-Roste) auf vier gegossenen Beinen, Stegen von 9 mm am Fuß mit einer Konsole unter dem Seitenstab, mit vier Fingern, die über den Flammenkranz bis 36 mm an die Brennerachse reichen, sodass ein Topf von 0,1 m darauf steht, und sich von 12 mm am Rahmen auf 8 mm an der Spitze verjüngen; der Bakelit-Knebel von 37 mm auf seiner 42-mm-Rosette mit Griffsteg und Zeiger dreht sich an der 50 mm hohen Blende, die so hoch ist, wie ein echter Tischkocher für den Hahn braucht; der R-1/2-Gasanschluss sitzt an der Rückwand unter dem Überstand der Platte, und eine Zündelektrode und ein Thermoelement stehen in der Mulde neben der Krone."
     },
     {
      "en": "Thermal: every region on its real surface. Plate: the one-piece top and the spill well; the underside, which closes the housing, is marked as mounting face (C25 b). Knob: its turned body and ridge, the back on the fascia marked. Burner: cup, crown and cap, the cup's seat on the well floor marked. Flame: the inner-cone ring and all 26 tongues. Pan support: frame, legs and fingers. The plume emitter is the 7.5 mm outlet ring at the tongue tips (D2). Housing: the pressed tray below the top as its own passive region, its top under the plate marked.",
@@ -3292,8 +3312,7 @@
        0,
        0
       ]
-     },
-     "cornerRadius": 0.0015
+     }
     },
     {
      "id": "trivet-legs-back",
@@ -3321,8 +3340,7 @@
        0,
        0
       ]
-     },
-     "cornerRadius": 0.0015
+     }
     },
     {
      "id": "trivet-fingers",
@@ -3332,13 +3350,13 @@
      "role": "body",
      "tone": 0.3,
      "size": [
-      0.0635,
+      0.09,
       0.01,
       0.01
      ],
      "transform": {
       "translation": [
-       0.0955,
+       0.081,
        0.043,
        0.03
       ]
@@ -4547,8 +4565,8 @@
    ],
    "decisions": [
     {
-     "en": "Body at 15 mm: housing, top and feet are one rounded block of 0.30 m by 0.497 m (the 10 mm overhang, the 7.5 mm feet, bead, slots and well are below the feature); the knob is a 40 mm turned stub without ridge; burner cup, crown and cap are one turned puck of 94 mm; the flame is twelve 15 mm tongues; the pan support keeps its frame, four legs and four fingers as 10 by 12 mm bars, drawn that way in the 1:100 drawings.",
-     "de": "Körper bei 15 mm: Gehäuse, Platte und Füße sind ein gerundeter Block von 0,30 m mal 0,497 m (der 10-mm-Überstand, die 7,5-mm-Füße, Sicke, Schlitze und Mulde liegen unter dem Merkmal); der Knebel ist ein gedrehter Stumpf von 40 mm ohne Steg; Topf, Krone und Deckel des Brenners sind eine gedrehte Scheibe von 94 mm; die Flamme sind zwölf Zungen von 15 mm; der Pfannenträger behält Rahmen, vier Beine und vier Finger als Stäbe von 10 mal 12 mm, so wie die Zeichnungen 1:100 sie zeigen."
+     "en": "Body at 15 mm: housing, top and feet are one rounded block of 0.30 m by 0.497 m (the 10 mm overhang, the 7.5 mm feet, bead, slots and well are below the feature); the knob is a 40 mm turned stub without ridge; burner cup, crown and cap are one turned puck of 94 mm; the flame is twelve 15 mm tongues; the pan support keeps its frame, four legs and four fingers, which reach to 36 mm from the burner axis as at 1:50, as 10 by 12 mm bars, drawn that way in the 1:100 drawings.",
+     "de": "Körper bei 15 mm: Gehäuse, Platte und Füße sind ein gerundeter Block von 0,30 m mal 0,497 m (der 10-mm-Überstand, die 7,5-mm-Füße, Sicke, Schlitze und Mulde liegen unter dem Merkmal); der Knebel ist ein gedrehter Stumpf von 40 mm ohne Steg; Topf, Krone und Deckel des Brenners sind eine gedrehte Scheibe von 94 mm; die Flamme sind zwölf Zungen von 15 mm; der Pfannenträger behält Rahmen, vier Beine und vier Finger, die wie in 1:50 bis 36 mm an die Brennerachse reichen, als Stäbe von 10 mal 12 mm, so wie die Zeichnungen 1:100 sie zeigen."
     },
     {
      "en": "Thermal: the plate is the top 15 mm of the block with its underside on the housing marked; the housing is the 51 mm of the block below it as its own passive region; knob, burner (seat marked), flame crown and pan support reference their body solids; the plume emitter is a 15 mm outlet ring at the tongue tips.",
@@ -4984,8 +5002,7 @@
        0,
        0
       ]
-     },
-     "cornerRadius": 0.0015
+     }
     },
     {
      "id": "trivet-posts-back",
@@ -5013,8 +5030,7 @@
        0,
        0
       ]
-     },
-     "cornerRadius": 0.0015
+     }
     }
    ],
    "thermal": [
@@ -6525,8 +6541,7 @@
        0,
        0
       ]
-     },
-     "cornerRadius": 0.0015
+     }
     },
     {
      "id": "trivet-posts-back",
@@ -6554,8 +6569,7 @@
        0,
        0
       ]
-     },
-     "cornerRadius": 0.0015
+     }
     }
    ],
    "thermal": [

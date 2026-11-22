@@ -4,7 +4,7 @@ import{createInterface}from"node:readline";
 import{resolve}from"node:path";
 import Ajv from"ajv";
 import {Database} from "bun:sqlite";
-import{ADMISSION_POLICY_V1,startAdmissionBrokerV1,unitObservationsV1,compilerWrapperEnvironmentV1}from"../../🟦️.ts";
+import{ADMISSION_POLICY_V1,admissionReserveBytesV1,startAdmissionBrokerV1,unitObservationsV1,compilerWrapperEnvironmentV1}from"../../🟦️.ts";
 import schema from"../../🧬️schema/🔣️.json"with{type:"json"};
 import disconnect from"./🔣️.json"with{type:"json"};
 
@@ -68,7 +68,7 @@ test("cached units are recorded with their measurements, marked, excluded from h
   const units=broker.units();expect(units.length).toBe(2);
   const served=units[1]!;expect(served.cache).toEqual({key,recorded:true});expect(served.exit).toBe(0);expect(served.peakRssBytes).toBe(123456);expect(served.predictedBytes).toBe(0);expect(served.endMs-served.startMs).toBe(0);
   expect(served.artifact).toBe(resolve("/lane/b/deps","alpha-1f"));expect(served.dependencies[0]!.edge).toBe("rmeta");expect(units[0]!.cache??null).toBeNull();
-  expect(unitObservationsV1(units,new Map(),new Map([[units[0]!.artifact,10]]),5).length,"history keeps real compiles only").toBe(1);
+  expect(unitObservationsV1(units,new Map(),new Map([[units[0]!.artifact,10]])).length,"history keeps real compiles only").toBe(1);
   expect((await converse(broker.endpoint,[{v:1,op:"recall",pass:"p1",crate:"alpha",outDir:"/lane/b/deps",extraFilename:"-1f"}],1))[0]!.record,"a cached unit is not a compile").toBeNull();
 
   const unrecorded=await converse(broker.endpoint,[{...unit("beta","/lane/b/deps"),op:"cached",cacheKey:key,provenance:null}],1);expect(unrecorded[0]!.admitted).toBe(true);expect(broker.units()[2]!.cache).toEqual({key,recorded:false});expect(broker.units()[2]!.peakRssBytes).toBe(0);
@@ -89,7 +89,8 @@ test("the compiler chain of a build names the cache wrapper only when the enviro
 
 test("physical charge freezes broker admission independently of resident memory",async()=>{
  const {budgetBytes,samples}=disconnect.physicalCharge,policy=ADMISSION_POLICY_V1;
- const broker=await startAdmissionBrokerV1({physicalBytes:policy.maximumReserveBytes+budgetBytes,history:new Map()});
+ const usable=(bytes:number)=>bytes-admissionReserveBytesV1(bytes);let physicalBytes=Math.max(budgetBytes+1,Math.floor(budgetBytes*10000/(10000-policy.reserveBasisPoints)));while(usable(physicalBytes)<budgetBytes)physicalBytes++;expect(physicalBytes-admissionReserveBytesV1(physicalBytes)).toBe(budgetBytes);
+ const broker=await startAdmissionBrokerV1({physicalBytes,history:new Map()});
  broker.registerPass({id:"p1",profile:"release",target:"host"});
  const peers:Socket[]=[];
  const send=(socket:Socket,message:object)=>socket.write(JSON.stringify(message)+"\n");

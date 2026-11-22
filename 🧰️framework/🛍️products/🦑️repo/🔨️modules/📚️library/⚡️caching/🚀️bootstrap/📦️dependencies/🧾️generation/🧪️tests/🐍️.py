@@ -20,7 +20,24 @@ def profile(path, data):
     return hashlib.sha256(json.dumps(kept, sort_keys=True, separators=(",", ":"), ensure_ascii=False).encode()).hexdigest()
 
 
-TIERS = "walk stamp, runtime, installer configuration files, installer inputs, workspace manifests"
+TIERS = "walk stamp, receipt scoping, runtime, installer configuration files, installer inputs, workspace manifests"
+
+
+def owner_of(directories, path):
+    depth = lambda directory: 0 if directory == "." else len(directory.split("/"))
+    best = "."
+    for directory in directories:
+        if (directory == "." or path == directory or path.startswith(directory + "/")) and depth(directory) > depth(best):
+            best = directory
+    return best
+
+
+def text_owner(directories, path):
+    return owner_of(directories, path.rsplit("/", 1)[0] if "/" in path else ".")
+
+
+def scoped_texts(texts, required):
+    return [text["path"] for text in texts if text["owner"] in set(required)]
 
 
 def sha(data):
@@ -61,6 +78,9 @@ def configuration(row, workspace, store):
 def verify(receipt, workspace, store, stamp, runtime, maximum_source_bytes, environment):
     if receipt["walkStamp"] != stamp:
         return {"status": "mismatch", "class": "protocol-changed", "detail": receipt["walkStamp"]}
+    owned = set(receipt["required"])
+    if any(group["scope"] not in owned for group in receipt["inputs"]) or any(text["owner"] not in owned for text in receipt["membership"]["texts"]):
+        return {"status": "mismatch", "class": "receipt-invalid"}
     for field in ["manager", "revision", "node", "platform", "arch", "sha256"]:
         if runtime[field] != receipt["runtime"][field]:
             return {"status": "mismatch", "class": "runtime-changed", "detail": field}
@@ -126,12 +146,17 @@ def main():
         receipt = json.load(open(sys.argv[2], encoding="utf-8"))
         protocol = json.load(open(sys.argv[6], encoding="utf-8"))["$defs"]["Protocol"]["const"]
         print(json.dumps(verify(receipt, sys.argv[3], sys.argv[4], protocol["walkStamp"], json.loads(sys.argv[5]), protocol["maximumSourceFileBytes"], json.loads(sys.argv[7])), ensure_ascii=False))
+    elif command == "owners":
+        directories = json.loads(sys.argv[2])
+        print(json.dumps({path: text_owner(directories, path) for path in json.loads(sys.argv[3])}, ensure_ascii=False))
+    elif command == "scoped":
+        print(json.dumps(scoped_texts(json.loads(sys.argv[2]), json.loads(sys.argv[3])), ensure_ascii=False))
     elif command == "render":
         protocol = json.load(open(sys.argv[2], encoding="utf-8"))["$defs"]["Protocol"]["const"]
         rows = json.loads(sys.argv[3])
         print(json.dumps([{language: render(protocol["texts"], language, row, protocol) for language in protocol["languages"]} for row in rows], ensure_ascii=False))
     else:
-        raise SystemExit("usage: keying.oracle.py verify RECEIPT WORKSPACE STORE RUNTIME_JSON SCHEMA ENVIRONMENT_JSON | render SCHEMA ROWS_JSON (" + TIERS + ")")
+        raise SystemExit("usage: keying.oracle.py verify RECEIPT WORKSPACE STORE RUNTIME_JSON SCHEMA ENVIRONMENT_JSON | owners DIRECTORIES_JSON PATHS_JSON | scoped TEXTS_JSON REQUIRED_JSON | render SCHEMA ROWS_JSON (" + TIERS + ")")
 
 
 main()

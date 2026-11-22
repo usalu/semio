@@ -43,8 +43,16 @@
       "maximumActionResultBytes": 4194304,
       "maintenanceSeconds": 300,
       "graceSeconds": 600,
+      "staleness": {
+        "mode": "dry-run",
+        "recheckSeconds": 3,
+        "manifestNames": ["unit.json", "stage.json"],
+        "generatedRoots": [".cache", ".git", ".nx", "node_modules", "target"],
+        "examples": 8
+      },
       "environment": {
         "readOnly": "SEMIO_REMOTE_CACHE_SERVER_READ_ONLY",
+        "toolchains": "SEMIO_REMOTE_CACHE_SERVER_TOOLCHAINS",
         "tlsCertificate": "SEMIO_REMOTE_CACHE_SERVER_TLS_CERTIFICATE",
         "tlsKey": "SEMIO_REMOTE_CACHE_SERVER_TLS_KEY"
       },
@@ -167,12 +175,12 @@
       "!{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📏️incremental/**/*",
       "!{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📖️texts/**/*",
       "!{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/💾️storage/**/*",
+      "!{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔬️test-file/**/*",
       "!{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/🔭️coverage/**/*",
       "!{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/🧩️claims/**/*",
       "!{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/🧷️pin/**/*",
       "!{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🗓️scheduler/**/*",
       "!{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🚢️fleet-status/**/*",
-      "!{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔬️test-file/**/*",
       "!{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🚪️door/**/*",
       "!{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧠️memory/**/*",
       "!{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧭️invocation/🕸️graph/**/*",
@@ -542,7 +550,7 @@
       "leaseSeconds": 30,
       "maximumAttempts": 2,
       "defaultActionSeconds": 1800,
-      "maximumActionSeconds": 1800,
+      "maximumActionSeconds": 3600,
       "maximumQueued": 4096,
       "maximumWorkers": 256,
       "maximumRequestBytes": 16777216,
@@ -558,6 +566,7 @@
       "directory": ".🧬semio/🦑️repo/⚡️cache/remote-execution",
       "materialize": "clone",
       "maximumBlobBytes": 268435456,
+      "ownerlessWorkSeconds": 86400,
       "sandbox": "auto",
       "inlineOutputBytes": 4096,
       "loadIntervalSeconds": 5,
@@ -565,7 +574,8 @@
       "confinement": "best-effort",
       "actions": "rustc",
       "disk": {
-        "reserveGigabytes": 3,
+        "reserveGigabytes": 0.5,
+        "hostReserveGigabytes": 3,
         "perActionGigabytes": 0.5
       }
     }

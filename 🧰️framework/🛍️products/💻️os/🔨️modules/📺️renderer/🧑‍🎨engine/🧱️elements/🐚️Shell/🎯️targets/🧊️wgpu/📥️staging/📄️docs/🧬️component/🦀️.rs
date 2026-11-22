@@ -25,6 +25,8 @@ pub struct DocumentState {
     pub window_projection_documents: HashMap<String, UiDocumentLease>,
     /// 📏️ Each live window instance's projected Measures overlay document — see `//#region 📏️WindowMeasures`.
     pub window_measures_documents: HashMap<String, UiDocumentLease>,
+    /// 🏷️ The active program's published `labels` section, React's `windowUi.appLabelsOverlay`: the navbar example select reads its example labels from it.
+    pub app_labels_overlay: semio_framework::manifest::AppLabelsOverlay,
 }
 
 impl DocumentState {

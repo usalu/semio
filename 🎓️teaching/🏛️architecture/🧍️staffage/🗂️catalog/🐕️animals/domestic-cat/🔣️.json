@@ -516,16 +516,33 @@
           }
         },
         {
-          "id": "thigh-hf",
+          "id": "hip-hf",
           "parent": "pelvis",
+          "title": {
+            "en": "Far hip bone (os coxae)",
+            "de": "Fernes Hüftbein (Os coxae)"
+          },
+          "x": 0.04,
+          "y": 0.004,
+          "z": 0.019,
+          "angleDeg": -174.2894,
+          "abductionDeg": 15.3035,
+          "twistDeg": 0.0,
+          "lengthM": 0.04168,
+          "joint": {
+            "type": "fixed"
+          }
+        },
+        {
+          "id": "thigh-hf",
+          "parent": "hip-hf",
           "title": {
             "en": "Far thigh (femur)",
             "de": "Ferner Oberschenkel"
           },
-          "x": 0,
-          "y": 0,
-          "z": 0.03,
-          "angleDeg": -79.792,
+          "x": 0.04168,
+          "y": 0.0,
+          "angleDeg": 94.3385,
           "lengthM": 0.098,
           "joint": {
             "type": "revolute",
@@ -539,7 +556,10 @@
             "distribution": "uniform",
             "source": "authored-estimate",
             "reference": "hoy-zernicke-1985"
-          }
+          },
+          "z": 0.0,
+          "abductionDeg": 1.1859,
+          "twistDeg": -15.2586
         },
         {
           "id": "shank-hf",
@@ -629,7 +649,7 @@
           "y": 0.0117,
           "z": 0.022,
           "angleDeg": -29.983,
-          "lengthM": 0.064,
+          "lengthM": 0.06648,
           "joint": {
             "type": "revolute",
             "minDeg": -40,
@@ -637,12 +657,14 @@
           },
           "mass": {
             "kg": 0.09,
-            "comX": 0.032,
+            "comX": 0.0332,
             "comY": 0,
             "distribution": "uniform",
             "source": "authored-estimate",
             "reference": "hoy-zernicke-1985"
-          }
+          },
+          "abductionDeg": 15.7086,
+          "twistDeg": 0.0
         },
         {
           "id": "humerus-ff",
@@ -651,15 +673,16 @@
             "en": "Far upper arm (humerus)",
             "de": "Ferner Oberarm"
           },
-          "x": 0.064,
-          "y": 0,
-          "z": 0.018,
-          "angleDeg": -85,
+          "x": 0.06648,
+          "y": 0.0,
+          "angleDeg": -85.1858,
           "lengthM": 0.09,
           "joint": {
             "type": "revolute",
             "minDeg": -45,
-            "maxDeg": 130
+            "maxDeg": 130,
+            "twistMinDeg": -20,
+            "twistMaxDeg": 20
           },
           "mass": {
             "kg": 0.09,
@@ -668,7 +691,10 @@
             "distribution": "uniform",
             "source": "authored-estimate",
             "reference": "hoy-zernicke-1985"
-          }
+          },
+          "z": 0.0,
+          "abductionDeg": -1.3521,
+          "twistDeg": 15.6518
         },
         {
           "id": "forearm-ff",
@@ -747,16 +773,33 @@
           }
         },
         {
-          "id": "thigh-hn",
+          "id": "hip-hn",
           "parent": "pelvis",
+          "title": {
+            "en": "Near hip bone (os coxae)",
+            "de": "Nahes Hüftbein (Os coxae)"
+          },
+          "x": 0.04,
+          "y": 0.004,
+          "z": -0.019,
+          "angleDeg": -174.2894,
+          "abductionDeg": -15.3035,
+          "twistDeg": 0.0,
+          "lengthM": 0.04168,
+          "joint": {
+            "type": "fixed"
+          }
+        },
+        {
+          "id": "thigh-hn",
+          "parent": "hip-hn",
           "title": {
             "en": "Near thigh (femur)",
             "de": "Naher Oberschenkel"
           },
-          "x": 0,
-          "y": 0,
-          "z": -0.03,
-          "angleDeg": -79.792,
+          "x": 0.04168,
+          "y": 0.0,
+          "angleDeg": 94.3385,
           "lengthM": 0.098,
           "joint": {
             "type": "revolute",
@@ -770,7 +813,10 @@
             "distribution": "uniform",
             "source": "authored-estimate",
             "reference": "hoy-zernicke-1985"
-          }
+          },
+          "z": 0.0,
+          "abductionDeg": -1.1859,
+          "twistDeg": 15.2586
         },
         {
           "id": "shank-hn",
@@ -860,7 +906,7 @@
           "y": 0.0117,
           "z": -0.022,
           "angleDeg": -29.983,
-          "lengthM": 0.064,
+          "lengthM": 0.06648,
           "joint": {
             "type": "revolute",
             "minDeg": -40,
@@ -868,12 +914,14 @@
           },
           "mass": {
             "kg": 0.09,
-            "comX": 0.032,
+            "comX": 0.0332,
             "comY": 0,
             "distribution": "uniform",
             "source": "authored-estimate",
             "reference": "hoy-zernicke-1985"
-          }
+          },
+          "abductionDeg": -15.7086,
+          "twistDeg": 0.0
         },
         {
           "id": "humerus-fn",
@@ -882,15 +930,16 @@
             "en": "Near upper arm (humerus)",
             "de": "Naher Oberarm"
           },
-          "x": 0.064,
-          "y": 0,
-          "z": -0.018,
-          "angleDeg": -85,
+          "x": 0.06648,
+          "y": 0.0,
+          "angleDeg": -85.1858,
           "lengthM": 0.09,
           "joint": {
             "type": "revolute",
             "minDeg": -45,
-            "maxDeg": 130
+            "maxDeg": 130,
+            "twistMinDeg": -20,
+            "twistMaxDeg": 20
           },
           "mass": {
             "kg": 0.09,
@@ -899,7 +948,10 @@
             "distribution": "uniform",
             "source": "authored-estimate",
             "reference": "hoy-zernicke-1985"
-          }
+          },
+          "z": 0.0,
+          "abductionDeg": 1.3521,
+          "twistDeg": -15.6518
         },
         {
           "id": "forearm-fn",
@@ -1169,7 +1221,7 @@
               "tone": 0.55,
               "region": "coat-forelimbs",
               "kind": "poly",
-              "points": [[0.00404, -0.02856], [0.01932, -0.03505], [0.0321, -0.03688], [0.0488, -0.03427], [0.06398, -0.02683], [0.07397, -0.01692], [0.07871, -0.00228], [0.07894, 0.00718], [0.07418, 0.02048], [0.06466, 0.02662], [0.04173, 0.03065], [0.02156, 0.03054], [0.00334, 0.02506], [-0.00523, 0.01523], [-0.00903, -0.0026], [-0.00332, -0.02112]],
+              "points": [[0.0042, -0.02856], [0.02007, -0.03505], [0.03335, -0.03688], [0.05069, -0.03427], [0.06646, -0.02683], [0.07684, -0.01692], [0.08176, -0.00228], [0.082, 0.00718], [0.07706, 0.02048], [0.06717, 0.02662], [0.04335, 0.03065], [0.0224, 0.03054], [0.00347, 0.02506], [-0.00543, 0.01523], [-0.00938, -0.0026], [-0.00345, -0.02112]],
               "closed": true
             },
             {
@@ -1301,7 +1353,7 @@
               "tone": 0.72,
               "region": "coat-forelimbs",
               "kind": "poly",
-              "points": [[0.00404, -0.02856], [0.01932, -0.03505], [0.0321, -0.03688], [0.0488, -0.03427], [0.06398, -0.02683], [0.07397, -0.01692], [0.07871, -0.00228], [0.07894, 0.00718], [0.07418, 0.02048], [0.06466, 0.02662], [0.04173, 0.03065], [0.02156, 0.03054], [0.00334, 0.02506], [-0.00523, 0.01523], [-0.00903, -0.0026], [-0.00332, -0.02112]],
+              "points": [[0.0042, -0.02856], [0.02007, -0.03505], [0.03335, -0.03688], [0.05069, -0.03427], [0.06646, -0.02683], [0.07684, -0.01692], [0.08176, -0.00228], [0.082, 0.00718], [0.07706, 0.02048], [0.06717, 0.02662], [0.04335, 0.03065], [0.0224, 0.03054], [0.00347, 0.02506], [-0.00543, 0.01523], [-0.00938, -0.0026], [-0.00345, -0.02112]],
               "closed": true
             },
             {
@@ -2816,7 +2868,7 @@
               "tone": 0.55,
               "region": "coat-forelimbs",
               "kind": "poly",
-              "points": [[0.01045, -0.02489], [0.02815, -0.03], [0.05304, -0.02611], [0.07371, -0.0097], [0.07722, 0.00842], [0.06528, 0.01901], [0.05323, 0.02245], [0.01228, 0.02186], [-0.00787, 0.00486], [-0.00744, -0.0065]],
+              "points": [[0.01086, -0.02489], [0.02924, -0.03], [0.0551, -0.02611], [0.07657, -0.0097], [0.08022, 0.00842], [0.06781, 0.01901], [0.0553, 0.02245], [0.01276, 0.02186], [-0.00818, 0.00486], [-0.00773, -0.0065]],
               "closed": true
             },
             {
@@ -2949,7 +3001,7 @@
               "tone": 0.72,
               "region": "coat-forelimbs",
               "kind": "poly",
-              "points": [[0.01045, -0.02489], [0.02815, -0.03], [0.05304, -0.02611], [0.07371, -0.0097], [0.07722, 0.00842], [0.06528, 0.01901], [0.05323, 0.02245], [0.01228, 0.02186], [-0.00787, 0.00486], [-0.00744, -0.0065]],
+              "points": [[0.01086, -0.02489], [0.02924, -0.03], [0.0551, -0.02611], [0.07657, -0.0097], [0.08022, 0.00842], [0.06781, 0.01901], [0.0553, 0.02245], [0.01276, 0.02186], [-0.00818, 0.00486], [-0.00773, -0.0065]],
               "closed": true
             },
             {
@@ -5459,19 +5511,19 @@
             "angleDeg": -70
           },
           "scapula-ff": {
-            "angleDeg": -28
+            "angleDeg": -16
           },
           "humerus-ff": {
-            "angleDeg": 3.68
+            "angleDeg": -4.15
           },
           "forearm-ff": {
-            "angleDeg": 8.04
+            "angleDeg": -7.52
           },
           "metacarpus-ff": {
-            "angleDeg": -4.72
+            "angleDeg": 5.99
           },
           "paw-ff": {
-            "angleDeg": -5
+            "angleDeg": -5.2
           },
           "thigh-hn": {
             "angleDeg": 66.87
@@ -5486,19 +5538,19 @@
             "angleDeg": -70
           },
           "scapula-fn": {
-            "angleDeg": -28
+            "angleDeg": -16
           },
           "humerus-fn": {
-            "angleDeg": 3.68
+            "angleDeg": -4.15
           },
           "forearm-fn": {
-            "angleDeg": 8.04
+            "angleDeg": -7.52
           },
           "metacarpus-fn": {
-            "angleDeg": -4.72
+            "angleDeg": 5.99
           },
           "paw-fn": {
-            "angleDeg": -5
+            "angleDeg": -5.2
           }
         },
         "root": {
@@ -6045,19 +6097,19 @@
             "angleDeg": 12.51
           },
           "scapula-ff": {
-            "angleDeg": 3.1
+            "angleDeg": 1.55
           },
           "humerus-ff": {
-            "angleDeg": 3.7
+            "angleDeg": 5.28
           },
           "forearm-ff": {
-            "angleDeg": 24.13
+            "angleDeg": 25.35
           },
           "metacarpus-ff": {
-            "angleDeg": -30.83
+            "angleDeg": -32.05
           },
           "paw-ff": {
-            "angleDeg": -0.1
+            "angleDeg": -0.08
           },
           "thigh-hn": {
             "angleDeg": 39.14
@@ -6069,19 +6121,19 @@
             "angleDeg": -59.82
           },
           "scapula-fn": {
-            "angleDeg": -5.1
+            "angleDeg": -2.55
           },
           "humerus-fn": {
-            "angleDeg": -23.96
+            "angleDeg": -25.93
           },
           "forearm-fn": {
-            "angleDeg": 34.94
+            "angleDeg": 32.45
           },
           "metacarpus-fn": {
-            "angleDeg": 15.82
+            "angleDeg": 17.64
           },
           "paw-fn": {
-            "angleDeg": -39
+            "angleDeg": -39.0
           }
         },
         "ground": "auto",
@@ -6193,16 +6245,16 @@
             "angleDeg": 15.44
           },
           "scapula-ff": {
-            "angleDeg": -3.1
+            "angleDeg": -1.55
           },
           "humerus-ff": {
-            "angleDeg": 0.56
+            "angleDeg": -0.52
           },
           "forearm-ff": {
-            "angleDeg": 6.83
+            "angleDeg": 4.96
           },
           "metacarpus-ff": {
-            "angleDeg": -6.8
+            "angleDeg": -5.46
           },
           "thigh-hn": {
             "angleDeg": 37.25
@@ -6214,19 +6266,22 @@
             "angleDeg": -36.13
           },
           "scapula-fn": {
-            "angleDeg": 5.1
+            "angleDeg": 2.55
           },
           "humerus-fn": {
-            "angleDeg": -7.82
+            "angleDeg": -5.05
           },
           "forearm-fn": {
-            "angleDeg": 40.35
+            "angleDeg": 42.18
           },
           "metacarpus-fn": {
-            "angleDeg": -18.53
+            "angleDeg": -20.51
           },
           "paw-fn": {
-            "angleDeg": -39
+            "angleDeg": -39.0
+          },
+          "paw-ff": {
+            "angleDeg": 0.0
           }
         },
         "ground": "auto",
@@ -6338,19 +6393,19 @@
             "angleDeg": -47.6
           },
           "scapula-ff": {
-            "angleDeg": -9.2
+            "angleDeg": -4.6
           },
           "humerus-ff": {
-            "angleDeg": -2.32
+            "angleDeg": -4.6
           },
           "forearm-ff": {
-            "angleDeg": 0.06
+            "angleDeg": -6.88
           },
           "metacarpus-ff": {
-            "angleDeg": 11.56
+            "angleDeg": 16.02
           },
           "paw-ff": {
-            "angleDeg": -0.1
+            "angleDeg": -0.14
           },
           "thigh-hn": {
             "angleDeg": 25.75
@@ -6365,16 +6420,19 @@
             "angleDeg": -0.1
           },
           "scapula-fn": {
-            "angleDeg": 15.4
+            "angleDeg": 7.7
           },
           "humerus-fn": {
-            "angleDeg": 35.03
+            "angleDeg": 43.8
           },
           "forearm-fn": {
-            "angleDeg": -4.74
+            "angleDeg": -0.24
           },
           "metacarpus-fn": {
-            "angleDeg": -45.7
+            "angleDeg": -51.04
+          },
+          "paw-fn": {
+            "angleDeg": -0.06
           }
         },
         "ground": "auto",
@@ -6489,16 +6547,16 @@
             "angleDeg": -47.6
           },
           "scapula-ff": {
-            "angleDeg": -15.4
+            "angleDeg": -9.24
           },
           "humerus-ff": {
-            "angleDeg": 2.74
+            "angleDeg": 3.61
           },
           "forearm-ff": {
-            "angleDeg": -20.58
+            "angleDeg": -37.63
           },
           "metacarpus-ff": {
-            "angleDeg": 35.74
+            "angleDeg": 44.8
           },
           "thigh-hn": {
             "angleDeg": 7.25
@@ -6510,16 +6568,22 @@
             "angleDeg": 2.29
           },
           "scapula-fn": {
-            "angleDeg": 9.2
+            "angleDeg": 4.6
           },
           "humerus-fn": {
-            "angleDeg": 15.65
+            "angleDeg": 21.39
           },
           "forearm-fn": {
-            "angleDeg": 28.08
+            "angleDeg": 30.34
           },
           "metacarpus-fn": {
-            "angleDeg": -50.43
+            "angleDeg": -53.71
+          },
+          "paw-fn": {
+            "angleDeg": -0.02
+          },
+          "paw-ff": {
+            "angleDeg": 0.06
           }
         },
         "ground": "auto",
@@ -6628,19 +6692,19 @@
             "angleDeg": -59.82
           },
           "scapula-ff": {
-            "angleDeg": -5.1
+            "angleDeg": -2.55
           },
           "humerus-ff": {
-            "angleDeg": -23.96
+            "angleDeg": -25.93
           },
           "forearm-ff": {
-            "angleDeg": 34.94
+            "angleDeg": 32.45
           },
           "metacarpus-ff": {
-            "angleDeg": 15.82
+            "angleDeg": 17.64
           },
           "paw-ff": {
-            "angleDeg": -39
+            "angleDeg": -39.0
           },
           "thigh-hn": {
             "angleDeg": -15.12
@@ -6652,19 +6716,19 @@
             "angleDeg": 12.51
           },
           "scapula-fn": {
-            "angleDeg": 3.1
+            "angleDeg": 1.55
           },
           "humerus-fn": {
-            "angleDeg": 3.7
+            "angleDeg": 5.28
           },
           "forearm-fn": {
-            "angleDeg": 24.13
+            "angleDeg": 25.35
           },
           "metacarpus-fn": {
-            "angleDeg": -30.83
+            "angleDeg": -32.05
           },
           "paw-fn": {
-            "angleDeg": -0.1
+            "angleDeg": -0.08
           }
         },
         "ground": "auto",
@@ -6776,19 +6840,19 @@
             "angleDeg": -36.13
           },
           "scapula-ff": {
-            "angleDeg": 5.1
+            "angleDeg": 2.55
           },
           "humerus-ff": {
-            "angleDeg": -7.82
+            "angleDeg": -5.05
           },
           "forearm-ff": {
-            "angleDeg": 40.35
+            "angleDeg": 42.18
           },
           "metacarpus-ff": {
-            "angleDeg": -18.53
+            "angleDeg": -20.51
           },
           "paw-ff": {
-            "angleDeg": -39
+            "angleDeg": -39.0
           },
           "thigh-hn": {
             "angleDeg": -39.83
@@ -6800,16 +6864,19 @@
             "angleDeg": 15.44
           },
           "scapula-fn": {
-            "angleDeg": -3.1
+            "angleDeg": -1.55
           },
           "humerus-fn": {
-            "angleDeg": 0.56
+            "angleDeg": -0.52
           },
           "forearm-fn": {
-            "angleDeg": 6.83
+            "angleDeg": 4.96
           },
           "metacarpus-fn": {
-            "angleDeg": -6.8
+            "angleDeg": -5.46
+          },
+          "paw-fn": {
+            "angleDeg": 0.0
           }
         },
         "ground": "auto",
@@ -6921,16 +6988,16 @@
             "angleDeg": -0.1
           },
           "scapula-ff": {
-            "angleDeg": 15.4
+            "angleDeg": 7.7
           },
           "humerus-ff": {
-            "angleDeg": 35.03
+            "angleDeg": 43.8
           },
           "forearm-ff": {
-            "angleDeg": -4.74
+            "angleDeg": -0.24
           },
           "metacarpus-ff": {
-            "angleDeg": -45.7
+            "angleDeg": -51.04
           },
           "thigh-hn": {
             "angleDeg": -6.47
@@ -6945,19 +7012,22 @@
             "angleDeg": -47.6
           },
           "scapula-fn": {
-            "angleDeg": -9.2
+            "angleDeg": -4.6
           },
           "humerus-fn": {
-            "angleDeg": -2.32
+            "angleDeg": -4.6
           },
           "forearm-fn": {
-            "angleDeg": 0.06
+            "angleDeg": -6.88
           },
           "metacarpus-fn": {
-            "angleDeg": 11.56
+            "angleDeg": 16.02
           },
           "paw-fn": {
-            "angleDeg": -0.1
+            "angleDeg": -0.14
+          },
+          "paw-ff": {
+            "angleDeg": -0.06
           }
         },
         "ground": "auto",
@@ -7069,16 +7139,16 @@
             "angleDeg": 2.29
           },
           "scapula-ff": {
-            "angleDeg": 9.2
+            "angleDeg": 4.6
           },
           "humerus-ff": {
-            "angleDeg": 15.65
+            "angleDeg": 21.39
           },
           "forearm-ff": {
-            "angleDeg": 28.08
+            "angleDeg": 30.34
           },
           "metacarpus-ff": {
-            "angleDeg": -50.43
+            "angleDeg": -53.71
           },
           "thigh-hn": {
             "angleDeg": 33.03
@@ -7093,16 +7163,22 @@
             "angleDeg": -47.6
           },
           "scapula-fn": {
-            "angleDeg": -15.4
+            "angleDeg": -9.24
           },
           "humerus-fn": {
-            "angleDeg": 2.74
+            "angleDeg": 3.61
           },
           "forearm-fn": {
-            "angleDeg": -20.58
+            "angleDeg": -37.63
           },
           "metacarpus-fn": {
-            "angleDeg": 35.74
+            "angleDeg": 44.8
+          },
+          "paw-ff": {
+            "angleDeg": -0.02
+          },
+          "paw-fn": {
+            "angleDeg": 0.06
           }
         },
         "ground": "auto",
@@ -7217,19 +7293,19 @@
             "angleDeg": -11.9
           },
           "scapula-ff": {
-            "angleDeg": 2.2
+            "angleDeg": 1.1
           },
           "humerus-ff": {
-            "angleDeg": -29.3
+            "angleDeg": -28.23
           },
           "forearm-ff": {
-            "angleDeg": 53.97
+            "angleDeg": 54.86
           },
           "metacarpus-ff": {
-            "angleDeg": -15.86
+            "angleDeg": -16.7
           },
           "paw-ff": {
-            "angleDeg": -15
+            "angleDeg": -14.98
           },
           "thigh-hn": {
             "angleDeg": 52.62
@@ -7244,19 +7320,19 @@
             "angleDeg": -12
           },
           "scapula-fn": {
-            "angleDeg": -6.6
+            "angleDeg": -3.3
           },
           "humerus-fn": {
-            "angleDeg": -36.63
+            "angleDeg": -38.4
           },
           "forearm-fn": {
-            "angleDeg": 26.01
+            "angleDeg": 22.21
           },
           "metacarpus-fn": {
-            "angleDeg": 28.21
+            "angleDeg": 30.37
           },
           "paw-fn": {
-            "angleDeg": -15
+            "angleDeg": -15.02
           }
         },
         "ground": "auto",
@@ -7522,19 +7598,19 @@
             "angleDeg": -12
           },
           "scapula-ff": {
-            "angleDeg": -2.2
+            "angleDeg": -1.1
           },
           "humerus-ff": {
-            "angleDeg": -35.74
+            "angleDeg": -36.54
           },
           "forearm-ff": {
-            "angleDeg": 42.55
+            "angleDeg": 41.49
           },
           "metacarpus-ff": {
-            "angleDeg": 6.39
+            "angleDeg": 7.13
           },
           "paw-ff": {
-            "angleDeg": -15
+            "angleDeg": -15.0
           },
           "thigh-hn": {
             "angleDeg": 34.58
@@ -7549,19 +7625,19 @@
             "angleDeg": -12
           },
           "scapula-fn": {
-            "angleDeg": 6.6
+            "angleDeg": 3.3
           },
           "humerus-fn": {
-            "angleDeg": -15.87
+            "angleDeg": -11.86
           },
           "forearm-fn": {
-            "angleDeg": 56.77
+            "angleDeg": 58.89
           },
           "metacarpus-fn": {
-            "angleDeg": -36.51
+            "angleDeg": -39.27
           },
           "paw-fn": {
-            "angleDeg": -15
+            "angleDeg": -15.0
           }
         },
         "ground": "auto",
@@ -7679,19 +7755,19 @@
             "angleDeg": -67
           },
           "scapula-ff": {
-            "angleDeg": -4.4
+            "angleDeg": -2.2
           },
           "humerus-ff": {
-            "angleDeg": -34.19
+            "angleDeg": -35.73
           },
           "forearm-ff": {
-            "angleDeg": 38.55
+            "angleDeg": 36.36
           },
           "metacarpus-ff": {
-            "angleDeg": 14.04
+            "angleDeg": 15.5
           },
           "paw-ff": {
-            "angleDeg": -15
+            "angleDeg": -15.0
           },
           "thigh-hn": {
             "angleDeg": 20.8
@@ -7706,19 +7782,19 @@
             "angleDeg": -12.1
           },
           "scapula-fn": {
-            "angleDeg": 4.4
+            "angleDeg": 2.2
           },
           "humerus-fn": {
-            "angleDeg": -20.95
+            "angleDeg": -18.4
           },
           "forearm-fn": {
-            "angleDeg": 58.89
+            "angleDeg": 60.4
           },
           "metacarpus-fn": {
-            "angleDeg": -28.44
+            "angleDeg": -30.24
           },
           "paw-fn": {
-            "angleDeg": -14.9
+            "angleDeg": -14.92
           }
         },
         "ground": "auto",
@@ -7833,19 +7909,19 @@
             "angleDeg": -12
           },
           "scapula-ff": {
-            "angleDeg": -6.6
+            "angleDeg": -3.3
           },
           "humerus-ff": {
-            "angleDeg": -36.63
+            "angleDeg": -38.4
           },
           "forearm-ff": {
-            "angleDeg": 26.01
+            "angleDeg": 22.21
           },
           "metacarpus-ff": {
-            "angleDeg": 28.21
+            "angleDeg": 30.37
           },
           "paw-ff": {
-            "angleDeg": -15
+            "angleDeg": -15.02
           },
           "thigh-hn": {
             "angleDeg": 11.83
@@ -7860,19 +7936,19 @@
             "angleDeg": -11.9
           },
           "scapula-fn": {
-            "angleDeg": 2.2
+            "angleDeg": 1.1
           },
           "humerus-fn": {
-            "angleDeg": -29.3
+            "angleDeg": -28.23
           },
           "forearm-fn": {
-            "angleDeg": 53.97
+            "angleDeg": 54.86
           },
           "metacarpus-fn": {
-            "angleDeg": -15.86
+            "angleDeg": -16.7
           },
           "paw-fn": {
-            "angleDeg": -15
+            "angleDeg": -14.98
           }
         },
         "ground": "auto",
@@ -8135,19 +8211,19 @@
             "angleDeg": -12
           },
           "scapula-ff": {
-            "angleDeg": 6.6
+            "angleDeg": 3.3
           },
           "humerus-ff": {
-            "angleDeg": -15.87
+            "angleDeg": -11.86
           },
           "forearm-ff": {
-            "angleDeg": 56.77
+            "angleDeg": 58.89
           },
           "metacarpus-ff": {
-            "angleDeg": -36.51
+            "angleDeg": -39.27
           },
           "paw-ff": {
-            "angleDeg": -15
+            "angleDeg": -15.0
           },
           "thigh-hn": {
             "angleDeg": -10.89
@@ -8162,19 +8238,19 @@
             "angleDeg": -12
           },
           "scapula-fn": {
-            "angleDeg": -2.2
+            "angleDeg": -1.1
           },
           "humerus-fn": {
-            "angleDeg": -35.74
+            "angleDeg": -36.54
           },
           "forearm-fn": {
-            "angleDeg": 42.55
+            "angleDeg": 41.49
           },
           "metacarpus-fn": {
-            "angleDeg": 6.39
+            "angleDeg": 7.13
           },
           "paw-fn": {
-            "angleDeg": -15
+            "angleDeg": -15.0
           }
         },
         "ground": "auto",
@@ -8292,19 +8368,19 @@
             "angleDeg": -12.1
           },
           "scapula-ff": {
-            "angleDeg": 4.4
+            "angleDeg": 2.2
           },
           "humerus-ff": {
-            "angleDeg": -20.95
+            "angleDeg": -18.4
           },
           "forearm-ff": {
-            "angleDeg": 58.89
+            "angleDeg": 60.4
           },
           "metacarpus-ff": {
-            "angleDeg": -28.44
+            "angleDeg": -30.24
           },
           "paw-ff": {
-            "angleDeg": -14.9
+            "angleDeg": -14.92
           },
           "thigh-hn": {
             "angleDeg": 14.25
@@ -8319,19 +8395,19 @@
             "angleDeg": -67
           },
           "scapula-fn": {
-            "angleDeg": -4.4
+            "angleDeg": -2.2
           },
           "humerus-fn": {
-            "angleDeg": -34.19
+            "angleDeg": -35.73
           },
           "forearm-fn": {
-            "angleDeg": 38.55
+            "angleDeg": 36.36
           },
           "metacarpus-fn": {
-            "angleDeg": 14.04
+            "angleDeg": 15.5
           },
           "paw-fn": {
-            "angleDeg": -15
+            "angleDeg": -15.0
           }
         },
         "ground": "auto",
@@ -10218,85 +10294,85 @@
             "sections": [
               {
                 "at": [-0.04, 0.016, 0],
-                "rx": 0.012,
+                "rx": 0.01128,
                 "ry": 0.012,
                 "exponent": 2.1,
                 "rotation": [0, -0.70711, 0, 0.70711]
               },
               {
                 "at": [-0.03687, 0.01612, 0],
-                "rx": 0.02138,
+                "rx": 0.0201,
                 "ry": 0.02231,
                 "exponent": 2.1,
                 "rotation": [0, -0.70711, 0, 0.70711]
               },
               {
                 "at": [-0.03, 0.016, 0],
-                "rx": 0.032,
+                "rx": 0.03008,
                 "ry": 0.034,
                 "exponent": 2.1,
                 "rotation": [0, -0.70711, 0, 0.70711]
               },
               {
                 "at": [-0.01575, 0.01519, 0],
-                "rx": 0.03844,
-                "ry": 0.04088,
+                "rx": 0.03504,
+                "ry": 0.04049,
                 "exponent": 2.1,
                 "rotation": [0, -0.70711, 0, 0.70711]
               },
               {
                 "at": [0, 0.014, 0],
-                "rx": 0.042,
-                "ry": 0.045,
+                "rx": 0.03696,
+                "ry": 0.0441,
                 "exponent": 2.1,
                 "rotation": [0, -0.70711, 0, 0.70711]
               },
               {
                 "at": [0.01144, 0.01256, 0],
-                "rx": 0.04138,
-                "ry": 0.04588,
+                "rx": 0.0362,
+                "ry": 0.04329,
                 "exponent": 2.1,
                 "rotation": [0, -0.70711, 0, 0.70711]
               },
               {
                 "at": [0.022, 0.011, 0],
-                "rx": 0.039,
-                "ry": 0.045,
+                "rx": 0.03393,
+                "ry": 0.04095,
                 "exponent": 2.1,
                 "rotation": [0, -0.70711, 0, 0.70711]
               },
               {
                 "at": [0.03363, 0.0095, 0],
-                "rx": 0.037,
-                "ry": 0.04394,
+                "rx": 0.03249,
+                "ry": 0.03932,
                 "exponent": 2.1,
                 "rotation": [0, -0.70711, 0, 0.70711]
               },
               {
                 "at": [0.045, 0.008, 0],
-                "rx": 0.035,
-                "ry": 0.042,
+                "rx": 0.03101,
+                "ry": 0.03696,
                 "exponent": 2.1,
                 "rotation": [0, -0.70711, 0, 0.70711]
               },
               {
                 "at": [0.05537, 0.00644, 0],
-                "rx": 0.03375,
-                "ry": 0.039,
+                "rx": 0.03085,
+                "ry": 0.03614,
                 "exponent": 2.1,
                 "rotation": [0, -0.70711, 0, 0.70711]
               },
               {
                 "at": [0.065, 0.005, 0],
-                "rx": 0.032,
-                "ry": 0.035,
+                "rx": 0.03008,
+                "ry": 0.03395,
                 "exponent": 2.1,
                 "rotation": [0, -0.70711, 0, 0.70711]
               },
               {
                 "at": [0.07425, 0.00387, 0],
-                "rx": 0.02881,
-                "ry": 0.03006,
+                "rx": 0.02802,
+                "ry": 0.02965,
                 "exponent": 2.1,
                 "rotation": [0, -0.70711, 0, 0.70711]
               },
@@ -11832,109 +11908,109 @@
             "tone": 0.7,
             "sections": [
               {
-                "at": [-0.009, 0, 0.013],
+                "at": [-0.01218, 0.0, 0.01008],
                 "rx": 0.003,
                 "ry": 0.004,
                 "exponent": 2.2,
-                "rotation": [0, -0.70711, 0, 0.70711]
+                "rotation": [0.0, -0.79711, 0.0, 0.60385]
               },
               {
-                "at": [-0.00694, -0.00044, 0.01187],
+                "at": [-0.00989, -0.00044, 0.00955],
                 "rx": 0.00675,
                 "ry": 0.01188,
                 "exponent": 2.2,
-                "rotation": [0, -0.70711, 0, 0.70711]
+                "rotation": [0.0, -0.79711, 0.0, 0.60385]
               },
               {
-                "at": [-0.003, -0.001, 0.01],
+                "at": [-0.0056, -0.001, 0.00881],
                 "rx": 0.011,
                 "ry": 0.021,
                 "exponent": 2.2,
-                "rotation": [0, -0.70711, 0, 0.70711]
+                "rotation": [0.0, -0.79711, 0.0, 0.60385]
               },
               {
-                "at": [0.00362, -0.0015, 0.00719],
+                "at": [0.00154, -0.0015, 0.0079],
                 "rx": 0.01337,
                 "ry": 0.02688,
                 "exponent": 2.2,
-                "rotation": [0, -0.70711, 0, 0.70711]
+                "rotation": [0.0, -0.79711, 0.0, 0.60385]
               },
               {
-                "at": [0.012, -0.002, 0.004],
+                "at": [0.01047, -0.002, 0.0071],
                 "rx": 0.015,
                 "ry": 0.031,
                 "exponent": 2.2,
-                "rotation": [0, -0.70711, 0, 0.70711]
+                "rotation": [0.0, -0.79711, 0.0, 0.60385]
               },
               {
-                "at": [0.02181, -0.00262, 0.00088],
+                "at": [0.02076, -0.00262, 0.00675],
                 "rx": 0.01625,
                 "ry": 0.03325,
                 "exponent": 2.2,
-                "rotation": [0, -0.70711, 0, 0.70711]
+                "rotation": [0.0, -0.79711, 0.0, 0.60385]
               },
               {
-                "at": [0.032, -0.003, -0.002],
+                "at": [0.03135, -0.003, 0.00674],
                 "rx": 0.017,
                 "ry": 0.034,
                 "exponent": 2.2,
-                "rotation": [0, -0.70711, 0, 0.70711]
+                "rotation": [0.0, -0.79711, 0.0, 0.60385]
               },
               {
-                "at": [0.04137, -0.00269, -0.00425],
+                "at": [0.04098, -0.00269, 0.00711],
                 "rx": 0.01716,
                 "ry": 0.0335,
                 "exponent": 2.2,
-                "rotation": [0, -0.70711, 0, 0.70711]
+                "rotation": [0.0, -0.79711, 0.0, 0.60385]
               },
               {
-                "at": [0.05, -0.002, -0.006],
+                "at": [0.04976, -0.002, 0.00776],
                 "rx": 0.017,
                 "ry": 0.032,
                 "exponent": 2.2,
-                "rotation": [0, -0.70711, 0, 0.70711]
+                "rotation": [0.0, -0.79711, 0.0, 0.60385]
               },
               {
-                "at": [0.0575, -0.00106, -0.00725],
+                "at": [0.05732, -0.00106, 0.00859],
                 "rx": 0.01703,
                 "ry": 0.02988,
                 "exponent": 2.2,
-                "rotation": [0, -0.70711, 0, 0.70711]
+                "rotation": [0.0, -0.79711, 0.0, 0.60385]
               },
               {
-                "at": [0.064, 0, -0.008],
+                "at": [0.06378, 0.0, 0.00963],
                 "rx": 0.0165,
                 "ry": 0.027,
                 "exponent": 2.2,
-                "rotation": [0, -0.70711, 0, 0.70711]
+                "rotation": [0.0, -0.79711, 0.0, 0.60385]
               },
               {
-                "at": [0.06956, 0.00106, -0.00812],
+                "at": [0.06916, 0.00106, 0.01102],
                 "rx": 0.01472,
                 "ry": 0.02363,
                 "exponent": 2.2,
-                "rotation": [0, -0.70711, 0, 0.70711]
+                "rotation": [0.0, -0.79711, 0.0, 0.60385]
               },
               {
-                "at": [0.074, 0.002, -0.008],
+                "at": [0.0734, 0.002, 0.01233],
                 "rx": 0.012,
                 "ry": 0.019,
                 "exponent": 2.2,
-                "rotation": [0, -0.70711, 0, 0.70711]
+                "rotation": [0.0, -0.79711, 0.0, 0.60385]
               },
               {
-                "at": [0.07713, 0.00263, -0.008],
+                "at": [0.07642, 0.00263, 0.01318],
                 "rx": 0.00772,
                 "ry": 0.011,
                 "exponent": 2.2,
-                "rotation": [0, -0.70711, 0, 0.70711]
+                "rotation": [0.0, -0.79711, 0.0, 0.60385]
               },
               {
-                "at": [0.079, 0.003, -0.008],
+                "at": [0.07822, 0.003, 0.01369],
                 "rx": 0.004,
                 "ry": 0.004,
                 "exponent": 2.2,
-                "rotation": [0, -0.70711, 0, 0.70711]
+                "rotation": [0.0, -0.79711, 0.0, 0.60385]
               }
             ],
             "capStart": true,
@@ -13021,109 +13097,109 @@
             "tone": 0.7,
             "sections": [
               {
-                "at": [-0.009, 0, -0.013],
+                "at": [-0.01218, 0.0, -0.01008],
                 "rx": 0.003,
                 "ry": 0.004,
                 "exponent": 2.2,
-                "rotation": [0, -0.70711, 0, 0.70711]
+                "rotation": [0.0, -0.60385, 0.0, 0.79711]
               },
               {
-                "at": [-0.00694, -0.00044, -0.01187],
+                "at": [-0.00989, -0.00044, -0.00955],
                 "rx": 0.00675,
                 "ry": 0.01188,
                 "exponent": 2.2,
-                "rotation": [0, -0.70711, 0, 0.70711]
+                "rotation": [0.0, -0.60385, 0.0, 0.79711]
               },
               {
-                "at": [-0.003, -0.001, -0.01],
+                "at": [-0.0056, -0.001, -0.00881],
                 "rx": 0.011,
                 "ry": 0.021,
                 "exponent": 2.2,
-                "rotation": [0, -0.70711, 0, 0.70711]
+                "rotation": [0.0, -0.60385, 0.0, 0.79711]
               },
               {
-                "at": [0.00362, -0.0015, -0.00719],
+                "at": [0.00154, -0.0015, -0.0079],
                 "rx": 0.01337,
                 "ry": 0.02688,
                 "exponent": 2.2,
-                "rotation": [0, -0.70711, 0, 0.70711]
+                "rotation": [0.0, -0.60385, 0.0, 0.79711]
               },
               {
-                "at": [0.012, -0.002, -0.004],
+                "at": [0.01047, -0.002, -0.0071],
                 "rx": 0.015,
                 "ry": 0.031,
                 "exponent": 2.2,
-                "rotation": [0, -0.70711, 0, 0.70711]
+                "rotation": [0.0, -0.60385, 0.0, 0.79711]
               },
               {
-                "at": [0.02181, -0.00262, -0.00088],
+                "at": [0.02076, -0.00262, -0.00675],
                 "rx": 0.01625,
                 "ry": 0.03325,
                 "exponent": 2.2,
-                "rotation": [0, -0.70711, 0, 0.70711]
+                "rotation": [0.0, -0.60385, 0.0, 0.79711]
               },
               {
-                "at": [0.032, -0.003, 0.002],
+                "at": [0.03135, -0.003, -0.00674],
                 "rx": 0.017,
                 "ry": 0.034,
                 "exponent": 2.2,
-                "rotation": [0, -0.70711, 0, 0.70711]
+                "rotation": [0.0, -0.60385, 0.0, 0.79711]
               },
               {
-                "at": [0.04137, -0.00269, 0.00425],
+                "at": [0.04098, -0.00269, -0.00711],
                 "rx": 0.01716,
                 "ry": 0.0335,
                 "exponent": 2.2,
-                "rotation": [0, -0.70711, 0, 0.70711]
+                "rotation": [0.0, -0.60385, 0.0, 0.79711]
               },
               {
-                "at": [0.05, -0.002, 0.006],
+                "at": [0.04976, -0.002, -0.00776],
                 "rx": 0.017,
                 "ry": 0.032,
                 "exponent": 2.2,
-                "rotation": [0, -0.70711, 0, 0.70711]
+                "rotation": [0.0, -0.60385, 0.0, 0.79711]
               },
               {
-                "at": [0.0575, -0.00106, 0.00725],
+                "at": [0.05732, -0.00106, -0.00859],
                 "rx": 0.01703,
                 "ry": 0.02988,
                 "exponent": 2.2,
-                "rotation": [0, -0.70711, 0, 0.70711]
+                "rotation": [0.0, -0.60385, 0.0, 0.79711]
               },
               {
-                "at": [0.064, 0, 0.008],
+                "at": [0.06378, 0.0, -0.00963],
                 "rx": 0.0165,
                 "ry": 0.027,
                 "exponent": 2.2,
-                "rotation": [0, -0.70711, 0, 0.70711]
+                "rotation": [0.0, -0.60385, 0.0, 0.79711]
               },
               {
-                "at": [0.06956, 0.00106, 0.00813],
+                "at": [0.06916, 0.00106, -0.01101],
                 "rx": 0.01472,
                 "ry": 0.02363,
                 "exponent": 2.2,
-                "rotation": [0, -0.70711, 0, 0.70711]
+                "rotation": [0.0, -0.60385, 0.0, 0.79711]
               },
               {
-                "at": [0.074, 0.002, 0.008],
+                "at": [0.0734, 0.002, -0.01233],
                 "rx": 0.012,
                 "ry": 0.019,
                 "exponent": 2.2,
-                "rotation": [0, -0.70711, 0, 0.70711]
+                "rotation": [0.0, -0.60385, 0.0, 0.79711]
               },
               {
-                "at": [0.07713, 0.00263, 0.008],
+                "at": [0.07642, 0.00263, -0.01318],
                 "rx": 0.00772,
                 "ry": 0.011,
                 "exponent": 2.2,
-                "rotation": [0, -0.70711, 0, 0.70711]
+                "rotation": [0.0, -0.60385, 0.0, 0.79711]
               },
               {
-                "at": [0.079, 0.003, 0.008],
+                "at": [0.07822, 0.003, -0.01369],
                 "rx": 0.004,
                 "ry": 0.004,
                 "exponent": 2.2,
-                "rotation": [0, -0.70711, 0, 0.70711]
+                "rotation": [0.0, -0.60385, 0.0, 0.79711]
               }
             ],
             "capStart": true,
@@ -15486,78 +15562,78 @@
           {
             "id": "near-ilium",
             "kind": "loft",
-            "bone": "pelvis",
+            "bone": "hip-hn",
             "material": "bone",
             "role": "body",
             "tone": 0.18,
             "sections": [
               {
-                "at": [0.0572, 0.00716, -0.023],
+                "at": [-0.01576, -0.00143, -0.00846],
                 "rx": 0.004,
                 "ry": 0.013,
                 "exponent": 2,
-                "rotation": [0.02367, -0.68723, 0.02499, 0.72563]
+                "rotation": [0.58477, -0.01199, 0.81106, 0.00968]
               },
               {
-                "at": [0.03886, 0.0059, -0.022],
+                "at": [0.0017, -0.002, -0.00264],
                 "rx": 0.004,
                 "ry": 0.011,
                 "exponent": 2,
-                "rotation": [0.04273, -0.71465, 0.04167, 0.69693]
+                "rotation": [0.61656, 0.00793, 0.78725, -0.0059]
               },
               {
-                "at": [0.01767, 0.00242, -0.026],
+                "at": [0.02343, -0.00065, -0.00085],
                 "rx": 0.005,
                 "ry": 0.007,
                 "exponent": 2,
-                "rotation": [0.0568, -0.73982, 0.05132, 0.66844]
+                "rotation": [0.64589, 0.02209, 0.76296, -0.01515]
               },
               {
-                "at": [-4e-05, -0.00011, -0.03],
+                "at": [0.04173, 0.00011, 1e-05],
                 "rx": 0.007,
                 "ry": 0.009,
                 "exponent": 2,
-                "rotation": [0.05284, -0.74348, 0.04726, 0.66499]
+                "rotation": [0.64981, 0.01747, 0.75981, -0.01185]
               }
             ],
             "capStart": true,
             "capEnd": true,
-            "member": "pelvis",
+            "member": "hip-hn",
             "part": "member"
           },
           {
             "id": "near-ischium",
             "kind": "loft",
-            "bone": "pelvis",
+            "bone": "hip-hn",
             "material": "bone",
             "role": "body",
             "tone": 0.18,
             "sections": [
               {
-                "at": [-4e-05, -0.00011, -0.03],
+                "at": [0.04173, 0.00011, 1e-05],
                 "rx": 0.006,
                 "ry": 0.007,
                 "exponent": 2,
-                "rotation": [-0.04174, -0.67042, -0.04603, 0.73938]
+                "rotation": [0.56354, -0.08544, 0.81849, 0.07207]
               },
               {
-                "at": [-0.02028, 0.00242, -0.028],
+                "at": [0.06038, -0.00443, 0.00719],
                 "rx": 0.004,
                 "ry": 0.006,
                 "exponent": 2,
-                "rotation": [-0.04392, -0.67624, -0.04766, 0.73382]
+                "rotation": [0.56995, -0.08807, 0.81367, 0.07308]
               },
               {
-                "at": [-0.0364, 0.00463, -0.027],
+                "at": [0.07538, -0.00823, 0.01233],
                 "rx": 0.005,
                 "ry": 0.008,
                 "exponent": 2,
-                "rotation": [-0.04669, -0.68349, -0.04964, 0.72677]
+                "rotation": [0.57794, -0.09138, 0.80754, 0.07428]
               }
             ],
             "capStart": true,
             "capEnd": true,
-            "member": "pelvis",
+            "member": "hip-hn",
             "part": "member"
           },
           {
@@ -16374,39 +16450,39 @@
             "tone": 0.18,
             "sections": [
               {
-                "at": [-0.004, 0, 0.004],
+                "at": [-0.00493, 0.0, 0.00277],
                 "rx": 0.0025,
                 "ry": 0.016,
                 "exponent": 2.6,
-                "rotation": [0, -0.70711, 0, 0.70711]
+                "rotation": [0.0, -0.79711, 0.0, 0.60385]
               },
               {
-                "at": [0.01, 0, -0.001],
+                "at": [0.0099, 0.0, 0.00174],
                 "rx": 0.0025,
                 "ry": 0.02,
                 "exponent": 2.6,
-                "rotation": [0, -0.70711, 0, 0.70711]
+                "rotation": [0.0, -0.79711, 0.0, 0.60385]
               },
               {
-                "at": [0.035, 0, -0.009],
+                "at": [0.03613, 0.0, 0.00081],
                 "rx": 0.003,
                 "ry": 0.013,
                 "exponent": 2.6,
-                "rotation": [0, -0.70711, 0, 0.70711]
+                "rotation": [0.0, -0.79711, 0.0, 0.60385]
               },
               {
-                "at": [0.055, 0, -0.014],
+                "at": [0.05674, 0.0, 0.00141],
                 "rx": 0.004,
                 "ry": 0.0065,
                 "exponent": 2.6,
-                "rotation": [0, -0.70711, 0, 0.70711]
+                "rotation": [0.0, -0.79711, 0.0, 0.60385]
               },
               {
-                "at": [0.064, 0, -0.015],
+                "at": [0.06567, 0.0, 0.00289],
                 "rx": 0.006,
                 "ry": 0.007,
                 "exponent": 2.6,
-                "rotation": [0, -0.70711, 0, 0.70711]
+                "rotation": [0.0, -0.79711, 0.0, 0.60385]
               }
             ],
             "capStart": true,
@@ -16852,78 +16928,78 @@
           {
             "id": "far-ilium",
             "kind": "loft",
-            "bone": "pelvis",
+            "bone": "hip-hf",
             "material": "bone",
             "role": "body",
             "tone": 0.18,
             "sections": [
               {
-                "at": [0.0572, 0.00716, 0.023],
+                "at": [-0.01576, -0.00143, 0.00846],
                 "rx": 0.004,
                 "ry": 0.013,
                 "exponent": 2,
-                "rotation": [0.02499, -0.72563, 0.02367, 0.68723]
+                "rotation": [0.81106, -0.00968, 0.58477, 0.01199]
               },
               {
-                "at": [0.03886, 0.0059, 0.022],
+                "at": [0.0017, -0.002, 0.00264],
                 "rx": 0.004,
                 "ry": 0.011,
                 "exponent": 2,
-                "rotation": [0.04167, -0.69693, 0.04273, 0.71465]
+                "rotation": [0.78725, 0.0059, 0.61656, -0.00793]
               },
               {
-                "at": [0.01767, 0.00242, 0.026],
+                "at": [0.02343, -0.00065, 0.00085],
                 "rx": 0.005,
                 "ry": 0.007,
                 "exponent": 2,
-                "rotation": [0.05132, -0.66844, 0.0568, 0.73982]
+                "rotation": [0.76296, 0.01515, 0.64589, -0.02209]
               },
               {
-                "at": [-4e-05, -0.00011, 0.03],
+                "at": [0.04173, 0.00011, -1e-05],
                 "rx": 0.007,
                 "ry": 0.009,
                 "exponent": 2,
-                "rotation": [0.04726, -0.66499, 0.05284, 0.74348]
+                "rotation": [0.75981, 0.01185, 0.64981, -0.01747]
               }
             ],
             "capStart": true,
             "capEnd": true,
-            "member": "pelvis",
+            "member": "hip-hf",
             "part": "member"
           },
           {
             "id": "far-ischium",
             "kind": "loft",
-            "bone": "pelvis",
+            "bone": "hip-hf",
             "material": "bone",
             "role": "body",
             "tone": 0.18,
             "sections": [
               {
-                "at": [-4e-05, -0.00011, 0.03],
+                "at": [0.04173, 0.00011, -1e-05],
                 "rx": 0.006,
                 "ry": 0.007,
                 "exponent": 2,
-                "rotation": [-0.04603, -0.73938, -0.04174, 0.67042]
+                "rotation": [0.81849, -0.07207, 0.56354, 0.08544]
               },
               {
-                "at": [-0.02028, 0.00242, 0.028],
+                "at": [0.06038, -0.00443, -0.00719],
                 "rx": 0.004,
                 "ry": 0.006,
                 "exponent": 2,
-                "rotation": [-0.04766, -0.73382, -0.04392, 0.67624]
+                "rotation": [0.81367, -0.07308, 0.56995, 0.08807]
               },
               {
-                "at": [-0.0364, 0.00463, 0.027],
+                "at": [0.07538, -0.00823, -0.01233],
                 "rx": 0.005,
                 "ry": 0.008,
                 "exponent": 2,
-                "rotation": [-0.04964, -0.72677, -0.04669, 0.68349]
+                "rotation": [0.80754, -0.07428, 0.57794, 0.09138]
               }
             ],
             "capStart": true,
             "capEnd": true,
-            "member": "pelvis",
+            "member": "hip-hf",
             "part": "member"
           },
           {
@@ -17740,39 +17816,39 @@
             "tone": 0.18,
             "sections": [
               {
-                "at": [-0.004, 0, -0.004],
+                "at": [-0.00493, 0.0, -0.00277],
                 "rx": 0.0025,
                 "ry": 0.016,
                 "exponent": 2.6,
-                "rotation": [0, -0.70711, 0, 0.70711]
+                "rotation": [0.0, -0.60385, 0.0, 0.79711]
               },
               {
-                "at": [0.01, 0, 0.001],
+                "at": [0.0099, 0.0, -0.00174],
                 "rx": 0.0025,
                 "ry": 0.02,
                 "exponent": 2.6,
-                "rotation": [0, -0.70711, 0, 0.70711]
+                "rotation": [0.0, -0.60385, 0.0, 0.79711]
               },
               {
-                "at": [0.035, 0, 0.009],
+                "at": [0.03613, 0.0, -0.00081],
                 "rx": 0.003,
                 "ry": 0.013,
                 "exponent": 2.6,
-                "rotation": [0, -0.70711, 0, 0.70711]
+                "rotation": [0.0, -0.60385, 0.0, 0.79711]
               },
               {
-                "at": [0.055, 0, 0.014],
+                "at": [0.05674, 0.0, -0.00141],
                 "rx": 0.004,
                 "ry": 0.0065,
                 "exponent": 2.6,
-                "rotation": [0, -0.70711, 0, 0.70711]
+                "rotation": [0.0, -0.60385, 0.0, 0.79711]
               },
               {
-                "at": [0.064, 0, 0.015],
+                "at": [0.06567, 0.0, -0.00289],
                 "rx": 0.006,
                 "ry": 0.007,
                 "exponent": 2.6,
-                "rotation": [0, -0.70711, 0, 0.70711]
+                "rotation": [0.0, -0.60385, 0.0, 0.79711]
               }
             ],
             "capStart": true,
@@ -18479,8 +18555,8 @@
             "tone": 0.5,
             "radii": [0.004, 0.004, 0.004],
             "transform": {
-              "translation": [0, 0, 0],
-              "rotation": [0.62721, 0.32651, 0.32651, 0.62721]
+              "translation": [0.0, 0.0, 0.0],
+              "rotation": [0.66595, 0.40916, 0.23774, 0.57671]
             },
             "member": "scapula-ff",
             "part": "joint"
@@ -18614,8 +18690,8 @@
             "tone": 0.5,
             "radii": [0.004, 0.004, 0.004],
             "transform": {
-              "translation": [0, 0, 0],
-              "rotation": [0.62721, 0.32651, 0.32651, 0.62721]
+              "translation": [0.0, 0.0, 0.0],
+              "rotation": [0.57671, 0.23774, 0.40916, 0.66595]
             },
             "member": "scapula-fn",
             "part": "joint"
@@ -18743,16 +18819,16 @@
         ],
         "decisions": [
           {
-            "en": "Body at 1:50 (smallest feature 7.5 mm): 74 solids, every section stated by hand from the skeletal landmarks of a 4.2 kg short-haired cat standing alert (withers 0.25 m, hip joint 0.235 m, nose to rump 0.47 m). The trunk is four overlapping lofts on pelvis, loin, hind and fore ribcage with a level back, a deep chest behind the elbows and a belly tucked up to the flank; the neck is short and thick. The head is a domed skull with a stop, a short muzzle carrying two whisker pads and the nose leather, forward-facing eyes, two cupped ears turned forward and outward, and a mandible with the tongue inside the closed mouth. Each hind leg is a broad flat thigh, a shank with the calf at the top, a metatarsus with the heel of the hock; each foreleg a shoulder over the blade, an upper arm with the triceps, a forearm with the point of the elbow and a metacarpus; every paw has a body, four toes in their arc, a metapodial pad and four digital pads on the ground. Segments reach into their neighbours at every joint (tail segments end in domes) so that poses and clips stay closed. Whiskers and claws are below the feature size and left out. Every trunk loft ends at its spinal joint in a blunt half ellipsoid about 60 mm long that lies inside its neighbour at rest, so the sitting, bowing and stretching spine bends without a flat cap or a step.",
-            "de": "Körper bei 1:50 (kleinstes Merkmal 7,5 mm): 74 Körper, jeder Schnitt von Hand nach den Skelettpunkten einer 4,2 kg schweren Kurzhaarkatze im aufmerksamen Stand gesetzt (Widerrist 0,25 m, Hüftgelenk 0,235 m, Nase bis Kruppe 0,47 m). Der Rumpf besteht aus vier überlappenden Lofts an Becken, Lende, hinterem und vorderem Brustkorb mit geradem Rücken, tiefer Brust hinter den Ellbogen und zur Flanke aufgezogenem Bauch; der Hals ist kurz und kräftig. Der Kopf ist ein gewölbter Schädel mit Stirnabsatz, kurzer Schnauze mit zwei Schnurrhaarkissen und Nasenspiegel, nach vorn gerichteten Augen, zwei gewölbten, nach vorn außen gedrehten Ohren und einem Unterkiefer mit der Zunge im geschlossenen Maul. Jedes Hinterbein besteht aus breitem flachem Oberschenkel, Unterschenkel mit der Wade oben und Mittelfuß mit dem Fersenhöcker; jedes Vorderbein aus Schulter über dem Schulterblatt, Oberarm mit Trizeps, Unterarm mit Ellbogenhöcker und Mittelhand; jede Pfote hat einen Pfotenkörper, vier Zehen in ihrem Bogen, einen Sohlenballen und vier Zehenballen auf dem Boden. Die Segmente greifen an jedem Gelenk ineinander (Schwanzsegmente enden in Kuppeln), damit Posen und Clips geschlossen bleiben. Tasthaare und Krallen liegen unter der Merkmalgröße und entfallen. Jeder Rumpfloft endet an seinem Wirbelgelenk in einem stumpfen Halbellipsoid von etwa 60 mm Länge, das in Ruhe im Nachbarn liegt, sodass die sitzende, sich verbeugende und sich streckende Wirbelsäule ohne flache Kappe und ohne Stufe biegt."
+            "en": "Body at 1:50 (smallest feature 7.5 mm): 74 solids, every section stated by hand from the skeletal landmarks of a 4.2 kg short-haired cat standing alert (withers 0.25 m, hip joint 0.235 m, nose to rump 0.47 m). The trunk is four overlapping lofts on pelvis, loin, hind and fore ribcage with a level back, a deep chest behind the elbows and a belly tucked up to the flank; the neck is short and thick. The head is a domed skull with a stop, a short muzzle carrying two whisker pads and the nose leather, forward-facing eyes, two cupped ears turned forward and outward, and a mandible with the tongue inside the closed mouth. Each hind leg is a broad flat thigh, a shank with the calf at the top, a metatarsus with the heel of the hock; each foreleg a shoulder over the blade, an upper arm with the triceps, a forearm with the point of the elbow and a metacarpus; every paw has a body, four toes in their arc, a metapodial pad and four digital pads on the ground. Segments reach into their neighbours at every joint (tail segments end in domes) so that poses and clips stay closed. Whiskers and claws are below the feature size and left out. Every trunk loft ends at its spinal joint in a blunt half ellipsoid about 60 mm long that lies inside its neighbour at rest, so the sitting, bowing and stretching spine bends without a flat cap or a step. The neck is slimmed to life: 74 by 88 mm at the chest, 62 by 74 mm in the middle (girth 0.21 m) and 60 by 68 mm behind the skull, narrower than the 88 mm head; before it was an 84 by 90 mm ball.",
+            "de": "Körper bei 1:50 (kleinstes Merkmal 7,5 mm): 74 Körper, jeder Schnitt von Hand nach den Skelettpunkten einer 4,2 kg schweren Kurzhaarkatze im aufmerksamen Stand gesetzt (Widerrist 0,25 m, Hüftgelenk 0,235 m, Nase bis Kruppe 0,47 m). Der Rumpf besteht aus vier überlappenden Lofts an Becken, Lende, hinterem und vorderem Brustkorb mit geradem Rücken, tiefer Brust hinter den Ellbogen und zur Flanke aufgezogenem Bauch; der Hals ist kurz und kräftig. Der Kopf ist ein gewölbter Schädel mit Stirnabsatz, kurzer Schnauze mit zwei Schnurrhaarkissen und Nasenspiegel, nach vorn gerichteten Augen, zwei gewölbten, nach vorn außen gedrehten Ohren und einem Unterkiefer mit der Zunge im geschlossenen Maul. Jedes Hinterbein besteht aus breitem flachem Oberschenkel, Unterschenkel mit der Wade oben und Mittelfuß mit dem Fersenhöcker; jedes Vorderbein aus Schulter über dem Schulterblatt, Oberarm mit Trizeps, Unterarm mit Ellbogenhöcker und Mittelhand; jede Pfote hat einen Pfotenkörper, vier Zehen in ihrem Bogen, einen Sohlenballen und vier Zehenballen auf dem Boden. Die Segmente greifen an jedem Gelenk ineinander (Schwanzsegmente enden in Kuppeln), damit Posen und Clips geschlossen bleiben. Tasthaare und Krallen liegen unter der Merkmalgröße und entfallen. Jeder Rumpfloft endet an seinem Wirbelgelenk in einem stumpfen Halbellipsoid von etwa 60 mm Länge, das in Ruhe im Nachbarn liegt, sodass die sitzende, sich verbeugende und sich streckende Wirbelsäule ohne flache Kappe und ohne Stufe biegt. Der Hals ist auf das wirkliche Maß verschlankt: 74 auf 88 mm an der Brust, 62 auf 74 mm in der Mitte (Umfang 0,21 m) und 60 auf 68 mm hinter dem Schädel, schmaler als der 88 mm breite Kopf; vorher war er eine Kugel von 84 auf 90 mm."
           },
           {
             "en": "Thermal at 1:50: every region has at most one declared layer (the fur), so each region is the body surface it covers, as references to the body solids: trunk coat with the neck, head coat with jaw and whisker pads, ears, tail coat, coats of hind and fore limbs with the toes; the bare regions are their own solids: nose leather, the two corneas, the tongue inside the mouth and the twenty pads. The outlets are patches on the surface: the nostrils on the nose, the lips for the open mouth and a patch of the back for the plume, each a piece of the fur layer at its declared thickness (6 mm on the head, 12 mm on the trunk).",
             "de": "Thermik bei 1:50: jede Region hat höchstens eine deklarierte Schicht (das Fell), daher ist jede Region die Körperoberfläche, die sie bedeckt, als Verweis auf die Körper: Rumpffell mit Hals, Kopffell mit Unterkiefer und Schnurrhaarkissen, Ohren, Schwanzfell, Fell der Hinter- und Vorderläufe mit den Zehen; die nackten Regionen sind eigene Körper: Nasenspiegel, die beiden Hornhäute, die Zunge im Maul und die zwanzig Ballen. Die Auslässe sind Flächen auf der Oberfläche: die Nasenlöcher an der Nase, die Lippen für das offene Maul und ein Rückenfeld für die Warmluftfahne, jeweils ein Stück der Fellschicht in ihrer deklarierten Dicke (6 mm am Kopf, 12 mm am Rumpf)."
           },
           {
-            "en": "Structure at 1:50: the skeleton. Skull and mandible, cervical spine in its S curve, thoracic spine with the spinous processes of the withers, thirteen ribs per side at their true 3 to 4 mm (slender) with costal arch and sternum, lumbar spine with transverse and spinous processes, sacrum, ilium, ischium and pubis, five caudal rods, ear cartilages; per foreleg scapula, humerus, radius and ulna with the olecranon, carpus with metacarpals, digits; per hind leg femur with patella, tibia, calcaneus, tarsus with metatarsals, digits. Carpals, metapodials and phalanges are each one flat bundle because single rays are 3 to 5 mm. Joints sit at the rig joints at joint size, the masses of pelvis, loin and the two halves of the ribcage at their centres of mass. The asset declares no structural supports. The rib heads sit on the vertebrae; ribs one to eight reach the sternum through their costal cartilages, ribs nine to thirteen join the costal arch. The alae of the sacrum are 38 mm wide and carry the ilia in the sacroiliac joints, the pubis runs from acetabulum to acetabulum through the symphysis, and the ear cartilages are rooted on the skull, so the load path from skull to paws is closed.",
-            "de": "Tragwerk bei 1:50: das Skelett. Schädel und Unterkiefer, Halswirbelsäule in ihrer S-Kurve, Brustwirbelsäule mit den Dornfortsätzen des Widerrists, dreizehn Rippen je Seite in ihren wahren 3 bis 4 mm (schlank) mit Rippenbogen und Brustbein, Lendenwirbelsäule mit Quer- und Dornfortsätzen, Kreuzbein, Darmbein, Sitzbein und Schambein, fünf Schwanzwirbelstäbe, Ohrknorpel; je Vorderbein Schulterblatt, Oberarmbein, Speiche und Elle mit Ellbogenhöcker, Handwurzel mit Mittelhandknochen, Zehen; je Hinterbein Oberschenkelbein mit Kniescheibe, Schienbein, Fersenbein, Fußwurzel mit Mittelfußknochen, Zehen. Handwurzel, Mittelhand- und Mittelfußknochen sowie Zehenglieder sind je ein flaches Bündel, weil einzelne Strahlen 3 bis 5 mm messen. Gelenke sitzen an den Gelenken des Skeletts in Gelenkgröße, die Massen von Becken, Lende und den beiden Brustkorbhälften in ihren Schwerpunkten. Das Asset deklariert keine Auflager. Die Rippenköpfe sitzen an den Wirbeln; die Rippen eins bis acht erreichen das Brustbein über ihre Rippenknorpel, die Rippen neun bis dreizehn schließen an den Rippenbogen an. Die Kreuzbeinflügel sind 38 mm breit und tragen die Darmbeine in den Kreuzdarmbeingelenken, das Schambein läuft von Hüftpfanne zu Hüftpfanne durch die Symphyse, und die Ohrknorpel wurzeln am Schädel, sodass der Lastpfad vom Schädel bis zu den Pfoten geschlossen ist."
+            "en": "Structure at 1:50: the skeleton. Skull and mandible, cervical spine in its S curve, thoracic spine with the spinous processes of the withers, thirteen ribs per side at their true 3 to 4 mm (slender) with costal arch and sternum, lumbar spine with transverse and spinous processes, sacrum, ilium, ischium and pubis, five caudal rods, ear cartilages; per foreleg scapula, humerus, radius and ulna with the olecranon, carpus with metacarpals, digits; per hind leg femur with patella, tibia, calcaneus, tarsus with metatarsals, digits. Carpals, metapodials and phalanges are each one flat bundle because single rays are 3 to 5 mm. Joints sit at the rig joints at joint size, the masses of pelvis, loin and the two halves of the ribcage at their centres of mass. The asset declares no structural supports. The rib heads sit on the vertebrae; ribs one to eight reach the sternum through their costal cartilages, ribs nine to thirteen join the costal arch. The alae of the sacrum are 38 mm wide and carry the ilia in the sacroiliac joints, the pubis runs from acetabulum to acetabulum through the symphysis, and the ear cartilages are rooted on the skull, so the load path from skull to paws is closed. Girdles (rig of 2026-11-22): each scapula is a bone of its own that rests 15.7 degrees out of the sagittal plane, from its dorsal border 22 mm beside the median plane to the shoulder joint 40 mm beside it, and the humerus hangs from its tip; each hip bone (os coxae) is a fixed bone from the sacroiliac joint 19 mm beside the plane to the hip joint 30 mm beside it, and the femur hangs from its tip. Ilium and ischium are bound to the hip bones, the scapula solids lie in the plane of their bone.",
+            "de": "Tragwerk bei 1:50: das Skelett. Schädel und Unterkiefer, Halswirbelsäule in ihrer S-Kurve, Brustwirbelsäule mit den Dornfortsätzen des Widerrists, dreizehn Rippen je Seite in ihren wahren 3 bis 4 mm (schlank) mit Rippenbogen und Brustbein, Lendenwirbelsäule mit Quer- und Dornfortsätzen, Kreuzbein, Darmbein, Sitzbein und Schambein, fünf Schwanzwirbelstäbe, Ohrknorpel; je Vorderbein Schulterblatt, Oberarmbein, Speiche und Elle mit Ellbogenhöcker, Handwurzel mit Mittelhandknochen, Zehen; je Hinterbein Oberschenkelbein mit Kniescheibe, Schienbein, Fersenbein, Fußwurzel mit Mittelfußknochen, Zehen. Handwurzel, Mittelhand- und Mittelfußknochen sowie Zehenglieder sind je ein flaches Bündel, weil einzelne Strahlen 3 bis 5 mm messen. Gelenke sitzen an den Gelenken des Skeletts in Gelenkgröße, die Massen von Becken, Lende und den beiden Brustkorbhälften in ihren Schwerpunkten. Das Asset deklariert keine Auflager. Die Rippenköpfe sitzen an den Wirbeln; die Rippen eins bis acht erreichen das Brustbein über ihre Rippenknorpel, die Rippen neun bis dreizehn schließen an den Rippenbogen an. Die Kreuzbeinflügel sind 38 mm breit und tragen die Darmbeine in den Kreuzdarmbeingelenken, das Schambein läuft von Hüftpfanne zu Hüftpfanne durch die Symphyse, und die Ohrknorpel wurzeln am Schädel, sodass der Lastpfad vom Schädel bis zu den Pfoten geschlossen ist. Gürtel (Rig vom 22.11.2026): jedes Schulterblatt ist ein eigener Knochen, der 15,7 Grad aus der Sagittalebene geneigt ruht, vom Rückenrand 22 mm neben der Medianebene zum Schultergelenk 40 mm daneben, und der Oberarm hängt an seiner Spitze; jedes Hüftbein (Os coxae) ist ein fester Knochen vom Kreuzdarmbeingelenk 19 mm neben der Ebene zum Hüftgelenk 30 mm daneben, und der Oberschenkel hängt an seiner Spitze. Darmbein und Sitzbein sind an die Hüftbeine gebunden, die Körper der Schulterblätter liegen in der Ebene ihres Knochens."
           },
           {
             "en": "Five caudal sections wrap beside the seated paws. The tear surface follows the exposed front of the cornea. The fine views distinguish the iris and vertical pupil.",
@@ -19396,57 +19472,57 @@
             "sections": [
               {
                 "at": [-0.035, 0.016, 0],
-                "rx": 0.02,
+                "rx": 0.0188,
                 "ry": 0.02,
                 "exponent": 2.1,
                 "rotation": [0, -0.70711, 0, 0.70711]
               },
               {
                 "at": [-0.01969, 0.01531, 0],
-                "rx": 0.03081,
-                "ry": 0.03256,
+                "rx": 0.02833,
+                "ry": 0.03234,
                 "exponent": 2.1,
                 "rotation": [0, -0.70711, 0, 0.70711]
               },
               {
                 "at": [0, 0.014, 0],
-                "rx": 0.041,
-                "ry": 0.045,
+                "rx": 0.03608,
+                "ry": 0.0441,
                 "exponent": 2.1,
                 "rotation": [0, -0.70711, 0, 0.70711]
               },
               {
                 "at": [0.01781, 0.01162, 0],
-                "rx": 0.04006,
-                "ry": 0.04662,
+                "rx": 0.03493,
+                "ry": 0.04305,
                 "exponent": 2.1,
                 "rotation": [0, -0.70711, 0, 0.70711]
               },
               {
                 "at": [0.035, 0.009, 0],
-                "rx": 0.036,
-                "ry": 0.044,
+                "rx": 0.03165,
+                "ry": 0.03929,
                 "exponent": 2.1,
                 "rotation": [0, -0.70711, 0, 0.70711]
               },
               {
                 "at": [0.05075, 0.00687, 0],
-                "rx": 0.03494,
-                "ry": 0.04088,
+                "rx": 0.0315,
+                "ry": 0.03703,
                 "exponent": 2.1,
                 "rotation": [0, -0.70711, 0, 0.70711]
               },
               {
                 "at": [0.065, 0.005, 0],
-                "rx": 0.032,
-                "ry": 0.035,
+                "rx": 0.03008,
+                "ry": 0.03395,
                 "exponent": 2.1,
                 "rotation": [0, -0.70711, 0, 0.70711]
               },
               {
                 "at": [0.07838, 0.00325, 0],
-                "rx": 0.02175,
-                "ry": 0.02294,
+                "rx": 0.02147,
+                "ry": 0.02279,
                 "exponent": 2.1,
                 "rotation": [0, -0.70711, 0, 0.70711]
               },
@@ -20489,67 +20565,67 @@
             "tone": 0.7,
             "sections": [
               {
-                "at": [-0.008, 0, 0.005],
+                "at": [-0.00905, 0.0, 0.00265],
                 "rx": 0.004,
                 "ry": 0.006,
                 "exponent": 2.2,
-                "rotation": [0, -0.70711, 0, 0.70711]
+                "rotation": [0.0, -0.79711, 0.0, 0.60385]
               },
               {
-                "at": [0.00025, -0.00094, 0.0015],
+                "at": [-0.00017, -0.00094, 0.00151],
                 "rx": 0.00738,
                 "ry": 0.01481,
                 "exponent": 2.2,
-                "rotation": [0, -0.70711, 0, 0.70711]
+                "rotation": [0.0, -0.79711, 0.0, 0.60385]
               },
               {
-                "at": [0.012, -0.002, -0.003],
+                "at": [0.01236, -0.002, 0.00036],
                 "rx": 0.011,
                 "ry": 0.024,
                 "exponent": 2.2,
-                "rotation": [0, -0.70711, 0, 0.70711]
+                "rotation": [0.0, -0.79711, 0.0, 0.60385]
               },
               {
-                "at": [0.02563, -0.00281, -0.00725],
+                "at": [0.02664, -0.00281, -4e-05],
                 "rx": 0.0125,
                 "ry": 0.02713,
                 "exponent": 2.2,
-                "rotation": [0, -0.70711, 0, 0.70711]
+                "rotation": [0.0, -0.79711, 0.0, 0.60385]
               },
               {
-                "at": [0.04, -0.003, -0.011],
+                "at": [0.04148, -0.003, 0.00024],
                 "rx": 0.013,
                 "ry": 0.027,
                 "exponent": 2.2,
-                "rotation": [0, -0.70711, 0, 0.70711]
+                "rotation": [0.0, -0.79711, 0.0, 0.60385]
               },
               {
-                "at": [0.054, -0.00175, -0.0135],
+                "at": [0.05564, -0.00175, 0.00162],
                 "rx": 0.01306,
                 "ry": 0.02406,
                 "exponent": 2.2,
-                "rotation": [0, -0.70711, 0, 0.70711]
+                "rotation": [0.0, -0.79711, 0.0, 0.60385]
               },
               {
-                "at": [0.066, 0, -0.015],
+                "at": [0.0676, 0.0, 0.00343],
                 "rx": 0.012,
                 "ry": 0.019,
                 "exponent": 2.2,
-                "rotation": [0, -0.70711, 0, 0.70711]
+                "rotation": [0.0, -0.79711, 0.0, 0.60385]
               },
               {
-                "at": [0.07363, 0.00169, -0.01525],
+                "at": [0.07501, 0.00169, 0.00525],
                 "rx": 0.00844,
                 "ry": 0.0115,
                 "exponent": 2.2,
-                "rotation": [0, -0.70711, 0, 0.70711]
+                "rotation": [0.0, -0.79711, 0.0, 0.60385]
               },
               {
-                "at": [0.078, 0.003, -0.015],
+                "at": [0.07915, 0.003, 0.00668],
                 "rx": 0.005,
                 "ry": 0.005,
                 "exponent": 2.2,
-                "rotation": [0, -0.70711, 0, 0.70711]
+                "rotation": [0.0, -0.79711, 0.0, 0.60385]
               }
             ],
             "capStart": true,
@@ -21148,67 +21224,67 @@
             "tone": 0.7,
             "sections": [
               {
-                "at": [-0.008, 0, -0.005],
+                "at": [-0.00905, 0.0, -0.00265],
                 "rx": 0.004,
                 "ry": 0.006,
                 "exponent": 2.2,
-                "rotation": [0, -0.70711, 0, 0.70711]
+                "rotation": [0.0, -0.60385, 0.0, 0.79711]
               },
               {
-                "at": [0.00025, -0.00094, -0.0015],
+                "at": [-0.00017, -0.00094, -0.00151],
                 "rx": 0.00738,
                 "ry": 0.01481,
                 "exponent": 2.2,
-                "rotation": [0, -0.70711, 0, 0.70711]
+                "rotation": [0.0, -0.60385, 0.0, 0.79711]
               },
               {
-                "at": [0.012, -0.002, 0.003],
+                "at": [0.01236, -0.002, -0.00036],
                 "rx": 0.011,
                 "ry": 0.024,
                 "exponent": 2.2,
-                "rotation": [0, -0.70711, 0, 0.70711]
+                "rotation": [0.0, -0.60385, 0.0, 0.79711]
               },
               {
-                "at": [0.02563, -0.00281, 0.00725],
+                "at": [0.02664, -0.00281, 4e-05],
                 "rx": 0.0125,
                 "ry": 0.02713,
                 "exponent": 2.2,
-                "rotation": [0, -0.70711, 0, 0.70711]
+                "rotation": [0.0, -0.60385, 0.0, 0.79711]
               },
               {
-                "at": [0.04, -0.003, 0.011],
+                "at": [0.04148, -0.003, -0.00024],
                 "rx": 0.013,
                 "ry": 0.027,
                 "exponent": 2.2,
-                "rotation": [0, -0.70711, 0, 0.70711]
+                "rotation": [0.0, -0.60385, 0.0, 0.79711]
               },
               {
-                "at": [0.054, -0.00175, 0.0135],
+                "at": [0.05564, -0.00175, -0.00162],
                 "rx": 0.01306,
                 "ry": 0.02406,
                 "exponent": 2.2,
-                "rotation": [0, -0.70711, 0, 0.70711]
+                "rotation": [0.0, -0.60385, 0.0, 0.79711]
               },
               {
-                "at": [0.066, 0, 0.015],
+                "at": [0.0676, 0.0, -0.00343],
                 "rx": 0.012,
                 "ry": 0.019,
                 "exponent": 2.2,
-                "rotation": [0, -0.70711, 0, 0.70711]
+                "rotation": [0.0, -0.60385, 0.0, 0.79711]
               },
               {
-                "at": [0.07363, 0.00169, 0.01525],
+                "at": [0.07501, 0.00169, -0.00525],
                 "rx": 0.00844,
                 "ry": 0.0115,
                 "exponent": 2.2,
-                "rotation": [0, -0.70711, 0, 0.70711]
+                "rotation": [0.0, -0.60385, 0.0, 0.79711]
               },
               {
-                "at": [0.078, 0.003, 0.015],
+                "at": [0.07915, 0.003, -0.00668],
                 "rx": 0.005,
                 "ry": 0.005,
                 "exponent": 2.2,
-                "rotation": [0, -0.70711, 0, 0.70711]
+                "rotation": [0.0, -0.60385, 0.0, 0.79711]
               }
             ],
             "capStart": true,
@@ -22150,155 +22226,155 @@
           {
             "id": "near-ilium",
             "kind": "loft",
-            "bone": "pelvis",
+            "bone": "hip-hn",
             "material": "bone",
             "role": "body",
             "tone": 0.18,
             "sections": [
               {
-                "at": [0.0572, 0.0072, -0.024],
+                "at": [-0.0155, -0.00147, -0.00942],
                 "rx": 0.0075,
                 "ry": 0.012,
                 "exponent": 2,
-                "rotation": [0.02367, -0.68723, 0.02499, 0.72563]
+                "rotation": [0.58477, -0.01199, 0.81106, 0.00968]
               },
               {
-                "at": [0.0389, 0.0059, -0.024],
+                "at": [0.00219, -0.002, -0.00458],
                 "rx": 0.0075,
                 "ry": 0.011,
                 "exponent": 2,
-                "rotation": [0.04273, -0.71465, 0.04167, 0.69693]
+                "rotation": [0.61656, 0.00793, 0.78725, -0.0059]
               },
               {
-                "at": [0.0177, 0.0024, -0.0265],
+                "at": [0.02354, -0.00063, -0.00134],
                 "rx": 0.0075,
                 "ry": 0.008,
                 "exponent": 2,
-                "rotation": [0.0568, -0.73982, 0.05132, 0.66844]
+                "rotation": [0.64589, 0.02209, 0.76296, -0.01515]
               },
               {
-                "at": [0, -0.0001, -0.029],
+                "at": [0.04142, 0.0001, 0.00097],
                 "rx": 0.008,
                 "ry": 0.009,
                 "exponent": 2,
-                "rotation": [0.05284, -0.74348, 0.04726, 0.66499]
+                "rotation": [0.64981, 0.01747, 0.75981, -0.01185]
               }
             ],
             "capStart": true,
             "capEnd": true,
-            "member": "pelvis",
+            "member": "hip-hn",
             "part": "member"
           },
           {
             "id": "near-ischium",
             "kind": "loft",
-            "bone": "pelvis",
+            "bone": "hip-hn",
             "material": "bone",
             "role": "body",
             "tone": 0.18,
             "sections": [
               {
-                "at": [0, -0.0001, -0.029],
+                "at": [0.04142, 0.0001, 0.00097],
                 "rx": 0.008,
                 "ry": 0.009,
                 "exponent": 2,
-                "rotation": [-0.04174, -0.67042, -0.04603, 0.73938]
+                "rotation": [0.56354, -0.08544, 0.81849, 0.07207]
               },
               {
-                "at": [-0.0203, 0.0024, -0.0275],
+                "at": [0.06027, -0.00441, 0.00768],
                 "rx": 0.0075,
                 "ry": 0.0075,
                 "exponent": 2,
-                "rotation": [-0.04392, -0.67624, -0.04766, 0.73382]
+                "rotation": [0.56995, -0.08807, 0.81367, 0.07308]
               },
               {
-                "at": [-0.0364, 0.0046, -0.0265],
+                "at": [0.07525, -0.0082, 0.01281],
                 "rx": 0.0075,
                 "ry": 0.008,
                 "exponent": 2,
-                "rotation": [-0.04669, -0.68349, -0.04964, 0.72677]
+                "rotation": [0.57794, -0.09138, 0.80754, 0.07428]
               }
             ],
             "capStart": true,
             "capEnd": true,
-            "member": "pelvis",
+            "member": "hip-hn",
             "part": "member"
           },
           {
             "id": "far-ilium",
             "kind": "loft",
-            "bone": "pelvis",
+            "bone": "hip-hf",
             "material": "bone",
             "role": "body",
             "tone": 0.18,
             "sections": [
               {
-                "at": [0.0572, 0.0072, 0.024],
+                "at": [-0.0155, -0.00147, 0.00942],
                 "rx": 0.0075,
                 "ry": 0.012,
                 "exponent": 2,
-                "rotation": [0.02499, -0.72563, 0.02367, 0.68723]
+                "rotation": [0.81106, -0.00968, 0.58477, 0.01199]
               },
               {
-                "at": [0.0389, 0.0059, 0.024],
+                "at": [0.00219, -0.002, 0.00458],
                 "rx": 0.0075,
                 "ry": 0.011,
                 "exponent": 2,
-                "rotation": [0.04167, -0.69693, 0.04273, 0.71465]
+                "rotation": [0.78725, 0.0059, 0.61656, -0.00793]
               },
               {
-                "at": [0.0177, 0.0024, 0.0265],
+                "at": [0.02354, -0.00063, 0.00134],
                 "rx": 0.0075,
                 "ry": 0.008,
                 "exponent": 2,
-                "rotation": [0.05132, -0.66844, 0.0568, 0.73982]
+                "rotation": [0.76296, 0.01515, 0.64589, -0.02209]
               },
               {
-                "at": [0, -0.0001, 0.029],
+                "at": [0.04142, 0.0001, -0.00097],
                 "rx": 0.008,
                 "ry": 0.009,
                 "exponent": 2,
-                "rotation": [0.04726, -0.66499, 0.05284, 0.74348]
+                "rotation": [0.75981, 0.01185, 0.64981, -0.01747]
               }
             ],
             "capStart": true,
             "capEnd": true,
-            "member": "pelvis",
+            "member": "hip-hf",
             "part": "member"
           },
           {
             "id": "far-ischium",
             "kind": "loft",
-            "bone": "pelvis",
+            "bone": "hip-hf",
             "material": "bone",
             "role": "body",
             "tone": 0.18,
             "sections": [
               {
-                "at": [0, -0.0001, 0.029],
+                "at": [0.04142, 0.0001, -0.00097],
                 "rx": 0.008,
                 "ry": 0.009,
                 "exponent": 2,
-                "rotation": [-0.04603, -0.73938, -0.04174, 0.67042]
+                "rotation": [0.81849, -0.07207, 0.56354, 0.08544]
               },
               {
-                "at": [-0.0203, 0.0024, 0.0275],
+                "at": [0.06027, -0.00441, -0.00768],
                 "rx": 0.0075,
                 "ry": 0.0075,
                 "exponent": 2,
-                "rotation": [-0.04766, -0.73382, -0.04392, 0.67624]
+                "rotation": [0.81367, -0.07308, 0.56995, 0.08807]
               },
               {
-                "at": [-0.0364, 0.0046, 0.0265],
+                "at": [0.07525, -0.0082, -0.01281],
                 "rx": 0.0075,
                 "ry": 0.008,
                 "exponent": 2,
-                "rotation": [-0.04964, -0.72677, -0.04669, 0.68349]
+                "rotation": [0.80754, -0.07428, 0.57794, 0.09138]
               }
             ],
             "capStart": true,
             "capEnd": true,
-            "member": "pelvis",
+            "member": "hip-hf",
             "part": "member"
           },
           {
@@ -23280,32 +23356,32 @@
             "tone": 0.18,
             "sections": [
               {
-                "at": [-0.004, 0, 0.004],
+                "at": [-0.00493, 0.0, 0.00277],
                 "rx": 0.003,
                 "ry": 0.016,
                 "exponent": 2.6,
-                "rotation": [0, -0.70711, 0, 0.70711]
+                "rotation": [0.0, -0.79711, 0.0, 0.60385]
               },
               {
-                "at": [0.015, 0, -0.003],
+                "at": [0.01525, 0.0, 0.00117],
                 "rx": 0.003,
                 "ry": 0.019,
                 "exponent": 2.6,
-                "rotation": [0, -0.70711, 0, 0.70711]
+                "rotation": [0.0, -0.79711, 0.0, 0.60385]
               },
               {
-                "at": [0.056, 0, -0.012],
+                "at": [0.05716, 0.0, 0.00361],
                 "rx": 0.0055,
                 "ry": 0.008,
                 "exponent": 2.6,
-                "rotation": [0, -0.70711, 0, 0.70711]
+                "rotation": [0.0, -0.79711, 0.0, 0.60385]
               },
               {
-                "at": [0.066, 0, -0.015],
+                "at": [0.0676, 0.0, 0.00343],
                 "rx": 0.0078,
                 "ry": 0.008,
                 "exponent": 2.6,
-                "rotation": [0, -0.70711, 0, 0.70711]
+                "rotation": [0.0, -0.79711, 0.0, 0.60385]
               }
             ],
             "capStart": true,
@@ -23851,32 +23927,32 @@
             "tone": 0.18,
             "sections": [
               {
-                "at": [-0.004, 0, -0.004],
+                "at": [-0.00493, 0.0, -0.00277],
                 "rx": 0.003,
                 "ry": 0.016,
                 "exponent": 2.6,
-                "rotation": [0, -0.70711, 0, 0.70711]
+                "rotation": [0.0, -0.60385, 0.0, 0.79711]
               },
               {
-                "at": [0.015, 0, 0.003],
+                "at": [0.01525, 0.0, -0.00117],
                 "rx": 0.003,
                 "ry": 0.019,
                 "exponent": 2.6,
-                "rotation": [0, -0.70711, 0, 0.70711]
+                "rotation": [0.0, -0.60385, 0.0, 0.79711]
               },
               {
-                "at": [0.056, 0, 0.012],
+                "at": [0.05716, 0.0, -0.00361],
                 "rx": 0.0055,
                 "ry": 0.008,
                 "exponent": 2.6,
-                "rotation": [0, -0.70711, 0, 0.70711]
+                "rotation": [0.0, -0.60385, 0.0, 0.79711]
               },
               {
-                "at": [0.066, 0, 0.015],
+                "at": [0.0676, 0.0, -0.00343],
                 "rx": 0.0078,
                 "ry": 0.008,
                 "exponent": 2.6,
-                "rotation": [0, -0.70711, 0, 0.70711]
+                "rotation": [0.0, -0.60385, 0.0, 0.79711]
               }
             ],
             "capStart": true,
@@ -24449,8 +24525,8 @@
             "tone": 0.5,
             "radii": [0.0077, 0.0077, 0.0077],
             "transform": {
-              "translation": [0, 0, 0],
-              "rotation": [0.62721, 0.32651, 0.32651, 0.62721]
+              "translation": [0.0, 0.0, 0.0],
+              "rotation": [0.66595, 0.40916, 0.23774, 0.57671]
             },
             "member": "scapula-ff",
             "part": "joint"
@@ -24584,8 +24660,8 @@
             "tone": 0.5,
             "radii": [0.0077, 0.0077, 0.0077],
             "transform": {
-              "translation": [0, 0, 0],
-              "rotation": [0.62721, 0.32651, 0.32651, 0.62721]
+              "translation": [0.0, 0.0, 0.0],
+              "rotation": [0.57671, 0.23774, 0.40916, 0.66595]
             },
             "member": "scapula-fn",
             "part": "joint"
@@ -24713,16 +24789,16 @@
         ],
         "decisions": [
           {
-            "en": "Body at 1:100 (smallest feature 15 mm), restated for this scale: the trunk keeps its four pieces on pelvis, loin and the two halves of the ribcage, with fewer and simpler sections; neck, skull and mandible are single lofts, the whisker pads are merged into the muzzle, nose leather, eyes and ears stay because the drawing shows them. Every limb segment keeps its own solid with the muscle mass in a five-row table, each paw is one rounded body on one sole pad (toes and single digital pads are 9 mm and merged). The tail keeps one round piece per bone. Legs, tail and ears are thinner than 15 mm in life and stay at their true size, as the drawing draws them. Every trunk loft ends at its spinal joint in a blunt half ellipsoid about 60 mm long that lies inside its neighbour at rest, so the sitting, bowing and stretching spine bends without a flat cap or a step.",
-            "de": "Körper bei 1:100 (kleinstes Merkmal 15 mm), für diesen Maßstab neu gesetzt: der Rumpf behält seine vier Teile an Becken, Lende und den beiden Brustkorbhälften mit weniger und einfacheren Schnitten; Hals, Schädel und Unterkiefer sind einzelne Lofts, die Schnurrhaarkissen sind in die Schnauze eingegangen, Nasenspiegel, Augen und Ohren bleiben, weil die Zeichnung sie zeigt. Jedes Gliedmaßensegment behält seinen eigenen Körper mit der Muskelmasse in einer fünfzeiligen Tabelle, jede Pfote ist ein gerundeter Körper auf einem Sohlenballen (Zehen und einzelne Zehenballen messen 9 mm und sind zusammengefasst). Der Schwanz behält ein rundes Stück je Knochen. Läufe, Schwanz und Ohren sind in Wirklichkeit dünner als 15 mm und bleiben in wahrer Größe, wie die Zeichnung sie zeichnet. Jeder Rumpfloft endet an seinem Wirbelgelenk in einem stumpfen Halbellipsoid von etwa 60 mm Länge, das in Ruhe im Nachbarn liegt, sodass die sitzende, sich verbeugende und sich streckende Wirbelsäule ohne flache Kappe und ohne Stufe biegt."
+            "en": "Body at 1:100 (smallest feature 15 mm), restated for this scale: the trunk keeps its four pieces on pelvis, loin and the two halves of the ribcage, with fewer and simpler sections; neck, skull and mandible are single lofts, the whisker pads are merged into the muzzle, nose leather, eyes and ears stay because the drawing shows them. Every limb segment keeps its own solid with the muscle mass in a five-row table, each paw is one rounded body on one sole pad (toes and single digital pads are 9 mm and merged). The tail keeps one round piece per bone. Legs, tail and ears are thinner than 15 mm in life and stay at their true size, as the drawing draws them. Every trunk loft ends at its spinal joint in a blunt half ellipsoid about 60 mm long that lies inside its neighbour at rest, so the sitting, bowing and stretching spine bends without a flat cap or a step. The neck is slimmed to life: 74 by 88 mm at the chest, 62 by 74 mm in the middle (girth 0.21 m) and 60 by 68 mm behind the skull, narrower than the 88 mm head; before it was an 84 by 90 mm ball.",
+            "de": "Körper bei 1:100 (kleinstes Merkmal 15 mm), für diesen Maßstab neu gesetzt: der Rumpf behält seine vier Teile an Becken, Lende und den beiden Brustkorbhälften mit weniger und einfacheren Schnitten; Hals, Schädel und Unterkiefer sind einzelne Lofts, die Schnurrhaarkissen sind in die Schnauze eingegangen, Nasenspiegel, Augen und Ohren bleiben, weil die Zeichnung sie zeigt. Jedes Gliedmaßensegment behält seinen eigenen Körper mit der Muskelmasse in einer fünfzeiligen Tabelle, jede Pfote ist ein gerundeter Körper auf einem Sohlenballen (Zehen und einzelne Zehenballen messen 9 mm und sind zusammengefasst). Der Schwanz behält ein rundes Stück je Knochen. Läufe, Schwanz und Ohren sind in Wirklichkeit dünner als 15 mm und bleiben in wahrer Größe, wie die Zeichnung sie zeichnet. Jeder Rumpfloft endet an seinem Wirbelgelenk in einem stumpfen Halbellipsoid von etwa 60 mm Länge, das in Ruhe im Nachbarn liegt, sodass die sitzende, sich verbeugende und sich streckende Wirbelsäule ohne flache Kappe und ohne Stufe biegt. Der Hals ist auf das wirkliche Maß verschlankt: 74 auf 88 mm an der Brust, 62 auf 74 mm in der Mitte (Umfang 0,21 m) und 60 auf 68 mm hinter dem Schädel, schmaler als der 88 mm breite Kopf; vorher war er eine Kugel von 84 auf 90 mm."
           },
           {
             "en": "Thermal at 1:100: each fur region is the body surface it covers (references), nose leather, corneas and the four soles are the body solids of their regions, the tongue is an own solid inside the closed mouth. Outlets: one nostril patch on the nose leather, the lips, a patch of the back for the plume.",
             "de": "Thermik bei 1:100: jede Fellregion ist die Körperoberfläche, die sie bedeckt (Verweise), Nasenspiegel, Hornhäute und die vier Sohlen sind die Körper ihrer Regionen, die Zunge ist ein eigener Körper im geschlossenen Maul. Auslässe: ein Nasenlochfeld im Nasenspiegel, die Lippen, ein Rückenfeld für die Warmluftfahne."
           },
           {
-            "en": "Structure at 1:100: the skeleton simplified for 15 mm. Skull, mandible, cervical, two thoracic and the lumbar spine pieces, the pelvis, four rib hoops per side for thirteen ribs, sternum, five caudal rods, ear cartilages; scapula, humerus, radius with ulna, metacarpal bundle and digits per foreleg; femur, tibia, metatarsal bundle with the heel and digits per hind leg. Joints at every rig joint, four trunk masses at their centres of mass. Bones stay at their true thickness (5 to 12 mm), below the feature size, because the 15 mm floor would fill the leg. The pelvis is sacrum, two hip bones of ilium and ischium each and the pubic bar at 15 mm, meeting in the sacroiliac joints, the acetabula and the symphysis; the sacrum carries the first caudal rod. Each of the four rib hoops per side runs from its vertebra to the sternum, the last one into the hoop before it as the costal arch.",
-            "de": "Tragwerk bei 1:100: das Skelett, für 15 mm vereinfacht. Schädel, Unterkiefer, Hals-, zwei Brust- und Lendenwirbelsäulenstücke, das Becken, vier Rippenbögen je Seite für dreizehn Rippen, Brustbein, fünf Schwanzwirbelstäbe, Ohrknorpel; Schulterblatt, Oberarmbein, Speiche mit Elle, Mittelhandbündel und Zehen je Vorderbein; Oberschenkelbein, Schienbein, Mittelfußbündel mit Ferse und Zehen je Hinterbein. Gelenke an jedem Gelenk des Skeletts, vier Rumpfmassen in ihren Schwerpunkten. Die Knochen bleiben in wahrer Dicke (5 bis 12 mm) unter der Merkmalgröße, weil 15 mm den Lauf ausfüllen würden. Das Becken besteht aus Kreuzbein, zwei Hüftbeinen aus je Darmbein und Sitzbein und der Schambeinspange in 15 mm, verbunden in den Kreuzdarmbeingelenken, den Hüftpfannen und der Symphyse; das Kreuzbein trägt den ersten Schwanzwirbelstab. Jeder der vier Rippenbögen je Seite läuft von seinem Wirbel zum Brustbein, der letzte als Rippenbogen in den Bogen davor."
+            "en": "Structure at 1:100: the skeleton simplified for 15 mm. Skull, mandible, cervical, two thoracic and the lumbar spine pieces, the pelvis, four rib hoops per side for thirteen ribs, sternum, five caudal rods, ear cartilages; scapula, humerus, radius with ulna, metacarpal bundle and digits per foreleg; femur, tibia, metatarsal bundle with the heel and digits per hind leg. Joints at every rig joint, four trunk masses at their centres of mass. Bones stay at their true thickness (5 to 12 mm), below the feature size, because the 15 mm floor would fill the leg. The pelvis is sacrum, two hip bones of ilium and ischium each and the pubic bar at 15 mm, meeting in the sacroiliac joints, the acetabula and the symphysis; the sacrum carries the first caudal rod. Each of the four rib hoops per side runs from its vertebra to the sternum, the last one into the hoop before it as the costal arch. Girdles (rig of 2026-11-22): each scapula is a bone of its own that rests 15.7 degrees out of the sagittal plane, from its dorsal border 22 mm beside the median plane to the shoulder joint 40 mm beside it, and the humerus hangs from its tip; each hip bone (os coxae) is a fixed bone from the sacroiliac joint 19 mm beside the plane to the hip joint 30 mm beside it, and the femur hangs from its tip. Ilium and ischium are bound to the hip bones, the scapula solids lie in the plane of their bone.",
+            "de": "Tragwerk bei 1:100: das Skelett, für 15 mm vereinfacht. Schädel, Unterkiefer, Hals-, zwei Brust- und Lendenwirbelsäulenstücke, das Becken, vier Rippenbögen je Seite für dreizehn Rippen, Brustbein, fünf Schwanzwirbelstäbe, Ohrknorpel; Schulterblatt, Oberarmbein, Speiche mit Elle, Mittelhandbündel und Zehen je Vorderbein; Oberschenkelbein, Schienbein, Mittelfußbündel mit Ferse und Zehen je Hinterbein. Gelenke an jedem Gelenk des Skeletts, vier Rumpfmassen in ihren Schwerpunkten. Die Knochen bleiben in wahrer Dicke (5 bis 12 mm) unter der Merkmalgröße, weil 15 mm den Lauf ausfüllen würden. Das Becken besteht aus Kreuzbein, zwei Hüftbeinen aus je Darmbein und Sitzbein und der Schambeinspange in 15 mm, verbunden in den Kreuzdarmbeingelenken, den Hüftpfannen und der Symphyse; das Kreuzbein trägt den ersten Schwanzwirbelstab. Jeder der vier Rippenbögen je Seite läuft von seinem Wirbel zum Brustbein, der letzte als Rippenbogen in den Bogen davor. Gürtel (Rig vom 22.11.2026): jedes Schulterblatt ist ein eigener Knochen, der 15,7 Grad aus der Sagittalebene geneigt ruht, vom Rückenrand 22 mm neben der Medianebene zum Schultergelenk 40 mm daneben, und der Oberarm hängt an seiner Spitze; jedes Hüftbein (Os coxae) ist ein fester Knochen vom Kreuzdarmbeingelenk 19 mm neben der Ebene zum Hüftgelenk 30 mm daneben, und der Oberschenkel hängt an seiner Spitze. Darmbein und Sitzbein sind an die Hüftbeine gebunden, die Körper der Schulterblätter liegen in der Ebene ihres Knochens."
           },
           {
             "en": "Five caudal sections wrap beside the seated paws. The tear surface follows the exposed front of the cornea. The fine views distinguish the iris and vertical pupil.",
@@ -24985,43 +25061,43 @@
             "sections": [
               {
                 "at": [-0.03, 0.015, 0],
-                "rx": 0.025,
+                "rx": 0.0235,
                 "ry": 0.025,
                 "exponent": 2.1,
                 "rotation": [0, -0.70711, 0, 0.70711]
               },
               {
                 "at": [-0.01531, 0.01437, 0],
-                "rx": 0.03288,
-                "ry": 0.03531,
+                "rx": 0.02994,
+                "ry": 0.03496,
                 "exponent": 2.1,
                 "rotation": [0, -0.70711, 0, 0.70711]
               },
               {
                 "at": [0.005, 0.013, 0],
-                "rx": 0.04,
-                "ry": 0.045,
+                "rx": 0.03511,
+                "ry": 0.04338,
                 "exponent": 2.1,
                 "rotation": [0, -0.70711, 0, 0.70711]
               },
               {
                 "at": [0.0275, 0.01012, 0],
-                "rx": 0.03906,
-                "ry": 0.04525,
+                "rx": 0.03413,
+                "ry": 0.04085,
                 "exponent": 2.1,
                 "rotation": [0, -0.70711, 0, 0.70711]
               },
               {
                 "at": [0.05, 0.007, 0],
-                "rx": 0.034,
-                "ry": 0.04,
+                "rx": 0.03058,
+                "ry": 0.0361,
                 "exponent": 2.1,
                 "rotation": [0, -0.70711, 0, 0.70711]
               },
               {
                 "at": [0.07031, 0.00462, 0],
-                "rx": 0.02463,
-                "ry": 0.02769,
+                "rx": 0.02361,
+                "ry": 0.02712,
                 "exponent": 2.1,
                 "rotation": [0, -0.70711, 0, 0.70711]
               },
@@ -26971,45 +27047,32 @@
             "tone": 0.18,
             "sections": [
               {
-                "at": [-0.00902, -0.00131, 0],
-                "rx": 0.00215,
-                "ry": 0.00215,
-                "exponent": 2,
+                "at": [-0.006, 0, 0.0],
+                "rx": 0.0085,
+                "ry": 0.007,
+                "exponent": 2.2,
                 "rotation": [0.7071, -0.00287, 0.7071, 0.00287]
               },
               {
-                "at": [-0.00325, -0.00136, 0],
-                "rx": 0.01193,
-                "ry": 0.01193,
-                "exponent": 2,
+                "at": [0.036, 0, 0.0],
+                "rx": 0.0085,
+                "ry": 0.007,
+                "exponent": 2.2,
                 "rotation": [0.7071, -0.00287, 0.7071, 0.00287]
               },
               {
-                "at": [0.00618, -0.00143, 0],
-                "rx": 0.0152,
-                "ry": 0.0152,
-                "exponent": 2,
-                "rotation": [0.7071, -0.00287, 0.7071, 0.00287]
-              },
-              {
-                "at": [0.07061, -0.00196, 0],
-                "rx": 0.01193,
-                "ry": 0.01193,
-                "exponent": 2,
-                "rotation": [0.7071, -0.00287, 0.7071, 0.00287]
-              },
-              {
-                "at": [0.07638, -0.002, 0],
-                "rx": 0.00215,
-                "ry": 0.00215,
-                "exponent": 2,
+                "at": [0.076, 0, 0.0],
+                "rx": 0.009,
+                "ry": 0.0075,
+                "exponent": 2.2,
                 "rotation": [0.7071, -0.00287, 0.7071, 0.00287]
               }
             ],
             "capStart": true,
             "capEnd": true,
             "member": "neck",
-            "part": "member"
+            "part": "member",
+            "slender": true
           },
           {
             "id": "thoracic-spine-b",
@@ -27118,45 +27181,32 @@
             "tone": 0.18,
             "sections": [
               {
-                "at": [-0.01008, -0.00304, 0],
-                "rx": 0.00215,
-                "ry": 0.00215,
-                "exponent": 2,
+                "at": [-0.008, -0.003, 0.0],
+                "rx": 0.0085,
+                "ry": 0.009,
+                "exponent": 2.2,
                 "rotation": [0.7071, 0.00201, 0.7071, -0.00201]
               },
               {
-                "at": [-0.0043, -0.00301, 0],
-                "rx": 0.01193,
-                "ry": 0.01193,
-                "exponent": 2,
+                "at": [0.066, -0.003, 0.0],
+                "rx": 0.0095,
+                "ry": 0.01,
+                "exponent": 2.2,
                 "rotation": [0.7071, 0.00201, 0.7071, -0.00201]
               },
               {
-                "at": [0.00512, -0.00295, 0],
-                "rx": 0.0152,
-                "ry": 0.0152,
-                "exponent": 2,
-                "rotation": [0.7071, 0.00201, 0.7071, -0.00201]
-              },
-              {
-                "at": [0.13758, -0.0022, 0],
-                "rx": 0.01193,
-                "ry": 0.01193,
-                "exponent": 2,
-                "rotation": [0.7071, 0.00201, 0.7071, -0.00201]
-              },
-              {
-                "at": [0.14336, -0.00217, 0],
-                "rx": 0.00215,
-                "ry": 0.00215,
-                "exponent": 2,
+                "at": [0.141, -0.002, 0.0],
+                "rx": 0.0085,
+                "ry": 0.009,
+                "exponent": 2.2,
                 "rotation": [0.7071, 0.00201, 0.7071, -0.00201]
               }
             ],
             "capStart": true,
             "capEnd": true,
             "member": "lumbar",
-            "part": "member"
+            "part": "member",
+            "slender": true
           },
           {
             "id": "pelvis",
@@ -27191,7 +27241,8 @@
             "capStart": true,
             "capEnd": true,
             "member": "pelvis",
-            "part": "member"
+            "part": "member",
+            "members": ["hip-hf", "hip-hn"]
           },
           {
             "id": "sternum",
@@ -27238,38 +27289,32 @@
             "tone": 0.18,
             "sections": [
               {
-                "at": [-0.0152, 0, 0],
-                "rx": 0.00215,
-                "ry": 0.00215,
-                "exponent": 2,
+                "at": [-0.006, 0, 0.0],
+                "rx": 0.006,
+                "ry": 0.006,
+                "exponent": 2.2,
                 "rotation": [0.70711, 0, 0.70711, 0]
               },
               {
-                "at": [-0.00942, 0, 0],
-                "rx": 0.01193,
-                "ry": 0.01193,
-                "exponent": 2,
+                "at": [0.032, 0, 0.0],
+                "rx": 0.0055,
+                "ry": 0.0055,
+                "exponent": 2.2,
                 "rotation": [0.70711, 0, 0.70711, 0]
               },
               {
-                "at": [0.064, 0, 0],
-                "rx": 0.0152,
-                "ry": 0.0152,
-                "exponent": 2,
-                "rotation": [0.70711, 0, 0.70711, 0]
-              },
-              {
-                "at": [0.0792, 0, 0],
-                "rx": 0.00215,
-                "ry": 0.00215,
-                "exponent": 2,
+                "at": [0.068, 0, 0.0],
+                "rx": 0.005,
+                "ry": 0.005,
+                "exponent": 2.2,
                 "rotation": [0.70711, 0, 0.70711, 0]
               }
             ],
             "capStart": true,
             "capEnd": true,
             "member": "tail-1",
-            "part": "member"
+            "part": "member",
+            "slender": true
           },
           {
             "id": "caudal-2",
@@ -27280,38 +27325,32 @@
             "tone": 0.18,
             "sections": [
               {
-                "at": [-0.0152, 0, 0],
-                "rx": 0.00215,
-                "ry": 0.00215,
-                "exponent": 2,
+                "at": [-0.004, 0, 0.0],
+                "rx": 0.005,
+                "ry": 0.005,
+                "exponent": 2.2,
                 "rotation": [0.70711, 0, 0.70711, 0]
               },
               {
-                "at": [-0.00942, 0, 0],
-                "rx": 0.01193,
-                "ry": 0.01193,
-                "exponent": 2,
+                "at": [0.032, 0, 0.0],
+                "rx": 0.005,
+                "ry": 0.005,
+                "exponent": 2.2,
                 "rotation": [0.70711, 0, 0.70711, 0]
               },
               {
-                "at": [0.064, 0, 0],
-                "rx": 0.0152,
-                "ry": 0.0152,
-                "exponent": 2,
-                "rotation": [0.70711, 0, 0.70711, 0]
-              },
-              {
-                "at": [0.0792, 0, 0],
-                "rx": 0.00215,
-                "ry": 0.00215,
-                "exponent": 2,
+                "at": [0.068, 0, 0.0],
+                "rx": 0.0045,
+                "ry": 0.0045,
+                "exponent": 2.2,
                 "rotation": [0.70711, 0, 0.70711, 0]
               }
             ],
             "capStart": true,
             "capEnd": true,
             "member": "tail-2",
-            "part": "member"
+            "part": "member",
+            "slender": true
           },
           {
             "id": "caudal-3",
@@ -27322,38 +27361,32 @@
             "tone": 0.18,
             "sections": [
               {
-                "at": [-0.0152, 0, 0],
-                "rx": 0.00215,
-                "ry": 0.00215,
-                "exponent": 2,
+                "at": [-0.004, 0, 0.0],
+                "rx": 0.0045,
+                "ry": 0.0045,
+                "exponent": 2.2,
                 "rotation": [0.70711, 0, 0.70711, 0]
               },
               {
-                "at": [-0.00942, 0, 0],
-                "rx": 0.01193,
-                "ry": 0.01193,
-                "exponent": 2,
+                "at": [0.032, 0, 0.0],
+                "rx": 0.0045,
+                "ry": 0.0045,
+                "exponent": 2.2,
                 "rotation": [0.70711, 0, 0.70711, 0]
               },
               {
-                "at": [0.063, 0, 0],
-                "rx": 0.0152,
-                "ry": 0.0152,
-                "exponent": 2,
-                "rotation": [0.70711, 0, 0.70711, 0]
-              },
-              {
-                "at": [0.0782, 0, 0],
-                "rx": 0.00215,
-                "ry": 0.00215,
-                "exponent": 2,
+                "at": [0.067, 0, 0.0],
+                "rx": 0.004,
+                "ry": 0.004,
+                "exponent": 2.2,
                 "rotation": [0.70711, 0, 0.70711, 0]
               }
             ],
             "capStart": true,
             "capEnd": true,
             "member": "tail-3",
-            "part": "member"
+            "part": "member",
+            "slender": true
           },
           {
             "id": "caudal-4",
@@ -27364,38 +27397,32 @@
             "tone": 0.18,
             "sections": [
               {
-                "at": [-0.0152, 0, 0],
-                "rx": 0.00215,
-                "ry": 0.00215,
-                "exponent": 2,
+                "at": [-0.004, 0, 0.0],
+                "rx": 0.004,
+                "ry": 0.004,
+                "exponent": 2.2,
                 "rotation": [0.70711, 0, 0.70711, 0]
               },
               {
-                "at": [-0.00942, 0, 0],
-                "rx": 0.01193,
-                "ry": 0.01193,
-                "exponent": 2,
+                "at": [0.03, 0, 0.0],
+                "rx": 0.004,
+                "ry": 0.004,
+                "exponent": 2.2,
                 "rotation": [0.70711, 0, 0.70711, 0]
               },
               {
-                "at": [0.059, 0, 0],
-                "rx": 0.0152,
-                "ry": 0.0152,
-                "exponent": 2,
-                "rotation": [0.70711, 0, 0.70711, 0]
-              },
-              {
-                "at": [0.0742, 0, 0],
-                "rx": 0.00215,
-                "ry": 0.00215,
-                "exponent": 2,
+                "at": [0.063, 0, 0.0],
+                "rx": 0.0035,
+                "ry": 0.0035,
+                "exponent": 2.2,
                 "rotation": [0.70711, 0, 0.70711, 0]
               }
             ],
             "capStart": true,
             "capEnd": true,
             "member": "tail-4",
-            "part": "member"
+            "part": "member",
+            "slender": true
           },
           {
             "id": "caudal-5",
@@ -27406,38 +27433,32 @@
             "tone": 0.18,
             "sections": [
               {
-                "at": [-0.0152, 0, 0],
-                "rx": 0.00215,
-                "ry": 0.00215,
-                "exponent": 2,
+                "at": [-0.008, 0, 0.0],
+                "rx": 0.0035,
+                "ry": 0.0035,
+                "exponent": 2.2,
                 "rotation": [0.70711, 0, 0.70711, 0]
               },
               {
-                "at": [-0.00942, 0, 0],
-                "rx": 0.01193,
-                "ry": 0.01193,
-                "exponent": 2,
+                "at": [0.025, 0, 0.0],
+                "rx": 0.003,
+                "ry": 0.003,
+                "exponent": 2.2,
                 "rotation": [0.70711, 0, 0.70711, 0]
               },
               {
-                "at": [0.05, 0, 0],
-                "rx": 0.0152,
-                "ry": 0.0152,
-                "exponent": 2,
-                "rotation": [0.70711, 0, 0.70711, 0]
-              },
-              {
-                "at": [0.0652, 0, 0],
-                "rx": 0.00215,
-                "ry": 0.00215,
-                "exponent": 2,
+                "at": [0.054, 0, 0.0],
+                "rx": 0.002,
+                "ry": 0.002,
+                "exponent": 2.2,
                 "rotation": [0.70711, 0, 0.70711, 0]
               }
             ],
             "capStart": true,
             "capEnd": true,
             "member": "tail-5",
-            "part": "member"
+            "part": "member",
+            "slender": true
           },
           {
             "id": "near-ear-cartilage",
@@ -27654,39 +27675,39 @@
             "tone": 0.18,
             "sections": [
               {
-                "at": [-0.0152, 0, 0],
+                "at": [-0.01463, 0.0, -0.00412],
                 "rx": 0.00215,
                 "ry": 0.00215,
                 "exponent": 2,
-                "rotation": [0.70711, 0, 0.70711, 0]
+                "rotation": [0.60385, 0.0, 0.79711, 0.0]
               },
               {
-                "at": [-0.01368, 0, 0],
+                "at": [-0.01317, 0.0, -0.0037],
                 "rx": 0.00663,
                 "ry": 0.00663,
                 "exponent": 2,
-                "rotation": [0.70711, 0, 0.70711, 0]
+                "rotation": [0.60385, 0.0, 0.79711, 0.0]
               },
               {
-                "at": [0, 0, 0],
+                "at": [0.0, 0.0, 0.0],
                 "rx": 0.0152,
                 "ry": 0.0152,
                 "exponent": 2,
-                "rotation": [0.70711, 0, 0.70711, 0]
+                "rotation": [0.60385, 0.0, 0.79711, 0.0]
               },
               {
-                "at": [0.07342, 0, 0],
+                "at": [0.07068, 0.0, 0.01988],
                 "rx": 0.01193,
                 "ry": 0.01193,
                 "exponent": 2,
-                "rotation": [0.70711, 0, 0.70711, 0]
+                "rotation": [0.60385, 0.0, 0.79711, 0.0]
               },
               {
-                "at": [0.0792, 0, 0],
+                "at": [0.07624, 0.0, 0.02144],
                 "rx": 0.00215,
                 "ry": 0.00215,
                 "exponent": 2,
-                "rotation": [0.70711, 0, 0.70711, 0]
+                "rotation": [0.60385, 0.0, 0.79711, 0.0]
               }
             ],
             "capStart": true,
@@ -27703,45 +27724,32 @@
             "tone": 0.18,
             "sections": [
               {
-                "at": [-0.0152, 0, 0],
-                "rx": 0.00215,
-                "ry": 0.00215,
-                "exponent": 2,
-                "rotation": [0.70711, 0, 0.70711, 0]
+                "at": [0, 0, 0.003],
+                "rx": 0.0085,
+                "ry": 0.0085,
+                "exponent": 2.2,
+                "rotation": [0, -0.70711, 0, 0.70711]
               },
               {
-                "at": [-0.01368, 0, 0],
-                "rx": 0.00663,
-                "ry": 0.00663,
-                "exponent": 2,
-                "rotation": [0.70711, 0, 0.70711, 0]
+                "at": [0.045, 0, 0.001],
+                "rx": 0.0045,
+                "ry": 0.0048,
+                "exponent": 2.2,
+                "rotation": [0, -0.70711, 0, 0.70711]
               },
               {
-                "at": [0, 0, 0],
-                "rx": 0.0152,
-                "ry": 0.0152,
-                "exponent": 2,
-                "rotation": [0.70711, 0, 0.70711, 0]
-              },
-              {
-                "at": [0.09942, 0, 0],
-                "rx": 0.01193,
-                "ry": 0.01193,
-                "exponent": 2,
-                "rotation": [0.70711, 0, 0.70711, 0]
-              },
-              {
-                "at": [0.1052, 0, 0],
-                "rx": 0.00215,
-                "ry": 0.00215,
-                "exponent": 2,
-                "rotation": [0.70711, 0, 0.70711, 0]
+                "at": [0.091, 0, 0.0],
+                "rx": 0.0088,
+                "ry": 0.007,
+                "exponent": 2.2,
+                "rotation": [0, -0.70711, 0, 0.70711]
               }
             ],
             "capStart": true,
             "capEnd": true,
             "member": "humerus-fn",
-            "part": "member"
+            "part": "member",
+            "slender": true
           },
           {
             "id": "near-radius-ulna",
@@ -27752,45 +27760,39 @@
             "tone": 0.18,
             "sections": [
               {
-                "at": [-0.0136, 0, 0],
-                "rx": 0.00192,
-                "ry": 0.00192,
-                "exponent": 2,
-                "rotation": [0.70711, 0, 0.70711, 0]
+                "at": [-0.012, -0.004, 0.0],
+                "rx": 0.005,
+                "ry": 0.006,
+                "exponent": 2.2,
+                "rotation": [0, -0.70711, 0, 0.70711]
               },
               {
-                "at": [-0.01224, 0, 0],
-                "rx": 0.00593,
-                "ry": 0.00593,
-                "exponent": 2,
-                "rotation": [0.70711, 0, 0.70711, 0]
+                "at": [0, 0, 0.0],
+                "rx": 0.007,
+                "ry": 0.009,
+                "exponent": 2.2,
+                "rotation": [0, -0.70711, 0, 0.70711]
               },
               {
-                "at": [0, 0, 0],
-                "rx": 0.0136,
-                "ry": 0.0136,
-                "exponent": 2,
-                "rotation": [0.70711, 0, 0.70711, 0]
+                "at": [0.042, 0, 0.003],
+                "rx": 0.006,
+                "ry": 0.005,
+                "exponent": 2.2,
+                "rotation": [0, -0.70711, 0, 0.70711]
               },
               {
-                "at": [0.09253, 0, 0],
-                "rx": 0.01067,
-                "ry": 0.01067,
-                "exponent": 2,
-                "rotation": [0.70711, 0, 0.70711, 0]
-              },
-              {
-                "at": [0.0977, 0, 0],
-                "rx": 0.00192,
-                "ry": 0.00192,
-                "exponent": 2,
-                "rotation": [0.70711, 0, 0.70711, 0]
+                "at": [0.0841, 0, 0.006],
+                "rx": 0.008,
+                "ry": 0.0055,
+                "exponent": 2.2,
+                "rotation": [0, -0.70711, 0, 0.70711]
               }
             ],
             "capStart": true,
             "capEnd": true,
             "member": "forearm-fn",
-            "part": "member"
+            "part": "member",
+            "slender": true
           },
           {
             "id": "near-metacarpals",
@@ -27899,45 +27901,32 @@
             "tone": 0.18,
             "sections": [
               {
-                "at": [-0.0152, 0, 0],
-                "rx": 0.00215,
-                "ry": 0.00215,
-                "exponent": 2,
-                "rotation": [0.70711, 0, 0.70711, 0]
+                "at": [-0.004, 0, 0.0],
+                "rx": 0.009,
+                "ry": 0.008,
+                "exponent": 2.2,
+                "rotation": [0, -0.70711, 0, 0.70711]
               },
               {
-                "at": [-0.01368, 0, 0],
-                "rx": 0.00663,
-                "ry": 0.00663,
-                "exponent": 2,
-                "rotation": [0.70711, 0, 0.70711, 0]
+                "at": [0.05, 0, -0.009],
+                "rx": 0.0048,
+                "ry": 0.0048,
+                "exponent": 2.2,
+                "rotation": [0, -0.70711, 0, 0.70711]
               },
               {
-                "at": [0, 0, 0],
-                "rx": 0.0152,
-                "ry": 0.0152,
-                "exponent": 2,
-                "rotation": [0.70711, 0, 0.70711, 0]
-              },
-              {
-                "at": [0.10742, 0, 0],
-                "rx": 0.01193,
-                "ry": 0.01193,
-                "exponent": 2,
-                "rotation": [0.70711, 0, 0.70711, 0]
-              },
-              {
-                "at": [0.1132, 0, 0],
-                "rx": 0.00215,
-                "ry": 0.00215,
-                "exponent": 2,
-                "rotation": [0.70711, 0, 0.70711, 0]
+                "at": [0.099, 0.001, -0.012],
+                "rx": 0.0095,
+                "ry": 0.009,
+                "exponent": 2.2,
+                "rotation": [0, -0.70711, 0, 0.70711]
               }
             ],
             "capStart": true,
             "capEnd": true,
             "member": "thigh-hn",
-            "part": "member"
+            "part": "member",
+            "slender": true
           },
           {
             "id": "near-tibia",
@@ -27948,45 +27937,32 @@
             "tone": 0.18,
             "sections": [
               {
-                "at": [-0.0152, 0, 0],
-                "rx": 0.00215,
-                "ry": 0.00215,
-                "exponent": 2,
-                "rotation": [0.70711, 0, 0.70711, 0]
+                "at": [0, 0, 0.0],
+                "rx": 0.0095,
+                "ry": 0.009,
+                "exponent": 2.2,
+                "rotation": [0, -0.70711, 0, 0.70711]
               },
               {
-                "at": [-0.01368, 0, 0],
-                "rx": 0.00663,
-                "ry": 0.00663,
-                "exponent": 2,
-                "rotation": [0.70711, 0, 0.70711, 0]
+                "at": [0.055, 0, 0.004],
+                "rx": 0.0042,
+                "ry": 0.0045,
+                "exponent": 2.2,
+                "rotation": [0, -0.70711, 0, 0.70711]
               },
               {
-                "at": [0, 0, 0],
-                "rx": 0.0152,
-                "ry": 0.0152,
-                "exponent": 2,
-                "rotation": [0.70711, 0, 0.70711, 0]
-              },
-              {
-                "at": [0.11342, 0, 0],
-                "rx": 0.01193,
-                "ry": 0.01193,
-                "exponent": 2,
-                "rotation": [0.70711, 0, 0.70711, 0]
-              },
-              {
-                "at": [0.1192, 0, 0],
-                "rx": 0.00215,
-                "ry": 0.00215,
-                "exponent": 2,
-                "rotation": [0.70711, 0, 0.70711, 0]
+                "at": [0.105, 0, 0.008],
+                "rx": 0.0065,
+                "ry": 0.0055,
+                "exponent": 2.2,
+                "rotation": [0, -0.70711, 0, 0.70711]
               }
             ],
             "capStart": true,
             "capEnd": true,
             "member": "shank-hn",
-            "part": "member"
+            "part": "member",
+            "slender": true
           },
           {
             "id": "near-metatarsals",
@@ -28301,39 +28277,39 @@
             "tone": 0.18,
             "sections": [
               {
-                "at": [-0.0152, 0, 0],
+                "at": [-0.01463, 0.0, 0.00412],
                 "rx": 0.00215,
                 "ry": 0.00215,
                 "exponent": 2,
-                "rotation": [0.70711, 0, 0.70711, 0]
+                "rotation": [0.79711, 0.0, 0.60385, 0.0]
               },
               {
-                "at": [-0.01368, 0, 0],
+                "at": [-0.01317, 0.0, 0.0037],
                 "rx": 0.00663,
                 "ry": 0.00663,
                 "exponent": 2,
-                "rotation": [0.70711, 0, 0.70711, 0]
+                "rotation": [0.79711, 0.0, 0.60385, 0.0]
               },
               {
-                "at": [0, 0, 0],
+                "at": [0.0, 0.0, 0.0],
                 "rx": 0.0152,
                 "ry": 0.0152,
                 "exponent": 2,
-                "rotation": [0.70711, 0, 0.70711, 0]
+                "rotation": [0.79711, 0.0, 0.60385, 0.0]
               },
               {
-                "at": [0.07342, 0, 0],
+                "at": [0.07068, 0.0, -0.01988],
                 "rx": 0.01193,
                 "ry": 0.01193,
                 "exponent": 2,
-                "rotation": [0.70711, 0, 0.70711, 0]
+                "rotation": [0.79711, 0.0, 0.60385, 0.0]
               },
               {
-                "at": [0.0792, 0, 0],
+                "at": [0.07624, 0.0, -0.02144],
                 "rx": 0.00215,
                 "ry": 0.00215,
                 "exponent": 2,
-                "rotation": [0.70711, 0, 0.70711, 0]
+                "rotation": [0.79711, 0.0, 0.60385, 0.0]
               }
             ],
             "capStart": true,
@@ -28350,45 +28326,32 @@
             "tone": 0.18,
             "sections": [
               {
-                "at": [-0.0152, 0, 0],
-                "rx": 0.00215,
-                "ry": 0.00215,
-                "exponent": 2,
-                "rotation": [0.70711, 0, 0.70711, 0]
+                "at": [0, 0, -0.003],
+                "rx": 0.0085,
+                "ry": 0.0085,
+                "exponent": 2.2,
+                "rotation": [0, -0.70711, 0, 0.70711]
               },
               {
-                "at": [-0.01368, 0, 0],
-                "rx": 0.00663,
-                "ry": 0.00663,
-                "exponent": 2,
-                "rotation": [0.70711, 0, 0.70711, 0]
+                "at": [0.045, 0, -0.001],
+                "rx": 0.0045,
+                "ry": 0.0048,
+                "exponent": 2.2,
+                "rotation": [0, -0.70711, 0, 0.70711]
               },
               {
-                "at": [0, 0, 0],
-                "rx": 0.0152,
-                "ry": 0.0152,
-                "exponent": 2,
-                "rotation": [0.70711, 0, 0.70711, 0]
-              },
-              {
-                "at": [0.09942, 0, 0],
-                "rx": 0.01193,
-                "ry": 0.01193,
-                "exponent": 2,
-                "rotation": [0.70711, 0, 0.70711, 0]
-              },
-              {
-                "at": [0.1052, 0, 0],
-                "rx": 0.00215,
-                "ry": 0.00215,
-                "exponent": 2,
-                "rotation": [0.70711, 0, 0.70711, 0]
+                "at": [0.091, 0, 0.0],
+                "rx": 0.0088,
+                "ry": 0.007,
+                "exponent": 2.2,
+                "rotation": [0, -0.70711, 0, 0.70711]
               }
             ],
             "capStart": true,
             "capEnd": true,
             "member": "humerus-ff",
-            "part": "member"
+            "part": "member",
+            "slender": true
           },
           {
             "id": "far-radius-ulna",
@@ -28399,45 +28362,39 @@
             "tone": 0.18,
             "sections": [
               {
-                "at": [-0.0136, 0, 0],
-                "rx": 0.00192,
-                "ry": 0.00192,
-                "exponent": 2,
-                "rotation": [0.70711, 0, 0.70711, 0]
+                "at": [-0.012, -0.004, 0.0],
+                "rx": 0.005,
+                "ry": 0.006,
+                "exponent": 2.2,
+                "rotation": [0, -0.70711, 0, 0.70711]
               },
               {
-                "at": [-0.01224, 0, 0],
-                "rx": 0.00593,
-                "ry": 0.00593,
-                "exponent": 2,
-                "rotation": [0.70711, 0, 0.70711, 0]
+                "at": [0, 0, 0.0],
+                "rx": 0.007,
+                "ry": 0.009,
+                "exponent": 2.2,
+                "rotation": [0, -0.70711, 0, 0.70711]
               },
               {
-                "at": [0, 0, 0],
-                "rx": 0.0136,
-                "ry": 0.0136,
-                "exponent": 2,
-                "rotation": [0.70711, 0, 0.70711, 0]
+                "at": [0.042, 0, -0.003],
+                "rx": 0.006,
+                "ry": 0.005,
+                "exponent": 2.2,
+                "rotation": [0, -0.70711, 0, 0.70711]
               },
               {
-                "at": [0.09253, 0, 0],
-                "rx": 0.01067,
-                "ry": 0.01067,
-                "exponent": 2,
-                "rotation": [0.70711, 0, 0.70711, 0]
-              },
-              {
-                "at": [0.0977, 0, 0],
-                "rx": 0.00192,
-                "ry": 0.00192,
-                "exponent": 2,
-                "rotation": [0.70711, 0, 0.70711, 0]
+                "at": [0.0841, 0, -0.006],
+                "rx": 0.008,
+                "ry": 0.0055,
+                "exponent": 2.2,
+                "rotation": [0, -0.70711, 0, 0.70711]
               }
             ],
             "capStart": true,
             "capEnd": true,
             "member": "forearm-ff",
-            "part": "member"
+            "part": "member",
+            "slender": true
           },
           {
             "id": "far-metacarpals",
@@ -28546,45 +28503,32 @@
             "tone": 0.18,
             "sections": [
               {
-                "at": [-0.0152, 0, 0],
-                "rx": 0.00215,
-                "ry": 0.00215,
-                "exponent": 2,
-                "rotation": [0.70711, 0, 0.70711, 0]
+                "at": [-0.004, 0, 0.0],
+                "rx": 0.009,
+                "ry": 0.008,
+                "exponent": 2.2,
+                "rotation": [0, -0.70711, 0, 0.70711]
               },
               {
-                "at": [-0.01368, 0, 0],
-                "rx": 0.00663,
-                "ry": 0.00663,
-                "exponent": 2,
-                "rotation": [0.70711, 0, 0.70711, 0]
+                "at": [0.05, 0, 0.009],
+                "rx": 0.0048,
+                "ry": 0.0048,
+                "exponent": 2.2,
+                "rotation": [0, -0.70711, 0, 0.70711]
               },
               {
-                "at": [0, 0, 0],
-                "rx": 0.0152,
-                "ry": 0.0152,
-                "exponent": 2,
-                "rotation": [0.70711, 0, 0.70711, 0]
-              },
-              {
-                "at": [0.10742, 0, 0],
-                "rx": 0.01193,
-                "ry": 0.01193,
-                "exponent": 2,
-                "rotation": [0.70711, 0, 0.70711, 0]
-              },
-              {
-                "at": [0.1132, 0, 0],
-                "rx": 0.00215,
-                "ry": 0.00215,
-                "exponent": 2,
-                "rotation": [0.70711, 0, 0.70711, 0]
+                "at": [0.099, 0.001, 0.012],
+                "rx": 0.0095,
+                "ry": 0.009,
+                "exponent": 2.2,
+                "rotation": [0, -0.70711, 0, 0.70711]
               }
             ],
             "capStart": true,
             "capEnd": true,
             "member": "thigh-hf",
-            "part": "member"
+            "part": "member",
+            "slender": true
           },
           {
             "id": "far-tibia",
@@ -28595,45 +28539,32 @@
             "tone": 0.18,
             "sections": [
               {
-                "at": [-0.0152, 0, 0],
-                "rx": 0.00215,
-                "ry": 0.00215,
-                "exponent": 2,
-                "rotation": [0.70711, 0, 0.70711, 0]
+                "at": [0, 0, 0.0],
+                "rx": 0.0095,
+                "ry": 0.009,
+                "exponent": 2.2,
+                "rotation": [0, -0.70711, 0, 0.70711]
               },
               {
-                "at": [-0.01368, 0, 0],
-                "rx": 0.00663,
-                "ry": 0.00663,
-                "exponent": 2,
-                "rotation": [0.70711, 0, 0.70711, 0]
+                "at": [0.055, 0, -0.004],
+                "rx": 0.0042,
+                "ry": 0.0045,
+                "exponent": 2.2,
+                "rotation": [0, -0.70711, 0, 0.70711]
               },
               {
-                "at": [0, 0, 0],
-                "rx": 0.0152,
-                "ry": 0.0152,
-                "exponent": 2,
-                "rotation": [0.70711, 0, 0.70711, 0]
-              },
-              {
-                "at": [0.11342, 0, 0],
-                "rx": 0.01193,
-                "ry": 0.01193,
-                "exponent": 2,
-                "rotation": [0.70711, 0, 0.70711, 0]
-              },
-              {
-                "at": [0.1192, 0, 0],
-                "rx": 0.00215,
-                "ry": 0.00215,
-                "exponent": 2,
-                "rotation": [0.70711, 0, 0.70711, 0]
+                "at": [0.105, 0, -0.008],
+                "rx": 0.0065,
+                "ry": 0.0055,
+                "exponent": 2.2,
+                "rotation": [0, -0.70711, 0, 0.70711]
               }
             ],
             "capStart": true,
             "capEnd": true,
             "member": "shank-hf",
-            "part": "member"
+            "part": "member",
+            "slender": true
           },
           {
             "id": "far-metatarsals",
@@ -29006,16 +28937,16 @@
         ],
         "decisions": [
           {
-            "en": "Body at 1:200 (smallest feature 30 mm; the cat is 3.8 mm long on paper), generalised: the trunk is two masses, hindquarters with loin on the lumbar bone and ribcage with chest on the fore thorax; neck, head and jaw are three coarse lofts, ears two leaves; eyes, nose and pads are not shown. Each hind leg is thigh, lower leg and foot with its paw; each foreleg shoulder, upper arm, lower leg and foot with its paw, bound to the bones the 1:200 drawing draws. The tail is two pieces over its five bones. Legs and tail are thinner than 30 mm in life and stay at true size. Every trunk loft ends at its spinal joint in a blunt half ellipsoid about 60 mm long that lies inside its neighbour at rest, so the sitting, bowing and stretching spine bends without a flat cap or a step.",
-            "de": "Körper bei 1:200 (kleinstes Merkmal 30 mm; die Katze ist auf dem Papier 3,8 mm lang), verallgemeinert: der Rumpf besteht aus zwei Massen, Hinterhand mit Lende am Lendenknochen und Brustkorb mit Brust am vorderen Brustknochen; Hals, Kopf und Unterkiefer sind drei grobe Lofts, die Ohren zwei Blätter; Augen, Nase und Ballen werden nicht gezeigt. Jedes Hinterbein besteht aus Oberschenkel, Unterschenkel und Fuß mit Pfote; jedes Vorderbein aus Schulter, Oberarm, Unterarm und Fuß mit Pfote, gebunden an die Knochen, die die Zeichnung 1:200 zeichnet. Der Schwanz besteht aus zwei Stücken über seinen fünf Knochen. Läufe und Schwanz sind in Wirklichkeit dünner als 30 mm und bleiben in wahrer Größe. Jeder Rumpfloft endet an seinem Wirbelgelenk in einem stumpfen Halbellipsoid von etwa 60 mm Länge, das in Ruhe im Nachbarn liegt, sodass die sitzende, sich verbeugende und sich streckende Wirbelsäule ohne flache Kappe und ohne Stufe biegt."
+            "en": "Body at 1:200 (smallest feature 30 mm; the cat is 3.8 mm long on paper), generalised: the trunk is two masses, hindquarters with loin on the lumbar bone and ribcage with chest on the fore thorax; neck, head and jaw are three coarse lofts, ears two leaves; eyes, nose and pads are not shown. Each hind leg is thigh, lower leg and foot with its paw; each foreleg shoulder, upper arm, lower leg and foot with its paw, bound to the bones the 1:200 drawing draws. The tail is two pieces over its five bones. Legs and tail are thinner than 30 mm in life and stay at true size. Every trunk loft ends at its spinal joint in a blunt half ellipsoid about 60 mm long that lies inside its neighbour at rest, so the sitting, bowing and stretching spine bends without a flat cap or a step. The neck is slimmed to life: 74 by 88 mm at the chest, 62 by 74 mm in the middle (girth 0.21 m) and 60 by 68 mm behind the skull, narrower than the 88 mm head; before it was an 84 by 90 mm ball.",
+            "de": "Körper bei 1:200 (kleinstes Merkmal 30 mm; die Katze ist auf dem Papier 3,8 mm lang), verallgemeinert: der Rumpf besteht aus zwei Massen, Hinterhand mit Lende am Lendenknochen und Brustkorb mit Brust am vorderen Brustknochen; Hals, Kopf und Unterkiefer sind drei grobe Lofts, die Ohren zwei Blätter; Augen, Nase und Ballen werden nicht gezeigt. Jedes Hinterbein besteht aus Oberschenkel, Unterschenkel und Fuß mit Pfote; jedes Vorderbein aus Schulter, Oberarm, Unterarm und Fuß mit Pfote, gebunden an die Knochen, die die Zeichnung 1:200 zeichnet. Der Schwanz besteht aus zwei Stücken über seinen fünf Knochen. Läufe und Schwanz sind in Wirklichkeit dünner als 30 mm und bleiben in wahrer Größe. Jeder Rumpfloft endet an seinem Wirbelgelenk in einem stumpfen Halbellipsoid von etwa 60 mm Länge, das in Ruhe im Nachbarn liegt, sodass die sitzende, sich verbeugende und sich streckende Wirbelsäule ohne flache Kappe und ohne Stufe biegt. Der Hals ist auf das wirkliche Maß verschlankt: 74 auf 88 mm an der Brust, 62 auf 74 mm in der Mitte (Umfang 0,21 m) und 60 auf 68 mm hinter dem Schädel, schmaler als der 88 mm breite Kopf; vorher war er eine Kugel von 84 auf 90 mm."
           },
           {
             "en": "Thermal at 1:200: the fur regions are the body surfaces (references); nose leather, corneas, tongue and the four soles are too small for the body of this scale and are own solids at their real size, so every region keeps a solid. Outlets: nostril patch, lips, back patch.",
             "de": "Thermik bei 1:200: die Fellregionen sind die Körperoberflächen (Verweise); Nasenspiegel, Hornhäute, Zunge und die vier Sohlen sind für den Körper dieses Maßstabs zu klein und sind eigene Körper in wahrer Größe, damit jede Region einen Körper behält. Auslässe: Nasenlochfeld, Lippen, Rückenfeld."
           },
           {
-            "en": "Structure at 1:200: one member per rig bone at the 30 mm print floor (or the thickness the drawing gives the limb where that is less): skull, mandible, four spine rods under the topline, pelvis plate, five caudal rods, ear cartilages and the long bones of the four legs with metapodial and digit rods; three ribs per side and the sternum at their real size as slender solids. Joints only at neck, head and the large limb joints, four trunk masses. The three rib hoops per side close the ribcage: the cranial and the middle one run from the spine to the sternum, the caudal one joins the middle one as the costal arch.",
-            "de": "Tragwerk bei 1:200: ein Stab je Rig-Knochen an der 30-mm-Druckgrenze (oder in der Dicke, die die Zeichnung dem Bein gibt, wo diese kleiner ist): Schädel, Unterkiefer, vier Wirbelsäulenstäbe unter der Rückenlinie, Beckenplatte, fünf Schwanzstäbe, Ohrknorpel und die Röhrenknochen der vier Beine mit Mittelfuß- und Zehenstäben; drei Rippen je Seite und das Brustbein in wirklicher Größe als schlanke Körper. Gelenke nur an Hals, Kopf und den großen Gliedmaßengelenken, vier Rumpfmassen. Die drei Rippenbögen je Seite schließen den Brustkorb: der vordere und der mittlere laufen von der Wirbelsäule zum Brustbein, der hintere schließt als Rippenbogen an den mittleren an."
+            "en": "Structure at 1:200: one member per rig bone at the 30 mm print floor (or the thickness the drawing gives the limb where that is less): skull, mandible, four spine rods under the topline, pelvis plate, five caudal rods, ear cartilages and the long bones of the four legs with metapodial and digit rods; three ribs per side and the sternum at their real size as slender solids. Joints only at neck, head and the large limb joints, four trunk masses. The three rib hoops per side close the ribcage: the cranial and the middle one run from the spine to the sternum, the caudal one joins the middle one as the costal arch. Girdles (rig of 2026-11-22): the scapulae rest 15.7 degrees out of the sagittal plane on bones of their own and carry the forelimbs; the two hip bones are fixed bones from the sacroiliac joints to the hip joints, and at this scale the one pelvis block is their member solid as well (`members`), because a 42 mm hip bone is not a part of its own here. Femur, tibia, humerus, radius with ulna, the cervical and lumbar spine and the five caudal rods keep their true sections (shafts 8 to 10 mm, ends 14 to 19 mm, caudal rods 12 to 4 mm) and are declared slender, instead of the 30 mm sausages of the earlier list; foot bones, scapulae, thoracic spine and joint markers stay at the 30 mm feature.",
+            "de": "Tragwerk bei 1:200: ein Stab je Rig-Knochen an der 30-mm-Druckgrenze (oder in der Dicke, die die Zeichnung dem Bein gibt, wo diese kleiner ist): Schädel, Unterkiefer, vier Wirbelsäulenstäbe unter der Rückenlinie, Beckenplatte, fünf Schwanzstäbe, Ohrknorpel und die Röhrenknochen der vier Beine mit Mittelfuß- und Zehenstäben; drei Rippen je Seite und das Brustbein in wirklicher Größe als schlanke Körper. Gelenke nur an Hals, Kopf und den großen Gliedmaßengelenken, vier Rumpfmassen. Die drei Rippenbögen je Seite schließen den Brustkorb: der vordere und der mittlere laufen von der Wirbelsäule zum Brustbein, der hintere schließt als Rippenbogen an den mittleren an. Gürtel (Rig vom 22.11.2026): die Schulterblätter ruhen 15,7 Grad aus der Sagittalebene geneigt auf eigenen Knochen und tragen die Vorderläufe; die beiden Hüftbeine sind feste Knochen von den Kreuzdarmbeingelenken zu den Hüftgelenken, und in diesem Maßstab ist der eine Beckenblock auch ihr Stabkörper (`members`), weil ein 42 mm langes Hüftbein hier kein eigenes Teil ist. Oberschenkel, Schienbein, Oberarm, Speiche mit Elle, Hals- und Lendenwirbelsäule und die fünf Schwanzstäbe behalten ihre wahren Querschnitte (Schäfte 8 bis 10 mm, Enden 14 bis 19 mm, Schwanzstäbe 12 bis 4 mm) und sind als schlank erklärt, statt der 30-mm-Würste der früheren Liste; Fußknochen, Schulterblätter, Brustwirbelsäule und Gelenkmarken bleiben beim Merkmal von 30 mm."
           },
           {
             "en": "Five caudal sections wrap beside the seated paws. The tear surface follows the exposed front of the cornea. The fine views distinguish the iris and vertical pupil.",
@@ -29187,22 +29118,22 @@
             "sections": [
               {
                 "at": [-0.03, 0.015, 0],
-                "rx": 0.024,
+                "rx": 0.02256,
                 "ry": 0.024,
                 "exponent": 2.1,
                 "rotation": [0, -0.70711, 0, 0.70711]
               },
               {
                 "at": [0.005, 0.013, 0],
-                "rx": 0.04,
-                "ry": 0.045,
+                "rx": 0.03511,
+                "ry": 0.04338,
                 "exponent": 2.1,
                 "rotation": [0, -0.70711, 0, 0.70711]
               },
               {
                 "at": [0.05, 0.007, 0],
-                "rx": 0.034,
-                "ry": 0.04,
+                "rx": 0.03058,
+                "ry": 0.0361,
                 "exponent": 2.1,
                 "rotation": [0, -0.70711, 0, 0.70711]
               },
@@ -30734,21 +30665,21 @@
               {
                 "at": [0.05341, 0.0021, 0],
                 "rx": 0.026,
-                "ry": 0.008,
+                "ry": 0.0152,
                 "exponent": 2,
                 "rotation": [0.00212, -0.7071, 0.00212, 0.7071]
               },
               {
                 "at": [0.0006, 0.00179, 0],
                 "rx": 0.033,
-                "ry": 0.009,
+                "ry": 0.0152,
                 "exponent": 2,
                 "rotation": [-0.01536, -0.70694, -0.01536, 0.70694]
               },
               {
                 "at": [-0.03387, 0.0059, 0],
                 "rx": 0.029,
-                "ry": 0.007,
+                "ry": 0.0152,
                 "exponent": 2,
                 "rotation": [-0.04194, -0.70586, -0.04194, 0.70586]
               }
@@ -30756,7 +30687,8 @@
             "capStart": true,
             "capEnd": true,
             "member": "pelvis",
-            "part": "member"
+            "part": "member",
+            "members": ["hip-hf", "hip-hn"]
           },
           {
             "id": "sternum",
@@ -31364,25 +31296,25 @@
             "tone": 0.18,
             "sections": [
               {
-                "at": [-0.004, 0, 0.004],
+                "at": [-0.00493, 0.0, 0.00277],
                 "rx": 0.003,
                 "ry": 0.016,
                 "exponent": 2.6,
-                "rotation": [0, -0.70711, 0, 0.70711]
+                "rotation": [0.0, -0.79711, 0.0, 0.60385]
               },
               {
-                "at": [0.03, 0, -0.006],
+                "at": [0.0305, 0.0, 0.00235],
                 "rx": 0.003,
                 "ry": 0.015,
                 "exponent": 2.6,
-                "rotation": [0, -0.70711, 0, 0.70711]
+                "rotation": [0.0, -0.79711, 0.0, 0.60385]
               },
               {
-                "at": [0.066, 0, -0.015],
+                "at": [0.0676, 0.0, 0.00343],
                 "rx": 0.006,
                 "ry": 0.007,
                 "exponent": 2.6,
-                "rotation": [0, -0.70711, 0, 0.70711]
+                "rotation": [0.0, -0.79711, 0.0, 0.60385]
               }
             ],
             "capStart": true,
@@ -31807,25 +31739,25 @@
             "tone": 0.18,
             "sections": [
               {
-                "at": [-0.004, 0, -0.004],
+                "at": [-0.00493, 0.0, -0.00277],
                 "rx": 0.003,
                 "ry": 0.016,
                 "exponent": 2.6,
-                "rotation": [0, -0.70711, 0, 0.70711]
+                "rotation": [0.0, -0.60385, 0.0, 0.79711]
               },
               {
-                "at": [0.03, 0, 0.006],
+                "at": [0.0305, 0.0, -0.00235],
                 "rx": 0.003,
                 "ry": 0.015,
                 "exponent": 2.6,
-                "rotation": [0, -0.70711, 0, 0.70711]
+                "rotation": [0.0, -0.60385, 0.0, 0.79711]
               },
               {
-                "at": [0.066, 0, 0.015],
+                "at": [0.0676, 0.0, -0.00343],
                 "rx": 0.006,
                 "ry": 0.007,
                 "exponent": 2.6,
-                "rotation": [0, -0.70711, 0, 0.70711]
+                "rotation": [0.0, -0.60385, 0.0, 0.79711]
               }
             ],
             "capStart": true,
@@ -32297,16 +32229,16 @@
         ],
         "decisions": [
           {
-            "en": "Body at 1:500 (digital only, the print drawing of this scale is unavailable): 20 solids at their real size with the fewest hand sections that still give the cat. Trunk in two lofts of six sections each that cross at the deepest point of the flank; short neck; round head as one mass with the short muzzle, the mandible inside it; ears as thin pricked leaves; per hind leg thigh, gaskin and one foot piece from the heel to the toes; per foreleg one mass for shoulder blade and upper arm, the forearm and one foot piece; tail in two round tapering pieces over its five bones. No eyes, nose, toes or whisker pads. Every trunk loft ends at its spinal joint in a blunt half ellipsoid about 60 mm long that lies inside its neighbour at rest, so the sitting, bowing and stretching spine bends without a flat cap or a step.",
-            "de": "Körper bei 1:500 (nur digital, die Druckzeichnung dieses Maßstabs entfällt): 20 Körper in wirklicher Größe mit den wenigsten von Hand gesetzten Schnitten, die die Katze noch ergeben. Rumpf in zwei Lofts aus je sechs Schnitten, die sich am tiefsten Punkt der Flanke kreuzen; kurzer Hals; runder Kopf als eine Masse mit kurzem Fang, der Unterkiefer liegt darin; Ohren als dünne aufgestellte Blätter; je Hinterbein Oberschenkel, Unterschenkel und ein Fußstück von der Ferse bis zu den Zehen; je Vorderbein eine Masse für Schulterblatt und Oberarm, der Unterarm und ein Fußstück; Schwanz in zwei runden, sich verjüngenden Stücken über seine fünf Knochen. Keine Augen, keine Nase, keine Zehen, keine Schnurrhaarkissen. Jeder Rumpfloft endet an seinem Wirbelgelenk in einem stumpfen Halbellipsoid von etwa 60 mm Länge, das in Ruhe im Nachbarn liegt, sodass die sitzende, sich verbeugende und sich streckende Wirbelsäule ohne flache Kappe und ohne Stufe biegt."
+            "en": "Body at 1:500 (digital only, the print drawing of this scale is unavailable): 20 solids at their real size with the fewest hand sections that still give the cat. Trunk in two lofts of six sections each that cross at the deepest point of the flank; short neck; round head as one mass with the short muzzle, the mandible inside it; ears as thin pricked leaves; per hind leg thigh, gaskin and one foot piece from the heel to the toes; per foreleg one mass for shoulder blade and upper arm, the forearm and one foot piece; tail in two round tapering pieces over its five bones. No eyes, nose, toes or whisker pads. Every trunk loft ends at its spinal joint in a blunt half ellipsoid about 60 mm long that lies inside its neighbour at rest, so the sitting, bowing and stretching spine bends without a flat cap or a step. The neck is slimmed to life: 74 by 88 mm at the chest, 62 by 74 mm in the middle (girth 0.21 m) and 60 by 68 mm behind the skull, narrower than the 88 mm head; before it was an 84 by 90 mm ball.",
+            "de": "Körper bei 1:500 (nur digital, die Druckzeichnung dieses Maßstabs entfällt): 20 Körper in wirklicher Größe mit den wenigsten von Hand gesetzten Schnitten, die die Katze noch ergeben. Rumpf in zwei Lofts aus je sechs Schnitten, die sich am tiefsten Punkt der Flanke kreuzen; kurzer Hals; runder Kopf als eine Masse mit kurzem Fang, der Unterkiefer liegt darin; Ohren als dünne aufgestellte Blätter; je Hinterbein Oberschenkel, Unterschenkel und ein Fußstück von der Ferse bis zu den Zehen; je Vorderbein eine Masse für Schulterblatt und Oberarm, der Unterarm und ein Fußstück; Schwanz in zwei runden, sich verjüngenden Stücken über seine fünf Knochen. Keine Augen, keine Nase, keine Zehen, keine Schnurrhaarkissen. Jeder Rumpfloft endet an seinem Wirbelgelenk in einem stumpfen Halbellipsoid von etwa 60 mm Länge, das in Ruhe im Nachbarn liegt, sodass die sitzende, sich verbeugende und sich streckende Wirbelsäule ohne flache Kappe und ohne Stufe biegt. Der Hals ist auf das wirkliche Maß verschlankt: 74 auf 88 mm an der Brust, 62 auf 74 mm in der Mitte (Umfang 0,21 m) und 60 auf 68 mm hinter dem Schädel, schmaler als der 88 mm breite Kopf; vorher war er eine Kugel von 84 auf 90 mm."
           },
           {
             "en": "Thermal at 1:500: each coat region is the fur surface of its body solids (references, layer fur): trunk with neck, head, ears, forelimbs, hindlimbs, tail. The bare regions the body does not show are own small solids at their real size: nose leather, the two eyes, the tongue in the mouth and one sole under every foot. The outlets lie on the surface as the nostril patch, the lip patch and the back patch, stated for this scale.",
             "de": "Thermik bei 1:500: jede Fellregion ist die Felloberfläche ihrer Körper (Verweise, Schicht fur): Rumpf mit Hals, Kopf, Ohren, Vorderbeine, Hinterbeine, Schwanz. Die nackten Regionen, die der Körper nicht zeigt, sind eigene kleine Körper in wirklicher Größe: Nasenspiegel, die beiden Augen, die Zunge im Maul und eine Sohle unter jedem Fuß. Die Auslässe liegen auf der Oberfläche als Nasenfleck, Lippenfleck und Rückenfleck, für diesen Maßstab gesetzt."
           },
           {
-            "en": "Structure at 1:500: the skeleton as real slender bones, since no print floor applies: skull, mandible, cervical spine, thoracic spine in two members under the topline with the withers, lumbar spine, pelvis, sternum, two ribs per side as slender solids, five caudal vertebra runs, ear cartilages, scapula plate, one tapered member per long bone, metapodial and digit bundle of every leg; joints at head, hips, stifles, shoulders and elbows; the four trunk masses at their centres. No supports are declared. Both rib hoops per side run from the spine to the sternum, so the ribcage is closed.",
-            "de": "Tragwerk bei 1:500: das Skelett als wirklich schlanke Knochen, da keine Druckgrenze gilt: Schädel, Unterkiefer, Halswirbelsäule, Brustwirbelsäule in zwei Stäben unter der Rückenlinie mit dem Widerrist, Lendenwirbelsäule, Becken, Brustbein, zwei Rippen je Seite als schlanke Körper, fünf Schwanzwirbelzüge, Ohrknorpel, Schulterblattplatte, ein verjüngter Stab je Röhrenknochen, Mittelfuß- und Zehenbündel jedes Beins; Gelenke an Kopf, Hüften, Knien, Schultern und Ellbogen; die vier Rumpfmassen in ihren Schwerpunkten. Es sind keine Auflager deklariert. Beide Rippenbögen je Seite laufen von der Wirbelsäule zum Brustbein, sodass der Brustkorb geschlossen ist."
+            "en": "Structure at 1:500: the skeleton as real slender bones, since no print floor applies: skull, mandible, cervical spine, thoracic spine in two members under the topline with the withers, lumbar spine, pelvis, sternum, two ribs per side as slender solids, five caudal vertebra runs, ear cartilages, scapula plate, one tapered member per long bone, metapodial and digit bundle of every leg; joints at head, hips, stifles, shoulders and elbows; the four trunk masses at their centres. No supports are declared. Both rib hoops per side run from the spine to the sternum, so the ribcage is closed. Girdles (rig of 2026-11-22): the scapulae rest 15.7 degrees out of the sagittal plane on bones of their own and carry the forelimbs; the two hip bones are fixed bones from the sacroiliac joints to the hip joints, and at this scale the one pelvis block is their member solid as well (`members`), because a 42 mm hip bone is not a part of its own here.",
+            "de": "Tragwerk bei 1:500: das Skelett als wirklich schlanke Knochen, da keine Druckgrenze gilt: Schädel, Unterkiefer, Halswirbelsäule, Brustwirbelsäule in zwei Stäben unter der Rückenlinie mit dem Widerrist, Lendenwirbelsäule, Becken, Brustbein, zwei Rippen je Seite als schlanke Körper, fünf Schwanzwirbelzüge, Ohrknorpel, Schulterblattplatte, ein verjüngter Stab je Röhrenknochen, Mittelfuß- und Zehenbündel jedes Beins; Gelenke an Kopf, Hüften, Knien, Schultern und Ellbogen; die vier Rumpfmassen in ihren Schwerpunkten. Es sind keine Auflager deklariert. Beide Rippenbögen je Seite laufen von der Wirbelsäule zum Brustbein, sodass der Brustkorb geschlossen ist. Gürtel (Rig vom 22.11.2026): die Schulterblätter ruhen 15,7 Grad aus der Sagittalebene geneigt auf eigenen Knochen und tragen die Vorderläufe; die beiden Hüftbeine sind feste Knochen von den Kreuzdarmbeingelenken zu den Hüftgelenken, und in diesem Maßstab ist der eine Beckenblock auch ihr Stabkörper (`members`), weil ein 42 mm langes Hüftbein hier kein eigenes Teil ist."
           },
           {
             "en": "Five caudal sections wrap beside the seated paws. The tear surface follows the exposed front of the cornea. The fine views distinguish the iris and vertical pupil.",

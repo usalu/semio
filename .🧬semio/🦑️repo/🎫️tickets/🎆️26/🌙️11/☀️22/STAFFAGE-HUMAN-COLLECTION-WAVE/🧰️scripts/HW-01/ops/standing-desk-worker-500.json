@@ -1,0 +1,1 @@
+[{"op":"shape","scale":"500","view":"elevation","id":"sil-body","shape":{"kind":"poly","points":[[0.2203,0.1324],[-0.0838,0.0686],[-0.2763,0.0805],[-0.2691,-0.1414],[0.0735,-0.1544],[0.2288,-0.1314],[0.3112,-0.0808],[0.3066,0.0632]],"closed":true,"id":"sil-body","bone":"torso","role":"body","z":4,"filled":true,"tone":0.4,"region":"hoodie"}}]

@@ -41,7 +41,7 @@ fn settled<R>(cx:&mut StepContext<'_>,scope:Option<OriginalNativeReceivingOutcom
 fn received<R>(cx:&mut StepContext<'_>,run:impl FnOnce(&mut NativeDecodeControl<'_>,RetainedCloneGrant,u64)->Result<R,ValueError>)->Result<Option<R>,OriginalTurnFailure>{
  if cx.should_yield(){return Ok(None)}
  let(mut scope,mut stepped,mut committed)=(None,None,0);
- if !cx.with_native_receiving_work(&mut scope,|native,grant,work|{let before=native.actual_work();stepped=Some(run(native,grant,work).map(Some));committed=native.actual_work().saturating_sub(before);Ok(())})?{return Ok(None)}
+ if !cx.with_native_receiving_work(&mut scope, Default::default(), |native,grant,work|{let before=native.actual_work();stepped=Some(run(native,grant,work).map(Some));committed=native.actual_work().saturating_sub(before);Ok(())})?{return Ok(None)}
  cx.consume_fuel(u64::try_from(committed).unwrap_or(u64::MAX));settled(cx,scope,stepped)
 }
 /// 🪙️ Runs one allocating receiving action inside the decoder's own performed-work effect.
@@ -56,7 +56,7 @@ fn effected<R>(cx:&mut StepContext<'_>,d:RetirementDemand,run:impl FnOnce(&mut N
 /// 🧾️ A construction step quotes its demand, runs against the decoder and posts its complete physical receipt.
 fn native_step<T>(cx:&mut StepContext<'_>,run:impl FnOnce(&mut NativeDecodeControl<'_>,u64)->NativeConstructionStepOutcome<T,OriginalReceivingPrimary>)->Result<(),OriginalTurnFailure>{
  let mut scope:Option<OriginalNativeReceivingOutcome>=None;let mut stepped=None;
- if !cx.with_native_receiving_work(&mut scope,|native,_,units|{let outcome=run(native,units);let p=outcome.progress;let work=outcome.work;let result=NativeConstructionStepOutcome{result:outcome.result.map(|result|result.map(|_|RetainedCloneStep::Progress(p))),receipt_refusal:outcome.receipt_refusal,progress:p,work}.into_step_outcome().result;stepped=Some(RetainedWorkOutcome{result,work});Ok(())})?{return Ok(())}
+ if !cx.with_native_receiving_work(&mut scope, Default::default(), |native,_,units|{let outcome=run(native,units);let p=outcome.progress;let work=outcome.work;let result=NativeConstructionStepOutcome{result:outcome.result.map(|result|result.map(|_|RetainedCloneStep::Progress(p))),receipt_refusal:outcome.receipt_refusal,progress:p,work}.into_step_outcome().result;stepped=Some(RetainedWorkOutcome{result,work});Ok(())})?{return Ok(())}
  let scope=scope.ok_or_else(||invalid("original Window receiving scope vanished"))?;
  scope.into_result()?;
  let turn=stepped.ok_or_else(||invalid("original Window receiving step vanished"))?;
@@ -66,7 +66,7 @@ fn native_step<T>(cx:&mut StepContext<'_>,run:impl FnOnce(&mut NativeDecodeContr
 fn receive(cx:&mut StepContext<'_>,d:RetirementDemand,run:impl FnOnce(&mut NativeDecodeControl<'_>,RetainedCloneGrant)->Result<RetainedCloneProgress,ValueError>)->Result<(),OriginalTurnFailure>{
  receive_progress(cx,d,|native,grant,_|run(native,grant))
 }
-/// Runs one window action with the work its actual receiving scope issued. Nested
+/// 🎬️ Runs one window action with the work its actual receiving scope issued. Nested
 /// decoder effects post their performed work alongside the parent construction.
 pub fn receive_progress(cx:&mut StepContext<'_>,d:RetirementDemand,run:impl FnOnce(&mut NativeDecodeControl<'_>,RetainedCloneGrant,u64)->Result<RetainedCloneProgress,ValueError>)->Result<(),OriginalTurnFailure>{
  if cx.should_yield()||!fits(cx,d){return Ok(())}
@@ -172,7 +172,7 @@ pub struct TypedWindowConfigPackLoad<O:WindowConfigOwner>{
  sources:ManuallyDrop<Sources<O::State,O::Mutation>>,sources_close:Option<ControlledRetirement<Sources<O::State,O::Mutation>>>,pair:Option<Box<dyn WindowConfigNativePairReceiving<O::State>>>,history_source:Option<WindowConfigHistorySource>,fold_job:Option<FoldJob>,initializer:Option<Box<WindowConfigInitialization<O>>>,outcome:JobOutcomeDescriptorSlot,construction:Construction,wire:Option<RetainedCloneSource<Vec<u8>>>,wire_admission:Option<semio_framework_value::retained_clone::RetainedCloneSourceAdmission<Vec<u8>,Vec<u8>,()>>,wire_projection:Option<RetainedOwnedProjection<Vec<u8>>>,wire_projecting:RetainedOwnedProjectionAdmission<Vec<u8>>,wire_reply:ReplyStash<ValueError>,wire_take_reply:ReplyStash<ValueError>,receiver:Option<OperationReceiver<O::Mutation>>,factory:Option<std::sync::Arc<dyn store::ArtifactOwnedValueRetirementFactory<O::Mutation>>>,factory_close:Option<FactoryAuthority>,metadata_close:Option<ControlledRetirement<(Option<String>,Option<String>,Option<semio_framework_value::SharedUtf8>)>>,pair_failure_close:Option<ControlledRetirement<OriginalArtifactPairFailure>>,binding:OriginalSourceBinding,digest:Option<[u8;32]>,stage:u8,edit_index:usize,operation_index:usize,metadata_phase:u8,taking_operation:bool,dependency_index:usize,message_index:usize,ready:bool,closing:bool,terminal:bool,
 }
 
-/// The frame contains only empty fields until the final paid placement of the original inputs.
+/// 🧱️ The frame contains only empty fields until the final paid placement of the original inputs.
 struct WindowLoadFrame {
     storage: Box<dyn Any + Send>,
     binding: OriginalSourceBinding,
@@ -249,7 +249,6 @@ impl WindowLoadFrame {
             return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit, "saved Window field exceeds the mounted copy ceiling").into());
         }
         direct_unit(cx, demand, |_| {
-            // Each address is exclusive, and the retained cursor records all previously written bytes.
             let complete = unsafe {
                 match self.field {
                     0 => initialize_absent_field_at(std::ptr::addr_of_mut!((*target).candidate).cast::<Option<WindowConfigPartition<O>>>(), self.offset, copy_bytes),
@@ -468,7 +467,7 @@ impl<O:WindowConfigOwner> ErasedWindowConfigPackLoad for TypedWindowConfigPackLo
 }
 impl<O:WindowConfigOwner> Drop for TypedWindowConfigPackLoad<O>{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal,"native saved Window must close every original source under actual authority");if self.terminal{unsafe{ManuallyDrop::drop(&mut self.sources);ManuallyDrop::drop(&mut self.window_id);ManuallyDrop::drop(&mut self.window_kind_id);ManuallyDrop::drop(&mut self.candidate);ManuallyDrop::drop(&mut self.displaced);}}}}
 fn window_config_history_limits(spr_bytes:u32)->semio_os_store_codec_registry::native_snapshot::OriginalArtifactHistoryReadLimits{semio_os_store_codec_registry::native_snapshot::OriginalArtifactHistoryReadLimits{file_bytes:spr_bytes,frame_body_bytes:spr_bytes,records:store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_BYTES as u32,maximum_fields:128,maximum_text_bytes:1_048_576,maximum_binary_bytes:1_048_576,maximum_json_bytes:1_048_576,maximum_json_allocation_bytes:8_388_608,maximum_json_items:65_536,maximum_json_depth:64}}
-/// Allocates the loader in its final address and initializes it within the mounted copy allowance.
+/// 🧠️ Allocates the loader in its final address and initializes it within the mounted copy allowance.
 pub fn admit_typed_window_config_pack_load<O: WindowConfigOwner>(
     registry_lifetime: u64,
     partition_generation: Option<u64>,
@@ -545,7 +544,6 @@ pub fn admit_typed_window_config_pack_load<O: WindowConfigOwner>(
         expected.push(':');
         expected.push_str(&input.window_id);
         let target = storage.as_mut_ptr();
-        // The empty-field cursor covered all fields except the original input headers installed here.
         let owner = unsafe {
             std::ptr::addr_of_mut!((*target).candidate_authority).write(Some(candidate_authority));
             std::ptr::addr_of_mut!((*target).window_id).write(ManuallyDrop::new(Some(input.window_id)));

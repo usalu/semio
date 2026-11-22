@@ -7,7 +7,7 @@ import {linkRootArgumentsV1} from "../../../../../⚡️caching/🦀️cargo/�
 import {PATH_NEUTRAL_FLAGS_V1} from "../../../../../⚡️caching/🦀️cargo/🗃️unit-cache/📜️script.ts";
 import {OFFLOAD_POLICY_V1} from "../../📐️policy/🟦️.ts";
 import {moduleRemapArgumentsV1,planOffloadV1,type OffloadPlanV1} from "../../🗺️paths/🟦️.ts";
-import {offloadCommandV1} from "../../📜️action/🟦️.ts";
+import {offloadRustcCommandV1} from "../../📜️action/🟦️.ts";
 import {expandRemoteExecutionRootV1,validateRemoteExecutionRustcActionV1} from "../../../🧱️actions/🟦️.ts";
 import {testRustEnvironmentV1} from "../🧰️workspace/🟦️.ts";
 
@@ -19,7 +19,7 @@ const HOST=/^host: (\S+)$/mu.exec(spawnSync(rustc,["-vV"],{encoding:"utf8",env:t
 
 /** 👷️ Runs one planned unit the way a worker does: the argv form is validated, its inputs are placed in a fresh input root, `@root` is expanded and the compiler is spawned without a shell. */
 function runAction(plan:OffloadPlanV1,root:string):string{
- const built=offloadCommandV1(plan,HOST),refusal=validateRemoteExecutionRustcActionV1({arguments:[...built.arguments],environment_variables:built.environment.map(([name,value])=>({name,value})),output_paths:[policy.virtual.out,policy.virtual.root],working_directory:""});
+ const built=offloadRustcCommandV1(plan,HOST),refusal=validateRemoteExecutionRustcActionV1({arguments:[...built.arguments],environment_variables:built.environment.map(([name,value])=>({name,value})),output_paths:[policy.virtual.out,policy.virtual.root],working_directory:""});
  if(refusal!==undefined)throw Error("the worker policy refuses what the planner sends: "+refusal);
  mkdirSync(root,{recursive:true});mkdirSync(join(root,".tmp"),{recursive:true});for(const directory of policy.root.directories)mkdirSync(join(root,directory),{recursive:true});
  for(const [path,real] of plan.files){const target=join(root,path);mkdirSync(dirname(target),{recursive:true});copyFileSync(real,target);}

@@ -55,7 +55,7 @@ fn boot_without_the_requested_plugin_settles_with_a_per_plugin_status() {
 fn plugin_fault_status_reads_in_both_languages() {
     let mut shell = ShellState::new(Vec::new(), "generation3d".into(), semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native);
     assert!(shell.prefs.plugin_fault_status(&shell.plugins).is_none());
-    shell.plugins.plugin_faults.push(ShellPluginFault { plugin_id: "flow".into(), app_id: "s.flow.flow@1/*#editor".into(), detail: "interactive-job.catalog-authority: tool 'addGeneration'".into() });
+    shell.plugins.plugin_faults.push(ShellPluginFault { plugin_id: "flow".into(), app_id: "s.flow.flow@1/*#editor".into(), detail: "interactive-job.catalog-authority: tool 'addGeneration'".into(), frame: None, kernel: None, actor_call: None });
     shell.prefs.locale_id = "en".into();
     let english = shell.prefs.plugin_fault_status(&shell.plugins).expect("english status");
     assert!(english.starts_with("Plugin unavailable: flow (s.flow.flow@1/*#editor)"), "{english}");
@@ -136,7 +136,7 @@ fn surface_fault_status_reads_in_both_languages_and_never_duplicates_a_surface()
     assert!(german.starts_with("Fläche nicht verfügbar: flow-window (flow.body)"), "{german}");
     assert!(german.contains("wgpu-ui.read-snapshot-missing"), "{german}");
 
-    shell.plugins.plugin_faults.push(ShellPluginFault { plugin_id: "flow".into(), app_id: "s.flow.flow@1/*#editor".into(), detail: "trapped".into() });
+    shell.plugins.plugin_faults.push(ShellPluginFault { plugin_id: "flow".into(), app_id: "s.flow.flow@1/*#editor".into(), detail: "trapped".into(), frame: None, kernel: None, actor_call: None });
     let combined = shell.prefs.fault_status(&shell.plugins).expect("combined status");
     assert!(combined.contains("Plugin nicht verfügbar"), "{combined}");
     assert!(combined.contains("Fläche nicht verfügbar"), "{combined}");

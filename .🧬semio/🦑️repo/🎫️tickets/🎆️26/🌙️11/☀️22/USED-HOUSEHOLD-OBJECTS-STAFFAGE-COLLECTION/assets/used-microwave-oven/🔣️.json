@@ -1,0 +1,8075 @@
+{
+ "$schema": "../../../🧬️schema/🔣️.json#/$defs/AssetDocument",
+ "version": "semio.staffage/v2",
+ "asset": {
+  "id": "used-microwave-oven",
+  "category": "appliances",
+  "title": {
+   "en": "Used Microwave Oven",
+   "de": "Gebrauchte Mikrowelle"
+  },
+  "summary": {
+   "en": "A second-hand 20-litre solo microwave oven 0.44 x 0.258 x 0.352 m of about 2005, 10.71 kg, 700 W output and 1150 W rated input: a 315 x 212 x 293 mm cavity whose white paint has yellowed and is splattered, a 245 mm glass turntable on its roller ring, a side-hinged door with a scratched window, a push-button door release, the original timer knob and a black replacement power knob, a dented top with a price sticker and a taped mains cord; stored on a flattened banana box at the depot, carried by one person, running again on a kitchen worktop with its turntable turning.",
+   "de": "Eine gebrauchte 20-Liter-Solo-Mikrowelle 0,44 x 0,258 x 0,352 m von etwa 2005, 10,71 kg, 700 W Leistung und 1150 W Nennaufnahme: ein Garraum von 315 x 212 x 293 mm, dessen weißer Lack vergilbt und bespritzt ist, ein 245-mm-Glasdrehteller auf seinem Rollenring, eine seitlich angeschlagene Tür mit zerkratztem Fenster, eine Türöffnertaste, der originale Zeitknopf und ein schwarzer Ersatz-Leistungsknopf, ein eingedellter Deckel mit Preisaufkleber und ein geklebtes Netzkabel; gelagert auf einem flachgelegten Bananenkarton im Lager, von einer Person getragen, wieder in Betrieb auf einer Küchenarbeitsplatte mit drehendem Teller."
+  },
+  "tags": [
+   "used",
+   "household",
+   "second-hand",
+   "kitchen",
+   "microwave",
+   "appliance",
+   "turntable",
+   "steel",
+   "glass",
+   "abs",
+   "countertop"
+  ],
+  "provenance": {
+   "author": "Semio staffage content (used household objects wave)",
+   "method": "handcrafted",
+   "created": "2026-11-22",
+   "references": [
+    {
+     "id": "iec-60335-2-25",
+     "citation": "IEC 60335-2-25:2020 Household and similar electrical appliances - Safety - Part 2-25: Particular requirements for microwave ovens, including combination microwave ovens (door interlock, door hinge and stability tests, microwave leakage limit 50 W/m2 at 5 cm; product class of the 700-800 W solo ovens with 1150-1250 W rated input)."
+    },
+    {
+     "id": "iec-60705",
+     "citation": "IEC 60705:2010+A1:2014 Household microwave ovens - Methods for measuring performance (microwave output power by the 1 kg water-load method, usable cavity volume, turntable dimensions)."
+    },
+    {
+     "id": "en-12150-1",
+     "citation": "EN 12150-1:2015 Glass in building - Thermally toughened soda lime silicate safety glass (density 2500 kg/m3, E 70 GPa, characteristic bending strength 120 MPa)."
+    },
+    {
+     "id": "iso-3585",
+     "citation": "ISO 3585:1998 Borosilicate glass 3.3 - Properties (density 2230 kg/m3, thermal conductivity 1.14 W/mK at 20 degC, specific heat 830 J/kgK, E 64 GPa)."
+    },
+    {
+     "id": "en-50525-2-11",
+     "citation": "EN 50525-2-11:2011 Electric cables - Low voltage energy cables of rated voltages up to 450/750 V - Part 2-11: Cables for general applications - Flexible cables with thermoplastic PVC insulation (H05VV-F 3G1.0: outer diameter about 6 mm)."
+    },
+    {
+     "id": "iso-10456-2007",
+     "citation": "ISO 10456:2007 Building materials and products - Hygrothermal properties - Tabulated design values (steel 50 W/mK and 7850 kg/m3, plastics 0.17-0.25 W/mK, paper and board 0.05-0.07 W/mK, specific heats)."
+    },
+    {
+     "id": "incropera-2018",
+     "citation": "Incropera, F. P., DeWitt, D. P., Bergman, T. L., Lavine, A. S. (2018). Fundamentals of Heat and Mass Transfer, 8th ed., Wiley (emissivity and solar absorptance of white paints 0.2-0.3, aged and dirty paints higher, galvanised steel 0.2-0.3 emissivity when dull, glass 0.84-0.9)."
+    },
+    {
+     "id": "din-18022",
+     "citation": "DIN 18022:2007 Küche, Bad, WC, Hausarbeitsraum - Planungsgrundlagen (worktop depth 600 mm and height 850-950 mm on which a countertop microwave oven stands)."
+    },
+    {
+     "id": "used-appliance-market",
+     "citation": "Catalogue-typical 20-litre solo microwave ovens of the German discount and mid-range trade 1995-2012 (700 W output, 1150-1200 W input, about 440 x 258 x 340 mm, cavity about 315 x 212 x 293 mm, 245 mm glass turntable, two mechanical rotary knobs, push-button door release, 10.5-11.5 kg net) and the intake practice of municipal second-hand department stores (Gebrauchtwarenkaufhaus): electrical safety test after DIN VDE 0701-0702, cleaned, priced and shelved in a flattened banana box; no brand data used."
+    }
+   ],
+   "notes": {
+    "en": "Type: German discount and mid-range 20-litre solo microwave oven of about 1995-2012 (700 W output after IEC 60705, 1150 W rated input), 440 x 258 x 335 mm over housing and door, 352 mm over the knobs; cavity 315 x 212 x 293 mm; 245 mm borosilicate turntable at about 5 rpm; door hinged on the left with a push-button release on the panel; two mechanical knobs (power level, 30-minute clockwork timer). Masses: sheets, glass, cord, plug, feet and cardboard are their 1:50 solid volumes times the densities; the moulded door frame and fascia are their surface areas times a 2.5 mm wall; transformer 2.8 kg, magnetron 0.8 kg, fan 0.25 kg, HV parts 0.25 kg, timer and switches 0.3 kg, door plate and screen 0.45 kg and turntable motor 0.1 kg are catalogue-typical component masses; together 10.71 kg for the oven and 10.91 kg with the cardboard. Traces of use are authored from the intake of second-hand department stores; nothing is measured.",
+    "de": "Typ: 20-Liter-Solo-Mikrowelle des deutschen Discount- und Mittelpreissegments von etwa 1995-2012 (700 W Leistung nach IEC 60705, 1150 W Nennaufnahme), 440 x 258 x 335 mm über Gehäuse und Tür, 352 mm über die Knöpfe; Garraum 315 x 212 x 293 mm; 245-mm-Drehteller aus Borosilikatglas mit etwa 5 U/min; Tür links angeschlagen mit Öffnertaste in der Blende; zwei mechanische Knöpfe (Leistungsstufe, 30-Minuten-Uhrwerk). Massen: Bleche, Glas, Kabel, Stecker, Füße und Pappe sind ihre 1:50-Körpervolumen mal den Dichten; Türrahmen und Blende aus Spritzguss sind ihre Oberflächen mal 2,5 mm Wand; Transformator 2,8 kg, Magnetron 0,8 kg, Lüfter 0,25 kg, Hochspannungsteile 0,25 kg, Zeitschalter und Schalter 0,3 kg, Türblech und Schirm 0,45 kg und Drehtellermotor 0,1 kg sind katalogtypische Bauteilmassen; zusammen 10,71 kg für das Gerät und 10,91 kg mit der Pappe. Gebrauchsspuren sind nach der Annahme von Gebrauchtwarenkaufhäusern geschätzt; nichts ist gemessen."
+   }
+  },
+  "dimensions": {
+   "heightM": 0.266,
+   "widthM": 0.48,
+   "depthM": 0.395,
+   "massKg": 10.91
+  },
+  "materials": [
+   {
+    "id": "painted-steel",
+    "title": {
+     "en": "Powder-coated steel sheet 0.5 mm, white, yellowed",
+     "de": "Pulverbeschichtetes Stahlblech 0,5 mm, weiß, vergilbt"
+    },
+    "emissivity": 0.9,
+    "solarAbsorptivity": 0.35,
+    "densityKgM3": 7850,
+    "conductivityWmK": 50,
+    "specificHeatJKgK": 460,
+    "elasticModulusPa": 210000000000.0,
+    "strengthPa": 235000000.0,
+    "source": "literature",
+    "reference": "iso-10456-2007"
+   },
+   {
+    "id": "galv-steel",
+    "title": {
+     "en": "Galvanised steel base pan 1 mm, dull",
+     "de": "Verzinkte Stahl-Bodenwanne 1 mm, matt"
+    },
+    "emissivity": 0.28,
+    "solarAbsorptivity": 0.6,
+    "densityKgM3": 7850,
+    "conductivityWmK": 50,
+    "specificHeatJKgK": 460,
+    "elasticModulusPa": 210000000000.0,
+    "strengthPa": 235000000.0,
+    "source": "literature",
+    "reference": "incropera-2018"
+   },
+   {
+    "id": "cavity-paint",
+    "title": {
+     "en": "Epoxy-painted steel cavity liner 0.5 mm, yellowed and splattered",
+     "de": "Epoxidlackierte Stahl-Garraumauskleidung 0,5 mm, vergilbt und bespritzt"
+    },
+    "emissivity": 0.92,
+    "solarAbsorptivity": 0.5,
+    "densityKgM3": 7850,
+    "conductivityWmK": 50,
+    "specificHeatJKgK": 460,
+    "elasticModulusPa": 210000000000.0,
+    "strengthPa": 235000000.0,
+    "source": "authored-estimate",
+    "reference": "incropera-2018"
+   },
+   {
+    "id": "abs-aged",
+    "title": {
+     "en": "Moulded ABS, white, yellowed (door frame, control panel, timer knob)",
+     "de": "Spritzgegossenes ABS, weiß, vergilbt (Türrahmen, Bedienblende, Zeitknopf)"
+    },
+    "emissivity": 0.9,
+    "solarAbsorptivity": 0.42,
+    "densityKgM3": 1050,
+    "conductivityWmK": 0.17,
+    "specificHeatJKgK": 1400,
+    "elasticModulusPa": 2300000000.0,
+    "strengthPa": 40000000.0,
+    "source": "literature",
+    "reference": "iso-10456-2007"
+   },
+   {
+    "id": "abs-black",
+    "title": {
+     "en": "Black ABS (replacement power knob)",
+     "de": "Schwarzes ABS (Ersatz-Leistungsknopf)"
+    },
+    "emissivity": 0.92,
+    "solarAbsorptivity": 0.92,
+    "densityKgM3": 1050,
+    "conductivityWmK": 0.17,
+    "specificHeatJKgK": 1400,
+    "elasticModulusPa": 2300000000.0,
+    "strengthPa": 40000000.0,
+    "source": "literature",
+    "reference": "iso-10456-2007"
+   },
+   {
+    "id": "door-glass",
+    "title": {
+     "en": "Tempered door glass 4 mm with the perforated steel screen behind it, tinted",
+     "de": "Vorgespanntes Türglas 4 mm mit dem gelochten Stahlschirm dahinter, getönt"
+    },
+    "emissivity": 0.84,
+    "solarAbsorptivity": 0.55,
+    "densityKgM3": 2500,
+    "conductivityWmK": 1.0,
+    "specificHeatJKgK": 750,
+    "elasticModulusPa": 70000000000.0,
+    "strengthPa": 120000000.0,
+    "source": "literature",
+    "reference": "en-12150-1"
+   },
+   {
+    "id": "borosilicate",
+    "title": {
+     "en": "Borosilicate glass turntable plate, 5 mm",
+     "de": "Drehteller aus Borosilikatglas, 5 mm"
+    },
+    "emissivity": 0.9,
+    "solarAbsorptivity": 0.1,
+    "densityKgM3": 2230,
+    "conductivityWmK": 1.14,
+    "specificHeatJKgK": 830,
+    "elasticModulusPa": 64000000000.0,
+    "strengthPa": 40000000.0,
+    "source": "literature",
+    "reference": "iso-3585"
+   },
+   {
+    "id": "pp-plastic",
+    "title": {
+     "en": "Polypropylene (feet, roller ring, coupler, motor housing)",
+     "de": "Polypropylen (Füße, Rollenring, Mitnehmer, Motorgehäuse)"
+    },
+    "emissivity": 0.9,
+    "solarAbsorptivity": 0.55,
+    "densityKgM3": 905,
+    "conductivityWmK": 0.22,
+    "specificHeatJKgK": 1900,
+    "elasticModulusPa": 1500000000.0,
+    "strengthPa": 30000000.0,
+    "source": "literature",
+    "reference": "iso-10456-2007"
+   },
+   {
+    "id": "pvc-cord",
+    "title": {
+     "en": "PVC-sheathed mains cord H05VV-F 3G1.0 and moulded plug",
+     "de": "PVC-ummanteltes Netzkabel H05VV-F 3G1,0 und angespritzter Stecker"
+    },
+    "emissivity": 0.9,
+    "solarAbsorptivity": 0.45,
+    "densityKgM3": 1900,
+    "conductivityWmK": 0.3,
+    "specificHeatJKgK": 1000,
+    "elasticModulusPa": 50000000.0,
+    "strengthPa": 15000000.0,
+    "source": "authored-estimate",
+    "reference": "en-50525-2-11"
+   },
+   {
+    "id": "corrugated-board",
+    "title": {
+     "en": "Double-wall corrugated board 8 mm (flattened banana box)",
+     "de": "Doppelwellpappe 8 mm (flachgelegter Bananenkarton)"
+    },
+    "emissivity": 0.9,
+    "solarAbsorptivity": 0.7,
+    "densityKgM3": 130,
+    "conductivityWmK": 0.065,
+    "specificHeatJKgK": 1340,
+    "elasticModulusPa": 300000000.0,
+    "strengthPa": 3000000.0,
+    "source": "authored-estimate",
+    "reference": "iso-10456-2007"
+   },
+   {
+    "id": "electrical-iron",
+    "title": {
+     "en": "Transformer and magnetron: laminated iron, copper windings, ceramic and steel",
+     "de": "Transformator und Magnetron: Blechpaket, Kupferwicklung, Keramik und Stahl"
+    },
+    "emissivity": 0.6,
+    "solarAbsorptivity": 0.6,
+    "densityKgM3": 7800,
+    "conductivityWmK": 40,
+    "specificHeatJKgK": 450,
+    "elasticModulusPa": 200000000000.0,
+    "strengthPa": 200000000.0,
+    "source": "authored-estimate",
+    "reference": "iec-60335-2-25"
+   }
+  ],
+  "rig": {
+   "kind": "mechanical",
+   "root": "ground",
+   "bones": [
+    {
+     "id": "ground",
+     "parent": null,
+     "title": {
+      "en": "Floor reference",
+      "de": "Bodenbezug"
+     },
+     "x": 0.0,
+     "y": 0.0,
+     "angleDeg": 0,
+     "lengthM": 0,
+     "joint": {
+      "type": "fixed"
+     }
+    },
+    {
+     "id": "pad",
+     "parent": "ground",
+     "title": {
+      "en": "Corrugated cardboard pad under the oven",
+      "de": "Wellpappenunterlage unter dem Gerät"
+     },
+     "x": -0.02,
+     "y": 0.0,
+     "angleDeg": 0,
+     "lengthM": 0.48000000000000004,
+     "joint": {
+      "type": "prismatic",
+      "axisDeg": 0,
+      "minM": -0.8,
+      "maxM": 0
+     },
+     "mass": {
+      "kg": 0.197,
+      "comX": 0.24,
+      "comY": 0.004,
+      "distribution": "point",
+      "source": "authored-estimate",
+      "reference": "iec-60705"
+     },
+     "section": {
+      "areaM2": 0.00316,
+      "secondMomentM4": 1.6853e-08,
+      "extremeFibreM": 0.004,
+      "material": "corrugated-board",
+      "title": {
+       "en": "Board 395 x 8 mm",
+       "de": "Pappe 395 x 8 mm"
+      }
+     }
+    },
+    {
+     "id": "lift",
+     "parent": "ground",
+     "title": {
+      "en": "Lift of the oven off its base",
+      "de": "Anheben des Geräts von seiner Unterlage"
+     },
+     "x": 0.0,
+     "y": 0.008,
+     "angleDeg": 0,
+     "lengthM": 0,
+     "joint": {
+      "type": "prismatic",
+      "axisDeg": 90,
+      "minM": -0.008,
+      "maxM": 0.6
+     }
+    },
+    {
+     "id": "housing",
+     "parent": "lift",
+     "title": {
+      "en": "Housing, tilt about the lower left edge",
+      "de": "Gehäuse, Neigung um die untere linke Kante"
+     },
+     "x": 0.0,
+     "y": 0.0,
+     "angleDeg": 0,
+     "lengthM": 0.44,
+     "joint": {
+      "type": "revolute",
+      "minDeg": -10,
+      "maxDeg": 10
+     },
+     "mass": {
+      "kg": 1.489,
+      "comX": 0.3325,
+      "comY": 0.1664,
+      "distribution": "point",
+      "source": "authored-estimate",
+      "reference": "iec-60705"
+     },
+     "section": {
+      "areaM2": 0.000546,
+      "secondMomentM4": 5.7978e-06,
+      "extremeFibreM": 0.1235,
+      "material": "painted-steel",
+      "title": {
+       "en": "Housing box 300 x 247 x 0.5 mm (wrapper with base)",
+       "de": "Gehäusekasten 300 x 247 x 0,5 mm (Mantel mit Boden)"
+      }
+     }
+    },
+    {
+     "id": "base",
+     "parent": "housing",
+     "title": {
+      "en": "Base pan with the transformer",
+      "de": "Bodenwanne mit dem Transformator"
+     },
+     "x": 0.0,
+     "y": 0.0105,
+     "angleDeg": 0,
+     "lengthM": 0.44,
+     "joint": {
+      "type": "fixed"
+     },
+     "mass": {
+      "kg": 4.086,
+      "comX": 0.3382,
+      "comY": 0.0303,
+      "distribution": "point",
+      "source": "authored-estimate",
+      "reference": "iec-60705"
+     },
+     "section": {
+      "areaM2": 0.0003,
+      "secondMomentM4": 2.5e-11,
+      "extremeFibreM": 0.0005,
+      "material": "galv-steel",
+      "title": {
+       "en": "Base pan 300 x 1 mm",
+       "de": "Bodenwanne 300 x 1 mm"
+      }
+     }
+    },
+    {
+     "id": "side-l",
+     "parent": "housing",
+     "title": {
+      "en": "Left side of the U-shaped wrapper",
+      "de": "Linke Seite des U-förmigen Mantels"
+     },
+     "x": 0.00025,
+     "y": 0.011,
+     "angleDeg": 90,
+     "lengthM": 0.247,
+     "joint": {
+      "type": "fixed"
+     },
+     "mass": {
+      "kg": 0.291,
+      "comX": 0.1235,
+      "comY": 0.0,
+      "distribution": "point",
+      "source": "authored-estimate",
+      "reference": "iec-60705"
+     },
+     "section": {
+      "areaM2": 0.00015,
+      "secondMomentM4": 3.125e-12,
+      "extremeFibreM": 0.00025,
+      "material": "painted-steel",
+      "title": {
+       "en": "Wrapper side 300 x 0.5 mm",
+       "de": "Mantelseite 300 x 0,5 mm"
+      }
+     }
+    },
+    {
+     "id": "side-r",
+     "parent": "housing",
+     "title": {
+      "en": "Right side of the wrapper with the vents",
+      "de": "Rechte Seite des Mantels mit den Lüftungsschlitzen"
+     },
+     "x": 0.43975,
+     "y": 0.011,
+     "angleDeg": 90,
+     "lengthM": 0.247,
+     "joint": {
+      "type": "fixed"
+     },
+     "mass": {
+      "kg": 0.291,
+      "comX": 0.1235,
+      "comY": 0.0,
+      "distribution": "point",
+      "source": "authored-estimate",
+      "reference": "iec-60705"
+     },
+     "section": {
+      "areaM2": 0.00015,
+      "secondMomentM4": 3.125e-12,
+      "extremeFibreM": 0.00025,
+      "material": "painted-steel",
+      "title": {
+       "en": "Wrapper side 300 x 0.5 mm",
+       "de": "Mantelseite 300 x 0,5 mm"
+      }
+     }
+    },
+    {
+     "id": "top",
+     "parent": "housing",
+     "title": {
+      "en": "Top of the wrapper",
+      "de": "Deckel des Mantels"
+     },
+     "x": 0.0005,
+     "y": 0.25775,
+     "angleDeg": 0,
+     "lengthM": 0.439,
+     "joint": {
+      "type": "fixed"
+     },
+     "mass": {
+      "kg": 0.517,
+      "comX": 0.2195,
+      "comY": 0.0,
+      "distribution": "point",
+      "source": "authored-estimate",
+      "reference": "iec-60705"
+     },
+     "section": {
+      "areaM2": 0.00015,
+      "secondMomentM4": 3.125e-12,
+      "extremeFibreM": 0.00025,
+      "material": "painted-steel",
+      "title": {
+       "en": "Wrapper top 300 x 0.5 mm",
+       "de": "Manteldeckel 300 x 0,5 mm"
+      }
+     }
+    },
+    {
+     "id": "cavity",
+     "parent": "housing",
+     "title": {
+      "en": "Cooking cavity liner",
+      "de": "Garraum-Auskleidung"
+     },
+     "x": 0.01,
+     "y": 0.028,
+     "angleDeg": 0,
+     "lengthM": 0.315,
+     "joint": {
+      "type": "fixed"
+     },
+     "mass": {
+      "kg": 1.587,
+      "comX": 0.1575,
+      "comY": 0.0988,
+      "distribution": "point",
+      "source": "authored-estimate",
+      "reference": "iec-60705"
+     },
+     "section": {
+      "areaM2": 0.0005075,
+      "secondMomentM4": 4.1299e-06,
+      "extremeFibreM": 0.1065,
+      "material": "cavity-paint",
+      "title": {
+       "en": "Cavity liner tube 296 x 213 x 0.5 mm",
+       "de": "Garraumrohr 296 x 213 x 0,5 mm"
+      }
+     }
+    },
+    {
+     "id": "panel",
+     "parent": "housing",
+     "title": {
+      "en": "Control panel fascia",
+      "de": "Bedienblende"
+     },
+     "x": 0.38,
+     "y": 0.011,
+     "z": -0.1525,
+     "angleDeg": 90,
+     "lengthM": 0.247,
+     "joint": {
+      "type": "fixed"
+     },
+     "mass": {
+      "kg": 0.536,
+      "comX": 0.1305,
+      "comY": 0.0,
+      "distribution": "point",
+      "source": "authored-estimate",
+      "reference": "iec-60705"
+     },
+     "section": {
+      "areaM2": 0.00075,
+      "secondMomentM4": 1.2378e-06,
+      "extremeFibreM": 0.06,
+      "material": "abs-aged",
+      "title": {
+       "en": "Panel moulding 120 x 35 mm, wall 2.5 mm",
+       "de": "Blendenformteil 120 x 35 mm, Wand 2,5 mm"
+      }
+     }
+    },
+    {
+     "id": "door",
+     "parent": "housing",
+     "title": {
+      "en": "Door, hinged on the left at the front of the housing",
+      "de": "Tür, links an der Gehäusefront angeschlagen"
+     },
+     "x": 0.0,
+     "y": 0.0115,
+     "z": -0.135,
+     "angleDeg": 90,
+     "lengthM": 0.245,
+     "joint": {
+      "type": "revolute",
+      "minDeg": 0,
+      "maxDeg": 0,
+      "twistMinDeg": -110,
+      "twistMaxDeg": 0
+     },
+     "mass": {
+      "kg": 1.213,
+      "comX": 0.1225,
+      "comY": -0.1555,
+      "distribution": "point",
+      "source": "authored-estimate",
+      "reference": "iec-60705"
+     },
+     "section": {
+      "areaM2": 0.0017425,
+      "secondMomentM4": 1.7207e-05,
+      "extremeFibreM": 0.159,
+      "material": "abs-aged",
+      "title": {
+       "en": "Door moulding 318 x 35 mm, wall 2.5 mm",
+       "de": "Türformteil 318 x 35 mm, Wand 2,5 mm"
+      }
+     }
+    },
+    {
+     "id": "turntable",
+     "parent": "cavity",
+     "title": {
+      "en": "Turntable glass plate on its roller ring",
+      "de": "Drehteller aus Glas auf seinem Rollenring"
+     },
+     "x": 0.1575,
+     "y": 0.0,
+     "z": 0.0125,
+     "angleDeg": 90,
+     "lengthM": 0.027,
+     "joint": {
+      "type": "revolute",
+      "continuousTwist": true
+     },
+     "mass": {
+      "kg": 0.582,
+      "comX": 0.0167,
+      "comY": 0.0,
+      "distribution": "point",
+      "source": "authored-estimate",
+      "reference": "iec-60705"
+     },
+     "section": {
+      "areaM2": 0.001225,
+      "secondMomentM4": 2.5521e-09,
+      "extremeFibreM": 0.0025,
+      "material": "borosilicate",
+      "title": {
+       "en": "Glass plate 245 x 5 mm",
+       "de": "Glasteller 245 x 5 mm"
+      }
+     }
+    },
+    {
+     "id": "knob-power",
+     "parent": "housing",
+     "title": {
+      "en": "Power level knob (replacement)",
+      "de": "Leistungsknopf (Ersatz)"
+     },
+     "x": 0.38,
+     "y": 0.195,
+     "z": -0.17,
+     "angleDeg": 0,
+     "lengthM": 0.01,
+     "joint": {
+      "type": "revolute",
+      "minDeg": -180,
+      "maxDeg": 0
+     },
+     "mass": {
+      "kg": 0.013,
+      "comX": 0.0,
+      "comY": 0.0,
+      "distribution": "point",
+      "source": "authored-estimate",
+      "reference": "iec-60705"
+     }
+    },
+    {
+     "id": "knob-timer",
+     "parent": "housing",
+     "title": {
+      "en": "Clockwork timer knob, 0 to 30 minutes",
+      "de": "Uhrwerk-Zeitschaltknopf, 0 bis 30 Minuten"
+     },
+     "x": 0.38,
+     "y": 0.12,
+     "z": -0.17,
+     "angleDeg": 0,
+     "lengthM": 0.01,
+     "joint": {
+      "type": "revolute",
+      "minDeg": -300,
+      "maxDeg": 0
+     },
+     "mass": {
+      "kg": 0.016,
+      "comX": 0.0,
+      "comY": 0.0,
+      "distribution": "point",
+      "source": "authored-estimate",
+      "reference": "iec-60705"
+     }
+    },
+    {
+     "id": "cord",
+     "parent": "housing",
+     "title": {
+      "en": "Mains cord lying on the base behind the oven",
+      "de": "Netzkabel, hinter dem Gerät auf der Unterlage liegend"
+     },
+     "x": 0.112,
+     "y": 0.003,
+     "z": 0.185,
+     "angleDeg": 0,
+     "lengthM": 0.285,
+     "joint": {
+      "type": "fixed"
+     },
+     "mass": {
+      "kg": 0.096,
+      "comX": 0.0117,
+      "comY": 0.0093,
+      "distribution": "point",
+      "source": "authored-estimate",
+      "reference": "iec-60705"
+     },
+     "section": {
+      "areaM2": 2.8274e-05,
+      "secondMomentM4": 6.3617e-11,
+      "extremeFibreM": 0.003,
+      "material": "pvc-cord",
+      "title": {
+       "en": "Cord 6 mm",
+       "de": "Kabel 6 mm"
+      }
+     }
+    }
+   ]
+  },
+  "anchors": [
+   {
+    "id": "foot-left",
+    "bone": "housing",
+    "x": 0.035,
+    "y": 0.0,
+    "z": 0.015,
+    "kind": "contact",
+    "title": {
+     "en": "Left pair of feet on the base",
+     "de": "Linkes Fußpaar auf der Unterlage"
+    },
+    "support": "contact",
+    "normalDeg": 90,
+    "footprintLengthM": 0.024,
+    "footprintWidthM": 0.264,
+    "frictionCoefficient": 0.5
+   },
+   {
+    "id": "foot-right",
+    "bone": "housing",
+    "x": 0.405,
+    "y": 0.0,
+    "z": 0.015,
+    "kind": "contact",
+    "title": {
+     "en": "Right pair of feet on the base",
+     "de": "Rechtes Fußpaar auf der Unterlage"
+    },
+    "support": "contact",
+    "normalDeg": 90,
+    "footprintLengthM": 0.024,
+    "footprintWidthM": 0.264,
+    "frictionCoefficient": 0.5
+   },
+   {
+    "id": "grip-left",
+    "bone": "housing",
+    "x": 0.0,
+    "y": 0.01,
+    "z": 0.015,
+    "kind": "support",
+    "title": {
+     "en": "Left hand under the left bottom edge",
+     "de": "Linke Hand unter der linken Unterkante"
+    },
+    "support": "pin",
+    "footprintLengthM": 0.08,
+    "footprintWidthM": 0.1
+   },
+   {
+    "id": "grip-right",
+    "bone": "housing",
+    "x": 0.44,
+    "y": 0.01,
+    "z": 0.015,
+    "kind": "support",
+    "title": {
+     "en": "Right hand under the right bottom edge",
+     "de": "Rechte Hand unter der rechten Unterkante"
+    },
+    "support": "pin",
+    "footprintLengthM": 0.08,
+    "footprintWidthM": 0.1
+   },
+   {
+    "id": "pad-floor",
+    "bone": "pad",
+    "x": 0.24,
+    "y": 0.0,
+    "z": 0.0075,
+    "kind": "contact",
+    "title": {
+     "en": "Cardboard pad on the shelf or floor",
+     "de": "Pappunterlage auf Regal oder Boden"
+    },
+    "support": "contact",
+    "normalDeg": 90,
+    "footprintLengthM": 0.48,
+    "footprintWidthM": 0.395,
+    "frictionCoefficient": 0.5
+   },
+   {
+    "id": "exhaust",
+    "bone": "housing",
+    "x": 0.44,
+    "y": 0.19,
+    "z": 0.05,
+    "kind": "emitter",
+    "title": {
+     "en": "Warm cooling air out of the right side vents",
+     "de": "Warme Kühlluft aus den Schlitzen der rechten Seite"
+    }
+   }
+  ],
+  "representations": {
+   "50": {
+    "status": "authored",
+    "denominator": 50,
+    "validRange": {
+     "minDenominator": 20,
+     "maxDenominator": 75
+    },
+    "pens": {
+     "body": 0.35,
+     "detail": 0.18,
+     "texture": 0.18,
+     "glazing": 0.18,
+     "ground": 0.5
+    },
+    "hatches": [],
+    "geometry": {
+     "elevation": [
+      {
+       "id": "pad",
+       "bone": "pad",
+       "role": "body",
+       "z": 6.9,
+       "filled": true,
+       "tone": 0.62,
+       "kind": "rect",
+       "x": 0.0,
+       "y": 0.0,
+       "w": 0.48,
+       "h": 0.008,
+       "region": "pad",
+       "material": "corrugated-board"
+      },
+      {
+       "id": "foot-1",
+       "bone": "housing",
+       "role": "body",
+       "z": 6.17,
+       "filled": true,
+       "tone": 0.15,
+       "kind": "rect",
+       "x": 0.023,
+       "y": 0.0,
+       "w": 0.024,
+       "h": 0.01,
+       "region": "casing",
+       "material": "pp-plastic"
+      },
+      {
+       "id": "foot-2",
+       "bone": "housing",
+       "role": "body",
+       "z": 6.17,
+       "filled": true,
+       "tone": 0.15,
+       "kind": "rect",
+       "x": 0.393,
+       "y": 0.0,
+       "w": 0.024,
+       "h": 0.01,
+       "region": "casing",
+       "material": "pp-plastic"
+      },
+      {
+       "id": "base",
+       "bone": "base",
+       "role": "body",
+       "z": 6.35,
+       "filled": true,
+       "tone": 0.5,
+       "kind": "rect",
+       "x": 0.0,
+       "y": -0.0005,
+       "w": 0.44,
+       "h": 0.001,
+       "region": "casing",
+       "material": "galv-steel"
+      },
+      {
+       "id": "side-l",
+       "bone": "side-l",
+       "role": "body",
+       "z": 6.35,
+       "filled": true,
+       "tone": 0.88,
+       "kind": "rect",
+       "x": 0.0,
+       "y": -0.00025,
+       "w": 0.247,
+       "h": 0.0005,
+       "region": "casing",
+       "material": "painted-steel"
+      },
+      {
+       "id": "side-r",
+       "bone": "side-r",
+       "role": "body",
+       "z": 6.35,
+       "filled": true,
+       "tone": 0.88,
+       "kind": "rect",
+       "x": 0.0,
+       "y": -0.00025,
+       "w": 0.247,
+       "h": 0.0005,
+       "region": "casing",
+       "material": "painted-steel"
+      },
+      {
+       "id": "top",
+       "bone": "top",
+       "role": "body",
+       "z": 6.35,
+       "filled": true,
+       "tone": 0.9,
+       "kind": "rect",
+       "x": 0.0,
+       "y": -0.00025,
+       "w": 0.439,
+       "h": 0.0005,
+       "region": "casing",
+       "material": "painted-steel"
+      },
+      {
+       "id": "back",
+       "bone": "housing",
+       "role": "body",
+       "z": 3.355,
+       "filled": true,
+       "tone": 0.8,
+       "kind": "rect",
+       "x": 0.0005,
+       "y": 0.011,
+       "w": 0.439,
+       "h": 0.2465,
+       "region": "casing",
+       "material": "painted-steel"
+      },
+      {
+       "id": "liner",
+       "bone": "cavity",
+       "role": "body",
+       "z": 6.35,
+       "filled": true,
+       "tone": 0.72,
+       "kind": "path",
+       "d": "M -0.0005 -0.0005 L 0.3155 -0.0005 L 0.3155 0.2125 L -0.0005 0.2125 Z M 0.0 -0.0 L 0.315 -0.0 L 0.315 0.212 L 0.0 0.212 Z",
+       "region": "cavity",
+       "material": "cavity-paint"
+      },
+      {
+       "id": "liner-back",
+       "bone": "cavity",
+       "role": "body",
+       "z": 3.4,
+       "filled": true,
+       "tone": 0.66,
+       "kind": "rect",
+       "x": -0.0005,
+       "y": -0.0005,
+       "w": 0.316,
+       "h": 0.213,
+       "region": "cavity",
+       "material": "cavity-paint"
+      },
+      {
+       "id": "plate",
+       "bone": "turntable",
+       "role": "body",
+       "z": 3.0999999999999996,
+       "filled": true,
+       "tone": 0.85,
+       "kind": "poly",
+       "points": [
+        [
+         0.012,
+         0.0
+        ],
+        [
+         0.012,
+         -0.1
+        ],
+        [
+         0.022,
+         -0.1225
+        ],
+        [
+         0.027,
+         -0.1225
+        ],
+        [
+         0.017,
+         -0.1
+        ],
+        [
+         0.017,
+         0.0
+        ]
+       ],
+       "closed": true,
+       "region": "turntable",
+       "material": "borosilicate",
+       "solid": {
+        "kind": "revolved",
+        "axisBone": "turntable",
+        "axis": "u",
+        "axisX": 0,
+        "axisZ": 0,
+        "mirror": true
+       }
+      },
+      {
+       "id": "coupler",
+       "bone": "turntable",
+       "role": "body",
+       "z": 1.9850000000000003,
+       "filled": true,
+       "tone": 0.4,
+       "kind": "poly",
+       "points": [
+        [
+         0.0,
+         0.0
+        ],
+        [
+         0.0,
+         -0.011
+        ],
+        [
+         0.012,
+         -0.009
+        ],
+        [
+         0.012,
+         0.0
+        ]
+       ],
+       "closed": true,
+       "region": "turntable",
+       "material": "pp-plastic",
+       "solid": {
+        "kind": "revolved",
+        "axisBone": "turntable",
+        "axis": "u",
+        "axisX": 0,
+        "axisZ": 0,
+        "mirror": true
+       }
+      },
+      {
+       "id": "door-frame",
+       "bone": "door",
+       "role": "body",
+       "z": 7.0,
+       "filled": true,
+       "tone": 0.92,
+       "kind": "path",
+       "d": "M 0.0 0.0 L 0.0 -0.3185 L 0.245 -0.3185 L 0.245 0.0 Z M 0.0465 -0.045 L 0.0465 -0.265 L 0.1985 -0.265 L 0.1985 -0.045 Z",
+       "region": "door",
+       "material": "abs-aged",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.17,
+        "z1": -0.135
+       }
+      },
+      {
+       "id": "glass",
+       "bone": "door",
+       "role": "glazing",
+       "z": 6.9,
+       "filled": true,
+       "tone": 0.3,
+       "kind": "rect",
+       "x": 0.0465,
+       "y": -0.265,
+       "w": 0.152,
+       "h": 0.22,
+       "region": "window",
+       "material": "door-glass",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.16,
+        "z1": -0.156
+       }
+      },
+      {
+       "id": "hinge-1",
+       "bone": "door",
+       "role": "detail",
+       "z": 6.8,
+       "filled": true,
+       "tone": 0.4,
+       "kind": "rect",
+       "x": 0.0,
+       "y": -0.009,
+       "w": 0.015,
+       "h": 0.008,
+       "region": "door",
+       "material": "galv-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.141,
+        "z1": -0.129
+       }
+      },
+      {
+       "id": "hinge-2",
+       "bone": "door",
+       "role": "detail",
+       "z": 6.8,
+       "filled": true,
+       "tone": 0.4,
+       "kind": "rect",
+       "x": 0.23,
+       "y": -0.009,
+       "w": 0.015,
+       "h": 0.008,
+       "region": "door",
+       "material": "galv-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.141,
+        "z1": -0.129
+       }
+      },
+      {
+       "id": "fascia",
+       "bone": "panel",
+       "role": "body",
+       "z": 6.7,
+       "filled": true,
+       "tone": 0.9,
+       "kind": "rect",
+       "x": 0.0,
+       "y": -0.06,
+       "w": 0.247,
+       "h": 0.12,
+       "region": "panel",
+       "material": "abs-aged"
+      },
+      {
+       "id": "button",
+       "bone": "panel",
+       "role": "body",
+       "z": 6.78,
+       "filled": true,
+       "tone": 0.75,
+       "kind": "rect",
+       "x": 0.029,
+       "y": -0.03,
+       "w": 0.022,
+       "h": 0.06,
+       "region": "panel",
+       "material": "abs-aged"
+      },
+      {
+       "id": "knob-power",
+       "bone": "knob-power",
+       "role": "body",
+       "z": 8.0,
+       "filled": true,
+       "tone": 0.12,
+       "kind": "poly",
+       "points": [
+        [
+         0.016,
+         0.0
+        ],
+        [
+         0.015455,
+         0.004141
+        ],
+        [
+         0.013856,
+         0.008
+        ],
+        [
+         0.011314,
+         0.011314
+        ],
+        [
+         0.008,
+         0.013856
+        ],
+        [
+         0.004141,
+         0.015455
+        ],
+        [
+         0.0,
+         0.016
+        ],
+        [
+         -0.004141,
+         0.015455
+        ],
+        [
+         -0.008,
+         0.013856
+        ],
+        [
+         -0.011314,
+         0.011314
+        ],
+        [
+         -0.013856,
+         0.008
+        ],
+        [
+         -0.015455,
+         0.004141
+        ],
+        [
+         -0.016,
+         0.0
+        ],
+        [
+         -0.015455,
+         -0.004141
+        ],
+        [
+         -0.013856,
+         -0.008
+        ],
+        [
+         -0.011314,
+         -0.011314
+        ],
+        [
+         -0.008,
+         -0.013856
+        ],
+        [
+         -0.004141,
+         -0.015455
+        ],
+        [
+         0.0,
+         -0.016
+        ],
+        [
+         0.004141,
+         -0.015455
+        ],
+        [
+         0.008,
+         -0.013856
+        ],
+        [
+         0.011314,
+         -0.011314
+        ],
+        [
+         0.013856,
+         -0.008
+        ],
+        [
+         0.015455,
+         -0.004141
+        ]
+       ],
+       "closed": true,
+       "region": "panel",
+       "material": "abs-black",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.185,
+        "z1": -0.17
+       }
+      },
+      {
+       "id": "knob-timer",
+       "bone": "knob-timer",
+       "role": "body",
+       "z": 8.0,
+       "filled": true,
+       "tone": 0.85,
+       "kind": "poly",
+       "points": [
+        [
+         0.019,
+         0.0
+        ],
+        [
+         0.018353,
+         0.004918
+        ],
+        [
+         0.016454,
+         0.0095
+        ],
+        [
+         0.013435,
+         0.013435
+        ],
+        [
+         0.0095,
+         0.016454
+        ],
+        [
+         0.004918,
+         0.018353
+        ],
+        [
+         0.0,
+         0.019
+        ],
+        [
+         -0.004918,
+         0.018353
+        ],
+        [
+         -0.0095,
+         0.016454
+        ],
+        [
+         -0.013435,
+         0.013435
+        ],
+        [
+         -0.016454,
+         0.0095
+        ],
+        [
+         -0.018353,
+         0.004918
+        ],
+        [
+         -0.019,
+         0.0
+        ],
+        [
+         -0.018353,
+         -0.004918
+        ],
+        [
+         -0.016454,
+         -0.0095
+        ],
+        [
+         -0.013435,
+         -0.013435
+        ],
+        [
+         -0.0095,
+         -0.016454
+        ],
+        [
+         -0.004918,
+         -0.018353
+        ],
+        [
+         0.0,
+         -0.019
+        ],
+        [
+         0.004918,
+         -0.018353
+        ],
+        [
+         0.0095,
+         -0.016454
+        ],
+        [
+         0.013435,
+         -0.013435
+        ],
+        [
+         0.016454,
+         -0.0095
+        ],
+        [
+         0.018353,
+         -0.004918
+        ]
+       ],
+       "closed": true,
+       "region": "panel",
+       "material": "abs-aged",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.187,
+        "z1": -0.17
+       }
+      },
+      {
+       "id": "plug",
+       "bone": "cord",
+       "role": "body",
+       "z": 3.29,
+       "filled": true,
+       "tone": 0.88,
+       "kind": "rect",
+       "x": -0.052,
+       "y": -0.003,
+       "w": 0.052,
+       "h": 0.028,
+       "region": "casing",
+       "material": "pvc-cord"
+      },
+      {
+       "id": "cord-run",
+       "bone": "cord",
+       "role": "body",
+       "z": 3.18,
+       "filled": true,
+       "tone": 0.88,
+       "kind": "rect",
+       "x": 0.0,
+       "y": -0.003,
+       "w": 0.283,
+       "h": 0.006,
+       "region": "casing",
+       "material": "pvc-cord"
+      },
+      {
+       "id": "glass-scratch-1",
+       "bone": "door",
+       "role": "texture",
+       "z": 7.2,
+       "filled": true,
+       "tone": 0.6,
+       "kind": "poly",
+       "points": [
+        [
+         0.079394,
+         -0.069553
+        ],
+        [
+         0.109394,
+         -0.129553
+        ],
+        [
+         0.107606,
+         -0.130447
+        ],
+        [
+         0.077606,
+         -0.070447
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.16,
+        "z1": -0.156
+       }
+      },
+      {
+       "id": "glass-scratch-2",
+       "bone": "door",
+       "role": "texture",
+       "z": 7.2,
+       "filled": true,
+       "tone": 0.6,
+       "kind": "poly",
+       "points": [
+        [
+         0.15944,
+         -0.150342
+        ],
+        [
+         0.13944,
+         -0.205342
+        ],
+        [
+         0.13756,
+         -0.204658
+        ],
+        [
+         0.15756,
+         -0.149658
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.16,
+        "z1": -0.156
+       }
+      },
+      {
+       "id": "glass-scratch-3",
+       "bone": "door",
+       "role": "texture",
+       "z": 7.2,
+       "filled": true,
+       "tone": 0.6,
+       "kind": "poly",
+       "points": [
+        [
+         0.06947,
+         -0.179757
+        ],
+        [
+         0.08447,
+         -0.239757
+        ],
+        [
+         0.08253,
+         -0.240243
+        ],
+        [
+         0.06753,
+         -0.180243
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.16,
+        "z1": -0.156
+       }
+      },
+      {
+       "id": "grease-spot-1",
+       "bone": "door",
+       "role": "texture",
+       "z": 7.3,
+       "filled": true,
+       "tone": 0.55,
+       "kind": "poly",
+       "points": [
+        [
+         0.0225,
+         -0.025
+        ],
+        [
+         0.025,
+         -0.02433
+        ],
+        [
+         0.02683,
+         -0.0225
+        ],
+        [
+         0.0275,
+         -0.02
+        ],
+        [
+         0.02683,
+         -0.0175
+        ],
+        [
+         0.025,
+         -0.01567
+        ],
+        [
+         0.0225,
+         -0.015
+        ],
+        [
+         0.02,
+         -0.01567
+        ],
+        [
+         0.01817,
+         -0.0175
+        ],
+        [
+         0.0175,
+         -0.02
+        ],
+        [
+         0.01817,
+         -0.0225
+        ],
+        [
+         0.02,
+         -0.02433
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.17,
+        "z1": -0.165
+       }
+      },
+      {
+       "id": "grease-spot-2",
+       "bone": "door",
+       "role": "texture",
+       "z": 7.3,
+       "filled": true,
+       "tone": 0.55,
+       "kind": "poly",
+       "points": [
+        [
+         0.0135,
+         -0.0345
+        ],
+        [
+         0.01525,
+         -0.034031
+        ],
+        [
+         0.016531,
+         -0.03275
+        ],
+        [
+         0.017,
+         -0.031
+        ],
+        [
+         0.016531,
+         -0.02925
+        ],
+        [
+         0.01525,
+         -0.027969
+        ],
+        [
+         0.0135,
+         -0.0275
+        ],
+        [
+         0.01175,
+         -0.027969
+        ],
+        [
+         0.010469,
+         -0.02925
+        ],
+        [
+         0.01,
+         -0.031
+        ],
+        [
+         0.010469,
+         -0.03275
+        ],
+        [
+         0.01175,
+         -0.034031
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.17,
+        "z1": -0.165
+       }
+      },
+      {
+       "id": "grease-spot-3",
+       "bone": "door",
+       "role": "texture",
+       "z": 7.3,
+       "filled": true,
+       "tone": 0.55,
+       "kind": "poly",
+       "points": [
+        [
+         0.0235,
+         -0.294
+        ],
+        [
+         0.0255,
+         -0.293464
+        ],
+        [
+         0.026964,
+         -0.292
+        ],
+        [
+         0.0275,
+         -0.29
+        ],
+        [
+         0.026964,
+         -0.288
+        ],
+        [
+         0.0255,
+         -0.286536
+        ],
+        [
+         0.0235,
+         -0.286
+        ],
+        [
+         0.0215,
+         -0.286536
+        ],
+        [
+         0.020036,
+         -0.288
+        ],
+        [
+         0.0195,
+         -0.29
+        ],
+        [
+         0.020036,
+         -0.292
+        ],
+        [
+         0.0215,
+         -0.293464
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.17,
+        "z1": -0.165
+       }
+      },
+      {
+       "id": "grease-spot-4",
+       "bone": "door",
+       "role": "texture",
+       "z": 7.3,
+       "filled": true,
+       "tone": 0.55,
+       "kind": "poly",
+       "points": [
+        [
+         0.2185,
+         -0.3035
+        ],
+        [
+         0.22025,
+         -0.303031
+        ],
+        [
+         0.221531,
+         -0.30175
+        ],
+        [
+         0.222,
+         -0.3
+        ],
+        [
+         0.221531,
+         -0.29825
+        ],
+        [
+         0.22025,
+         -0.296969
+        ],
+        [
+         0.2185,
+         -0.2965
+        ],
+        [
+         0.21675,
+         -0.296969
+        ],
+        [
+         0.215469,
+         -0.29825
+        ],
+        [
+         0.215,
+         -0.3
+        ],
+        [
+         0.215469,
+         -0.30175
+        ],
+        [
+         0.21675,
+         -0.303031
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.17,
+        "z1": -0.165
+       }
+      },
+      {
+       "id": "timer-scale-1",
+       "bone": "panel",
+       "role": "texture",
+       "z": 7.5,
+       "filled": true,
+       "tone": 0.3,
+       "kind": "rect",
+       "x": 0.1338,
+       "y": -0.0012,
+       "w": 0.0024,
+       "h": 0.0024
+      },
+      {
+       "id": "timer-scale-2",
+       "bone": "panel",
+       "role": "texture",
+       "z": 7.5,
+       "filled": true,
+       "tone": 0.3,
+       "kind": "rect",
+       "x": 0.127122,
+       "y": -0.018597,
+       "w": 0.0024,
+       "h": 0.0024
+      },
+      {
+       "id": "timer-scale-3",
+       "bone": "panel",
+       "role": "texture",
+       "z": 7.5,
+       "filled": true,
+       "tone": 0.3,
+       "kind": "rect",
+       "x": 0.110518,
+       "y": -0.027058,
+       "w": 0.0024,
+       "h": 0.0024
+      },
+      {
+       "id": "timer-scale-4",
+       "bone": "panel",
+       "role": "texture",
+       "z": 7.5,
+       "filled": true,
+       "tone": 0.3,
+       "kind": "rect",
+       "x": 0.092518,
+       "y": -0.022234,
+       "w": 0.0024,
+       "h": 0.0024
+      },
+      {
+       "id": "timer-scale-5",
+       "bone": "panel",
+       "role": "texture",
+       "z": 7.5,
+       "filled": true,
+       "tone": 0.7,
+       "kind": "rect",
+       "x": 0.082368,
+       "y": -0.006606,
+       "w": 0.0024,
+       "h": 0.0024
+      },
+      {
+       "id": "timer-scale-6",
+       "bone": "panel",
+       "role": "texture",
+       "z": 7.5,
+       "filled": true,
+       "tone": 0.7,
+       "kind": "rect",
+       "x": 0.085283,
+       "y": 0.0118,
+       "w": 0.0024,
+       "h": 0.0024
+      },
+      {
+       "id": "timer-scale-7",
+       "bone": "panel",
+       "role": "texture",
+       "z": 7.5,
+       "filled": true,
+       "tone": 0.7,
+       "kind": "rect",
+       "x": 0.099766,
+       "y": 0.023527,
+       "w": 0.0024,
+       "h": 0.0024
+      },
+      {
+       "id": "knob-power-pointer",
+       "bone": "knob-power",
+       "role": "texture",
+       "z": 8.1,
+       "filled": true,
+       "tone": 0.95,
+       "kind": "rect",
+       "x": -0.0012,
+       "y": 0.004,
+       "w": 0.0024,
+       "h": 0.01,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.187,
+        "z1": -0.183
+       }
+      },
+      {
+       "id": "knob-timer-pointer",
+       "bone": "knob-timer",
+       "role": "texture",
+       "z": 8.1,
+       "filled": true,
+       "tone": 0.25,
+       "kind": "rect",
+       "x": -0.0012,
+       "y": 0.004,
+       "w": 0.0024,
+       "h": 0.013,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.187,
+        "z1": -0.183
+       }
+      },
+      {
+       "id": "power-mark-1",
+       "bone": "panel",
+       "role": "texture",
+       "z": 7.5,
+       "filled": true,
+       "tone": 0.35,
+       "kind": "rect",
+       "x": 0.215,
+       "y": 0.029,
+       "w": 0.0025,
+       "h": 0.006
+      },
+      {
+       "id": "power-mark-2",
+       "bone": "panel",
+       "role": "texture",
+       "z": 7.5,
+       "filled": true,
+       "tone": 0.35,
+       "kind": "rect",
+       "x": 0.215,
+       "y": 0.015,
+       "w": 0.0025,
+       "h": 0.006
+      },
+      {
+       "id": "power-mark-3",
+       "bone": "panel",
+       "role": "texture",
+       "z": 7.5,
+       "filled": true,
+       "tone": 0.35,
+       "kind": "rect",
+       "x": 0.215,
+       "y": 0.001,
+       "w": 0.0025,
+       "h": 0.006
+      },
+      {
+       "id": "power-mark-4",
+       "bone": "panel",
+       "role": "texture",
+       "z": 7.5,
+       "filled": true,
+       "tone": 0.35,
+       "kind": "rect",
+       "x": 0.215,
+       "y": -0.013,
+       "w": 0.0025,
+       "h": 0.006
+      },
+      {
+       "id": "power-mark-5",
+       "bone": "panel",
+       "role": "texture",
+       "z": 7.5,
+       "filled": true,
+       "tone": 0.35,
+       "kind": "rect",
+       "x": 0.215,
+       "y": -0.027,
+       "w": 0.0025,
+       "h": 0.006
+      },
+      {
+       "id": "button-yellowing",
+       "bone": "panel",
+       "role": "texture",
+       "z": 7.6,
+       "filled": true,
+       "tone": 0.6,
+       "kind": "rect",
+       "x": 0.031,
+       "y": -0.028,
+       "w": 0.008,
+       "h": 0.056
+      }
+     ],
+     "front": [
+      {
+       "id": "pad",
+       "bone": "pad",
+       "role": "body",
+       "z": 6.6,
+       "filled": true,
+       "tone": 0.62,
+       "kind": "rect",
+       "x": -0.19,
+       "y": 0.0,
+       "w": 0.395,
+       "h": 0.008,
+       "region": "pad",
+       "material": "corrugated-board"
+      },
+      {
+       "id": "foot-2",
+       "bone": "housing",
+       "role": "body",
+       "z": 6.17,
+       "filled": true,
+       "tone": 0.15,
+       "kind": "rect",
+       "x": -0.117,
+       "y": 0.008,
+       "w": 0.024,
+       "h": 0.01,
+       "region": "casing",
+       "material": "pp-plastic"
+      },
+      {
+       "id": "foot-4",
+       "bone": "housing",
+       "role": "body",
+       "z": 6.17,
+       "filled": true,
+       "tone": 0.15,
+       "kind": "rect",
+       "x": 0.123,
+       "y": 0.008,
+       "w": 0.024,
+       "h": 0.01,
+       "region": "casing",
+       "material": "pp-plastic"
+      },
+      {
+       "id": "base",
+       "bone": "base",
+       "role": "body",
+       "z": 6.4,
+       "filled": true,
+       "tone": 0.5,
+       "kind": "rect",
+       "x": -0.135,
+       "y": 0.018,
+       "w": 0.3,
+       "h": 0.001,
+       "region": "casing",
+       "material": "galv-steel"
+      },
+      {
+       "id": "side-l",
+       "bone": "side-l",
+       "role": "body",
+       "z": 2.005,
+       "filled": true,
+       "tone": 0.88,
+       "kind": "rect",
+       "x": -0.135,
+       "y": 0.019,
+       "w": 0.3,
+       "h": 0.247,
+       "region": "casing",
+       "material": "painted-steel"
+      },
+      {
+       "id": "side-r",
+       "bone": "side-r",
+       "role": "body",
+       "z": 6.4,
+       "filled": true,
+       "tone": 0.88,
+       "kind": "rect",
+       "x": -0.135,
+       "y": 0.019,
+       "w": 0.3,
+       "h": 0.247,
+       "region": "casing",
+       "material": "painted-steel"
+      },
+      {
+       "id": "top",
+       "bone": "top",
+       "role": "body",
+       "z": 6.395,
+       "filled": true,
+       "tone": 0.9,
+       "kind": "rect",
+       "x": -0.135,
+       "y": 0.2655,
+       "w": 0.3,
+       "h": 0.0005,
+       "region": "casing",
+       "material": "painted-steel"
+      },
+      {
+       "id": "back",
+       "bone": "housing",
+       "role": "body",
+       "z": 6.395,
+       "filled": true,
+       "tone": 0.8,
+       "kind": "rect",
+       "x": 0.1645,
+       "y": 0.019,
+       "w": 0.0005,
+       "h": 0.2465,
+       "region": "casing",
+       "material": "painted-steel"
+      },
+      {
+       "id": "liner",
+       "bone": "cavity",
+       "role": "body",
+       "z": 5.255,
+       "filled": true,
+       "tone": 0.72,
+       "kind": "rect",
+       "x": -0.135,
+       "y": 0.0355,
+       "w": 0.295,
+       "h": 0.213,
+       "region": "cavity",
+       "material": "cavity-paint"
+      },
+      {
+       "id": "liner-back",
+       "bone": "cavity",
+       "role": "body",
+       "z": 5.255,
+       "filled": true,
+       "tone": 0.66,
+       "kind": "rect",
+       "x": 0.16,
+       "y": 0.0355,
+       "w": 0.0005,
+       "h": 0.213,
+       "region": "cavity",
+       "material": "cavity-paint"
+      },
+      {
+       "id": "plate",
+       "bone": "turntable",
+       "role": "body",
+       "z": 1.9000000000000004,
+       "filled": true,
+       "tone": 0.85,
+       "kind": "poly",
+       "points": [
+        [
+         0.012,
+         0.0
+        ],
+        [
+         0.012,
+         -0.1
+        ],
+        [
+         0.022,
+         -0.1225
+        ],
+        [
+         0.027,
+         -0.1225
+        ],
+        [
+         0.017,
+         -0.1
+        ],
+        [
+         0.017,
+         0.0
+        ]
+       ],
+       "closed": true,
+       "region": "turntable",
+       "material": "borosilicate",
+       "solid": {
+        "kind": "revolved",
+        "axisBone": "turntable",
+        "axis": "u",
+        "axisX": 0,
+        "axisZ": 0,
+        "mirror": true
+       }
+      },
+      {
+       "id": "coupler",
+       "bone": "turntable",
+       "role": "body",
+       "z": 0.7850000000000001,
+       "filled": true,
+       "tone": 0.4,
+       "kind": "poly",
+       "points": [
+        [
+         0.0,
+         0.0
+        ],
+        [
+         0.0,
+         -0.011
+        ],
+        [
+         0.012,
+         -0.009
+        ],
+        [
+         0.012,
+         0.0
+        ]
+       ],
+       "closed": true,
+       "region": "turntable",
+       "material": "pp-plastic",
+       "solid": {
+        "kind": "revolved",
+        "axisBone": "turntable",
+        "axis": "u",
+        "axisX": 0,
+        "axisZ": 0,
+        "mirror": true
+       }
+      },
+      {
+       "id": "door-frame",
+       "bone": "door",
+       "role": "body",
+       "z": 7.0,
+       "filled": true,
+       "tone": 0.92,
+       "kind": "path",
+       "d": "M 0.0 0.0 L 0.0 -0.3185 L 0.245 -0.3185 L 0.245 0.0 Z M 0.0465 -0.045 L 0.0465 -0.265 L 0.1985 -0.265 L 0.1985 -0.045 Z",
+       "region": "door",
+       "material": "abs-aged",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.17,
+        "z1": -0.135
+       }
+      },
+      {
+       "id": "glass",
+       "bone": "door",
+       "role": "glazing",
+       "z": 6.9,
+       "filled": true,
+       "tone": 0.3,
+       "kind": "rect",
+       "x": 0.0465,
+       "y": -0.265,
+       "w": 0.152,
+       "h": 0.22,
+       "region": "window",
+       "material": "door-glass",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.16,
+        "z1": -0.156
+       }
+      },
+      {
+       "id": "hinge-1",
+       "bone": "door",
+       "role": "detail",
+       "z": 6.8,
+       "filled": true,
+       "tone": 0.4,
+       "kind": "rect",
+       "x": 0.0,
+       "y": -0.009,
+       "w": 0.015,
+       "h": 0.008,
+       "region": "door",
+       "material": "galv-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.141,
+        "z1": -0.129
+       }
+      },
+      {
+       "id": "hinge-2",
+       "bone": "door",
+       "role": "detail",
+       "z": 6.8,
+       "filled": true,
+       "tone": 0.4,
+       "kind": "rect",
+       "x": 0.23,
+       "y": -0.009,
+       "w": 0.015,
+       "h": 0.008,
+       "region": "door",
+       "material": "galv-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.141,
+        "z1": -0.129
+       }
+      },
+      {
+       "id": "fascia",
+       "bone": "panel",
+       "role": "body",
+       "z": 6.4,
+       "filled": true,
+       "tone": 0.9,
+       "kind": "rect",
+       "x": -0.17,
+       "y": 0.019,
+       "w": 0.035,
+       "h": 0.247,
+       "region": "panel",
+       "material": "abs-aged"
+      },
+      {
+       "id": "button",
+       "bone": "panel",
+       "role": "body",
+       "z": 6.1,
+       "filled": true,
+       "tone": 0.75,
+       "kind": "rect",
+       "x": -0.178,
+       "y": 0.048,
+       "w": 0.008,
+       "h": 0.022,
+       "region": "panel",
+       "material": "abs-aged"
+      },
+      {
+       "id": "knob-power",
+       "bone": "knob-power",
+       "role": "body",
+       "z": 5.96,
+       "filled": true,
+       "tone": 0.12,
+       "kind": "poly",
+       "points": [
+        [
+         0.016,
+         0.0
+        ],
+        [
+         0.015455,
+         0.004141
+        ],
+        [
+         0.013856,
+         0.008
+        ],
+        [
+         0.011314,
+         0.011314
+        ],
+        [
+         0.008,
+         0.013856
+        ],
+        [
+         0.004141,
+         0.015455
+        ],
+        [
+         0.0,
+         0.016
+        ],
+        [
+         -0.004141,
+         0.015455
+        ],
+        [
+         -0.008,
+         0.013856
+        ],
+        [
+         -0.011314,
+         0.011314
+        ],
+        [
+         -0.013856,
+         0.008
+        ],
+        [
+         -0.015455,
+         0.004141
+        ],
+        [
+         -0.016,
+         0.0
+        ],
+        [
+         -0.015455,
+         -0.004141
+        ],
+        [
+         -0.013856,
+         -0.008
+        ],
+        [
+         -0.011314,
+         -0.011314
+        ],
+        [
+         -0.008,
+         -0.013856
+        ],
+        [
+         -0.004141,
+         -0.015455
+        ],
+        [
+         0.0,
+         -0.016
+        ],
+        [
+         0.004141,
+         -0.015455
+        ],
+        [
+         0.008,
+         -0.013856
+        ],
+        [
+         0.011314,
+         -0.011314
+        ],
+        [
+         0.013856,
+         -0.008
+        ],
+        [
+         0.015455,
+         -0.004141
+        ]
+       ],
+       "closed": true,
+       "region": "panel",
+       "material": "abs-black",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.185,
+        "z1": -0.17
+       }
+      },
+      {
+       "id": "knob-timer",
+       "bone": "knob-timer",
+       "role": "body",
+       "z": 5.99,
+       "filled": true,
+       "tone": 0.85,
+       "kind": "poly",
+       "points": [
+        [
+         0.019,
+         0.0
+        ],
+        [
+         0.018353,
+         0.004918
+        ],
+        [
+         0.016454,
+         0.0095
+        ],
+        [
+         0.013435,
+         0.013435
+        ],
+        [
+         0.0095,
+         0.016454
+        ],
+        [
+         0.004918,
+         0.018353
+        ],
+        [
+         0.0,
+         0.019
+        ],
+        [
+         -0.004918,
+         0.018353
+        ],
+        [
+         -0.0095,
+         0.016454
+        ],
+        [
+         -0.013435,
+         0.013435
+        ],
+        [
+         -0.016454,
+         0.0095
+        ],
+        [
+         -0.018353,
+         0.004918
+        ],
+        [
+         -0.019,
+         0.0
+        ],
+        [
+         -0.018353,
+         -0.004918
+        ],
+        [
+         -0.016454,
+         -0.0095
+        ],
+        [
+         -0.013435,
+         -0.013435
+        ],
+        [
+         -0.0095,
+         -0.016454
+        ],
+        [
+         -0.004918,
+         -0.018353
+        ],
+        [
+         0.0,
+         -0.019
+        ],
+        [
+         0.004918,
+         -0.018353
+        ],
+        [
+         0.0095,
+         -0.016454
+        ],
+        [
+         0.013435,
+         -0.013435
+        ],
+        [
+         0.016454,
+         -0.0095
+        ],
+        [
+         0.018353,
+         -0.004918
+        ]
+       ],
+       "closed": true,
+       "region": "panel",
+       "material": "abs-aged",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.187,
+        "z1": -0.17
+       }
+      },
+      {
+       "id": "plug",
+       "bone": "cord",
+       "role": "body",
+       "z": 3.12,
+       "filled": true,
+       "tone": 0.88,
+       "kind": "rect",
+       "x": 0.171,
+       "y": 0.008,
+       "w": 0.028,
+       "h": 0.028,
+       "region": "casing",
+       "material": "pvc-cord"
+      },
+      {
+       "id": "cord-drop",
+       "bone": "cord",
+       "role": "body",
+       "z": 6.045,
+       "filled": true,
+       "tone": 0.88,
+       "kind": "capsule",
+       "x0": 0.1665,
+       "y0": 0.036,
+       "x1": 0.185,
+       "y1": 0.0135,
+       "r0": 0.0045,
+       "r1": 0.0035,
+       "region": "casing",
+       "material": "pvc-cord"
+      },
+      {
+       "id": "vent-slot-1",
+       "bone": "side-r",
+       "role": "texture",
+       "z": 6.5,
+       "filled": true,
+       "tone": 0.45,
+       "kind": "rect",
+       "x": -0.06,
+       "y": 0.158,
+       "w": 0.012,
+       "h": 0.08
+      },
+      {
+       "id": "vent-slot-2",
+       "bone": "side-r",
+       "role": "texture",
+       "z": 6.5,
+       "filled": true,
+       "tone": 0.45,
+       "kind": "rect",
+       "x": -0.038,
+       "y": 0.158,
+       "w": 0.012,
+       "h": 0.08
+      },
+      {
+       "id": "vent-slot-3",
+       "bone": "side-r",
+       "role": "texture",
+       "z": 6.5,
+       "filled": true,
+       "tone": 0.45,
+       "kind": "rect",
+       "x": -0.016,
+       "y": 0.158,
+       "w": 0.012,
+       "h": 0.08
+      },
+      {
+       "id": "vent-slot-4",
+       "bone": "side-r",
+       "role": "texture",
+       "z": 6.5,
+       "filled": true,
+       "tone": 0.45,
+       "kind": "rect",
+       "x": 0.006,
+       "y": 0.158,
+       "w": 0.012,
+       "h": 0.08
+      },
+      {
+       "id": "vent-slot-5",
+       "bone": "side-r",
+       "role": "texture",
+       "z": 6.5,
+       "filled": true,
+       "tone": 0.45,
+       "kind": "rect",
+       "x": 0.028,
+       "y": 0.158,
+       "w": 0.012,
+       "h": 0.08
+      },
+      {
+       "id": "vent-slot-6",
+       "bone": "side-r",
+       "role": "texture",
+       "z": 6.5,
+       "filled": true,
+       "tone": 0.45,
+       "kind": "rect",
+       "x": 0.05,
+       "y": 0.158,
+       "w": 0.012,
+       "h": 0.08
+      },
+      {
+       "id": "side-dent",
+       "bone": "side-r",
+       "role": "texture",
+       "z": 6.5,
+       "filled": false,
+       "tone": 0.4,
+       "kind": "ellipse",
+       "cx": 0.11,
+       "cy": 0.088,
+       "rx": 0.018,
+       "ry": 0.012
+      }
+     ],
+     "plan": [
+      {
+       "id": "pad",
+       "bone": "pad",
+       "role": "body",
+       "z": 2.08,
+       "filled": true,
+       "tone": 0.62,
+       "kind": "rect",
+       "x": -0.02,
+       "y": -0.19,
+       "w": 0.48,
+       "h": 0.395,
+       "region": "pad",
+       "material": "corrugated-board"
+      },
+      {
+       "id": "base",
+       "bone": "base",
+       "role": "body",
+       "z": 2.19,
+       "filled": true,
+       "tone": 0.5,
+       "kind": "rect",
+       "x": 0.0,
+       "y": -0.135,
+       "w": 0.44,
+       "h": 0.3,
+       "region": "casing",
+       "material": "galv-steel"
+      },
+      {
+       "id": "side-l",
+       "bone": "side-l",
+       "role": "body",
+       "z": 4.66,
+       "filled": true,
+       "tone": 0.88,
+       "kind": "rect",
+       "x": 0.0,
+       "y": -0.135,
+       "w": 0.0005,
+       "h": 0.3,
+       "region": "casing",
+       "material": "painted-steel"
+      },
+      {
+       "id": "side-r",
+       "bone": "side-r",
+       "role": "body",
+       "z": 4.66,
+       "filled": true,
+       "tone": 0.88,
+       "kind": "rect",
+       "x": 0.4395,
+       "y": -0.135,
+       "w": 0.0005,
+       "h": 0.3,
+       "region": "casing",
+       "material": "painted-steel"
+      },
+      {
+       "id": "top",
+       "bone": "top",
+       "role": "body",
+       "z": 4.66,
+       "filled": true,
+       "tone": 0.9,
+       "kind": "rect",
+       "x": 0.0005,
+       "y": -0.135,
+       "w": 0.439,
+       "h": 0.3,
+       "region": "casing",
+       "material": "painted-steel"
+      },
+      {
+       "id": "back",
+       "bone": "housing",
+       "role": "body",
+       "z": 4.655,
+       "filled": true,
+       "tone": 0.8,
+       "kind": "rect",
+       "x": 0.0005,
+       "y": 0.1645,
+       "w": 0.439,
+       "h": 0.0005,
+       "region": "casing",
+       "material": "painted-steel"
+      },
+      {
+       "id": "liner",
+       "bone": "cavity",
+       "role": "body",
+       "z": 4.405,
+       "filled": true,
+       "tone": 0.72,
+       "kind": "rect",
+       "x": 0.0095,
+       "y": -0.135,
+       "w": 0.316,
+       "h": 0.295,
+       "region": "cavity",
+       "material": "cavity-paint"
+      },
+      {
+       "id": "liner-back",
+       "bone": "cavity",
+       "role": "body",
+       "z": 4.485,
+       "filled": true,
+       "tone": 0.66,
+       "kind": "rect",
+       "x": 0.0095,
+       "y": 0.16,
+       "w": 0.316,
+       "h": 0.0005,
+       "region": "cavity",
+       "material": "cavity-paint"
+      },
+      {
+       "id": "plate",
+       "bone": "turntable",
+       "role": "body",
+       "z": 1.5499999999999998,
+       "filled": true,
+       "tone": 0.85,
+       "kind": "poly",
+       "points": [
+        [
+         0.012,
+         0.0
+        ],
+        [
+         0.012,
+         -0.1
+        ],
+        [
+         0.022,
+         -0.1225
+        ],
+        [
+         0.027,
+         -0.1225
+        ],
+        [
+         0.017,
+         -0.1
+        ],
+        [
+         0.017,
+         0.0
+        ]
+       ],
+       "closed": true,
+       "region": "turntable",
+       "material": "borosilicate",
+       "solid": {
+        "kind": "revolved",
+        "axisBone": "turntable",
+        "axis": "u",
+        "axisX": 0,
+        "axisZ": 0,
+        "mirror": true
+       }
+      },
+      {
+       "id": "coupler",
+       "bone": "turntable",
+       "role": "body",
+       "z": 1.4,
+       "filled": true,
+       "tone": 0.4,
+       "kind": "poly",
+       "points": [
+        [
+         0.0,
+         0.0
+        ],
+        [
+         0.0,
+         -0.011
+        ],
+        [
+         0.012,
+         -0.009
+        ],
+        [
+         0.012,
+         0.0
+        ]
+       ],
+       "closed": true,
+       "region": "turntable",
+       "material": "pp-plastic",
+       "solid": {
+        "kind": "revolved",
+        "axisBone": "turntable",
+        "axis": "u",
+        "axisX": 0,
+        "axisZ": 0,
+        "mirror": true
+       }
+      },
+      {
+       "id": "door-frame",
+       "bone": "door",
+       "role": "body",
+       "z": 7.0,
+       "filled": true,
+       "tone": 0.92,
+       "kind": "path",
+       "d": "M 0.0 0.0 L 0.0 -0.3185 L 0.245 -0.3185 L 0.245 0.0 Z M 0.0465 -0.045 L 0.0465 -0.265 L 0.1985 -0.265 L 0.1985 -0.045 Z",
+       "region": "door",
+       "material": "abs-aged",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.17,
+        "z1": -0.135
+       }
+      },
+      {
+       "id": "glass",
+       "bone": "door",
+       "role": "glazing",
+       "z": 6.9,
+       "filled": true,
+       "tone": 0.3,
+       "kind": "rect",
+       "x": 0.0465,
+       "y": -0.265,
+       "w": 0.152,
+       "h": 0.22,
+       "region": "window",
+       "material": "door-glass",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.16,
+        "z1": -0.156
+       }
+      },
+      {
+       "id": "hinge-1",
+       "bone": "door",
+       "role": "detail",
+       "z": 6.8,
+       "filled": true,
+       "tone": 0.4,
+       "kind": "rect",
+       "x": 0.0,
+       "y": -0.009,
+       "w": 0.015,
+       "h": 0.008,
+       "region": "door",
+       "material": "galv-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.141,
+        "z1": -0.129
+       }
+      },
+      {
+       "id": "hinge-2",
+       "bone": "door",
+       "role": "detail",
+       "z": 6.8,
+       "filled": true,
+       "tone": 0.4,
+       "kind": "rect",
+       "x": 0.23,
+       "y": -0.009,
+       "w": 0.015,
+       "h": 0.008,
+       "region": "door",
+       "material": "galv-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.141,
+        "z1": -0.129
+       }
+      },
+      {
+       "id": "fascia",
+       "bone": "panel",
+       "role": "body",
+       "z": 4.66,
+       "filled": true,
+       "tone": 0.9,
+       "kind": "rect",
+       "x": 0.32,
+       "y": -0.17,
+       "w": 0.12,
+       "h": 0.035,
+       "region": "panel",
+       "material": "abs-aged"
+      },
+      {
+       "id": "button",
+       "bone": "panel",
+       "role": "body",
+       "z": 2.7,
+       "filled": true,
+       "tone": 0.75,
+       "kind": "rect",
+       "x": 0.35,
+       "y": -0.178,
+       "w": 0.06,
+       "h": 0.008,
+       "region": "panel",
+       "material": "abs-aged"
+      },
+      {
+       "id": "knob-power",
+       "bone": "knob-power",
+       "role": "body",
+       "z": 4.11,
+       "filled": true,
+       "tone": 0.12,
+       "kind": "poly",
+       "points": [
+        [
+         0.016,
+         0.0
+        ],
+        [
+         0.015455,
+         0.004141
+        ],
+        [
+         0.013856,
+         0.008
+        ],
+        [
+         0.011314,
+         0.011314
+        ],
+        [
+         0.008,
+         0.013856
+        ],
+        [
+         0.004141,
+         0.015455
+        ],
+        [
+         0.0,
+         0.016
+        ],
+        [
+         -0.004141,
+         0.015455
+        ],
+        [
+         -0.008,
+         0.013856
+        ],
+        [
+         -0.011314,
+         0.011314
+        ],
+        [
+         -0.013856,
+         0.008
+        ],
+        [
+         -0.015455,
+         0.004141
+        ],
+        [
+         -0.016,
+         0.0
+        ],
+        [
+         -0.015455,
+         -0.004141
+        ],
+        [
+         -0.013856,
+         -0.008
+        ],
+        [
+         -0.011314,
+         -0.011314
+        ],
+        [
+         -0.008,
+         -0.013856
+        ],
+        [
+         -0.004141,
+         -0.015455
+        ],
+        [
+         0.0,
+         -0.016
+        ],
+        [
+         0.004141,
+         -0.015455
+        ],
+        [
+         0.008,
+         -0.013856
+        ],
+        [
+         0.011314,
+         -0.011314
+        ],
+        [
+         0.013856,
+         -0.008
+        ],
+        [
+         0.015455,
+         -0.004141
+        ]
+       ],
+       "closed": true,
+       "region": "panel",
+       "material": "abs-black",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.185,
+        "z1": -0.17
+       }
+      },
+      {
+       "id": "knob-timer",
+       "bone": "knob-timer",
+       "role": "body",
+       "z": 3.39,
+       "filled": true,
+       "tone": 0.85,
+       "kind": "poly",
+       "points": [
+        [
+         0.019,
+         0.0
+        ],
+        [
+         0.018353,
+         0.004918
+        ],
+        [
+         0.016454,
+         0.0095
+        ],
+        [
+         0.013435,
+         0.013435
+        ],
+        [
+         0.0095,
+         0.016454
+        ],
+        [
+         0.004918,
+         0.018353
+        ],
+        [
+         0.0,
+         0.019
+        ],
+        [
+         -0.004918,
+         0.018353
+        ],
+        [
+         -0.0095,
+         0.016454
+        ],
+        [
+         -0.013435,
+         0.013435
+        ],
+        [
+         -0.016454,
+         0.0095
+        ],
+        [
+         -0.018353,
+         0.004918
+        ],
+        [
+         -0.019,
+         0.0
+        ],
+        [
+         -0.018353,
+         -0.004918
+        ],
+        [
+         -0.016454,
+         -0.0095
+        ],
+        [
+         -0.013435,
+         -0.013435
+        ],
+        [
+         -0.0095,
+         -0.016454
+        ],
+        [
+         -0.004918,
+         -0.018353
+        ],
+        [
+         0.0,
+         -0.019
+        ],
+        [
+         0.004918,
+         -0.018353
+        ],
+        [
+         0.0095,
+         -0.016454
+        ],
+        [
+         0.013435,
+         -0.013435
+        ],
+        [
+         0.016454,
+         -0.0095
+        ],
+        [
+         0.018353,
+         -0.004918
+        ]
+       ],
+       "closed": true,
+       "region": "panel",
+       "material": "abs-aged",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.187,
+        "z1": -0.17
+       }
+      },
+      {
+       "id": "plug",
+       "bone": "cord",
+       "role": "body",
+       "z": 2.36,
+       "filled": true,
+       "tone": 0.88,
+       "kind": "rect",
+       "x": 0.06,
+       "y": 0.171,
+       "w": 0.052,
+       "h": 0.028,
+       "region": "casing",
+       "material": "pvc-cord"
+      },
+      {
+       "id": "cord-run",
+       "bone": "cord",
+       "role": "body",
+       "z": 2.06,
+       "filled": true,
+       "tone": 0.88,
+       "kind": "rect",
+       "x": 0.112,
+       "y": 0.182,
+       "w": 0.283,
+       "h": 0.006,
+       "region": "casing",
+       "material": "pvc-cord"
+      },
+      {
+       "id": "cord-drop",
+       "bone": "cord",
+       "role": "body",
+       "z": 2.325,
+       "filled": true,
+       "tone": 0.88,
+       "kind": "rect",
+       "x": 0.3925,
+       "y": 0.162,
+       "w": 0.012,
+       "h": 0.0265,
+       "region": "casing",
+       "material": "pvc-cord"
+      },
+      {
+       "id": "cord-tape",
+       "bone": "cord",
+       "role": "texture",
+       "z": 2.07,
+       "filled": true,
+       "tone": 0.2,
+       "kind": "rect",
+       "x": 0.25,
+       "y": 0.1813,
+       "w": 0.022,
+       "h": 0.0074
+      },
+      {
+       "id": "price-sticker",
+       "bone": "top",
+       "role": "texture",
+       "z": 4.68,
+       "filled": true,
+       "tone": 0.97,
+       "kind": "rect",
+       "x": 0.25,
+       "y": -0.09,
+       "w": 0.07,
+       "h": 0.05
+      },
+      {
+       "id": "sticker-line",
+       "bone": "top",
+       "role": "texture",
+       "z": 4.78,
+       "filled": false,
+       "tone": 0.2,
+       "kind": "poly",
+       "points": [
+        [
+         0.258,
+         -0.078
+        ],
+        [
+         0.31,
+         -0.078
+        ]
+       ],
+       "closed": false
+      },
+      {
+       "id": "top-dent",
+       "bone": "top",
+       "role": "texture",
+       "z": 4.68,
+       "filled": false,
+       "tone": 0.4,
+       "kind": "ellipse",
+       "cx": 0.11,
+       "cy": 0.07,
+       "rx": 0.025,
+       "ry": 0.015
+      },
+      {
+       "id": "top-scratch-1",
+       "bone": "top",
+       "role": "texture",
+       "z": 4.68,
+       "filled": false,
+       "tone": 0.3,
+       "kind": "poly",
+       "points": [
+        [
+         0.05,
+         0.1
+        ],
+        [
+         0.18,
+         0.12
+        ]
+       ],
+       "closed": false
+      },
+      {
+       "id": "top-scratch-2",
+       "bone": "top",
+       "role": "texture",
+       "z": 4.68,
+       "filled": false,
+       "tone": 0.3,
+       "kind": "poly",
+       "points": [
+        [
+         0.3,
+         0.02
+        ],
+        [
+         0.41,
+         0.0
+        ]
+       ],
+       "closed": false
+      }
+     ]
+    },
+    "decisions": {
+     "silhouette": {
+      "en": "Full construction at 8.8 x 5.3 mm: feet, base pan, the wrapper edges, the door with its window and glass, the control fascia with the two knobs and the door-release button, the cord and plug behind and the cardboard under the oven; behind the glass the yellowed cavity and the turntable.",
+      "de": "Volle Konstruktion auf 8,8 x 5,3 mm: Füße, Bodenwanne, die Mantelkanten, die Tür mit Fenster und Glas, die Bedienblende mit den zwei Knöpfen und der Türöffnertaste, Kabel und Stecker dahinter und die Pappe unter dem Gerät; hinter dem Glas der vergilbte Garraum und der Drehteller."
+     },
+     "retained": {
+      "en": "Every sheet at its true gauge (0.5 mm wrapper and liner, 1 mm base, 4 mm glass), the 35 mm door, the 1.5 mm door gap, the 245 mm plate with its rim, the two different knobs, the 6 mm cord.",
+      "de": "Jedes Blech in seiner wahren Stärke (0,5 mm Mantel und Auskleidung, 1 mm Boden, 4 mm Glas), die 35-mm-Tür, die 1,5-mm-Türfuge, der 245-mm-Teller mit Rand, die zwei verschiedenen Knöpfe, das 6-mm-Kabel."
+     },
+     "merged": {
+      "en": "The perforated screen is drawn with the glass; the choke seal of the door is part of the door frame.",
+      "de": "Der Lochschirm ist mit dem Glas gezeichnet; die Drosseldichtung der Tür gehört zum Türrahmen."
+     },
+     "omitted": {
+      "en": "Screws, the waveguide cover, the internal wiring and the fan blades.",
+      "de": "Schrauben, die Hohlleiterabdeckung, die innere Verdrahtung und die Lüfterflügel."
+     },
+     "thinElements": {
+      "en": "Wrapper, back, base, liner and glass keep their true thickness as thin filled shapes; the cord is a 6 mm filled strip.",
+      "de": "Mantel, Rückwand, Boden, Auskleidung und Glas behalten ihre wahre Stärke als dünne gefüllte Formen; das Kabel ist ein gefüllter 6-mm-Streifen."
+     },
+     "hatching": {
+      "en": "No hatches: the parts read by tone, the glazing by its dark glass tone.",
+      "de": "Keine Schraffuren: die Teile lesen sich über den Ton, die Verglasung über ihren dunklen Glaston."
+     },
+     "styles": {
+      "en": "Body pen 0.35 mm, texture pen 0.18 mm for the traces of use: scratches on the door glass, grease spots on the door frame, the worn print of the timer scale and of the power marks, the yellowed release button, the pointer of the mismatched black power knob, the slots and a dent on the right side, the price sticker, a dent and scratches on the top and the taped repair of the cord.",
+      "de": "Körperstift 0,35 mm, Texturstift 0,18 mm für die Gebrauchsspuren: Kratzer im Türglas, Fettflecken am Türrahmen, der abgegriffene Aufdruck der Zeitskala und der Leistungsmarken, die vergilbte Öffnertaste, der Zeiger des nicht passenden schwarzen Leistungsknopfs, die Schlitze und eine Delle an der rechten Seite, der Preisaufkleber, eine Delle und Kratzer auf dem Deckel und die geklebte Reparatur am Kabel."
+     },
+     "overlays": {
+      "en": "Analysis views colour the same shapes by region and member; the door, its glass and the knobs are drawn as swept solids and the turntable parts as revolved solids, so every view follows them when the door opens or the plate turns.",
+      "de": "Die Analyseansichten färben dieselben Formen nach Region und Bauteil; Tür, Glas und Knöpfe sind als gezogene Körper und die Drehtellerteile als Drehkörper gezeichnet, damit ihnen jede Ansicht folgt, wenn die Tür aufgeht oder der Teller dreht."
+     }
+    }
+   },
+   "100": {
+    "status": "authored",
+    "denominator": 100,
+    "validRange": {
+     "minDenominator": 75,
+     "maxDenominator": 150
+    },
+    "pens": {
+     "body": 0.25,
+     "detail": 0.13,
+     "texture": 0.13,
+     "glazing": 0.18,
+     "ground": 0.35
+    },
+    "hatches": [],
+    "geometry": {
+     "elevation": [
+      {
+       "id": "pad",
+       "bone": "pad",
+       "role": "body",
+       "z": 6.9,
+       "filled": true,
+       "tone": 0.62,
+       "kind": "rect",
+       "x": 0.0,
+       "y": 0.0,
+       "w": 0.48,
+       "h": 0.008,
+       "region": "pad",
+       "material": "corrugated-board"
+      },
+      {
+       "id": "foot-1",
+       "bone": "housing",
+       "role": "body",
+       "z": 6.17,
+       "filled": true,
+       "tone": 0.15,
+       "kind": "rect",
+       "x": 0.023,
+       "y": 0.0,
+       "w": 0.024,
+       "h": 0.01,
+       "region": "casing",
+       "material": "pp-plastic"
+      },
+      {
+       "id": "foot-2",
+       "bone": "housing",
+       "role": "body",
+       "z": 6.17,
+       "filled": true,
+       "tone": 0.15,
+       "kind": "rect",
+       "x": 0.393,
+       "y": 0.0,
+       "w": 0.024,
+       "h": 0.01,
+       "region": "casing",
+       "material": "pp-plastic"
+      },
+      {
+       "id": "shell",
+       "bone": "housing",
+       "role": "body",
+       "z": 6.35,
+       "filled": true,
+       "tone": 0.86,
+       "kind": "rect",
+       "x": 0.0,
+       "y": 0.01,
+       "w": 0.44,
+       "h": 0.248,
+       "region": "casing",
+       "material": "painted-steel"
+      },
+      {
+       "id": "plate",
+       "bone": "turntable",
+       "role": "body",
+       "z": 3.0999999999999996,
+       "filled": true,
+       "tone": 0.85,
+       "kind": "poly",
+       "points": [
+        [
+         -0.004,
+         0.0
+        ],
+        [
+         -0.004,
+         -0.015
+        ],
+        [
+         0.012,
+         -0.015
+        ],
+        [
+         0.012,
+         -0.1
+        ],
+        [
+         0.022,
+         -0.1225
+        ],
+        [
+         0.027,
+         -0.1225
+        ],
+        [
+         0.017,
+         -0.1
+        ],
+        [
+         0.017,
+         0.0
+        ]
+       ],
+       "closed": true,
+       "region": "turntable",
+       "material": "borosilicate",
+       "solid": {
+        "kind": "revolved",
+        "axisBone": "turntable",
+        "axis": "u",
+        "axisX": 0,
+        "axisZ": 0,
+        "mirror": true
+       }
+      },
+      {
+       "id": "door-frame",
+       "bone": "door",
+       "role": "body",
+       "z": 7.0,
+       "filled": true,
+       "tone": 0.92,
+       "kind": "path",
+       "d": "M 0.0 0.0 L 0.0 -0.3185 L 0.245 -0.3185 L 0.245 0.0 Z M 0.0465 -0.045 L 0.0465 -0.265 L 0.1985 -0.265 L 0.1985 -0.045 Z",
+       "region": "door",
+       "material": "abs-aged",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.17,
+        "z1": -0.135
+       }
+      },
+      {
+       "id": "glass",
+       "bone": "door",
+       "role": "glazing",
+       "z": 6.9,
+       "filled": true,
+       "tone": 0.3,
+       "kind": "rect",
+       "x": 0.0465,
+       "y": -0.265,
+       "w": 0.152,
+       "h": 0.22,
+       "region": "window",
+       "material": "door-glass",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.16,
+        "z1": -0.156
+       }
+      },
+      {
+       "id": "fascia",
+       "bone": "panel",
+       "role": "body",
+       "z": 6.7,
+       "filled": true,
+       "tone": 0.9,
+       "kind": "rect",
+       "x": 0.0,
+       "y": -0.06,
+       "w": 0.247,
+       "h": 0.12,
+       "region": "panel",
+       "material": "abs-aged"
+      },
+      {
+       "id": "knob-power",
+       "bone": "knob-power",
+       "role": "body",
+       "z": 8.0,
+       "filled": true,
+       "tone": 0.12,
+       "kind": "poly",
+       "points": [
+        [
+         0.016,
+         0.0
+        ],
+        [
+         0.015455,
+         0.004141
+        ],
+        [
+         0.013856,
+         0.008
+        ],
+        [
+         0.011314,
+         0.011314
+        ],
+        [
+         0.008,
+         0.013856
+        ],
+        [
+         0.004141,
+         0.015455
+        ],
+        [
+         0.0,
+         0.016
+        ],
+        [
+         -0.004141,
+         0.015455
+        ],
+        [
+         -0.008,
+         0.013856
+        ],
+        [
+         -0.011314,
+         0.011314
+        ],
+        [
+         -0.013856,
+         0.008
+        ],
+        [
+         -0.015455,
+         0.004141
+        ],
+        [
+         -0.016,
+         0.0
+        ],
+        [
+         -0.015455,
+         -0.004141
+        ],
+        [
+         -0.013856,
+         -0.008
+        ],
+        [
+         -0.011314,
+         -0.011314
+        ],
+        [
+         -0.008,
+         -0.013856
+        ],
+        [
+         -0.004141,
+         -0.015455
+        ],
+        [
+         0.0,
+         -0.016
+        ],
+        [
+         0.004141,
+         -0.015455
+        ],
+        [
+         0.008,
+         -0.013856
+        ],
+        [
+         0.011314,
+         -0.011314
+        ],
+        [
+         0.013856,
+         -0.008
+        ],
+        [
+         0.015455,
+         -0.004141
+        ]
+       ],
+       "closed": true,
+       "region": "panel",
+       "material": "abs-black",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.185,
+        "z1": -0.17
+       }
+      },
+      {
+       "id": "knob-timer",
+       "bone": "knob-timer",
+       "role": "body",
+       "z": 8.0,
+       "filled": true,
+       "tone": 0.85,
+       "kind": "poly",
+       "points": [
+        [
+         0.019,
+         0.0
+        ],
+        [
+         0.018353,
+         0.004918
+        ],
+        [
+         0.016454,
+         0.0095
+        ],
+        [
+         0.013435,
+         0.013435
+        ],
+        [
+         0.0095,
+         0.016454
+        ],
+        [
+         0.004918,
+         0.018353
+        ],
+        [
+         0.0,
+         0.019
+        ],
+        [
+         -0.004918,
+         0.018353
+        ],
+        [
+         -0.0095,
+         0.016454
+        ],
+        [
+         -0.013435,
+         0.013435
+        ],
+        [
+         -0.016454,
+         0.0095
+        ],
+        [
+         -0.018353,
+         0.004918
+        ],
+        [
+         -0.019,
+         0.0
+        ],
+        [
+         -0.018353,
+         -0.004918
+        ],
+        [
+         -0.016454,
+         -0.0095
+        ],
+        [
+         -0.013435,
+         -0.013435
+        ],
+        [
+         -0.0095,
+         -0.016454
+        ],
+        [
+         -0.004918,
+         -0.018353
+        ],
+        [
+         0.0,
+         -0.019
+        ],
+        [
+         0.004918,
+         -0.018353
+        ],
+        [
+         0.0095,
+         -0.016454
+        ],
+        [
+         0.013435,
+         -0.013435
+        ],
+        [
+         0.016454,
+         -0.0095
+        ],
+        [
+         0.018353,
+         -0.004918
+        ]
+       ],
+       "closed": true,
+       "region": "panel",
+       "material": "abs-aged",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.187,
+        "z1": -0.17
+       }
+      },
+      {
+       "id": "plug",
+       "bone": "cord",
+       "role": "body",
+       "z": 3.29,
+       "filled": true,
+       "tone": 0.88,
+       "kind": "rect",
+       "x": -0.052,
+       "y": -0.003,
+       "w": 0.052,
+       "h": 0.028,
+       "region": "casing",
+       "material": "pvc-cord"
+      },
+      {
+       "id": "cord-run",
+       "bone": "cord",
+       "role": "body",
+       "z": 3.18,
+       "filled": true,
+       "tone": 0.88,
+       "kind": "poly",
+       "points": [
+        [
+         0.0,
+         -0.003
+        ],
+        [
+         0.288,
+         0.022
+        ],
+        [
+         0.288,
+         0.028
+        ],
+        [
+         0.0,
+         0.003
+        ]
+       ],
+       "closed": true,
+       "region": "casing",
+       "material": "pvc-cord"
+      },
+      {
+       "id": "cavity-opening",
+       "bone": "housing",
+       "role": "body",
+       "z": 6.449999999999999,
+       "filled": true,
+       "tone": 0.72,
+       "kind": "rect",
+       "x": 0.01,
+       "y": 0.028,
+       "w": 0.315,
+       "h": 0.212,
+       "region": "cavity",
+       "material": "cavity-paint"
+      }
+     ],
+     "front": [
+      {
+       "id": "pad",
+       "bone": "pad",
+       "role": "body",
+       "z": 6.6,
+       "filled": true,
+       "tone": 0.62,
+       "kind": "rect",
+       "x": -0.19,
+       "y": 0.0,
+       "w": 0.395,
+       "h": 0.008,
+       "region": "pad",
+       "material": "corrugated-board"
+      },
+      {
+       "id": "foot-2",
+       "bone": "housing",
+       "role": "body",
+       "z": 6.17,
+       "filled": true,
+       "tone": 0.15,
+       "kind": "rect",
+       "x": -0.117,
+       "y": 0.008,
+       "w": 0.024,
+       "h": 0.01,
+       "region": "casing",
+       "material": "pp-plastic"
+      },
+      {
+       "id": "foot-4",
+       "bone": "housing",
+       "role": "body",
+       "z": 6.17,
+       "filled": true,
+       "tone": 0.15,
+       "kind": "rect",
+       "x": 0.123,
+       "y": 0.008,
+       "w": 0.024,
+       "h": 0.01,
+       "region": "casing",
+       "material": "pp-plastic"
+      },
+      {
+       "id": "shell",
+       "bone": "housing",
+       "role": "body",
+       "z": 6.4,
+       "filled": true,
+       "tone": 0.86,
+       "kind": "rect",
+       "x": -0.135,
+       "y": 0.018,
+       "w": 0.3,
+       "h": 0.248,
+       "region": "casing",
+       "material": "painted-steel"
+      },
+      {
+       "id": "plate",
+       "bone": "turntable",
+       "role": "body",
+       "z": 1.9000000000000004,
+       "filled": true,
+       "tone": 0.85,
+       "kind": "poly",
+       "points": [
+        [
+         -0.004,
+         0.0
+        ],
+        [
+         -0.004,
+         -0.015
+        ],
+        [
+         0.012,
+         -0.015
+        ],
+        [
+         0.012,
+         -0.1
+        ],
+        [
+         0.022,
+         -0.1225
+        ],
+        [
+         0.027,
+         -0.1225
+        ],
+        [
+         0.017,
+         -0.1
+        ],
+        [
+         0.017,
+         0.0
+        ]
+       ],
+       "closed": true,
+       "region": "turntable",
+       "material": "borosilicate",
+       "solid": {
+        "kind": "revolved",
+        "axisBone": "turntable",
+        "axis": "u",
+        "axisX": 0,
+        "axisZ": 0,
+        "mirror": true
+       }
+      },
+      {
+       "id": "door-frame",
+       "bone": "door",
+       "role": "body",
+       "z": 7.0,
+       "filled": true,
+       "tone": 0.92,
+       "kind": "path",
+       "d": "M 0.0 0.0 L 0.0 -0.3185 L 0.245 -0.3185 L 0.245 0.0 Z M 0.0465 -0.045 L 0.0465 -0.265 L 0.1985 -0.265 L 0.1985 -0.045 Z",
+       "region": "door",
+       "material": "abs-aged",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.17,
+        "z1": -0.135
+       }
+      },
+      {
+       "id": "glass",
+       "bone": "door",
+       "role": "glazing",
+       "z": 6.9,
+       "filled": true,
+       "tone": 0.3,
+       "kind": "rect",
+       "x": 0.0465,
+       "y": -0.265,
+       "w": 0.152,
+       "h": 0.22,
+       "region": "window",
+       "material": "door-glass",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.16,
+        "z1": -0.156
+       }
+      },
+      {
+       "id": "fascia",
+       "bone": "panel",
+       "role": "body",
+       "z": 6.4,
+       "filled": true,
+       "tone": 0.9,
+       "kind": "rect",
+       "x": -0.17,
+       "y": 0.019,
+       "w": 0.035,
+       "h": 0.247,
+       "region": "panel",
+       "material": "abs-aged"
+      },
+      {
+       "id": "knob-power",
+       "bone": "knob-power",
+       "role": "body",
+       "z": 5.96,
+       "filled": true,
+       "tone": 0.12,
+       "kind": "poly",
+       "points": [
+        [
+         0.016,
+         0.0
+        ],
+        [
+         0.015455,
+         0.004141
+        ],
+        [
+         0.013856,
+         0.008
+        ],
+        [
+         0.011314,
+         0.011314
+        ],
+        [
+         0.008,
+         0.013856
+        ],
+        [
+         0.004141,
+         0.015455
+        ],
+        [
+         0.0,
+         0.016
+        ],
+        [
+         -0.004141,
+         0.015455
+        ],
+        [
+         -0.008,
+         0.013856
+        ],
+        [
+         -0.011314,
+         0.011314
+        ],
+        [
+         -0.013856,
+         0.008
+        ],
+        [
+         -0.015455,
+         0.004141
+        ],
+        [
+         -0.016,
+         0.0
+        ],
+        [
+         -0.015455,
+         -0.004141
+        ],
+        [
+         -0.013856,
+         -0.008
+        ],
+        [
+         -0.011314,
+         -0.011314
+        ],
+        [
+         -0.008,
+         -0.013856
+        ],
+        [
+         -0.004141,
+         -0.015455
+        ],
+        [
+         0.0,
+         -0.016
+        ],
+        [
+         0.004141,
+         -0.015455
+        ],
+        [
+         0.008,
+         -0.013856
+        ],
+        [
+         0.011314,
+         -0.011314
+        ],
+        [
+         0.013856,
+         -0.008
+        ],
+        [
+         0.015455,
+         -0.004141
+        ]
+       ],
+       "closed": true,
+       "region": "panel",
+       "material": "abs-black",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.185,
+        "z1": -0.17
+       }
+      },
+      {
+       "id": "knob-timer",
+       "bone": "knob-timer",
+       "role": "body",
+       "z": 5.99,
+       "filled": true,
+       "tone": 0.85,
+       "kind": "poly",
+       "points": [
+        [
+         0.019,
+         0.0
+        ],
+        [
+         0.018353,
+         0.004918
+        ],
+        [
+         0.016454,
+         0.0095
+        ],
+        [
+         0.013435,
+         0.013435
+        ],
+        [
+         0.0095,
+         0.016454
+        ],
+        [
+         0.004918,
+         0.018353
+        ],
+        [
+         0.0,
+         0.019
+        ],
+        [
+         -0.004918,
+         0.018353
+        ],
+        [
+         -0.0095,
+         0.016454
+        ],
+        [
+         -0.013435,
+         0.013435
+        ],
+        [
+         -0.016454,
+         0.0095
+        ],
+        [
+         -0.018353,
+         0.004918
+        ],
+        [
+         -0.019,
+         0.0
+        ],
+        [
+         -0.018353,
+         -0.004918
+        ],
+        [
+         -0.016454,
+         -0.0095
+        ],
+        [
+         -0.013435,
+         -0.013435
+        ],
+        [
+         -0.0095,
+         -0.016454
+        ],
+        [
+         -0.004918,
+         -0.018353
+        ],
+        [
+         0.0,
+         -0.019
+        ],
+        [
+         0.004918,
+         -0.018353
+        ],
+        [
+         0.0095,
+         -0.016454
+        ],
+        [
+         0.013435,
+         -0.013435
+        ],
+        [
+         0.016454,
+         -0.0095
+        ],
+        [
+         0.018353,
+         -0.004918
+        ]
+       ],
+       "closed": true,
+       "region": "panel",
+       "material": "abs-aged",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.187,
+        "z1": -0.17
+       }
+      },
+      {
+       "id": "plug",
+       "bone": "cord",
+       "role": "body",
+       "z": 3.12,
+       "filled": true,
+       "tone": 0.88,
+       "kind": "rect",
+       "x": 0.171,
+       "y": 0.008,
+       "w": 0.028,
+       "h": 0.028,
+       "region": "casing",
+       "material": "pvc-cord"
+      },
+      {
+       "id": "cord-run",
+       "bone": "cord",
+       "role": "body",
+       "z": 6.03,
+       "filled": true,
+       "tone": 0.88,
+       "kind": "poly",
+       "points": [
+        [
+         0.1635,
+         0.036
+        ],
+        [
+         0.1695,
+         0.036
+        ],
+        [
+         0.188,
+         0.011
+        ],
+        [
+         0.182,
+         0.011
+        ]
+       ],
+       "closed": true,
+       "region": "casing",
+       "material": "pvc-cord"
+      }
+     ],
+     "plan": [
+      {
+       "id": "pad",
+       "bone": "pad",
+       "role": "body",
+       "z": 2.08,
+       "filled": true,
+       "tone": 0.62,
+       "kind": "rect",
+       "x": -0.02,
+       "y": -0.19,
+       "w": 0.48,
+       "h": 0.395,
+       "region": "pad",
+       "material": "corrugated-board"
+      },
+      {
+       "id": "shell",
+       "bone": "housing",
+       "role": "body",
+       "z": 4.58,
+       "filled": true,
+       "tone": 0.88,
+       "kind": "rect",
+       "x": 0.0,
+       "y": -0.135,
+       "w": 0.44,
+       "h": 0.3,
+       "region": "casing",
+       "material": "painted-steel"
+      },
+      {
+       "id": "plate",
+       "bone": "turntable",
+       "role": "body",
+       "z": 1.5499999999999998,
+       "filled": true,
+       "tone": 0.85,
+       "kind": "poly",
+       "points": [
+        [
+         -0.004,
+         0.0
+        ],
+        [
+         -0.004,
+         -0.015
+        ],
+        [
+         0.012,
+         -0.015
+        ],
+        [
+         0.012,
+         -0.1
+        ],
+        [
+         0.022,
+         -0.1225
+        ],
+        [
+         0.027,
+         -0.1225
+        ],
+        [
+         0.017,
+         -0.1
+        ],
+        [
+         0.017,
+         0.0
+        ]
+       ],
+       "closed": true,
+       "region": "turntable",
+       "material": "borosilicate",
+       "solid": {
+        "kind": "revolved",
+        "axisBone": "turntable",
+        "axis": "u",
+        "axisX": 0,
+        "axisZ": 0,
+        "mirror": true
+       }
+      },
+      {
+       "id": "door-frame",
+       "bone": "door",
+       "role": "body",
+       "z": 7.0,
+       "filled": true,
+       "tone": 0.92,
+       "kind": "path",
+       "d": "M 0.0 0.0 L 0.0 -0.3185 L 0.245 -0.3185 L 0.245 0.0 Z M 0.0465 -0.045 L 0.0465 -0.265 L 0.1985 -0.265 L 0.1985 -0.045 Z",
+       "region": "door",
+       "material": "abs-aged",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.17,
+        "z1": -0.135
+       }
+      },
+      {
+       "id": "glass",
+       "bone": "door",
+       "role": "glazing",
+       "z": 6.9,
+       "filled": true,
+       "tone": 0.3,
+       "kind": "rect",
+       "x": 0.0465,
+       "y": -0.265,
+       "w": 0.152,
+       "h": 0.22,
+       "region": "window",
+       "material": "door-glass",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.16,
+        "z1": -0.156
+       }
+      },
+      {
+       "id": "fascia",
+       "bone": "panel",
+       "role": "body",
+       "z": 4.66,
+       "filled": true,
+       "tone": 0.9,
+       "kind": "rect",
+       "x": 0.32,
+       "y": -0.17,
+       "w": 0.12,
+       "h": 0.035,
+       "region": "panel",
+       "material": "abs-aged"
+      },
+      {
+       "id": "knob-power",
+       "bone": "knob-power",
+       "role": "body",
+       "z": 4.11,
+       "filled": true,
+       "tone": 0.12,
+       "kind": "poly",
+       "points": [
+        [
+         0.016,
+         0.0
+        ],
+        [
+         0.015455,
+         0.004141
+        ],
+        [
+         0.013856,
+         0.008
+        ],
+        [
+         0.011314,
+         0.011314
+        ],
+        [
+         0.008,
+         0.013856
+        ],
+        [
+         0.004141,
+         0.015455
+        ],
+        [
+         0.0,
+         0.016
+        ],
+        [
+         -0.004141,
+         0.015455
+        ],
+        [
+         -0.008,
+         0.013856
+        ],
+        [
+         -0.011314,
+         0.011314
+        ],
+        [
+         -0.013856,
+         0.008
+        ],
+        [
+         -0.015455,
+         0.004141
+        ],
+        [
+         -0.016,
+         0.0
+        ],
+        [
+         -0.015455,
+         -0.004141
+        ],
+        [
+         -0.013856,
+         -0.008
+        ],
+        [
+         -0.011314,
+         -0.011314
+        ],
+        [
+         -0.008,
+         -0.013856
+        ],
+        [
+         -0.004141,
+         -0.015455
+        ],
+        [
+         0.0,
+         -0.016
+        ],
+        [
+         0.004141,
+         -0.015455
+        ],
+        [
+         0.008,
+         -0.013856
+        ],
+        [
+         0.011314,
+         -0.011314
+        ],
+        [
+         0.013856,
+         -0.008
+        ],
+        [
+         0.015455,
+         -0.004141
+        ]
+       ],
+       "closed": true,
+       "region": "panel",
+       "material": "abs-black",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.185,
+        "z1": -0.17
+       }
+      },
+      {
+       "id": "knob-timer",
+       "bone": "knob-timer",
+       "role": "body",
+       "z": 3.39,
+       "filled": true,
+       "tone": 0.85,
+       "kind": "poly",
+       "points": [
+        [
+         0.019,
+         0.0
+        ],
+        [
+         0.018353,
+         0.004918
+        ],
+        [
+         0.016454,
+         0.0095
+        ],
+        [
+         0.013435,
+         0.013435
+        ],
+        [
+         0.0095,
+         0.016454
+        ],
+        [
+         0.004918,
+         0.018353
+        ],
+        [
+         0.0,
+         0.019
+        ],
+        [
+         -0.004918,
+         0.018353
+        ],
+        [
+         -0.0095,
+         0.016454
+        ],
+        [
+         -0.013435,
+         0.013435
+        ],
+        [
+         -0.016454,
+         0.0095
+        ],
+        [
+         -0.018353,
+         0.004918
+        ],
+        [
+         -0.019,
+         0.0
+        ],
+        [
+         -0.018353,
+         -0.004918
+        ],
+        [
+         -0.016454,
+         -0.0095
+        ],
+        [
+         -0.013435,
+         -0.013435
+        ],
+        [
+         -0.0095,
+         -0.016454
+        ],
+        [
+         -0.004918,
+         -0.018353
+        ],
+        [
+         0.0,
+         -0.019
+        ],
+        [
+         0.004918,
+         -0.018353
+        ],
+        [
+         0.0095,
+         -0.016454
+        ],
+        [
+         0.013435,
+         -0.013435
+        ],
+        [
+         0.016454,
+         -0.0095
+        ],
+        [
+         0.018353,
+         -0.004918
+        ]
+       ],
+       "closed": true,
+       "region": "panel",
+       "material": "abs-aged",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.187,
+        "z1": -0.17
+       }
+      },
+      {
+       "id": "plug",
+       "bone": "cord",
+       "role": "body",
+       "z": 2.36,
+       "filled": true,
+       "tone": 0.88,
+       "kind": "rect",
+       "x": 0.06,
+       "y": 0.171,
+       "w": 0.052,
+       "h": 0.028,
+       "region": "casing",
+       "material": "pvc-cord"
+      },
+      {
+       "id": "cord-run",
+       "bone": "cord",
+       "role": "body",
+       "z": 2.31,
+       "filled": true,
+       "tone": 0.88,
+       "kind": "poly",
+       "points": [
+        [
+         0.112,
+         0.182
+        ],
+        [
+         0.4,
+         0.1635
+        ],
+        [
+         0.4,
+         0.1695
+        ],
+        [
+         0.112,
+         0.188
+        ]
+       ],
+       "closed": true,
+       "region": "casing",
+       "material": "pvc-cord"
+      }
+     ]
+    },
+    "decisions": {
+     "silhouette": {
+      "en": "Oven at 4.4 x 2.7 mm: the housing as one shell, the door with its window, the fascia, the two knobs, the four feet, the cord and plug and the cardboard.",
+      "de": "Gerät auf 4,4 x 2,7 mm: das Gehäuse als eine Schale, die Tür mit Fenster, die Blende, die zwei Knöpfe, die vier Füße, Kabel und Stecker und die Pappe."
+     },
+     "retained": {
+      "en": "Overall 0.44 x 0.266 x 0.395 m, the window, the knobs at their diameters, the feet gap, the turntable behind the glass.",
+      "de": "Gesamtmaß 0,44 x 0,266 x 0,395 m, das Fenster, die Knöpfe in ihren Durchmessern, die Fußfuge, der Drehteller hinter dem Glas."
+     },
+     "merged": {
+      "en": "Wrapper, base and cavity liner into one shell; roller ring and coupler into the hub of the plate; strain relief and cord into one strand.",
+      "de": "Mantel, Boden und Garraumauskleidung zu einer Schale; Rollenring und Mitnehmer zur Nabe des Tellers; Knickschutz und Kabel zu einem Strang."
+     },
+     "omitted": {
+      "en": "Button, hinge pins and all traces of use (below 15 mm).",
+      "de": "Taste, Scharnierzapfen und alle Gebrauchsspuren (unter 15 mm)."
+     },
+     "thinElements": {
+      "en": "Glass and cardboard stay thin filled strips; the cord is a 6 mm strip.",
+      "de": "Glas und Pappe bleiben dünne gefüllte Streifen; das Kabel ist ein 6-mm-Streifen."
+     },
+     "hatching": {
+      "en": "No hatches.",
+      "de": "Keine Schraffuren."
+     },
+     "styles": {
+      "en": "Body pen 0.25 mm.",
+      "de": "Körperstift 0,25 mm."
+     },
+     "overlays": {
+      "en": "As at 1:50.",
+      "de": "Wie in 1:50."
+     }
+    }
+   },
+   "200": {
+    "status": "unavailable",
+    "cause": "below-printable-feature",
+    "denominator": 200,
+    "reason": {
+     "en": "The microwave oven is 0.44 x 0.27 m = 2.2 x 1.3 mm on paper at 1:200, under the 3 mm below which a whole component is not drawn: the door window, the knobs (38 mm = 0.19 mm) and the 35 mm door would be specks.",
+     "de": "Die Mikrowelle misst 0,44 x 0,27 m = 2,2 x 1,3 mm auf dem Papier bei 1:200, unter den 3 mm, unter denen ein ganzes Bauteil nicht gezeichnet wird: Türfenster, Knöpfe (38 mm = 0,19 mm) und die 35-mm-Tür wären Punkte."
+    },
+    "limitingFeature": {
+     "en": "Knobs and door depth (0.035-0.038 m = 0.18-0.19 mm)",
+     "de": "Knöpfe und Türtiefe (0,035-0,038 m = 0,18-0,19 mm)"
+    },
+    "limitingSizeM": 0.035,
+    "alternatives": [
+     {
+      "kind": "scale",
+      "denominator": 100
+     }
+    ]
+   },
+   "500": {
+    "status": "unavailable",
+    "cause": "below-printable-feature",
+    "denominator": 500,
+    "reason": {
+     "en": "The microwave oven is 0.44 x 0.27 m = 0.9 x 0.5 mm on paper at 1:500: only an anonymous speck would print.",
+     "de": "Die Mikrowelle misst 0,44 x 0,27 m = 0,9 x 0,5 mm auf dem Papier bei 1:500: es würde nur ein namenloser Fleck drucken."
+    },
+    "limitingFeature": {
+     "en": "The whole oven (0.44 m = 0.9 mm)",
+     "de": "Das ganze Gerät (0,44 m = 0,9 mm)"
+    },
+    "limitingSizeM": 0.44,
+    "alternatives": [
+     {
+      "kind": "scale",
+      "denominator": 100
+     }
+    ]
+   }
+  },
+  "symbols": [],
+  "poses": [
+   {
+    "id": "stored",
+    "title": {
+     "en": "Stored at the reuse depot",
+     "de": "Gelagert im Gebrauchtwarenlager"
+    },
+    "description": {
+     "en": "Emptied, wiped and tested, the oven stands on a flattened banana box on the depot shelf with its mains cord laid out behind it; a price sticker is on the top.",
+     "de": "Geleert, ausgewischt und geprüft steht das Gerät auf einem flachgelegten Bananenkarton im Lagerregal, das Netzkabel liegt dahinter; oben klebt ein Preisaufkleber."
+    },
+    "bones": {},
+    "ground": "authored",
+    "contacts": [
+     "foot-left",
+     "foot-right",
+     "pad-floor"
+    ],
+    "thermal": {
+     "operating": {
+      "magnetron": 0
+     },
+     "regions": {
+      "casing": {
+       "exposedFraction": 1.0,
+       "sunlitFraction": 0.0,
+       "contact": {
+        "fraction": 0.01,
+        "tempC": 18
+       }
+      },
+      "door": {
+       "exposedFraction": 1.0,
+       "sunlitFraction": 0.0
+      },
+      "window": {
+       "exposedFraction": 1.0,
+       "sunlitFraction": 0.0
+      },
+      "panel": {
+       "exposedFraction": 1.0,
+       "sunlitFraction": 0.0
+      },
+      "cavity": {
+       "exposedFraction": 0.3,
+       "sunlitFraction": 0.0
+      },
+      "turntable": {
+       "exposedFraction": 0.3,
+       "sunlitFraction": 0.0
+      },
+      "electronics": {
+       "exposedFraction": 1.0,
+       "sunlitFraction": 0.0
+      },
+      "pad": {
+       "exposedFraction": 0.45,
+       "sunlitFraction": 0.0,
+       "contact": {
+        "fraction": 0.55,
+        "tempC": 18
+       }
+      }
+     },
+     "emitters": {
+      "exhaust": 0
+     }
+    },
+    "loads": []
+   },
+   {
+    "id": "carried",
+    "title": {
+     "en": "Carried by one person",
+     "de": "Von einer Person getragen"
+    },
+    "description": {
+     "en": "Lifted 0.30 m off the cardboard with both hands under the bottom edges of the sides and tilted 4 degrees towards the heavier transformer side; the cardboard stays on the shelf.",
+     "de": "Mit beiden Händen unter den Unterkanten der Seiten 0,30 m von der Pappe gehoben und um 4 Grad zur schwereren Transformatorseite geneigt; die Pappe bleibt im Regal."
+    },
+    "bones": {
+     "lift": {
+      "dy": 0.3
+     },
+     "housing": {
+      "angleDeg": 4
+     }
+    },
+    "ground": "authored",
+    "contacts": [
+     "grip-left",
+     "grip-right",
+     "pad-floor"
+    ],
+    "thermal": {
+     "operating": {
+      "magnetron": 0
+     },
+     "regions": {
+      "casing": {
+       "exposedFraction": 1.0,
+       "sunlitFraction": 0.0,
+       "contact": {
+        "fraction": 0.01,
+        "tempC": 18
+       }
+      },
+      "door": {
+       "exposedFraction": 1.0,
+       "sunlitFraction": 0.0
+      },
+      "window": {
+       "exposedFraction": 1.0,
+       "sunlitFraction": 0.0
+      },
+      "panel": {
+       "exposedFraction": 1.0,
+       "sunlitFraction": 0.0
+      },
+      "cavity": {
+       "exposedFraction": 0.3,
+       "sunlitFraction": 0.0
+      },
+      "turntable": {
+       "exposedFraction": 0.3,
+       "sunlitFraction": 0.0
+      },
+      "electronics": {
+       "exposedFraction": 1.0,
+       "sunlitFraction": 0.0
+      },
+      "pad": {
+       "exposedFraction": 0.45,
+       "sunlitFraction": 0.0,
+       "contact": {
+        "fraction": 0.55,
+        "tempC": 18
+       }
+      }
+     },
+     "emitters": {
+      "exhaust": 0
+     }
+    },
+    "loads": []
+   },
+   {
+    "id": "in-use",
+    "title": {
+     "en": "Running on a kitchen worktop",
+     "de": "In Betrieb auf einer Küchenarbeitsplatte"
+    },
+    "description": {
+     "en": "Back on a kitchen worktop at full power with the door closed: the turntable turns a plate of food, the fan blows the magnetron heat out of the right side vents; the cardboard lies folded beside it.",
+     "de": "Wieder auf einer Küchenarbeitsplatte bei voller Leistung mit geschlossener Tür: der Drehteller dreht einen Teller mit Essen, der Lüfter bläst die Wärme des Magnetrons aus den Schlitzen der rechten Seite; die Pappe liegt gefaltet daneben."
+    },
+    "bones": {
+     "lift": {
+      "dy": -0.008
+     },
+     "pad": {
+      "dx": -0.6
+     }
+    },
+    "ground": "authored",
+    "contacts": [
+     "foot-left",
+     "foot-right",
+     "pad-floor"
+    ],
+    "thermal": {
+     "operating": {
+      "magnetron": 1
+     },
+     "regions": {
+      "casing": {
+       "exposedFraction": 1.0,
+       "sunlitFraction": 0.0,
+       "contact": {
+        "fraction": 0.01,
+        "tempC": 21
+       }
+      },
+      "door": {
+       "exposedFraction": 1.0,
+       "sunlitFraction": 0.0
+      },
+      "window": {
+       "exposedFraction": 1.0,
+       "sunlitFraction": 0.0
+      },
+      "panel": {
+       "exposedFraction": 1.0,
+       "sunlitFraction": 0.0
+      },
+      "cavity": {
+       "exposedFraction": 0.3,
+       "sunlitFraction": 0.0
+      },
+      "turntable": {
+       "exposedFraction": 0.3,
+       "sunlitFraction": 0.0
+      },
+      "electronics": {
+       "exposedFraction": 1.0,
+       "sunlitFraction": 0.0
+      },
+      "pad": {
+       "exposedFraction": 0.5,
+       "sunlitFraction": 0.0,
+       "contact": {
+        "fraction": 0.5,
+        "tempC": 21
+       }
+      }
+     },
+     "emitters": {
+      "exhaust": 1
+     }
+    },
+    "loads": [
+     {
+      "id": "food-on-plate",
+      "kind": "equipment",
+      "title": {
+       "en": "A plate of food, 0.6 kg, on the turntable",
+       "de": "Ein Teller mit Essen, 0,6 kg, auf dem Drehteller"
+      },
+      "bone": "turntable",
+      "x": 0.027,
+      "y": 0.0,
+      "fxN": 0,
+      "fyN": -5.88,
+      "source": "authored-estimate",
+      "reference": "iec-60705"
+     }
+    ]
+   },
+   {
+    "id": "door-open",
+    "title": {
+     "en": "Door open in the kitchen",
+     "de": "Tür offen in der Küche"
+    },
+    "description": {
+     "en": "Switched off by the door interlock, the door swung open 95 degrees on its left hinge pins: the yellowed cavity and the turntable are open to the kitchen air.",
+     "de": "Durch die Türverriegelung abgeschaltet, die Tür auf ihren linken Scharnierzapfen um 95 Grad geöffnet: der vergilbte Garraum und der Drehteller liegen offen zur Küchenluft."
+    },
+    "bones": {
+     "lift": {
+      "dy": -0.008
+     },
+     "pad": {
+      "dx": -0.6
+     },
+     "door": {
+      "twistDeg": -95
+     }
+    },
+    "ground": "authored",
+    "contacts": [
+     "foot-left",
+     "foot-right",
+     "pad-floor"
+    ],
+    "thermal": {
+     "operating": {
+      "magnetron": 0
+     },
+     "regions": {
+      "casing": {
+       "exposedFraction": 1.0,
+       "sunlitFraction": 0.0,
+       "contact": {
+        "fraction": 0.01,
+        "tempC": 21
+       }
+      },
+      "door": {
+       "exposedFraction": 1.0,
+       "sunlitFraction": 0.0
+      },
+      "window": {
+       "exposedFraction": 1.0,
+       "sunlitFraction": 0.0
+      },
+      "panel": {
+       "exposedFraction": 1.0,
+       "sunlitFraction": 0.0
+      },
+      "cavity": {
+       "exposedFraction": 1.0,
+       "sunlitFraction": 0.0
+      },
+      "turntable": {
+       "exposedFraction": 1.0,
+       "sunlitFraction": 0.0
+      },
+      "electronics": {
+       "exposedFraction": 1.0,
+       "sunlitFraction": 0.0
+      },
+      "pad": {
+       "exposedFraction": 0.5,
+       "sunlitFraction": 0.0,
+       "contact": {
+        "fraction": 0.5,
+        "tempC": 21
+       }
+      }
+     },
+     "emitters": {
+      "exhaust": 0
+     }
+    },
+    "loads": [
+     {
+      "id": "food-on-plate",
+      "kind": "equipment",
+      "title": {
+       "en": "A plate of food, 0.6 kg, on the turntable",
+       "de": "Ein Teller mit Essen, 0,6 kg, auf dem Drehteller"
+      },
+      "bone": "turntable",
+      "x": 0.027,
+      "y": 0.0,
+      "fxN": 0,
+      "fyN": -5.88,
+      "source": "authored-estimate",
+      "reference": "iec-60705"
+     },
+     {
+      "id": "hand-on-open-door",
+      "kind": "live",
+      "title": {
+       "en": "A hand resting on the open door edge, 20 N",
+       "de": "Eine Hand auf der offenen Türkante, 20 N"
+      },
+      "bone": "door",
+      "x": 0.12,
+      "y": 0.0,
+      "fxN": 0,
+      "fyN": -20.0,
+      "source": "authored-estimate",
+      "reference": "iec-60335-2-25"
+     }
+    ]
+   },
+   {
+    "id": "idle",
+    "key": true,
+    "title": {
+     "en": "Off with the door closed",
+     "de": "Aus mit geschlossener Tür"
+    },
+    "description": {
+     "en": "Key pose of the reheat clip: on the worktop, switched off, door closed.",
+     "de": "Schlüsselpose des Aufwärm-Clips: auf der Arbeitsplatte, ausgeschaltet, Tür geschlossen."
+    },
+    "bones": {
+     "lift": {
+      "dy": -0.008
+     },
+     "pad": {
+      "dx": -0.6
+     }
+    },
+    "ground": "authored",
+    "contacts": [
+     "foot-left",
+     "foot-right",
+     "pad-floor"
+    ],
+    "thermal": {
+     "operating": {
+      "magnetron": 0
+     },
+     "regions": {
+      "casing": {
+       "exposedFraction": 1.0,
+       "sunlitFraction": 0.0,
+       "contact": {
+        "fraction": 0.01,
+        "tempC": 21
+       }
+      },
+      "door": {
+       "exposedFraction": 1.0,
+       "sunlitFraction": 0.0
+      },
+      "window": {
+       "exposedFraction": 1.0,
+       "sunlitFraction": 0.0
+      },
+      "panel": {
+       "exposedFraction": 1.0,
+       "sunlitFraction": 0.0
+      },
+      "cavity": {
+       "exposedFraction": 0.3,
+       "sunlitFraction": 0.0
+      },
+      "turntable": {
+       "exposedFraction": 0.3,
+       "sunlitFraction": 0.0
+      },
+      "electronics": {
+       "exposedFraction": 1.0,
+       "sunlitFraction": 0.0
+      },
+      "pad": {
+       "exposedFraction": 0.5,
+       "sunlitFraction": 0.0,
+       "contact": {
+        "fraction": 0.5,
+        "tempC": 21
+       }
+      }
+     },
+     "emitters": {
+      "exhaust": 0
+     }
+    },
+    "loads": [
+     {
+      "id": "food-on-plate",
+      "kind": "equipment",
+      "title": {
+       "en": "A plate of food, 0.6 kg, on the turntable",
+       "de": "Ein Teller mit Essen, 0,6 kg, auf dem Drehteller"
+      },
+      "bone": "turntable",
+      "x": 0.027,
+      "y": 0.0,
+      "fxN": 0,
+      "fyN": -5.88,
+      "source": "authored-estimate",
+      "reference": "iec-60705"
+     }
+    ]
+   }
+  ],
+  "clips": [
+   {
+    "id": "carry",
+    "title": {
+     "en": "Carry off the depot shelf",
+     "de": "Aus dem Lagerregal tragen"
+    },
+    "description": {
+     "en": "One person takes hold under both bottom edges, lifts the oven off the cardboard and tilts it slightly towards the heavy transformer side as it is carried away; the cardboard stays behind.",
+     "de": "Eine Person fasst unter beide Unterkanten, hebt das Gerät von der Pappe und neigt es beim Wegtragen leicht zur schweren Transformatorseite; die Pappe bleibt liegen."
+    },
+    "durationS": 6.0,
+    "fps": 25,
+    "loop": false,
+    "rootMotion": "none",
+    "keys": [
+     {
+      "t": 0,
+      "pose": "stored",
+      "ease": "smooth"
+     },
+     {
+      "t": 1.0,
+      "pose": "stored",
+      "ease": "smooth"
+     },
+     {
+      "t": 3.0,
+      "pose": "carried",
+      "ease": "smooth",
+      "bones": {
+       "housing": {
+        "angleDeg": 0
+       }
+      }
+     },
+     {
+      "t": 5.0,
+      "pose": "carried",
+      "ease": "smooth"
+     },
+     {
+      "t": 6.0,
+      "pose": "carried",
+      "ease": "smooth"
+     }
+    ],
+    "contacts": [
+     {
+      "anchor": "foot-left",
+      "fromS": 0,
+      "toS": 1.0
+     },
+     {
+      "anchor": "foot-right",
+      "fromS": 0,
+      "toS": 1.0
+     },
+     {
+      "anchor": "grip-left",
+      "fromS": 1.0,
+      "toS": 6.0
+     },
+     {
+      "anchor": "grip-right",
+      "fromS": 1.0,
+      "toS": 6.0
+     },
+     {
+      "anchor": "pad-floor",
+      "fromS": 0,
+      "toS": 6.0
+     }
+    ],
+    "phases": [
+     {
+      "id": "take-hold",
+      "fromS": 0,
+      "toS": 1.0,
+      "title": {
+       "en": "Taking hold",
+       "de": "Anfassen"
+      }
+     },
+     {
+      "id": "lift",
+      "fromS": 1.0,
+      "toS": 3.0,
+      "title": {
+       "en": "Lifting off the cardboard",
+       "de": "Von der Pappe heben"
+      }
+     },
+     {
+      "id": "tilt",
+      "fromS": 3.0,
+      "toS": 5.0,
+      "title": {
+       "en": "Tilting to the heavy side",
+       "de": "Zur schweren Seite neigen"
+      }
+     },
+     {
+      "id": "carry",
+      "fromS": 5.0,
+      "toS": 6.0,
+      "title": {
+       "en": "Carrying",
+       "de": "Tragen"
+      }
+     }
+    ],
+    "events": [
+     {
+      "t": 1.0,
+      "kind": "contact-off",
+      "title": {
+       "en": "Off the cardboard",
+       "de": "Von der Pappe"
+      },
+      "target": "foot-left"
+     },
+     {
+      "t": 1.0,
+      "kind": "contact-on",
+      "title": {
+       "en": "Hands take the load",
+       "de": "Hände übernehmen die Last"
+      },
+      "target": "grip-left"
+     },
+     {
+      "t": 3.0,
+      "kind": "motion",
+      "title": {
+       "en": "Lifted 0.30 m",
+       "de": "0,30 m angehoben"
+      }
+     }
+    ],
+    "tracks": []
+   },
+   {
+    "id": "reheat",
+    "title": {
+     "en": "Reheat a plate for 30 seconds",
+     "de": "Einen Teller 30 Sekunden aufwärmen"
+    },
+    "description": {
+     "en": "The door is opened and closed again over the plate, the timer is turned to half a minute, the magnetron runs at full power while the turntable makes two and a half turns and the timer runs back, the bell rings and the door is opened.",
+     "de": "Die Tür wird über dem Teller geöffnet und wieder geschlossen, der Zeitschalter auf eine halbe Minute gedreht, das Magnetron läuft mit voller Leistung, während der Drehteller zweieinhalb Umdrehungen macht und der Zeitschalter zurückläuft, die Glocke klingelt und die Tür wird geöffnet."
+    },
+    "durationS": 40.0,
+    "fps": 10,
+    "loop": false,
+    "rootMotion": "none",
+    "keys": [
+     {
+      "t": 0,
+      "pose": "idle",
+      "ease": "smooth"
+     },
+     {
+      "t": 1.5,
+      "pose": "door-open",
+      "ease": "smooth"
+     },
+     {
+      "t": 3.0,
+      "pose": "door-open",
+      "ease": "smooth"
+     },
+     {
+      "t": 4.5,
+      "pose": "idle",
+      "ease": "smooth"
+     },
+     {
+      "t": 5.5,
+      "pose": "idle",
+      "ease": "linear",
+      "bones": {
+       "knob-timer": {
+        "angleDeg": -5
+       }
+      }
+     },
+     {
+      "t": 6.0,
+      "pose": "in-use",
+      "ease": "linear",
+      "bones": {
+       "knob-timer": {
+        "angleDeg": -5
+       },
+       "turntable": {
+        "twistDeg": 0
+       }
+      }
+     },
+     {
+      "t": 36.0,
+      "pose": "in-use",
+      "ease": "smooth",
+      "bones": {
+       "knob-timer": {
+        "angleDeg": 0
+       },
+       "turntable": {
+        "twistDeg": 900
+       }
+      }
+     },
+     {
+      "t": 37.0,
+      "pose": "idle",
+      "ease": "smooth",
+      "bones": {
+       "turntable": {
+        "twistDeg": 900
+       }
+      }
+     },
+     {
+      "t": 38.5,
+      "pose": "door-open",
+      "ease": "smooth",
+      "bones": {
+       "turntable": {
+        "twistDeg": 900
+       }
+      }
+     },
+     {
+      "t": 40.0,
+      "pose": "door-open",
+      "ease": "smooth",
+      "bones": {
+       "turntable": {
+        "twistDeg": 900
+       }
+      }
+     }
+    ],
+    "contacts": [
+     {
+      "anchor": "foot-left",
+      "fromS": 0,
+      "toS": 40.0
+     },
+     {
+      "anchor": "foot-right",
+      "fromS": 0,
+      "toS": 40.0
+     },
+     {
+      "anchor": "pad-floor",
+      "fromS": 0,
+      "toS": 40.0
+     }
+    ],
+    "phases": [
+     {
+      "id": "load",
+      "fromS": 0,
+      "toS": 4.5,
+      "title": {
+       "en": "Opening and closing over the plate",
+       "de": "Über dem Teller öffnen und schließen"
+      }
+     },
+     {
+      "id": "set",
+      "fromS": 4.5,
+      "toS": 6.0,
+      "title": {
+       "en": "Setting the timer",
+       "de": "Zeit einstellen"
+      }
+     },
+     {
+      "id": "heat",
+      "fromS": 6.0,
+      "toS": 36.0,
+      "title": {
+       "en": "Heating with the turntable turning",
+       "de": "Heizen mit drehendem Teller"
+      }
+     },
+     {
+      "id": "ready",
+      "fromS": 36.0,
+      "toS": 40.0,
+      "title": {
+       "en": "Bell and door open",
+       "de": "Glocke und Tür auf"
+      }
+     }
+    ],
+    "events": [
+     {
+      "t": 0.0,
+      "kind": "motion",
+      "title": {
+       "en": "Door opens",
+       "de": "Tür öffnet"
+      },
+      "target": "door"
+     },
+     {
+      "t": 3.0,
+      "kind": "motion",
+      "title": {
+       "en": "Door closes",
+       "de": "Tür schließt"
+      },
+      "target": "door"
+     },
+     {
+      "t": 6.0,
+      "kind": "operating",
+      "title": {
+       "en": "Magnetron on",
+       "de": "Magnetron an"
+      },
+      "target": "magnetron"
+     },
+     {
+      "t": 36.0,
+      "kind": "shutdown",
+      "title": {
+       "en": "Bell rings, magnetron off",
+       "de": "Glocke klingelt, Magnetron aus"
+      },
+      "target": "magnetron"
+     },
+     {
+      "t": 37.0,
+      "kind": "motion",
+      "title": {
+       "en": "Door opens",
+       "de": "Tür öffnet"
+      },
+      "target": "door"
+     }
+    ],
+    "tracks": [
+     {
+      "target": "operating:magnetron",
+      "ease": "step",
+      "keys": [
+       {
+        "t": 0,
+        "v": 0
+       },
+       {
+        "t": 6.0,
+        "v": 1
+       },
+       {
+        "t": 36.0,
+        "v": 0
+       },
+       {
+        "t": 40.0,
+        "v": 0
+       }
+      ]
+     }
+    ]
+   }
+  ],
+  "thermal": {
+   "environment": {
+    "airTempC": 21,
+    "meanRadiantTempC": 21,
+    "relativeHumidity": 0.5,
+    "windMS": 0.05,
+    "windDirectionDeg": 0,
+    "solarWM2": 0,
+    "diffuseFraction": 0,
+    "pressurePa": 101325
+   },
+   "passengers": [],
+   "operating": [
+    {
+     "id": "magnetron",
+     "title": {
+      "en": "Magnetron",
+      "de": "Magnetron"
+     },
+     "levels": [
+      {
+       "v": 0,
+       "title": {
+        "en": "Off",
+        "de": "Aus"
+       }
+      },
+      {
+       "v": 1,
+       "title": {
+        "en": "Full power (700 W microwave output, 1150 W input)",
+        "de": "Volle Leistung (700 W Mikrowellenleistung, 1150 W Aufnahme)"
+       }
+      }
+     ]
+    }
+   ],
+   "regions": [
+    {
+     "id": "casing",
+     "title": {
+      "en": "Wrapper, back, base pan, feet and mains cord",
+      "de": "Mantel, Rückwand, Bodenwanne, Füße und Netzkabel"
+     },
+     "kind": "surface",
+     "model": "operating",
+     "material": "painted-steel",
+     "areaM2": 0.56,
+     "characteristicLengthM": 0.3,
+     "geometry": "vertical-plate",
+     "skyViewFactor": 0.5,
+     "layers": [
+      {
+       "id": "casing-sheet",
+       "title": {
+        "en": "Steel sheet 0.5 mm",
+        "de": "Stahlblech 0,5 mm"
+       },
+       "kind": "metal",
+       "material": "painted-steel",
+       "thicknessM": 0.0005,
+       "resistanceM2KW": 1e-05,
+       "heatCapacityJM2K": 1805.5,
+       "source": "literature",
+       "reference": "iso-10456-2007"
+      }
+     ],
+     "heatCapacityJM2K": 1805.5,
+     "operating": {
+      "key": "magnetron",
+      "heatW": 35
+     },
+     "source": "authored-estimate",
+     "reference": "iec-60335-2-25",
+     "ratedPowerW": 1150,
+     "ratedPowerBasis": "electrical-input"
+    },
+    {
+     "id": "door",
+     "title": {
+      "en": "Moulded door frame and hinge pins",
+      "de": "Spritzgegossener Türrahmen und Scharnierzapfen"
+     },
+     "kind": "surface",
+     "model": "operating",
+     "material": "abs-aged",
+     "areaM2": 0.095,
+     "characteristicLengthM": 0.245,
+     "geometry": "vertical-plate",
+     "skyViewFactor": 0.5,
+     "layers": [
+      {
+       "id": "door-shell",
+       "title": {
+        "en": "ABS wall 2.5 mm",
+        "de": "ABS-Wand 2,5 mm"
+       },
+       "kind": "polymer",
+       "material": "abs-aged",
+       "thicknessM": 0.0025,
+       "resistanceM2KW": 0.01470588,
+       "heatCapacityJM2K": 3675.0,
+       "source": "literature",
+       "reference": "iso-10456-2007"
+      }
+     ],
+     "heatCapacityJM2K": 3675.0,
+     "operating": {
+      "key": "magnetron",
+      "heatW": 10
+     },
+     "source": "authored-estimate",
+     "reference": "iec-60335-2-25"
+    },
+    {
+     "id": "window",
+     "title": {
+      "en": "Door window: tempered glass over the perforated screen",
+      "de": "Türfenster: vorgespanntes Glas über dem Lochschirm"
+     },
+     "kind": "glazing",
+     "model": "operating",
+     "material": "door-glass",
+     "areaM2": 0.036,
+     "characteristicLengthM": 0.152,
+     "geometry": "vertical-plate",
+     "skyViewFactor": 0.5,
+     "layers": [
+      {
+       "id": "window-pane",
+       "title": {
+        "en": "Glass 4 mm",
+        "de": "Glas 4 mm"
+       },
+       "kind": "glass",
+       "material": "door-glass",
+       "thicknessM": 0.004,
+       "resistanceM2KW": 0.004,
+       "heatCapacityJM2K": 7500.0,
+       "source": "literature",
+       "reference": "iso-10456-2007"
+      }
+     ],
+     "heatCapacityJM2K": 7500.0,
+     "operating": {
+      "key": "magnetron",
+      "heatW": 5
+     },
+     "source": "authored-estimate",
+     "reference": "iec-60335-2-25"
+    },
+    {
+     "id": "panel",
+     "title": {
+      "en": "Control panel, knobs and door-release button",
+      "de": "Bedienblende, Knöpfe und Türöffnertaste"
+     },
+     "kind": "surface",
+     "model": "passive",
+     "material": "abs-aged",
+     "areaM2": 0.05,
+     "characteristicLengthM": 0.12,
+     "geometry": "vertical-plate",
+     "skyViewFactor": 0.5,
+     "layers": [
+      {
+       "id": "panel-shell",
+       "title": {
+        "en": "ABS wall 2.5 mm",
+        "de": "ABS-Wand 2,5 mm"
+       },
+       "kind": "polymer",
+       "material": "abs-aged",
+       "thicknessM": 0.0025,
+       "resistanceM2KW": 0.01470588,
+       "heatCapacityJM2K": 3675.0,
+       "source": "literature",
+       "reference": "iso-10456-2007"
+      }
+     ],
+     "heatCapacityJM2K": 3675.0,
+     "source": "authored-estimate",
+     "reference": "iec-60335-2-25",
+     "ratedPowerW": 0,
+     "ratedPowerBasis": "passive"
+    },
+    {
+     "id": "cavity",
+     "title": {
+      "en": "Yellowed cooking cavity liner, both faces",
+      "de": "Vergilbte Garraumauskleidung, beide Seiten"
+     },
+     "kind": "surface",
+     "model": "operating",
+     "material": "cavity-paint",
+     "areaM2": 0.88,
+     "characteristicLengthM": 0.212,
+     "geometry": "horizontal-plate-up",
+     "skyViewFactor": 0.0,
+     "layers": [
+      {
+       "id": "cavity-sheet",
+       "title": {
+        "en": "Painted steel 0.5 mm",
+        "de": "Lackierter Stahl 0,5 mm"
+       },
+       "kind": "metal",
+       "material": "cavity-paint",
+       "thicknessM": 0.0005,
+       "resistanceM2KW": 1e-05,
+       "heatCapacityJM2K": 1805.5,
+       "source": "literature",
+       "reference": "iso-10456-2007"
+      }
+     ],
+     "heatCapacityJM2K": 1805.5,
+     "operating": {
+      "key": "magnetron",
+      "heatW": 60
+     },
+     "source": "authored-estimate",
+     "reference": "iec-60335-2-25"
+    },
+    {
+     "id": "turntable",
+     "title": {
+      "en": "Turntable plate, roller ring, coupler and drive motor",
+      "de": "Drehteller, Rollenring, Mitnehmer und Antriebsmotor"
+     },
+     "kind": "surface",
+     "model": "operating",
+     "material": "borosilicate",
+     "areaM2": 0.12,
+     "characteristicLengthM": 0.245,
+     "geometry": "horizontal-plate-up",
+     "skyViewFactor": 0.0,
+     "layers": [
+      {
+       "id": "plate-glass",
+       "title": {
+        "en": "Borosilicate glass 5 mm",
+        "de": "Borosilikatglas 5 mm"
+       },
+       "kind": "glass",
+       "material": "borosilicate",
+       "thicknessM": 0.005,
+       "resistanceM2KW": 0.00438596,
+       "heatCapacityJM2K": 9254.5,
+       "source": "literature",
+       "reference": "iso-10456-2007"
+      }
+     ],
+     "heatCapacityJM2K": 9254.5,
+     "operating": {
+      "key": "magnetron",
+      "heatW": 15
+     },
+     "source": "authored-estimate",
+     "reference": "iec-60335-2-25"
+    },
+    {
+     "id": "electronics",
+     "title": {
+      "en": "Transformer and magnetron in the technical bay",
+      "de": "Transformator und Magnetron im Technikraum"
+     },
+     "kind": "surface",
+     "model": "operating",
+     "material": "electrical-iron",
+     "areaM2": 0.105,
+     "characteristicLengthM": 0.09,
+     "geometry": "vertical-plate",
+     "skyViewFactor": 0.0,
+     "layers": [
+      {
+       "id": "iron-core",
+       "title": {
+        "en": "Laminated iron 10 mm (effective)",
+        "de": "Blechpaket 10 mm (wirksam)"
+       },
+       "kind": "metal",
+       "material": "electrical-iron",
+       "thicknessM": 0.01,
+       "resistanceM2KW": 0.00025,
+       "heatCapacityJM2K": 35100.0,
+       "source": "literature",
+       "reference": "iso-10456-2007"
+      }
+     ],
+     "heatCapacityJM2K": 35100.0,
+     "operating": {
+      "key": "magnetron",
+      "heatW": 40
+     },
+     "source": "authored-estimate",
+     "reference": "iec-60335-2-25",
+     "hidden": {
+      "en": "Inside the closed technical bay behind the control panel: no view of the drawings shows it.",
+      "de": "Im geschlossenen Technikraum hinter der Bedienblende: keine Ansicht der Zeichnungen zeigt ihn."
+     }
+    },
+    {
+     "id": "pad",
+     "title": {
+      "en": "Corrugated cardboard pad",
+      "de": "Wellpappenunterlage"
+     },
+     "kind": "surface",
+     "model": "passive",
+     "material": "corrugated-board",
+     "areaM2": 0.38,
+     "characteristicLengthM": 0.38,
+     "geometry": "horizontal-plate-up",
+     "skyViewFactor": 0.3,
+     "layers": [
+      {
+       "id": "pad-board",
+       "title": {
+        "en": "Double-wall board 8 mm",
+        "de": "Doppelwellpappe 8 mm"
+       },
+       "kind": "timber",
+       "material": "corrugated-board",
+       "thicknessM": 0.008,
+       "resistanceM2KW": 0.12307692,
+       "heatCapacityJM2K": 1393.6,
+       "source": "literature",
+       "reference": "iso-10456-2007"
+      }
+     ],
+     "heatCapacityJM2K": 1393.6,
+     "source": "authored-estimate",
+     "reference": "iec-60335-2-25"
+    }
+   ],
+   "emitters": [
+    {
+     "id": "exhaust",
+     "kind": "vent",
+     "title": {
+      "en": "Cooling air blown out of the right side vents",
+      "de": "Kühlluft aus den Schlitzen der rechten Seite"
+     },
+     "anchor": "exhaust",
+     "directionDeg": 0,
+     "diameterM": 0.08,
+     "operatingKey": "magnetron",
+     "volumeFlowM3S": 0.012,
+     "temperatureRiseK": 25,
+     "source": "authored-estimate",
+     "reference": "incropera-2018"
+    }
+   ],
+   "assumptions": [
+    {
+     "en": "Rated input 1150 W (electrical input, the nameplate of the class after IEC 60335-2-25); 700 W of it reach the food as microwave power (IEC 60705) and are not a part of the model. Of the 450 W of losses the cooling fan blows about 360 W out of the right side vents (0.012 m3/s warmed by 25 K), the rest leaves through the electronics (40 W), the casing (35 W), the door (10 W) and the window (5 W); the cavity liner (60 W) and the turntable (15 W) are warmed by the food and its steam.",
+     "de": "Nennaufnahme 1150 W (elektrische Aufnahme, das Typenschild der Klasse nach IEC 60335-2-25); 700 W davon erreichen das Essen als Mikrowellenleistung (IEC 60705) und sind nicht Teil des Modells. Von den 450 W Verlusten bläst der Lüfter etwa 360 W aus den Schlitzen der rechten Seite (0,012 m3/s um 25 K erwärmt), der Rest geht über die Elektronik (40 W), das Gehäuse (35 W), die Tür (10 W) und das Fenster (5 W); Garraumauskleidung (60 W) und Drehteller (15 W) werden vom Essen und seinem Dampf erwärmt."
+    },
+    {
+     "en": "Aged surfaces: the white powder coat has yellowed, so its solar absorptance is taken as 0.35 instead of about 0.25 when new; the cavity paint is yellowed and splattered with fat (0.5 instead of about 0.3); the moulded ABS has yellowed (0.42); authored estimates after Incropera, white paints 0.2-0.3. The galvanised base pan is dull (emissivity 0.28).",
+     "de": "Gealterte Oberflächen: die weiße Pulverbeschichtung ist vergilbt, daher gilt ein solarer Absorptionsgrad von 0,35 statt etwa 0,25 im Neuzustand; der Garraumlack ist vergilbt und mit Fett bespritzt (0,5 statt etwa 0,3); das gespritzte ABS ist vergilbt (0,42); Schätzungen nach Incropera, weiße Lacke 0,2-0,3. Die verzinkte Bodenwanne ist matt (Emissionsgrad 0,28)."
+    },
+    {
+     "en": "The closed door makes the housing a closed cavity: liner and turntable are contents seen through the window and count both faces; transformer and magnetron are hidden in the technical bay. Feet, cord and plug are 0.01 m2 together and counted in the casing region, knobs and button in the panel region.",
+     "de": "Die geschlossene Tür macht das Gehäuse zu einem geschlossenen Hohlraum: Auskleidung und Drehteller sind durch das Fenster sichtbarer Inhalt und zählen beide Seiten; Transformator und Magnetron sind im Technikraum verdeckt. Füße, Kabel und Stecker haben zusammen 0,01 m2 und zählen zur Region Gehäuse, Knöpfe und Taste zur Region Blende."
+    },
+    {
+     "en": "Reference case: a kitchen at 21 degC without sun; the depot pose uses the same air. The control panel is passive (0 W).",
+     "de": "Referenzfall: eine Küche bei 21 degC ohne Sonne; die Lagerpose nutzt dieselbe Luft. Die Bedienblende ist passiv (0 W)."
+    }
+   ]
+  },
+  "structure": {
+   "gravityMS2": 9.80665,
+   "dynamics": "quasi-static",
+   "supports": [
+    "pad-floor"
+   ],
+   "assumptions": [
+    {
+     "en": "The housing is a box of 0.5 mm steel sheet (wrapper, back) on a 1 mm base pan, stiffened by the welded cavity liner; members are the sheets on their bones with their true sections, the housing bone carries the closed box section 300 x 247 x 0.5 mm. The oven stands on four feet in two pairs (contacts).",
+     "de": "Das Gehäuse ist ein Kasten aus 0,5-mm-Stahlblech (Mantel, Rückwand) auf einer 1-mm-Bodenwanne, ausgesteift durch die geschweißte Garraumauskleidung; Bauteile sind die Bleche auf ihren Knochen mit ihren wahren Querschnitten, der Gehäuseknochen trägt den geschlossenen Kastenquerschnitt 300 x 247 x 0,5 mm. Das Gerät steht auf vier Füßen in zwei Paaren (Kontakte)."
+    },
+    {
+     "en": "Centre of mass at x = 0.270328 m from the left side (the 2.8 kg transformer pulls it towards the control side) and 0.102376 m above the feet; carried by one person with both hands under the bottom edges (pins), the right hand takes the larger share.",
+     "de": "Schwerpunkt bei x = 0,270328 m von der linken Seite (der 2,8-kg-Transformator zieht ihn zur Bedienseite) und 0,102376 m über den Füßen; von einer Person mit beiden Händen unter den Unterkanten getragen (Gelenke), die rechte Hand trägt den größeren Teil."
+    },
+    {
+     "en": "Tipping with the door open (IEC 60335-2-25 stability): the 10.71 kg oven tips forward about its front feet (z = -0.105 m) when a load on the open door edge (about 0.45 m in front of them) exceeds about 37 N; the 20 N of a hand resting on the door are held. The planar solver of the archive resolves the loads in the width plane; the forward tipping check is this hand calculation.",
+     "de": "Kippen bei offener Tür (Standsicherheit nach IEC 60335-2-25): das 10,71-kg-Gerät kippt um seine vorderen Füße (z = -0,105 m) nach vorn, wenn eine Last an der offenen Türkante (etwa 0,45 m davor) etwa 37 N übersteigt; die 20 N einer auf der Tür ruhenden Hand werden gehalten. Der ebene Löser des Archivs löst die Lasten in der Breitenebene; die Kippprüfung nach vorn ist diese Handrechnung."
+    },
+    {
+     "en": "The cardboard pad stays behind on its own contact when the oven is lifted and lies folded beside it in the kitchen; the solver treats the asset as one rigid body (see requests.md, used-coffee-table), so a small share of the oven weight leaks to the pad in the carried and in-use poses.",
+     "de": "Die Pappunterlage bleibt beim Anheben mit eigenem Kontakt liegen und liegt in der Küche gefaltet daneben; der Löser behandelt das Asset als einen starren Körper (siehe requests.md, used-coffee-table), daher fließt in den Posen Getragen und In Betrieb ein kleiner Teil des Gerätegewichts in die Pappe."
+    }
+   ],
+   "clinical": false
+  },
+  "volumes": {
+   "50": {
+    "status": "authored",
+    "denominator": 50,
+    "body": [
+     {
+      "id": "pad",
+      "kind": "box",
+      "bone": "pad",
+      "material": "corrugated-board",
+      "role": "body",
+      "tone": 0.62,
+      "size": [
+       0.48,
+       0.008,
+       0.395
+      ],
+      "transform": {
+       "translation": [
+        0.24,
+        0.004,
+        0.0075
+       ]
+      }
+     },
+     {
+      "id": "foot-1",
+      "kind": "revolve",
+      "bone": "housing",
+      "material": "pp-plastic",
+      "role": "body",
+      "tone": 0.15,
+      "profile": [
+       [
+        0.0,
+        0.012
+       ],
+       [
+        0.01,
+        0.01
+       ],
+       [
+        0.01,
+        0.0
+       ]
+      ],
+      "axis": [
+       0,
+       1,
+       0
+      ],
+      "origin": [
+       0.035,
+       0.0,
+       -0.105
+      ]
+     },
+     {
+      "id": "foot-2",
+      "kind": "revolve",
+      "bone": "housing",
+      "material": "pp-plastic",
+      "role": "body",
+      "tone": 0.15,
+      "profile": [
+       [
+        0.0,
+        0.012
+       ],
+       [
+        0.01,
+        0.01
+       ],
+       [
+        0.01,
+        0.0
+       ]
+      ],
+      "axis": [
+       0,
+       1,
+       0
+      ],
+      "origin": [
+       0.405,
+       0.0,
+       -0.105
+      ]
+     },
+     {
+      "id": "foot-3",
+      "kind": "revolve",
+      "bone": "housing",
+      "material": "pp-plastic",
+      "role": "body",
+      "tone": 0.15,
+      "profile": [
+       [
+        0.0,
+        0.012
+       ],
+       [
+        0.01,
+        0.01
+       ],
+       [
+        0.01,
+        0.0
+       ]
+      ],
+      "axis": [
+       0,
+       1,
+       0
+      ],
+      "origin": [
+       0.035,
+       0.0,
+       0.135
+      ]
+     },
+     {
+      "id": "foot-4",
+      "kind": "revolve",
+      "bone": "housing",
+      "material": "pp-plastic",
+      "role": "body",
+      "tone": 0.15,
+      "profile": [
+       [
+        0.0,
+        0.012
+       ],
+       [
+        0.01,
+        0.01
+       ],
+       [
+        0.01,
+        0.0
+       ]
+      ],
+      "axis": [
+       0,
+       1,
+       0
+      ],
+      "origin": [
+       0.405,
+       0.0,
+       0.135
+      ]
+     },
+     {
+      "id": "base",
+      "kind": "box",
+      "bone": "base",
+      "material": "galv-steel",
+      "role": "body",
+      "tone": 0.5,
+      "size": [
+       0.44,
+       0.001,
+       0.3
+      ],
+      "transform": {
+       "translation": [
+        0.22,
+        -0.0,
+        0.015
+       ]
+      },
+      "sheet": true
+     },
+     {
+      "id": "side-l",
+      "kind": "box",
+      "bone": "side-l",
+      "material": "painted-steel",
+      "role": "body",
+      "tone": 0.88,
+      "size": [
+       0.247,
+       0.0005,
+       0.3
+      ],
+      "transform": {
+       "translation": [
+        0.1235,
+        0.0,
+        0.015
+       ]
+      },
+      "sheet": true
+     },
+     {
+      "id": "side-r",
+      "kind": "box",
+      "bone": "side-r",
+      "material": "painted-steel",
+      "role": "body",
+      "tone": 0.88,
+      "size": [
+       0.247,
+       0.0005,
+       0.3
+      ],
+      "transform": {
+       "translation": [
+        0.1235,
+        0.0,
+        0.015
+       ]
+      },
+      "sheet": true
+     },
+     {
+      "id": "top",
+      "kind": "box",
+      "bone": "top",
+      "material": "painted-steel",
+      "role": "body",
+      "tone": 0.9,
+      "size": [
+       0.439,
+       0.0005,
+       0.3
+      ],
+      "transform": {
+       "translation": [
+        0.2195,
+        0.0,
+        0.015
+       ]
+      },
+      "sheet": true
+     },
+     {
+      "id": "back",
+      "kind": "box",
+      "bone": "housing",
+      "material": "painted-steel",
+      "role": "body",
+      "tone": 0.8,
+      "size": [
+       0.439,
+       0.2465,
+       0.0005
+      ],
+      "transform": {
+       "translation": [
+        0.22,
+        0.13425,
+        0.16475
+       ]
+      },
+      "sheet": true
+     },
+     {
+      "id": "liner",
+      "kind": "extrude",
+      "bone": "cavity",
+      "material": "cavity-paint",
+      "role": "body",
+      "tone": 0.72,
+      "profile": [
+       [
+        -0.0005,
+        -0.0005
+       ],
+       [
+        0.3155,
+        -0.0005
+       ],
+       [
+        0.3155,
+        0.2125
+       ],
+       [
+        -0.0005,
+        0.2125
+       ]
+      ],
+      "plane": "xy",
+      "from": -0.135,
+      "to": 0.16,
+      "holes": [
+       [
+        [
+         0.0,
+         -0.0
+        ],
+        [
+         0.315,
+         -0.0
+        ],
+        [
+         0.315,
+         0.212
+        ],
+        [
+         0.0,
+         0.212
+        ]
+       ]
+      ]
+     },
+     {
+      "id": "liner-back",
+      "kind": "box",
+      "bone": "cavity",
+      "material": "cavity-paint",
+      "role": "body",
+      "tone": 0.66,
+      "size": [
+       0.316,
+       0.213,
+       0.0005
+      ],
+      "transform": {
+       "translation": [
+        0.1575,
+        0.106,
+        0.16025
+       ]
+      },
+      "sheet": true
+     },
+     {
+      "id": "motor",
+      "kind": "box",
+      "bone": "cavity",
+      "material": "pp-plastic",
+      "role": "body",
+      "tone": 0.3,
+      "size": [
+       0.025,
+       0.0165,
+       0.025
+      ],
+      "transform": {
+       "translation": [
+        0.1575,
+        -0.00875,
+        0.0125
+       ]
+      }
+     },
+     {
+      "id": "plate",
+      "kind": "revolve",
+      "bone": "turntable",
+      "material": "borosilicate",
+      "role": "body",
+      "tone": 0.85,
+      "profile": [
+       [
+        0.012,
+        0.0
+       ],
+       [
+        0.012,
+        0.1
+       ],
+       [
+        0.022,
+        0.1225
+       ],
+       [
+        0.027,
+        0.1225
+       ],
+       [
+        0.017,
+        0.1
+       ],
+       [
+        0.017,
+        0.0
+       ]
+      ],
+      "axis": [
+       1,
+       0,
+       0
+      ],
+      "origin": [
+       0.0,
+       0.0,
+       0.0
+      ]
+     },
+     {
+      "id": "coupler",
+      "kind": "revolve",
+      "bone": "turntable",
+      "material": "pp-plastic",
+      "role": "body",
+      "tone": 0.4,
+      "profile": [
+       [
+        0.0,
+        0.0
+       ],
+       [
+        0.0,
+        0.011
+       ],
+       [
+        0.012,
+        0.009
+       ],
+       [
+        0.012,
+        0.0
+       ]
+      ],
+      "axis": [
+       1,
+       0,
+       0
+      ],
+      "origin": [
+       0.0,
+       0.0,
+       0.0
+      ]
+     },
+     {
+      "id": "roller-ring",
+      "kind": "revolve",
+      "bone": "turntable",
+      "material": "pp-plastic",
+      "role": "body",
+      "tone": 0.35,
+      "profile": [
+       [
+        0.006,
+        0.091
+       ],
+       [
+        0.008296,
+        0.090543
+       ],
+       [
+        0.010243,
+        0.089243
+       ],
+       [
+        0.011543,
+        0.087296
+       ],
+       [
+        0.012,
+        0.085
+       ],
+       [
+        0.011543,
+        0.082704
+       ],
+       [
+        0.010243,
+        0.080757
+       ],
+       [
+        0.008296,
+        0.079457
+       ],
+       [
+        0.006,
+        0.079
+       ],
+       [
+        0.003704,
+        0.079457
+       ],
+       [
+        0.001757,
+        0.080757
+       ],
+       [
+        0.000457,
+        0.082704
+       ],
+       [
+        0.0,
+        0.085
+       ],
+       [
+        0.000457,
+        0.087296
+       ],
+       [
+        0.001757,
+        0.089243
+       ],
+       [
+        0.003704,
+        0.090543
+       ],
+       [
+        0.006,
+        0.091
+       ]
+      ],
+      "axis": [
+       1,
+       0,
+       0
+      ],
+      "origin": [
+       0.0,
+       0.0,
+       0.0
+      ],
+      "slender": true
+     },
+     {
+      "id": "door-frame",
+      "kind": "extrude",
+      "bone": "door",
+      "material": "abs-aged",
+      "role": "body",
+      "tone": 0.92,
+      "profile": [
+       [
+        0.0,
+        0.0
+       ],
+       [
+        0.0,
+        -0.3185
+       ],
+       [
+        0.245,
+        -0.3185
+       ],
+       [
+        0.245,
+        0.0
+       ]
+      ],
+      "plane": "xy",
+      "from": -0.035,
+      "to": 0.0,
+      "holes": [
+       [
+        [
+         0.0465,
+         -0.045
+        ],
+        [
+         0.0465,
+         -0.265
+        ],
+        [
+         0.1985,
+         -0.265
+        ],
+        [
+         0.1985,
+         -0.045
+        ]
+       ]
+      ]
+     },
+     {
+      "id": "glass",
+      "kind": "box",
+      "bone": "door",
+      "material": "door-glass",
+      "role": "body",
+      "tone": 0.3,
+      "size": [
+       0.152,
+       0.22,
+       0.004
+      ],
+      "transform": {
+       "translation": [
+        0.1225,
+        -0.155,
+        -0.023
+       ]
+      },
+      "sheet": true
+     },
+     {
+      "id": "hinge-1",
+      "kind": "box",
+      "bone": "door",
+      "material": "galv-steel",
+      "role": "detail",
+      "tone": 0.4,
+      "size": [
+       0.015,
+       0.008,
+       0.012
+      ],
+      "transform": {
+       "translation": [
+        0.0075,
+        -0.005,
+        0.0
+       ]
+      }
+     },
+     {
+      "id": "hinge-2",
+      "kind": "box",
+      "bone": "door",
+      "material": "galv-steel",
+      "role": "detail",
+      "tone": 0.4,
+      "size": [
+       0.015,
+       0.008,
+       0.012
+      ],
+      "transform": {
+       "translation": [
+        0.2375,
+        -0.005,
+        0.0
+       ]
+      }
+     },
+     {
+      "id": "fascia",
+      "kind": "box",
+      "bone": "panel",
+      "material": "abs-aged",
+      "role": "body",
+      "tone": 0.9,
+      "size": [
+       0.247,
+       0.12,
+       0.035
+      ],
+      "transform": {
+       "translation": [
+        0.1235,
+        0.0,
+        -0.0
+       ]
+      }
+     },
+     {
+      "id": "button",
+      "kind": "box",
+      "bone": "panel",
+      "material": "abs-aged",
+      "role": "body",
+      "tone": 0.75,
+      "size": [
+       0.022,
+       0.06,
+       0.008
+      ],
+      "transform": {
+       "translation": [
+        0.04,
+        0.0,
+        -0.0215
+       ]
+      }
+     },
+     {
+      "id": "knob-power",
+      "kind": "revolve",
+      "bone": "knob-power",
+      "material": "abs-black",
+      "role": "body",
+      "tone": 0.12,
+      "profile": [
+       [
+        0.0,
+        0.016
+       ],
+       [
+        0.015,
+        0.016
+       ],
+       [
+        0.015,
+        0.0
+       ]
+      ],
+      "axis": [
+       0,
+       0,
+       -1
+      ],
+      "origin": [
+       0.0,
+       0.0,
+       0.0
+      ]
+     },
+     {
+      "id": "knob-timer",
+      "kind": "revolve",
+      "bone": "knob-timer",
+      "material": "abs-aged",
+      "role": "body",
+      "tone": 0.85,
+      "profile": [
+       [
+        0.0,
+        0.019
+       ],
+       [
+        0.004,
+        0.019
+       ],
+       [
+        0.006,
+        0.0165
+       ],
+       [
+        0.017,
+        0.0155
+       ],
+       [
+        0.017,
+        0.0
+       ]
+      ],
+      "axis": [
+       0,
+       0,
+       -1
+      ],
+      "origin": [
+       0.0,
+       0.0,
+       0.0
+      ]
+     },
+     {
+      "id": "plug",
+      "kind": "box",
+      "bone": "cord",
+      "material": "pvc-cord",
+      "role": "body",
+      "tone": 0.88,
+      "size": [
+       0.052,
+       0.028,
+       0.028
+      ],
+      "transform": {
+       "translation": [
+        -0.026,
+        0.011,
+        0.0
+       ]
+      }
+     },
+     {
+      "id": "cord-drop",
+      "kind": "capsule",
+      "bone": "cord",
+      "material": "pvc-cord",
+      "role": "body",
+      "tone": 0.88,
+      "p0": [
+       0.288,
+       0.025,
+       -0.0185
+      ],
+      "p1": [
+       0.285,
+       0.0025,
+       0.0
+      ],
+      "r0": 0.0045,
+      "r1": 0.0035
+     },
+     {
+      "id": "cord-run",
+      "kind": "capsule",
+      "bone": "cord",
+      "material": "pvc-cord",
+      "role": "body",
+      "tone": 0.88,
+      "p0": [
+       0.283,
+       0.0,
+       0.0
+      ],
+      "p1": [
+       0.0,
+       0.0,
+       0.0
+      ],
+      "r0": 0.003,
+      "r1": 0.003,
+      "slender": true
+     },
+     {
+      "id": "cord-tape",
+      "kind": "capsule",
+      "bone": "cord",
+      "material": "pvc-cord",
+      "role": "texture",
+      "tone": 0.2,
+      "p0": [
+       0.138,
+       0.0,
+       0.0
+      ],
+      "p1": [
+       0.16,
+       0.0,
+       0.0
+      ],
+      "r0": 0.0037,
+      "r1": 0.0037,
+      "texture": true
+     },
+     {
+      "id": "price-sticker",
+      "kind": "box",
+      "bone": "top",
+      "material": "abs-aged",
+      "role": "texture",
+      "tone": 0.95,
+      "size": [
+       0.07,
+       0.0003,
+       0.05
+      ],
+      "transform": {
+       "translation": [
+        0.2845,
+        0.0004,
+        -0.065
+       ]
+      },
+      "texture": true
+     }
+    ],
+    "thermal": [
+     {
+      "id": "th-pad",
+      "of": "pad",
+      "region": "pad"
+     },
+     {
+      "id": "th-foot-1",
+      "of": "foot-1",
+      "region": "casing"
+     },
+     {
+      "id": "th-foot-2",
+      "of": "foot-2",
+      "region": "casing"
+     },
+     {
+      "id": "th-foot-3",
+      "of": "foot-3",
+      "region": "casing"
+     },
+     {
+      "id": "th-foot-4",
+      "of": "foot-4",
+      "region": "casing"
+     },
+     {
+      "id": "th-base",
+      "of": "base",
+      "region": "casing"
+     },
+     {
+      "id": "th-side-l",
+      "of": "side-l",
+      "region": "casing"
+     },
+     {
+      "id": "th-side-r",
+      "of": "side-r",
+      "region": "casing"
+     },
+     {
+      "id": "th-top",
+      "of": "top",
+      "region": "casing"
+     },
+     {
+      "id": "th-back",
+      "of": "back",
+      "region": "casing"
+     },
+     {
+      "id": "th-liner",
+      "of": "liner",
+      "region": "cavity"
+     },
+     {
+      "id": "th-liner-back",
+      "of": "liner-back",
+      "region": "cavity"
+     },
+     {
+      "id": "th-motor",
+      "of": "motor",
+      "region": "turntable"
+     },
+     {
+      "id": "th-plate",
+      "of": "plate",
+      "region": "turntable"
+     },
+     {
+      "id": "th-coupler",
+      "of": "coupler",
+      "region": "turntable"
+     },
+     {
+      "id": "th-roller-ring",
+      "of": "roller-ring",
+      "region": "turntable"
+     },
+     {
+      "id": "th-door-frame",
+      "of": "door-frame",
+      "region": "door"
+     },
+     {
+      "id": "th-glass",
+      "of": "glass",
+      "region": "window"
+     },
+     {
+      "id": "th-hinge-1",
+      "of": "hinge-1",
+      "region": "door"
+     },
+     {
+      "id": "th-hinge-2",
+      "of": "hinge-2",
+      "region": "door"
+     },
+     {
+      "id": "th-fascia",
+      "of": "fascia",
+      "region": "panel"
+     },
+     {
+      "id": "th-button",
+      "of": "button",
+      "region": "panel"
+     },
+     {
+      "id": "th-knob-power",
+      "of": "knob-power",
+      "region": "panel"
+     },
+     {
+      "id": "th-knob-timer",
+      "of": "knob-timer",
+      "region": "panel"
+     },
+     {
+      "id": "th-plug",
+      "of": "plug",
+      "region": "casing"
+     },
+     {
+      "id": "th-cord-drop",
+      "of": "cord-drop",
+      "region": "casing"
+     },
+     {
+      "id": "th-cord-run",
+      "of": "cord-run",
+      "region": "casing"
+     },
+     {
+      "id": "th-exhaust-vents",
+      "kind": "box",
+      "bone": "side-r",
+      "material": "painted-steel",
+      "role": "body",
+      "tone": 0.45,
+      "size": [
+       0.08,
+       0.0005,
+       0.12
+      ],
+      "transform": {
+       "translation": [
+        0.179,
+        -0.0005,
+        0.0
+       ]
+      },
+      "region": "casing",
+      "tags": [
+       "exhaust"
+      ],
+      "sheet": true
+     },
+     {
+      "id": "th-transformer",
+      "kind": "box",
+      "bone": "base",
+      "material": "electrical-iron",
+      "role": "body",
+      "tone": 0.3,
+      "size": [
+       0.09,
+       0.084,
+       0.1
+      ],
+      "transform": {
+       "translation": [
+        0.38,
+        0.0425,
+        0.07
+       ]
+      },
+      "region": "electronics"
+     },
+     {
+      "id": "th-magnetron",
+      "kind": "box",
+      "bone": "housing",
+      "material": "electrical-iron",
+      "role": "body",
+      "tone": 0.3,
+      "size": [
+       0.0945,
+       0.095,
+       0.1
+      ],
+      "transform": {
+       "translation": [
+        0.37275,
+        0.1675,
+        0.0
+       ]
+      },
+      "region": "electronics"
+     }
+    ],
+    "structure": [
+     {
+      "id": "m-pad",
+      "of": "pad",
+      "member": "pad",
+      "part": "member"
+     },
+     {
+      "id": "m-base",
+      "of": "base",
+      "member": "base",
+      "part": "member"
+     },
+     {
+      "id": "m-side-l",
+      "of": "side-l",
+      "member": "side-l",
+      "part": "member"
+     },
+     {
+      "id": "m-side-r",
+      "of": "side-r",
+      "member": "side-r",
+      "part": "member"
+     },
+     {
+      "id": "m-top",
+      "of": "top",
+      "member": "top",
+      "part": "member"
+     },
+     {
+      "id": "m-back",
+      "of": "back",
+      "member": "housing",
+      "part": "member"
+     },
+     {
+      "id": "m-liner",
+      "of": "liner",
+      "member": "cavity",
+      "part": "member"
+     },
+     {
+      "id": "m-liner-back",
+      "of": "liner-back",
+      "member": "cavity",
+      "part": "member"
+     },
+     {
+      "id": "m-motor",
+      "of": "motor",
+      "member": "cavity",
+      "part": "member"
+     },
+     {
+      "id": "m-plate",
+      "of": "plate",
+      "member": "turntable",
+      "part": "member"
+     },
+     {
+      "id": "m-coupler",
+      "of": "coupler",
+      "member": "turntable",
+      "part": "joint"
+     },
+     {
+      "id": "m-door-frame",
+      "of": "door-frame",
+      "member": "door",
+      "part": "member"
+     },
+     {
+      "id": "m-hinge-1",
+      "of": "hinge-1",
+      "member": "door",
+      "part": "joint"
+     },
+     {
+      "id": "m-hinge-2",
+      "of": "hinge-2",
+      "member": "door",
+      "part": "joint"
+     },
+     {
+      "id": "m-fascia",
+      "of": "fascia",
+      "member": "panel",
+      "part": "member"
+     },
+     {
+      "id": "m-cord-run",
+      "of": "cord-run",
+      "member": "cord",
+      "part": "member"
+     },
+     {
+      "id": "support-pad-floor",
+      "kind": "box",
+      "bone": "pad",
+      "material": "corrugated-board",
+      "role": "ground",
+      "tone": 0.2,
+      "size": [
+       0.4,
+       0.006,
+       0.3
+      ],
+      "transform": {
+       "translation": [
+        0.24,
+        0.003,
+        0.0075
+       ]
+      },
+      "member": "pad",
+      "part": "support",
+      "anchor": "pad-floor"
+     },
+     {
+      "id": "mass-housing",
+      "kind": "ellipsoid",
+      "bone": "housing",
+      "material": "electrical-iron",
+      "role": "detail",
+      "tone": 0.3,
+      "radii": [
+       0.02,
+       0.02,
+       0.02
+      ],
+      "transform": {
+       "translation": [
+        0.270328,
+        0.102376,
+        0.02
+       ]
+      },
+      "member": "housing",
+      "part": "mass"
+     }
+    ],
+    "decisions": [
+     {
+      "en": "Body 1:50 is the oven as built: four turned polypropylene feet, the 1 mm galvanised base pan, the U-shaped 0.5 mm wrapper as left side, top and right side, the 0.5 mm back, the cavity liner as a 0.5 mm steel tube with its back wall (315 x 212 x 293 mm inside = 19.6 l), the turntable motor under the cavity floor, the 245 mm borosilicate plate with its rim on a slender roller ring and its coupler, the 35 mm moulded door frame with the 220 x 152 mm window and the 4 mm glass in it, two steel hinge pins that reach into the housing, the control fascia with the push-button door release, the original white timer knob and the smaller black replacement power knob, the cord leaving the back through its strain relief and lying on the cardboard to the moulded plug, the taped repair of the cord and the price sticker (textures), and the flattened banana box.",
+      "de": "Körper 1:50 ist das Gerät, wie es gebaut ist: vier gedrehte Polypropylenfüße, die 1-mm-Bodenwanne aus verzinktem Stahl, der U-förmige 0,5-mm-Mantel als linke Seite, Deckel und rechte Seite, die 0,5-mm-Rückwand, die Garraumauskleidung als 0,5-mm-Stahlrohr mit Rückwand (innen 315 x 212 x 293 mm = 19,6 l), der Drehtellermotor unter dem Garraumboden, der 245-mm-Teller aus Borosilikatglas mit Rand auf einem schlanken Rollenring und seinem Mitnehmer, der 35 mm tiefe gespritzte Türrahmen mit dem 220 x 152 mm großen Fenster und dem 4-mm-Glas darin, zwei Stahl-Scharnierzapfen, die ins Gehäuse greifen, die Bedienblende mit der Türöffnertaste, der originale weiße Zeitknopf und der kleinere schwarze Ersatz-Leistungsknopf, das Kabel, das hinten durch seinen Knickschutz austritt und auf der Pappe bis zum angespritzten Stecker liegt, die geklebte Reparatur am Kabel und der Preisaufkleber (Texturen) und der flachgelegte Bananenkarton."
+     },
+     {
+      "en": "Thermal 1:50 references the body by region; the wrapper, back, base, door, panel and the door gaps of 1.5 mm close the housing, so the cavity liner and the turntable are contents of a closed cavity seen through the window glazing and count both faces, and the transformer and magnetron are the hidden electronics region (thermal solids only). Structure 1:50: every sheet is the member of its bone, the hinge pins are the joints of the door, the coupler the joint of the turntable, one support pad stands under the cardboard and one mass marker at the centre of mass of the oven.",
+      "de": "Thermik 1:50 verweist nach Regionen auf den Körper; Mantel, Rückwand, Boden, Tür, Blende und die 1,5-mm-Türfugen schließen das Gehäuse, sodass Garraumauskleidung und Drehteller Inhalt eines geschlossenen Hohlraums sind, durch die Fensterverglasung sichtbar, und beide Seiten zählen; Transformator und Magnetron sind die verdeckte Region Elektronik (nur thermische Körper). Tragwerk 1:50: jedes Blech ist das Bauteil seines Knochens, die Scharnierzapfen sind die Gelenke der Tür, der Mitnehmer das Gelenk des Drehtellers, ein Auflagerklotz steht unter der Pappe und ein Massenmarker im Schwerpunkt des Geräts."
+     }
+    ]
+   },
+   "100": {
+    "status": "authored",
+    "denominator": 100,
+    "body": [
+     {
+      "id": "pad",
+      "kind": "box",
+      "bone": "pad",
+      "material": "corrugated-board",
+      "role": "body",
+      "tone": 0.62,
+      "size": [
+       0.48,
+       0.008,
+       0.395
+      ],
+      "transform": {
+       "translation": [
+        0.24,
+        0.004,
+        0.0075
+       ]
+      },
+      "sheet": true
+     },
+     {
+      "id": "foot-1",
+      "kind": "box",
+      "bone": "housing",
+      "material": "pp-plastic",
+      "role": "body",
+      "tone": 0.15,
+      "size": [
+       0.024,
+       0.01,
+       0.024
+      ],
+      "transform": {
+       "translation": [
+        0.035,
+        0.005,
+        -0.105
+       ]
+      }
+     },
+     {
+      "id": "foot-2",
+      "kind": "box",
+      "bone": "housing",
+      "material": "pp-plastic",
+      "role": "body",
+      "tone": 0.15,
+      "size": [
+       0.024,
+       0.01,
+       0.024
+      ],
+      "transform": {
+       "translation": [
+        0.405,
+        0.005,
+        -0.105
+       ]
+      }
+     },
+     {
+      "id": "foot-3",
+      "kind": "box",
+      "bone": "housing",
+      "material": "pp-plastic",
+      "role": "body",
+      "tone": 0.15,
+      "size": [
+       0.024,
+       0.01,
+       0.024
+      ],
+      "transform": {
+       "translation": [
+        0.035,
+        0.005,
+        0.135
+       ]
+      }
+     },
+     {
+      "id": "foot-4",
+      "kind": "box",
+      "bone": "housing",
+      "material": "pp-plastic",
+      "role": "body",
+      "tone": 0.15,
+      "size": [
+       0.024,
+       0.01,
+       0.024
+      ],
+      "transform": {
+       "translation": [
+        0.405,
+        0.005,
+        0.135
+       ]
+      }
+     },
+     {
+      "id": "shell",
+      "kind": "extrude",
+      "bone": "housing",
+      "material": "painted-steel",
+      "role": "body",
+      "tone": 0.86,
+      "profile": [
+       [
+        0.0,
+        0.01
+       ],
+       [
+        0.44,
+        0.01
+       ],
+       [
+        0.44,
+        0.258
+       ],
+       [
+        0.0,
+        0.258
+       ]
+      ],
+      "plane": "xy",
+      "from": -0.135,
+      "to": 0.15,
+      "holes": [
+       [
+        [
+         0.006,
+         0.024
+        ],
+        [
+         0.329,
+         0.024
+        ],
+        [
+         0.329,
+         0.244
+        ],
+        [
+         0.006,
+         0.244
+        ]
+       ],
+       [
+        [
+         0.333,
+         0.018
+        ],
+        [
+         0.432,
+         0.018
+        ],
+        [
+         0.432,
+         0.25
+        ],
+        [
+         0.333,
+         0.25
+        ]
+       ]
+      ]
+     },
+     {
+      "id": "back",
+      "kind": "box",
+      "bone": "housing",
+      "material": "painted-steel",
+      "role": "body",
+      "tone": 0.8,
+      "size": [
+       0.44,
+       0.248,
+       0.015
+      ],
+      "transform": {
+       "translation": [
+        0.22,
+        0.134,
+        0.1575
+       ]
+      }
+     },
+     {
+      "id": "plate",
+      "kind": "revolve",
+      "bone": "turntable",
+      "material": "borosilicate",
+      "role": "body",
+      "tone": 0.85,
+      "profile": [
+       [
+        -0.004,
+        0.0
+       ],
+       [
+        -0.004,
+        0.015
+       ],
+       [
+        0.012,
+        0.015
+       ],
+       [
+        0.012,
+        0.1
+       ],
+       [
+        0.022,
+        0.1225
+       ],
+       [
+        0.027,
+        0.1225
+       ],
+       [
+        0.017,
+        0.1
+       ],
+       [
+        0.017,
+        0.0
+       ]
+      ],
+      "axis": [
+       1,
+       0,
+       0
+      ],
+      "origin": [
+       0.0,
+       0.0,
+       0.0
+      ]
+     },
+     {
+      "id": "door-frame",
+      "kind": "extrude",
+      "bone": "door",
+      "material": "abs-aged",
+      "role": "body",
+      "tone": 0.92,
+      "profile": [
+       [
+        0.0,
+        0.0
+       ],
+       [
+        0.0,
+        -0.3185
+       ],
+       [
+        0.245,
+        -0.3185
+       ],
+       [
+        0.245,
+        0.0
+       ]
+      ],
+      "plane": "xy",
+      "from": -0.035,
+      "to": 0.0,
+      "holes": [
+       [
+        [
+         0.0465,
+         -0.045
+        ],
+        [
+         0.0465,
+         -0.265
+        ],
+        [
+         0.1985,
+         -0.265
+        ],
+        [
+         0.1985,
+         -0.045
+        ]
+       ]
+      ]
+     },
+     {
+      "id": "glass",
+      "kind": "box",
+      "bone": "door",
+      "material": "door-glass",
+      "role": "body",
+      "tone": 0.3,
+      "size": [
+       0.152,
+       0.22,
+       0.004
+      ],
+      "transform": {
+       "translation": [
+        0.1225,
+        -0.155,
+        -0.023
+       ]
+      },
+      "sheet": true
+     },
+     {
+      "id": "fascia",
+      "kind": "box",
+      "bone": "panel",
+      "material": "abs-aged",
+      "role": "body",
+      "tone": 0.9,
+      "size": [
+       0.247,
+       0.12,
+       0.035
+      ],
+      "transform": {
+       "translation": [
+        0.1235,
+        0.0,
+        -0.0
+       ]
+      }
+     },
+     {
+      "id": "knob-power",
+      "kind": "revolve",
+      "bone": "knob-power",
+      "material": "abs-black",
+      "role": "body",
+      "tone": 0.12,
+      "profile": [
+       [
+        0.0,
+        0.016
+       ],
+       [
+        0.015,
+        0.016
+       ],
+       [
+        0.015,
+        0.0
+       ]
+      ],
+      "axis": [
+       0,
+       0,
+       -1
+      ],
+      "origin": [
+       0.0,
+       0.0,
+       0.0
+      ]
+     },
+     {
+      "id": "knob-timer",
+      "kind": "revolve",
+      "bone": "knob-timer",
+      "material": "abs-aged",
+      "role": "body",
+      "tone": 0.85,
+      "profile": [
+       [
+        0.0,
+        0.019
+       ],
+       [
+        0.017,
+        0.019
+       ],
+       [
+        0.017,
+        0.0
+       ]
+      ],
+      "axis": [
+       0,
+       0,
+       -1
+      ],
+      "origin": [
+       0.0,
+       0.0,
+       0.0
+      ]
+     },
+     {
+      "id": "plug",
+      "kind": "box",
+      "bone": "cord",
+      "material": "pvc-cord",
+      "role": "body",
+      "tone": 0.88,
+      "size": [
+       0.052,
+       0.028,
+       0.028
+      ],
+      "transform": {
+       "translation": [
+        -0.026,
+        0.011,
+        0.0
+       ]
+      }
+     },
+     {
+      "id": "cord-run",
+      "kind": "capsule",
+      "bone": "cord",
+      "material": "pvc-cord",
+      "role": "body",
+      "tone": 0.88,
+      "p0": [
+       0.288,
+       0.025,
+       -0.0185
+      ],
+      "p1": [
+       0.0,
+       0.0,
+       0.0
+      ],
+      "r0": 0.003,
+      "r1": 0.003,
+      "slender": true
+     }
+    ],
+    "thermal": [
+     {
+      "id": "th-pad",
+      "of": "pad",
+      "region": "pad"
+     },
+     {
+      "id": "th-foot-1",
+      "of": "foot-1",
+      "region": "casing"
+     },
+     {
+      "id": "th-foot-2",
+      "of": "foot-2",
+      "region": "casing"
+     },
+     {
+      "id": "th-foot-3",
+      "of": "foot-3",
+      "region": "casing"
+     },
+     {
+      "id": "th-foot-4",
+      "of": "foot-4",
+      "region": "casing"
+     },
+     {
+      "id": "th-shell",
+      "of": "shell",
+      "region": "casing"
+     },
+     {
+      "id": "th-back",
+      "of": "back",
+      "region": "casing"
+     },
+     {
+      "id": "th-cavity-lining",
+      "kind": "extrude",
+      "bone": "cavity",
+      "material": "cavity-paint",
+      "role": "body",
+      "tone": 0.72,
+      "profile": [
+       [
+        0.0,
+        -0.0
+       ],
+       [
+        0.315,
+        -0.0
+       ],
+       [
+        0.315,
+        0.212
+       ],
+       [
+        0.0,
+        0.212
+       ]
+      ],
+      "plane": "xy",
+      "from": -0.135,
+      "to": 0.15,
+      "holes": [
+       [
+        [
+         0.0005,
+         0.0005
+        ],
+        [
+         0.3145,
+         0.0005
+        ],
+        [
+         0.3145,
+         0.2115
+        ],
+        [
+         0.0005,
+         0.2115
+        ]
+       ]
+      ],
+      "region": "cavity"
+     },
+     {
+      "id": "th-cavity-back",
+      "kind": "box",
+      "bone": "cavity",
+      "material": "cavity-paint",
+      "role": "body",
+      "tone": 0.66,
+      "size": [
+       0.315,
+       0.212,
+       0.0005
+      ],
+      "transform": {
+       "translation": [
+        0.1575,
+        0.106,
+        0.14975
+       ]
+      },
+      "region": "cavity",
+      "sheet": true
+     },
+     {
+      "id": "th-plate",
+      "of": "plate",
+      "region": "turntable"
+     },
+     {
+      "id": "th-door-frame",
+      "of": "door-frame",
+      "region": "door"
+     },
+     {
+      "id": "th-glass",
+      "of": "glass",
+      "region": "window"
+     },
+     {
+      "id": "th-fascia",
+      "of": "fascia",
+      "region": "panel"
+     },
+     {
+      "id": "th-knob-power",
+      "of": "knob-power",
+      "region": "panel"
+     },
+     {
+      "id": "th-knob-timer",
+      "of": "knob-timer",
+      "region": "panel"
+     },
+     {
+      "id": "th-plug",
+      "of": "plug",
+      "region": "casing"
+     },
+     {
+      "id": "th-cord-run",
+      "of": "cord-run",
+      "region": "casing"
+     },
+     {
+      "id": "th-exhaust-vents",
+      "kind": "box",
+      "bone": "side-r",
+      "material": "painted-steel",
+      "role": "body",
+      "tone": 0.45,
+      "size": [
+       0.08,
+       0.0005,
+       0.12
+      ],
+      "transform": {
+       "translation": [
+        0.179,
+        -0.0005,
+        0.0
+       ]
+      },
+      "region": "casing",
+      "tags": [
+       "exhaust"
+      ],
+      "sheet": true
+     },
+     {
+      "id": "th-transformer",
+      "kind": "box",
+      "bone": "base",
+      "material": "electrical-iron",
+      "role": "body",
+      "tone": 0.3,
+      "size": [
+       0.09,
+       0.075,
+       0.1
+      ],
+      "transform": {
+       "translation": [
+        0.38,
+        0.047,
+        0.07
+       ]
+      },
+      "region": "electronics"
+     },
+     {
+      "id": "th-magnetron",
+      "kind": "box",
+      "bone": "housing",
+      "material": "electrical-iron",
+      "role": "body",
+      "tone": 0.3,
+      "size": [
+       0.0945,
+       0.095,
+       0.1
+      ],
+      "transform": {
+       "translation": [
+        0.37275,
+        0.1675,
+        0.0
+       ]
+      },
+      "region": "electronics"
+     }
+    ],
+    "structure": [
+     {
+      "id": "m-pad",
+      "of": "pad",
+      "member": "pad",
+      "part": "member"
+     },
+     {
+      "id": "m-shell",
+      "of": "shell",
+      "member": "housing",
+      "part": "member",
+      "members": [
+       "base",
+       "side-l",
+       "side-r",
+       "top",
+       "cavity"
+      ]
+     },
+     {
+      "id": "m-back",
+      "of": "back",
+      "member": "housing",
+      "part": "member"
+     },
+     {
+      "id": "m-plate",
+      "of": "plate",
+      "member": "turntable",
+      "part": "member"
+     },
+     {
+      "id": "m-door-frame",
+      "of": "door-frame",
+      "member": "door",
+      "part": "member"
+     },
+     {
+      "id": "m-fascia",
+      "of": "fascia",
+      "member": "panel",
+      "part": "member"
+     },
+     {
+      "id": "m-cord-run",
+      "of": "cord-run",
+      "member": "cord",
+      "part": "member"
+     },
+     {
+      "id": "support-pad-floor",
+      "kind": "box",
+      "bone": "pad",
+      "material": "corrugated-board",
+      "role": "ground",
+      "tone": 0.2,
+      "size": [
+       0.4,
+       0.015,
+       0.3
+      ],
+      "transform": {
+       "translation": [
+        0.24,
+        0.0075,
+        0.0075
+       ]
+      },
+      "member": "pad",
+      "part": "support",
+      "anchor": "pad-floor"
+     },
+     {
+      "id": "mass-housing",
+      "kind": "ellipsoid",
+      "bone": "housing",
+      "material": "electrical-iron",
+      "role": "detail",
+      "tone": 0.3,
+      "radii": [
+       0.02,
+       0.02,
+       0.02
+      ],
+      "transform": {
+       "translation": [
+        0.270328,
+        0.102376,
+        0.02
+       ]
+      },
+      "member": "housing",
+      "part": "mass"
+     }
+    ],
+    "decisions": [
+     {
+      "en": "Body 1:100 merges base pan, wrapper and cavity liner into one housing shell extruded from the front to 15 mm before the back, with the cavity as its opening (a hollow part judged by its overall extents), and a 15 mm back plate; the four feet stay as 24 x 10 x 24 mm blocks because the drawing of the housing shows them 10 mm high; the door keeps its 35 mm frame with the window and the 4 mm glass as a declared sheet; the knobs become plain cylinders of their diameters; the turntable is one plate with its rim on a 30 mm hub that stands for the roller ring and the coupler; the cord is one slender run from the back to the plug; button, hinge pins, motor and all traces of use are below 15 mm and left out.",
+      "de": "Körper 1:100 fasst Bodenwanne, Mantel und Garraumauskleidung zu einer Gehäuseschale zusammen, die von der Front bis 15 mm vor die Rückseite gezogen ist und den Garraum als Öffnung hat (ein Hohlteil, nach seinen Gesamtmaßen beurteilt), dazu eine 15-mm-Rückplatte; die vier Füße bleiben Blöcke von 24 x 10 x 24 mm, weil die Zeichnung des Gehäuses sie 10 mm hoch zeigt; die Tür behält ihren 35-mm-Rahmen mit Fenster und das 4-mm-Glas als erklärte Platte; die Knöpfe werden einfache Zylinder ihrer Durchmesser; der Drehteller ist ein Teller mit Rand auf einer 30-mm-Nabe, die für Rollenring und Mitnehmer steht; das Kabel ist ein schlanker Strang von der Rückseite bis zum Stecker; Taste, Scharnierzapfen, Motor und alle Gebrauchsspuren liegen unter 15 mm und entfallen."
+     },
+     {
+      "en": "Thermal 1:100 references the body and adds the cavity lining as a 0.5 mm thermal tube with its back sheet inside the shell opening, and the transformer and magnetron as hidden blocks. Structure 1:100: the shell is the member solid of the housing and names base, wrapper sides, top and cavity (they lie in its walls), door, fascia, plate, cord and cardboard are their own members, one support and the mass marker.",
+      "de": "Thermik 1:100 verweist auf den Körper und ergänzt die Garraumauskleidung als thermisches 0,5-mm-Rohr mit Rückblech in der Öffnung der Schale sowie Transformator und Magnetron als verdeckte Blöcke. Tragwerk 1:100: die Schale ist der Bauteilkörper des Gehäuses und nennt Boden, Mantelseiten, Deckel und Garraum (sie liegen in ihren Wänden), Tür, Blende, Teller, Kabel und Pappe sind eigene Bauteile, ein Auflager und der Massenmarker."
+     }
+    ]
+   },
+   "200": {
+    "status": "unavailable",
+    "denominator": 200
+   },
+   "500": {
+    "status": "unavailable",
+    "denominator": 500
+   }
+  },
+  "presentation": {
+   "defaultPose": "stored",
+   "defaultClip": "reheat",
+   "defaultScale": 50
+  },
+  "exports": [
+   "svg",
+   "pdf",
+   "dxf",
+   "dwg",
+   "png-sequence",
+   "mp4",
+   "webm",
+   "component",
+   "glb",
+   "fbx",
+   "model",
+   "model-zip"
+  ],
+  "completion": "authored"
+ }
+}

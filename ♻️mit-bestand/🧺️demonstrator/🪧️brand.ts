@@ -2,6 +2,7 @@
 /** 🏷️ Entwerfen mit Bestand demonstrator brands — shared landing introduction plus per-app shell brands. */
 // #endregion 🧲️Header
 
+import { publishedPageUrl } from "@semio-tech/framework/assets/published-page";
 import { DEMONSTRATOR_HOST, DEMONSTRATOR_ASSETS_DIR, demonstratorPaneRuntimeVariant } from "./🔨️modules/🧩️runtime/📇️catalog/🟦️.ts";
 export { DEMONSTRATOR_HOST, DEMONSTRATOR_ASSETS_DIR, demonstratorPaneRuntimeVariant };
 import {
@@ -20,11 +21,11 @@ import { demonstratorLabel, demonstratorText, type DemonstratorLocale } from "./
 /** 🏛️ Credits shared by the demonstrator's shells, captioned and described in the viewer's `locale`. */
 export const demonstratorFooterItems = (locale: DemonstratorLocale): readonly ShellFooterItem[] => [
   { id: "aProjectOfLuhUdk", placement: "leading", caption: { en: demonstratorText("demonstrator.footer.aProjectOf", "en"), de: demonstratorText("demonstrator.footer.aProjectOf", "de") }, separator: { en: demonstratorText("demonstrator.footer.and", "en"), de: demonstratorText("demonstrator.footer.and", "de") }, logos: [
-    { href: "https://www.iek.uni-hannover.de/ngs/team", src: `/${DEMONSTRATOR_ASSETS_DIR}/🪧️logos/🎓️luh/☀️logo.png`, darkSrc: `/${DEMONSTRATOR_ASSETS_DIR}/🪧️logos/🎓️luh/🌙️logo-dark.png`, alt: demonstratorText("demonstrator.partner.luh", locale) },
-    { href: "https://www.udk-berlin.de/studium/architektur/fachgebiete/konstruktives-entwerfen-und-tragwerksplanung/team-2025-2026/", src: `/${DEMONSTRATOR_ASSETS_DIR}/🪧️logos/🎨️udk/☀️logo.png`, darkSrc: `/${DEMONSTRATOR_ASSETS_DIR}/🪧️logos/🎨️udk/🌙️logo-dark.png`, alt: demonstratorText("demonstrator.partner.udk", locale) },
+    { href: "https://www.iek.uni-hannover.de/ngs/team", src: demonstratorLogoUrl("🎓️luh/☀️logo.png"), darkSrc: demonstratorLogoUrl("🎓️luh/🌙️logo-dark.png"), alt: demonstratorText("demonstrator.partner.luh", locale) },
+    { href: "https://www.udk-berlin.de/studium/architektur/fachgebiete/konstruktives-entwerfen-und-tragwerksplanung/team-2025-2026/", src: demonstratorLogoUrl("🎨️udk/☀️logo.png"), darkSrc: demonstratorLogoUrl("🎨️udk/🌙️logo-dark.png"), alt: demonstratorText("demonstrator.partner.udk", locale) },
   ] },
   { id: "fundedByZukunftBau", placement: "trailing", caption: { en: demonstratorText("demonstrator.footer.fundedBy", "en"), de: demonstratorText("demonstrator.footer.fundedBy", "de") }, logos: [
-    { href: "https://www.zukunftbau.de/projekte/forschungsfoerderung/1008187-2506", src: `/${DEMONSTRATOR_ASSETS_DIR}/🪧️logos/🔮️zukunft-bau/☀️logo.png`, darkSrc: `/${DEMONSTRATOR_ASSETS_DIR}/🪧️logos/🔮️zukunft-bau/🌙️logo-dark.png`, alt: demonstratorText("demonstrator.partner.zukunftBau", locale) },
+    { href: "https://www.zukunftbau.de/projekte/forschungsfoerderung/1008187-2506", src: demonstratorLogoUrl("🔮️zukunft-bau/☀️logo.png"), darkSrc: demonstratorLogoUrl("🔮️zukunft-bau/🌙️logo-dark.png"), alt: demonstratorText("demonstrator.partner.zukunftBau", locale) },
   ] },
 ];
 
@@ -54,7 +55,7 @@ export const DEMONSTRATOR_NEUTRAL_TITLE = `${demonstratorText("demonstrator.bran
 /** ✒️ Semio emblem shared across demonstrator brands and the landing page. */
 export const ENTWERFEN_MIT_BESTAND_LOGO_SVG = `<svg viewBox="0 0 350 350" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false"><path d="M270.589 28.413a175 175 0 0151.24 241.804A175 175 0 0180.155 322.07 175 175 0 0127.691 80.528a175 175 0 01241.408-53.076" fill="#001117"/><path d="M76.25 271.933l35-35.808V118.75h-35z" fill="#fa9500" stroke="#f7f3e3" stroke-width="2.5" stroke-miterlimit="5"/><g fill="#ff344f" stroke="#f7f3e3" stroke-width="2.5" stroke-miterlimit="5"><path d="M76.25 113.75h155.563l37.66-37.5H76.25zM236.263 273.75l-.013-155.606 37.5-37.62V273.75z"/></g><g fill="#34d1bf" stroke="#f7f3e3" stroke-width="2.5" stroke-miterlimit="5"><path d="M160.467 273.75h70.783v-37.5h-34.169zM160.468 193.75h70.782v-37.5h-34.169z"/></g></svg>`;
 
-const demonstratorLogoUrl = (file: string) => `/${DEMONSTRATOR_ASSETS_DIR}/🪧️logos/${file}`;
+const demonstratorLogoUrl = (file: string) => publishedPageUrl(`/${DEMONSTRATOR_ASSETS_DIR}/🪧️logos/${file}`);
 
 /** 🎓️ General demonstrator introduction, logo texts in the viewer's `locale`, shown on the landing page only (not inside app shells). */
 export const demonstratorGeneralIntroduction = (locale: DemonstratorLocale): IntroductionDefinition => ({

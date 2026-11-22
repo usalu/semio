@@ -46,6 +46,14 @@
       "en": "Extracted function required: {name}",
       "de": "Extrahierte Funktion erforderlich: {name}"
     },
+    "testing.product-function-required": {
+      "en": "Product function required: {name} in {module}",
+      "de": "Produktfunktion erforderlich: {name} in {module}"
+    },
+    "testing.product-import-required": {
+      "en": "Product import required: {imported} of {specifier} for {name} in {module}",
+      "de": "Produkt-Import erforderlich: {imported} aus {specifier} für {name} in {module}"
+    },
     "leases.invalid-resource": {
       "en": "Invalid lease resource",
       "de": "Ungültige Lease-Ressource"

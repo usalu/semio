@@ -1,15 +1,18 @@
 """🗺️ Where the 1:50 plan drawing and the projected body of machinery/concrete-mixer-truck disagree: rasters both on a 15 mm grid (chute bones left out, they are placed by the pose) and lists the connected difference blobs.
 
-Usage: python3 rework-concrete-mixer-truck-plandiff.py [scale]   (after r3-project2d.ts --view plan)
+Usage: python3 rework-concrete-mixer-truck-plandiff.py [scale] [plan|elevation] [bone]   (after r3-project2d.ts --view … [--bone … --merge]; a bone limits both sides to that bone, whose elevation frame must be the world frame)
 """
 import json, re, sys
 
 scale = sys.argv[1] if len(sys.argv) > 1 else "50"
+view = sys.argv[2] if len(sys.argv) > 2 else "plan"
+only = sys.argv[3] if len(sys.argv) > 3 else None
+suffix = "." + only if only else ""
 C = "/Users/ueli/Documents/semio/🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/🏗️machinery/concrete-mixer-truck/🔣️.json"
 a = json.load(open(C))["asset"]
-pj = json.load(open(f"🗑️generated/r3-project2d/machinery/concrete-mixer-truck.s{scale}.plan.json"))
+pj = json.load(open(f"🗑️generated/r3-project2d/machinery/concrete-mixer-truck.s{scale}.{view}{suffix}.json"))
 H = 0.015
-X0, Y0, NX, NY = -4.7, -1.4, int(9.5 / H), int(2.8 / H)
+X0, Y0, NX, NY = (-4.7, -1.4, int(9.5 / H), int(2.8 / H)) if view == "plan" else (-4.7, 0.0, int(9.5 / H), int(3.8 / H))
 
 
 def rings(s):
@@ -66,8 +69,9 @@ def raster(shapes):
     return total
 
 
-B = raster([s for b in pj["bones"] if not b["bone"].startswith("chute") for s in b["shapes"]])
-D = raster([s for s in a["representations"][scale]["geometry"]["plan"] if not s["bone"].startswith("chute") and s.get("filled")])
+keep = (lambda bone: bone == only) if only else (lambda bone: not bone.startswith("chute"))
+B = raster([s for b in pj["bones"] if keep(b["bone"]) for s in b["shapes"]])
+D = raster([s for s in a["representations"][scale]["geometry"][view] if keep(s["bone"]) and s.get("filled")])
 for name, U, W in (("body not drawn", B, D), ("drawn not body", D, B)):
     diff = [[1 if U[j][i] and not W[j][i] else 0 for i in range(NX)] for j in range(NY)]
     blobs = []

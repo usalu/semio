@@ -4,7 +4,7 @@
   "description": "Geometry constants the React chrome and the wgpu chrome both read, so the two targets cannot drift.",
   "type": "object",
   "additionalProperties": false,
-  "required": ["introduction", "panelDrop", "toast", "statusStacks"],
+  "required": ["introduction", "panelDrop", "toast", "statusStacks", "focus", "sizes"],
   "properties": {
     "$schema": { "type": "string" },
     "introduction": {
@@ -46,6 +46,27 @@
         "artifactCreationMaxWidthRem": { "type": "number", "exclusiveMinimum": 0 },
         "routeAdmissionMaxWidthFraction": { "type": "number", "exclusiveMinimum": 0, "maximum": 1 },
         "installMaxWidthFraction": { "type": "number", "exclusiveMinimum": 0, "maximum": 1 }
+      }
+    },
+    "focus": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["underlineThicknessPx", "underlineOffsetEm"],
+      "properties": {
+        "underlineThicknessPx": { "type": "number", "exclusiveMinimum": 0 },
+        "underlineOffsetEm": { "type": "number", "minimum": 0 }
+      }
+    },
+    "sizes": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["panelDefaultPx", "windowPaneDefaultPx", "paletteDialogMaxWidthRem", "timeTravelBandMaxWidthFraction", "folderBandMaxWidthFraction"],
+      "properties": {
+        "panelDefaultPx": { "type": "number", "exclusiveMinimum": 0 },
+        "windowPaneDefaultPx": { "type": "number", "exclusiveMinimum": 0 },
+        "paletteDialogMaxWidthRem": { "type": "number", "exclusiveMinimum": 0 },
+        "timeTravelBandMaxWidthFraction": { "type": "number", "exclusiveMinimum": 0, "maximum": 1 },
+        "folderBandMaxWidthFraction": { "type": "number", "exclusiveMinimum": 0, "maximum": 1 }
       }
     }
   }

@@ -225,6 +225,14 @@ fn seed_domain_catalog_contributions(app: &mut Process3dApp) {
 
 /// 🏛️ Installs a host contribution pack through the editor's addressed app command.
 pub fn install_contributions(app: &mut Process3dApp, json: String) -> semio_plugin::artifact_app_laws::TypedOperationFixtureReceipt {
+    contributions_command(app, DslValue::object([("json".into(), DslValue::String(json))])).expect("the addressed host contribution command settles");
+    let cx = app.1.cx();
+    semio_plugin::artifact_app_laws::fixture_renew_turn(cx, semio_plugin::artifact_app_laws::OriginalFixtureCaller::turn_fuel(), cx.original_turn_ceiling().0).expect("fund the contribution publication turn");
+    settle(app)
+}
+
+/// 🏛️ Dispatches the editor's addressed host-configuration command with `args` under its actual decoder recipient, answering its refusal unretired.
+pub fn contributions_command(app: &mut Process3dApp, args: DslValue) -> Result<InvocationResult, semio_framework_job::OriginalTurnFailure> {
     use semio_framework::manifest::{CommandAddress, CommandOwnerAddress};
     use semio_plugin::artifact_app_laws::{dispatch_fixture_command, fixture_renew_turn, OriginalFixtureCaller};
 
@@ -248,14 +256,11 @@ pub fn install_contributions(app: &mut Process3dApp, json: String) -> semio_plug
         owner: CommandOwnerAddress::App { plugin_id: "process".into(), app_id: semio_s_artifact_process_process3d_kit::PROCESS_3D_PLAY_CONTROLLER_ID.into() },
         command_id: "setContributions".into(),
     };
-    let args = DslValue::object([("json".into(), DslValue::String(json))]);
     ::semio_framework_async::poll::resolve_ready(dispatch_fixture_command(
         &mut app.0, &address, Some(args), None, &meta("local"),
         &mut semio_plugin::artifact_app_laws::fixture_identity(), cx,
         semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close,
-    )).expect("the addressed host contribution command settles");
-    fixture_renew_turn(cx, fuel, grant).expect("fund the contribution publication turn");
-    settle(app)
+    ))
 }
 
 /// 🧪️ Every test context app is wired to the real manifest registry. The registry-less `new_app` path

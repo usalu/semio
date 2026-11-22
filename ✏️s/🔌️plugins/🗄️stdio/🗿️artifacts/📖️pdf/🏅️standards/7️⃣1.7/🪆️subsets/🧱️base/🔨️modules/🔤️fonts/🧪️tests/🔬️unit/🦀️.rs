@@ -257,3 +257,19 @@ fn verify_embedded_font(fixture: &str, composite: bool) {
         }
     }
 }
+
+#[test]
+fn every_base14_program_exists_matches_its_provenance_and_is_selected() {
+    let directory = concat!(env!("CARGO_MANIFEST_DIR"), "/../../🖼️base14");
+    let provenance = std::fs::read_to_string(format!("{directory}/PROVENANCE.tsv")).expect("recorded provenance");
+    let rows: Vec<Vec<&str>> = provenance.lines().map(|line| line.split('\t').collect()).collect();
+    assert_eq!(rows.len(), 14);
+    for row in rows {
+        let bytes = std::fs::read(format!("{directory}/{}", row[1])).unwrap_or_else(|_| panic!("missing font asset {}", row[1]));
+        assert_eq!(bytes.len(), row[2].parse::<usize>().unwrap(), "{}", row[1]);
+        assert_eq!(&bytes[..2], &[1, 0], "CFF header of {}", row[1]);
+        assert!(row[4].contains("commit") && row[5].contains("AGPL"), "provenance of {}", row[1]);
+        let program = super::standard_outline_program(row[0]).unwrap_or_else(|| panic!("{} has no outline program", row[0]));
+        assert_eq!(program, &bytes[..], "{}", row[0]);
+    }
+}

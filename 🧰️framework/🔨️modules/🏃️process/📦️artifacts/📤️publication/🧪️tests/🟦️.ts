@@ -7,11 +7,15 @@ import { dirname, join, resolve } from "node:path";
 import { createRequire } from "node:module";
 import { stageArtifacts } from "../🟦️.ts";
 import { acquireResourceLease } from "../../../🔒️leases/🟦️.ts";
+import { LeaseOrderErrorV1 } from "../../../🔒️leases/🧭️order/🟦️.ts";
+import leaseOrderPolicy from "../../../🔒️leases/🧭️order/🔣️policy.json" with { type: "json" };
+import { createHash } from "node:crypto";
 import{privateRepositoryWorkspaceV1}from"../../../../../🛍️products/🦑️repo/🔨️modules/📚️library/🧪️testing/🧫️private-repository/🟦️.ts";
 const repository=await privateRepositoryWorkspaceV1();
 
 /** 📦️ Verifies portable publication, cancellation and complete bytes through independent Python. */
 export async function testArtifactPublication(output: string): Promise<void> {
+  await testConcurrentPublishersOfOneArtifactV1(output);
   const fixture = JSON.parse(readFileSync(resolve(import.meta.dirname, "🧫️fixtures/🔣️.json"), "utf8"));
   const validator = new (createRequire(import.meta.url)("ajv").default)({strict:true}), schema = JSON.parse(readFileSync(resolve(import.meta.dirname,"../🧬️schema/🔣️.json"),"utf8"));
   assert.ok(validator.validate(schema,fixture));
@@ -122,4 +126,56 @@ export async function testArtifactPublication(output: string): Promise<void> {
     } finally { mock.module("node:fs", () => native); }
 
   } finally { lease.release(); rmSync(root, { recursive: true, force: true }); rmSync(leaseDirectory, { recursive: true, force: true }); }
+}
+
+/** 🪢️ A publisher that holds its private scratch claim waits past the hold-and-wait grace for a concurrent publisher of the same artifact and then publishes; the shared scratch claim and a policy without the declared edges still refuse. */
+async function testConcurrentPublishersOfOneArtifactV1(output: string): Promise<void> {
+  const fixture = JSON.parse(readFileSync(resolve(import.meta.dirname, "🧫️fixtures/🔣️.json"), "utf8"));
+  const root = mkdtempSync(join(output, "cp-")), staging = join(root, "dist"), leaseRoot = resolve(repository.root, ".cache/b/l/m/data");
+  mkdirSync(leaseRoot, { recursive: true });
+  const leaseDirectory = mkdtempSync(join(leaseRoot, "cp-")), files = new Map<string, string>();
+  for (const [name, text] of Object.entries(fixture.files)) {
+    const path = join(root, "input", name); mkdirSync(dirname(path), { recursive: true }); writeFileSync(path, String(text)); files.set(name, path);
+  }
+  const grace = 200, hold = 900;
+  const policyFile = (name: string, allowed: unknown[]) => {
+    const path = join(root, name + ".json");
+    writeFileSync(path, JSON.stringify({ ...leaseOrderPolicy, holdAndWait: { ...leaseOrderPolicy.holdAndWait, graceMilliseconds: grace, pollMilliseconds: 50 }, allowed }));
+    return path;
+  };
+  const authored = policyFile("authored", leaseOrderPolicy.allowed);
+  const withoutArtifactEdges = policyFile("without", leaseOrderPolicy.allowed.filter(edge => !(edge.from === "artifact" && edge.to === "artifact")));
+  const scratch = (prefix: string) => prefix + createHash("sha256").update(root).digest("hex");
+  const previous = process.env.SEMIO_LEASE_ORDER_POLICY, previousMode = process.env.SEMIO_LEASE_ORDER;
+  const publish = async (policy: string, resource: string) => {
+    process.env.SEMIO_LEASE_ORDER_POLICY = policy; delete process.env.SEMIO_LEASE_ORDER;
+    const task = new AbortController(), other = new AbortController(), waits: number[] = [];
+    const scratchLease = await acquireResourceLease({ directory: leaseDirectory, resource, mode: "exclusive", signal: task.signal });
+    const publisher = await acquireResourceLease({ directory: leaseDirectory, resource: `artifact:${resolve(staging)}`, mode: "exclusive", signal: other.signal });
+    const started = Date.now();
+    setTimeout(() => publisher.release(), hold);
+    try { await stageArtifacts(staging, fixture.owner, files, { leaseDirectory, signal: task.signal, onWait: progress => waits.push(progress.elapsedMs) }); }
+    finally { scratchLease.release(); }
+    return { waits, elapsed: Date.now() - started };
+  };
+  const program = "import json,pathlib,sys\np=pathlib.Path(sys.argv[1]);print(json.dumps({str(f.relative_to(p)).replace('\\\\','/'):f.read_text() for f in p.rglob('*') if f.is_file() and f.name!='.semio-artifact.json'}))";
+  try {
+    const rejectedShared = await publish(authored, scratch("artifact-scratch:")).then(() => undefined, (error: unknown) => error);
+    assert.ok(rejectedShared instanceof LeaseOrderErrorV1 && rejectedShared.violation.kind === "hold-and-wait", "a scratch claim shared between invocations must still refuse");
+    rmSync(staging, { recursive: true, force: true });
+    const rejected = await publish(withoutArtifactEdges, scratch("artifact-scratch-private:")).then(() => undefined, (error: unknown) => error);
+    assert.ok(rejected instanceof LeaseOrderErrorV1 && rejected.violation.kind === "hold-and-wait" && rejected.violation.requested === `artifact:${resolve(staging)}`, "without the declared edges the wait is the recorded refusal");
+    rmSync(staging, { recursive: true, force: true });
+    const { waits, elapsed } = await publish(authored, scratch("artifact-scratch-private:"));
+    assert.ok(waits.length > 0, "waiting must report progress");
+    assert.ok(hold > grace && elapsed >= hold, "the second publisher must wait past the hold-and-wait grace for the first one");
+    const oracle = Bun.spawnSync([testPythonV1() ?? "python", "-c", program, staging], { stdout: "pipe", stderr: "pipe" });
+    assert.equal(oracle.exitCode, 0, oracle.stderr.toString());
+    assert.deepEqual(JSON.parse(oracle.stdout.toString()), fixture.files);
+    assert.deepEqual(readdirSync(root).filter(name => name.startsWith("dist.stage-")), []);
+  } finally {
+    if (previous === undefined) delete process.env.SEMIO_LEASE_ORDER_POLICY; else process.env.SEMIO_LEASE_ORDER_POLICY = previous;
+    if (previousMode === undefined) delete process.env.SEMIO_LEASE_ORDER; else process.env.SEMIO_LEASE_ORDER = previousMode;
+    rmSync(root, { recursive: true, force: true }); rmSync(leaseDirectory, { recursive: true, force: true });
+  }
 }

@@ -37,8 +37,8 @@ export async function proveGisDurableThreeStoreAssembly(repoRoot: string): Promi
     throw new Error("GIS durable assembly terminal owner trace changed");
   }
   const storeSource = readModuleTreeSource(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🦀️.rs"));
-  const assembly = storeSource.slice(storeSource.indexOf("pub struct DurableOwnedThreeStoreMapAssemblyV1"), storeSource.indexOf("impl<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation> DurableOwnedThreeStoreBoundV1"));
-  for (const marker of ["DurableOwnedMapMemberAdmissionV1", "AdmittingParent", "AdmittingDrawing", "AdmittingValue", "PreparingParent", "PreparingDrawing", "PreparingValue", "take_assembly_prepared", "bind_store_owned", "mount_map", "take_mounted_host", "take_terminal_owners"]) {
+  const assembly = storeSource.slice(storeSource.indexOf("pub struct DurableOwnedThreeStoreMapAssemblyV1"), storeSource.indexOf("impl<ParentP: Send + Sync + 'static, ParentMutation, DrawingP: Send + Sync + 'static, DrawingMutation, ValueP: Send + Sync + 'static, ValueMutation> DurableOwnedThreeStoreBoundV1"));
+  for (const marker of ["DurableOwnedMapMemberAdmissionV1", "AdmittingParent", "AdmittingDrawing", "AdmittingValue", "PreparingParent", "PreparingDrawing", "PreparingValue", "take_assembly_prepared", "advance_binding", "take_bound", "begin_retained_commit", "mount_map", "take_mounted_host", "take_terminal_owners"]) {
     if (!assembly.includes(marker)) throw new Error(`Store durable assembly missing ${marker}`);
   }
   if (assembly.includes("begin_member_apply_batch") || assembly.includes("group_id:") || !assembly.includes("begin_apply_batch(")) throw new Error("Store durable assembly admits a caller group or catalog factory shortcut");

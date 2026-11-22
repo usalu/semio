@@ -1,0 +1,21 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/app/stdio/pdf/presence/mutation/set-presence/schema.json",
+  "title": "SetPresence",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["page", "pointerActive", "pointerX", "pointerY", "viewLeft", "viewTop", "viewRight", "viewBottom", "caretObject", "caretOffset", "caretAnchor"],
+  "properties": {
+    "page": { "type": "integer", "minimum": 0, "x-semio-ui": { "widget": "stepper", "role": "value", "label": { "en": "Page", "de": "Seite" }, "description": { "en": "Page the collaborator is on.", "de": "Seite, auf der sich die Person befindet." }, "step": 1, "precision": 0, "group": "presence", "order": 10 } },
+    "pointerActive": { "type": "boolean", "x-semio-ui": { "widget": "toggle", "role": "value", "label": { "en": "Pointer active", "de": "Zeiger aktiv" }, "description": { "en": "Whether the pointer is over the page.", "de": "Ob der Zeiger über der Seite steht." }, "group": "pointer", "order": 20 } },
+    "pointerX": { "type": "integer", "minimum": 0, "x-semio-ui": { "widget": "stepper", "role": "value", "label": { "en": "Pointer X", "de": "Zeiger X" }, "description": { "en": "Horizontal pointer position in per mille of the page width.", "de": "Horizontale Zeigerposition in Promille der Seitenbreite." }, "step": 1, "precision": 0, "group": "pointer", "order": 30 } },
+    "pointerY": { "type": "integer", "minimum": 0, "x-semio-ui": { "widget": "stepper", "role": "value", "label": { "en": "Pointer Y", "de": "Zeiger Y" }, "description": { "en": "Vertical pointer position in per mille of the page height.", "de": "Vertikale Zeigerposition in Promille der Seitenhöhe." }, "step": 1, "precision": 0, "group": "pointer", "order": 40 } },
+    "viewLeft": { "type": "integer", "minimum": 0, "x-semio-ui": { "widget": "stepper", "role": "value", "label": { "en": "View left", "de": "Ansicht links" }, "description": { "en": "Left edge of the visible page rectangle in per mille.", "de": "Linker Rand des sichtbaren Seitenausschnitts in Promille." }, "step": 1, "precision": 0, "group": "view", "order": 50 } },
+    "viewTop": { "type": "integer", "minimum": 0, "x-semio-ui": { "widget": "stepper", "role": "value", "label": { "en": "View top", "de": "Ansicht oben" }, "description": { "en": "Top edge of the visible page rectangle in per mille.", "de": "Oberer Rand des sichtbaren Seitenausschnitts in Promille." }, "step": 1, "precision": 0, "group": "view", "order": 60 } },
+    "viewRight": { "type": "integer", "minimum": 0, "x-semio-ui": { "widget": "stepper", "role": "value", "label": { "en": "View right", "de": "Ansicht rechts" }, "description": { "en": "Right edge of the visible page rectangle in per mille.", "de": "Rechter Rand des sichtbaren Seitenausschnitts in Promille." }, "step": 1, "precision": 0, "group": "view", "order": 70 } },
+    "viewBottom": { "type": "integer", "minimum": 0, "x-semio-ui": { "widget": "stepper", "role": "value", "label": { "en": "View bottom", "de": "Ansicht unten" }, "description": { "en": "Bottom edge of the visible page rectangle in per mille.", "de": "Unterer Rand des sichtbaren Seitenausschnitts in Promille." }, "step": 1, "precision": 0, "group": "view", "order": 80 } },
+    "caretObject": { "type": "string", "x-semio-ui": { "widget": "text", "role": "value", "label": { "en": "Caret object", "de": "Eingabemarke Objekt" }, "description": { "en": "Object holding the text caret; empty means no caret.", "de": "Objekt mit der Eingabemarke; leer bedeutet keine Eingabemarke." }, "group": "caret", "order": 90 } },
+    "caretOffset": { "type": "integer", "minimum": 0, "x-semio-ui": { "widget": "stepper", "role": "value", "label": { "en": "Caret offset", "de": "Eingabemarke Versatz" }, "description": { "en": "Character offset of the caret in the object.", "de": "Zeichenversatz der Eingabemarke im Objekt." }, "step": 1, "precision": 0, "group": "caret", "order": 100 } },
+    "caretAnchor": { "type": "integer", "minimum": 0, "x-semio-ui": { "widget": "stepper", "role": "value", "label": { "en": "Caret anchor", "de": "Eingabemarke Anker" }, "description": { "en": "Character offset of the selection anchor.", "de": "Zeichenversatz des Auswahlankers." }, "step": 1, "precision": 0, "group": "caret", "order": 110 } }
+  }
+}

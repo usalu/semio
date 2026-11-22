@@ -97,7 +97,7 @@ impl CrossShellHandshake {
 /// it (the shell input laws' own painter), so the engine surfaces a window carries (the board) register and
 /// mirror into the shell's pointer-state maps exactly as they would under a GPU. Answers the painted boards.
 #[cfg(not(target_arch = "wasm32"))]
-fn paint_session_windows(shell: &mut ShellState, body: Rect) -> Vec<String> {
+fn paint_session_windows(mut shell: &mut ShellState, body: Rect) -> Vec<String> {
     let _serialized = semio_renderer_wgpu_engine_registry::engine_surface_law_guard();
     let controller = shell.docs.session.as_ref().map(|session| session.app.controller_id.clone()).unwrap_or_default();
     let mut windows: Vec<String> = shell.docs.window_ui.keys().cloned().collect();

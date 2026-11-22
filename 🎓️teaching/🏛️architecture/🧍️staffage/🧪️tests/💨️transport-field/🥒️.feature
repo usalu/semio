@@ -42,8 +42,14 @@ Feature: Transport field
   Scenario: Condensation
     Given exhaled air at 34 degrees and 95 percent humidity
     Then supersaturated parcels exist in 5 degree air and none in 30 degree air
+    And the flow field carries exactly those parcels as its fog puffs
 
-  Scenario: Streamlines are not pathlines
+  Scenario: Streams are not paths
     Given steady wind and no jets
-    Then streamlines are straight lines at the wind speed
-    And after a wind change a pathline is bent while the streamline is straight
+    Then the streams of the flow field are straight lines at the wind speed, one arc-length step per point
+    And after a wind change the path of a parcel is bent while streams of the instant exist
+    And the flow field carries the path of every parcel only when pathlines are asked for
+
+  Scenario: Inhalation draws streams into the nostril
+    Given a breathing figure while it inhales
+    Then six streams seeded around the nose end nearer to it than they began

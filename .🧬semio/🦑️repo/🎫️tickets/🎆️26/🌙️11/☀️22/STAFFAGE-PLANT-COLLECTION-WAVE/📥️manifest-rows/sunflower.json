@@ -1,0 +1,57 @@
+{
+  "id": "sunflower",
+  "category": "vegetation",
+  "title": {
+    "en": "Sunflower",
+    "de": "Sonnenblume"
+  },
+  "heightM": 2.48,
+  "widthM": 1.17,
+  "powerW": 0,
+  "poses": [
+    "calm",
+    "windy",
+    "storm",
+    "ripening",
+    "evening-sun"
+  ],
+  "clips": [
+    "wind-sway",
+    "gust",
+    "diurnal-transpiration",
+    "heliotropic-tracking"
+  ],
+  "representations": {
+    "50": "authored",
+    "100": "authored",
+    "200": "authored",
+    "500": "authored"
+  },
+  "symbols": [
+    "sunflower-symbol"
+  ],
+  "analytics": [
+    "thermal",
+    "transport",
+    "structural"
+  ],
+  "exports": [
+    "svg",
+    "pdf",
+    "dxf",
+    "dwg",
+    "png-sequence",
+    "mp4",
+    "webm",
+    "component",
+    "glb",
+    "fbx",
+    "model",
+    "model-zip"
+  ],
+  "distinction": {
+    "en": "The only annual crop flower among the grasses and perennials: three stout stems with spiral heart-shaped leaves and large east-facing heads that follow the sun by day and droop with ripening seed.",
+    "de": "Die einzige einjährige Kulturblume unter den Gräsern und Stauden: drei kräftige Stängel mit spiralig gestellten herzförmigen Blättern und großen, nach Osten gerichteten Körben, die tagsüber der Sonne folgen und mit reifenden Kernen herabhängen."
+  },
+  "completion": "authored"
+}

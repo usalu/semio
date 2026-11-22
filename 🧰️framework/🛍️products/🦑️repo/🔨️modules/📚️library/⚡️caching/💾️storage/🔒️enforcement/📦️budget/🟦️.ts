@@ -32,7 +32,7 @@ export function readRepositoryCacheBudgetV1(value:unknown):RepositoryCacheBudget
 }
 /** 🚦️ Declares the one bounded queued whole-image maintenance wait that ordinary commands use instead of refusing concurrent invocations; callers start it before taking their own shared pin on that partition because later readers queue behind it. */
 export function repositoryCacheOrdinaryMaintenanceV1():Readonly<{version:1;mode:"queued";maximumWaitMilliseconds:number}>{const row=schema.$defs.ordinaryMaintenance.const;return Object.freeze({version:1 as const,mode:"queued" as const,maximumWaitMilliseconds:row.maximumWaitMilliseconds});}
-export {effectiveCapacityV1,elasticBloatedV1,elasticCapacityV1,elasticGrowthV1,elasticMinimumV1,hostShareCapacityV1,hostSharePercentV1,pinnedCapacityV1,writeElasticGrowthV1,type ElasticPartitionIdV1,type ElasticRuleV1} from "./📐️elastic/🟦️.ts";
+export {effectiveCapacityV1,elasticBloatedV1,elasticCapacityV1,elasticGrowthV1,elasticMinimumV1,hostShareCapacityV1,hostSharePercentV1,pinHostFreeBytesForSizingV1,pinnedCapacityV1,writeElasticGrowthV1,type ElasticPartitionIdV1,type ElasticRuleV1} from "./📐️elastic/🟦️.ts";
 /** 🌱️ Whether an elastic image should be recreated now: its rule is automatic, the mounted image has less free space than the pressure floor and the elastic size the host allows exceeds its capacity. Bloat is never a reason: it is reclaimed in place. */
 export function repositoryPartitionRegrowDueV1(workspace:string,partition:ElasticPartitionIdV1):boolean{
  const rule=policy.elastic?.[partition];if(!rule?.automatic)return false;

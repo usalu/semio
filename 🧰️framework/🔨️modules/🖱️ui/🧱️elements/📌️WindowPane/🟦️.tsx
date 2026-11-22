@@ -1,5 +1,6 @@
 /** 📑 Owns the window pane host and the resizable pane that window chrome stacks above the body. */
 import * as React from "react";
+import chromeParityConstants from "../../🧬️schema/📐️chrome-parity-constants/🧮️values.json";
 import { type IconName } from "@semio-tech/assets";
 import { reactHostPort } from "../🔌️Ports/⚛️react/🟦️.ts";
 import { cn } from "../../🔨️modules/🏷️class-name-composition/🟦️.ts";
@@ -155,7 +156,7 @@ export interface PaneProps {
   readonly children?: React.ReactNode;
 }
 
-const PANE_DEFAULT_SIZE = 300;
+const PANE_DEFAULT_SIZE = chromeParityConstants.sizes.windowPaneDefaultPx;
 
 const PANE_DEFAULT_MIN_SIZE = 200;
 

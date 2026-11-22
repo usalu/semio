@@ -67,13 +67,15 @@ async fn composed_replacement_candidate(
 /// 🎟️ The fixture lends its authored maintenance policy without deriving authority from quotes.
 fn composed_maintenance_turn<A: PluginApp>(app: &mut A, body: usize, cx:&mut semio_framework_job::StepContext<'_>) -> Result<semio_plugin_ownership::bounded_ownership::PluginLifecycleStep, semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
     assert_eq!(body,COMPOSITION_MAINTENANCE_GRANT.maximum_copy_bytes);
-    app.maintenance_step(cx,COMPOSITION_MAINTENANCE_GRANT)
+    let demand = app.maintenance_retirement_demands(body,cx.fuel_remaining())?;
+    eprintln!("[DEBUG] maint demand {demand:?} cxgrant {:?} fuel {} yield {}",cx.retained_grant(),cx.fuel_remaining(),cx.retirement_should_yield());
+    semio_plugin_ownership::bounded_ownership::original_lifecycle_step(cx,COMPOSITION_MAINTENANCE_GRANT,demand,|same,grant|Ok((app.maintenance_step(same,grant)?,app.maintenance_terminal_is_empty())))
 }
 
 /// ♻️ Returns the complete original fixture refusal through the initiating physical recipient.
 fn close_composition_refusal(source:semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure,cx:&mut semio_framework_job::StepContext<'_>){
  let mut owner=semio_framework_value::retirement::controlled::ControlledRetirement::new(source).unwrap_or_else(|_|panic!("complete original lifecycle refusal supports controlled retirement"));
- for _ in 0..semio_plugin_testing_laws::OriginalFixtureCaller::maximum_turns(){if owner.terminal_is_empty(){return}cx.with_retained_loan(COMPOSITION_CLEANUP_GRANT,|same|semio_framework_job::close_original_retained_step(same,owner.selected_demand(COMPOSITION_CLEANUP_GRANT.maximum_copy_bytes)?,|grant|owner.step(grant))).expect("original composition refusal paid retirement");}
+ for _ in 0..semio_plugin_testing_laws::OriginalFixtureCaller::maximum_turns(){if owner.terminal_is_empty(){return}cx.with_retained_loan(COMPOSITION_CLEANUP_GRANT,|same|semio_framework_job::close_original_effect_step(same,owner.selected_demand(COMPOSITION_CLEANUP_GRANT.maximum_copy_bytes)?,|effect|owner.step(effect.grant().maximum_copy_bytes,effect))).expect("original composition refusal paid retirement");}
  panic!("original composition refusal exceeded its initiating supplied turn bound")
 }
 
@@ -96,7 +98,8 @@ async fn drive_composed_replacement_to(
 async fn live_composed_replacement_app() -> VcsArtifactApp<ComposedParentApp, TestMembers> {
     let mut app = VcsArtifactApp::<ComposedParentApp, TestMembers>::new(ComposedParentApp::default(), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()), semio_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy(), &mut semio_plugin_testing_laws::artifact_app_laws::fixture_identity()).await.expect("the reference snapshot births");
     let dialect = test_child_dialect().await;
-    let member = TestMembers::create("child-1", &dialect, &TestSnapshot::default().encode_pack(), app.stores.store.local_actor_id().clone()).await.expect("live child");
+    let mut member = TestMembers::create("child-1", &dialect, &TestSnapshot::default().encode_pack(), app.stores.store.local_actor_id().clone()).await.expect("live child");
+    member.set_owner(Some(store::OwnerRef { parent: ArtifactRef { artifact_id: app.stores.store.envelope().id.clone(), dialect: ComposedParentApp::<true>::DIALECT.into() }, slot: "slot".into(), child_id: "child-1".into() })).await;
     app.register_child("slot", "child-1", dialect, member, &mut semio_plugin_testing_laws::artifact_app_laws::fixture_identity()).await.expect("live child publication");
     app
 }
@@ -110,7 +113,7 @@ fn recursive_replacement_case<'a>(vectors: &'a Value, id: &str) -> &'a Value {
 }
 
 fn close_recursive_member_fixture(member: &mut RecursiveTestMembers) {
-    let grant=COMPOSITION_MAINTENANCE_GRANT;
+    let grant=semio_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy().close;
     for _ in 0..65_536 {
         let step = member.close_owned_step_cold(grant).expect("recursive fixture member closes under its exact grant");
         assert!(step.progress().fits(grant));
@@ -123,7 +126,7 @@ fn close_recursive_member_fixture(member: &mut RecursiveTestMembers) {
 }
 
 fn close_recursive_parent_fixture(store: &mut store::ArtifactStore<ComposedParentSnapshot, RecursiveFixtureMutation>) {
-    let grant=COMPOSITION_MAINTENANCE_GRANT;
+    let grant=semio_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy().close;
     for _ in 0..65_536 {
         let step = store.close_owned_step_cold(grant).expect("recursive archive parent closes under its exact grant");
         assert!(step.progress().fits(grant));
@@ -203,7 +206,7 @@ async fn append_malformed_transition_to_member_history(entry: &mut protocol::Own
         hlt: (1, 1, 0),
         dependencies: Vec::new(),
         observed: None,
-        payload: vec![0xff],
+        payload: protocol::CausalPayload::try_from_slice(&[0xff]).expect("rejected frame payload"),
     });
     let encoded = Box::pin(protocol::encode_history(
         &history,

@@ -1,0 +1,182 @@
+{
+ "id": "flow-environments",
+ "oracle": "CoolProp 8 humid air (dew point, saturation humidity ratio, mixing-line enthalpy), psychrolib 2.5 (dew point cross-check), numpy sign of Newton's law of cooling",
+ "exhaled": {
+  "tempC": 34,
+  "relativeHumidity": 0.95
+ },
+ "body": {
+  "surfaceTempC": 28,
+  "conductanceWK": 8
+ },
+ "decisiveKgPerKg": 0.0003,
+ "developS": 8,
+ "domain": {
+  "min": {
+   "x": -3,
+   "y": 0,
+   "z": -3
+  },
+  "max": {
+   "x": 3,
+   "y": 5,
+   "z": 3
+  }
+ },
+ "tolerances": {
+  "dewPointK": 0.2,
+  "frostPointK": 0.5,
+  "comment": "below 0 °C the oracles report the frost point over ice, the model the dew point over supercooled liquid water (no ice phase): up to 0.5 K lower"
+ },
+ "expected": [
+  {
+   "preset": "office-neutral",
+   "airTempC": 22,
+   "relativeHumidity": 0.5,
+   "dewPointC": 11.112428024835879,
+   "dewPointPsychrolibC": 11.110092965013603,
+   "supersaturationKgPerKg": -0.0018304149577351575,
+   "breathFogs": false,
+   "decisive": true,
+   "plumeHeatW": 48.0,
+   "plume": 1
+  },
+  {
+   "preset": "office-still",
+   "airTempC": 22,
+   "relativeHumidity": 0.5,
+   "dewPointC": 11.112428024835879,
+   "dewPointPsychrolibC": 11.110092965013603,
+   "supersaturationKgPerKg": -0.0018304149577351575,
+   "breathFogs": false,
+   "decisive": true,
+   "plumeHeatW": 48.0,
+   "plume": 1
+  },
+  {
+   "preset": "indoor-heated-winter",
+   "airTempC": 21,
+   "relativeHumidity": 0.35,
+   "dewPointC": 4.973201511450213,
+   "dewPointPsychrolibC": 4.9703398227188496,
+   "supersaturationKgPerKg": -0.0018355167202859998,
+   "breathFogs": false,
+   "decisive": true,
+   "plumeHeatW": 56.0,
+   "plume": 1
+  },
+  {
+   "preset": "indoor-warm-summer",
+   "airTempC": 27,
+   "relativeHumidity": 0.5,
+   "dewPointC": 15.701489172227241,
+   "dewPointPsychrolibC": 15.698110804747358,
+   "supersaturationKgPerKg": -0.001864071848946769,
+   "breathFogs": false,
+   "decisive": true,
+   "plumeHeatW": 8.0,
+   "plume": 1
+  },
+  {
+   "preset": "winter-overcast",
+   "airTempC": 2,
+   "relativeHumidity": 0.85,
+   "dewPointC": -0.2230306421662931,
+   "dewPointPsychrolibC": -0.2222486523300318,
+   "supersaturationKgPerKg": 0.004966829482421206,
+   "breathFogs": true,
+   "decisive": true,
+   "plumeHeatW": 208.0,
+   "plume": 1
+  },
+  {
+   "preset": "winter-clear-night",
+   "airTempC": -5,
+   "relativeHumidity": 0.8,
+   "dewPointC": -7.585435402827443,
+   "dewPointPsychrolibC": -7.5852684521305465,
+   "supersaturationKgPerKg": 0.006786662781586536,
+   "breathFogs": true,
+   "decisive": true,
+   "plumeHeatW": 264.0,
+   "plume": 1
+  },
+  {
+   "preset": "spring-mild-sun",
+   "airTempC": 15,
+   "relativeHumidity": 0.55,
+   "dewPointC": 6.04385021035813,
+   "dewPointPsychrolibC": 6.042458033029037,
+   "supersaturationKgPerKg": -0.00019582739464541268,
+   "breathFogs": false,
+   "decisive": false,
+   "plumeHeatW": 104.0,
+   "plume": 1
+  },
+  {
+   "preset": "summer-hot-sun",
+   "airTempC": 32,
+   "relativeHumidity": 0.4,
+   "dewPointC": 16.722253946881153,
+   "dewPointPsychrolibC": 16.716713807821918,
+   "supersaturationKgPerKg": -0.0019091885502722367,
+   "breathFogs": false,
+   "decisive": true,
+   "plumeHeatW": -32.0,
+   "plume": -1
+  },
+  {
+   "preset": "summer-heatwave-calm",
+   "airTempC": 38,
+   "relativeHumidity": 0.3,
+   "dewPointC": 17.423257609439304,
+   "dewPointPsychrolibC": 17.414273763175363,
+   "supersaturationKgPerKg": -0.001965409372123944,
+   "breathFogs": false,
+   "decisive": true,
+   "plumeHeatW": -80.0,
+   "plume": -1
+  },
+  {
+   "preset": "summer-humid",
+   "airTempC": 30,
+   "relativeHumidity": 0.8,
+   "dewPointC": 26.17039976616951,
+   "dewPointPsychrolibC": 26.168593239278714,
+   "supersaturationKgPerKg": -0.001840451711971329,
+   "breathFogs": false,
+   "decisive": true,
+   "plumeHeatW": -16.0,
+   "plume": -1
+  },
+  {
+   "preset": "summer-night",
+   "airTempC": 20,
+   "relativeHumidity": 0.6,
+   "dewPointC": 12.00911690790889,
+   "dewPointPsychrolibC": 12.00746989158346,
+   "supersaturationKgPerKg": -0.001504354761410559,
+   "breathFogs": false,
+   "decisive": true,
+   "plumeHeatW": 64.0,
+   "plume": 1
+  },
+  {
+   "preset": "windy-cool",
+   "airTempC": 10,
+   "relativeHumidity": 0.7,
+   "dewPointC": 4.7875465848690055,
+   "dewPointPsychrolibC": 4.786771054431173,
+   "supersaturationKgPerKg": 0.0020911901358828706,
+   "breathFogs": true,
+   "decisive": true,
+   "plumeHeatW": 144.0,
+   "plume": 1
+  }
+ ],
+ "travelM": {
+  "calm": 0.3,
+  "windy": 0.1,
+  "comment": "vertical travel a plume must show inside the 6 m wide domain: wind above 0.5 m/s carries the parcels out before they have risen or sunk far"
+ }
+}

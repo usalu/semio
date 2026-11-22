@@ -111,7 +111,7 @@ fn retained_raster_contract(draw: &str, gpu: &str, glue: &str, engine: &str) -> 
         && !draw.contains("HashMap<String, RasterTexture>")
         && gpu.contains("self.ensure_raster_texture_step(key, RasterUploadPixels::Contiguous(pixels)")
         && gpu.contains("self.ensure_raster_texture_step(key, RasterUploadPixels::Pages(pixels)")
-        && gpu.contains("pub(crate) fn stage_engine_texture")
+        && gpu.contains("pub fn stage_engine_texture")
         && gpu.contains("view: gpu_device::TextureView")
         && gpu.contains(".stage_gpu_bind_group")
         && gpu.contains("Result<(), RasterTextureStageFault>")
@@ -123,7 +123,7 @@ fn retained_raster_contract(draw: &str, gpu: &str, glue: &str, engine: &str) -> 
         && guarded_allocations(engine, "self.validate_engine_target_view_allocation(admission,expected)", ".create_view", 1)
         && guarded_allocations(&engine[engine.find("EngineRasterBuildPhase::Renderer=>").unwrap_or(engine.len())..engine.find("EngineRasterBuildPhase::Render=>").unwrap_or(engine.len())], "self.validate_engine_renderer_allocation(admission,expected)", "CanvasRasterSession::new", 1)
         && engine.contains("gpu.raster_content_is_reusable(key, identity, candidate_generation, expected)")
-        && engine.matches("self.roots.device.create_texture(&wgpu::TextureDescriptor").count() == 1
+        && engine.matches("self.roots.device.create_texture(&gpu_device::TextureDescriptor").count() == 1
         && engine.contains("Err(RasterTextureStageFault::Returned{fault,admission,texture,view})=>{")
         && engine.contains("build.admission=Some(admission);")
         && engine.contains("build.texture=Some(texture);")

@@ -2,7 +2,7 @@
  * fixtures the native `example-geometry` test reads — so a runtime probe and `cargo test` can never
  * disagree about what an example IS.
  *
- * Source of truth: `✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/<dir>/🧫️fixtures/🧩️example/🔣️.json`
+ * Source of truth: `✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/<dir>/🧪️tests/🧫️fixtures/🧩️example/🔣️.json`
  * (schema `s.procedural.generation3d.example-geometry/v1`). The native binding is
  * `📦️packages/🦀️rust/Cargo.toml` `[[test]] name = "example-geometry"` →
  * `📚️examples/🧪️tests/🧩️geometry/🦀️.rs`; `assert_example` (`:610`) checks the tessellated geometry and
@@ -38,10 +38,10 @@
  *   - `data-camera-json` / `data-viewport-camera-json` — `world3dCameraDomJson`
  *     (`World3dHost/🟦️.tsx:783`): `{ position: [x,y,z], target: [x,y,z], up, zoom, fov, projection }`.
  */
-import { readFileSync, readdirSync } from "node:fs";
-import { join } from "node:path";
+import { readdirSync } from "node:fs";
+import { EXAMPLES_DIR, readExampleFixture } from "./🐍️example-fixtures.mjs";
 
-export const EXAMPLES_DIR = "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples";
+export { EXAMPLES_DIR };
 
 /** 🏷️ The picker label a slug is painted as — `setActiveExample`'s rows are the slug in Title Case. */
 export const labelOfSlug = (slug) => slug.split("-").map((word) => word[0].toUpperCase() + word.slice(1)).join(" ");
@@ -51,12 +51,7 @@ const slugOfLabel = (label) => label.trim().toLowerCase().replace(/\s+/g, "-");
 export const loadExampleOracles = (dir = EXAMPLES_DIR) => {
   const oracles = {};
   for (const entry of readdirSync(dir)) {
-    let fixture;
-    try {
-      fixture = JSON.parse(readFileSync(join(dir, entry, "🧫️fixtures", "🧩️example", "🔣️.json"), "utf8"));
-    } catch {
-      continue;
-    }
+    const fixture = readExampleFixture(entry, dir);
     if (fixture?.schema !== "s.procedural.generation3d.example-geometry/v1") continue;
     oracles[fixture.example] = {
       slug: fixture.example,

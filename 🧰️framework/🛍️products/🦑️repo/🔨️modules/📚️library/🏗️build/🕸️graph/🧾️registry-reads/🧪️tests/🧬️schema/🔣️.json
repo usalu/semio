@@ -1,0 +1,26 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["registry", "selection", "questions", "edits"],
+  "properties": {
+    "registry": { "type": "object" },
+    "selection": { "type": "object" },
+    "questions": { "type": "array", "items": { "type": "array", "minItems": 1 } },
+    "edits": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "op"],
+        "properties": {
+          "name": { "type": "string" },
+          "op": { "enum": ["root", "packages", "reorder", "add", "remove", "provider"] },
+          "owner": { "type": "string" },
+          "value": {},
+          "row": { "type": "object" },
+          "index": { "type": "integer" }
+        }
+      }
+    }
+  }
+}

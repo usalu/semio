@@ -1,0 +1,53 @@
+{
+  "id": "patient-with-iv-pole",
+  "category": "humans",
+  "title": {
+    "en": "Patient with IV Pole",
+    "de": "Patient mit Infusionsständer"
+  },
+  "heightM": 2.023,
+  "widthM": 0.758,
+  "powerW": 145.6,
+  "poses": [
+    "standing-with-pole",
+    "contact-left",
+    "passing-right"
+  ],
+  "clips": [
+    "slow-walk",
+    "idle-breathing"
+  ],
+  "representations": {
+    "50": "authored",
+    "100": "authored",
+    "200": "authored",
+    "500": "authored"
+  },
+  "symbols": [
+    "slow-walker-marker"
+  ],
+  "analytics": [
+    "thermal",
+    "transport",
+    "structural"
+  ],
+  "exports": [
+    "svg",
+    "pdf",
+    "dxf",
+    "dwg",
+    "png-sequence",
+    "mp4",
+    "webm",
+    "component",
+    "glb",
+    "fbx",
+    "model",
+    "model-zip"
+  ],
+  "distinction": {
+    "en": "A patient in a knee-length gown over bare legs and felt slippers walking slowly and pushing a five-castor IV stand with the right hand: the pole slides in its handle clamp so the castors stay on the floor, with infusion bag and infusion pump on the pole; the pump carries the only nameplate of the figure.",
+    "de": "Eine Patientin bzw. ein Patient in knielangem Patientenhemd über nackten Beinen und Filzpantoffeln geht langsam und schiebt mit der rechten Hand einen Infusionsständer mit fünf Lenkrollen: Die Stange gleitet in ihrer Griffklemme, damit die Rollen am Boden bleiben, mit Infusionsbeutel und Infusionspumpe an der Stange; die Pumpe trägt das einzige Typenschild der Figur."
+  },
+  "completion": "authored"
+}

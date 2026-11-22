@@ -4,7 +4,7 @@ import {createHash} from "node:crypto";
 import {join,resolve} from "node:path";
 import Ajv from "ajv";
 import {acquireQueuedResourceLease,acquireResourceLease,resourceLeasePathV1,resourceQueueClaimV1,resourceQueueTicketV1} from "../../🟦️.ts";
-import {isRepoErrorV1,renderRepoErrorV1} from "../../../🏗️build/🗣️language/🚨️error/🟦️.ts";
+import {isRepoErrorV1} from "../../../🏗️build/🗣️language/🚨️error/🟦️.ts";
 import policySchema from "../../⏳️wait/🧬️schema/📜️policy.json";
 
 /** 🪦️ Laws of the directory admission under abandoned queue tickets: a waiter reclaims thousands of tickets of dead requesters in bounded slices, a timeout of the admission is a typed bilingual refusal, a dead admission holder is released by the kernel at once and a live slow holder is waited for and named. Independent oracle: a Python `sqlite3` process proves the claim locks. */
@@ -66,20 +66,13 @@ test("a dead holder of the directory admission is released by the kernel and the
  expect(Date.now()-began).toBeLessThan(8000);
 },60000);
 
-test("a live slow holder of the directory admission is waited for, then refused with a typed bilingual refusal naming the directory, its size and the holder",async()=>{
+test("a live slow holder of the directory admission is waited for beyond the caller deadline and the waiter acquires once it is gone, never refused",async()=>{
  const directory=fresh(),signal=new AbortController().signal;
  (await acquireResourceLease({directory,resource:"r:seed",mode:"shared",signal})).release();
  const holding=child(holder(directory),{SEMIO_LEASE_REGISTRY_DIRECTORY:process.env.SEMIO_LEASE_REGISTRY_DIRECTORY!});await ready(holding);
+ const release=setTimeout(()=>holding.kill("SIGKILL"),3500);
  try{
-  const began=Date.now();let failure:unknown;
-  try{await acquireQueuedResourceLease({directory,resource:"r:blocked",mode:"exclusive",owner:"blocked",signal,timeoutMs:1500});}catch(error){failure=error;}
-  expect(Date.now()-began).toBeGreaterThanOrEqual(1400);
-  expect(isRepoErrorV1(failure)).toBe(true);
-  const refusal=failure as import("../../../🏗️build/🗣️language/🚨️error/🟦️.ts").RepoErrorV1;
-  expect(refusal.code).toBe("timeout");expect(refusal.key).toBe("process.leases.admission-timeout");
-  expect(refusal.message.startsWith("Resource lease timed out: "+admission)).toBe(true);
-  expect(refusal.values.directory).toBe(resolve(directory));expect(Number(refusal.values.entries)).toBeGreaterThan(0);expect(String(refusal.values.holders)).toContain(String(holding.pid));
-  for(const language of ["en","de"]){const text=renderRepoErrorV1(refusal,language);expect(text).toContain(resolve(directory));expect(text).toContain(String(holding.pid));expect(text).not.toMatch(/\{[a-z]+\}/u);}
-  expect(renderRepoErrorV1(refusal,"de")).toContain("Verzeichniszulassung");
- }finally{holding.kill("SIGKILL");}
+  const began=Date.now(),lease=await acquireQueuedResourceLease({directory,resource:"r:blocked",mode:"exclusive",owner:"blocked",signal,timeoutMs:1500});lease.release();
+  expect(Date.now()-began).toBeGreaterThanOrEqual(3000);
+ }finally{clearTimeout(release);holding.kill("SIGKILL");}
 },60000);

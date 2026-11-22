@@ -9,7 +9,7 @@
  * @see ../../../../../../../🧰️framework/🔨️modules/🧊️3d/🗿️model/🖥️viewer/🕹️controller/🟦️.ts — the viewer
  */
 import { ModelViewer, PRESETS, projectionMatrix, viewMatrix, type BackendFactory, type CameraPreset, type ViewerStatus } from "../../../../../../../../🧰️framework/🔨️modules/🧊️3d/🗿️model/🖥️viewer/🟦️.ts";
-import type { Asset, FlowField, Language, View } from "@teaching/staffage";
+import type { Asset, FlowConditions, FlowField, FlowMarkDetail, Language, View } from "@teaching/staffage";
 import { CSS_PX_PER_MM, VIEWS, authoredScales, modeOf } from "@teaching/staffage";
 import type { StaffageClock } from "../../⏱️clock/🧱️core/🟦️.ts";
 import { translator, type Key } from "../../🌐️i18n/🟦️.ts";
@@ -40,13 +40,19 @@ export type StageOptions = SpatialRequest & {
   readonly onView?: (view: View) => void;
   readonly onState?: (state: StageState) => void;
   readonly onFlow?: (flow: FlowField | null) => void;
+  /** 🌪️ The conditions of the air the flow is solved in besides the environment; changing them solves the flow again, the model stays. */
+  readonly flowConditions?: FlowConditions;
+  /** 🔎️ The generalisation and timing of the flow marks; changing it only redraws the flow. */
+  readonly flowDetail?: FlowMarkDetail;
   readonly backend?: BackendFactory;
   readonly settleMs?: number;
   readonly restoreMs?: number;
 };
 
-/** 🔭️ How far the camera steps back when the air flow is first shown over a model (a zoom factor below 1), so the air around and above the asset is in the picture. */
-export const FLOW_ZOOM = 0.42;
+/** 🔭️ The free space the camera leaves around a model while its air flow is shown (the viewer's fit margin; 1.1 without flow), so the air around and above the asset is in the picture. */
+export const FLOW_FIT_MARGIN = 2.6;
+
+const flowing = (options: StageOptions): boolean => (options.flow?.length ?? 0) > 0 && flowsIn(options.asset, options.view);
 
 /** 🔎️ The size of the flow marks of the 3D view relative to their paper size at print zoom. */
 export const FLOW_MARK_SCALE = 1.5;
@@ -151,7 +157,6 @@ export class ModelStage {
   #disposed = false;
   #ready = false;
   #flow: FlowStage | null = null;
-  #flowFramed = "";
   readonly #matrices = { view: new Float32Array(16), projection: new Float32Array(16) };
 
   constructor(host: HTMLElement, options: StageOptions) {
@@ -221,8 +226,8 @@ export class ModelStage {
     const next = { ...before, ...patch } as StageOptions;
     this.#options = next;
     if (next.clock !== before.clock) this.#bindClock(next.clock ?? null);
-    if (next.language !== before.language) {
-      this.#buildBar();
+    if (next.language !== before.language || flowing(next) !== flowing(before)) {
+      if (next.language !== before.language) this.#buildBar();
       this.#mountViewer();
       this.#loaded = "";
       this.#requested = "";
@@ -475,6 +480,7 @@ export class ModelStage {
       fallback: true,
       background: null,
       autoplay: false,
+      ...(flowing(options) ? { fitMargin: FLOW_FIT_MARGIN } : {}),
       preset: this.#shown ?? options.preset,
       ...(options.reducedMotion === undefined ? {} : { reducedMotion: options.reducedMotion }),
     });
@@ -513,7 +519,7 @@ export class ModelStage {
     this.#refresh();
   }
 
-  /** 🌊️ The projection of a staffage world point (ahead x, up y, left z) through the viewer's camera to the pixels of the stage view; marks keep their paper size at print zoom. */
+  /** 🌊️ The projection of a staffage world point (ahead x, up y, left z) through the viewer's camera to the pixels of the stage view; marks keep their paper size at print zoom. The eye of the camera goes with it (the direction towards the viewer of an orthographic camera, the place of a perspective one, both from the view matrix), so the flow marks behind the model are hidden. */
   #projection(): FlowProjection | null {
     const viewer = this.#viewer;
     const canvas = this.#canvas;
@@ -523,8 +529,10 @@ export class ModelStage {
     const camera = viewer.getCamera();
     const view = viewMatrix(camera, this.#matrices.view) as Float32Array;
     const projection = projectionMatrix(camera, width / height, this.#matrices.projection) as Float32Array;
+    const eye = (row: 0 | 1 | 2): number => -(view[4 * row]! * view[12]! + view[4 * row + 1]! * view[13]! + view[4 * row + 2]! * view[14]!);
     return {
       pxPerMm: CSS_PX_PER_MM * FLOW_MARK_SCALE,
+      eye: projection[11] === 0 ? { toward: { x: view[10]!, y: view[6]!, z: view[2]! } } : { at: { x: eye(2), y: eye(1), z: eye(0) } },
       project: (at, out) => {
         const x = at.z, y = at.y, z = at.x;
         const ex = view[0]! * x + view[4]! * y + view[8]! * z + view[12]!;
@@ -543,21 +551,17 @@ export class ModelStage {
   #syncFlow(): void {
     const options = this.#options;
     const layers = options.flow ?? [];
-    const wanted = !this.#disposed && this.#ready && layers.length > 0 && flowsIn(options.asset, options.view) && options.query.kind !== "transition";
+    const wanted = !this.#disposed && this.#ready && flowing(options) && options.query.kind !== "transition";
     if (!wanted) {
       if (this.#flow !== null) options.onFlow?.(null);
       this.#flow?.dispose();
       this.#flow = null;
       return;
     }
-    const flowOptions = { asset: options.asset, query: options.query, environment: options.environment ?? options.asset.thermal.environment, clock: this.#clock, layers, theme: options.theme ?? "light", range: options.range ?? ({ mode: "auto" } as const), scale: options.scale, language: options.language, projection: () => this.#projection(), ...(options.onFlow === undefined ? {} : { onFlow: options.onFlow }) };
-    if (this.#flow === null) {
-      this.#flow = new FlowStage(this.#view, flowOptions);
-      if (this.#flowFramed !== this.#loaded) {
-        this.#flowFramed = this.#loaded;
-        this.#viewer?.zoomBy(FLOW_ZOOM);
-      }
-    } else this.#flow.update(flowOptions);
+    const flowOptions = { asset: options.asset, query: options.query, environment: options.environment ?? options.asset.thermal.environment, conditions: options.flowConditions ?? {}, detail: options.flowDetail ?? {}, clock: this.#clock, layers, theme: options.theme ?? "light", range: options.range ?? ({ mode: "auto" } as const), scale: options.scale, language: options.language, projection: () => this.#projection(), ...(options.onFlow === undefined ? {} : { onFlow: options.onFlow }) };
+    if (this.#flow === null) this.#flow = new FlowStage(this.#view, flowOptions);
+    else this.#flow.update(flowOptions);
+
   }
 
   #backend(status: "ready" | "lost" | "restored"): void {
@@ -629,6 +633,7 @@ export class ModelStage {
       this.#set("ready", 1, "");
       this.#applyLook(true);
       this.#refresh();
+      this.#syncFlow();
     } catch (error) {
       if (this.#job !== job) return;
       this.#job = null;

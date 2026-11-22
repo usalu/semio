@@ -4,6 +4,11 @@ use super::*;
 
 // #region gpu
 impl GpuContext {
+    /// 🫥️ The offscreen target of the innermost open group, `None` outside every group.
+    pub(super) fn open_group_target(targets: &[Option<PreparedGroupTarget>], open: usize) -> Option<&PreparedGroupTarget> {
+        targets.get(open.checked_sub(1)?)?.as_ref()
+    }
+
     pub(super) fn encode_prepared_draw_scalar(&mut self, packet: &PreparedRenderPacket, cursor: DrawMeasureCursor, packet_overlay: bool, scissor: Option<semio_ui_draw_contract::ScissorRect>) -> Result<(), String> {
         let draw = if packet_overlay { packet.overlay().ok_or_else(|| "prepared overlay owner was missing".to_string())? } else { packet.draw() };
         if let DrawMeasureCursor::PassBackdropSnapshot { pass } = cursor {
@@ -13,36 +18,44 @@ impl GpuContext {
             }
             let composite = self.composite_color.as_mut().ok_or_else(|| "prepared backdrop snapshot composite target was missing".to_string())?;
             let mut encoder = self.roots.device.create_command_encoder(&gpu_device::CommandEncoderDescriptor { label: Some("prepared_world_backdrop_snapshot") });
-            composite.copy_to_postprocess_background_scratch(&self.roots.device, &mut encoder);
+            composite.copy_to_postprocess_background_scratch(&self.roots.device, &mut encoder, Self::open_group_target(&self.group_targets, self.group_open.len()).map(|group| &group.texture));
             self.roots.queue.submit(encoder.finish()).expect("same-session recorded command");
             return Ok(());
         }
         match cursor {
             DrawMeasureCursor::GroupBegin(layer) => {
                 let group = draw.layers.get(layer).and_then(|layer| layer.group).ok_or_else(|| "prepared group begin cursor was stale".to_string())?;
-                PreparedGroupTarget::ensure(&self.roots.device, &mut self.group_target, self.width, self.height, self.color_target_format);
-                let target = self.group_target.as_ref().ok_or_else(|| "prepared group target was missing".to_string())?;
+                let level = self.group_open.len();
+                if self.group_targets.len() <= level {
+                    self.group_targets.resize_with(level + 1, || None);
+                }
+                PreparedGroupTarget::ensure(&self.roots.device, &mut self.group_targets[level], self.width, self.height, self.color_target_format);
+                let target = self.group_targets[level].as_ref().ok_or_else(|| "prepared group target was missing".to_string())?;
                 let mut encoder = self.roots.device.create_command_encoder(&gpu_device::CommandEncoderDescriptor { label: Some("prepared_group_begin") });
                 self.pipelines.encode_prepared_group_clear(&mut encoder, target);
                 self.roots.queue.submit(encoder.finish()).expect("same-session recorded command");
-                self.group_open = Some(group);
+                self.group_open.push(group);
                 return Ok(());
             }
-            DrawMeasureCursor::GroupEnd(_) => {
-                let Some(group) = self.group_open.take() else { return Ok(()) };
-                let target = self.group_target.as_ref().ok_or_else(|| "prepared group target was missing".to_string())?;
-                let composite = self.composite_color.as_ref().ok_or_else(|| "prepared group composite target was missing".to_string())?;
+            DrawMeasureCursor::GroupEnd(..) => {
+                let Some(group) = self.group_open.pop() else { return Ok(()) };
+                let level = self.group_open.len();
+                let target = self.group_targets.get(level).and_then(Option::as_ref).ok_or_else(|| "prepared group target was missing".to_string())?;
+                let parent = match level.checked_sub(1) {
+                    Some(parent) => &self.group_targets.get(parent).and_then(Option::as_ref).ok_or_else(|| "prepared parent group target was missing".to_string())?.view,
+                    None => self.composite_color.as_ref().ok_or_else(|| "prepared group composite target was missing".to_string())?.view(),
+                };
                 let mut encoder = self.roots.device.create_command_encoder(&gpu_device::CommandEncoderDescriptor { label: Some("prepared_group_end") });
-                self.pipelines.encode_prepared_group_composite(&self.roots.device, &self.roots.queue, &mut encoder, target, composite.view(), group.alpha, group.bounds, self.logical_width, self.logical_height);
+                self.pipelines.encode_prepared_group_composite(&self.roots.device, &self.roots.queue, &mut encoder, target, parent, group.alpha, group.bounds, self.logical_width, self.logical_height);
                 self.roots.queue.submit(encoder.finish()).expect("same-session recorded command");
                 return Ok(());
             }
             _ => {}
         }
         let world_encoded = prepared_draw_scalar_uses_world_encoded_attachment(cursor);
-        let color_view = match (world_encoded, self.group_open.is_some(), self.group_target.as_ref()) {
-            (false, true, Some(group)) => &group.view,
-            _ => self.composite_color.as_ref().map(|composite| if world_encoded { composite.world_encoded_view() } else { composite.view() }).ok_or_else(|| "prepared composite target was missing".to_string())?,
+        let color_view = match Self::open_group_target(&self.group_targets, self.group_open.len()) {
+            Some(group) => if world_encoded { &group.world_encoded_view } else { &group.view },
+            None => self.composite_color.as_ref().map(|composite| if world_encoded { composite.world_encoded_view() } else { composite.view() }).ok_or_else(|| "prepared composite target was missing".to_string())?,
         };
         let Some(depth) = self.depth_view.as_ref() else { return Err("prepared depth owner was missing".to_string()) };
         let width = self.logical_width;
@@ -86,7 +99,7 @@ impl GpuContext {
                 let pass_owner = draw.scene_passes.get(pass).ok_or_else(|| "prepared world scene clear pass cursor was stale".to_string())?;
                 let composite = self.composite_color.as_ref().ok_or_else(|| "prepared world scene clear composite target was missing".to_string())?;
                 let mut encoder = self.roots.device.create_command_encoder(&gpu_device::CommandEncoderDescriptor { label: Some("prepared_world_scene_clear") });
-                self.pipelines.encode_prepared_world_scene_clear(&self.roots.device, &self.roots.queue, &mut encoder, composite, pass_owner, scissor).map_err(str::to_owned)?;
+                self.pipelines.encode_prepared_world_scene_clear(&self.roots.device, &self.roots.queue, &mut encoder, composite, Self::open_group_target(&self.group_targets, self.group_open.len()), pass_owner, scissor).map_err(str::to_owned)?;
                 self.roots.queue.submit(encoder.finish()).expect("same-session recorded command");
             }
             DrawMeasureCursor::PassShadowInstance { pass, draw: draw_index, instance } => {
@@ -195,7 +208,7 @@ impl GpuContext {
                 let pass_owner = draw.scene_passes.get(pass).ok_or_else(|| "prepared world postprocess pass cursor was stale".to_string())?;
                 let composite = self.composite_color.as_ref().ok_or_else(|| "prepared world postprocess composite target was missing".to_string())?;
                 let mut encoder = self.roots.device.create_command_encoder(&gpu_device::CommandEncoderDescriptor { label: Some("prepared_world_postprocess") });
-                self.pipelines.encode_prepared_world_postprocess(&self.roots.device, &self.roots.queue, &mut encoder, composite, pass_owner, scissor).map_err(str::to_owned)?;
+                self.pipelines.encode_prepared_world_postprocess(&self.roots.device, &self.roots.queue, &mut encoder, composite, Self::open_group_target(&self.group_targets, self.group_open.len()), pass_owner, scissor).map_err(str::to_owned)?;
                 self.roots.queue.submit(encoder.finish()).expect("same-session recorded command");
             }
             _ => {}

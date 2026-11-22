@@ -53,3 +53,20 @@
 - **Structure**: the wood itself, connected from every branch end to the root plate; supports at the root plate, masses on the heaviest segments.
 - **2D**: all three views of all four scales re-drawn from the new solids by `rework-12-draw2d.ts` (ruler output, see what remains).
 - **Decisions** (en, de) of 1:50, 1:100, 1:200 rewritten for the new content.
+
+## Pass 2 (second round), 2026-11-22 14:20–17:30, cut off; finished by the umbrella finisher 20:40–21:10
+
+State found by the finisher: the catalog still held the publication of 13:58, which the author's own full run of 14:05 (`final.log`) had measured `INVALID … checkVolumes 10` (among them `volumes-thermal-coverage` 1:200, 33 % against 30 %). The author then worked on the candidate (`🗑️generated/rework-small-leaved-lime/small-leaved-lime/🔣️.json`, built 17:22 from `rework-small-leaved-lime-model.py` of 17:22:05) through five full validations (`v1.log` … `v5.log`): 1:500 against 1:200 in plan, thermal area at 1:200 and of `limb-bark` at 1:50, a floating leaf mass at 1:200, the 1:100 plan drawing, and print findings at 1:500 that moved from shape to shape (`ls3a`, `ln5a`, `ln3a`). The last run ended after the cut-off (17:30): `INVALID … validateAsset 2, checkVolumes 0`, both `PRINT`: feature of `ln3a` 0.185 mm at 1:500. No report was written for this pass; the model script holds its numbers.
+
+Cause of the print finding (measured with `finisher-print-probe.ts`: removing `ln3a` from the elevation makes 1:500 suitable, removing it from front or plan does not): the branch `ln3a` grows away from the viewer of the side elevation and lies behind the stem; only a wedge of 95 mm shows beside the stem at 9 m. Which far-side branch shows such a wedge changes with every small change of the model, which is why the finding wandered.
+
+Finished: `rework-small-leaved-lime-print500.py` (new, one-shot on the built candidate, refuses another candidate) draws the underside of `ln3a` in the 1:500 side elevation 30 mm lower at mid length (0.06 mm on paper; the solid is unchanged). Then `rework-small-leaved-lime-publish.py`.
+
+Proof:
+- Candidate, 20:50: `r3-validate.ts --file … --volumes` → `VALID file/small-leaved-lime (file as it is): schema 0, validateAsset 0, checkVolumes 0`.
+- Published 20:52 (catalog asset and `volumes/vegetation/small-leaved-lime.json`, source = catalog). Check CLI: `✓ small-leaved-lime (1/1)`, 1:500 min feature 0.224 mm, all four scales suitable.
+- 21:05: `r3-validate.ts vegetation/small-leaved-lime --catalog-only --volumes` → `VALID vegetation/small-leaved-lime (catalog file as it is): schema 0, validateAsset 0, checkVolumes 0` (ten minutes on the loaded host).
+
+Sheets read at full size by the finisher (candidate, `--file`): 1:50 body six views, 1:500 body six views, 2D 1:500. Verdict: one straight stem with root spurs and burr, five tiers of rising branches, hanging foliage masses per bough with shade foliage inside, a closed rounded top; 1:500 is modelled for its scale (one mass per bough, 240 mm limbs), not a thinned list; the 2D drawing agrees with the model. Rendered but not read: 1:50 structure, 2D 1:50.
+
+Remains imperfect: the foliage masses read as stacked cushions, more so at 1:500; the 2D drawings are projected outlines of the solids (`rework-12-draw2d.ts`), not economical hand-drawn shapes, and a rebuild of the candidate can move the print wedge to another far-side branch (then `…-print500.py` refuses and the wedge has to be measured again); the asset file is 22 MB (574 body solids at 1:50), which makes every tool slow; poses, clips, thermal and 1:100 / 1:200 were not looked at by the finisher.

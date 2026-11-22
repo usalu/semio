@@ -1,3 +1,4 @@
+import { S_FORMAT_CATALOG_V1 } from "../../../🚀️entry/🧭️format-catalog/🟦️.ts";
 import { bootFrameworkOsDev } from "@semio-tech/framework-os-dev";
 import { composeSpecificOsCatalogV1 } from "@semio-tech/s-dev-catalog-ts";
 
@@ -18,6 +19,6 @@ const admission = {
     window.dispatchEvent(new CustomEvent("semio:catalog-progress", { detail })),
 };
 const { rows } = composeSpecificOsCatalogV1(window.location.href, admission);
-const mounted = await bootFrameworkOsDev({ variant, admission, catalogRows: rows, brands: [] });
+const mounted = await bootFrameworkOsDev({ formatCatalog: S_FORMAT_CATALOG_V1, variant, admission, catalogRows: rows, brands: [] });
 if (import.meta.hot) import.meta.hot.dispose(() => mounted.dispose());
 window.addEventListener("pagehide", () => mounted.dispose(), { once: true });

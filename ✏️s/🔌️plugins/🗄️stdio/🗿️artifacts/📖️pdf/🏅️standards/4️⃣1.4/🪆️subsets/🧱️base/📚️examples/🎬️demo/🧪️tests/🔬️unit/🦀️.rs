@@ -20,6 +20,6 @@ fn sqlite_snapshot_pdf14_demo_assets_share_the_owned_page_snapshot() {
     let bytes = expected.encode_pack();
     let published = fixture_bytes!("../../../../../../📚️examples/🎬️demo/🖼️assets/🎒️.pack.semio");
     let owned_hex = bytes.iter().map(|byte| format!("{byte:02x}")).collect::<String>();
-    assert_eq!(published.as_slice(), bytes, "expected owned pack {owned_hex}");
+    assert_eq!(published, bytes, "expected owned pack {owned_hex}");
     assert_eq!(PdfSnapshot::decode_pack(published).unwrap(), expected);
 }

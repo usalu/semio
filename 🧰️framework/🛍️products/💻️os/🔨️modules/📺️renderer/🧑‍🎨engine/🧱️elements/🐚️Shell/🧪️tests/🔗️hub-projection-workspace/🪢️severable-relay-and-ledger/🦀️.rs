@@ -90,7 +90,7 @@ fn drive<F: std::future::Future>(future: F) -> F::Output {
             return output;
         }
         let advanced = semio_renderer_wgpu_host_base::pump_renderer_io_sessions(1);
-        let _ = semio_framework_job_worker::pump_worker_job_retirements(1, 1, semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES);
+        let _ = semio_renderer_wgpu_ui_engine_tests::fixture_original_turn::FixtureTurnV1::new(ui_contract::UI_WORKER_RETIREMENT_POLICY).turn(|cx| semio_framework_job_worker::pump_worker_job_retirements(1, cx));
         if advanced == 0 {
             std::thread::sleep(std::time::Duration::from_millis(1));
         }
@@ -106,7 +106,7 @@ fn live_env(key: &str) -> String {
 /// human would when the first attempt failed (a debug hub's password hash can outlast the lane's
 /// 5 s command deadline under load); answers the first attempt's refusal, if any.
 #[cfg(not(target_arch = "wasm32"))]
-fn sign_in_live(shell: &mut ShellState, origin: &str, email: &str, password: &str) -> Option<String> {
+fn sign_in_live(mut shell: &mut ShellState, origin: &str, email: &str, password: &str) -> Option<String> {
     drive(ActionsCtx::of(&mut shell).apply_os_command("os.openHub", None)).expect("the hub route opens");
     hub_verb(shell, semio_renderer_wgpu_hub_workspace::hub_connection::action::SET_ADDRESS, &[("value", origin)]);
     hub_verb(shell, semio_renderer_wgpu_hub_workspace::hub_connection::action::ADD_CONNECTION, &[]);
@@ -124,7 +124,7 @@ fn sign_in_live(shell: &mut ShellState, origin: &str, email: &str, password: &st
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-fn shell_command(shell: &mut ShellState, action_id: &str, args: &[(&str, &str)]) {
+fn shell_command(mut shell: &mut ShellState, action_id: &str, args: &[(&str, &str)]) {
     let args = DslValue::Object(args.iter().map(|(key, value)| ((*key).to_string(), DslValue::String((*value).to_string()))).collect());
     drive(ActionsCtx::of(&mut shell).handle_replay_shell_command(action_id, Some(&args)));
 }

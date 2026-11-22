@@ -889,6 +889,18 @@ export function withoutUiRefreshSectionsV1(request: PluginUiRefreshRequest | nul
   return (stripped.windows ?? []).length === 0 && (stripped.panels ?? []).length === 0 && stripped.labels === undefined ? null : stripped;
 }
 
+/** 🪓️ Only the reserved sections of `request`, on their own guest crossing; `null` when it asks for none.
+ *
+ * 🐛️ Window bodies and sections used to share one `refresh-ui` turn, so a fault while projecting a section
+ * (a `window_measures` trap on the Terrain editor) discarded the already rendered window bodies with it.
+ * Selecting Raise Terrain then left the viewport's `data-interaction-json` without its `terrainBrush`
+ * binding (ticket 26/11/22/GIS-PLUGIN-END-TO-END `gap4-terrain-brush-archive.md`). Bodies cross first. */
+export function uiRefreshSectionsOnlyV1(request: PluginUiRefreshRequest | null): PluginUiRefreshRequest | null {
+  if (request === null) return null;
+  const { engagements, measures, tools, catalogue, viewState } = request;
+  return engagements === undefined && measures === undefined && tools === undefined && catalogue === undefined ? null : { viewState, windows: [], panels: [], engagements, measures, tools, catalogue };
+}
+
 export function resolveCanvasBodyKey(app: AppDefinition): string {
   const windowKind = app.windowKinds[0];
   if (!windowKind) return "main";

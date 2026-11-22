@@ -1,0 +1,27 @@
+{
+  "$comment": "Language-agnostic presence fold: events in, overlays out. Time is explicit in milliseconds; page and pointer coordinates are per mille of the page.",
+  "steps": [
+    { "event": { "event": "heard", "atMs": 1000, "peer": { "actor": "ada", "label": "Ada", "color": 1, "presence": { "page": 2, "pointerActive": true, "pointerX": 250, "pointerY": 500, "viewLeft": 100, "viewTop": 0, "viewRight": 900, "viewBottom": 1000, "caretObject": "p2.o3", "caretOffset": 4, "caretAnchor": 1 }, "selection": ["p2.o3", "p2.o4"] } } },
+    { "event": { "event": "heard", "atMs": 1500, "peer": { "actor": "ben", "label": "Ben", "color": 2, "presence": { "page": 0 }, "selection": [] } } },
+    { "at": 2000, "page": 2, "expect": { "page": 2, "pointers": [{ "peer": { "actor": "ada", "label": "Ada", "color": 1, "status": "live" }, "x": 250, "y": 500 }], "viewports": [{ "peer": { "actor": "ada", "label": "Ada", "color": 1, "status": "live" }, "rect": [100, 0, 900, 1000] }], "carets": [{ "peer": { "actor": "ada", "label": "Ada", "color": 1, "status": "live" }, "object": "p2.o3", "offset": 4, "anchor": 1 }], "selections": [{ "peer": { "actor": "ada", "label": "Ada", "color": 1, "status": "live" }, "object": "p2.o3" }, { "peer": { "actor": "ada", "label": "Ada", "color": 1, "status": "live" }, "object": "p2.o4" }], "thumbnails": { "0": [{ "actor": "ben", "label": "Ben", "color": 2, "status": "live" }], "2": [{ "actor": "ada", "label": "Ada", "color": 1, "status": "live" }] }, "roster": [{ "peer": { "actor": "ada", "label": "Ada", "color": 1, "status": "live" }, "page": 2, "selected": 2, "caret": true }, { "peer": { "actor": "ben", "label": "Ben", "color": 2, "status": "live" }, "page": 0, "selected": 0, "caret": false }] } },
+    { "event": { "event": "heard", "atMs": 900, "peer": { "actor": "ada", "label": "Ada", "color": 1, "presence": { "page": 9 }, "selection": [] } } },
+    { "at": 2000, "page": 2, "expectRosterPages": { "ada": 2, "ben": 0 } },
+    { "event": { "event": "tick", "atMs": 6000 } },
+    { "at": 6000, "page": 2, "expectStatus": { "ada": "away", "ben": "away" }, "expectPointers": 0, "expectSelections": 2 },
+    { "event": { "event": "heard", "atMs": 6100, "peer": { "actor": "ada", "label": "Ada", "color": 1, "presence": { "page": 3 }, "selection": [] } } },
+    { "at": 6200, "page": 3, "expectStatus": { "ada": "live", "ben": "away" } },
+    { "event": { "event": "disconnected", "atMs": 7000 } },
+    { "at": 9000, "page": 3, "expectStatus": { "ada": "away", "ben": "away" }, "expectOffline": true },
+    { "event": { "event": "reconnected", "atMs": 12000 } },
+    { "event": { "event": "heard", "atMs": 12500, "peer": { "actor": "ada", "label": "Ada", "color": 1, "presence": { "page": 3 }, "selection": [] } } },
+    { "at": 12600, "page": 3, "expectStatus": { "ada": "live", "ben": "away" }, "expectOffline": false },
+    { "event": { "event": "tick", "atMs": 22001 } },
+    { "at": 22001, "page": 3, "expectPeers": ["ada"] },
+    { "event": { "event": "left", "actor": "ada" } },
+    { "at": 22002, "page": 3, "expectPeers": [] },
+    { "event": { "event": "heard", "atMs": 23000, "peer": { "actor": "cy", "label": "Cy", "presence": { "page": 1 }, "selection": [] } } },
+    { "event": { "event": "disconnected", "atMs": 23500 } },
+    { "event": { "event": "tick", "atMs": 54000 } },
+    { "at": 54000, "page": 1, "expectPeers": [] }
+  ]
+}

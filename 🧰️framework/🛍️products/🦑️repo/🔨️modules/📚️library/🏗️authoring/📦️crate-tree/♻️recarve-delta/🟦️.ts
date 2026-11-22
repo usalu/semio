@@ -58,9 +58,16 @@ export function crateUnchanged(plan: ArtifactCratePlan, crate: PlannedCrate): bo
   return sameSet(known.recorded ?? known.owned, planned) && names.every((name) => known.dependsOn.includes(name));
 }
 
+/** 🪟️ The signed carved crates that no longer own a declaration but were not merged into another crate (pure re-export layers): they stay in the layout untouched and keep their facade dependency row. */
+export function retainedCrates(plan: ArtifactCratePlan): readonly { name: string; packageDir: string }[] {
+  const absorbed = new Set(plan.crates.flatMap((crate) => crate.supersedes ?? []));
+  return (plan.carved?.crates ?? []).filter((carved) => carved.signed && !absorbed.has(carved.name) && !plan.crates.some((crate) => crate.name === carved.name));
+}
+
 /** 🗑️ The carved crates a re-carve no longer produces: their identity was merged into another crate to break a cycle, or they were hand-written and the planner now owns their declarations. */
 export function supersededCrates(plan: ArtifactCratePlan): readonly { name: string; packageDir: string }[] {
-  return (plan.carved?.crates ?? []).filter((carved) => !plan.crates.some((crate) => crate.name === carved.name));
+  const kept = new Set(retainedCrates(plan).map((crate) => crate.name));
+  return (plan.carved?.crates ?? []).filter((carved) => !kept.has(carved.name) && !plan.crates.some((crate) => crate.name === carved.name));
 }
 
 /** ✂️ Drops every write that leaves its file as it is: crates that keep their declarations are not rewritten, and a planned text equivalent to the file on disk is not written again. */

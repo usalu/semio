@@ -1,5 +1,6 @@
 import {expect,test} from "bun:test";
 import {Database} from "bun:sqlite";
+import {loadProductFunctionsV1} from "../../../../../🧪️testing/🧩️extracted-function/🟦️.ts";
 import fixture from "./🔣️.json" with {type:"json"};
 import {selectNativeStorageBackendV1} from "../../🔌️backends/🧭️selection/🟦️.ts";
 import {nativeImageDirectoryNamesV1,requireNativeStoragePathV1} from "../../🌐️platform/📋️contract/🟦️.ts";
@@ -51,10 +52,8 @@ test("an opener waiting for the exclusive writer re-reads the image and retries 
 });
 
 test("disposable fixed retirement includes only the directory backend usage records",async()=>{
- const {nativeDirectoryProtocolV1}=await import("../../📁️directory/🟦️.ts"),directoryProtocol=nativeDirectoryProtocolV1(),source=await Bun.file(new URL("../🟦️.ts",import.meta.url)).text(),ts=(await import("typescript")).default;
- const tree=ts.createSourceFile("fixed.ts",source,ts.ScriptTarget.Latest,true),node=tree.statements.find(value=>ts.isFunctionDeclaration(value)&&value.name?.text==="requireDisposableFixedDirectoryV1");
- if(!node)throw Error("Actual fixed retirement inventory required");
- const code=ts.transpileModule(node.getText(tree),{compilerOptions:{target:ts.ScriptTarget.ES2022}}).outputText,ports={directoryProtocol,nativeImageDirectoryNamesV1,join,lstatSync},requireInventory=new Function(...Object.keys(ports),code+";return requireDisposableFixedDirectoryV1")(...Object.values(ports)),database=new Database(":memory:");
+ const {nativeDirectoryProtocolV1}=await import("../../📁️directory/🟦️.ts"),directoryProtocol=nativeDirectoryProtocolV1();
+ const ports={directoryProtocol,nativeImageDirectoryNamesV1,join,lstatSync},requireInventory=(await loadProductFunctionsV1(new URL("../🟦️.ts",import.meta.url),["requireDisposableFixedDirectoryV1"],ports)).requireDisposableFixedDirectoryV1,database=new Database(":memory:");
  const base=process.env.SEMIO_TEST_ARTIFACT_DIR;if(!base)throw Error("Fixed retirement tests require an artifact root");
  try{for(const row of fixture.disposableInventories){const root=mkdtempSync(join(resolve(base),"fixed-"));
   try{for(const name of row.entries){const path=join(root,name);if(["m","v","usage"].includes(name))mkdirSync(path);else writeFileSync(path,"");}

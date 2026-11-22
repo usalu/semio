@@ -1,0 +1,53 @@
+{
+  "id": "office-worker-carrying-laptop",
+  "category": "humans",
+  "title": {
+    "en": "Office Worker Carrying a Laptop",
+    "de": "Büroangestellte Person mit Laptop unter dem Arm"
+  },
+  "heightM": 1.851,
+  "widthM": 0.497,
+  "powerW": 205.1,
+  "poses": [
+    "standing",
+    "contact-left",
+    "passing-right"
+  ],
+  "clips": [
+    "walk-cycle",
+    "idle-breathing"
+  ],
+  "representations": {
+    "50": "authored",
+    "100": "authored",
+    "200": "authored",
+    "500": "authored"
+  },
+  "symbols": [
+    "walking-direction-marker"
+  ],
+  "analytics": [
+    "thermal",
+    "transport",
+    "structural"
+  ],
+  "exports": [
+    "svg",
+    "pdf",
+    "dxf",
+    "dwg",
+    "png-sequence",
+    "mp4",
+    "webm",
+    "component",
+    "glb",
+    "fbx",
+    "model",
+    "model-zip"
+  ],
+  "distinction": {
+    "en": "An office worker in overcoat and scarf walking heel to toe with a closed laptop standing on the level near forearm against the hip, the far arm swinging; the laptop is a 1.9 kg point mass on the forearm, its 65 W adapter counts in the total power.",
+    "de": "Eine büroangestellte Person in Mantel und Schal im Fersen-Zehen-Gang mit einem zugeklappten Laptop, der auf dem waagerechten nahen Unterarm an der Hüfte steht, der ferne Arm schwingt; der Laptop ist eine Punktmasse von 1,9 kg am Unterarm, sein 65-W-Netzteil zählt zur Gesamtleistung."
+  },
+  "completion": "authored"
+}

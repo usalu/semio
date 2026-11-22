@@ -98,6 +98,10 @@
       "en": "The generation folder of the dependency store changed while retained references were being proved (new names {added}; reference targets present again {returned}); the proof is refused and the stage tries again",
       "de": "Der Generationsordner des Abhängigkeitsspeichers hat sich geändert, während behaltene Verweise bewiesen wurden (neue Namen {added}; Verweisziele wieder vorhanden {returned}); der Beweis wird abgelehnt und die Stufe versucht es erneut"
     },
+    "dependency-store.container-roster-changed": {
+      "en": "The generation folder of the dependency store changed between the plan and the retirement (new generations {added}; generations gone {gone}); the retirement is refused and the stage tries again",
+      "de": "Der Generationsordner des Abhängigkeitsspeichers hat sich zwischen Plan und Entfernung geändert (neue Generationen {added}; verschwundene Generationen {gone}); die Entfernung wird abgelehnt und die Stufe versucht es erneut"
+    },
     "dependency-store.retirement-deferred": {
       "en": "The dependency store stayed busy for {seconds} s while obsolete generations were retired ({retired} retired); the rest is retired by the next setup",
       "de": "Der Abhängigkeitsspeicher blieb {seconds} s belegt, während veraltete Generationen entfernt wurden ({retired} entfernt); der Rest wird vom nächsten Setup entfernt"

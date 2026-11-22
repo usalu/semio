@@ -1,0 +1,6235 @@
+{
+ "$schema": "../../../🧬️schema/🔣️.json#/$defs/AssetDocument",
+ "version": "semio.staffage/v2",
+ "asset": {
+  "id": "used-crt-television",
+  "category": "appliances",
+  "title": {
+   "en": "Used CRT Television",
+   "de": "Gebrauchter Röhrenfernseher"
+  },
+  "summary": {
+   "en": "A second-hand 1990s 70 cm picture-tube television 0.70 x 0.53 x 0.49 m on a swivel stand, 34 kg, with a missing control flap, scratches, a burnt-in channel logo and dusty vents, stored on a moving blanket with its cable taped to the back, carried by two people and running warm again in a living room at 100 W.",
+   "de": "Ein gebrauchter 70-cm-Röhrenfernseher der 1990er-Jahre, 0,70 x 0,53 x 0,49 m, auf einem Drehfuß, 34 kg, mit fehlender Bedienklappe, Kratzern, eingebranntem Senderlogo und verstaubten Lüftungsschlitzen, auf einer Möbeldecke gelagert, das Kabel hinten angeklebt, von zwei Personen getragen und im Wohnzimmer mit 100 W wieder warm in Betrieb."
+  },
+  "tags": [
+   "used",
+   "household",
+   "second-hand",
+   "living",
+   "television",
+   "crt",
+   "picture-tube",
+   "electrical",
+   "heat-source",
+   "internal-gain",
+   "plastic",
+   "glass",
+   "reuse-depot"
+  ],
+  "provenance": {
+   "author": "Semio staffage content (used household objects wave)",
+   "method": "handcrafted",
+   "created": "2026-11-22",
+   "references": [
+    {
+     "id": "crt-tv-catalogue",
+     "citation": "Catalogue-typical data of 70 cm (28 inch, 4:3, 100 Hz) picture-tube television sets of the German mid-range 1994-2003 (types as Grundig, Loewe, Philips, Telefunken, Nokia sold them; no brand): cabinet 690-740 mm wide, 530-570 mm high, 470-520 mm deep, net weight 32-40 kg, on-mode power 85-130 W, standby 1-8 W, optional swivel stand 300-350 mm diameter, 30-40 mm high (authored-estimate from listings and manuals of the type)."
+    },
+    {
+     "id": "iec-62087-2011",
+     "citation": "IEC 62087:2011 Methods of measurement for the power consumption of audio, video and related equipment (on-mode power with a broadcast video signal, standby power; the rating basis of the nameplate)."
+    },
+    {
+     "id": "en-60065-2014",
+     "citation": "EN 60065:2014 Audio, video and similar electronic apparatus - Safety requirements (accessible surface temperatures, ventilation openings, mechanical strength and implosion protection of picture tubes)."
+    },
+    {
+     "id": "andreola-2005",
+     "citation": "Andreola, F., Barbieri, L., Corradi, A., Lancellotti, I., Falcone, R., Hreglich, S. (2005). Glass-ceramics obtained by the recycling of end of life cathode ray tubes glasses. Waste Management 25, 183-189 (panel glass about two thirds and funnel glass about one third of the tube glass; barium-strontium panel glass about 2.7 g/cm3, lead funnel glass about 3.0 g/cm3)."
+    },
+    {
+     "id": "herat-2008",
+     "citation": "Herat, S. (2008). Recycling of cathode ray tubes (CRTs) in electronic waste. CLEAN - Soil, Air, Water 36, 19-24 (the tube is about two thirds of the mass of a CRT television; composition of panel, funnel, neck and frit)."
+    },
+    {
+     "id": "iso-10456-2007",
+     "citation": "ISO 10456:2007 Building materials and products - Hygrothermal properties - Tabulated design values (glass 2500 kg/m3 1.0 W/mK 750 J/kgK, plastics about 0.17-0.25 W/mK and 1300-1500 J/kgK, nonwoven polyester felts about 0.04-0.05 W/mK)."
+    },
+    {
+     "id": "incropera-2018",
+     "citation": "Incropera, F. P., DeWitt, D. P., Bergman, T. L., Lavine, A. S. (2018). Fundamentals of Heat and Mass Transfer, 8th ed., Wiley (total hemispherical emissivity of glass about 0.92 and of plastics and paints 0.9-0.95; natural convection from vertical and inclined plates)."
+    },
+    {
+     "id": "plastics-handbook",
+     "citation": "Domininghaus, H., Elsner, P., Eyerer, P., Hirth, T. (eds.) (2012). Kunststoffe - Eigenschaften und Anwendungen, 8th ed., Springer (HIPS density 1.04-1.06 g/cm3, tensile modulus 1.6-2.2 GPa, tensile strength 20-30 MPa; ABS 1.04-1.07 g/cm3, 2.2-2.6 GPa; photo-oxidative ageing of styrenics: yellowing and chalking of the surface under daylight)."
+    },
+    {
+     "id": "din-18011-1992",
+     "citation": "DIN 18011:1992-11 Stellflächen, Abstände und Bewegungsflächen im Wohnungsbau (placing area of a television set in the living room)."
+    },
+    {
+     "id": "dguv-208-033",
+     "citation": "DGUV Information 208-033 (2014) Muskel-Skelett-Belastungen - erkennen und beurteilen (manual handling: bulky loads above about 25 kg are carried by two persons; grip height about 0.7-0.8 m with hanging arms)."
+    },
+    {
+     "id": "moving-blanket-catalogue",
+     "citation": "Catalogue-typical data of removal blankets (Umzugsdecken, Möbeldecken) of quilted nonwoven felt, about 150 x 180 cm, 3 mm, 1.0-1.5 kg (authored-estimate)."
+    },
+    {
+     "id": "reuse-depot-practice",
+     "citation": "Practice of municipal second-hand department stores and reuse depots in Germany (Gebrauchtwarenkaufhaus, Haushaltsauflösung): picture-tube televisions are checked (E-Check sticker), stored on blankets on the floor because they are too heavy for shelving, the mains cable coiled and taped to the back, carried by two people (authored-estimate from the practice described in reuse programmes, no single source)."
+    }
+   ],
+   "notes": {
+    "en": "Picture-tube television of the German mid-range type 1994-2003: 70 cm tube (66 cm visible, 4:3), cabinet 700 x 530 x 490 mm of anthracite HIPS: a 115 mm deep bezel and a rear cover tapering to a 400 x 340 mm back plate; on a 340 mm swivel stand 34 mm high. Traces of use: the control flap broken off, scratches on bezel and top, a burnt-in channel logo, dust in the vent slots, an E-Check sticker and a price label, the mains cable coiled and taped to the back. Storage aid: a moving blanket folded to 12 mm. Masses section x density: tube 24.4 kg, cabinet with turntable 8.9 kg, base plate 0.7 kg (television 34.0 kg), blanket 1.1 kg.",
+    "de": "Röhrenfernseher der deutschen Mittelklasse 1994-2003: 70-cm-Röhre (66 cm sichtbar, 4:3), Gehäuse 700 x 530 x 490 mm aus anthrazitfarbenem HIPS: ein 115 mm tiefer Frontrahmen und eine auf die Rückplatte 400 x 340 mm verjüngte Rückwand; auf einem Drehfuß 340 mm, 34 mm hoch. Gebrauchsspuren: die Bedienklappe abgebrochen, Kratzer an Rahmen und Oberseite, ein eingebranntes Senderlogo, Staub in den Lüftungsschlitzen, ein E-Check-Aufkleber und ein Preisschild, das Netzkabel aufgewickelt und hinten angeklebt. Lagerhilfe: eine auf 12 mm gefaltete Möbeldecke. Massen aus Querschnitt x Dichte: Röhre 24,4 kg, Gehäuse mit Drehteller 8,9 kg, Fußplatte 0,7 kg (Fernseher 34,0 kg), Decke 1,1 kg."
+   }
+  },
+  "dimensions": {
+   "heightM": 0.576,
+   "widthM": 0.73,
+   "depthM": 0.9,
+   "massKg": 35.019822
+  },
+  "materials": [
+   {
+    "id": "crt-panel-glass",
+    "title": {
+     "en": "Barium-strontium panel glass of the picture tube, tinted grey, with a dust film",
+     "de": "Barium-Strontium-Schirmglas der Bildröhre, grau getönt, mit Staubfilm"
+    },
+    "emissivity": 0.92,
+    "solarAbsorptivity": 0.55,
+    "densityKgM3": 2700.0,
+    "conductivityWmK": 1.0,
+    "specificHeatJKgK": 840,
+    "elasticModulusPa": 70000000000.0,
+    "strengthPa": 40000000.0,
+    "source": "literature",
+    "reference": "andreola-2005"
+   },
+   {
+    "id": "hips-anthracite",
+    "title": {
+     "en": "Anthracite high-impact polystyrene, faded and scratched",
+     "de": "Anthrazitfarbenes schlagfestes Polystyrol, verblasst und verkratzt"
+    },
+    "emissivity": 0.92,
+    "solarAbsorptivity": 0.82,
+    "densityKgM3": 1050.0,
+    "conductivityWmK": 0.17,
+    "specificHeatJKgK": 1300,
+    "elasticModulusPa": 1900000000.0,
+    "strengthPa": 25000000.0,
+    "source": "literature",
+    "reference": "plastics-handbook"
+   },
+   {
+    "id": "abs-stand",
+    "title": {
+     "en": "Dark grey ABS of the swivel stand",
+     "de": "Dunkelgraues ABS des Drehfußes"
+    },
+    "emissivity": 0.92,
+    "solarAbsorptivity": 0.8,
+    "densityKgM3": 1050.0,
+    "conductivityWmK": 0.17,
+    "specificHeatJKgK": 1400,
+    "elasticModulusPa": 2400000000.0,
+    "strengthPa": 40000000.0,
+    "source": "literature",
+    "reference": "plastics-handbook"
+   },
+   {
+    "id": "pvc-cable",
+    "title": {
+     "en": "PVC-sheathed mains cable H03VVH2-F",
+     "de": "PVC-ummanteltes Netzkabel H03VVH2-F"
+    },
+    "emissivity": 0.92,
+    "solarAbsorptivity": 0.85,
+    "densityKgM3": 1400.0,
+    "conductivityWmK": 0.19,
+    "specificHeatJKgK": 1000,
+    "source": "authored-estimate",
+    "reference": "iso-10456-2007"
+   },
+   {
+    "id": "felt-blanket",
+    "title": {
+     "en": "Quilted nonwoven felt of a moving blanket, dark blue",
+     "de": "Gesteppter Vliesfilz einer Möbeldecke, dunkelblau"
+    },
+    "emissivity": 0.9,
+    "solarAbsorptivity": 0.8,
+    "densityKgM3": 134.0,
+    "conductivityWmK": 0.045,
+    "specificHeatJKgK": 1300,
+    "source": "authored-estimate",
+    "reference": "iso-10456-2007"
+   },
+   {
+    "id": "steel-band",
+    "title": {
+     "en": "Steel implosion band and pivot",
+     "de": "Stahl-Spannband und Drehzapfen"
+    },
+    "emissivity": 0.3,
+    "solarAbsorptivity": 0.6,
+    "densityKgM3": 7850.0,
+    "conductivityWmK": 50,
+    "specificHeatJKgK": 450,
+    "elasticModulusPa": 210000000000.0,
+    "strengthPa": 235000000.0,
+    "source": "literature",
+    "reference": "iso-10456-2007"
+   }
+  ],
+  "rig": {
+   "kind": "mechanical",
+   "root": "ground",
+   "bones": [
+    {
+     "id": "ground",
+     "parent": null,
+     "title": {
+      "en": "Floor reference",
+      "de": "Bodenbezug"
+     },
+     "x": 0,
+     "y": 0,
+     "angleDeg": 0,
+     "lengthM": 0,
+     "joint": {
+      "type": "fixed"
+     }
+    },
+    {
+     "id": "blanket",
+     "parent": "ground",
+     "title": {
+      "en": "Folded moving blanket (storage aid, stays behind)",
+      "de": "Gefaltete Möbeldecke (Lagerhilfe, bleibt liegen)"
+     },
+     "x": 0,
+     "y": 0,
+     "angleDeg": 0,
+     "lengthM": 0.28,
+     "joint": {
+      "type": "fixed"
+     },
+     "mass": {
+      "kg": 1.054285,
+      "comX": -0.085,
+      "comY": 0.006,
+      "distribution": "point",
+      "source": "authored-estimate",
+      "reference": "moving-blanket-catalogue"
+     }
+    },
+    {
+     "id": "carry-lift",
+     "parent": "ground",
+     "title": {
+      "en": "Carriers' hands: lift",
+      "de": "Hände der Träger: Heben"
+     },
+     "x": 0,
+     "y": 0,
+     "angleDeg": 0,
+     "lengthM": 0,
+     "joint": {
+      "type": "prismatic",
+      "axisDeg": 90,
+      "minM": -0.05,
+      "maxM": 0.8
+     }
+    },
+    {
+     "id": "carry-travel",
+     "parent": "carry-lift",
+     "title": {
+      "en": "Carriers' hands: walking away",
+      "de": "Hände der Träger: Weggehen"
+     },
+     "x": 0,
+     "y": 0,
+     "angleDeg": 0,
+     "lengthM": 0,
+     "joint": {
+      "type": "prismatic",
+      "axisDeg": 0,
+      "minM": 0,
+      "maxM": 1.5
+     }
+    },
+    {
+     "id": "base",
+     "parent": "carry-travel",
+     "title": {
+      "en": "Base plate of the swivel stand",
+      "de": "Fußplatte des Drehfußes"
+     },
+     "x": 0,
+     "y": 0.012,
+     "angleDeg": 0,
+     "lengthM": 0.17,
+     "joint": {
+      "type": "fixed"
+     },
+     "mass": {
+      "kg": 0.676482,
+      "comX": 0.0,
+      "comY": 0.008,
+      "distribution": "point",
+      "source": "authored-estimate",
+      "reference": "crt-tv-catalogue"
+     },
+     "section": {
+      "areaM2": 0.00204,
+      "secondMomentM4": 4.06187e-08,
+      "extremeFibreM": 0.008,
+      "material": "abs-stand",
+      "title": {
+       "en": "Ribbed ABS plate 340 x 16 mm",
+       "de": "Verrippte ABS-Platte 340 x 16 mm"
+      }
+     }
+    },
+    {
+     "id": "swivel",
+     "parent": "base",
+     "title": {
+      "en": "Swivel pivot (vertical axis)",
+      "de": "Drehzapfen (senkrechte Achse)"
+     },
+     "x": 0,
+     "y": 0.016,
+     "angleDeg": 90,
+     "lengthM": 0.018,
+     "joint": {
+      "type": "revolute",
+      "minDeg": 0,
+      "maxDeg": 0,
+      "twistMinDeg": -40,
+      "twistMaxDeg": 40
+     }
+    },
+    {
+     "id": "cabinet",
+     "parent": "swivel",
+     "title": {
+      "en": "Cabinet: bezel, rear cover, chassis, turntable",
+      "de": "Gehäuse: Frontrahmen, Rückwand, Chassis, Drehteller"
+     },
+     "x": 0.018,
+     "y": 0,
+     "angleDeg": -90,
+     "lengthM": 0.15,
+     "joint": {
+      "type": "fixed"
+     },
+     "mass": {
+      "kg": 8.875173,
+      "comX": -0.06385,
+      "comY": 0.128064,
+      "distribution": "point",
+      "source": "authored-estimate",
+      "reference": "crt-tv-catalogue"
+     },
+     "section": {
+      "areaM2": 0.0018,
+      "secondMomentM4": 3.456e-08,
+      "extremeFibreM": 0.006,
+      "material": "hips-anthracite",
+      "title": {
+       "en": "Ribbed bottom tray 600 x 12 mm",
+       "de": "Verrippte Bodenwanne 600 x 12 mm"
+      }
+     }
+    },
+    {
+     "id": "tube",
+     "parent": "cabinet",
+     "title": {
+      "en": "Picture tube with implosion band and yoke",
+      "de": "Bildröhre mit Spannband und Ablenkeinheit"
+     },
+     "x": 0,
+     "y": 0,
+     "angleDeg": 0,
+     "lengthM": 0.138,
+     "joint": {
+      "type": "fixed"
+     },
+     "mass": {
+      "kg": 24.413881,
+      "comX": 0.043851,
+      "comY": 0.305,
+      "distribution": "point",
+      "source": "authored-estimate",
+      "reference": "herat-2008"
+     },
+     "section": {
+      "areaM2": 0.0209,
+      "secondMomentM4": 7.73437e-07,
+      "extremeFibreM": 0.0375,
+      "material": "crt-panel-glass",
+      "title": {
+       "en": "Faceplate skirt 11 mm glass, 75 mm deep",
+       "de": "Schirmmantel 11 mm Glas, 75 mm tief"
+      }
+     }
+    }
+   ]
+  },
+  "anchors": [
+   {
+    "id": "blanket-floor",
+    "bone": "blanket",
+    "x": -0.085,
+    "y": 0.0,
+    "kind": "contact",
+    "title": {
+     "en": "Folded blanket on the depot floor",
+     "de": "Gefaltete Decke auf dem Lagerboden"
+    },
+    "support": "contact",
+    "normalDeg": 90,
+    "footprintLengthM": 0.73,
+    "footprintWidthM": 0.9,
+    "frictionCoefficient": 0.5
+   },
+   {
+    "id": "stand-foot",
+    "bone": "base",
+    "x": 0.0,
+    "y": 0.0,
+    "kind": "contact",
+    "title": {
+     "en": "Swivel stand base plate on the floor",
+     "de": "Fußplatte des Drehfußes auf dem Boden"
+    },
+    "support": "contact",
+    "normalDeg": 90,
+    "footprintLengthM": 0.3,
+    "footprintWidthM": 0.3,
+    "frictionCoefficient": 0.5
+   },
+   {
+    "id": "grip-left",
+    "bone": "cabinet",
+    "x": 0.0,
+    "y": 0.0,
+    "z": 0.28,
+    "kind": "contact",
+    "title": {
+     "en": "Hands of the left carrier under the bottom edge",
+     "de": "Hände des Trägers links unter der Bodenkante"
+    },
+    "support": "contact",
+    "normalDeg": 90,
+    "footprintLengthM": 0.1,
+    "footprintWidthM": 0.04,
+    "frictionCoefficient": 0.6
+   },
+   {
+    "id": "grip-right",
+    "bone": "cabinet",
+    "x": 0.0,
+    "y": 0.0,
+    "z": -0.28,
+    "kind": "contact",
+    "title": {
+     "en": "Hands of the right carrier under the bottom edge",
+     "de": "Hände des Trägers rechts unter der Bodenkante"
+    },
+    "support": "contact",
+    "normalDeg": 90,
+    "footprintLengthM": 0.1,
+    "footprintWidthM": 0.04,
+    "frictionCoefficient": 0.6
+   },
+   {
+    "id": "vent-top",
+    "bone": "cabinet",
+    "x": -0.22,
+    "y": 0.3976,
+    "kind": "emitter",
+    "title": {
+     "en": "Vent slots on the sloping top of the rear cover",
+     "de": "Lüftungsschlitze auf der schrägen Oberseite der Rückwand"
+    }
+   }
+  ],
+  "representations": {
+   "50": {
+    "status": "authored",
+    "denominator": 50,
+    "validRange": {
+     "minDenominator": 20,
+     "maxDenominator": 75
+    },
+    "pens": {
+     "body": 0.5,
+     "detail": 0.25,
+     "texture": 0.13,
+     "glazing": 0.18,
+     "ground": 0.7
+    },
+    "hatches": [
+     {
+      "id": "quilt",
+      "title": {
+       "en": "Quilting of the moving blanket",
+       "de": "Steppung der Möbeldecke"
+      },
+      "pattern": "cross",
+      "angleDeg": 45,
+      "spacingMm": 1.2,
+      "penMm": 0.13
+     },
+     {
+      "id": "perforation",
+      "title": {
+       "en": "Perforated speaker grille",
+       "de": "Gelochtes Lautsprechergitter"
+      },
+      "pattern": "dots",
+      "angleDeg": 0,
+      "spacingMm": 0.5,
+      "penMm": 0.13
+     }
+    ],
+    "geometry": {
+     "elevation": [
+      {
+       "id": "blanket",
+       "bone": "blanket",
+       "role": "body",
+       "z": 1,
+       "filled": true,
+       "tone": 0.3,
+       "kind": "poly",
+       "points": [
+        [
+         -0.45,
+         0.0
+        ],
+        [
+         0.274,
+         0.0
+        ],
+        [
+         0.277,
+         0.000803848
+        ],
+        [
+         0.279196,
+         0.003
+        ],
+        [
+         0.28,
+         0.006
+        ],
+        [
+         0.279196,
+         0.009
+        ],
+        [
+         0.277,
+         0.011196
+        ],
+        [
+         0.274,
+         0.012
+        ],
+        [
+         -0.45,
+         0.012
+        ]
+       ],
+       "closed": true,
+       "region": "blanket",
+       "material": "felt-blanket"
+      },
+      {
+       "id": "blanket-layers",
+       "bone": "blanket",
+       "role": "texture",
+       "z": 1.1,
+       "filled": false,
+       "tone": 0.2,
+       "kind": "path",
+       "d": "M -0.45000 0.00300 L -0.39000 0.00300 M -0.45000 0.00600 L -0.39000 0.00600 M -0.45000 0.00900 L -0.39000 0.00900",
+       "region": "blanket"
+      },
+      {
+       "id": "base",
+       "bone": "base",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.4,
+       "kind": "poly",
+       "points": [
+        [
+         -0.17,
+         0.0
+        ],
+        [
+         0.17,
+         0.0
+        ],
+        [
+         0.17,
+         0.012
+        ],
+        [
+         0.166,
+         0.016
+        ],
+        [
+         -0.166,
+         0.016
+        ],
+        [
+         -0.17,
+         0.012
+        ]
+       ],
+       "closed": true,
+       "region": "stand",
+       "material": "abs-stand"
+      },
+      {
+       "id": "turntable",
+       "bone": "cabinet",
+       "role": "body",
+       "z": 2.1,
+       "filled": true,
+       "tone": 0.45,
+       "kind": "rect",
+       "x": -0.15,
+       "y": -0.018,
+       "w": 0.3,
+       "h": 0.018,
+       "region": "stand",
+       "material": "abs-stand"
+      },
+      {
+       "id": "rear",
+       "bone": "cabinet",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.28,
+       "kind": "poly",
+       "points": [
+        [
+         0.035,
+         0.0
+        ],
+        [
+         0.035,
+         0.52
+        ],
+        [
+         -0.34,
+         0.34
+        ],
+        [
+         -0.34,
+         0.0
+        ]
+       ],
+       "closed": true,
+       "region": "rear-cover",
+       "material": "hips-anthracite"
+      },
+      {
+       "id": "tray",
+       "bone": "cabinet",
+       "role": "body",
+       "z": 3.1,
+       "filled": true,
+       "tone": 0.22,
+       "kind": "rect",
+       "x": -0.29,
+       "y": 0.0,
+       "w": 0.325,
+       "h": 0.012,
+       "region": "rear-cover",
+       "material": "hips-anthracite"
+      },
+      {
+       "id": "coil",
+       "bone": "cabinet",
+       "role": "body",
+       "z": 3.2,
+       "filled": true,
+       "tone": 0.15,
+       "kind": "rect",
+       "x": -0.364,
+       "y": 0.088,
+       "w": 0.024,
+       "h": 0.164,
+       "region": "rear-cover",
+       "material": "pvc-cable"
+      },
+      {
+       "id": "bezel",
+       "bone": "cabinet",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.2,
+       "kind": "rect",
+       "x": 0.035,
+       "y": 0.0,
+       "w": 0.115,
+       "h": 0.53,
+       "material": "hips-anthracite",
+       "regions": [
+        "bezel",
+        "screen"
+       ]
+      },
+      {
+       "id": "vents",
+       "bone": "cabinet",
+       "role": "texture",
+       "z": 3.3,
+       "filled": false,
+       "tone": 0.2,
+       "kind": "path",
+       "d": "M -0.28000 0.36480 L -0.27400 0.35280 M -0.25000 0.37920 L -0.24400 0.36720 M -0.22000 0.39360 L -0.21400 0.38160 M -0.19000 0.40800 L -0.18400 0.39600 M -0.16000 0.42240 L -0.15400 0.41040 M -0.13000 0.43680 L -0.12400 0.42480 M -0.10000 0.45120 L -0.09400 0.43920",
+       "region": "rear-cover"
+      },
+      {
+       "id": "dust",
+       "bone": "cabinet",
+       "role": "texture",
+       "z": 3.4,
+       "filled": false,
+       "tone": 0.4,
+       "kind": "path",
+       "d": "M -0.29000 0.36600 L -0.27500 0.37320 M -0.24500 0.38760 L -0.23000 0.39480 M -0.20000 0.40920 L -0.18500 0.41640 M -0.15500 0.43080 L -0.14000 0.43800 M -0.11000 0.45240 L -0.09500 0.45960 M -0.06500 0.47400 L -0.05000 0.48120 M -0.02000 0.49560 L -0.00500 0.50280",
+       "region": "rear-cover"
+      },
+      {
+       "id": "e-check-sticker",
+       "bone": "cabinet",
+       "role": "texture",
+       "z": 3.5,
+       "filled": false,
+       "tone": 0.9,
+       "kind": "path",
+       "d": "M -0.22000 0.08000 L -0.17000 0.08000 M -0.17000 0.08000 L -0.17000 0.11000 M -0.17000 0.11000 L -0.22000 0.11000 M -0.22000 0.11000 L -0.22000 0.08000",
+       "region": "rear-cover"
+      },
+      {
+       "id": "coil-tape",
+       "bone": "cabinet",
+       "role": "texture",
+       "z": 3.6,
+       "filled": false,
+       "tone": 0.8,
+       "kind": "path",
+       "d": "M -0.36600 0.15500 L -0.33800 0.15500 M -0.36600 0.18500 L -0.33800 0.18500",
+       "region": "rear-cover"
+      },
+      {
+       "id": "bezel-joint",
+       "bone": "cabinet",
+       "role": "detail",
+       "z": 4.1,
+       "filled": false,
+       "tone": 0.3,
+       "kind": "path",
+       "d": "M 0.04700 0.00000 L 0.04700 0.53000",
+       "region": "bezel"
+      }
+     ],
+     "front": [
+      {
+       "id": "blanket",
+       "bone": "blanket",
+       "role": "body",
+       "z": 1,
+       "filled": true,
+       "tone": 0.3,
+       "kind": "rect",
+       "x": -0.45,
+       "y": 0.0,
+       "w": 0.9,
+       "h": 0.012,
+       "region": "blanket",
+       "material": "felt-blanket",
+       "hatch": "quilt"
+      },
+      {
+       "id": "base",
+       "bone": "base",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.4,
+       "kind": "rect",
+       "x": -0.17,
+       "y": 0.012,
+       "w": 0.34,
+       "h": 0.016,
+       "region": "stand",
+       "material": "abs-stand"
+      },
+      {
+       "id": "turntable",
+       "bone": "cabinet",
+       "role": "body",
+       "z": 2.1,
+       "filled": true,
+       "tone": 0.45,
+       "kind": "rect",
+       "x": -0.15,
+       "y": 0.028,
+       "w": 0.3,
+       "h": 0.018,
+       "region": "stand",
+       "material": "abs-stand"
+      },
+      {
+       "id": "bezel",
+       "bone": "cabinet",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.2,
+       "kind": "rect",
+       "x": -0.35,
+       "y": 0.046,
+       "w": 0.7,
+       "h": 0.53,
+       "r": 0.02,
+       "region": "bezel",
+       "material": "hips-anthracite"
+      },
+      {
+       "id": "screen",
+       "bone": "tube",
+       "role": "glazing",
+       "z": 5,
+       "filled": true,
+       "tone": 0.12,
+       "kind": "rect",
+       "x": -0.28,
+       "y": 0.156,
+       "w": 0.56,
+       "h": 0.39,
+       "r": 0.03,
+       "region": "screen",
+       "material": "crt-panel-glass"
+      },
+      {
+       "id": "speaker-l",
+       "bone": "cabinet",
+       "role": "detail",
+       "z": 4.2,
+       "filled": true,
+       "tone": 0.14,
+       "kind": "rect",
+       "x": 0.11,
+       "y": 0.068,
+       "w": 0.19,
+       "h": 0.066,
+       "region": "bezel",
+       "hatch": "perforation"
+      },
+      {
+       "id": "speaker-r",
+       "bone": "cabinet",
+       "role": "detail",
+       "z": 4.2,
+       "filled": true,
+       "tone": 0.14,
+       "kind": "rect",
+       "x": -0.3,
+       "y": 0.068,
+       "w": 0.19,
+       "h": 0.066,
+       "region": "bezel",
+       "hatch": "perforation"
+      },
+      {
+       "id": "control-recess",
+       "bone": "cabinet",
+       "role": "detail",
+       "z": 4.3,
+       "filled": true,
+       "tone": 0.08,
+       "kind": "rect",
+       "x": -0.075,
+       "y": 0.076,
+       "w": 0.15,
+       "h": 0.05,
+       "region": "bezel"
+      },
+      {
+       "id": "buttons",
+       "bone": "cabinet",
+       "role": "texture",
+       "z": 4.4,
+       "filled": false,
+       "tone": 0.5,
+       "kind": "path",
+       "d": "M -0.06000 0.09200 L -0.04600 0.09200 M -0.03600 0.09200 L -0.02200 0.09200 M -0.01200 0.09200 L 0.00200 0.09200 M 0.01200 0.09200 L 0.02600 0.09200 M 0.03600 0.09200 L 0.05000 0.09200 M 0.06000 0.09200 L 0.07400 0.09200 M -0.06000 0.10800 L -0.04600 0.10800 M -0.03600 0.10800 L -0.02200 0.10800 M -0.01200 0.10800 L 0.00200 0.10800 M 0.01200 0.10800 L 0.02600 0.10800 M 0.03600 0.10800 L 0.05000 0.10800 M 0.06000 0.10800 L 0.07400 0.10800",
+       "region": "bezel"
+      },
+      {
+       "id": "burn-in",
+       "bone": "tube",
+       "role": "texture",
+       "z": 5.1,
+       "filled": false,
+       "tone": 0.25,
+       "kind": "path",
+       "d": "M -0.23500 0.50100 L -0.17500 0.50100 M -0.17500 0.50100 L -0.17500 0.52400 M -0.17500 0.52400 L -0.23500 0.52400 M -0.23500 0.52400 L -0.23500 0.50100",
+       "region": "screen"
+      },
+      {
+       "id": "bezel-scratches",
+       "bone": "cabinet",
+       "role": "texture",
+       "z": 4.5,
+       "filled": false,
+       "tone": 0.4,
+       "kind": "path",
+       "d": "M 0.16000 0.14200 L 0.24000 0.14700 M 0.19000 0.13900 L 0.23000 0.14300 M -0.32000 0.34600 L -0.31500 0.40600",
+       "region": "bezel"
+      },
+      {
+       "id": "power-switch",
+       "bone": "cabinet",
+       "role": "detail",
+       "z": 4.6,
+       "filled": true,
+       "tone": 0.6,
+       "kind": "rect",
+       "x": 0.31,
+       "y": 0.086,
+       "w": 0.02,
+       "h": 0.03,
+       "region": "bezel"
+      }
+     ],
+     "plan": [
+      {
+       "id": "blanket",
+       "bone": "blanket",
+       "role": "body",
+       "z": 1,
+       "filled": true,
+       "tone": 0.3,
+       "kind": "rect",
+       "x": -0.45,
+       "y": -0.45,
+       "w": 0.73,
+       "h": 0.9,
+       "region": "blanket",
+       "material": "felt-blanket",
+       "hatch": "quilt"
+      },
+      {
+       "id": "rear",
+       "bone": "cabinet",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.28,
+       "kind": "poly",
+       "points": [
+        [
+         0.035,
+         -0.34
+        ],
+        [
+         0.035,
+         0.34
+        ],
+        [
+         -0.34,
+         0.2
+        ],
+        [
+         -0.34,
+         -0.2
+        ]
+       ],
+       "closed": true,
+       "region": "rear-cover",
+       "material": "hips-anthracite"
+      },
+      {
+       "id": "coil",
+       "bone": "cabinet",
+       "role": "body",
+       "z": 3.2,
+       "filled": true,
+       "tone": 0.15,
+       "kind": "rect",
+       "x": -0.364,
+       "y": -0.082,
+       "w": 0.024,
+       "h": 0.164,
+       "region": "rear-cover",
+       "material": "pvc-cable"
+      },
+      {
+       "id": "bezel",
+       "bone": "cabinet",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.2,
+       "kind": "rect",
+       "x": 0.035,
+       "y": -0.35,
+       "w": 0.115,
+       "h": 0.7,
+       "region": "bezel",
+       "material": "hips-anthracite"
+      },
+      {
+       "id": "vents",
+       "bone": "cabinet",
+       "role": "texture",
+       "z": 3.3,
+       "filled": false,
+       "tone": 0.2,
+       "kind": "path",
+       "d": "M -0.28000 -0.14000 L -0.28000 0.14000 M -0.25000 -0.14000 L -0.25000 0.14000 M -0.22000 -0.14000 L -0.22000 0.14000 M -0.19000 -0.14000 L -0.19000 0.14000 M -0.16000 -0.14000 L -0.16000 0.14000 M -0.13000 -0.14000 L -0.13000 0.14000 M -0.10000 -0.14000 L -0.10000 0.14000",
+       "region": "rear-cover"
+      },
+      {
+       "id": "dust",
+       "bone": "cabinet",
+       "role": "texture",
+       "z": 3.4,
+       "filled": false,
+       "tone": 0.4,
+       "kind": "path",
+       "d": "M -0.30000 0.17000 L -0.04000 0.17000 M -0.30000 -0.17000 L -0.04000 -0.17000 M -0.24000 0.15500 L -0.12000 0.15500",
+       "region": "rear-cover"
+      },
+      {
+       "id": "price-label",
+       "bone": "cabinet",
+       "role": "texture",
+       "z": 4.1,
+       "filled": false,
+       "tone": 0.9,
+       "kind": "path",
+       "d": "M 0.05500 0.20000 L 0.11500 0.20000 M 0.11500 0.20000 L 0.11500 0.26000 M 0.11500 0.26000 L 0.05500 0.26000 M 0.05500 0.26000 L 0.05500 0.20000 M 0.06500 0.23000 L 0.10500 0.23000",
+       "region": "bezel"
+      },
+      {
+       "id": "top-scratches",
+       "bone": "cabinet",
+       "role": "texture",
+       "z": 4.2,
+       "filled": false,
+       "tone": 0.4,
+       "kind": "path",
+       "d": "M 0.06500 -0.10000 L 0.12500 -0.02000 M 0.08500 -0.12000 L 0.13500 -0.06000",
+       "region": "bezel"
+      }
+     ]
+    },
+    "decisions": {
+     "silhouette": {
+      "en": "Television 14 x 11 mm on paper on its stand and blanket. Side elevation: the 115 mm bezel, the rear cover tapering from 520 to 340 mm with its flat bottom, the bottom tray, the cable ring taped to the back, the two plates of the swivel stand and the folded blanket. Front elevation: the bezel with rounded corners, the screen 560 x 390 mm, two perforated speaker grilles, the open control recess, the power switch, the stand and the blanket. Plan: bezel, the rear cover tapering to 400 mm, the cable ring, vent slots and the blanket.",
+      "de": "Fernseher 14 x 11 mm auf dem Papier auf Fuß und Decke. Seitenansicht: der 115-mm-Frontrahmen, die von 520 auf 340 mm verjüngte Rückwand mit flachem Boden, die Bodenwanne, der hinten angeklebte Kabelring, die zwei Platten des Drehfußes und die gefaltete Decke. Vorderansicht: der Rahmen mit gerundeten Ecken, der Bildschirm 560 x 390 mm, zwei gelochte Lautsprechergitter, die offene Bedienmulde, der Netzschalter, Fuß und Decke. Grundriss: Rahmen, die auf 400 mm verjüngte Rückwand, Kabelring, Lüftungsschlitze und Decke."
+     },
+     "retained": {
+      "en": "Traces of use: the missing control flap (open recess with the bare buttons), scratches on the bezel and the top, the ghost of a channel logo burnt into the phosphor, dust lines in and beside the vent slots, the E-Check sticker on the side, the price label on the top, the taped cable; the chamfers of the stand, the folded layers and quilting of the blanket.",
+      "de": "Gebrauchsspuren: die fehlende Bedienklappe (offene Mulde mit den blanken Tasten), Kratzer an Rahmen und Oberseite, das eingebrannte Senderlogo im Leuchtstoff, Staublinien in und neben den Lüftungsschlitzen, der E-Check-Aufkleber an der Seite, das Preisschild oben, das angeklebte Kabel; die Fasen des Fußes, gefaltete Lagen und Steppung der Decke."
+     },
+     "merged": {
+      "en": "The far side of every part coincides with the near one in the elevations; the rear cover and the cable ring are hidden behind the bezel in the front elevation, the stand under the cabinet in plan; in the side elevation the bezel stands also for the faceplate recessed inside it (regions bezel and screen).",
+      "de": "Die ferne Seite jedes Teils deckt sich in den Ansichten mit der nahen; Rückwand und Kabelring verdeckt der Rahmen in der Vorderansicht, den Fuß das Gehäuse im Grundriss; in der Seitenansicht steht der Rahmen auch für den darin vertieften Bildschirm (Regionen Rahmen und Bildschirm)."
+     },
+     "omitted": {
+      "en": "Screws, the 5 mm vent slots as openings (drawn as strokes), the convexity of the faceplate (under 7.5 mm), the sockets of the back plate.",
+      "de": "Schrauben, die 5-mm-Lüftungsschlitze als Öffnungen (als Striche gezeichnet), die Wölbung des Schirms (unter 7,5 mm), die Buchsen der Rückplatte."
+     },
+     "thinElements": {
+      "en": "The 12 mm blanket and tray are filled strips of 0.24 mm; the screen recess of 12 mm shows in the plan of the 3D model only.",
+      "de": "Decke und Bodenwanne (12 mm) sind gefüllte Streifen von 0,24 mm; die 12-mm-Vertiefung des Bildschirms zeigt nur das 3D-Modell."
+     },
+     "hatching": {
+      "en": "Dots on the speaker grilles, cross quilting on the blanket.",
+      "de": "Punkte auf den Lautsprechergittern, Kreuzsteppung auf der Decke."
+     },
+     "styles": {
+      "en": "Bezel 0.20, screen 0.12 (glazing), rear cover 0.28, stand 0.40-0.45, blanket 0.30, cable 0.15.",
+      "de": "Rahmen 0,20, Bildschirm 0,12 (Verglasung), Rückwand 0,28, Fuß 0,40-0,45, Decke 0,30, Kabel 0,15."
+     },
+     "overlays": {
+      "en": "Every part carries its thermal region: screen, bezel, rear cover, stand, blanket.",
+      "de": "Jedes Teil trägt seine Thermikregion: Bildschirm, Rahmen, Rückwand, Fuß, Decke."
+     }
+    }
+   },
+   "100": {
+    "status": "authored",
+    "denominator": 100,
+    "validRange": {
+     "minDenominator": 75,
+     "maxDenominator": 150
+    },
+    "pens": {
+     "body": 0.35,
+     "detail": 0.18,
+     "texture": 0.13,
+     "glazing": 0.13,
+     "ground": 0.5
+    },
+    "hatches": [],
+    "geometry": {
+     "elevation": [
+      {
+       "id": "blanket",
+       "bone": "blanket",
+       "role": "body",
+       "z": 1,
+       "filled": true,
+       "tone": 0.3,
+       "kind": "poly",
+       "points": [
+        [
+         -0.45,
+         0.0
+        ],
+        [
+         0.274,
+         0.0
+        ],
+        [
+         0.28,
+         0.006
+        ],
+        [
+         0.274,
+         0.012
+        ],
+        [
+         -0.45,
+         0.012
+        ]
+       ],
+       "closed": true,
+       "region": "blanket",
+       "material": "felt-blanket"
+      },
+      {
+       "id": "base",
+       "bone": "base",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.4,
+       "kind": "poly",
+       "points": [
+        [
+         -0.17,
+         0.0
+        ],
+        [
+         0.17,
+         0.0
+        ],
+        [
+         0.17,
+         0.016
+        ],
+        [
+         -0.17,
+         0.016
+        ]
+       ],
+       "closed": true,
+       "region": "stand",
+       "material": "abs-stand"
+      },
+      {
+       "id": "turntable",
+       "bone": "cabinet",
+       "role": "body",
+       "z": 2.1,
+       "filled": true,
+       "tone": 0.45,
+       "kind": "rect",
+       "x": -0.15,
+       "y": -0.018,
+       "w": 0.3,
+       "h": 0.018,
+       "region": "stand",
+       "material": "abs-stand"
+      },
+      {
+       "id": "rear",
+       "bone": "cabinet",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.28,
+       "kind": "poly",
+       "points": [
+        [
+         0.035,
+         0.0
+        ],
+        [
+         0.035,
+         0.52
+        ],
+        [
+         -0.34,
+         0.34
+        ],
+        [
+         -0.34,
+         0.0
+        ]
+       ],
+       "closed": true,
+       "region": "rear-cover",
+       "material": "hips-anthracite"
+      },
+      {
+       "id": "coil",
+       "bone": "cabinet",
+       "role": "body",
+       "z": 3.2,
+       "filled": true,
+       "tone": 0.15,
+       "kind": "rect",
+       "x": -0.364,
+       "y": 0.088,
+       "w": 0.024,
+       "h": 0.164,
+       "region": "rear-cover",
+       "material": "pvc-cable"
+      },
+      {
+       "id": "bezel",
+       "bone": "cabinet",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.2,
+       "kind": "rect",
+       "x": 0.035,
+       "y": 0.0,
+       "w": 0.115,
+       "h": 0.53,
+       "material": "hips-anthracite",
+       "regions": [
+        "bezel",
+        "screen"
+       ]
+      },
+      {
+       "id": "vents",
+       "bone": "cabinet",
+       "role": "texture",
+       "z": 3.3,
+       "filled": false,
+       "tone": 0.2,
+       "kind": "path",
+       "d": "M -0.28000 0.36480 L -0.27400 0.35280 M -0.22000 0.39360 L -0.21400 0.38160 M -0.16000 0.42240 L -0.15400 0.41040 M -0.10000 0.45120 L -0.09400 0.43920",
+       "region": "rear-cover"
+      }
+     ],
+     "front": [
+      {
+       "id": "blanket",
+       "bone": "blanket",
+       "role": "body",
+       "z": 1,
+       "filled": true,
+       "tone": 0.3,
+       "kind": "rect",
+       "x": -0.45,
+       "y": 0.0,
+       "w": 0.9,
+       "h": 0.012,
+       "region": "blanket",
+       "material": "felt-blanket"
+      },
+      {
+       "id": "base",
+       "bone": "base",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.4,
+       "kind": "rect",
+       "x": -0.17,
+       "y": 0.012,
+       "w": 0.34,
+       "h": 0.016,
+       "region": "stand",
+       "material": "abs-stand"
+      },
+      {
+       "id": "turntable",
+       "bone": "cabinet",
+       "role": "body",
+       "z": 2.1,
+       "filled": true,
+       "tone": 0.45,
+       "kind": "rect",
+       "x": -0.15,
+       "y": 0.028,
+       "w": 0.3,
+       "h": 0.018,
+       "region": "stand",
+       "material": "abs-stand"
+      },
+      {
+       "id": "bezel",
+       "bone": "cabinet",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.2,
+       "kind": "rect",
+       "x": -0.35,
+       "y": 0.046,
+       "w": 0.7,
+       "h": 0.53,
+       "r": 0.02,
+       "region": "bezel",
+       "material": "hips-anthracite"
+      },
+      {
+       "id": "screen",
+       "bone": "tube",
+       "role": "glazing",
+       "z": 5,
+       "filled": true,
+       "tone": 0.12,
+       "kind": "rect",
+       "x": -0.28,
+       "y": 0.156,
+       "w": 0.56,
+       "h": 0.39,
+       "r": 0.03,
+       "region": "screen",
+       "material": "crt-panel-glass"
+      },
+      {
+       "id": "speaker-l",
+       "bone": "cabinet",
+       "role": "detail",
+       "z": 4.2,
+       "filled": true,
+       "tone": 0.14,
+       "kind": "rect",
+       "x": 0.11,
+       "y": 0.068,
+       "w": 0.19,
+       "h": 0.066,
+       "region": "bezel"
+      },
+      {
+       "id": "speaker-r",
+       "bone": "cabinet",
+       "role": "detail",
+       "z": 4.2,
+       "filled": true,
+       "tone": 0.14,
+       "kind": "rect",
+       "x": -0.3,
+       "y": 0.068,
+       "w": 0.19,
+       "h": 0.066,
+       "region": "bezel"
+      },
+      {
+       "id": "control-recess",
+       "bone": "cabinet",
+       "role": "detail",
+       "z": 4.3,
+       "filled": true,
+       "tone": 0.08,
+       "kind": "rect",
+       "x": -0.075,
+       "y": 0.076,
+       "w": 0.15,
+       "h": 0.05,
+       "region": "bezel"
+      }
+     ],
+     "plan": [
+      {
+       "id": "blanket",
+       "bone": "blanket",
+       "role": "body",
+       "z": 1,
+       "filled": true,
+       "tone": 0.3,
+       "kind": "rect",
+       "x": -0.45,
+       "y": -0.45,
+       "w": 0.73,
+       "h": 0.9,
+       "region": "blanket",
+       "material": "felt-blanket"
+      },
+      {
+       "id": "rear",
+       "bone": "cabinet",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.28,
+       "kind": "poly",
+       "points": [
+        [
+         0.035,
+         -0.34
+        ],
+        [
+         0.035,
+         0.34
+        ],
+        [
+         -0.34,
+         0.2
+        ],
+        [
+         -0.34,
+         -0.2
+        ]
+       ],
+       "closed": true,
+       "region": "rear-cover",
+       "material": "hips-anthracite"
+      },
+      {
+       "id": "coil",
+       "bone": "cabinet",
+       "role": "body",
+       "z": 3.2,
+       "filled": true,
+       "tone": 0.15,
+       "kind": "rect",
+       "x": -0.364,
+       "y": -0.082,
+       "w": 0.024,
+       "h": 0.164,
+       "region": "rear-cover",
+       "material": "pvc-cable"
+      },
+      {
+       "id": "bezel",
+       "bone": "cabinet",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.2,
+       "kind": "rect",
+       "x": 0.035,
+       "y": -0.35,
+       "w": 0.115,
+       "h": 0.7,
+       "region": "bezel",
+       "material": "hips-anthracite"
+      },
+      {
+       "id": "vents",
+       "bone": "cabinet",
+       "role": "texture",
+       "z": 3.3,
+       "filled": false,
+       "tone": 0.2,
+       "kind": "path",
+       "d": "M -0.28000 -0.12000 L -0.28000 0.12000 M -0.22000 -0.12000 L -0.22000 0.12000 M -0.16000 -0.12000 L -0.16000 0.12000 M -0.10000 -0.12000 L -0.10000 0.12000",
+       "region": "rear-cover"
+      }
+     ]
+    },
+    "decisions": {
+     "silhouette": {
+      "en": "Television 7 x 5.5 mm: bezel, screen, tapered rear cover, cable ring, both stand plates, blanket with its fold.",
+      "de": "Fernseher 7 x 5,5 mm: Rahmen, Bildschirm, verjüngte Rückwand, Kabelring, beide Fußplatten, Decke mit Falz."
+     },
+     "retained": {
+      "en": "Speaker grilles and the open control recess as outlines, the cable ring, every second vent slot.",
+      "de": "Lautsprechergitter und offene Bedienmulde als Umrisse, der Kabelring, jeder zweite Lüftungsschlitz."
+     },
+     "merged": {
+      "en": "Bottom tray into the rear cover.",
+      "de": "Bodenwanne in die Rückwand."
+     },
+     "omitted": {
+      "en": "Hatches, scratches, burn-in, stickers, dust, chamfers, the folded layers.",
+      "de": "Schraffuren, Kratzer, Einbrennung, Aufkleber, Staub, Fasen, gefaltete Lagen."
+     },
+     "thinElements": {
+      "en": "The 12 mm blanket is a 0.12 mm filled strip carried by its outline pen; a declared sheet in 3D.",
+      "de": "Die 12-mm-Decke ist ein gefüllter Streifen von 0,12 mm, den sein Umrissstrich trägt; in 3D ein deklariertes Blatt."
+     },
+     "hatching": {
+      "en": "None.",
+      "de": "Keine."
+     },
+     "styles": {
+      "en": "As 1:50.",
+      "de": "Wie 1:50."
+     },
+     "overlays": {
+      "en": "All five regions.",
+      "de": "Alle fünf Regionen."
+     }
+    }
+   },
+   "200": {
+    "status": "authored",
+    "denominator": 200,
+    "validRange": {
+     "minDenominator": 150,
+     "maxDenominator": 350
+    },
+    "pens": {
+     "body": 0.25,
+     "detail": 0.13,
+     "texture": null,
+     "glazing": 0.13,
+     "ground": 0.35
+    },
+    "hatches": [],
+    "geometry": {
+     "elevation": [
+      {
+       "id": "blanket",
+       "bone": "blanket",
+       "role": "body",
+       "z": 1,
+       "filled": true,
+       "tone": 0.3,
+       "kind": "poly",
+       "points": [
+        [
+         -0.45,
+         0.0
+        ],
+        [
+         0.28,
+         0.0
+        ],
+        [
+         0.28,
+         0.012
+        ],
+        [
+         -0.45,
+         0.012
+        ]
+       ],
+       "closed": true,
+       "region": "blanket",
+       "material": "felt-blanket"
+      },
+      {
+       "id": "stand",
+       "bone": "base",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.42,
+       "kind": "rect",
+       "x": -0.17,
+       "y": 0.0,
+       "w": 0.34,
+       "h": 0.034,
+       "region": "stand",
+       "material": "abs-stand"
+      },
+      {
+       "id": "rear",
+       "bone": "cabinet",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.28,
+       "kind": "poly",
+       "points": [
+        [
+         0.035,
+         0.0
+        ],
+        [
+         0.035,
+         0.52
+        ],
+        [
+         -0.34,
+         0.34
+        ],
+        [
+         -0.34,
+         0.0
+        ]
+       ],
+       "closed": true,
+       "region": "rear-cover",
+       "material": "hips-anthracite"
+      },
+      {
+       "id": "bezel",
+       "bone": "cabinet",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.2,
+       "kind": "rect",
+       "x": 0.035,
+       "y": 0.0,
+       "w": 0.115,
+       "h": 0.53,
+       "material": "hips-anthracite",
+       "regions": [
+        "bezel",
+        "screen"
+       ]
+      }
+     ],
+     "front": [
+      {
+       "id": "blanket",
+       "bone": "blanket",
+       "role": "body",
+       "z": 1,
+       "filled": true,
+       "tone": 0.3,
+       "kind": "rect",
+       "x": -0.45,
+       "y": 0.0,
+       "w": 0.9,
+       "h": 0.012,
+       "region": "blanket",
+       "material": "felt-blanket"
+      },
+      {
+       "id": "stand",
+       "bone": "base",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.42,
+       "kind": "rect",
+       "x": -0.17,
+       "y": 0.012,
+       "w": 0.34,
+       "h": 0.034,
+       "region": "stand",
+       "material": "abs-stand"
+      },
+      {
+       "id": "bezel",
+       "bone": "cabinet",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.2,
+       "kind": "rect",
+       "x": -0.35,
+       "y": 0.046,
+       "w": 0.7,
+       "h": 0.53,
+       "region": "bezel",
+       "material": "hips-anthracite"
+      },
+      {
+       "id": "screen",
+       "bone": "tube",
+       "role": "glazing",
+       "z": 5,
+       "filled": true,
+       "tone": 0.12,
+       "kind": "rect",
+       "x": -0.28,
+       "y": 0.156,
+       "w": 0.56,
+       "h": 0.39,
+       "region": "screen",
+       "material": "crt-panel-glass"
+      }
+     ],
+     "plan": [
+      {
+       "id": "blanket",
+       "bone": "blanket",
+       "role": "body",
+       "z": 1,
+       "filled": true,
+       "tone": 0.3,
+       "kind": "rect",
+       "x": -0.45,
+       "y": -0.45,
+       "w": 0.73,
+       "h": 0.9,
+       "region": "blanket",
+       "material": "felt-blanket"
+      },
+      {
+       "id": "rear",
+       "bone": "cabinet",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.28,
+       "kind": "poly",
+       "points": [
+        [
+         0.035,
+         -0.34
+        ],
+        [
+         0.035,
+         0.34
+        ],
+        [
+         -0.34,
+         0.2
+        ],
+        [
+         -0.34,
+         -0.2
+        ]
+       ],
+       "closed": true,
+       "region": "rear-cover",
+       "material": "hips-anthracite"
+      },
+      {
+       "id": "bezel",
+       "bone": "cabinet",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.2,
+       "kind": "rect",
+       "x": 0.035,
+       "y": -0.35,
+       "w": 0.115,
+       "h": 0.7,
+       "region": "bezel",
+       "material": "hips-anthracite"
+      }
+     ]
+    },
+    "decisions": {
+     "silhouette": {
+      "en": "Television 3.5 x 2.7 mm: bezel, screen, rear cover, one stand, blanket strip.",
+      "de": "Fernseher 3,5 x 2,7 mm: Rahmen, Bildschirm, Rückwand, ein Fuß, Deckenstreifen."
+     },
+     "retained": {
+      "en": "The taper of the rear cover, the screen inside the bezel, the stand.",
+      "de": "Die Verjüngung der Rückwand, der Bildschirm im Rahmen, der Fuß."
+     },
+     "merged": {
+      "en": "Base plate and turntable into one 34 mm stand.",
+      "de": "Fußplatte und Drehteller zu einem 34-mm-Fuß."
+     },
+     "omitted": {
+      "en": "Cable ring, grilles, recess, vents, rounded corners.",
+      "de": "Kabelring, Gitter, Mulde, Lüftung, gerundete Ecken."
+     },
+     "thinElements": {
+      "en": "The 12 mm blanket stays at its true thickness, carried by the body pen.",
+      "de": "Die 12-mm-Decke bleibt in echter Dicke und wird vom Körperstrich getragen."
+     },
+     "hatching": {
+      "en": "None.",
+      "de": "Keine."
+     },
+     "styles": {
+      "en": "As 1:50.",
+      "de": "Wie 1:50."
+     },
+     "overlays": {
+      "en": "All five regions.",
+      "de": "Alle fünf Regionen."
+     }
+    }
+   },
+   "500": {
+    "status": "authored",
+    "denominator": 500,
+    "validRange": {
+     "minDenominator": 350,
+     "maxDenominator": 1000
+    },
+    "pens": {
+     "body": 0.18,
+     "detail": null,
+     "texture": null,
+     "glazing": 0.13,
+     "ground": 0.25
+    },
+    "hatches": [],
+    "geometry": {
+     "elevation": [
+      {
+       "id": "blanket",
+       "bone": "blanket",
+       "role": "body",
+       "z": 1,
+       "filled": true,
+       "tone": 0.3,
+       "kind": "poly",
+       "points": [
+        [
+         -0.45,
+         0.0
+        ],
+        [
+         0.28,
+         0.0
+        ],
+        [
+         0.28,
+         0.022
+        ],
+        [
+         -0.45,
+         0.022
+        ]
+       ],
+       "closed": true,
+       "region": "blanket",
+       "material": "felt-blanket"
+      },
+      {
+       "id": "stand",
+       "bone": "base",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.42,
+       "kind": "rect",
+       "x": -0.17,
+       "y": 0.0,
+       "w": 0.34,
+       "h": 0.034,
+       "region": "stand",
+       "material": "abs-stand"
+      },
+      {
+       "id": "rear",
+       "bone": "cabinet",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.28,
+       "kind": "poly",
+       "points": [
+        [
+         0.035,
+         0.0
+        ],
+        [
+         0.035,
+         0.52
+        ],
+        [
+         -0.34,
+         0.34
+        ],
+        [
+         -0.34,
+         0.0
+        ]
+       ],
+       "closed": true,
+       "region": "rear-cover",
+       "material": "hips-anthracite"
+      },
+      {
+       "id": "bezel",
+       "bone": "cabinet",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.2,
+       "kind": "rect",
+       "x": 0.035,
+       "y": 0.0,
+       "w": 0.115,
+       "h": 0.53,
+       "material": "hips-anthracite",
+       "regions": [
+        "bezel",
+        "screen"
+       ]
+      }
+     ],
+     "front": [
+      {
+       "id": "blanket",
+       "bone": "blanket",
+       "role": "body",
+       "z": 1,
+       "filled": true,
+       "tone": 0.3,
+       "kind": "rect",
+       "x": -0.45,
+       "y": 0.0,
+       "w": 0.9,
+       "h": 0.022,
+       "region": "blanket",
+       "material": "felt-blanket"
+      },
+      {
+       "id": "stand",
+       "bone": "base",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.42,
+       "kind": "rect",
+       "x": -0.17,
+       "y": 0.012,
+       "w": 0.34,
+       "h": 0.034,
+       "region": "stand",
+       "material": "abs-stand"
+      },
+      {
+       "id": "bezel",
+       "bone": "cabinet",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.2,
+       "kind": "rect",
+       "x": -0.35,
+       "y": 0.046,
+       "w": 0.7,
+       "h": 0.53,
+       "region": "bezel",
+       "material": "hips-anthracite"
+      },
+      {
+       "id": "screen",
+       "bone": "cabinet",
+       "role": "glazing",
+       "z": 5,
+       "filled": true,
+       "tone": 0.12,
+       "kind": "rect",
+       "x": -0.28,
+       "y": 0.156,
+       "w": 0.56,
+       "h": 0.39,
+       "region": "screen",
+       "material": "crt-panel-glass"
+      }
+     ],
+     "plan": [
+      {
+       "id": "blanket",
+       "bone": "blanket",
+       "role": "body",
+       "z": 1,
+       "filled": true,
+       "tone": 0.3,
+       "kind": "rect",
+       "x": -0.45,
+       "y": -0.45,
+       "w": 0.73,
+       "h": 0.9,
+       "region": "blanket",
+       "material": "felt-blanket"
+      },
+      {
+       "id": "rear",
+       "bone": "cabinet",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.28,
+       "kind": "poly",
+       "points": [
+        [
+         0.035,
+         -0.34
+        ],
+        [
+         0.035,
+         0.34
+        ],
+        [
+         -0.34,
+         0.2
+        ],
+        [
+         -0.34,
+         -0.2
+        ]
+       ],
+       "closed": true,
+       "region": "rear-cover",
+       "material": "hips-anthracite"
+      },
+      {
+       "id": "bezel",
+       "bone": "cabinet",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.2,
+       "kind": "rect",
+       "x": 0.035,
+       "y": -0.35,
+       "w": 0.115,
+       "h": 0.7,
+       "region": "bezel",
+       "material": "hips-anthracite"
+      }
+     ]
+    },
+    "decisions": {
+     "silhouette": {
+      "en": "Television sign 1.4 x 1.1 mm: bezel with screen, the tapered rear cover, the stand and the blanket strip.",
+      "de": "Fernsehzeichen 1,4 x 1,1 mm: Rahmen mit Bildschirm, die verjüngte Rückwand, der Fuß und der Deckenstreifen."
+     },
+     "retained": {
+      "en": "Height, width and depth, the taper of the back, the screen.",
+      "de": "Höhe, Breite und Tiefe, die Verjüngung hinten, der Bildschirm."
+     },
+     "merged": {
+      "en": "Stand plates into one puck, screen flush with the bezel.",
+      "de": "Fußplatten zu einem Fuß, Bildschirm bündig mit dem Rahmen."
+     },
+     "omitted": {
+      "en": "Every detail under 75 mm.",
+      "de": "Jedes Detail unter 75 mm."
+     },
+     "thinElements": {
+      "en": "The blanket is drawn and modelled as a 22 mm strip and the stand as 34 mm so that with the 0.18 mm body pen they still print 0.2 mm wide at 1:1000.",
+      "de": "Die Decke ist als 22-mm-Streifen und der Fuß mit 34 mm gezeichnet und modelliert, damit sie mit dem 0,18-mm-Körperstrich bei 1:1000 noch 0,2 mm breit drucken."
+     },
+     "hatching": {
+      "en": "None.",
+      "de": "Keine."
+     },
+     "styles": {
+      "en": "As 1:50.",
+      "de": "Wie 1:50."
+     },
+     "overlays": {
+      "en": "All five regions.",
+      "de": "Alle fünf Regionen."
+     }
+    }
+   }
+  },
+  "symbols": [],
+  "poses": [
+   {
+    "id": "stored",
+    "title": {
+     "en": "Stored on a blanket",
+     "de": "Auf einer Decke gelagert"
+    },
+    "description": {
+     "en": "In the reuse depot the television stands on its swivel stand on a folded moving blanket on the floor, unplugged, the mains cable coiled and taped to the back, an E-Check sticker on the side and a price label on the top.",
+     "de": "Im Gebrauchtwarenlager steht der Fernseher auf seinem Drehfuß auf einer gefalteten Möbeldecke am Boden, ohne Strom, das Netzkabel aufgewickelt und hinten angeklebt, ein E-Check-Aufkleber an der Seite und ein Preisschild oben."
+    },
+    "bones": {},
+    "ground": "auto",
+    "contacts": [
+     "blanket-floor"
+    ],
+    "thermal": {
+     "regions": {
+      "screen": {
+       "exposedFraction": 0.38,
+       "sunlitFraction": 0
+      },
+      "bezel": {
+       "exposedFraction": 0.61,
+       "sunlitFraction": 0
+      },
+      "rear-cover": {
+       "exposedFraction": 0.66,
+       "sunlitFraction": 0
+      },
+      "stand": {
+       "exposedFraction": 0.26,
+       "sunlitFraction": 0,
+       "contact": {
+        "fraction": 0.44,
+        "tempC": 20
+       }
+      },
+      "blanket": {
+       "exposedFraction": 0.45,
+       "sunlitFraction": 0,
+       "contact": {
+        "fraction": 0.55,
+        "tempC": 20
+       }
+      }
+     },
+     "emitters": {
+      "vent-plume": 0.0
+     },
+     "operating": {
+      "power": 0.0
+     }
+    },
+    "loads": []
+   },
+   {
+    "id": "carried",
+    "title": {
+     "en": "Carried by two people",
+     "de": "Von zwei Personen getragen"
+    },
+    "description": {
+     "en": "Two people, one at each side, hold it under the bottom edges near the centre of mass and carry it level with hanging arms, bottom at 0.72 m, 1.2 m away from the blanket, which stays behind.",
+     "de": "Zwei Personen, je eine an jeder Seite, halten ihn unter den Bodenkanten nahe dem Schwerpunkt und tragen ihn waagerecht mit hängenden Armen, Unterkante auf 0,72 m, 1,2 m von der Decke weg, die liegen bleibt."
+    },
+    "bones": {
+     "carry-lift": {
+      "dy": 0.674
+     },
+     "carry-travel": {
+      "dx": 1.2
+     }
+    },
+    "ground": "auto",
+    "contacts": [
+     "blanket-floor",
+     "grip-left",
+     "grip-right"
+    ],
+    "thermal": {
+     "regions": {
+      "screen": {
+       "exposedFraction": 0.38,
+       "sunlitFraction": 0
+      },
+      "bezel": {
+       "exposedFraction": 0.61,
+       "sunlitFraction": 0
+      },
+      "rear-cover": {
+       "exposedFraction": 0.65,
+       "sunlitFraction": 0,
+       "contact": {
+        "fraction": 0.01,
+        "tempC": 32
+       }
+      },
+      "stand": {
+       "exposedFraction": 0.7,
+       "sunlitFraction": 0
+      },
+      "blanket": {
+       "exposedFraction": 0.5,
+       "sunlitFraction": 0,
+       "contact": {
+        "fraction": 0.5,
+        "tempC": 20
+       }
+      }
+     },
+     "emitters": {
+      "vent-plume": 0.0
+     },
+     "operating": {
+      "power": 0.0
+     }
+    },
+    "loads": []
+   },
+   {
+    "id": "in-use",
+    "title": {
+     "en": "Running in a living room",
+     "de": "In Betrieb im Wohnzimmer"
+    },
+    "description": {
+     "en": "Set down on its swivel stand on the floor of a living room, plugged in and showing a picture: 100 W, the rear cover runs warm and a plume of warm air rises from its dusty vent slots; a pot plant on a doily stands on the top.",
+     "de": "Auf seinem Drehfuß auf den Boden eines Wohnzimmers gestellt, eingesteckt und mit Bild: 100 W, die Rückwand wird warm und aus ihren verstaubten Lüftungsschlitzen steigt eine Warmluftfahne; oben steht eine Topfpflanze auf einem Deckchen."
+    },
+    "bones": {
+     "carry-lift": {
+      "dy": -0.012
+     },
+     "carry-travel": {
+      "dx": 1.2
+     }
+    },
+    "ground": "auto",
+    "contacts": [
+     "blanket-floor",
+     "stand-foot"
+    ],
+    "thermal": {
+     "regions": {
+      "screen": {
+       "exposedFraction": 0.38,
+       "sunlitFraction": 0
+      },
+      "bezel": {
+       "exposedFraction": 0.61,
+       "sunlitFraction": 0
+      },
+      "rear-cover": {
+       "exposedFraction": 0.66,
+       "sunlitFraction": 0
+      },
+      "stand": {
+       "exposedFraction": 0.26,
+       "sunlitFraction": 0,
+       "contact": {
+        "fraction": 0.44,
+        "tempC": 20
+       }
+      },
+      "blanket": {
+       "exposedFraction": 0.5,
+       "sunlitFraction": 0,
+       "contact": {
+        "fraction": 0.5,
+        "tempC": 20
+       }
+      }
+     },
+     "emitters": {
+      "vent-plume": 1.0
+     },
+     "operating": {
+      "power": 1.0
+     }
+    },
+    "loads": [
+     {
+      "id": "plant-on-doily",
+      "kind": "live",
+      "title": {
+       "en": "Pot plant on a crocheted doily on the top (2.5 kg)",
+       "de": "Topfpflanze auf einem Häkeldeckchen auf der Oberseite (2,5 kg)"
+      },
+      "distributed": {
+       "bone": "cabinet",
+       "fromM": -0.085,
+       "toM": 0.095,
+       "wxNPerM": 0,
+       "wyNPerM": -136.203472
+      },
+      "fxN": 0,
+      "fyN": 0,
+      "source": "authored-estimate",
+      "reference": "reuse-depot-practice"
+     }
+    ]
+   },
+   {
+    "id": "standby",
+    "title": {
+     "en": "In standby",
+     "de": "Im Bereitschaftsbetrieb"
+    },
+    "description": {
+     "en": "Switched off with the remote control, the red standby lamp lit: 5 W, a few tenths of a kelvin above the room.",
+     "de": "Mit der Fernbedienung ausgeschaltet, die rote Bereitschaftslampe leuchtet: 5 W, wenige Zehntel Kelvin über dem Raum."
+    },
+    "bones": {
+     "carry-lift": {
+      "dy": -0.012
+     },
+     "carry-travel": {
+      "dx": 1.2
+     }
+    },
+    "ground": "auto",
+    "contacts": [
+     "blanket-floor",
+     "stand-foot"
+    ],
+    "thermal": {
+     "regions": {
+      "screen": {
+       "exposedFraction": 0.38,
+       "sunlitFraction": 0
+      },
+      "bezel": {
+       "exposedFraction": 0.61,
+       "sunlitFraction": 0
+      },
+      "rear-cover": {
+       "exposedFraction": 0.66,
+       "sunlitFraction": 0
+      },
+      "stand": {
+       "exposedFraction": 0.26,
+       "sunlitFraction": 0,
+       "contact": {
+        "fraction": 0.44,
+        "tempC": 20
+       }
+      },
+      "blanket": {
+       "exposedFraction": 0.5,
+       "sunlitFraction": 0,
+       "contact": {
+        "fraction": 0.5,
+        "tempC": 20
+       }
+      }
+     },
+     "emitters": {
+      "vent-plume": 0.05
+     },
+     "operating": {
+      "power": 0.05
+     }
+    },
+    "loads": [
+     {
+      "id": "plant-on-doily",
+      "kind": "live",
+      "title": {
+       "en": "Pot plant on a crocheted doily on the top (2.5 kg)",
+       "de": "Topfpflanze auf einem Häkeldeckchen auf der Oberseite (2,5 kg)"
+      },
+      "distributed": {
+       "bone": "cabinet",
+       "fromM": -0.085,
+       "toM": 0.095,
+       "wxNPerM": 0,
+       "wyNPerM": -136.203472
+      },
+      "fxN": 0,
+      "fyN": 0,
+      "source": "authored-estimate",
+      "reference": "reuse-depot-practice"
+     }
+    ]
+   },
+   {
+    "id": "lifted-key",
+    "title": {
+     "en": "Lifted off the blanket (key)",
+     "de": "Von der Decke abgehoben (Schlüssel)"
+    },
+    "description": {
+     "en": "Lifted 0.10 m off the blanket by the two carriers.",
+     "de": "Von den beiden Trägern 0,10 m von der Decke abgehoben."
+    },
+    "key": true,
+    "bones": {
+     "carry-lift": {
+      "dy": 0.1
+     }
+    },
+    "ground": "auto",
+    "contacts": [
+     "blanket-floor",
+     "grip-left",
+     "grip-right"
+    ],
+    "thermal": {
+     "regions": {
+      "screen": {
+       "exposedFraction": 0.38,
+       "sunlitFraction": 0
+      },
+      "bezel": {
+       "exposedFraction": 0.61,
+       "sunlitFraction": 0
+      },
+      "rear-cover": {
+       "exposedFraction": 0.65,
+       "sunlitFraction": 0,
+       "contact": {
+        "fraction": 0.01,
+        "tempC": 32
+       }
+      },
+      "stand": {
+       "exposedFraction": 0.7,
+       "sunlitFraction": 0
+      },
+      "blanket": {
+       "exposedFraction": 0.5,
+       "sunlitFraction": 0,
+       "contact": {
+        "fraction": 0.5,
+        "tempC": 20
+       }
+      }
+     },
+     "emitters": {
+      "vent-plume": 0.0
+     },
+     "operating": {
+      "power": 0.0
+     }
+    },
+    "loads": []
+   },
+   {
+    "id": "raised-key",
+    "title": {
+     "en": "Raised to carrying height (key)",
+     "de": "Auf Traghöhe angehoben (Schlüssel)"
+    },
+    "description": {
+     "en": "Raised to carrying height above the blanket before walking off.",
+     "de": "Über der Decke auf Traghöhe angehoben, bevor die Träger losgehen."
+    },
+    "key": true,
+    "bones": {
+     "carry-lift": {
+      "dy": 0.674
+     }
+    },
+    "ground": "auto",
+    "contacts": [
+     "blanket-floor",
+     "grip-left",
+     "grip-right"
+    ],
+    "thermal": {
+     "regions": {
+      "screen": {
+       "exposedFraction": 0.38,
+       "sunlitFraction": 0
+      },
+      "bezel": {
+       "exposedFraction": 0.61,
+       "sunlitFraction": 0
+      },
+      "rear-cover": {
+       "exposedFraction": 0.65,
+       "sunlitFraction": 0,
+       "contact": {
+        "fraction": 0.01,
+        "tempC": 32
+       }
+      },
+      "stand": {
+       "exposedFraction": 0.7,
+       "sunlitFraction": 0
+      },
+      "blanket": {
+       "exposedFraction": 0.5,
+       "sunlitFraction": 0,
+       "contact": {
+        "fraction": 0.5,
+        "tempC": 20
+       }
+      }
+     },
+     "emitters": {
+      "vent-plume": 0.0
+     },
+     "operating": {
+      "power": 0.0
+     }
+    },
+    "loads": []
+   },
+   {
+    "id": "set-down-key",
+    "title": {
+     "en": "Set down, not yet plugged in (key)",
+     "de": "Abgestellt, noch nicht eingesteckt (Schlüssel)"
+    },
+    "description": {
+     "en": "Standing on the floor of the living room, still unplugged.",
+     "de": "Steht auf dem Boden des Wohnzimmers, noch ohne Strom."
+    },
+    "key": true,
+    "bones": {
+     "carry-lift": {
+      "dy": -0.012
+     },
+     "carry-travel": {
+      "dx": 1.2
+     }
+    },
+    "ground": "auto",
+    "contacts": [
+     "blanket-floor",
+     "stand-foot"
+    ],
+    "thermal": {
+     "regions": {
+      "screen": {
+       "exposedFraction": 0.38,
+       "sunlitFraction": 0
+      },
+      "bezel": {
+       "exposedFraction": 0.61,
+       "sunlitFraction": 0
+      },
+      "rear-cover": {
+       "exposedFraction": 0.66,
+       "sunlitFraction": 0
+      },
+      "stand": {
+       "exposedFraction": 0.26,
+       "sunlitFraction": 0,
+       "contact": {
+        "fraction": 0.44,
+        "tempC": 20
+       }
+      },
+      "blanket": {
+       "exposedFraction": 0.5,
+       "sunlitFraction": 0,
+       "contact": {
+        "fraction": 0.5,
+        "tempC": 20
+       }
+      }
+     },
+     "emitters": {
+      "vent-plume": 0.0
+     },
+     "operating": {
+      "power": 0.0
+     }
+    },
+    "loads": []
+   }
+  ],
+  "clips": [
+   {
+    "id": "carry",
+    "title": {
+     "en": "Carry out of the depot",
+     "de": "Aus dem Lager tragen"
+    },
+    "description": {
+     "en": "Two people lift the television off the blanket, raise it to carrying height with hanging arms and walk it 1.2 m away.",
+     "de": "Zwei Personen heben den Fernseher von der Decke, bringen ihn mit hängenden Armen auf Traghöhe und tragen ihn 1,2 m weg."
+    },
+    "durationS": 6,
+    "fps": 30,
+    "loop": false,
+    "rootMotion": "none",
+    "keys": [
+     {
+      "t": 0,
+      "pose": "stored",
+      "ease": "smooth"
+     },
+     {
+      "t": 1.0,
+      "pose": "lifted-key",
+      "ease": "smooth"
+     },
+     {
+      "t": 2.4,
+      "pose": "raised-key",
+      "ease": "smooth"
+     },
+     {
+      "t": 5.4,
+      "pose": "carried",
+      "ease": "smooth"
+     },
+     {
+      "t": 6,
+      "pose": "carried",
+      "ease": "smooth"
+     }
+    ],
+    "contacts": [
+     {
+      "anchor": "blanket-floor",
+      "fromS": 0,
+      "toS": 6
+     },
+     {
+      "anchor": "grip-left",
+      "fromS": 0,
+      "toS": 6
+     },
+     {
+      "anchor": "grip-right",
+      "fromS": 0,
+      "toS": 6
+     }
+    ],
+    "phases": [
+     {
+      "id": "lift",
+      "fromS": 0,
+      "toS": 2.4,
+      "title": {
+       "en": "Lift",
+       "de": "Heben"
+      }
+     },
+     {
+      "id": "walk",
+      "fromS": 2.4,
+      "toS": 5.4,
+      "title": {
+       "en": "Walk",
+       "de": "Gehen"
+      }
+     },
+     {
+      "id": "hold",
+      "fromS": 5.4,
+      "toS": 6,
+      "title": {
+       "en": "Hold",
+       "de": "Halten"
+      }
+     }
+    ],
+    "events": [
+     {
+      "t": 0.2,
+      "kind": "motion",
+      "title": {
+       "en": "Stand leaves the blanket",
+       "de": "Fuß löst sich von der Decke"
+      }
+     },
+     {
+      "t": 2.4,
+      "kind": "motion",
+      "title": {
+       "en": "Carriers walk off",
+       "de": "Träger gehen los"
+      }
+     }
+    ],
+    "tracks": [
+     {
+      "target": "region:stand:exposedFraction",
+      "ease": "smooth",
+      "keys": [
+       {
+        "t": 0,
+        "v": 0.26
+       },
+       {
+        "t": 1.0,
+        "v": 0.7
+       }
+      ]
+     },
+     {
+      "target": "region:blanket:exposedFraction",
+      "ease": "smooth",
+      "keys": [
+       {
+        "t": 0,
+        "v": 0.45
+       },
+       {
+        "t": 1.0,
+        "v": 0.5
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "set-down",
+    "title": {
+     "en": "Set down in the living room",
+     "de": "Im Wohnzimmer abstellen"
+    },
+    "description": {
+     "en": "The carriers lower the television from carrying height until the stand rests on the floor and let go.",
+     "de": "Die Träger senken den Fernseher von der Traghöhe ab, bis der Fuß auf dem Boden steht, und lassen los."
+    },
+    "durationS": 3,
+    "fps": 30,
+    "loop": false,
+    "rootMotion": "none",
+    "keys": [
+     {
+      "t": 0,
+      "pose": "carried",
+      "ease": "smooth"
+     },
+     {
+      "t": 2.6,
+      "pose": "set-down-key",
+      "ease": "smooth"
+     },
+     {
+      "t": 3,
+      "pose": "set-down-key",
+      "ease": "smooth"
+     }
+    ],
+    "contacts": [
+     {
+      "anchor": "blanket-floor",
+      "fromS": 0,
+      "toS": 3
+     },
+     {
+      "anchor": "grip-left",
+      "fromS": 0,
+      "toS": 2.8
+     },
+     {
+      "anchor": "grip-right",
+      "fromS": 0,
+      "toS": 2.8
+     },
+     {
+      "anchor": "stand-foot",
+      "fromS": 2.5,
+      "toS": 3
+     }
+    ],
+    "phases": [
+     {
+      "id": "lower",
+      "fromS": 0,
+      "toS": 2.6,
+      "title": {
+       "en": "Lower",
+       "de": "Absenken"
+      }
+     },
+     {
+      "id": "release",
+      "fromS": 2.6,
+      "toS": 3,
+      "title": {
+       "en": "Let go",
+       "de": "Loslassen"
+      }
+     }
+    ],
+    "events": [
+     {
+      "t": 2.6,
+      "kind": "contact-on",
+      "title": {
+       "en": "Stand on the floor",
+       "de": "Fuß auf dem Boden"
+      },
+      "target": "stand-foot"
+     },
+     {
+      "t": 2.8,
+      "kind": "contact-off",
+      "title": {
+       "en": "Hands let go",
+       "de": "Hände lassen los"
+      },
+      "target": "grip-left"
+     }
+    ],
+    "tracks": []
+   },
+   {
+    "id": "switch-on-warm-up",
+    "title": {
+     "en": "Switch on and warm up",
+     "de": "Einschalten und aufwärmen"
+    },
+    "description": {
+     "en": "Woken from standby by the remote control after five seconds, the picture tube lights up and the cabinet warms up over fifteen minutes; the warm plume over the rear vents builds up.",
+     "de": "Nach fünf Sekunden mit der Fernbedienung aus der Bereitschaft geweckt, leuchtet die Bildröhre auf und das Gehäuse erwärmt sich über fünfzehn Minuten; über den hinteren Lüftungsschlitzen baut sich die Warmluftfahne auf."
+    },
+    "durationS": 900,
+    "fps": 1,
+    "loop": false,
+    "rootMotion": "none",
+    "keys": [
+     {
+      "t": 0,
+      "pose": "standby",
+      "ease": "step"
+     },
+     {
+      "t": 5,
+      "pose": "in-use",
+      "ease": "step"
+     },
+     {
+      "t": 900,
+      "pose": "in-use",
+      "ease": "step"
+     }
+    ],
+    "contacts": [
+     {
+      "anchor": "blanket-floor",
+      "fromS": 0,
+      "toS": 900
+     },
+     {
+      "anchor": "stand-foot",
+      "fromS": 0,
+      "toS": 900
+     }
+    ],
+    "phases": [
+     {
+      "id": "standby",
+      "fromS": 0,
+      "toS": 5,
+      "title": {
+       "en": "Standby",
+       "de": "Bereitschaft"
+      }
+     },
+     {
+      "id": "warm-up",
+      "fromS": 5,
+      "toS": 900,
+      "title": {
+       "en": "On, warming up",
+       "de": "An, wärmt auf"
+      }
+     }
+    ],
+    "events": [
+     {
+      "t": 5,
+      "kind": "operating",
+      "title": {
+       "en": "Switched on",
+       "de": "Eingeschaltet"
+      },
+      "target": "power"
+     }
+    ],
+    "tracks": [
+     {
+      "target": "operating:power",
+      "ease": "step",
+      "keys": [
+       {
+        "t": 0,
+        "v": 0.05
+       },
+       {
+        "t": 5,
+        "v": 1
+       }
+      ]
+     },
+     {
+      "target": "emitter:vent-plume",
+      "ease": "step",
+      "keys": [
+       {
+        "t": 0,
+        "v": 0.05
+       },
+       {
+        "t": 5,
+        "v": 1
+       }
+      ]
+     }
+    ]
+   }
+  ],
+  "thermal": {
+   "environment": {
+    "airTempC": 20,
+    "meanRadiantTempC": 20,
+    "relativeHumidity": 0.45,
+    "windMS": 0.05,
+    "windDirectionDeg": 0,
+    "solarWM2": 0,
+    "diffuseFraction": 0,
+    "pressurePa": 101325
+   },
+   "operating": [
+    {
+     "id": "power",
+     "title": {
+      "en": "Electrical power",
+      "de": "Elektrische Leistung"
+     },
+     "levels": [
+      {
+       "v": 0,
+       "title": {
+        "en": "Off, unplugged",
+        "de": "Aus, Stecker gezogen"
+       }
+      },
+      {
+       "v": 0.05,
+       "title": {
+        "en": "Standby (5 W)",
+        "de": "Bereitschaft (5 W)"
+       }
+      },
+      {
+       "v": 1,
+       "title": {
+        "en": "On, picture (100 W)",
+        "de": "An, Bild (100 W)"
+       }
+      }
+     ]
+    }
+   ],
+   "regions": [
+    {
+     "id": "screen",
+     "title": {
+      "en": "Faceplate of the picture tube, dusty",
+      "de": "Bildschirm der Bildröhre, verstaubt"
+     },
+     "kind": "surface",
+     "model": "operating",
+     "material": "crt-panel-glass",
+     "areaM2": 0.625,
+     "characteristicLengthM": 0.39,
+     "geometry": "vertical-plate",
+     "skyViewFactor": 0.5,
+     "layers": [
+      {
+       "id": "panel-glass",
+       "title": {
+        "en": "Panel glass 13.5 mm",
+        "de": "Schirmglas 13,5 mm"
+       },
+       "kind": "glass",
+       "material": "crt-panel-glass",
+       "thicknessM": 0.0135,
+       "resistanceM2KW": 0.0135,
+       "heatCapacityJM2K": 30618.0,
+       "source": "literature",
+       "reference": "andreola-2005"
+      }
+     ],
+     "heatCapacityJM2K": 30618.0,
+     "source": "authored-estimate",
+     "reference": "crt-tv-catalogue",
+     "operating": {
+      "key": "power",
+      "heatW": 15.0
+     }
+    },
+    {
+     "id": "bezel",
+     "title": {
+      "en": "Front bezel, scratched, with speaker grilles and a missing control flap",
+      "de": "Frontrahmen, verkratzt, mit Lautsprechergittern und fehlender Bedienklappe"
+     },
+     "kind": "surface",
+     "model": "operating",
+     "material": "hips-anthracite",
+     "areaM2": 0.797,
+     "characteristicLengthM": 0.53,
+     "geometry": "vertical-plate",
+     "skyViewFactor": 0.5,
+     "layers": [
+      {
+       "id": "bezel-shell",
+       "title": {
+        "en": "HIPS shell 3 mm",
+        "de": "HIPS-Schale 3 mm"
+       },
+       "kind": "polymer",
+       "material": "hips-anthracite",
+       "thicknessM": 0.003,
+       "resistanceM2KW": 0.017647,
+       "heatCapacityJM2K": 4095.0,
+       "source": "literature",
+       "reference": "plastics-handbook"
+      }
+     ],
+     "heatCapacityJM2K": 4095.0,
+     "source": "authored-estimate",
+     "reference": "crt-tv-catalogue",
+     "operating": {
+      "key": "power",
+      "heatW": 8.0
+     }
+    },
+    {
+     "id": "rear-cover",
+     "title": {
+      "en": "Rear cover with dusty vent slots, bottom tray and taped cable coil",
+      "de": "Rückwand mit verstaubten Lüftungsschlitzen, Bodenwanne und angeklebtem Kabelring"
+     },
+     "kind": "surface",
+     "model": "operating",
+     "material": "hips-anthracite",
+     "areaM2": 1.314,
+     "characteristicLengthM": 0.4,
+     "geometry": "vertical-plate",
+     "skyViewFactor": 0.5,
+     "layers": [
+      {
+       "id": "rear-shell",
+       "title": {
+        "en": "HIPS shell 2.5 mm",
+        "de": "HIPS-Schale 2,5 mm"
+       },
+       "kind": "polymer",
+       "material": "hips-anthracite",
+       "thicknessM": 0.0025,
+       "resistanceM2KW": 0.014706,
+       "heatCapacityJM2K": 3412.5,
+       "source": "literature",
+       "reference": "plastics-handbook"
+      }
+     ],
+     "heatCapacityJM2K": 3412.5,
+     "source": "authored-estimate",
+     "reference": "crt-tv-catalogue",
+     "operating": {
+      "key": "power",
+      "heatW": 77.0
+     },
+     "ratedPowerW": 110,
+     "ratedPowerBasis": "electrical-input"
+    },
+    {
+     "id": "stand",
+     "title": {
+      "en": "Swivel stand, base plate and turntable",
+      "de": "Drehfuß, Fußplatte und Drehteller"
+     },
+     "kind": "surface",
+     "model": "passive",
+     "material": "abs-stand",
+     "areaM2": 0.207,
+     "characteristicLengthM": 0.3,
+     "geometry": "horizontal-plate-up",
+     "skyViewFactor": 0.5,
+     "layers": [
+      {
+       "id": "stand-shell",
+       "title": {
+        "en": "Ribbed ABS 3 mm",
+        "de": "Verripptes ABS 3 mm"
+       },
+       "kind": "polymer",
+       "material": "abs-stand",
+       "thicknessM": 0.003,
+       "resistanceM2KW": 0.017647,
+       "heatCapacityJM2K": 4410.0,
+       "source": "literature",
+       "reference": "plastics-handbook"
+      }
+     ],
+     "heatCapacityJM2K": 4410.0,
+     "source": "authored-estimate",
+     "reference": "crt-tv-catalogue",
+     "ratedPowerW": 0,
+     "ratedPowerBasis": "passive"
+    },
+    {
+     "id": "blanket",
+     "title": {
+      "en": "Folded moving blanket",
+      "de": "Gefaltete Möbeldecke"
+     },
+     "kind": "surface",
+     "model": "passive",
+     "material": "felt-blanket",
+     "areaM2": 1.348,
+     "characteristicLengthM": 0.73,
+     "geometry": "horizontal-plate-up",
+     "skyViewFactor": 0.5,
+     "layers": [
+      {
+       "id": "felt",
+       "title": {
+        "en": "Four layers of felt, 12 mm",
+        "de": "Vier Lagen Filz, 12 mm"
+       },
+       "kind": "polymer",
+       "material": "felt-blanket",
+       "thicknessM": 0.012,
+       "resistanceM2KW": 0.266667,
+       "heatCapacityJM2K": 2090.4,
+       "source": "authored-estimate",
+       "reference": "iso-10456-2007"
+      }
+     ],
+     "heatCapacityJM2K": 2090.4,
+     "source": "authored-estimate",
+     "reference": "crt-tv-catalogue"
+    }
+   ],
+   "emitters": [
+    {
+     "id": "vent-plume",
+     "kind": "plume",
+     "title": {
+      "en": "Warm air rising from the vent slots of the rear cover",
+      "de": "Warme Luft aus den Lüftungsschlitzen der Rückwand"
+     },
+     "anchor": "vent-top",
+     "directionDeg": 90,
+     "diameterM": 0.24,
+     "region": "rear-cover",
+     "operatingKey": "power",
+     "source": "authored-estimate",
+     "reference": "incropera-2018"
+    }
+   ],
+   "passengers": [],
+   "assumptions": [
+    {
+     "en": "Every watt ends as heat in the room: at level 1 (100 W on-mode, IEC 62087 type value of a 70 cm 100 Hz set) the rear cover with deflection, line output stage and power supply behind it releases 77 W, the bezel 8 W and the faceplate 15 W; the nameplate states 110 W electrical input on the rear cover, the element that carries the rating plate. Standby is 5 W, typical of the 1990s.",
+     "de": "Jedes Watt endet als Wärme im Raum: bei Stufe 1 (100 W im Betrieb, IEC-62087-Typwert eines 70-cm-100-Hz-Geräts) gibt die Rückwand mit Ablenkung, Zeilenendstufe und Netzteil dahinter 77 W ab, der Frontrahmen 8 W und der Bildschirm 15 W; das Typenschild nennt 110 W elektrische Aufnahme an der Rückwand, die das Schild trägt. Bereitschaft 5 W, typisch für die 1990er-Jahre."
+    },
+    {
+     "en": "Aged surfaces: the anthracite HIPS has faded and chalked on the window side, its solar absorptance is taken as 0.82 instead of about 0.88 when new; dust on the faceplate and in the vent slots keeps the emissivity of glass and plastics (0.92) but narrows the free vent area, which the model leaves to the plume diameter (Incropera, plastics handbook, authored-estimate).",
+     "de": "Gealterte Oberflächen: das anthrazitfarbene HIPS ist auf der Fensterseite verblasst und kreidet, sein solarer Absorptionsgrad wird mit 0,82 statt etwa 0,88 im Neuzustand angesetzt; Staub auf dem Bildschirm und in den Lüftungsschlitzen ändert den Emissionsgrad von Glas und Kunststoff (0,92) nicht, verengt aber die freie Lüftungsfläche, was das Modell dem Fahnendurchmesser überlässt (Incropera, Kunststoffhandbuch, Schätzwert)."
+    },
+    {
+     "en": "Reference case: indoors at 20 degC with still air and no sun, in the depot unplugged, in the living room running. Contacts: the stand on the blanket and the blanket on the floor at room temperature; the carriers' hands (32 degC) touch 1 % of the rear cover.",
+     "de": "Referenzfall: innen bei 20 degC, ruhige Luft, keine Sonne, im Lager ohne Strom, im Wohnzimmer in Betrieb. Kontakte: der Fuß auf der Decke und die Decke auf dem Boden bei Raumtemperatur; die Hände der Träger (32 degC) berühren 1 % der Rückwand."
+    },
+    {
+     "en": "The cable coil and the bottom tray belong to the rear-cover region: they share its temperature; the stand states the passive rating 0 W.",
+     "de": "Kabelring und Bodenwanne gehören zur Region der Rückwand und teilen ihre Temperatur; der Fuß nennt die passive Nennleistung 0 W."
+    }
+   ]
+  },
+  "structure": {
+   "gravityMS2": 9.80665,
+   "dynamics": "quasi-static",
+   "supports": [
+    "blanket-floor"
+   ],
+   "clinical": false,
+   "assumptions": [
+    {
+     "en": "Stored: one rigid stack. The television (34.0 kg, centre of mass 15 mm ahead of the swivel axis at 0.30 m) stands with its ribbed base plate on the folded blanket, the blanket on the depot floor (friction 0.5).",
+     "de": "Gelagert: ein starrer Stapel. Der Fernseher (34.0 kg, Schwerpunkt 15 mm vor der Drehachse auf 0.30 m) steht mit seiner verrippten Fußplatte auf der gefalteten Decke, die Decke auf dem Lagerboden (Reibung 0,5)."
+    },
+    {
+     "en": "Carried: two people, one at each side, hold the cabinet under the bottom edges at the swivel axis with hanging arms (grip height 0.72 m, about 17 kg per person, above the 25 kg that one person may carry and therefore a two-person load per DGUV 208-033); the hands are compression contacts pushing up.",
+     "de": "Getragen: zwei Personen, je eine an jeder Seite, halten das Gehäuse unter den Bodenkanten an der Drehachse mit hängenden Armen (Griffhöhe 0,72 m, etwa 17 kg je Person, über den 25 kg, die eine Person tragen darf, deshalb eine Last für zwei nach DGUV 208-033); die Hände sind nach oben drückende Kontakte."
+    },
+    {
+     "en": "In use: the stand rests on the floor; a pot plant on a doily on the top, 2.5 kg (authored-estimate). Load path: tube faceplate skirt with its implosion band screwed at four ears to the bezel, the bezel and the ribbed bottom tray into the turntable, the steel pivot and the base plate; the rear cover carries only itself.",
+     "de": "In Gebrauch: der Fuß steht auf dem Boden; eine Topfpflanze auf einem Deckchen oben, 2,5 kg (Schätzwert). Lastweg: Schirmmantel der Röhre mit Spannband an vier Laschen mit dem Frontrahmen verschraubt, Frontrahmen und verrippte Bodenwanne in den Drehteller, den Stahlzapfen und die Fußplatte; die Rückwand trägt nur sich selbst."
+    },
+    {
+     "en": "Limitation of the solver: the whole asset is one instantaneously rigid body on springs of equal stiffness, so while carried or in use the blanket left behind and the television share their reactions linearly over all active supports instead of each carrying its own weight; the stored pose, a resting stack, is exact.",
+     "de": "Grenze des Lösers: das ganze Objekt ist ein momentan starrer Körper auf gleich steifen Federn, getragen oder in Gebrauch teilen sich die zurückgelassene Decke und der Fernseher ihre Reaktionen deshalb linear über alle aktiven Auflager, statt dass jedes sein eigenes Gewicht trägt; die Lagerpose, ein ruhender Stapel, ist exakt."
+    },
+    {
+     "en": "Masses from sections x density: panel glass 2700 kg/m3 (faceplate 13.5 mm, skirt 11 mm), funnel lead glass 3000 kg/m3 at 6 mm, steel band, yoke 0.9 kg and degaussing coil 0.35 kg, HIPS 1050 kg/m3 shells of 3 and 2.5 mm, chassis 3.2 kg and speakers 0.9 kg as catalogue-typical masses; the tube is about two thirds of the set (Herat 2008, Andreola 2005).",
+     "de": "Massen aus Querschnitt x Dichte: Schirmglas 2700 kg/m3 (Schirm 13,5 mm, Mantel 11 mm), Bleiglas des Konus 3000 kg/m3 bei 6 mm, Stahlband, Ablenkeinheit 0,9 kg und Entmagnetisierungsspule 0,35 kg, HIPS-Schalen 1050 kg/m3 mit 3 und 2,5 mm, Chassis 3,2 kg und Lautsprecher 0,9 kg als katalogtypische Massen; die Röhre ist etwa zwei Drittel des Geräts (Herat 2008, Andreola 2005)."
+    }
+   ]
+  },
+  "volumes": {
+   "50": {
+    "status": "authored",
+    "denominator": 50,
+    "body": [
+     {
+      "id": "blanket",
+      "kind": "extrude",
+      "bone": "blanket",
+      "material": "felt-blanket",
+      "role": "body",
+      "tone": 0.3,
+      "plane": "xy",
+      "profile": [
+       [
+        -0.45,
+        0.0
+       ],
+       [
+        0.274,
+        0.0
+       ],
+       [
+        0.277,
+        0.000803848
+       ],
+       [
+        0.279196,
+        0.003
+       ],
+       [
+        0.28,
+        0.006
+       ],
+       [
+        0.279196,
+        0.009
+       ],
+       [
+        0.277,
+        0.011196
+       ],
+       [
+        0.274,
+        0.012
+       ],
+       [
+        -0.45,
+        0.012
+       ]
+      ],
+      "from": -0.45,
+      "to": 0.45
+     },
+     {
+      "id": "base",
+      "kind": "revolve",
+      "bone": "base",
+      "material": "abs-stand",
+      "role": "body",
+      "tone": 0.4,
+      "profile": [
+       [
+        0.0,
+        0.0
+       ],
+       [
+        0.0,
+        0.17
+       ],
+       [
+        0.012,
+        0.17
+       ],
+       [
+        0.016,
+        0.166
+       ],
+       [
+        0.016,
+        0.0
+       ]
+      ],
+      "axis": [
+       0,
+       1,
+       0
+      ],
+      "origin": [
+       0,
+       0,
+       0
+      ]
+     },
+     {
+      "id": "turntable",
+      "kind": "revolve",
+      "bone": "cabinet",
+      "material": "abs-stand",
+      "role": "body",
+      "tone": 0.45,
+      "profile": [
+       [
+        -0.018,
+        0.0
+       ],
+       [
+        -0.018,
+        0.15
+       ],
+       [
+        -0.004,
+        0.15
+       ],
+       [
+        0.0,
+        0.146
+       ],
+       [
+        0.0,
+        0.0
+       ]
+      ],
+      "axis": [
+       0,
+       1,
+       0
+      ],
+      "origin": [
+       0,
+       0,
+       0
+      ]
+     },
+     {
+      "id": "rear",
+      "kind": "loft",
+      "bone": "cabinet",
+      "material": "hips-anthracite",
+      "role": "body",
+      "tone": 0.28,
+      "sections": [
+       {
+        "at": [
+         -0.34,
+         0.17,
+         0.0
+        ],
+        "rx": 0.17,
+        "ry": 0.2,
+        "exponent": 8,
+        "rotation": [
+         0.5,
+         0.5,
+         0.5,
+         0.5
+        ]
+       },
+       {
+        "at": [
+         0.035,
+         0.26,
+         0.0
+        ],
+        "rx": 0.26,
+        "ry": 0.34,
+        "exponent": 8,
+        "rotation": [
+         0.5,
+         0.5,
+         0.5,
+         0.5
+        ]
+       }
+      ],
+      "capStart": true,
+      "capEnd": true
+     },
+     {
+      "id": "tray",
+      "kind": "extrude",
+      "bone": "cabinet",
+      "material": "hips-anthracite",
+      "role": "body",
+      "tone": 0.22,
+      "plane": "zx",
+      "profile": [
+       [
+        -0.188667,
+        -0.29
+       ],
+       [
+        -0.3,
+        0.035
+       ],
+       [
+        0.3,
+        0.035
+       ],
+       [
+        0.188667,
+        -0.29
+       ]
+      ],
+      "from": 0.0,
+      "to": 0.012
+     },
+     {
+      "id": "bezel",
+      "kind": "extrude",
+      "bone": "cabinet",
+      "material": "hips-anthracite",
+      "role": "body",
+      "tone": 0.2,
+      "plane": "yz",
+      "profile": [
+       [
+        0.53,
+        0.33
+       ],
+       [
+        0.528478,
+        0.337654
+       ],
+       [
+        0.524142,
+        0.344142
+       ],
+       [
+        0.517654,
+        0.348478
+       ],
+       [
+        0.51,
+        0.35
+       ],
+       [
+        0.02,
+        0.35
+       ],
+       [
+        0.012346,
+        0.348478
+       ],
+       [
+        0.00585786,
+        0.344142
+       ],
+       [
+        0.00152241,
+        0.337654
+       ],
+       [
+        0.0,
+        0.33
+       ],
+       [
+        0.0,
+        -0.33
+       ],
+       [
+        0.00152241,
+        -0.337654
+       ],
+       [
+        0.00585786,
+        -0.344142
+       ],
+       [
+        0.012346,
+        -0.348478
+       ],
+       [
+        0.02,
+        -0.35
+       ],
+       [
+        0.51,
+        -0.35
+       ],
+       [
+        0.517654,
+        -0.348478
+       ],
+       [
+        0.524142,
+        -0.344142
+       ],
+       [
+        0.528478,
+        -0.337654
+       ],
+       [
+        0.53,
+        -0.33
+       ]
+      ],
+      "from": 0.035,
+      "to": 0.15,
+      "holes": [
+       [
+        [
+         0.5,
+         0.25
+        ],
+        [
+         0.497716,
+         0.261481
+        ],
+        [
+         0.491213,
+         0.271213
+        ],
+        [
+         0.481481,
+         0.277716
+        ],
+        [
+         0.47,
+         0.28
+        ],
+        [
+         0.14,
+         0.28
+        ],
+        [
+         0.128519,
+         0.277716
+        ],
+        [
+         0.118787,
+         0.271213
+        ],
+        [
+         0.112284,
+         0.261481
+        ],
+        [
+         0.11,
+         0.25
+        ],
+        [
+         0.11,
+         -0.25
+        ],
+        [
+         0.112284,
+         -0.261481
+        ],
+        [
+         0.118787,
+         -0.271213
+        ],
+        [
+         0.128519,
+         -0.277716
+        ],
+        [
+         0.14,
+         -0.28
+        ],
+        [
+         0.47,
+         -0.28
+        ],
+        [
+         0.481481,
+         -0.277716
+        ],
+        [
+         0.491213,
+         -0.271213
+        ],
+        [
+         0.497716,
+         -0.261481
+        ],
+        [
+         0.5,
+         -0.25
+        ]
+       ]
+      ]
+     },
+     {
+      "id": "screen",
+      "kind": "extrude",
+      "bone": "tube",
+      "material": "crt-panel-glass",
+      "role": "glazing",
+      "tone": 0.12,
+      "plane": "yz",
+      "profile": [
+       [
+        0.5,
+        0.25
+       ],
+       [
+        0.497716,
+        0.261481
+       ],
+       [
+        0.491213,
+        0.271213
+       ],
+       [
+        0.481481,
+        0.277716
+       ],
+       [
+        0.47,
+        0.28
+       ],
+       [
+        0.14,
+        0.28
+       ],
+       [
+        0.128519,
+        0.277716
+       ],
+       [
+        0.118787,
+        0.271213
+       ],
+       [
+        0.112284,
+        0.261481
+       ],
+       [
+        0.11,
+        0.25
+       ],
+       [
+        0.11,
+        -0.25
+       ],
+       [
+        0.112284,
+        -0.261481
+       ],
+       [
+        0.118787,
+        -0.271213
+       ],
+       [
+        0.128519,
+        -0.277716
+       ],
+       [
+        0.14,
+        -0.28
+       ],
+       [
+        0.47,
+        -0.28
+       ],
+       [
+        0.481481,
+        -0.277716
+       ],
+       [
+        0.491213,
+        -0.271213
+       ],
+       [
+        0.497716,
+        -0.261481
+       ],
+       [
+        0.5,
+        -0.25
+       ]
+      ],
+      "from": 0.035,
+      "to": 0.138
+     },
+     {
+      "id": "coil",
+      "kind": "revolve",
+      "bone": "cabinet",
+      "material": "pvc-cable",
+      "role": "body",
+      "tone": 0.15,
+      "profile": [
+       [
+        0.012,
+        0.07
+       ],
+       [
+        0.011087,
+        0.074592
+       ],
+       [
+        0.00848528,
+        0.078485
+       ],
+       [
+        0.0045922,
+        0.081087
+       ],
+       [
+        7.34788e-19,
+        0.082
+       ],
+       [
+        -0.0045922,
+        0.081087
+       ],
+       [
+        -0.00848528,
+        0.078485
+       ],
+       [
+        -0.011087,
+        0.074592
+       ],
+       [
+        -0.012,
+        0.07
+       ],
+       [
+        -0.011087,
+        0.065408
+       ],
+       [
+        -0.00848528,
+        0.061515
+       ],
+       [
+        -0.0045922,
+        0.058913
+       ],
+       [
+        -2.20436e-18,
+        0.058
+       ],
+       [
+        0.0045922,
+        0.058913
+       ],
+       [
+        0.00848528,
+        0.061515
+       ],
+       [
+        0.011087,
+        0.065408
+       ],
+       [
+        0.012,
+        0.07
+       ]
+      ],
+      "axis": [
+       1,
+       0,
+       0
+      ],
+      "origin": [
+       -0.352,
+       0.17,
+       0.0
+      ]
+     }
+    ],
+    "thermal": [
+     {
+      "id": "th-blanket",
+      "of": "blanket",
+      "region": "blanket"
+     },
+     {
+      "id": "th-base",
+      "of": "base",
+      "region": "stand"
+     },
+     {
+      "id": "th-turntable",
+      "of": "turntable",
+      "region": "stand"
+     },
+     {
+      "id": "th-rear",
+      "of": "rear",
+      "region": "rear-cover"
+     },
+     {
+      "id": "th-tray",
+      "of": "tray",
+      "region": "rear-cover"
+     },
+     {
+      "id": "th-bezel",
+      "of": "bezel",
+      "region": "bezel"
+     },
+     {
+      "id": "th-screen",
+      "of": "screen",
+      "region": "screen"
+     },
+     {
+      "id": "th-coil",
+      "of": "coil",
+      "region": "rear-cover"
+     },
+     {
+      "id": "th-vent-plume",
+      "kind": "box",
+      "bone": "cabinet",
+      "material": "hips-anthracite",
+      "role": "body",
+      "tone": 0.28,
+      "sheet": true,
+      "size": [
+       0.12,
+       0.0015,
+       0.24
+      ],
+      "transform": {
+       "translation": [
+        -0.19,
+        0.4128,
+        0.0
+       ],
+       "rotation": [
+        0.0,
+        0.0,
+        0.221897,
+        0.97507
+       ]
+      },
+      "region": "rear-cover",
+      "tags": [
+       "vent-plume"
+      ]
+     }
+    ],
+    "structure": [
+     {
+      "id": "m-blanket",
+      "of": "blanket",
+      "member": "blanket",
+      "part": "member"
+     },
+     {
+      "id": "m-base",
+      "of": "base",
+      "member": "base",
+      "part": "member"
+     },
+     {
+      "id": "m-turntable",
+      "of": "turntable",
+      "member": "cabinet",
+      "part": "member"
+     },
+     {
+      "id": "m-tray",
+      "of": "tray",
+      "member": "cabinet",
+      "part": "member"
+     },
+     {
+      "id": "m-bezel",
+      "of": "bezel",
+      "member": "cabinet",
+      "part": "member"
+     },
+     {
+      "id": "m-tube-skirt",
+      "kind": "extrude",
+      "bone": "tube",
+      "material": "crt-panel-glass",
+      "role": "detail",
+      "tone": 0.3,
+      "plane": "yz",
+      "profile": [
+       [
+        0.5125,
+        0.25
+       ],
+       [
+        0.509265,
+        0.266264
+       ],
+       [
+        0.500052,
+        0.280052
+       ],
+       [
+        0.486264,
+        0.289265
+       ],
+       [
+        0.47,
+        0.2925
+       ],
+       [
+        0.14,
+        0.2925
+       ],
+       [
+        0.123736,
+        0.289265
+       ],
+       [
+        0.109948,
+        0.280052
+       ],
+       [
+        0.100735,
+        0.266264
+       ],
+       [
+        0.0975,
+        0.25
+       ],
+       [
+        0.0975,
+        -0.25
+       ],
+       [
+        0.100735,
+        -0.266264
+       ],
+       [
+        0.109948,
+        -0.280052
+       ],
+       [
+        0.123736,
+        -0.289265
+       ],
+       [
+        0.14,
+        -0.2925
+       ],
+       [
+        0.47,
+        -0.2925
+       ],
+       [
+        0.486264,
+        -0.289265
+       ],
+       [
+        0.500052,
+        -0.280052
+       ],
+       [
+        0.509265,
+        -0.266264
+       ],
+       [
+        0.5125,
+        -0.25
+       ]
+      ],
+      "from": 0.01,
+      "to": 0.035,
+      "holes": [
+       [
+        [
+         0.5,
+         0.25
+        ],
+        [
+         0.497716,
+         0.261481
+        ],
+        [
+         0.491213,
+         0.271213
+        ],
+        [
+         0.481481,
+         0.277716
+        ],
+        [
+         0.47,
+         0.28
+        ],
+        [
+         0.14,
+         0.28
+        ],
+        [
+         0.128519,
+         0.277716
+        ],
+        [
+         0.118787,
+         0.271213
+        ],
+        [
+         0.112284,
+         0.261481
+        ],
+        [
+         0.11,
+         0.25
+        ],
+        [
+         0.11,
+         -0.25
+        ],
+        [
+         0.112284,
+         -0.261481
+        ],
+        [
+         0.118787,
+         -0.271213
+        ],
+        [
+         0.128519,
+         -0.277716
+        ],
+        [
+         0.14,
+         -0.28
+        ],
+        [
+         0.47,
+         -0.28
+        ],
+        [
+         0.481481,
+         -0.277716
+        ],
+        [
+         0.491213,
+         -0.271213
+        ],
+        [
+         0.497716,
+         -0.261481
+        ],
+        [
+         0.5,
+         -0.25
+        ]
+       ]
+      ],
+      "member": "tube",
+      "part": "member"
+     },
+     {
+      "id": "j-ear-tl",
+      "kind": "box",
+      "bone": "tube",
+      "material": "steel-band",
+      "role": "detail",
+      "tone": 0.3,
+      "size": [
+       0.015,
+       0.015,
+       0.015
+      ],
+      "transform": {
+       "translation": [
+        0.0275,
+        0.50625,
+        0.28625
+       ]
+      },
+      "member": "tube",
+      "part": "joint"
+     },
+     {
+      "id": "j-ear-tr",
+      "kind": "box",
+      "bone": "tube",
+      "material": "steel-band",
+      "role": "detail",
+      "tone": 0.3,
+      "size": [
+       0.015,
+       0.015,
+       0.015
+      ],
+      "transform": {
+       "translation": [
+        0.0275,
+        0.50625,
+        -0.28625
+       ]
+      },
+      "member": "tube",
+      "part": "joint"
+     },
+     {
+      "id": "j-ear-bl",
+      "kind": "box",
+      "bone": "tube",
+      "material": "steel-band",
+      "role": "detail",
+      "tone": 0.3,
+      "size": [
+       0.015,
+       0.015,
+       0.015
+      ],
+      "transform": {
+       "translation": [
+        0.0275,
+        0.10375,
+        0.28625
+       ]
+      },
+      "member": "tube",
+      "part": "joint"
+     },
+     {
+      "id": "j-ear-br",
+      "kind": "box",
+      "bone": "tube",
+      "material": "steel-band",
+      "role": "detail",
+      "tone": 0.3,
+      "size": [
+       0.015,
+       0.015,
+       0.015
+      ],
+      "transform": {
+       "translation": [
+        0.0275,
+        0.10375,
+        -0.28625
+       ]
+      },
+      "member": "tube",
+      "part": "joint"
+     },
+     {
+      "id": "j-swivel",
+      "kind": "revolve",
+      "bone": "base",
+      "material": "steel-band",
+      "role": "detail",
+      "tone": 0.3,
+      "profile": [
+       [
+        0.01,
+        0.0
+       ],
+       [
+        0.01,
+        0.02
+       ],
+       [
+        0.022,
+        0.02
+       ],
+       [
+        0.022,
+        0.0
+       ]
+      ],
+      "axis": [
+       0,
+       1,
+       0
+      ],
+      "origin": [
+       0,
+       0,
+       0
+      ],
+      "member": "base",
+      "part": "joint"
+     },
+     {
+      "id": "support-blanket-floor",
+      "kind": "revolve",
+      "bone": "blanket",
+      "material": "felt-blanket",
+      "role": "ground",
+      "tone": 0.2,
+      "profile": [
+       [
+        0.0,
+        0.0
+       ],
+       [
+        0.0,
+        0.0075
+       ],
+       [
+        0.0075,
+        0.0075
+       ],
+       [
+        0.0075,
+        0.0
+       ]
+      ],
+      "axis": [
+       0,
+       1,
+       0
+      ],
+      "origin": [
+       -0.085,
+       0.0,
+       0.0
+      ],
+      "member": "blanket",
+      "part": "support",
+      "anchor": "blanket-floor"
+     },
+     {
+      "id": "mass-base",
+      "kind": "ellipsoid",
+      "bone": "base",
+      "material": "abs-stand",
+      "role": "detail",
+      "tone": 0.3,
+      "radii": [
+       0.006,
+       0.006,
+       0.006
+      ],
+      "transform": {
+       "translation": [
+        0.0,
+        0.008,
+        0.0
+       ]
+      },
+      "member": "base",
+      "part": "mass"
+     },
+     {
+      "id": "mass-cabinet",
+      "kind": "ellipsoid",
+      "bone": "cabinet",
+      "material": "hips-anthracite",
+      "role": "detail",
+      "tone": 0.3,
+      "radii": [
+       0.0075,
+       0.0075,
+       0.0075
+      ],
+      "transform": {
+       "translation": [
+        -0.06385,
+        0.128064,
+        0.0
+       ]
+      },
+      "member": "cabinet",
+      "part": "mass"
+     },
+     {
+      "id": "mass-tube",
+      "kind": "ellipsoid",
+      "bone": "tube",
+      "material": "crt-panel-glass",
+      "role": "detail",
+      "tone": 0.3,
+      "radii": [
+       0.0075,
+       0.0075,
+       0.0075
+      ],
+      "transform": {
+       "translation": [
+        0.043851,
+        0.305,
+        0.0
+       ]
+      },
+      "member": "tube",
+      "part": "mass"
+     }
+    ],
+    "decisions": [
+     {
+      "en": "Body, authored for 7.5 mm: the television on its swivel stand on the folded moving blanket. Front bezel as a 115 mm deep moulded frame with rounded corners round the 560 x 390 mm screen opening, the faceplate of the tube 12 mm behind the bezel face, the tapered rear cover as a loft from 680 x 520 mm behind the bezel to the 400 x 340 mm back plate with rounded moulded edges, the 12 mm bottom tray under it, the mains cable coiled to a ring of 164 mm and taped to the back plate; the stand as a 340 x 16 mm base plate and a 300 x 18 mm turntable with chamfered edges; the blanket as four 3 mm layers folded to 12 mm with its rounded fold at the front.",
+      "de": "Körper für 7,5 mm: der Fernseher auf seinem Drehfuß auf der gefalteten Möbeldecke. Frontrahmen als 115 mm tiefer Spritzgussrahmen mit gerundeten Ecken um die Bildöffnung 560 x 390 mm, der Bildschirm der Röhre 12 mm hinter der Rahmenfläche, die verjüngte Rückwand als Loft von 680 x 520 mm hinter dem Rahmen auf die Rückplatte 400 x 340 mm mit gerundeten Kanten, darunter die 12-mm-Bodenwanne, das Netzkabel zu einem Ring von 164 mm aufgewickelt und an die Rückplatte geklebt; der Fuß als Fußplatte 340 x 16 mm und Drehteller 300 x 18 mm mit gefasten Kanten; die Decke als vier 3-mm-Lagen auf 12 mm gefaltet mit gerundetem Falz vorn."
+     },
+     {
+      "en": "Thermal: every body solid by reference in its region (tray and cable coil in the rear-cover region) and the outlet patch of the vent plume flush on the sloping top. Structure: blanket, base plate, turntable, bottom tray and bezel as members, the faceplate skirt with its implosion band as the frame of the tube; the four mounting ears of the band at the bezel and the swivel pivot as joints; one pad on the depot floor under the blanket; masses at the centres of stand, cabinet and tube.",
+      "de": "Thermik: jeder Körper als Verweis in seiner Region (Bodenwanne und Kabelring in der Region der Rückwand) und die Austrittsfläche der Warmluftfahne bündig auf der schrägen Oberseite. Tragwerk: Decke, Fußplatte, Drehteller, Bodenwanne und Frontrahmen als Stäbe, der Schirmmantel mit dem Spannband als Rahmen der Röhre; die vier Befestigungslaschen des Bandes am Rahmen und der Drehzapfen als Knoten; ein Auflager auf dem Lagerboden unter der Decke; Massen in den Schwerpunkten von Fuß, Gehäuse und Röhre."
+     }
+    ]
+   },
+   "100": {
+    "status": "authored",
+    "denominator": 100,
+    "body": [
+     {
+      "id": "blanket",
+      "kind": "extrude",
+      "bone": "blanket",
+      "material": "felt-blanket",
+      "role": "body",
+      "tone": 0.3,
+      "plane": "xy",
+      "profile": [
+       [
+        -0.45,
+        0.0
+       ],
+       [
+        0.274,
+        0.0
+       ],
+       [
+        0.28,
+        0.006
+       ],
+       [
+        0.274,
+        0.012
+       ],
+       [
+        -0.45,
+        0.012
+       ]
+      ],
+      "from": -0.45,
+      "to": 0.45,
+      "sheet": true
+     },
+     {
+      "id": "base",
+      "kind": "revolve",
+      "bone": "base",
+      "material": "abs-stand",
+      "role": "body",
+      "tone": 0.4,
+      "profile": [
+       [
+        0.0,
+        0.0
+       ],
+       [
+        0.0,
+        0.17
+       ],
+       [
+        0.016,
+        0.17
+       ],
+       [
+        0.016,
+        0.0
+       ]
+      ],
+      "axis": [
+       0,
+       1,
+       0
+      ],
+      "origin": [
+       0,
+       0,
+       0
+      ]
+     },
+     {
+      "id": "turntable",
+      "kind": "revolve",
+      "bone": "cabinet",
+      "material": "abs-stand",
+      "role": "body",
+      "tone": 0.45,
+      "profile": [
+       [
+        -0.018,
+        0.0
+       ],
+       [
+        -0.018,
+        0.15
+       ],
+       [
+        0.0,
+        0.15
+       ],
+       [
+        0.0,
+        0.0
+       ]
+      ],
+      "axis": [
+       0,
+       1,
+       0
+      ],
+      "origin": [
+       0,
+       0,
+       0
+      ]
+     },
+     {
+      "id": "rear",
+      "kind": "loft",
+      "bone": "cabinet",
+      "material": "hips-anthracite",
+      "role": "body",
+      "tone": 0.28,
+      "sections": [
+       {
+        "at": [
+         -0.34,
+         0.17,
+         0.0
+        ],
+        "rx": 0.17,
+        "ry": 0.2,
+        "exponent": 8,
+        "rotation": [
+         0.5,
+         0.5,
+         0.5,
+         0.5
+        ]
+       },
+       {
+        "at": [
+         0.035,
+         0.26,
+         0.0
+        ],
+        "rx": 0.26,
+        "ry": 0.34,
+        "exponent": 8,
+        "rotation": [
+         0.5,
+         0.5,
+         0.5,
+         0.5
+        ]
+       }
+      ],
+      "capStart": true,
+      "capEnd": true
+     },
+     {
+      "id": "bezel",
+      "kind": "extrude",
+      "bone": "cabinet",
+      "material": "hips-anthracite",
+      "role": "body",
+      "tone": 0.2,
+      "plane": "yz",
+      "profile": [
+       [
+        0.53,
+        0.33
+       ],
+       [
+        0.524142,
+        0.344142
+       ],
+       [
+        0.51,
+        0.35
+       ],
+       [
+        0.02,
+        0.35
+       ],
+       [
+        0.00585786,
+        0.344142
+       ],
+       [
+        0.0,
+        0.33
+       ],
+       [
+        0.0,
+        -0.33
+       ],
+       [
+        0.00585786,
+        -0.344142
+       ],
+       [
+        0.02,
+        -0.35
+       ],
+       [
+        0.51,
+        -0.35
+       ],
+       [
+        0.524142,
+        -0.344142
+       ],
+       [
+        0.53,
+        -0.33
+       ]
+      ],
+      "from": 0.035,
+      "to": 0.15,
+      "holes": [
+       [
+        [
+         0.5,
+         0.25
+        ],
+        [
+         0.491213,
+         0.271213
+        ],
+        [
+         0.47,
+         0.28
+        ],
+        [
+         0.14,
+         0.28
+        ],
+        [
+         0.118787,
+         0.271213
+        ],
+        [
+         0.11,
+         0.25
+        ],
+        [
+         0.11,
+         -0.25
+        ],
+        [
+         0.118787,
+         -0.271213
+        ],
+        [
+         0.14,
+         -0.28
+        ],
+        [
+         0.47,
+         -0.28
+        ],
+        [
+         0.491213,
+         -0.271213
+        ],
+        [
+         0.5,
+         -0.25
+        ]
+       ]
+      ]
+     },
+     {
+      "id": "screen",
+      "kind": "extrude",
+      "bone": "tube",
+      "material": "crt-panel-glass",
+      "role": "glazing",
+      "tone": 0.12,
+      "plane": "yz",
+      "profile": [
+       [
+        0.5,
+        0.25
+       ],
+       [
+        0.491213,
+        0.271213
+       ],
+       [
+        0.47,
+        0.28
+       ],
+       [
+        0.14,
+        0.28
+       ],
+       [
+        0.118787,
+        0.271213
+       ],
+       [
+        0.11,
+        0.25
+       ],
+       [
+        0.11,
+        -0.25
+       ],
+       [
+        0.118787,
+        -0.271213
+       ],
+       [
+        0.14,
+        -0.28
+       ],
+       [
+        0.47,
+        -0.28
+       ],
+       [
+        0.491213,
+        -0.271213
+       ],
+       [
+        0.5,
+        -0.25
+       ]
+      ],
+      "from": 0.035,
+      "to": 0.138
+     },
+     {
+      "id": "coil",
+      "kind": "revolve",
+      "bone": "cabinet",
+      "material": "pvc-cable",
+      "role": "body",
+      "tone": 0.15,
+      "profile": [
+       [
+        0.012,
+        0.07
+       ],
+       [
+        0.00848528,
+        0.078485
+       ],
+       [
+        7.34788e-19,
+        0.082
+       ],
+       [
+        -0.00848528,
+        0.078485
+       ],
+       [
+        -0.012,
+        0.07
+       ],
+       [
+        -0.00848528,
+        0.061515
+       ],
+       [
+        -2.20436e-18,
+        0.058
+       ],
+       [
+        0.00848528,
+        0.061515
+       ],
+       [
+        0.012,
+        0.07
+       ]
+      ],
+      "axis": [
+       1,
+       0,
+       0
+      ],
+      "origin": [
+       -0.352,
+       0.17,
+       0.0
+      ]
+     }
+    ],
+    "thermal": [
+     {
+      "id": "th-blanket",
+      "of": "blanket",
+      "region": "blanket"
+     },
+     {
+      "id": "th-base",
+      "of": "base",
+      "region": "stand"
+     },
+     {
+      "id": "th-turntable",
+      "of": "turntable",
+      "region": "stand"
+     },
+     {
+      "id": "th-rear",
+      "of": "rear",
+      "region": "rear-cover"
+     },
+     {
+      "id": "th-bezel",
+      "of": "bezel",
+      "region": "bezel"
+     },
+     {
+      "id": "th-screen",
+      "of": "screen",
+      "region": "screen"
+     },
+     {
+      "id": "th-coil",
+      "of": "coil",
+      "region": "rear-cover"
+     },
+     {
+      "id": "th-vent-plume",
+      "kind": "box",
+      "bone": "cabinet",
+      "material": "hips-anthracite",
+      "role": "body",
+      "tone": 0.28,
+      "sheet": true,
+      "size": [
+       0.125,
+       0.0015,
+       0.25
+      ],
+      "transform": {
+       "translation": [
+        -0.19,
+        0.4128,
+        0.0
+       ],
+       "rotation": [
+        0.0,
+        0.0,
+        0.221897,
+        0.97507
+       ]
+      },
+      "region": "rear-cover",
+      "tags": [
+       "vent-plume"
+      ]
+     }
+    ],
+    "structure": [
+     {
+      "id": "m-blanket",
+      "of": "blanket",
+      "member": "blanket",
+      "part": "member"
+     },
+     {
+      "id": "m-base",
+      "of": "base",
+      "member": "base",
+      "part": "member"
+     },
+     {
+      "id": "m-turntable",
+      "of": "turntable",
+      "member": "cabinet",
+      "part": "member"
+     },
+     {
+      "id": "m-bottom",
+      "kind": "extrude",
+      "bone": "cabinet",
+      "material": "hips-anthracite",
+      "role": "detail",
+      "tone": 0.3,
+      "plane": "zx",
+      "profile": [
+       [
+        -0.188667,
+        -0.29
+       ],
+       [
+        -0.3,
+        0.035
+       ],
+       [
+        0.3,
+        0.035
+       ],
+       [
+        0.188667,
+        -0.29
+       ]
+      ],
+      "from": 0.0,
+      "to": 0.015,
+      "member": "cabinet",
+      "part": "member"
+     },
+     {
+      "id": "m-bezel",
+      "of": "bezel",
+      "member": "cabinet",
+      "part": "member"
+     },
+     {
+      "id": "m-tube-skirt",
+      "kind": "extrude",
+      "bone": "tube",
+      "material": "crt-panel-glass",
+      "role": "detail",
+      "tone": 0.3,
+      "plane": "yz",
+      "profile": [
+       [
+        0.5125,
+        0.25
+       ],
+       [
+        0.500052,
+        0.280052
+       ],
+       [
+        0.47,
+        0.2925
+       ],
+       [
+        0.14,
+        0.2925
+       ],
+       [
+        0.109948,
+        0.280052
+       ],
+       [
+        0.0975,
+        0.25
+       ],
+       [
+        0.0975,
+        -0.25
+       ],
+       [
+        0.109948,
+        -0.280052
+       ],
+       [
+        0.14,
+        -0.2925
+       ],
+       [
+        0.47,
+        -0.2925
+       ],
+       [
+        0.500052,
+        -0.280052
+       ],
+       [
+        0.5125,
+        -0.25
+       ]
+      ],
+      "from": 0.01,
+      "to": 0.035,
+      "holes": [
+       [
+        [
+         0.5,
+         0.25
+        ],
+        [
+         0.491213,
+         0.271213
+        ],
+        [
+         0.47,
+         0.28
+        ],
+        [
+         0.14,
+         0.28
+        ],
+        [
+         0.118787,
+         0.271213
+        ],
+        [
+         0.11,
+         0.25
+        ],
+        [
+         0.11,
+         -0.25
+        ],
+        [
+         0.118787,
+         -0.271213
+        ],
+        [
+         0.14,
+         -0.28
+        ],
+        [
+         0.47,
+         -0.28
+        ],
+        [
+         0.491213,
+         -0.271213
+        ],
+        [
+         0.5,
+         -0.25
+        ]
+       ]
+      ],
+      "member": "tube",
+      "part": "member"
+     },
+     {
+      "id": "j-ear-tl",
+      "kind": "box",
+      "bone": "tube",
+      "material": "steel-band",
+      "role": "detail",
+      "tone": 0.3,
+      "size": [
+       0.015,
+       0.015,
+       0.015
+      ],
+      "transform": {
+       "translation": [
+        0.0275,
+        0.50625,
+        0.28625
+       ]
+      },
+      "member": "tube",
+      "part": "joint"
+     },
+     {
+      "id": "j-ear-tr",
+      "kind": "box",
+      "bone": "tube",
+      "material": "steel-band",
+      "role": "detail",
+      "tone": 0.3,
+      "size": [
+       0.015,
+       0.015,
+       0.015
+      ],
+      "transform": {
+       "translation": [
+        0.0275,
+        0.50625,
+        -0.28625
+       ]
+      },
+      "member": "tube",
+      "part": "joint"
+     },
+     {
+      "id": "j-ear-bl",
+      "kind": "box",
+      "bone": "tube",
+      "material": "steel-band",
+      "role": "detail",
+      "tone": 0.3,
+      "size": [
+       0.015,
+       0.015,
+       0.015
+      ],
+      "transform": {
+       "translation": [
+        0.0275,
+        0.10375,
+        0.28625
+       ]
+      },
+      "member": "tube",
+      "part": "joint"
+     },
+     {
+      "id": "j-ear-br",
+      "kind": "box",
+      "bone": "tube",
+      "material": "steel-band",
+      "role": "detail",
+      "tone": 0.3,
+      "size": [
+       0.015,
+       0.015,
+       0.015
+      ],
+      "transform": {
+       "translation": [
+        0.0275,
+        0.10375,
+        -0.28625
+       ]
+      },
+      "member": "tube",
+      "part": "joint"
+     },
+     {
+      "id": "j-swivel",
+      "kind": "revolve",
+      "bone": "base",
+      "material": "steel-band",
+      "role": "detail",
+      "tone": 0.3,
+      "profile": [
+       [
+        0.0085,
+        0.0
+       ],
+       [
+        0.0085,
+        0.02
+       ],
+       [
+        0.0235,
+        0.02
+       ],
+       [
+        0.0235,
+        0.0
+       ]
+      ],
+      "axis": [
+       0,
+       1,
+       0
+      ],
+      "origin": [
+       0,
+       0,
+       0
+      ],
+      "member": "base",
+      "part": "joint"
+     },
+     {
+      "id": "support-blanket-floor",
+      "kind": "revolve",
+      "bone": "blanket",
+      "material": "felt-blanket",
+      "role": "ground",
+      "tone": 0.2,
+      "profile": [
+       [
+        0.0,
+        0.0
+       ],
+       [
+        0.0,
+        0.015
+       ],
+       [
+        0.009,
+        0.015
+       ],
+       [
+        0.009,
+        0.0
+       ]
+      ],
+      "axis": [
+       0,
+       1,
+       0
+      ],
+      "origin": [
+       -0.085,
+       0.0,
+       0.0
+      ],
+      "member": "blanket",
+      "part": "support",
+      "anchor": "blanket-floor"
+     },
+     {
+      "id": "mass-base",
+      "kind": "ellipsoid",
+      "bone": "base",
+      "material": "abs-stand",
+      "role": "detail",
+      "tone": 0.3,
+      "radii": [
+       0.0075,
+       0.0075,
+       0.0075
+      ],
+      "transform": {
+       "translation": [
+        0.0,
+        0.008,
+        0.0
+       ]
+      },
+      "member": "base",
+      "part": "mass"
+     },
+     {
+      "id": "mass-cabinet",
+      "kind": "ellipsoid",
+      "bone": "cabinet",
+      "material": "hips-anthracite",
+      "role": "detail",
+      "tone": 0.3,
+      "radii": [
+       0.015,
+       0.015,
+       0.015
+      ],
+      "transform": {
+       "translation": [
+        -0.06385,
+        0.128064,
+        0.0
+       ]
+      },
+      "member": "cabinet",
+      "part": "mass"
+     },
+     {
+      "id": "mass-tube",
+      "kind": "ellipsoid",
+      "bone": "tube",
+      "material": "crt-panel-glass",
+      "role": "detail",
+      "tone": 0.3,
+      "radii": [
+       0.015,
+       0.015,
+       0.015
+      ],
+      "transform": {
+       "translation": [
+        0.043851,
+        0.305,
+        0.0
+       ]
+      },
+      "member": "tube",
+      "part": "mass"
+     }
+    ],
+    "decisions": [
+     {
+      "en": "Body, authored anew for 15 mm: the bottom tray (12 mm) merges into the rear cover, the corners of bezel and screen are drawn with fewer segments, stand plates without chamfers (16 and 18 mm stay true), the cable ring kept with a coarser section, the blanket one 12 mm declared sheet with a two-step fold.",
+      "de": "Körper für 15 mm neu gebaut: die Bodenwanne (12 mm) geht in der Rückwand auf, die Ecken von Rahmen und Bildschirm mit weniger Segmenten, Fußplatten ohne Fase (16 und 18 mm bleiben echt), der Kabelring mit gröberem Querschnitt erhalten, die Decke als eine deklarierte 12-mm-Lage mit zweistufigem Falz."
+     },
+     {
+      "en": "Thermal: one surface per region by reference plus the vent patch. Structure: the same members with a 15 mm bottom member inside the rear cover, ears, pivot, the floor pad and the masses.",
+      "de": "Thermik: eine Oberfläche je Region als Verweis und die Lüftungsfläche. Tragwerk: dieselben Stäbe mit einem 15-mm-Bodenstab in der Rückwand, Laschen, Drehzapfen, das Bodenauflager und die Massen."
+     }
+    ]
+   },
+   "200": {
+    "status": "authored",
+    "denominator": 200,
+    "body": [
+     {
+      "id": "blanket",
+      "kind": "extrude",
+      "bone": "blanket",
+      "material": "felt-blanket",
+      "role": "body",
+      "tone": 0.3,
+      "plane": "xy",
+      "profile": [
+       [
+        -0.45,
+        0.0
+       ],
+       [
+        0.28,
+        0.0
+       ],
+       [
+        0.28,
+        0.012
+       ],
+       [
+        -0.45,
+        0.012
+       ]
+      ],
+      "from": -0.45,
+      "to": 0.45,
+      "sheet": true
+     },
+     {
+      "id": "stand",
+      "kind": "revolve",
+      "bone": "base",
+      "material": "abs-stand",
+      "role": "body",
+      "tone": 0.42,
+      "profile": [
+       [
+        0.0,
+        0.0
+       ],
+       [
+        0.0,
+        0.17
+       ],
+       [
+        0.034,
+        0.17
+       ],
+       [
+        0.034,
+        0.0
+       ]
+      ],
+      "axis": [
+       0,
+       1,
+       0
+      ],
+      "origin": [
+       0,
+       0,
+       0
+      ]
+     },
+     {
+      "id": "rear",
+      "kind": "loft",
+      "bone": "cabinet",
+      "material": "hips-anthracite",
+      "role": "body",
+      "tone": 0.28,
+      "sections": [
+       {
+        "at": [
+         -0.34,
+         0.17,
+         0.0
+        ],
+        "rx": 0.17,
+        "ry": 0.2,
+        "exponent": 6,
+        "rotation": [
+         0.5,
+         0.5,
+         0.5,
+         0.5
+        ]
+       },
+       {
+        "at": [
+         0.035,
+         0.26,
+         0.0
+        ],
+        "rx": 0.26,
+        "ry": 0.34,
+        "exponent": 6,
+        "rotation": [
+         0.5,
+         0.5,
+         0.5,
+         0.5
+        ]
+       }
+      ],
+      "capStart": true,
+      "capEnd": true
+     },
+     {
+      "id": "bezel",
+      "kind": "extrude",
+      "bone": "cabinet",
+      "material": "hips-anthracite",
+      "role": "body",
+      "tone": 0.2,
+      "plane": "yz",
+      "profile": [
+       [
+        0.0,
+        -0.35
+       ],
+       [
+        0.53,
+        -0.35
+       ],
+       [
+        0.53,
+        0.35
+       ],
+       [
+        0.0,
+        0.35
+       ]
+      ],
+      "from": 0.035,
+      "to": 0.15,
+      "holes": [
+       [
+        [
+         0.11,
+         -0.28
+        ],
+        [
+         0.5,
+         -0.28
+        ],
+        [
+         0.5,
+         0.28
+        ],
+        [
+         0.11,
+         0.28
+        ]
+       ]
+      ]
+     },
+     {
+      "id": "screen",
+      "kind": "extrude",
+      "bone": "tube",
+      "material": "crt-panel-glass",
+      "role": "glazing",
+      "tone": 0.12,
+      "plane": "yz",
+      "profile": [
+       [
+        0.11,
+        -0.28
+       ],
+       [
+        0.5,
+        -0.28
+       ],
+       [
+        0.5,
+        0.28
+       ],
+       [
+        0.11,
+        0.28
+       ]
+      ],
+      "from": 0.035,
+      "to": 0.138
+     }
+    ],
+    "thermal": [
+     {
+      "id": "th-blanket",
+      "of": "blanket",
+      "region": "blanket"
+     },
+     {
+      "id": "th-stand",
+      "of": "stand",
+      "region": "stand"
+     },
+     {
+      "id": "th-rear",
+      "of": "rear",
+      "region": "rear-cover"
+     },
+     {
+      "id": "th-bezel",
+      "of": "bezel",
+      "region": "bezel"
+     },
+     {
+      "id": "th-screen",
+      "of": "screen",
+      "region": "screen"
+     },
+     {
+      "id": "th-vent-plume",
+      "kind": "box",
+      "bone": "cabinet",
+      "material": "hips-anthracite",
+      "role": "body",
+      "tone": 0.28,
+      "sheet": true,
+      "size": [
+       0.13,
+       0.0015,
+       0.26
+      ],
+      "transform": {
+       "translation": [
+        -0.19,
+        0.4128,
+        0.0
+       ],
+       "rotation": [
+        0.0,
+        0.0,
+        0.221897,
+        0.97507
+       ]
+      },
+      "region": "rear-cover",
+      "tags": [
+       "vent-plume"
+      ]
+     }
+    ],
+    "structure": [
+     {
+      "id": "m-blanket",
+      "of": "blanket",
+      "member": "blanket",
+      "part": "member"
+     },
+     {
+      "id": "m-stand",
+      "of": "stand",
+      "member": "base",
+      "part": "member"
+     },
+     {
+      "id": "m-bottom",
+      "kind": "extrude",
+      "bone": "cabinet",
+      "material": "hips-anthracite",
+      "role": "detail",
+      "tone": 0.3,
+      "plane": "zx",
+      "profile": [
+       [
+        -0.188667,
+        -0.29
+       ],
+       [
+        -0.3,
+        0.035
+       ],
+       [
+        0.3,
+        0.035
+       ],
+       [
+        0.188667,
+        -0.29
+       ]
+      ],
+      "from": 0.0,
+      "to": 0.03,
+      "member": "cabinet",
+      "part": "member"
+     },
+     {
+      "id": "m-bezel",
+      "of": "bezel",
+      "member": "cabinet",
+      "part": "member"
+     },
+     {
+      "id": "m-tube-skirt",
+      "kind": "extrude",
+      "bone": "tube",
+      "material": "crt-panel-glass",
+      "role": "detail",
+      "tone": 0.3,
+      "plane": "yz",
+      "profile": [
+       [
+        0.095,
+        -0.295
+       ],
+       [
+        0.515,
+        -0.295
+       ],
+       [
+        0.515,
+        0.295
+       ],
+       [
+        0.095,
+        0.295
+       ]
+      ],
+      "from": 0.005,
+      "to": 0.035,
+      "holes": [
+       [
+        [
+         0.11,
+         -0.28
+        ],
+        [
+         0.5,
+         -0.28
+        ],
+        [
+         0.5,
+         0.28
+        ],
+        [
+         0.11,
+         0.28
+        ]
+       ]
+      ],
+      "member": "tube",
+      "part": "member"
+     },
+     {
+      "id": "j-ear-tl",
+      "kind": "box",
+      "bone": "tube",
+      "material": "steel-band",
+      "role": "detail",
+      "tone": 0.3,
+      "size": [
+       0.03,
+       0.03,
+       0.03
+      ],
+      "transform": {
+       "translation": [
+        0.02,
+        0.50625,
+        0.28625
+       ]
+      },
+      "member": "tube",
+      "part": "joint"
+     },
+     {
+      "id": "j-ear-tr",
+      "kind": "box",
+      "bone": "tube",
+      "material": "steel-band",
+      "role": "detail",
+      "tone": 0.3,
+      "size": [
+       0.03,
+       0.03,
+       0.03
+      ],
+      "transform": {
+       "translation": [
+        0.02,
+        0.50625,
+        -0.28625
+       ]
+      },
+      "member": "tube",
+      "part": "joint"
+     },
+     {
+      "id": "j-ear-bl",
+      "kind": "box",
+      "bone": "tube",
+      "material": "steel-band",
+      "role": "detail",
+      "tone": 0.3,
+      "size": [
+       0.03,
+       0.03,
+       0.03
+      ],
+      "transform": {
+       "translation": [
+        0.02,
+        0.10375,
+        0.28625
+       ]
+      },
+      "member": "tube",
+      "part": "joint"
+     },
+     {
+      "id": "j-ear-br",
+      "kind": "box",
+      "bone": "tube",
+      "material": "steel-band",
+      "role": "detail",
+      "tone": 0.3,
+      "size": [
+       0.03,
+       0.03,
+       0.03
+      ],
+      "transform": {
+       "translation": [
+        0.02,
+        0.10375,
+        -0.28625
+       ]
+      },
+      "member": "tube",
+      "part": "joint"
+     },
+     {
+      "id": "j-swivel",
+      "kind": "revolve",
+      "bone": "base",
+      "material": "steel-band",
+      "role": "detail",
+      "tone": 0.3,
+      "profile": [
+       [
+        0.001,
+        0.0
+       ],
+       [
+        0.001,
+        0.03
+       ],
+       [
+        0.031,
+        0.03
+       ],
+       [
+        0.031,
+        0.0
+       ]
+      ],
+      "axis": [
+       0,
+       1,
+       0
+      ],
+      "origin": [
+       0,
+       0,
+       0
+      ],
+      "member": "base",
+      "part": "joint"
+     },
+     {
+      "id": "support-blanket-floor",
+      "kind": "revolve",
+      "bone": "blanket",
+      "material": "felt-blanket",
+      "role": "ground",
+      "tone": 0.2,
+      "profile": [
+       [
+        0.0,
+        0.0
+       ],
+       [
+        0.0,
+        0.03
+       ],
+       [
+        0.009,
+        0.03
+       ],
+       [
+        0.009,
+        0.0
+       ]
+      ],
+      "axis": [
+       0,
+       1,
+       0
+      ],
+      "origin": [
+       -0.085,
+       0.0,
+       0.0
+      ],
+      "member": "blanket",
+      "part": "support",
+      "anchor": "blanket-floor"
+     },
+     {
+      "id": "mass-base",
+      "kind": "ellipsoid",
+      "bone": "base",
+      "material": "abs-stand",
+      "role": "detail",
+      "tone": 0.3,
+      "radii": [
+       0.015,
+       0.015,
+       0.015
+      ],
+      "transform": {
+       "translation": [
+        0.0,
+        0.017,
+        0.0
+       ]
+      },
+      "member": "base",
+      "part": "mass"
+     },
+     {
+      "id": "mass-cabinet",
+      "kind": "ellipsoid",
+      "bone": "cabinet",
+      "material": "hips-anthracite",
+      "role": "detail",
+      "tone": 0.3,
+      "radii": [
+       0.03,
+       0.03,
+       0.03
+      ],
+      "transform": {
+       "translation": [
+        -0.06385,
+        0.128064,
+        0.0
+       ]
+      },
+      "member": "cabinet",
+      "part": "mass"
+     },
+     {
+      "id": "mass-tube",
+      "kind": "ellipsoid",
+      "bone": "tube",
+      "material": "crt-panel-glass",
+      "role": "detail",
+      "tone": 0.3,
+      "radii": [
+       0.03,
+       0.03,
+       0.03
+      ],
+      "transform": {
+       "translation": [
+        0.043851,
+        0.305,
+        0.0
+       ]
+      },
+      "member": "tube",
+      "part": "mass"
+     }
+    ],
+    "decisions": [
+     {
+      "en": "Body, authored anew for 30 mm: base plate and turntable merged into one 34 mm stand puck, bezel and screen with square corners, the rear cover more rounded (exponent 6), the cable ring (24 mm) left out and the blanket a flat 12 mm declared sheet.",
+      "de": "Körper für 30 mm neu gebaut: Fußplatte und Drehteller zu einem 34-mm-Fuß verschmolzen, Rahmen und Bildschirm mit rechtwinkligen Ecken, die Rückwand stärker gerundet (Exponent 6), der Kabelring (24 mm) entfällt und die Decke ist eine ebene deklarierte 12-mm-Lage."
+     },
+     {
+      "en": "Thermal: one surface per region by reference plus the vent patch. Structure: members by reference, a 30 mm bottom member, the skirt ring at 30 mm, ears and pivot at 30 mm, the floor pad, masses.",
+      "de": "Thermik: eine Oberfläche je Region als Verweis und die Lüftungsfläche. Tragwerk: Stäbe als Verweis, ein 30-mm-Bodenstab, der Mantelring bei 30 mm, Laschen und Drehzapfen bei 30 mm, das Bodenauflager, Massen."
+     }
+    ]
+   },
+   "500": {
+    "status": "authored",
+    "denominator": 500,
+    "body": [
+     {
+      "id": "blanket",
+      "kind": "extrude",
+      "bone": "blanket",
+      "material": "felt-blanket",
+      "role": "body",
+      "tone": 0.3,
+      "plane": "xy",
+      "profile": [
+       [
+        -0.45,
+        0.0
+       ],
+       [
+        0.28,
+        0.0
+       ],
+       [
+        0.28,
+        0.022
+       ],
+       [
+        -0.45,
+        0.022
+       ]
+      ],
+      "from": -0.45,
+      "to": 0.45
+     },
+     {
+      "id": "stand",
+      "kind": "revolve",
+      "bone": "base",
+      "material": "abs-stand",
+      "role": "body",
+      "tone": 0.42,
+      "profile": [
+       [
+        0.0,
+        0.0
+       ],
+       [
+        0.0,
+        0.17
+       ],
+       [
+        0.034,
+        0.17
+       ],
+       [
+        0.034,
+        0.0
+       ]
+      ],
+      "axis": [
+       0,
+       1,
+       0
+      ],
+      "origin": [
+       0,
+       0,
+       0
+      ]
+     },
+     {
+      "id": "rear",
+      "kind": "loft",
+      "bone": "cabinet",
+      "material": "hips-anthracite",
+      "role": "body",
+      "tone": 0.28,
+      "sections": [
+       {
+        "at": [
+         -0.34,
+         0.17,
+         0.0
+        ],
+        "rx": 0.17,
+        "ry": 0.2,
+        "exponent": 4,
+        "rotation": [
+         0.5,
+         0.5,
+         0.5,
+         0.5
+        ]
+       },
+       {
+        "at": [
+         0.035,
+         0.26,
+         0.0
+        ],
+        "rx": 0.26,
+        "ry": 0.34,
+        "exponent": 4,
+        "rotation": [
+         0.5,
+         0.5,
+         0.5,
+         0.5
+        ]
+       }
+      ],
+      "capStart": true,
+      "capEnd": true
+     },
+     {
+      "id": "bezel",
+      "kind": "box",
+      "bone": "cabinet",
+      "material": "hips-anthracite",
+      "role": "body",
+      "tone": 0.2,
+      "size": [
+       0.115,
+       0.53,
+       0.7
+      ],
+      "transform": {
+       "translation": [
+        0.0925,
+        0.265,
+        0.0
+       ]
+      }
+     }
+    ],
+    "thermal": [
+     {
+      "id": "th-blanket",
+      "of": "blanket",
+      "region": "blanket"
+     },
+     {
+      "id": "th-stand",
+      "of": "stand",
+      "region": "stand"
+     },
+     {
+      "id": "th-rear",
+      "of": "rear",
+      "region": "rear-cover"
+     },
+     {
+      "id": "th-bezel",
+      "of": "bezel",
+      "region": "bezel"
+     },
+     {
+      "id": "th-screen-face",
+      "kind": "box",
+      "bone": "cabinet",
+      "material": "crt-panel-glass",
+      "role": "glazing",
+      "tone": 0.12,
+      "size": [
+       0.0135,
+       0.39,
+       0.56
+      ],
+      "transform": {
+       "translation": [
+        0.14325,
+        0.305,
+        0.0
+       ]
+      },
+      "region": "screen",
+      "layer": "panel-glass"
+     },
+     {
+      "id": "th-vent-plume",
+      "kind": "box",
+      "bone": "cabinet",
+      "material": "hips-anthracite",
+      "role": "body",
+      "tone": 0.28,
+      "sheet": true,
+      "size": [
+       0.15,
+       0.0015,
+       0.3
+      ],
+      "transform": {
+       "translation": [
+        -0.19,
+        0.4128,
+        0.0
+       ],
+       "rotation": [
+        0.0,
+        0.0,
+        0.221897,
+        0.97507
+       ]
+      },
+      "region": "rear-cover",
+      "tags": [
+       "vent-plume"
+      ]
+     }
+    ],
+    "structure": [
+     {
+      "id": "m-blanket",
+      "of": "blanket",
+      "member": "blanket",
+      "part": "member"
+     },
+     {
+      "id": "m-stand",
+      "of": "stand",
+      "member": "base",
+      "part": "member"
+     },
+     {
+      "id": "m-bottom",
+      "kind": "extrude",
+      "bone": "cabinet",
+      "material": "hips-anthracite",
+      "role": "detail",
+      "tone": 0.3,
+      "plane": "zx",
+      "profile": [
+       [
+        -0.188667,
+        -0.29
+       ],
+       [
+        -0.3,
+        0.035
+       ],
+       [
+        0.3,
+        0.035
+       ],
+       [
+        0.188667,
+        -0.29
+       ]
+      ],
+      "from": 0.0,
+      "to": 0.075,
+      "member": "cabinet",
+      "part": "member"
+     },
+     {
+      "id": "m-bezel",
+      "of": "bezel",
+      "member": "cabinet",
+      "part": "member"
+     },
+     {
+      "id": "m-tube-skirt",
+      "kind": "extrude",
+      "bone": "tube",
+      "material": "crt-panel-glass",
+      "role": "detail",
+      "tone": 0.3,
+      "plane": "yz",
+      "profile": [
+       [
+        0.09,
+        -0.3
+       ],
+       [
+        0.52,
+        -0.3
+       ],
+       [
+        0.52,
+        0.3
+       ],
+       [
+        0.09,
+        0.3
+       ]
+      ],
+      "from": -0.04,
+      "to": 0.035,
+      "holes": [
+       [
+        [
+         0.11,
+         -0.28
+        ],
+        [
+         0.5,
+         -0.28
+        ],
+        [
+         0.5,
+         0.28
+        ],
+        [
+         0.11,
+         0.28
+        ]
+       ]
+      ],
+      "member": "tube",
+      "part": "member"
+     },
+     {
+      "id": "j-ear-l",
+      "kind": "box",
+      "bone": "tube",
+      "material": "steel-band",
+      "role": "detail",
+      "tone": 0.3,
+      "size": [
+       0.075,
+       0.075,
+       0.075
+      ],
+      "transform": {
+       "translation": [
+        -0.0025,
+        0.305,
+        0.28625
+       ]
+      },
+      "member": "tube",
+      "part": "joint"
+     },
+     {
+      "id": "j-ear-r",
+      "kind": "box",
+      "bone": "tube",
+      "material": "steel-band",
+      "role": "detail",
+      "tone": 0.3,
+      "size": [
+       0.075,
+       0.075,
+       0.075
+      ],
+      "transform": {
+       "translation": [
+        -0.0025,
+        0.305,
+        -0.28625
+       ]
+      },
+      "member": "tube",
+      "part": "joint"
+     },
+     {
+      "id": "j-swivel",
+      "kind": "revolve",
+      "bone": "base",
+      "material": "steel-band",
+      "role": "detail",
+      "tone": 0.3,
+      "profile": [
+       [
+        0.0,
+        0.0
+       ],
+       [
+        0.0,
+        0.075
+       ],
+       [
+        0.034,
+        0.075
+       ],
+       [
+        0.034,
+        0.0
+       ]
+      ],
+      "axis": [
+       0,
+       1,
+       0
+      ],
+      "origin": [
+       0,
+       0,
+       0
+      ],
+      "member": "base",
+      "part": "joint"
+     },
+     {
+      "id": "support-blanket-floor",
+      "kind": "revolve",
+      "bone": "blanket",
+      "material": "felt-blanket",
+      "role": "ground",
+      "tone": 0.2,
+      "profile": [
+       [
+        0.0,
+        0.0
+       ],
+       [
+        0.0,
+        0.0375
+       ],
+       [
+        0.009,
+        0.0375
+       ],
+       [
+        0.009,
+        0.0
+       ]
+      ],
+      "axis": [
+       0,
+       1,
+       0
+      ],
+      "origin": [
+       -0.085,
+       0.0,
+       0.0
+      ],
+      "member": "blanket",
+      "part": "support",
+      "anchor": "blanket-floor"
+     },
+     {
+      "id": "mass-base",
+      "kind": "ellipsoid",
+      "bone": "base",
+      "material": "abs-stand",
+      "role": "detail",
+      "tone": 0.3,
+      "radii": [
+       0.017,
+       0.017,
+       0.017
+      ],
+      "transform": {
+       "translation": [
+        0.0,
+        0.017,
+        0.0
+       ]
+      },
+      "member": "base",
+      "part": "mass"
+     },
+     {
+      "id": "mass-cabinet",
+      "kind": "ellipsoid",
+      "bone": "cabinet",
+      "material": "hips-anthracite",
+      "role": "detail",
+      "tone": 0.3,
+      "radii": [
+       0.0375,
+       0.0375,
+       0.0375
+      ],
+      "transform": {
+       "translation": [
+        -0.06385,
+        0.128064,
+        0.0
+       ]
+      },
+      "member": "cabinet",
+      "part": "mass"
+     },
+     {
+      "id": "mass-tube",
+      "kind": "ellipsoid",
+      "bone": "tube",
+      "material": "crt-panel-glass",
+      "role": "detail",
+      "tone": 0.3,
+      "radii": [
+       0.0375,
+       0.0375,
+       0.0375
+      ],
+      "transform": {
+       "translation": [
+        0.043851,
+        0.305,
+        0.0
+       ]
+      },
+      "member": "tube",
+      "part": "mass"
+     }
+    ],
+    "decisions": [
+     {
+      "en": "Body, authored anew for 75 mm: the sign of the television on its stand: the bezel as one block with the screen flush in its face (the 12 mm recess and the 30 mm upper border are under the feature; the faceplate is a 13.5 mm glass layer of the thermal list on the block face), the rear cover as a strongly rounded taper (exponent 4), the 34 mm stand puck and the blanket as a 22 mm strip so that both still print at 1:1000 (C13).",
+      "de": "Körper für 75 mm neu gebaut: das Zeichen des Fernsehers auf seinem Fuß: der Frontrahmen als ein Block mit bündigem Bildschirm (die 12-mm-Vertiefung und der 30-mm-Oberrand liegen unter dem Merkmal; der Bildschirm ist eine 13,5-mm-Glasschicht der Thermikliste auf der Blockfläche), die Rückwand als stark gerundete Verjüngung (Exponent 4), der 34-mm-Fuß und die Decke als 22-mm-Streifen, damit beide bei 1:1000 noch drucken (C13)."
+     },
+     {
+      "en": "Thermal: one surface per region by reference, the faceplate as its glass layer and the vent patch. Structure: members by reference, a 75 mm bottom member, the skirt ring, two side ears and the pivot at 75 mm, the floor pad, masses.",
+      "de": "Thermik: eine Oberfläche je Region als Verweis, der Bildschirm als seine Glasschicht und die Lüftungsfläche. Tragwerk: Stäbe als Verweis, ein 75-mm-Bodenstab, Mantelring, zwei seitliche Laschen und Drehzapfen bei 75 mm, das Bodenauflager, Massen."
+     }
+    ]
+   }
+  },
+  "presentation": {
+   "defaultPose": "stored",
+   "defaultClip": "carry",
+   "defaultScale": 50
+  },
+  "exports": [
+   "svg",
+   "pdf",
+   "dxf",
+   "dwg",
+   "png-sequence",
+   "mp4",
+   "webm",
+   "component",
+   "glb",
+   "fbx",
+   "model",
+   "model-zip"
+  ],
+  "completion": "authored"
+ }
+}

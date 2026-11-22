@@ -1,0 +1,53 @@
+{
+  "id": "e-scooter-rider",
+  "category": "humans",
+  "title": {
+    "en": "E-Scooter Rider",
+    "de": "Person auf E-Scooter"
+  },
+  "heightM": 1.945,
+  "widthM": 1.088,
+  "powerW": 516.1,
+  "poses": [
+    "cruising",
+    "kicking-off",
+    "waiting-foot-down",
+    "braking"
+  ],
+  "clips": [
+    "ride-cruise",
+    "kick-start",
+    "idle-breathing"
+  ],
+  "representations": {
+    "50": "authored",
+    "100": "authored",
+    "200": "authored",
+    "500": "authored"
+  },
+  "symbols": [],
+  "analytics": [
+    "thermal",
+    "transport",
+    "structural"
+  ],
+  "exports": [
+    "svg",
+    "pdf",
+    "dxf",
+    "dwg",
+    "png-sequence",
+    "mp4",
+    "webm",
+    "component",
+    "glb",
+    "fbx",
+    "model",
+    "model-zip"
+  ],
+  "distinction": {
+    "en": "An adult in a vented helmet standing on a folding electric kick scooter with a 250 W front hub motor and a deck battery: the scooter is the root and rolls with the distance, the rider cruises, kicks off, brakes and waits with one foot down; motor, controller and brake disc warm with the operating level.",
+    "de": "Eine erwachsene Person mit belüftetem Helm steht auf einem klappbaren E-Tretroller mit 250-W-Vorderradnabenmotor und Akku im Trittbrett: Der Roller ist die Wurzel und rollt mit der Strecke, die Person fährt, stößt sich ab, bremst und wartet mit einem Fuß am Boden; Motor, Steuergerät und Bremsscheibe erwärmen sich mit der Betriebsstufe."
+  },
+  "completion": "authored"
+}

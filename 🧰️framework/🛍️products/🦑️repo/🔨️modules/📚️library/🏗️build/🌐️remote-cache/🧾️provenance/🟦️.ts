@@ -10,6 +10,9 @@ export type ProvenanceRowV1=Readonly<{origin:string;atMs:number;fingerprint?:str
 /** ⚠️ One key that two origins produced differently: the first entry stays, the later write was refused. `sort` is the class of result (`unit`, `project-inference`, `closure`, `other`) and `differing` the paths of the output files whose digests differ between the two results (at most 16, sorted; a path only one side names counts), so the nondeterministic output of a unit is named without fetching either result. */
 export type DivergenceV1=Readonly<{namespace:string;kind:"ac"|"cas"|"nx";key:string;keptOrigin:string;keptSha256:string;refusedOrigin:string;refusedSha256:string;sort:string;differing:readonly string[];atMs:number}>;
 
+/** 🪟️ The divergences of one window of time: how many and of which class; `since` is the start of the window (milliseconds), 0 when it is a sliding window. The lifetime `count` and `byClass` include every divergence ever recorded, among them those of code that has been fixed since; the windows say what still happens. */
+export type DivergenceWindowV1=Readonly<{since:number;count:number;byClass:Readonly<Record<string,number>>}>;
+
 /** 🔀️ What one producer-consumer pair of origins exchanged: action results read (`hits`) and, among them, compiled units (`units`). */
 export type ConsumptionPairV1=Readonly<{hits:number;units:number}>;
 
@@ -26,7 +29,7 @@ export interface ProvenanceV1{
  readonly evidence:EvidenceStoreV1;
  consume(namespace:string,kind:string,key:string,consumer:string):void;
  consumption():ConsumptionV1;
- summary():Readonly<{count:number;recent:readonly DivergenceV1[];since:number;byClass:Readonly<Record<string,number>>;advisory:Readonly<Record<string,number>>;superseded:Readonly<Record<string,number>>;evidence:Readonly<{count:number;bytes:number;byClass:Readonly<Record<string,number>>}>}>;
+ summary():Readonly<{count:number;recent:readonly DivergenceV1[];since:number;byClass:Readonly<Record<string,number>>;current:DivergenceWindowV1;lastHour:DivergenceWindowV1;advisory:Readonly<Record<string,number>>;superseded:Readonly<Record<string,number>>;evidence:Readonly<{count:number;bytes:number;byClass:Readonly<Record<string,number>>}>}>;
  flush():Promise<void>;
 }
 
@@ -42,8 +45,8 @@ export function provenanceClassV1(paths:readonly string[],manifest:boolean):Read
  return{sort:manifest?"unit":paths.includes("record.br")?"project-inference":paths.some(path=>path.startsWith("closure-"))?"closure":paths.some(path=>["head.br","units.br","session.br","pointer.br"].includes(path))?"owner-pool":"other",advisory:false};
 }
 
-/** 🔁️ The classes of result where the newest write replaces the older one although the two differ: a graph project record is valid for the tree its writer saw, so with a tree that changes under the fleet the first record is the stale one. The server keeps the replaced result as evidence and counts it under `superseded`, never as a divergence. Units, closures and the waves of the owner pool stay first-writer-wins. */
-export const PROVENANCE_SUPERSEDING_CLASSES_V1:readonly string[]=Object.freeze(["project-inference"]);
+/** 🔁️ The classes of result where the newest write replaces the older one although the two differ: a graph project record and the closure bundles of its entry record what their writer observed in the tree it saw (the bundle is canonical, so two machines at one tree store the same bytes), so with a tree that changes under the fleet the first one is the stale one. The server keeps the replaced result as evidence and counts it under `superseded`, never as a divergence. Units and the waves of the owner pool stay first-writer-wins. */
+export const PROVENANCE_SUPERSEDING_CLASSES_V1:readonly string[]=Object.freeze(["closure","project-inference"]);
 
 /** 🔍️ The paths whose digests differ between two results (a path only one names counts), sorted and cut to 16. */
 export function provenanceDifferingV1(kept:readonly Readonly<{path:string;hash:string}>[],refused:readonly Readonly<{path:string;hash:string}>[]):readonly string[]{
@@ -54,7 +57,8 @@ export function provenanceDifferingV1(kept:readonly Readonly<{path:string;hash:s
 /** 🕰️ The output names that record when and how long a unit was built (`createdMs`, `costMs`), so two honest builds of one key differ in them. They are left out of the fingerprint, otherwise every duplicate build would count as a divergence and be refused; the unit-cache manifest name (`manifestName` of its fleet policy) is the one entry. */
 export const PROVENANCE_VOLATILE_OUTPUTS_V1:readonly string[]=Object.freeze(["unit.json"]);
 
-const MAXIMUM=500000,RECENT=20,ROWS=1000,PAIRS=1024,OVERFLOW="*>*";
+const MAXIMUM=500000,RECENT=20,ROWS=1000,PAIRS=1024,OVERFLOW="*>*",HOUR=3600000;
+const windowOf=(rows:readonly DivergenceV1[],from:number):DivergenceWindowV1=>{const byClass:Record<string,number>={};let count=0;for(const row of rows)if(row.atMs>=from){count++;byClass[row.sort]=(byClass[row.sort]??0)+1;}return{since:0,count,byClass:Object.fromEntries(Object.entries(byClass).sort(([a],[b])=>a<b?-1:1))};};
 const address=(namespace:string,kind:string,key:string):string=>`${namespace}\u0000${kind}\u0000${key}`;
 
 /** 📒️ Opens the provenance of a server directory: `<directory>/fleet/provenance.jsonl` (appended, compacted when it holds twice as many lines as entries), `<directory>/fleet/divergences.json` (the newest 1000 rows with the lifetime total and the lifetime count per class) and `<directory>/fleet/consumption.json` (at most 1024 pairs). Entries beyond 500 000 drop the oldest. Disk trouble never fails a request: the memory view keeps working. */
@@ -62,7 +66,8 @@ export async function openProvenanceV1(directory:string,options:Readonly<{now?:(
  const clock=options.now??Date.now,journal=join(directory,"fleet","provenance.jsonl"),sheet=join(directory,"fleet","divergences.json"),tally=join(directory,"fleet","consumption.json"),rows=new Map<string,ProvenanceRowV1>(),pairs=new Map<string,{hits:number;units:number}>();
 const evidence=await openEvidenceV1(directory,clock);
  const classes=new Map<string,number>(),advice=new Map<string,number>(),replaced=new Map<string,number>();
- let divergences:DivergenceV1[]=[],pending:string[]=[],lines=0,writing:Promise<void>=Promise.resolve(),total=0,since=0,dirty=false,opened=clock(),count=0;
+ const run=clock(),runClasses=new Map<string,number>();
+ let divergences:DivergenceV1[]=[],runCount=0,pending:string[]=[],lines=0,writing:Promise<void>=Promise.resolve(),total=0,since=0,dirty=false,opened=clock(),count=0;
  await mkdir(dirname(journal),{recursive:true,mode:0o700}).catch(()=>{});
  try{
   for(const line of(await readFile(journal,"utf8")).split("\n")){
@@ -102,7 +107,7 @@ const evidence=await openEvidenceV1(directory,clock);
   advised(sort){advice.set(sort,(advice.get(sort)??0)+1);},
   superseded(sort){replaced.set(sort,(replaced.get(sort)??0)+1);},
   diverged(row){
-   classes.set(row.sort,(classes.get(row.sort)??0)+1);count++;
+   classes.set(row.sort,(classes.get(row.sort)??0)+1);count++;runCount++;runClasses.set(row.sort,(runClasses.get(row.sort)??0)+1);
    const entry:DivergenceV1={...row,atMs:clock()};
    divergences=[...divergences.filter(old=>!(old.namespace===entry.namespace&&old.kind===entry.kind&&old.key===entry.key&&old.refusedOrigin===entry.refusedOrigin)),entry].slice(-ROWS);
    writing=writing.then(async()=>{const temporary=`${sheet}.${process.pid}.tmp`;try{await writeFile(temporary,JSON.stringify({version:1,since:opened,total:count,classes:Object.fromEntries([...classes].sort(([a],[b])=>a<b?-1:1)),rows:divergences})+"\n",{mode:0o600});await rename(temporary,sheet);}catch{await rm(temporary,{force:true}).catch(()=>{});}});
@@ -114,7 +119,7 @@ const evidence=await openEvidenceV1(directory,clock);
    total++;if(since===0)since=clock();dirty=true;
   },
   consumption:snapshot,
-  summary:()=>({count,recent:divergences.slice(-RECENT),since:opened,byClass:Object.fromEntries([...classes].sort(([a],[b])=>a<b?-1:1)),advisory:Object.fromEntries([...advice].sort(([a],[b])=>a<b?-1:1)),superseded:Object.fromEntries([...replaced].sort(([a],[b])=>a<b?-1:1)),evidence:evidence.summary()}),
+  summary:()=>({count,recent:divergences.slice(-RECENT),since:opened,byClass:Object.fromEntries([...classes].sort(([a],[b])=>a<b?-1:1)),current:{since:run,count:runCount,byClass:Object.fromEntries([...runClasses].sort(([a],[b])=>a<b?-1:1))},lastHour:windowOf(divergences,clock()-HOUR),advisory:Object.fromEntries([...advice].sort(([a],[b])=>a<b?-1:1)),superseded:Object.fromEntries([...replaced].sort(([a],[b])=>a<b?-1:1)),evidence:evidence.summary()}),
   flush:async()=>{await flush();await persist();await writing;},
  });
 }

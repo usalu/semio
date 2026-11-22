@@ -9,6 +9,37 @@ description = "Component crate of semio-s-artifact-stdio-pdf: mut-x"
 [package.metadata.semio]
 role = "library"
 
+[package.metadata.semio.carve]
+owned = [
+  "standards::v1_7::subsets::x::io::binary::mutations::embed_font_file::tests",
+  "standards::v1_7::subsets::x::io::binary::mutations::insert_encryption_dictionary::tests",
+  "standards::v1_7::subsets::x::io::binary::mutations::insert_javascript_action::tests",
+  "standards::v1_7::subsets::x::io::binary::mutations::insert_launch_action::tests",
+  "standards::v1_7::subsets::x::io::binary::mutations::insert_media_annotation::tests",
+  "standards::v1_7::subsets::x::io::binary::mutations::remove_encryption_dictionary::tests",
+  "standards::v1_7::subsets::x::io::binary::mutations::remove_font_file::tests",
+  "standards::v1_7::subsets::x::io::binary::mutations::remove_javascript_action::tests",
+  "standards::v1_7::subsets::x::io::binary::mutations::remove_launch_action::tests",
+  "standards::v1_7::subsets::x::io::binary::mutations::remove_media_annotation::tests",
+  "standards::v1_7::subsets::x::io::binary::mutations::remove_output_intent::tests",
+  "standards::v1_7::subsets::x::io::binary::mutations::remove_trim_box::tests",
+  "standards::v1_7::subsets::x::io::binary::mutations::set_output_intent::tests",
+  "standards::v1_7::subsets::x::io::binary::mutations::set_trim_box::tests",
+  "standards::v1_7::subsets::x::io::text::mutations::embed_font_file::tests",
+  "standards::v1_7::subsets::x::io::text::mutations::insert_encryption_dictionary::tests",
+  "standards::v1_7::subsets::x::io::text::mutations::insert_javascript_action::tests",
+  "standards::v1_7::subsets::x::io::text::mutations::insert_media_annotation::tests",
+  "standards::v1_7::subsets::x::io::text::mutations::remove_encryption_dictionary::tests",
+  "standards::v1_7::subsets::x::io::text::mutations::remove_font_file::tests",
+  "standards::v1_7::subsets::x::io::text::mutations::remove_javascript_action::tests",
+  "standards::v1_7::subsets::x::io::text::mutations::remove_launch_action::tests",
+  "standards::v1_7::subsets::x::io::text::mutations::remove_media_annotation::tests",
+  "standards::v1_7::subsets::x::io::text::mutations::remove_output_intent::tests",
+  "standards::v1_7::subsets::x::io::text::mutations::remove_trim_box::tests",
+  "standards::v1_7::subsets::x::io::text::mutations::set_output_intent::tests",
+  "standards::v1_7::subsets::x::io::text::mutations::set_trim_box::tests",
+]
+
 [lints]
 workspace = true
 
