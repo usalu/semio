@@ -1,0 +1,15 @@
+{
+  "beat3LoopGuide": {
+    "description": "Beat3_Konvektion air-loop stroke is hidden; circulating particles remain.",
+    "requiredStroke": "opacity=0.0",
+    "forbiddenStroke": "opacity=0.35",
+    "sceneClass": "Beat3_Konvektion",
+    "keepsLoopFlow": "_loop_flow(loop"
+  },
+  "beat5LoopGuide": {
+    "description": "Beat5_Zusammenfassung indoor air-loop stroke is hidden.",
+    "requiredStroke": "opacity=0.0",
+    "forbiddenStroke": "opacity=0.35",
+    "sceneClass": "Beat5_Zusammenfassung"
+  }
+}

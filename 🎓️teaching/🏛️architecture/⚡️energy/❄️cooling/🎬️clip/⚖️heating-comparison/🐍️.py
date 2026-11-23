@@ -121,7 +121,7 @@ def _solar(house, *, per_window: int = 2):
     sun = sun_glyph(SUN_C).scale(0.42)
     floors = (house["bottom_left"][1], house["level_1"].get_center()[1])
     spread = np.linspace(0.14, -0.14, per_window)
-    sets = [sun_rays(SUN_C, w["x"], [w["center"][1] + dy for dy in spread], floor_y, gap=0.5)
+    sets = [sun_rays(SUN_C, w["outer"], [w["center"][1] + dy for dy in spread], floor_y, gap=0.5)
             for w, floor_y in zip(house["windows"], floors)]
     paths = [[s, h, p] for r in sets for s, h, p in zip(r["starts"], r["hits"], r["lands"])]
     return {"sun": sun, "rays": sets, "paths": paths, "group": VGroup(sun, *[r["group"] for r in sets])}
@@ -200,7 +200,7 @@ def _build_ahu(house: dict):
     """
     floor_y = house["bottom_left"][1]
     win_lo, win_hi = house["windows"]
-    wx = win_lo["x"]
+    wx = win_lo["outer"]
     storey = house["w_height"] / 2
     metres = room_metre(storey)
     ventilator = staffage_motion("ventilation-mechanical-mvhr", unit=room_metre(storey), rate=0.0)

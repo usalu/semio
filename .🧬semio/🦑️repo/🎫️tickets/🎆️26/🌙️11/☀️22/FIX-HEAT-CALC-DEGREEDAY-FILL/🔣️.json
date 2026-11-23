@@ -1,0 +1,13 @@
+{
+  "status": "closed",
+  "closedAt": "2026-11-23T15:55:29.217067+00:00",
+  "summary": "Scene2 Gt area: convex overlapping day trapezoids between θi and θe; continuous fill, no day-bar slits. Preview at videos/preview/de/speaker/s/63/v/Scene2.mp4.",
+  "title": "Fix Heat Calc Degreeday Fill",
+  "openedAt": "2026-11-22T21:28:52.793773+00:00",
+  "files": [
+    "🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧮️calculation/🐍️.py",
+    "🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧮️calculation/🧪️tests/🐍️.py",
+    "🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧮️calculation/🧪️tests/🔣️.cases.json",
+    "videos/preview/de/speaker/s/63/v/Scene2.mp4"
+  ]
+}

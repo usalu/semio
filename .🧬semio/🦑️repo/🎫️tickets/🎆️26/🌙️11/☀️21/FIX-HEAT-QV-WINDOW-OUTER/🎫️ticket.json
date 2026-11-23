@@ -1,0 +1,20 @@
+{
+  "id": "2026/11/21/FIX-HEAT-QV-WINDOW-OUTER",
+  "title": "Qv Window Outer Leaf Align",
+  "status": "closed",
+  "client": "cursor-chat",
+  "closed": "2026-11-21T09:43:53",
+  "goal": "ANIMATE",
+  "summary": "Qv/Fensterlüftung and related houses use outer-leaf casements.",
+  "files": [
+    "🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/⚙️mechanical/🐍️.py",
+    "🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧮️calculation/🐍️.py",
+    "🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🪟️natural/🐍️.py",
+    "🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🌬️convection/🐍️.py",
+    "🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/❓️need/🐍️.py",
+    "🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/⚙️mechanical/🧪️tests/🐍️.py",
+    "🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/⚙️mechanical/🧪️tests/🔣️.cases.json",
+    "🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧮️calculation/🧪️tests/🐍️.py",
+    "🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧮️calculation/🧪️tests/🔣️.cases.json"
+  ]
+}

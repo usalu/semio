@@ -1,0 +1,16 @@
+{
+  "id": "2026/11/22/FIX-HEAT-LOAD-DENSITY-FORMULA-CAPTION",
+  "title": "Fix Heat Load Density Formula Caption Overlap",
+  "status": "closed",
+  "client": "cursor-chat",
+  "opened": "2026-11-22T21:05:00",
+  "goal": "ANIMATE",
+  "prompt": "Spezifische Lastdichte: formula panel overlaps subtitle; fix.",
+  "closed": "2026-11-22T20:04:36",
+  "summary": "Raised FORMULA_EDGE_BUFF to 1.85 and shortened Beat5 DIN caption to one line so Spezifische Lastdichte formula clears the subtitle.",
+  "files": [
+    "🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/👥️internal-gains/🐍️.py",
+    "🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/👥️internal-gains/🎪️tests/🐍️.py",
+    "🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/👥️internal-gains/🎪️tests/🔣️.cases.json"
+  ]
+}

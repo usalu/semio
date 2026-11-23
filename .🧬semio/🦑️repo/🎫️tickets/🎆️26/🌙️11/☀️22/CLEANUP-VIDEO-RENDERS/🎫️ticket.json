@@ -1,0 +1,22 @@
+{
+  "id": "2026/11/22/CLEANUP-VIDEO-RENDERS",
+  "title": "Cleanup Video Renders",
+  "status": "closed",
+  "client": "cursor-chat",
+  "goal": "teaching/architecture/energy",
+  "opened_at": "2026-11-22T10:12:06.314145Z",
+  "closed_at": "2026-11-22T10:13:15.400953Z",
+  "summary": "Deleted regenerable videos/ (~335M) and staffage cache (~51M); kept teaching sources. Disk free ~522MiB \u2192 ~930MiB.",
+  "files": {
+    "removed": [
+      "videos/**",
+      ".\ud83e\uddecsemio/\ud83c\udf93\ufe0fteaching/\u26a1\ufe0fcache/staffage/**",
+      "this-week ticket \ud83d\uddd1\ufe0fgenerated tool logs"
+    ],
+    "created": [
+      ".\ud83e\uddecsemio/\ud83e\udd91\ufe0frepo/\ud83c\udfab\ufe0ftickets/\ud83c\udf86\ufe0f26/\ud83c\udf19\ufe0f11/\u2600\ufe0f22/CLEANUP-VIDEO-RENDERS/CLEANUP-PLAN.md",
+      ".\ud83e\uddecsemio/\ud83e\udd91\ufe0frepo/\ud83c\udfab\ufe0ftickets/\ud83c\udf86\ufe0f26/\ud83c\udf19\ufe0f11/\u2600\ufe0f22/CLEANUP-VIDEO-RENDERS/SUMMARY.md",
+      ".\ud83e\uddecsemio/\ud83e\udd91\ufe0frepo/\ud83c\udfab\ufe0ftickets/\ud83c\udf86\ufe0f26/\ud83c\udf19\ufe0f11/\u2600\ufe0f22/CLEANUP-VIDEO-RENDERS/\ud83c\udfab\ufe0fticket.json"
+    ]
+  }
+}

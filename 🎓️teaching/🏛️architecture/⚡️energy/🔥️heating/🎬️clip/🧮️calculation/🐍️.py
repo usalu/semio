@@ -26,6 +26,9 @@ BODY_FONT_SIZE = _manim_module.BODY_FONT_SIZE
 FORMULA_FONT_SIZE = _manim_module.FORMULA_FONT_SIZE
 _manim_module = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎨️visuals.🐍️")
 room_metre = _manim_module.room_metre
+SAFE_BOTTOM = _manim_module.SAFE_BOTTOM
+SAFE_BOTTOM_FORMULA = _manim_module.SAFE_BOTTOM_FORMULA
+fit_band = _manim_module.fit_band
 P_PRIMARY = _manim_module.P_PRIMARY
 section_material = _manim_module.section_material
 section_assembly = _manim_module.section_assembly
@@ -227,7 +230,7 @@ def _house(center, scale: float = 1.0):
     h = house_section(np.array(center, dtype=float), scale=scale)
     h["ground"].set_color(P_PRIMARY)
     for w in h["windows"]:
-        w["sash"].set_color(PASTEL_CYAN)
+        emphasize_casement(w, color=PASTEL_CYAN)
     t = 0.1 * scale
     air = Polygon(
         h["bottom_left"] + RIGHT * t + UP * 0.02, h["bottom_right"] + LEFT * t + UP * 0.02,
@@ -263,13 +266,17 @@ def _envelope_paths(h, *, sides=("left", "right", "roof", "floor"), reach: float
     return paths
 
 
-def _window_wall(x: float, y: float, *, height: float = 1.1, opening: float = 0.56, wall: float = 0.2):
-    """🪟 Physical Fundamentals wall slab with a glazed opening — the sash opens into the room on the right."""
+def _window_wall(x: float, y: float, *, height: float = 0.88, opening: float = 0.62, wall: float = 0.13):
+    """🪟 Slim exterior-wall section with a tall casement — house-scale leaf, not a thick slab."""
+    if not (0 < opening < height) or wall <= 0:
+        raise ValueError("Window wall needs positive wall and an opening shorter than the slab")
     lo, hi = y - opening / 2, y + opening / 2
     y0, y1 = y - height / 2, y + height / 2
     below = section_material(Rectangle(width=wall, height=lo - y0)).move_to(np.array([x, (y0 + lo) / 2, 0.0]))
     above = section_material(Rectangle(width=wall, height=y1 - hi)).move_to(np.array([x, (hi + y1) / 2, 0.0]))
-    win = emphasize_casement(window_glyph(x, lo, hi, depth=0.85 * opening, color=PASTEL_CYAN, wall=wall, inward=1))
+    sash_depth = min(0.20, 0.30 * (hi - lo))
+    win = emphasize_casement(window_glyph(x, lo, hi, depth=sash_depth, color=PASTEL_CYAN, wall=wall, inward=1),
+                             color=PASTEL_CYAN)
     return {"x": x, "lo": lo, "hi": hi, "window": win, "group": VGroup(below, above, win["group"])}
 
 
@@ -328,8 +335,8 @@ class ReviewingHeatLosses(Scene):
          r"From module 2: heat flows through the envelope as the load $\dot{Q}_{\mathrm{T}} = \Sigma\, U \cdot A \cdot \Delta\theta$, about $2\,300\,\mathrm{W}$.",
          r"Aus Modul 2: Wärme fließt durch die Hülle als Last $\dot{Q}_{\mathrm{T}} = \Sigma\, U \cdot A \cdot \Delta\theta$, rund $2\,300\,\mathrm{W}$."),
         ("vent",
-         r"From module 3 and the Ventilation video: the air change carries heat out as $\dot{Q}_{\mathrm{V}}$ — $n \cdot V \cdot \rho c_{\mathrm{p}} \cdot \Delta\theta$, about $1\,500\,\mathrm{W}$.",
-         r"Aus Modul 3 und dem Lüftungsvideo: Der Luftwechsel trägt Wärme als $\dot{Q}_{\mathrm{V}}$ hinaus — $n \cdot V \cdot \rho c_{\mathrm{p}} \cdot \Delta\theta$, rund $1\,500\,\mathrm{W}$."),
+         r"From module 3 and the Ventilation video: the air change carries heat out as $\dot{Q}_{\mathrm{V}}$ — about $1\,500\,\mathrm{W}$.",
+         r"Aus Modul 3 und dem Lüftungsvideo: Der Luftwechsel trägt Wärme als $\dot{Q}_{\mathrm{V}}$ hinaus — rund $1\,500\,\mathrm{W}$."),
         ("total",
          r"Both add up to about $3\,800\,\mathrm{W}$, the total heat-loss power $\dot{Q}_{\mathrm{l}}$ — after DIN V 4108-6.",
          r"Beide zusammen ergeben die Gesamtverlustleistung $\dot{Q}_{\mathrm{l}}$ von rund $3\,800\,\mathrm{W}$ — nach DIN V 4108-6."),
@@ -350,7 +357,7 @@ class ReviewingHeatLosses(Scene):
 
         trans_formula = math_label(r"\dot{Q}_{\mathrm{T}} = \Sigma\, U_{i} \cdot A_{i} \cdot \Delta\theta",
                                    np.array([X0, 2.15, 0.0]), size=28, color=ICY_BLUE, edge="left")
-        house = _house(np.array([-5.25, 0.8, 0.0]), scale=0.4)
+        house = _house(np.array([-5.25, 0.8, 0.0]), scale=0.55)
         house_paths = _envelope_paths(house, reach=1.1, inset=0.6)
         phi_t = ValueTracker(0.0)
         t_read = math_readout(lambda: rf"\dot{{Q}}_{{\mathrm{{T}}}} \approx {label_number(phi_t.get_value())}\,\mathrm{{W}}",
@@ -373,19 +380,19 @@ class ReviewingHeatLosses(Scene):
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "vent"))
         vent_formula = math_label(r"\dot{Q}_{\mathrm{V}} = n \cdot V \cdot \rho c_{\mathrm{p}} \cdot \Delta\theta",
-                                  np.array([X0, -0.6, 0.0]), size=28, color=DEEP_BLUE, edge="left")
-        vent = _window_wall(-5.25, -1.72)
-        vent_out, vent_in = _exchange_paths(vent)
+                                  np.array([X0, -0.35, 0.0]), size=28, color=DEEP_BLUE, edge="left")
+        vent = _window_wall(-5.25, -1.38)
+        vent_out, vent_in = _exchange_paths(vent, reach=0.55)
         phi_v = ValueTracker(0.0)
         v_read = math_readout(lambda: rf"\dot{{Q}}_{{\mathrm{{V}}}} \approx {label_number(phi_v.get_value())}\,\mathrm{{W}}",
-                              np.array([-3.65, -1.72, 0.0]), size=26, color=DEEP_BLUE)
+                              np.array([-3.65, -1.38, 0.0]), size=26, color=DEEP_BLUE)
 
         def losses(rt):
             return [*leak(rt), _flow([(vent_out, WARM, ICY_BLUE), (vent_in, DEEP_BLUE, WARM)], rt, speed=0.55,
                                      waves=4)]
 
         self.play(FadeIn(vent_formula, shift=DOWN * 0.1), FadeIn(vent["group"]), *leak(1.4), run_time=1.4)
-        self.play(open_window(vent["window"]), *leak(0.6), run_time=0.6)
+        self.play(open_window(vent["window"], fraction=0.55), *leak(0.6), run_time=0.6)
         self.add(v_read)
         self.play(*losses(3.0), phi_v.animate.set_value(_PHI_V), run_time=3.0)
         hold_for(self, self.NARRATION, "vent", during=losses)
@@ -448,20 +455,24 @@ class Scene2(Scene):
         PURPLE = PASTEL_PURPLE
         WARM = PASTEL_ORANGE
 
+        # Top formula band stays above the house roofs; icons + labels + H-readouts stack below.
         initial_eq, ie = math_row([
             ("loss", r"\dot{Q}_{\mathrm{l}}", PASTEL_WHITE), ("eq", "=", PASTEL_WHITE),
             ("t", r"\dot{Q}_{\mathrm{T}}", ICY_BLUE), ("plus", "+", PASTEL_WHITE), ("v", r"\dot{Q}_{\mathrm{V}}", DEEP_BLUE),
-        ], font_size=FORMULA_FONT_SIZE, buff=UI_SPACING)
-        initial_eq.move_to(UP * 1.35)
+        ], font_size=BODY_FONT_SIZE + 2, buff=UI_SPACING)
+        initial_eq.next_to(title, DOWN, buff=0.42).set_x(0)
 
-        house = _house(np.array([-2.5, -0.05, 0.0]), scale=0.4)
+        house = _house(np.array([-3.05, 0.48, 0.0]), scale=0.48)
         house_paths = _envelope_paths(house, reach=1.1, inset=0.6)
-        wall_label = _label("Transmission", size=18, color=ICY_BLUE).next_to(house["floor"], DOWN, buff=0.3)
-        wall_icon = VGroup(house["group"], wall_label)
+        wall_label = _label("Transmission", size=18, color=ICY_BLUE)
+        wall_label.next_to(house["group"], DOWN, buff=0.38)
 
-        vent = _window_wall(2.5, 0.1)
+        vent = _window_wall(3.05, float(house["group"].get_center()[1]))
         vent_out, vent_in = _exchange_paths(vent)
-        window_label = _label(tr("Ventilation", "Lüftung"), size=18, color=DEEP_BLUE).move_to(np.array([2.5, wall_label.get_y(), 0.0]))
+        window_label = _label(tr("Ventilation", "Lüftung"), size=18, color=DEEP_BLUE)
+        window_label.next_to(vent["group"], DOWN, buff=0.38)
+        # Keep icon packs as (drawing, label) so later FadeOut clears both.
+        wall_icon = VGroup(house["group"], wall_label)
         window_icon = VGroup(vent["group"], window_label)
 
         def losses(rt):
@@ -471,7 +482,7 @@ class Scene2(Scene):
         self.add(house["air"])
         self.play(FadeIn(initial_eq), FadeIn(wall_icon), FadeIn(window_icon), house["air"].animate.set_fill(opacity=0.14),
                   run_time=1.4)
-        self.play(open_window(vent["window"]), *losses(0.6), run_time=0.6)
+        self.play(open_window(vent["window"], fraction=0.55), *losses(0.6), run_time=0.6)
         self.play(*losses(2.0), run_time=2.0)
         hold_for(self, self.NARRATION, "phi", used=0.3 + 0.8 + 1.4 + 0.6 + 2.0, during=losses)
 
@@ -479,31 +490,43 @@ class Scene2(Scene):
         multiplier_group, mg = math_row([
             ("arrow", r"\to", PURPLE), ("ht", r"H_{\mathrm{T}}", ICY_BLUE), ("plus", "+", PURPLE),
             ("hv", r"H_{\mathrm{V}}", DEEP_BLUE),
-        ], font_size=FORMULA_FONT_SIZE, buff=UI_SPACING * 2)
-        probe = VGroup(initial_eq.copy(), multiplier_group.copy()).arrange(RIGHT, buff=0.3).move_to(UP * 1.35)
-        target_initial_pos = probe[0].get_center()
-        multiplier_group.move_to(probe[1].get_center())
+        ], font_size=BODY_FONT_SIZE + 2, buff=UI_SPACING * 2)
+        eq_row = VGroup(initial_eq.copy(), multiplier_group.copy()).arrange(RIGHT, buff=0.35)
+        eq_row.next_to(title, DOWN, buff=0.42).set_x(0)
+        target_initial_pos = eq_row[0].get_center()
+        multiplier_group.move_to(eq_row[1].get_center())
         multiplier_group.shift(UP * (initial_eq.base.get_center()[1] - multiplier_group.base.get_center()[1]))
 
         climate_label = math_label(
-            tr(r"H = \frac{\dot{Q}}{\Delta\theta} \quad \text{in}\; \frac{\mathrm{W}}{\mathrm{K}} \quad \text{annual energy uses}\; H \cdot G_{t,20/15}"
-               r"\text{, not the design load}",
-               r"H = \frac{\dot{Q}}{\Delta\theta} \quad \text{in}\; \frac{\mathrm{W}}{\mathrm{K}} \quad \text{Jahresenergie nutzt}\; H \cdot G_{t,20/15}"
-               r"\text{, nicht die Auslegungslast}"),
-            size=18, color=PURPLE,
+            tr(r"H = \frac{\dot{Q}}{\Delta\theta}\;\text{in}\;\frac{\mathrm{W}}{\mathrm{K}}",
+               r"H = \frac{\dot{Q}}{\Delta\theta}\;\text{in}\;\frac{\mathrm{W}}{\mathrm{K}}"),
+            size=20, color=PURPLE,
         )
-        climate_label.next_to(probe, UP, buff=0.45)
+        climate_label.next_to(eq_row, UP, buff=0.32).set_x(0)
+        # Keep climate definition under the section title, never into the equation row.
+        if climate_label.get_top()[1] > title.get_bottom()[1] - 0.12:
+            climate_label.next_to(title, DOWN, buff=0.18).set_x(0)
+            eq_row.next_to(climate_label, DOWN, buff=0.34).set_x(0)
+            target_initial_pos = eq_row[0].get_center()
+            multiplier_group.move_to(eq_row[1].get_center())
+            multiplier_group.shift(UP * (eq_row[0].base.get_center()[1] - multiplier_group.base.get_center()[1]))
 
         h_t = ValueTracker(0.0)
         h_v = ValueTracker(0.0)
+        # Shared baseline so H_T / H_V stay level and clear of the caption band.
+        floor = SAFE_BOTTOM + 0.55
+        read_y = min(wall_label.get_bottom()[1], window_label.get_bottom()[1]) - 0.62
+        read_y = max(read_y, floor)
+        ht_anchor = np.array([wall_label.get_center()[0], read_y, 0.0])
+        hv_anchor = np.array([window_label.get_center()[0], read_y, 0.0])
         ht_read = math_readout(
             lambda: rf"H_{{\mathrm{{T}}}} = \frac{{{label_number(_PHI_T)}\,\mathrm{{W}}}}{{20\,\mathrm{{K}}}} = "
                     rf"{label_number(h_t.get_value())}\,\frac{{\mathrm{{W}}}}{{\mathrm{{K}}}}",
-            np.array([wall_icon.get_center()[0], -1.6, 0.0]), size=20, color=ICY_BLUE, edge="center")
+            ht_anchor, size=18, color=ICY_BLUE, edge="center")
         hv_read = math_readout(
             lambda: rf"H_{{\mathrm{{V}}}} = \frac{{{label_number(_PHI_V)}\,\mathrm{{W}}}}{{20\,\mathrm{{K}}}} = "
                     rf"{label_number(h_v.get_value())}\,\frac{{\mathrm{{W}}}}{{\mathrm{{K}}}}",
-            np.array([window_icon.get_center()[0], -1.6, 0.0]), size=20, color=DEEP_BLUE, edge="center")
+            hv_anchor, size=18, color=DEEP_BLUE, edge="center")
 
         self.play(
             initial_eq.animate.move_to(target_initial_pos),
@@ -519,8 +542,8 @@ class Scene2(Scene):
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "gt_ref"))
         theta_e = _year_theta_e()
         heating = theta_e < _THETA_HG
-        O = np.array([-5.7, -2.0, 0.0])
-        XL, YL, T_LO, T_HI = 7.4, 2.6, -8.0, 26.0
+        O = np.array([-5.7, -1.55, 0.0])
+        XL, YL, T_LO, T_HI = 7.0, 2.25, -8.0, 26.0
 
         def cp(day, temp):
             return O + RIGHT * (day / 365 * XL) + UP * ((temp - T_LO) / (T_HI - T_LO) * YL)
@@ -540,39 +563,87 @@ class Scene2(Scene):
         starts = [0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334, 365]
         m_marks = VGroup(*[Line(cp(d, T_LO) + DOWN * 0.06, cp(d, T_LO) + UP * 0.06, color=PASTEL_WHITE, stroke_width=2)
                            for d in starts[1:-1]])
-        m_names = VGroup(*[_label(m, size=15, color=PASTEL_WHITE).move_to(cp((a + b) / 2, T_LO) + DOWN * 0.22)
+        m_names = VGroup(*[_label(m, size=14, color=PASTEL_WHITE).move_to(cp((a + b) / 2, T_LO) + DOWN * 0.14)
                            for m, a, b in zip(months, starts[:-1], starts[1:])])
-        curve = VMobject(color=ICY_BLUE, stroke_width=2.4).set_points_as_corners([cp(d + 0.5, v) for d, v in enumerate(theta_e)])
-        e_name = math_label(r"\theta_{\mathrm{e}}", cp(292, theta_e[292]) + DOWN * 0.38 + RIGHT * 0.25, size=22, color=ICY_BLUE)
-        i_line = Line(cp(0, _THETA_I), cp(365, _THETA_I), color=WARM, stroke_width=3)
-        hg_line = DashedLine(cp(0, _THETA_HG), cp(365, _THETA_HG), color=PASTEL_YELLOW, stroke_width=2.4)
+        curve = VMobject(color=ICY_BLUE, stroke_width=2.4).set_points_as_corners([cp(d + 0.5, v) for d, v in enumerate(theta_e)]).set_z_index(2)
+        e_name = math_label(r"\theta_{\mathrm{e}}", cp(55, theta_e[55]) + LEFT * 0.70 + DOWN * 0.10, size=18, color=ICY_BLUE)
+        i_line = Line(cp(0, _THETA_I), cp(365, _THETA_I), color=WARM, stroke_width=3).set_z_index(2)
+        hg_line = DashedLine(cp(0, _THETA_HG), cp(365, _THETA_HG), color=PASTEL_YELLOW, stroke_width=2.4).set_z_index(2)
         i_name = math_label(rf"\theta_{{\mathrm{{i}}}} = {label_number(_THETA_I)}\,\mathrm{{°C}}",
-                            np.array([2.2, cp(0, _THETA_I)[1], 0.0]), size=22, color=WARM, edge="left")
+                            np.array([3.15, cp(0, _THETA_I)[1], 0.0]), size=20, color=WARM, edge="left")
         i_note = _label(tr("room temperature", "Raumtemperatur"), size=15, color=WARM).next_to(i_name, RIGHT, buff=0.2)
         hg_name = math_label(tr(rf"\text{{heating limit}}\;{label_number(_THETA_HG)}\,\mathrm{{°C}}", rf"\text{{Heizgrenze}}\;{label_number(_THETA_HG)}\,\mathrm{{°C}}"),
-                             np.array([2.2, cp(0, _THETA_HG)[1], 0.0]), size=22, color=PASTEL_YELLOW, edge="left")
+                             np.array([3.15, cp(0, _THETA_HG)[1], 0.0]), size=20, color=PASTEL_YELLOW, edge="left")
 
         day = ValueTracker(0.0)
         heating_days = np.flatnonzero(heating)
-        bars = VGroup(*[
-            Rectangle(width=XL / 365 * 1.2, height=(_THETA_I - theta_e[d]) / (T_HI - T_LO) * YL, stroke_width=0,
-                      fill_color=PURPLE, fill_opacity=0.0).move_to((cp(d + 0.5, _THETA_I) + cp(d + 0.5, theta_e[d])) / 2)
-            for d in heating_days
-        ])
-        bars.add_updater(lambda group: [bar.set_fill(opacity=0.55 if d + 1 <= day.get_value() else 0.0)
-                                        for bar, d in zip(group, heating_days)])
+        # Visual band: every day with θ_e below room temperature (area between the curves).
+        # G_t still sums only Heizgrenze days — the dashed line marks that cutoff.
+        shade = theta_e < _THETA_I
+
+        def _runs(mask):
+            runs, start = [], None
+            for i, on in enumerate(mask):
+                if on and start is None:
+                    start = i
+                elif not on and start is not None:
+                    runs.append((start, i - 1))
+                    start = None
+            if start is not None:
+                runs.append((start, len(mask) - 1))
+            return runs
+
+        shade_runs = _runs(shade)
+
+        def _degree_day_band(upto: float):
+            """🟣 Solid fill between θ_i and θ_e via convex day trapezoids (no concave holes)."""
+            shapes = []
+            last = min(364, max(-1, int(upto) - 1))
+            for start, end in shade_runs:
+                if start > last:
+                    break
+                stop = min(end, last)
+                if stop < start:
+                    continue
+                samples = [(float(start), float(theta_e[start]))]
+                for d in range(start, stop + 1):
+                    samples.append((d + 0.5, float(theta_e[d])))
+                samples.append((float(stop) + 1.0, float(theta_e[stop])))
+                # Overlap ≥ ~2 px at 480p so trapezoid seams never show as dark slits.
+                x_overlap = 1.25
+                for i in range(len(samples) - 1):
+                    x0, te0 = samples[i]
+                    x1, te1 = samples[i + 1]
+                    te0 = min(te0, _THETA_I)
+                    te1 = min(te1, _THETA_I)
+                    if te0 >= _THETA_I - 1e-9 and te1 >= _THETA_I - 1e-9:
+                        continue
+                    if i > 0:
+                        x0 -= x_overlap
+                    shapes.append(Polygon(
+                        cp(min(365.0, x0), _THETA_I),
+                        cp(min(365.0, x1), _THETA_I),
+                        cp(min(365.0, x1), te1),
+                        cp(min(365.0, x0), te0),
+                        stroke_width=0, fill_color=PURPLE, fill_opacity=0.72,
+                    ))
+            group = VGroup(*shapes) if shapes else VGroup()
+            group.set_z_index(-8)
+            return group
+
+        bars = always_redraw(lambda: _degree_day_band(day.get_value()))
 
         def gt_now():
             return float(sum(_THETA_I - theta_e[d] for d in heating_days if d + 1 <= day.get_value()))
 
         gt_def = math_label(r"G_{t,20/15} = \Sigma\,(\theta_{\mathrm{i}} - \theta_{\mathrm{e}}) \cdot 1\,\mathrm{d}",
-                            np.array([2.2, -0.95, 0.0]), size=20, color=PURPLE, edge="left")
+                            np.array([3.15, -0.95, 0.0]), size=18, color=PURPLE, edge="left")
         gt_note = math_label(tr(r"\text{only days with}\;\theta_{\mathrm{e}} < 15\,\mathrm{°C}", r"\text{nur Tage mit}\;\theta_{\mathrm{e}} < 15\,\mathrm{°C}"),
-                             np.array([2.2, -1.35, 0.0]), size=18, color=GREY_A, edge="left")
+                             np.array([3.15, -1.35, 0.0]), size=16, color=GREY_A, edge="left")
         d_read = math_readout(lambda: tr(rf"\mathrm{{Day}}\; {int(day.get_value())}\; \text{{of}}\; 365", rf"\mathrm{{Tag}}\; {int(day.get_value())}\; \text{{von}}\; 365"),
-                              np.array([2.2, -1.75, 0.0]), size=20, color=GREY_A)
+                              np.array([3.15, -1.75, 0.0]), size=18, color=GREY_A)
         gt_read = math_readout(lambda: rf"G_{{t,20/15}} \approx {label_number(round(gt_now(), -1))}\,\frac{{\mathrm{{Kd}}}}{{\mathrm{{a}}}}",
-                               np.array([2.2, -2.25, 0.0]), size=24, color=PURPLE)
+                               np.array([3.15, -2.15, 0.0]), size=22, color=PURPLE)
         mark = always_redraw(lambda: Dot(cp(day.get_value(), theta_e[min(int(day.get_value()), 364)]), radius=0.07, color=PASTEL_WHITE))
         d0 = 20
         gap = DoubleArrow(cp(d0 + 0.5, _THETA_I), cp(d0 + 0.5, theta_e[d0]), buff=0, stroke_width=2.2, tip_length=0.12, color=PASTEL_WHITE)
@@ -614,7 +685,9 @@ class Scene2(Scene):
             np.array([0.0, -0.6, 0.0]), size=34, color=PASTEL_WHITE, edge="center")
 
         bars.clear_updaters()
-        area_static = bars
+        area_static = _degree_day_band(365.0)
+        self.remove(bars)
+        self.add(area_static)
         self.remove(mark)
         _freeze(gt_read)
         self.play(
@@ -1206,7 +1279,7 @@ class UltimateEnergyBalance(Scene):
 #region System losses scene
 BOILER_RATE = 60.0
 TANK_CHARGE_S = 900.0
-_HOUSE_DY = 0.22
+_HOUSE_DY = 1.20
 
 
 def _plant_house():
@@ -1217,27 +1290,39 @@ def _plant_house():
     slab = lambda x0, x1, y0, y1: section_material(Rectangle(width=x1 - x0, height=y1 - y0)).move_to(P((x0 + x1) / 2, (y0 + y1) / 2))
     WIN = (0.65, 1.25)
     room_h, wall = 1.6, 0.35 * 1.6 / 2.5
+    left_c, right_c = -6.65, -1.35
+    outer_l, outer_r = left_c - wall / 2, right_c + wall / 2
+    inner_l, inner_r = left_c + wall / 2, right_c - wall / 2
     metre = room_metre(room_h)
-    RAD_X, PIPE_Y, TANK_X = (-6.65 + wall / 2, -1.35 - wall / 2), -0.48, -4.9
+    RAD_X, PIPE_Y, TANK_X = (inner_l, inner_r), -0.48, -4.9
     RAD_Y = -0.15 + metre * (0.11 + 0.6 / 2)
     parts = {}
-    parts["room"] = Rectangle(width=5.3 - wall, height=room_h, stroke_width=0, fill_color=PASTEL_ORANGE, fill_opacity=0.10
-                              ).move_to(P(-4.0, 0.65))
-    parts["cellar"] = Rectangle(width=5.3 - wall, height=1.3, stroke_width=0, fill_color=PASTEL_BLUE, fill_opacity=0.10
-                                ).move_to(P(-4.0, -0.95))
+    parts["room"] = Rectangle(width=inner_r - inner_l, height=room_h, stroke_width=0, fill_color=PASTEL_ORANGE, fill_opacity=0.10
+                              ).move_to(P((inner_l + inner_r) / 2, 0.65))
+    parts["cellar"] = Rectangle(width=inner_r - inner_l, height=1.3, stroke_width=0, fill_color=PASTEL_BLUE, fill_opacity=0.10
+                                ).move_to(P((inner_l + inner_r) / 2, -0.95))
     parts["walls"] = VGroup(
-        *[slab(x - wall / 2, x + wall / 2, -0.15, WIN[0]) for x in (-6.65, -1.35)],
-        *[slab(x - wall / 2, x + wall / 2, WIN[1], 1.45) for x in (-6.65, -1.35)],
-        *[slab(x - wall / 2, x + wall / 2, -1.6, -0.3) for x in (-6.65, -1.35)],
-        slab(-6.8, -1.2, -0.3, -0.15), slab(-6.8, -1.2, -1.72, -1.6),
+        *[slab(c - wall / 2, c + wall / 2, -0.15, WIN[0]) for c in (left_c, right_c)],
+        *[slab(c - wall / 2, c + wall / 2, WIN[1], 1.45) for c in (left_c, right_c)],
+        *[slab(c - wall / 2, c + wall / 2, -1.6, -0.3) for c in (left_c, right_c)],
+        slab(outer_l, outer_r, -0.3, -0.15), slab(outer_l, outer_r, -1.72, -1.6),
     )
     parts["back_wall"] = parts["walls"][0]
-    parts["roof"] = section_material(Polygon(P(-7.0, 1.45), P(-4.0, 2.4), P(-1.0, 1.45), P(-1.0, 1.29), P(-4.0, 2.24), P(-7.0, 1.29)))
-    windows = [emphasize_casement(window_glyph(
-        x, WIN[0] + _HOUSE_DY, WIN[1] + _HOUSE_DY, depth=0.85 * (WIN[1] - WIN[0]),
-        color=PASTEL_CYAN, wall=max(wall, 0.28), inward=1 if x < -4 else -1))
-               for x in (-6.65, -1.35)]
+    parts["roof"] = section_material(Polygon(P(outer_l - 0.2, 1.45), P(-4.0, 2.4), P(outer_r + 0.2, 1.45),
+                                             P(outer_r + 0.2, 1.29), P(-4.0, 2.24), P(outer_l - 0.2, 1.29)))
+    sill_y, lintel_y = WIN[0] + _HOUSE_DY, WIN[1] + _HOUSE_DY
+    windows = [
+        emphasize_casement(window_glyph(left_c, sill_y, lintel_y, depth=0.85 * (lintel_y - sill_y),
+                                        color=PASTEL_CYAN, wall=wall, inward=1), color=PASTEL_CYAN),
+        emphasize_casement(window_glyph(right_c, sill_y, lintel_y, depth=0.85 * (lintel_y - sill_y),
+                                        color=PASTEL_CYAN, wall=wall, inward=-1), color=PASTEL_CYAN),
+    ]
+    for win in windows:
+        win["sash"][0].set_fill(PASTEL_CYAN, opacity=0.4)
+        win["sash"][0].set_stroke(PASTEL_CYAN, width=3.0)
+        win["joinery"][2].set_stroke(width=3.2, color=PASTEL_CYAN)
     parts["windows"] = VGroup(*[w["group"] for w in windows])
+    parts["window_dicts"] = windows
     parts["radiators"] = VGroup(*[_cast("shared-radiator-thermostat", staffage_height("shared-radiator-thermostat") * metre, motion=True, anchor=P(x, -0.15), mirror=mirror)
                                  for x, mirror in zip(RAD_X, (False, True))])
     parts["thermostat"] = _cast("heating-calculation-thermostat", staffage_height("heating-calculation-thermostat") * metre, motion=True, rate=0.0, anchor=P(-6.42, -0.15))
@@ -1360,7 +1445,7 @@ class AnlagenVerluste(Scene):
                 anims.append(_flow([(flue, PASTEL_ORANGE, PASTEL_GREY)], rt, speed=0.6, waves=6, radius=0.075))
             return anims
 
-        BASE = np.array([0.35, -1.5, 0.0])
+        BASE = np.array([0.35, 0.10, 0.0])
         BAR_W = 0.7
         UNIT = 3.5 / _Q_E
         vals = [ValueTracker(0.0) for _ in range(5)]
@@ -1387,7 +1472,7 @@ class AnlagenVerluste(Scene):
         bar_floor = Line(BASE + LEFT * 0.55, BASE + RIGHT * 0.55, color=PASTEL_WHITE, stroke_width=2)
 
         CX = 1.55
-        rows_y = [-0.95, -0.3, 0.32, 0.94, 1.56, 2.18]
+        rows_y = [0.45, 1.05, 1.63, 2.19, 2.71, 3.17]
         names = [tr("Heating demand", "Heizwärmebedarf"), tr("Emission: radiators, thermostat", "Übergabe: Heizkörper, Thermostat"), tr("Distribution: pipes in the basement", "Verteilung: Rohre im Keller"),
                  tr("Storage: standby", "Speicherung: Bereitschaft"), tr("Generation: flue gas, efficiency 0.95", "Erzeugung: Abgas, Wirkungsgrad 0,95"), tr("Final energy", "Endenergie")]
         row_colors = colors + [E_C]
@@ -1464,7 +1549,21 @@ class AnlagenVerluste(Scene):
             (None, "+", PASTEL_WHITE), ("s", r"Q_{\mathrm{h,s}}", S_C), (None, "+", PASTEL_WHITE),
             ("g", r"Q_{\mathrm{h,g}}", G_C), (None, r"\approx", PASTEL_WHITE),
             ("v", rf"{label_number(round(_Q_E, -2))}\,\frac{{\mathrm{{kWh}}}}{{\mathrm{{a}}}}", E_C),
-        ], color=P_PRIMARY)
+        ], color=P_PRIMARY, edge_buff=1.55, size=40)
+        # Large formula in the lower-middle free strip; clears diagram and caption.
+        panel = VGroup(row, box)
+        if panel.width > 13.6:
+            panel.scale(13.6 / panel.width)
+        panel.set_x(0)
+        content_clear = -0.48
+        caption_top = SAFE_BOTTOM + 0.10
+        mid_y = 0.28 * content_clear + 0.72 * caption_top
+        panel.shift(UP * (mid_y - panel.get_center()[1]))
+        if panel.get_top()[1] > content_clear - 0.14:
+            panel.shift(DOWN * (panel.get_top()[1] - (content_clear - 0.14)))
+        if panel.get_bottom()[1] < caption_top + 0.18:
+            panel.shift(UP * ((caption_top + 0.18) - panel.get_bottom()[1]))
+        panel.set_x(0)
         sources = {
             key: math_label(src, _slot(r), size=21, color=c, edge="left")
             for key, src, r, c in zip(
@@ -1473,7 +1572,8 @@ class AnlagenVerluste(Scene):
                 readouts[:5], colors)
         }
         self.add(readouts[5])
-        self.play(FadeIn(name_mobs[5]), e_val.animate.set_value(_Q_E), *running(1.8), run_time=1.8)
+        self.play(FadeIn(name_mobs[5]), e_val.animate.set_value(_Q_E),
+                  FadeOut(VGroup(name_mobs[0], readouts[0], leaders[0])), *running(1.8), run_time=1.8)
         copies = {k: s.copy() for k, s in sources.items()}
         for c in copies.values():
             for part in c.get_family():

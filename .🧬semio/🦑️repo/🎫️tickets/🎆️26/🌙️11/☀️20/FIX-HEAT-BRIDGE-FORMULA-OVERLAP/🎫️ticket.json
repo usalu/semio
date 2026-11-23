@@ -1,0 +1,17 @@
+{
+  "id": "2026/11/20/FIX-HEAT-BRIDGE-FORMULA-OVERLAP",
+  "title": "Fix Thermal Bridge Formula Overlap",
+  "status": "closed",
+  "client": "cursor-chat",
+  "opened": "2026-11-20T23:02:00",
+  "closed": "2026-11-20T23:05:36",
+  "goal": "ANIMATE",
+  "prompt": "In Wärmebrücken section the formula has an animation problem with overlapping/duplicate glyphs.",
+  "summary": "Drop detailed H_T panel before appearing flat-rate formula; no replace-morph between different MathTex rows.",
+  "files": [
+    "🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧱️conduction/🐍️.py",
+    "🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧱️conduction/🔀️transitions/🔣️.json",
+    "🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧱️conduction/🧪️tests/🐍️.py",
+    "🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧱️conduction/🧪️tests/🔣️.cases.json"
+  ]
+}

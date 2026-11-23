@@ -1,0 +1,88 @@
+{
+  "plantWindow": {
+    "wallArg": "wall=wall",
+    "forbid": "wall=max(wall, 0.28)"
+  },
+  "htHvWindows": {
+    "windowWallDefault": "wall: float = 0.13",
+    "scene2Scale": "scale=0.48",
+    "emphasizeInHouse": "emphasize_casement(w, color=PASTEL_CYAN)"
+  },
+  "plantOuter": {
+    "outerL": "outer_l, outer_r = left_c - wall / 2, right_c + wall / 2",
+    "slabOuter": "slab(outer_l, outer_r, -0.3, -0.15)",
+    "leftInward": "inward=1), color=PASTEL_CYAN)",
+    "rightInward": "inward=-1), color=PASTEL_CYAN)"
+  },
+  "anlagenFormulaGap": {
+    "edgeBuff": "edge_buff=1.55, size=40",
+    "center": "panel.set_x(0)",
+    "midSlot": "mid_y = 0.28 * content_clear + 0.72 * caption_top",
+    "fadeQh": "FadeOut(VGroup(name_mobs[0], readouts[0], leaders[0]))",
+    "contentClear": "content_clear = -0.48"
+  },
+  "scene2ClimateBand": {
+    "sceneClass": "Scene2",
+    "required": [
+      "SAFE_BOTTOM + 0.55",
+      "read_y = min(wall_label.get_bottom()[1], window_label.get_bottom()[1]) - 0.62",
+      "wall_label.next_to(house[\"group\"], DOWN, buff=0.38)",
+      "scale=0.48",
+      "O = np.array([-5.7, -1.55, 0.0])"
+    ],
+    "forbidden": [
+      "initial_eq.move_to(UP * 1.35)",
+      "np.array([wall_icon.get_center()[0], -1.6, 0.0])",
+      "Jahresenergie nutzt",
+      "scale=0.7)",
+      "scale=0.55)"
+    ]
+  },
+  "degreeDayFill": {
+    "sceneClass": "Scene2",
+    "required": [
+      "def _degree_day_band(upto: float):",
+      "bars = always_redraw(lambda: _degree_day_band(day.get_value()))",
+      "shade = theta_e < _THETA_I",
+      "shade_runs = _runs(shade)",
+      "area_static = _degree_day_band(365.0)",
+      "Solid fill between θ_i and θ_e via convex day trapezoids",
+      "samples.append((d + 0.5, float(theta_e[d])))"
+    ],
+    "forbidden": [
+      "Rectangle(width=XL / 365 * 1.2, height=(_THETA_I - theta_e[d])",
+      "bar.set_fill(opacity=0.55 if d + 1 <= day.get_value()",
+      "heating_runs = _heating_runs(heating)",
+      "xs = [float(days[0])] + [d + 0.5 for d in days] + [float(days[-1]) + 1.0]"
+    ]
+  },
+  "anlagenFormulaGapForbidden": [
+    "edge_buff=1.45",
+    "edge_buff=2.05, size=22",
+    "edge_buff=1.52, size=28",
+    "top_limit = -1.08",
+    "ceiling = -1.22",
+    "target_bottom = SAFE_BOTTOM + 0.28",
+    "VGroup(row, box).scale(0.80)",
+    "_HOUSE_DY = 0.22",
+    "_HOUSE_DY = 0.55",
+    "_HOUSE_DY = 0.95",
+    "edge_buff=1.7, size=32",
+    "_HOUSE_DY = 1.05",
+    "mid_y = 0.5 * (content_clear + caption_top)",
+    "content_clear = -0.92"
+  ],
+  "windowWallSection": {
+    "defaults": "height: float = 0.88, opening: float = 0.62, wall: float = 0.13",
+    "sashDepth": "sash_depth = min(0.20, 0.30 * (hi - lo))",
+    "reviewCall": "_window_wall(-5.25, -1.38)",
+    "partialOpen": "open_window(vent[\"window\"], fraction=0.55)"
+  },
+  "windowWallSectionForbidden": [
+    "height: float = 1.1, opening: float = 0.56, wall: float = 0.32",
+    "height: float = 0.98, opening: float = 0.70, wall: float = 0.15",
+    "depth=0.85 * (hi - lo)",
+    "_window_wall(-5.25, -1.72)"
+  ],
+  "anlagenHouseLift": "_HOUSE_DY = 1.20"
+}

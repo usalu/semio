@@ -1,0 +1,31 @@
+{
+  "beat4WattCaption": {
+    "description": "Beat4_WattVergleich U-value caption fits one caption_bar line in de and en.",
+    "sceneClass": "Beat4_WattVergleich",
+    "clauseKey": "u",
+    "maxLines": 1,
+    "requiredDe": "Jede Schicht addiert $\\frac{d}{\\lambda}$ — U-Werte $1{,}43$, $0{,}24$ und $0{,}11\\,\\mathrm{W/(m^{2}K)}$.",
+    "requiredEn": "Each layer adds $\\frac{d}{\\lambda}$ — U-values $1.43$, $0.24$ and $0.11\\,\\mathrm{W/(m^{2}K)}$.",
+    "forbiddenDe": "ihren Widerstand"
+  },
+  "bridgeMethodLayout": {
+    "description": "Beat6 method comparison columns sit above the formula band.",
+    "sceneClass": "Beat6_Waermebruecken",
+    "baseY": -0.32,
+    "kH": 0.0155,
+    "minNoteFormulaGap": 0.25
+  },
+  "bridgePsiDiffPanel": {
+    "description": "ψ_e/ψ_i labels fade before the difference formula panel; panel lifted from caption.",
+    "sceneClass": "Beat6_Waermebruecken",
+    "psiIY": -1.35,
+    "required": [
+      "FadeOut(VGroup(psi_e, psi_i, cut_e, add_i))",
+      "edge_buff=1.95",
+      "np.array([x_name, -1.35, 0.0])"
+    ],
+    "forbidden": [
+      "np.array([x_name, -1.95, 0.0])"
+    ]
+  }
+}

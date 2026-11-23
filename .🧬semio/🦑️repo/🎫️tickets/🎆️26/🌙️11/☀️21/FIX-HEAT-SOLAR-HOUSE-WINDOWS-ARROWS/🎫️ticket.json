@@ -1,0 +1,19 @@
+{
+  "id": "2026/11/21/FIX-HEAT-SOLAR-HOUSE-WINDOWS-ARROWS",
+  "title": "Solar House Windows And Hide Flow Arrows",
+  "status": "closed",
+  "client": "cursor-chat",
+  "opened": "2026-11-21T09:23:00",
+  "closed": "2026-11-21T09:26:03",
+  "goal": "ANIMATE",
+  "prompt": "House windows like Lüftung/Fundamentals; hide air-movement path arrows.",
+  "summary": "Cyan outer-leaf house casements on light walls; solar loss flow_guides hidden.",
+  "files": [
+    "🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎨️visuals/🐍️.py",
+    "🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎨️visuals/🧪️tests/🐍️.py",
+    "🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎨️visuals/🧪️tests/🔣️.cases.json",
+    "🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/☀️solar-gains/🐍️.py",
+    "🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/☀️solar-gains/🧪️tests/🐍️.py",
+    "🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/☀️solar-gains/🧪️tests/🔣️.cases.json"
+  ]
+}

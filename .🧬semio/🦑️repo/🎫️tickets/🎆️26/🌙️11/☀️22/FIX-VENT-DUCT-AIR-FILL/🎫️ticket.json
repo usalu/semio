@@ -1,0 +1,10 @@
+{
+  "id": "2026/11/22/FIX-VENT-DUCT-AIR-FILL",
+  "title": "Fill Whole Duct Air Without Overlap",
+  "status": "open",
+  "client": "cursor-chat",
+  "goal": "ENERGY",
+  "opened": "2026-11-22T09:38:30",
+  "summary": "Duct air full pipe at one opacity; stroke-only flow streaks.",
+  "reopened": "2026-11-22T10:55:05"
+}

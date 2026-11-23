@@ -1,0 +1,52 @@
+{
+  "lossGuides": {
+    "visible": false,
+    "required": "visible=False"
+  },
+  "irradianceWall": {
+    "fillOpacity": 0.4
+  },
+  "shadeFacade": {
+    "slabLeftIsGlassOut": true,
+    "inward": 1,
+    "required": [
+      "slab_left, room_end_x = glass_out",
+      "inward=1",
+      "facade_t = 0.24",
+      "t = 0.20",
+      "ceiling_y + t / 2"
+    ],
+    "facadeThickness": 0.24,
+    "slabThickness": 0.2,
+    "maxFacadeToSlabRatio": 1.6
+  },
+  "shadeWindow": {
+    "sceneClass": "Beat5_Verschattung",
+    "paneCap": 0.16,
+    "forbidden": [
+      "facade_t = 0.5",
+      "t = 0.16",
+      "ceiling_y - t / 2"
+    ]
+  },
+  "hauptOverlap": {
+    "sceneClass": "Beat8_Hauptgleichung",
+    "required": [
+      "_wipe(self, tokens, labs, unit_head)",
+      "FadeOut(intro)",
+      "fit_band(store_stack",
+      "mass_block = VGroup(VGroup(row2, box2), legend).arrange(RIGHT",
+      "Gespeicherte Wärme $Q = m \\cdot c \\cdot \\Delta\\theta$"
+    ],
+    "forbidden": [
+      "stage.transition(\"heating.solar-gains.main.tokens-into-formula\"",
+      "chain.animate.shift(UP * ((subtitle.get_bottom()[1] - 0.45) - box.get_top()[1]))",
+      "row2.next_to(store_note, DOWN, buff=0.5).set_x(-3.0)",
+      "Die gespeicherte Wärme $Q$ ist Masse",
+      "stray = [m for m in (tokens, *tokens)",
+      "mass_row = VGroup(VGroup(row2, box2), legend).arrange(RIGHT"
+    ],
+    "wipeLeafOpacity": 0.0,
+    "wipeSymbols": ["I_{s}", "A", "g_{\\perp}"]
+  }
+}

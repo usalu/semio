@@ -113,8 +113,8 @@ class PreviewSwap(_engine.Animation):
     def __init__(self, source, target, *, transition, fps, frames=None):
         self.source, self.target, self.transition = source, target, transition
         self.fps = float(fps)
-        self.sampling = transition.source.sampling
-        self.target_sampling = transition.target.sampling
+        self.sampling = None if transition.source is None else transition.source.sampling
+        self.target_sampling = None if transition.target is None else transition.target.sampling
         self.easing = transition.timing.easing
         self.lanes, self.window = _lanes(source, target, transition, frames)
         self.nominal = self.window.duration

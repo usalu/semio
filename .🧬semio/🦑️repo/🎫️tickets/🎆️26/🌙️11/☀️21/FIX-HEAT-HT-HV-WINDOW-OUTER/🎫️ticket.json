@@ -1,0 +1,14 @@
+{
+  "id": "2026/11/21/FIX-HEAT-HT-HV-WINDOW-OUTER",
+  "title": "Ht Hv Scene Windows Outer Leaf",
+  "status": "closed",
+  "client": "cursor-chat",
+  "closed": "2026-11-21T09:46:13",
+  "goal": "ANIMATE",
+  "summary": "HT/HV scene outer-leaf windows; thicker Lüftung wall; larger house scale.",
+  "files": [
+    "🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧮️calculation/🐍️.py",
+    "🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧮️calculation/🧪️tests/🐍️.py",
+    "🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧮️calculation/🧪️tests/🔣️.cases.json"
+  ]
+}

@@ -49,6 +49,15 @@ class InternalGainsStaffageTest(unittest.TestCase):
         assignment = next(node for node in ast.walk(comparison) if isinstance(node, ast.Assign) and any(isinstance(target, ast.Name) and target.id == "acts" for target in node.targets))
         self.assertEqual([row.elts[1].value for row in assignment.value.elts], CASES["metabolic_watts"])
 
+    def test_pendant_lamps_use_room_metre(self):
+        text = SOURCE.read_text(encoding="utf-8")
+        case = CASES["lampScale"]
+        for token in case["forbidden"]:
+            self.assertNotIn(token, text)
+        for token in case["required"]:
+            self.assertIn(token, text)
+
+
 
 if __name__ == "__main__":
     unittest.main()

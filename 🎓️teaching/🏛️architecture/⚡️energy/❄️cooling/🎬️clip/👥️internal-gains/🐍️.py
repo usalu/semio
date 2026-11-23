@@ -44,6 +44,7 @@ house_section = _manim_module.house_section
 room_section = _manim_module.room_section
 staffage = _manim_module.staffage
 staffage_motion = _manim_module.staffage_motion
+room_metre = _manim_module.room_metre
 droplets = _manim_module.droplets
 ripples = _manim_module.ripples
 smooth_path = _manim_module.smooth_path
@@ -690,7 +691,7 @@ class Beat3_DevicesLighting(Scene):
         )
 
         lroom = room_section(np.array([0.0, 0.3, 0.0]), w=7.4, h=2.7)
-        lamp_unit = lroom["h"] / 2.5 * 1.6
+        lamp_unit = room_metre(lroom["h"])
         lamps = [_lamp(lroom, x, lamp_unit) for x in (-1.8, 1.8)]
         bulbs = [bulb for _, bulb in lamps]
         fixture_l, fixture_r = lamps[0][0], lamps[1][0]
@@ -929,8 +930,8 @@ class Beat5_Mitigation(Scene):
         laptop_heat = seated["laptop"]
         laptop_lbl = Text(tr("Device", "Gerät"), font_size=LABEL_FONT_SIZE, color=C_HEAT_HOT)
         laptop_lbl.move_to(laptop_heat + UP * 0.55 + RIGHT * 0.4)
-        fixture, bulb_c = _lamp(rs, 2.55, unit * 1.4)
-        fixture_dim = _lamp(rs, 2.55, unit * 1.4, "lamp-dimmed")[0]
+        fixture, bulb_c = _lamp(rs, 2.55, room_metre(rs["h"]))
+        fixture_dim = _lamp(rs, 2.55, room_metre(rs["h"]), "lamp-dimmed")[0]
         beam = VGroup(*[Line(bulb_c, np.array([bulb_c[0] + dx, y_f + 0.02, 0.0]), color=C_YELLOW, stroke_width=1.8,
                              stroke_opacity=0.6) for dx in (-0.65, -0.22, 0.22, 0.65)])
         light_lbl = Text(tr("Lighting", "Beleuchtung"), font_size=LABEL_FONT_SIZE, color=C_YELLOW)

@@ -1,0 +1,7 @@
+{
+  "title": "Fix Heat Calc Loss Overlap",
+  "status": "closed",
+  "closedAt": "2026-11-22T21:27:15.765455+00:00",
+  "summary": "Scene2 climate layout: clear roof/label/H-readout collisions; lift degree-day chart.",
+  "goalHint": "heating/calculation"
+}

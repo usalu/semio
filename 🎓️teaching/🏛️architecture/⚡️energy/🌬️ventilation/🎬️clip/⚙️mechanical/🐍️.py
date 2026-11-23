@@ -78,6 +78,7 @@ unit_text = _manim_module.unit_text
 load_vo_timing = _manim_module.load_vo_timing
 room_section = _manim_module.room_section
 window_glyph = _manim_module.window_glyph
+emphasize_casement = _manim_module.emphasize_casement
 open_window = _manim_module.open_window
 window_opening = _manim_module.window_opening
 room_metre = _manim_module.room_metre
@@ -699,12 +700,7 @@ class Beat2_Waermerueckgewinnung(Scene):
         ], color=P_CYAN)
         self.play(stage.transition("ventilation.mechanical.heat-recovery.sensible-to-latent-formula", source=sp[0], target=lp2[0]), stage.transition("ventilation.mechanical.heat-recovery.sensible-to-latent-box", source=sp[1], target=lp2[1]), FadeIn(keep),
                   Indicate(l_full, color=P_CYAN, scale_factor=1.06), *exchanger(1.6), run_time=1.6)
-        lat_note = window_chip(math_label(
-            tr(rf"\dot{{Q}}_{{\mathrm{{V,lat}}}}:\;\text{{winter}}\;{label_number(Q_V_LAT_WINTER)}\,\mathrm{{W}}\quad\text{{summer}}\;{label_number(Q_V_LAT_SUMMER)}\,\mathrm{{W}}",
-               rf"\dot{{Q}}_{{\mathrm{{V,lat}}}}:\;\text{{Winter}}\;{label_number(Q_V_LAT_WINTER)}\,\mathrm{{W}}\quad\text{{Sommer}}\;{label_number(Q_V_LAT_SUMMER)}\,\mathrm{{W}}"),
-            size=LABEL_FONT_SIZE, color=P_CYAN), color=P_CYAN).move_to(np.array([-3.0, -1.46, 0.0]))
-        self.play(FadeIn(lat_note), *exchanger(0.8), run_time=0.8)
-        hold_for(self, N, "latent", used=0.8, during=exchanger)
+        hold_for(self, N, "latent", used=1.6, during=exchanger)
 
         caption = swap_caption(self, caption, subtitle_text(N, "latent_use"))
         hold_for(self, N, "latent_use", during=exchanger)
@@ -789,7 +785,8 @@ class Beat3_Anlagenvergleich(Scene):
                                 window=(0.3, 0.75))
             for part in room["shell"]:
                 part.set_stroke(P_WHITE).set_fill(P_WHITE, opacity=1)
-            room["glass"].set_stroke(P_CYAN).set_fill(P_CYAN, opacity=0.15)
+            for win in room["windows"]:
+                emphasize_casement(win, color=P_CYAN)
             height = 0.7 * room_h
             person = staffage_motion("shared-person-pathlines", unit=height / staffage_height("shared-person-pathlines"),
                                      anchor=np.array([px + 0.95, room["y_f"], 0.0]))
@@ -800,7 +797,7 @@ class Beat3_Anlagenvergleich(Scene):
         card1, hdr1, box1_stat, room1, person1 = panel(
             p1, P_RED, semio_color("dark-8-9"), tr("Window ventilation", "Fensterlüftung"), tr("natural, no heat recovery", "freie Lüftung ohne WRG"), r"\eta_{\mathrm{WRG}} = 0", bar1)
         x_l, y_f, y_c, lo, hi = room1["x_l"], room1["y_f"], room1["y_c"], room1["win_lo"], room1["win_hi"]
-        win1 = window_glyph(room1["glass_x"], lo, hi, depth=0.4, wall=0.13, color=P_CYAN)
+        win1 = room1["windows"][0]
         in1 = [path((x_l - 1.05, lo - 0.05), (x_l - 0.4, lo + 0.08), (x_l + 0.3, lo + 0.06), (x_l + 0.8, y_f + 0.15),
                     (p1 + 0.5, y_f + 0.2))]
         out1 = [path((p1 + 0.55, y_c - 0.35), (p1 + 0.3, y_c - 0.15), (x_l + 0.45, hi - 0.06), (x_l - 0.35, hi - 0.04),
@@ -968,17 +965,30 @@ class Beat4_Kanalquerschnitt(Scene):
         def vel():
             return Q_VR / area()
 
+        air_opacity = 0.28
+
         def tube():
             rr = r.get_value()
-            return VGroup(
-                Rectangle(width=disc_x - rr - tube_x0, height=2 * rr, stroke_width=0, fill_color=P_BLUE, fill_opacity=0.12)
-                .move_to(np.array([(disc_x - rr + tube_x0) / 2, cy, 0.0])),
-                *[Line(np.array([tube_x0, cy + s * rr, 0.0]), np.array([disc_x, cy + s * rr, 0.0]), color=P_TEAL,
-                       stroke_width=4) for s in (-1, 1)],
-            )
+            # One closed air path: full barrel through the disc centre + right semicircle face.
+            air = VMobject(stroke_width=0, fill_color=P_BLUE, fill_opacity=air_opacity)
+            arc = Arc(radius=rr, start_angle=PI / 2, angle=-PI, arc_center=disc_c)
+            air.set_points_as_corners([
+                np.array([tube_x0, cy + rr, 0.0]),
+                np.array([disc_x, cy + rr, 0.0]),
+            ])
+            air.append_points(arc.points.copy())
+            air.add_line_to(np.array([tube_x0, cy - rr, 0.0]))
+            air.close_path()
+            air.set_fill(P_BLUE, opacity=air_opacity).set_stroke(width=0)
+            walls = [
+                Line(np.array([tube_x0, cy + s * rr, 0.0]), np.array([disc_x, cy + s * rr, 0.0]),
+                     color=P_TEAL, stroke_width=4)
+                for s in (-1, 1)
+            ]
+            return VGroup(air, *walls)
 
         def disc():
-            return Circle(radius=r.get_value(), color=P_TEAL, stroke_width=4, fill_color=P_BLUE, fill_opacity=0.3).move_to(disc_c)
+            return Circle(radius=r.get_value(), color=P_TEAL, stroke_width=4, fill_opacity=0.0).move_to(disc_c)
 
         duct_wall = always_redraw(tube)
         duct_disc = always_redraw(disc)
@@ -986,11 +996,13 @@ class Beat4_Kanalquerschnitt(Scene):
 
         def lanes(rr):
             return [smooth_path([np.array([tube_x0 + 0.15, cy + k * rr, 0.0]), np.array([(tube_x0 + disc_x) / 2, cy + k * rr, 0.0]),
-                                 np.array([disc_x - 1.1, cy + k * rr, 0.0])]) for k in (-0.62, -0.2, 0.2, 0.62)]
+                                 np.array([disc_x - 0.08, cy + k * rr, 0.0])]) for k in (-0.55, 0.0, 0.55)]
 
         def duct_air(rt, speed=None):
             pace = (0.18 + 0.12 * min(vel() / V_M, 4.0)) if speed is None else speed
-            return [flow_animation([(lanes(r.get_value()), P_CYAN)], waves=3, radius=0.06, cycles=pace * rt)]
+            # Same hue as the air fill, stroke-like streaks — avoid a second translucent colour stacking on the fill.
+            return [flow_animation([(lanes(r.get_value()), P_TEAL)], waves=2, radius=0.045, cycles=pace * rt,
+                                     streak=True, peak_opacity=0.0, stroke_width=1.6)]
 
         rx = 1.25
 

@@ -112,7 +112,7 @@ def _blinds(house):
     blinds = []
     for win in house["windows"]:
         unit = (win["lintel"] - win["sill"] + 0.12) / staffage_height(cast)
-        blind = staffage_motion(cast, unit=unit, anchor=np.array([win["x"] - 0.27, win["sill"] - 0.06, 0.0]))
+        blind = staffage_motion(cast, unit=unit, anchor=np.array([win["outer"] - 0.18, win["sill"] - 0.06, 0.0]))
         blinds.append(blind)
     return VGroup(*blinds)
 
@@ -124,8 +124,8 @@ def _streams(streams, rt: float, *, speed: float = 0.85, waves: int = 3):
 
 def _through(win, *, inward: bool = False):
     """➡️ Particle track through one opening of the section house — from the room out, or reversed from outside in."""
-    x, y = win["x"], win["center"][1]
-    pts = [(x + 1.15, y - 0.12), (x + 0.35, y - 0.04), (x - 0.35, y + 0.02), (x - 1.15, y + 0.16)]
+    x, y = win["outer"], win["center"][1]
+    pts = [(x + 1.15, y - 0.12), (x + 0.35, y - 0.04), (x - 0.18, y + 0.02), (x - 1.15, y + 0.16)]
     if inward:
         pts = pts[::-1]
     return smooth_path([np.array([px, py, 0.0]) for px, py in pts])

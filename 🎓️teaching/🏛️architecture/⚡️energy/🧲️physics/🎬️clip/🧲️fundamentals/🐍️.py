@@ -549,6 +549,7 @@ def _shade_beams(blind, sun_dir, *, path_len: float = 2.8, reflect_len: float = 
 
 #region Glyphs — buildings
 _window = _manim_module.window_glyph
+_emphasize = _manim_module.emphasize_casement
 
 
 _open_window = _manim_module.open_window
@@ -2751,7 +2752,7 @@ class Beat6_ThermischeMasse(Scene):
                                  amp_lbl)),
                   *[FadeOut(m) for m in (c_out, c_light, c_heavy, ceil_live, flux_live, sky_live, hour_read, phi_read)],
                   run_time=0.6)
-        big = _room(np.array([-1.3, 0.05, 0.0]), w=5.6, h=2.4, slab=0.34, window=(0.3, 0.85))
+        big = _room(np.array([-1.3, 0.05, 0.0]), w=5.6, h=2.4, slab=0.34, wall=0.28, window=(0.3, 0.85))
         rise_paths = [smooth_path([start, start + np.array([0.18, 0.6, 0.0]), start + np.array([0.05, 1.3, 0.0]),
                                    np.array([start[0] + 0.3, big["y_c"] - 0.08, 0.0]),
                                    np.array([start[0] + 1.1, big["y_c"] - 0.12, 0.0])])
@@ -2826,9 +2827,7 @@ class Beat6_ThermischeMasse(Scene):
                               lag_ratio=0.1),
                   ceil_fill.animate.set_value(0.85), t_ceil.animate.set_value(27.0), run_time=2.0)
         gx, lo, hi = big["glass_x"], big["win_lo"], big["win_hi"]
-        night_window = _window(gx, lo, hi, depth=(hi - lo) * 0.75, wall=big["wall"])
-        big["glass"].set_opacity(0)
-        self.add(night_window["group"])
+        night_window = _emphasize(big["windows"][0], color=P_CYAN)
         purge = [smooth_path([np.array([gx - 1.4, lo + 0.05 + dy, 0.0]), np.array([gx + 0.3, lo + 0.12 + dy, 0.0]),
                               np.array([big["center"][0], big["y_f"] + 0.3 + dy, 0.0]),
                               np.array([big["x_r"] - 0.35, big["center"][1] - dy, 0.0]),

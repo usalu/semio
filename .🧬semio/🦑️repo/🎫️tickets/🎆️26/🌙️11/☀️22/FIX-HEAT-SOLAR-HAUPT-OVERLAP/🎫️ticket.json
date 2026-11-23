@@ -1,0 +1,9 @@
+{
+  "id": "2026/11/22/FIX-HEAT-SOLAR-HAUPT-OVERLAP",
+  "title": "Fix Solar Hauptgleichung Overlap Chaos",
+  "status": "open",
+  "client": "cursor-chat",
+  "opened": "2026-11-22T20:25:30",
+  "goal": "ANIMATE",
+  "prompt": "Hauptgleichung scene: solar factors ghost into thermal-mass formula; fix all overlaps."
+}

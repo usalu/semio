@@ -1,0 +1,11 @@
+{
+  "description": "appear recipe under preview profile runs full grow-in, not PreviewSwap",
+  "profile": "preview",
+  "transition": "demo.blocks-appear",
+  "expect": {
+    "full.prepare": {
+      "min": 1
+    },
+    "preview.swap": 0
+  }
+}

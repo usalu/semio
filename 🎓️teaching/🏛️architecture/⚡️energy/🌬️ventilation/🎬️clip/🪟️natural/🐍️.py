@@ -72,9 +72,12 @@ tr = _manim_module.tr
 load_vo_timing = _manim_module.load_vo_timing
 sun_glyph = _manim_module.sun_glyph
 moon_glyph = _manim_module.moon_glyph
+sun_rays = _manim_module.sun_rays
+shine = _manim_module.shine
 ripples = _manim_module.ripples
 flow_animation = _manim_module.flow_animation
 window_glyph = _manim_module.window_glyph
+emphasize_casement = _manim_module.emphasize_casement
 clock_glyph = _manim_module.clock_glyph
 tracked_clock = _manim_module.tracked_clock
 room_section = _manim_module.room_section
@@ -391,8 +394,10 @@ class Beat1_Fensterregeln(Scene):
         person = _stand(room_c, 2.5, room_c[0] + 0.55)
 
         win_h = 1.42
+        room_t = 0.16
         window = window_glyph(room_c[0] - 2.8, 0.30 - win_h / 2, 0.30 + win_h / 2,
-                              depth=0.55 * win_h, wall=0.22, color=P_CYAN, inward=1)
+                              depth=0.85 * win_h, wall=room_t, color=P_CYAN, inward=1)
+        emphasize_casement(window, color=P_CYAN)
         frame, sash, joinery, gap = window["reveal"], window["sash"], window["joinery"], window["reference"]
         opening = ValueTracker(0.0)
 
@@ -711,7 +716,9 @@ class Beat2_StossOderKipp(Scene):
         n_kipp_box = window_chip(VGroup(
             math_label(rf"n_{{\mathrm{{{tr('tilt', 'Kipp')}}}}} \approx 1\,\mathrm{{h^{{-1}}}}", size=LABEL_FONT_SIZE, color=P_ORANGE),
             math_label(r"\frac{5\,\mathrm{min}}{60\,\mathrm{min}} \approx 8\,\%", size=LABEL_FONT_SIZE, color=P_ORANGE),
-        ).arrange(DOWN, buff=0.12), color=P_ORANGE).move_to([-0.55, 1.05, 0])
+        ).arrange(DOWN, buff=0.12), color=P_ORANGE).scale(0.9)
+        gap_x = (rs["x_out"] + rk["ox"]) / 2
+        n_kipp_box.move_to([gap_x, pose_s.get_center()[1] - 0.9, 0])
         self.play(FadeIn(row_labels), FadeIn(source), *running(0.4), run_time=0.4)
         self.add(row_s, row_k, tot_s, tot_k)
 
@@ -1066,12 +1073,14 @@ class Beat4_Auftrieb(Scene):
     TOP_HIGH = 3.04
 
     def _stack_paths(self, inlet, room_top, shaft_top):
-        """〰️ Inlet → occupied zone → up the shaft → out at the top."""
+        """〰️ Inlet → low past the person → up the shaft → out at the top."""
+        low = float(inlet[1]) - 0.42
         return VGroup(*[
             smooth_path([
                 inlet + RIGHT * 0.06 + UP * (0.06 * i),
-                np.array([-3.20, inlet[1] - 0.20 + 0.10 * i, 0.0]),
-                np.array([self.SHAFT_X, room_top + 0.10, 0.0]),
+                np.array([-3.55, low + 0.06 * i, 0.0]),
+                np.array([-2.15, low + 0.04 * i, 0.0]),
+                np.array([self.SHAFT_X + 0.08, room_top + 0.10, 0.0]),
                 np.array([self.SHAFT_X, shaft_top - 0.08, 0.0]),
             ])
             for i in range(3)
@@ -1103,7 +1112,8 @@ class Beat4_Auftrieb(Scene):
         inlet_lbl = Text(tr("Inlet opening", "Zuluftöffnung"), font_size=LABEL_FONT_SIZE, color=P_CYAN)
         # Above the arrow — on-frame, and clear of the comfort ring around the opening alone.
         inlet_lbl.next_to(inlet_arrow, UP, buff=0.18, aligned_edge=RIGHT)
-        person = _stand(room_c, 1.25, -1.70)
+        person = _stand(room_c, 1.25, -2.75, cast="shared-person-neutral")
+        person.set_z_index(20)
 
         shaft_walls = VGroup(*[
             Line(
@@ -1157,14 +1167,13 @@ class Beat4_Auftrieb(Scene):
             room_top = room.get_top()[1]
 
         top_y = float(outlet.get_center()[1])
-        warm_spots = [person.get_top() + UP * 0.05, np.array([-2.30, floor.get_top()[1] + 0.02, 0.0])]
         stack = {"paths": None, "speed": 0.65}
 
         def warmth(rt, r_max=0.55):
-            return [ripples(warm_spots, r_max=r_max, color=P_ORANGE, cycles=rt / 1.4)]
+            return [Wait(rt)]
 
         def rising(rt):
-            return [_streams([(stack["paths"], P_CYAN, P_ORANGE)], rt, speed=stack["speed"]), *warmth(rt, 0.4)]
+            return [_streams([(stack["paths"], P_CYAN, P_ORANGE)], rt, speed=stack["speed"])]
 
         height, t_out_tr, t_in_tr = ValueTracker(2.5), ValueTracker(T_OUT_NIGHT), ValueTracker(T_IN_SUMMER)
 
@@ -1478,12 +1487,16 @@ class Beat5_Nachtlueftung(Scene):
         keys.move_to(np.array([4.85, -0.55, 0.0]))
 
         room_c = np.array([4.95, 0.95, 0.0])
-        icon = Rectangle(width=2.9, height=1.6, stroke_width=0).move_to(room_c)
-        icon_room = _room(room_c, 2.9, 1.6, t=0.12, window_side="both", window_y=room_c[1] + 0.34, window_h=0.6)
+        room_w, room_h, wall_t = 2.9, 1.6, 0.12
+        icon = Rectangle(width=room_w, height=room_h, stroke_width=0).move_to(room_c)
+        icon_room = _room(room_c, room_w, room_h, t=wall_t, window_side="both", window_y=room_c[1] + 0.34, window_h=0.6)
+        clear_w, clear_h = room_w - wall_t, room_h - wall_t
+        air_pad = 0.05
         mass = Rectangle(
-            width=2.65, height=0.5, stroke_width=0,
+            width=clear_w - 2 * air_pad, height=clear_h - 2 * air_pad, stroke_width=0,
             fill_color=P_RED, fill_opacity=0.0,
-        ).move_to(icon.get_bottom() + UP * 0.24)
+        ).move_to(room_c)
+        floor_y = float(room_c[1] - clear_h / 2) + air_pad
         mass_lbl = Text(tr("Thermal mass", "Speichermasse"), font_size=LABEL_FONT_SIZE, color=P_PRIMARY)
         mass_lbl.next_to(icon, UP, buff=0.12)
         mass_hot = Text("27 °C", font_size=BODY_FONT_SIZE, color=P_RED).move_to(mass)
@@ -1504,29 +1517,12 @@ class Beat5_Nachtlueftung(Scene):
         shade_lbl = Text(tr("Shading", "Verschattung"), font_size=LABEL_FONT_SIZE, color=P_ORANGE)
         shade_lbl.scale(0.72).next_to(blind, DOWN, buff=0.12)
         shade_lbl.move_to(np.array([2.85, blind.get_bottom()[1] - 0.22, 0.0]))
-        ray_dir = (blind_c + UP * 0.1 - sky_pos) / np.linalg.norm(blind_c + UP * 0.1 - sky_pos)
-        # Soft transparent sun wash onto the shaded facade (no ray lines).
-        hit_hi = blind_c + UP * 0.42 + LEFT * 0.04
-        hit_lo = blind_c + DOWN * 0.40 + LEFT * 0.04
-        rays = Polygon(
-            sky_pos + ray_dir * 0.30,
-            hit_hi,
-            hit_lo,
-            stroke_width=0,
-            fill_color=P_YELLOW,
-            fill_opacity=0.22,
-        )
-        # Soft residual wash through the glass into the Speichermasse.
-        leak = Polygon(
-            win_c + np.array([0.02, 0.28, 0.0]),
-            win_c + np.array([0.02, -0.28, 0.0]),
-            mass.get_top() + LEFT * 0.35 + DOWN * 0.08,
-            mass.get_top() + LEFT * 0.80 + UP * 0.02,
-            stroke_width=0,
-            fill_color=P_YELLOW,
-            fill_opacity=0.14,
-        )
-        sun_group = VGroup(sun, rays, blind, shade_lbl, leak)
+        ray_ys = [float(win_c[1] + dy) for dy in (-0.26, -0.13, 0.0, 0.13, 0.26)]
+        ray_pack = sun_rays(sky_pos, float(win_c[0]), ray_ys, floor_y, gap=0.38)
+        ray_pack["out"].set_stroke(opacity=0.78)
+        ray_pack["in"].set_stroke(opacity=0.45)
+        rays = ray_pack["group"]
+        sun_group = VGroup(sun, rays, blind, shade_lbl)
         moon = VGroup(
             moon_glyph(sky_pos).scale(0.85),
             *[
@@ -1565,9 +1561,8 @@ class Beat5_Nachtlueftung(Scene):
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "shade"))
         self.add(mass)
-        self.play(FadeIn(rays), FadeIn(blind), FadeIn(shade_lbl), run_time=1.4)
-        self.play(FadeIn(leak), run_time=0.8)
-        hold_for(self, self.NARRATION, "shade", used=1.4 + 0.8)
+        self.play(shine(ray_pack), FadeIn(blind), FadeIn(shade_lbl), run_time=1.6)
+        hold_for(self, self.NARRATION, "shade", used=1.6)
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "day"))
         self.play(mass.animate.set_fill(P_RED, opacity=0.55), FadeIn(mass_hot), *stored(1.3), run_time=1.3)
@@ -1619,7 +1614,8 @@ class Beat5_Nachtlueftung(Scene):
         hold_for(self, self.NARRATION, "result", used=2.2 + 1.0 + 0.35)
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "schedule"))
-        self.play(FadeIn(schedule, shift=UP * 0.12), FadeIn(season_lbl), FadeOut(moon), FadeIn(sun), FadeIn(blind), FadeIn(rays),
+        self.play(FadeIn(schedule, shift=UP * 0.12), FadeIn(season_lbl), FadeOut(moon),
+                  FadeIn(sun), FadeIn(blind), FadeIn(rays),
                   run_time=1.0)
         hold_for(self, self.NARRATION, "schedule", used=1.0 + 0.35)
 

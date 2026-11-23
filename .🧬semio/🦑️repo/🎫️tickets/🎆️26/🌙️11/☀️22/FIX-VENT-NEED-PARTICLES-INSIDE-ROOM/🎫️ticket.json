@@ -1,0 +1,13 @@
+{
+  "id": "2026/11/22/FIX-VENT-NEED-PARTICLES-INSIDE-ROOM",
+  "title": "Keep Need Scene Particles Inside Room",
+  "status": "closed",
+  "client": "cursor-chat",
+  "goal": "ENERGY",
+  "opened": "2026-11-22T20:46:31",
+  "closed": "2026-11-22T20:46:31",
+  "summary": "Beat1 need scene: clamp CO₂, moisture and odour particles to the clear room air volume so none spawn past the walls.",
+  "files": [
+    "🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/❓️need/🐍️.py"
+  ]
+}

@@ -880,8 +880,8 @@ class Beat4_WattVergleich(Scene):
          "The same 25 square meter wall at 20 degrees inside and 0 outside — uninsulated, with 12 and with 30 centimeters of insulation.",
          "Dieselbe Wand mit 25 m², innen 20 °C, außen 0 °C — ungedämmt, mit 12 cm und mit 30 cm Dämmung."),
         ("u",
-         r"Every layer adds its resistance $\frac{d}{\lambda}$. That gives U-values of $1.43$, $0.24$ and $0.11\,\mathrm{W/(m^{2}K)}$.",
-         r"Jede Schicht addiert ihren Widerstand $\frac{d}{\lambda}$. Das ergibt U-Werte von $1{,}43$, $0{,}24$ und $0{,}11\,\mathrm{W/(m^{2}K)}$."),
+         r"Each layer adds $\frac{d}{\lambda}$ — U-values $1.43$, $0.24$ and $0.11\,\mathrm{W/(m^{2}K)}$.",
+         r"Jede Schicht addiert $\frac{d}{\lambda}$ — U-Werte $1{,}43$, $0{,}24$ und $0{,}11\,\mathrm{W/(m^{2}K)}$."),
         ("q",
          r"Times $25\,\mathrm{m^{2}}$ and $20\,\mathrm{K}$: about $715\,\mathrm{W}$, $120\,\mathrm{W}$ and $55\,\mathrm{W}$ flow through the wall.",
          r"Mal $25\,\mathrm{m^{2}}$ und $20\,\mathrm{K}$ fließen rund $715\,\mathrm{W}$, $120\,\mathrm{W}$ und $55\,\mathrm{W}$ durch die Wand."),
@@ -1376,7 +1376,7 @@ class Beat6_Waermebruecken(Scene):
         add_i = Arrow(np.array([x_bar + k_bar * hu["i"], y_rows["i"] - 0.3, 0.0]), np.array([real_x, y_rows["i"] - 0.3, 0.0]),
                       buff=0, color=PASTEL_GREEN, stroke_width=5, max_tip_length_to_length_ratio=0.6, tip_length=0.16)
         psi_i = math_label(rf"\psi_{{\mathrm{{i}}}} = \frac{{+{label_number(real - hu['i'], 2)}\,\frac{{\mathrm{{W}}}}{{\mathrm{{K}}}}}}{{{label_number(CORNER_H)}\,\mathrm{{m}}}}"
-                           rf" = +{label_number(psi['i'], 3)}\,{UNIT_PSI}", np.array([x_name, -1.95, 0.0]),
+                           rf" = +{label_number(psi['i'], 3)}\,{UNIT_PSI}", np.array([x_name, -1.35, 0.0]),
                            size=LABEL_FONT_SIZE, color=colors["i"], edge="left")
         self.play(GrowArrow(add_i), FadeIn(psi_i, shift=RIGHT * 0.1), *corner_heat(0.8), run_time=0.8)
         hold_for(self, N, "inner", during=corner_heat)
@@ -1391,12 +1391,13 @@ class Beat6_Waermebruecken(Scene):
         self.play(FadeOut(st_i), FadeOut(gap), *[l.animate.set_stroke(opacity=1.0) for l in lines.values()],
                   *[t.animate.set_opacity(1.0) for t in tags], *corner_heat(0.5), run_time=0.5)
         self.play(GrowFromCenter(ext_a), GrowFromCenter(ext_b), FadeIn(ext_lbl), *corner_heat(0.8), run_time=0.8)
+        self.play(FadeOut(VGroup(psi_e, psi_i, cut_e, add_i)), run_time=0.35)
         p_diff = math_panel([
             ("psi", r"\psi_{\mathrm{i}} - \psi_{\mathrm{e}}", PASTEL_WHITE), (None, "=", PASTEL_WHITE), ("u", "U", PASTEL_WHITE),
             (None, r"\cdot", PASTEL_WHITE), ("d", r"2\,d", PASTEL_ORANGE), (None, "=", PASTEL_WHITE),
             (None, rf"{label_number(U_INSULATED, 2)}\,{UNIT_U} \cdot {label_number(2 * CORNER_D, 2)}\,\mathrm{{m}}", PASTEL_WHITE), (None, "=", PASTEL_WHITE),
             (None, rf"{label_number(U_INSULATED * 2 * CORNER_D, 2)}\,{UNIT_PSI}", PASTEL_YELLOW),
-        ])
+        ], edge_buff=1.95)
         _fly_into(self, stage, "heating.conduction.bridge.fly", p_diff, {"d": ext_lbl}, run_time=1.2)
         hold_for(self, N, "diff", during=corner_heat)
 
@@ -1460,7 +1461,7 @@ class Beat6_Waermebruecken(Scene):
             (None, "+", PASTEL_WHITE), ("psi", r"\Sigma\,\psi_{k}\,l_{k}", PASTEL_YELLOW), (None, rf"\quad[H_{{\mathrm{{T}}}}] = {UNIT_H}", PASTEL_WHITE),
         ])
         _fly_into(self, stage, "heating.conduction.psi.fly", p_det, {"psi": sum_line}, run_time=1.2)
-        base_y, k_h = -0.72, 0.018
+        base_y, k_h = -0.32, 0.0155
         cols_x = (-5.1, -1.7, 1.7, 5.1)
         adds = (0.0, psi_sum, DU_WB[0] * ENVELOPE_AREA, DU_WB[1] * ENVELOPE_AREA)
         heads_b = [tr(r"\text{without thermal bridges}", r"\text{ohne Wärmebrücken}"), r"+\,\Sigma\,\psi_{k}\,l_{k}",
@@ -1468,9 +1469,9 @@ class Beat6_Waermebruecken(Scene):
         notes_b = ["", tr("detailed", "detailliert"), tr("flat rate, no proof", "pauschal, ohne Nachweis"), tr("flat rate, Suppl. 2", "pauschal, nach Bbl. 2")]
         grow_b = [ValueTracker(0.0) for _ in cols_x]
         add_b = [ValueTracker(0.0) for _ in cols_x]
-        labels_b = VGroup(*[math_label(tex, np.array([x, base_y - 0.3, 0.0]), size=LABEL_FONT_SIZE, color=PASTEL_WHITE)
+        labels_b = VGroup(*[math_label(tex, np.array([x, base_y - 0.32, 0.0]), size=LABEL_FONT_SIZE, color=PASTEL_WHITE)
                             for x, tex in zip(cols_x, heads_b)])
-        notes_vg = VGroup(*[body_text(t, font_size=LABEL_FONT_SIZE - 2, color=P_PRIMARY).move_to(np.array([x, base_y - 0.62, 0.0]))
+        notes_vg = VGroup(*[body_text(t, font_size=LABEL_FONT_SIZE - 2, color=P_PRIMARY).move_to(np.array([x, base_y - 0.66, 0.0]))
                             for x, t in zip(cols_x, notes_b) if t])
 
         def col_height(i: int) -> float:
@@ -1500,8 +1501,8 @@ class Beat6_Waermebruecken(Scene):
             ("h", r"H_{\mathrm{T}}", PASTEL_WHITE), (None, "=", PASTEL_WHITE), ("ua", r"\Sigma\,U_{i}A_{i}", PASTEL_ORANGE),
             (None, "+", PASTEL_WHITE), ("du", r"\Delta U_{\mathrm{WB}} \cdot A", PASTEL_YELLOW), (None, rf"\quad[H_{{\mathrm{{T}}}}] = {UNIT_H}", PASTEL_WHITE),
         ])
-        self.play(stage.transition("heating.conduction.flat.formula-head", source=p_det[0], target=p_flat[0]), stage.transition("heating.conduction.flat.formula-box", source=p_det[1], target=p_flat[1]),
-                  FadeIn(labels_b[2:]), FadeIn(notes_vg[1:]), run_time=0.9)
+        _drop_panel(self, p_det, run_time=0.35)
+        self.play(FadeIn(p_flat[0]), Create(p_flat[1]), FadeIn(labels_b[2:]), FadeIn(notes_vg[1:]), run_time=0.55)
         self.add(base_bars[2], base_bars[3], add_bars[1], add_bars[2], tops[2], tops[3])
         self.play(grow_b[2].animate.set_value(1.0), grow_b[3].animate.set_value(1.0), run_time=1.2)
         hold_for(self, N, "pauschal")

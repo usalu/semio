@@ -1,0 +1,8 @@
+{
+  "lampUnit": {
+    "roomHeight": 3.3,
+    "expression": "room_metre(B4_ROOM_H)",
+    "forbiddenUnit": 3.2,
+    "maxUnitOverRoomMetre": 1.05
+  }
+}

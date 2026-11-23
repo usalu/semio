@@ -1,0 +1,16 @@
+{
+  "id": "2026/11/21/FIX-HEAT-ANLAGEN-FORMULA-GAP",
+  "title": "Anlagenverluste Formula Gap From House",
+  "status": "closed",
+  "client": "cursor-chat",
+  "goal": "ANIMATE",
+  "summary": "Larger lower-mid Q_E formula (size=40), house/bar lifted, no overlap with diagram or caption; preview republished.",
+  "files": [
+    "🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧮️calculation/🐍️.py",
+    "🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧮️calculation/🧪️tests/🐍️.py",
+    "🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧮️calculation/🧪️tests/🔣️.cases.json",
+    "videos/preview/de/speaker/s/67/v/AnlagenVerluste.mp4"
+  ],
+  "reopenedAt": "2026-11-23T17:24:57.315489+00:00",
+  "closed": "2026-11-23T20:36:53.859936+00:00"
+}

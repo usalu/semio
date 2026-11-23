@@ -1,0 +1,5 @@
+{
+  "schema": "cooling-summer-strategy-windows/v1",
+  "required": ["win[\"outer\"] - 0.18", "x, y = win[\"outer\"], win[\"center\"][1]"],
+  "forbid": ["win[\"x\"] - 0.27", "x, y = win[\"x\"], win[\"center\"][1]"]
+}

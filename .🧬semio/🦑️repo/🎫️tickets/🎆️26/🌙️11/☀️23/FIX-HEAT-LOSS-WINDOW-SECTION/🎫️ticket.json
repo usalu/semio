@@ -1,0 +1,16 @@
+{
+  "id": "2026/11/23/FIX-HEAT-LOSS-WINDOW-SECTION",
+  "title": "Fix Heat Loss Window Section Width",
+  "status": "closed",
+  "client": "cursor-chat",
+  "goal": "ANIMATE",
+  "closed": "2026-11-23T16:40:26",
+  "summary": "Slim house-scale vent wall (wall=0.13); shallow sash; partial open; shorter vent caption.",
+  "files": [
+    "🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧮️calculation/🐍️.py",
+    "🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧮️calculation/🧪️tests/🐍️.py",
+    "🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧮️calculation/🧪️tests/🔣️.cases.json",
+    "videos/preview/de/speaker/s/62/v/ReviewingHeatLosses.mp4",
+    "videos/preview/de/speaker/s/63/v/Scene2.mp4"
+  ]
+}

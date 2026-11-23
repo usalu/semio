@@ -1,0 +1,13 @@
+{
+  "formulaEdgeBuff": {
+    "value": 1.85,
+    "min": 1.7
+  },
+  "beat5DinCaption": {
+    "sceneClass": "Beat5_SummeUndDichte",
+    "maxLines": 1,
+    "requiredDe": "Tabellarisch in DIN/TS 18599-10 — über die Heizperiode wird daraus $Q_{\\mathrm{i}}$.",
+    "requiredEn": "Tabulated in DIN/TS 18599-10 — over the heating season it becomes $Q_{\\mathrm{i}}$.",
+    "forbiddenDe": "Diese spezifische Last"
+  }
+}

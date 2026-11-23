@@ -1,0 +1,14 @@
+{
+  "id": "2026/11/21/FIX-HEAT-SOLAR-SHADE-WALL-GAP",
+  "title": "Solar Shade Wall Flush Under Window",
+  "status": "closed",
+  "client": "cursor-chat",
+  "closed": "2026-11-21T09:36:03",
+  "goal": "ANIMATE",
+  "summary": "Floor/ceiling to glass_out; outer-leaf casement on left facade.",
+  "files": [
+    "🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/☀️solar-gains/🐍️.py",
+    "🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/☀️solar-gains/🧪️tests/🐍️.py",
+    "🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/☀️solar-gains/🧪️tests/🔣️.cases.json"
+  ]
+}

@@ -25,12 +25,15 @@
     "far_edge_height_ratio": [
       0.7,
       0.95
-    ]
+    ],
+    "paneCap": 0.16,
+    "thickWall": 0.5
   },
   "house_window_outer": {
     "scale": 0.75,
     "outer_tolerance": 1e-09,
-    "min_joinery": 4,
-    "min_muntins": 2
+    "min_joinery": 6,
+    "min_muntins": 2,
+    "joineryMatchesSash": true
   }
 }

@@ -1,0 +1,19 @@
+{
+  "id": "2026/11/22/FIX-HEAT-SOLAR-SHADE-WINDOW-SECTION",
+  "title": "Fix Solar Shade Window Section Realism",
+  "status": "closed",
+  "client": "cursor-chat",
+  "opened": "2026-11-22T20:12:28",
+  "goal": "ANIMATE",
+  "prompt": "Beat5 Verschattung window section unrealistic: mid horizontal, facade much thicker than slabs.",
+  "closed": "2026-11-22T20:21:50",
+  "summary": "Capped outer-leaf sash depth and aligned Beat5 facade/slab thicknesses so Sonnenschutz window section reads realistically.",
+  "files": [
+    "🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎨️visuals/🐍️.py",
+    "🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎨️visuals/🧪️tests/🐍️.py",
+    "🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎨️visuals/🧪️tests/🔣️.cases.json",
+    "🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/☀️solar-gains/🐍️.py",
+    "🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/☀️solar-gains/🧪️tests/🐍️.py",
+    "🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/☀️solar-gains/🧪️tests/🔣️.cases.json"
+  ]
+}

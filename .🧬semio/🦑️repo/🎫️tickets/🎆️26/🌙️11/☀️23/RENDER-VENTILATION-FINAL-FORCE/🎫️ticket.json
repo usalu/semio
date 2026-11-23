@@ -1,0 +1,14 @@
+{
+  "id": "2026/11/23/RENDER-VENTILATION-FINAL-FORCE",
+  "title": "Force Re-Render Ventilation Final",
+  "status": "closed",
+  "client": "cursor-chat",
+  "opened": "2026-11-23T17:23:34",
+  "goal": "ANIMATE",
+  "summary": "Full_Ventilation 1080p30 published from content.mp4 after force re-render.",
+  "files": [
+    "videos/final/de/speaker/rendered/Full_Ventilation_speaker_de_1080p30.mp4",
+    "videos/final/de/speaker/verify/Full_Ventilation_final.mp4"
+  ],
+  "closed": "2026-11-23T21:19:09"
+}

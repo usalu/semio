@@ -1,0 +1,10 @@
+{
+  "id": "2026/11/21/FIX-HEAT-THERMAL-MASS-WINDOW",
+  "title": "Thermal Mass Outer Leaf Window",
+  "status": "closed",
+  "client": "cursor-chat",
+  "opened": "2026-11-21T09:37:12",
+  "goal": "ANIMATE",
+  "prompt": "Thermal mass scene window detailed and outer-leaf flush.",
+  "closed": "2026-11-21T09:39:29"
+}

@@ -1,0 +1,16 @@
+{
+  "id": "2026/11/22/FIX-HEAT-WATT-CAPTION-FORMULA-OVERLAP",
+  "title": "Fix Heat Watt Caption Formula Overlap",
+  "status": "closed",
+  "client": "cursor-chat",
+  "opened": "2026-11-22T21:00:00",
+  "goal": "ANIMATE",
+  "prompt": "Beat4 WattVergleich: subtitle and formula overlap; make subtitle one line.",
+  "closed": "2026-11-22T21:05:00",
+  "summary": "Beat4 WattVergleich U-caption shortened to one line; clears formula panel.",
+  "files": [
+    "🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧱️conduction/🐍️.py",
+    "🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧱️conduction/🎪️tests/🔣️.cases.json",
+    "🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧱️conduction/🎪️tests/🐍️.py"
+  ]
+}

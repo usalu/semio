@@ -1,0 +1,16 @@
+{
+  "id": "2026/11/22/HIDE-HEATING-CONVECTION-AIR-LOOP",
+  "title": "Hide Heating Convection Air Loop Guide",
+  "status": "closed",
+  "client": "cursor-chat",
+  "opened": "2026-11-22T20:55:00",
+  "goal": "ANIMATE",
+  "prompt": "In Beat3 Konvektion hide the blue/teal air-movement loop line; keep circulating particles.",
+  "summary": "Hidden cyan air-loop guides in Beat3_Konvektion and Beat5_Zusammenfassung.",
+  "files": [
+    "🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧲️fundamentals/🐍️.py",
+    "🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧲️fundamentals/🎪️tests/🔣️.cases.json",
+    "🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧲️fundamentals/🎪️tests/🐍️.py"
+  ],
+  "closed": "2026-11-22T21:00:00"
+}

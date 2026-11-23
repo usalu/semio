@@ -121,7 +121,7 @@ def _parallel_rays(sun_c, hits, gap: float = 0.5):
 def _house_sun_rays(house, sun_c):
     """🔆 Two parallel rays through each window of ``house``, landing on that storey's floor."""
     floors = (house["bottom_left"][1], house["level_1"].get_center()[1])
-    sets = [sun_rays(sun_c, w["x"], [w["center"][1] + 0.09, w["center"][1] - 0.09], fy, gap=0.5)
+    sets = [sun_rays(sun_c, w["outer"], [w["center"][1] + 0.09, w["center"][1] - 0.09], fy, gap=0.5)
             for w, fy in zip(house["windows"], floors)]
     paths = [[s, h, p] for r in sets for s, h, p in zip(r["starts"], r["hits"], r["lands"])]
     return sets, paths
@@ -440,7 +440,8 @@ class Beat5_SolarCoolingLoad(Scene):
         sun_pos = np.array([-6.45, 1.45, 0.0])
         sun = _sun(sun_pos)
         ys = np.linspace(room["win_hi"] - 0.18, room["win_lo"] + 0.18, 4)
-        rays = sun_rays(sun_pos, room["glass_x"], ys, room["y_f"], gap=0.5)
+        glass_outer = room["windows"][0]["outer"]
+        rays = sun_rays(sun_pos, glass_outer, ys, room["y_f"], gap=0.5)
         ray_paths = [[s, h, p] for s, h, p in zip(rays["starts"], rays["hits"], rays["lands"])]
         warm_spots = [p + UP * 0.03 for p in rays["lands"]]
 
@@ -470,16 +471,13 @@ class Beat5_SolarCoolingLoad(Scene):
         g_tr = ValueTracker(0.0)
         i_tr = ValueTracker(0.0)
         read_at = np.array([room["x_r"] - 0.3, room["y_c"] - 1.3, 0.0])
-        gx = room["glass_x"]
-        win_mid_y = (room["win_hi"] + room["win_lo"]) / 2
-        frame = Rectangle(
-            width=0.28, height=(room["win_hi"] - room["win_lo"]) + 0.16,
-            color=P_WHITE, stroke_width=2.4,
-        ).move_to(np.array([gx, win_mid_y, 0.0]))
+        gx = room["windows"][0]["outer"]
+        sash = room["windows"][0]["sash"][0]
+        frame = SurroundingRectangle(sash, buff=0.04, corner_radius=0, color=P_WHITE, stroke_width=2.4)
         slats = VGroup(*[
             Line(
-                np.array([gx - 0.46, y, 0.0]),
-                np.array([gx - 0.14, y - 0.12, 0.0]),
+                np.array([gx - 0.38, y, 0.0]),
+                np.array([gx - 0.06, y - 0.12, 0.0]),
                 color=P_TEAL, stroke_width=3,
             )
             for y in np.linspace(room["win_lo"] + 0.16, room["win_hi"] - 0.16, 5)

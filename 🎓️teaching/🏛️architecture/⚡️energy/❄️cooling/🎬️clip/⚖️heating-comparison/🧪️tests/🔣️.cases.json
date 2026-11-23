@@ -1,0 +1,16 @@
+{
+  "schema": "cooling-heating-comparison-windows/v1",
+  "house": {
+    "outer_tolerance": 1e-09,
+    "min_joinery": 4,
+    "min_muntins": 2
+  },
+  "solarRays": {
+    "required": "sun_rays(SUN_C, w[\"outer\"]",
+    "forbid": "sun_rays(SUN_C, w[\"x\"]"
+  },
+  "ahu": {
+    "required": "wx = win_lo[\"outer\"]",
+    "forbid": "wx = win_lo[\"x\"]"
+  }
+}

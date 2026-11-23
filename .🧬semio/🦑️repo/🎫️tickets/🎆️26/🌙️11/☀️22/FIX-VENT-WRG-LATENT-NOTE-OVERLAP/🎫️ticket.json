@@ -1,0 +1,12 @@
+{
+  "id": "2026/11/22/FIX-VENT-WRG-LATENT-NOTE-OVERLAP",
+  "title": "Hide Latent Note Overlapping Formula",
+  "status": "closed",
+  "client": "cursor-chat",
+  "opened": "2026-11-22T20:39:52",
+  "closed": "2026-11-22T20:39:52",
+  "summary": "Beat2_Waermerueckgewinnung: remove lat_note chip that overlapped the latent formula; caption already carries winter/summer Q_V,lat.",
+  "files": [
+    "🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/⚙️mechanical/🐍️.py"
+  ]
+}

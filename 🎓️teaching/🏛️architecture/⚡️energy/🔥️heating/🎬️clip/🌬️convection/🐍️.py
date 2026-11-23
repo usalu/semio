@@ -62,6 +62,7 @@ subtitle_text = _manim_module.subtitle_text
 tr = _manim_module.tr
 _references = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.📚️references.🐍️")
 house_section = _manim_module.house_section
+emphasize_casement = _manim_module.emphasize_casement
 open_window = _manim_module.open_window
 _morph = importlib.import_module("🎓️teaching.🏛️architecture.🔀️morph.🐍️")
 TRANSITIONS = Path(__file__).resolve().parent / "🔀️transitions" / "🔣️.json"
@@ -176,6 +177,8 @@ class Beat1_LueftungImWinter(Scene):
 
         #region winter house
         hs = house_section(np.array([-3.9, -0.05, 0.0]), scale=0.9)
+        for w in hs["windows"]:
+            emphasize_casement(w, color=PASTEL_CYAN)
         bl, br, tl = hs["bottom_left"], hs["bottom_right"], hs["top_left"]
         x_r, t = br[0], 0.08
         air = Polygon(bl + RIGHT * t + UP * 0.02, br + LEFT * t + UP * 0.02, hs["top_right"] + LEFT * t + DOWN * 0.06,

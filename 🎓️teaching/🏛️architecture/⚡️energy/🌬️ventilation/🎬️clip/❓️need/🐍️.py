@@ -65,6 +65,7 @@ tr = _manim_module.tr
 _references = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.📚️references.🐍️")
 load_vo_timing = _manim_module.load_vo_timing
 house_section = _manim_module.house_section
+emphasize_casement = _manim_module.emphasize_casement
 open_window = _manim_module.open_window
 room_section = _manim_module.room_section
 window_glyph = _manim_module.window_glyph
@@ -297,20 +298,38 @@ class Beat1_Lueftungsbedarf(Scene):
         moist_col = VGroup(g_moist["group"], cap_moist, read_lat)
         odor_col = VGroup(g_odor["group"], cap_odor)
 
+        wall_t = 0.16
+        clear_w, clear_h = room_w - wall_t, room_h - wall_t
+        air_l, air_r = float(room_c[0] - clear_w / 2), float(room_c[0] + clear_w / 2)
+        air_f, air_c = float(room_c[1] - clear_h / 2), float(room_c[1] + clear_h / 2)
+        pad = 0.08
+        in_x = (air_l + pad, air_r - pad)
+        in_y = (air_f + pad, air_c - pad)
+
         rng = np.random.default_rng(7)
         n_dots = 16
-        co2_dots = VGroup(*[Dot(np.array([rng.uniform(-5.0, -0.4), room_c[1] + rng.uniform(0.62, 1.08), 0.0]), radius=0.05,
+        co2_y0 = max(in_y[0], float(room_c[1]) + 0.55)
+        co2_dots = VGroup(*[Dot(np.array([rng.uniform(*in_x), rng.uniform(co2_y0, in_y[1]), 0.0]), radius=0.05,
                                 color=CO2_COLOR).set_fill(CO2_COLOR, opacity=0.0) for _ in range(n_dots)])
         for i, dot in enumerate(co2_dots):
             dot.add_updater(lambda d, i=i: d.set_fill(CO2_COLOR, opacity=0.9 * float(np.clip(co2.get_value() * n_dots - i, 0, 1))))
-        drops = VGroup(*[droplets(np.array([x + 0.4, floor_top + 0.85, 0.0]), n=4, spread=(0.15, 0.32), seed=i)
-                         for i, x in enumerate(xs)])
+        drop_spread = (0.15, 0.32)
+        drops = VGroup(*[
+            droplets(np.array([
+                float(np.clip(x + 0.4, in_x[0] + drop_spread[0], in_x[1] - drop_spread[0])),
+                float(np.clip(floor_top + 0.85, in_y[0] + drop_spread[1], in_y[1] - drop_spread[1])),
+                0.0]), n=4, spread=drop_spread, seed=i)
+            for i, x in enumerate(xs)])
         for i, cluster in enumerate(drops):
             cluster.add_updater(lambda m, i=i: m.set_fill(MOISTURE_COLOR, opacity=0.85 * float(np.clip(moist.get_value() * PEOPLE - i, 0, 1))))
             cluster.set_fill(MOISTURE_COLOR, opacity=0.0)
-        smells = VGroup(*[VGroup(*[Dot(np.array([cx + rng.uniform(-0.28, 0.28), floor_top + 0.18 + rng.uniform(-0.07, 0.1), 0.0]),
-                                       radius=0.04, color=ODOUR_COLOR).set_fill(ODOUR_COLOR, opacity=0.0) for _ in range(5)])
-                          for cx in (-4.95, -3.9, -2.7, -1.5, -0.5)])
+        smell_spread = 0.22
+        smell_xs = np.linspace(in_x[0] + smell_spread, in_x[1] - smell_spread, 5)
+        smells = VGroup(*[VGroup(*[Dot(np.array([
+            cx + rng.uniform(-smell_spread, smell_spread),
+            float(np.clip(floor_top + 0.18 + rng.uniform(-0.07, 0.1), in_y[0], in_y[1])),
+            0.0]), radius=0.04, color=ODOUR_COLOR).set_fill(ODOUR_COLOR, opacity=0.0) for _ in range(5)])
+                          for cx in smell_xs])
         for j, cluster in enumerate(smells):
             cluster.add_updater(lambda m, j=j: m.set_fill(ODOUR_COLOR, opacity=0.9 * float(np.clip(odor.get_value() * 5 - j, 0, 1))))
 
@@ -503,6 +522,8 @@ class Beat2_Lueftungsweg(Scene):
         self.play(FadeIn(caption), run_time=0.3)
 
         hs = house_section(np.array([-1.0, -0.3, 0.0]), scale=1.05)
+        for w in hs["windows"]:
+            emphasize_casement(w, color=P_CYAN)
         bl, br, tl = hs["bottom_left"], hs["bottom_right"], hs["top_left"]
         x_r, t = br[0], 0.1
         air = Polygon(bl + RIGHT * t + UP * 0.02, br + LEFT * t + UP * 0.02, hs["top_right"] + LEFT * t + DOWN * 0.06,

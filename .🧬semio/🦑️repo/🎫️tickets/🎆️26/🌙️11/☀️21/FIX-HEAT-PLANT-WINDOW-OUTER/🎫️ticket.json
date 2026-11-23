@@ -1,0 +1,14 @@
+{
+  "id": "2026/11/21/FIX-HEAT-PLANT-WINDOW-OUTER",
+  "title": "Plant House Windows Outer Leaf",
+  "status": "closed",
+  "client": "cursor-chat",
+  "closed": "2026-11-21T09:49:09",
+  "goal": "ANIMATE",
+  "summary": "Anlagenverluste plant house outer-leaf windows; floors flush to facade outers.",
+  "files": [
+    "🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧮️calculation/🐍️.py",
+    "🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧮️calculation/🧪️tests/🐍️.py",
+    "🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧮️calculation/🧪️tests/🔣️.cases.json"
+  ]
+}

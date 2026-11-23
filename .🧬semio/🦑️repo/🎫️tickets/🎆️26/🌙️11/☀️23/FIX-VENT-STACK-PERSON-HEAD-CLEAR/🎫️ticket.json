@@ -1,0 +1,9 @@
+{
+  "id": "2026/11/23/FIX-VENT-STACK-PERSON-HEAD-CLEAR",
+  "title": "Clear Stack Person Head From Shaft Overlap",
+  "status": "open",
+  "client": "cursor-chat",
+  "opened": "2026-11-23T22:42:15",
+  "goal": "ANIMATE",
+  "summary": "Beat4_Auftrieb: move person left of shaft so ceiling/shaft no longer cuts the head; PNG for approval before merge."
+}

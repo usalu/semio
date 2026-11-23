@@ -506,12 +506,14 @@ def animate_flows(
 _FLOW_PHASE: dict = {}
 
 
-def flow_animation(streams, *, waves: int = 5, radius: float = 0.065, cycles: float = 2.4, streak: bool = True):
+def flow_animation(streams, *, waves: int = 5, radius: float = 0.065, cycles: float = 2.4, streak: bool = True,
+                   peak_opacity: float = 0.92, stroke_width: float = 0.0):
     """🌊 The particle stream of ``animate_flows`` as one animation — for ``hold_for(during=…)`` and mixed plays.
 
     ``streams`` are ``(paths, colour)`` or ``(paths, colour, colour_end)``; particles are added when the
     animation starts and removed when it ends. The phase of a stream (identified by its path objects) is carried
     over to the next animation on the same paths, so consecutive plays continue the flow instead of restarting it.
+    ``peak_opacity`` caps fill; with ``stroke_width`` and ``peak_opacity=0`` the stream is stroke-only (no fill stack).
     """
     from manim import Ellipse, ManimColor, UpdateFromAlphaFunc, VGroup, interpolate_color, linear
 
@@ -523,11 +525,11 @@ def flow_animation(streams, *, waves: int = 5, radius: float = 0.065, cycles: fl
         end_c = ManimColor(entry[2]) if len(entry) > 2 and entry[2] else start_c
         for path in paths:
             for w in range(waves):
-                particle = Ellipse(width=radius * 2.8, height=radius * 1.15, color=color, stroke_width=0,
-                                   fill_opacity=0.0) if streak else None
+                particle = Ellipse(width=radius * 2.8, height=radius * 1.15, color=color,
+                                   stroke_width=stroke_width, fill_opacity=0.0) if streak else None
                 if particle is None:
                     from manim import Dot
-                    particle = Dot(radius=radius, color=color, stroke_width=0).set_fill(color, opacity=0.0)
+                    particle = Dot(radius=radius, color=color, stroke_width=stroke_width).set_fill(color, opacity=0.0)
                 particle.move_to(path.point_from_proportion(0.0))
                 dots.add(particle)
                 meta.append((path, w / waves, start_c, end_c))
@@ -543,13 +545,15 @@ def flow_animation(streams, *, waves: int = 5, radius: float = 0.065, cycles: fl
             particle.move_to(path.point_from_proportion(t))
             fade = min(1.0, t / 0.08, (1.0 - t) / 0.10)
             fill = interpolate_color(start_c, end_c, t)
+            fill_peak = peak_opacity if streak else (1.0 if peak_opacity == 0.92 else peak_opacity)
+            op = max(0.0, fade * fill_peak)
             if streak:
                 t0, t1 = max(0.0, t - 0.02), min(1.0, t + 0.02)
                 tangent = path.point_from_proportion(t1) - path.point_from_proportion(t0)
                 particle.set_angle(float(np.arctan2(tangent[1], tangent[0])))
-                particle.set_fill(fill, opacity=max(0.0, fade * 0.92))
-            else:
-                particle.set_fill(fill, opacity=max(0.0, fade))
+            particle.set_fill(fill, opacity=op)
+            if stroke_width:
+                particle.set_stroke(fill, width=stroke_width, opacity=max(0.0, fade * max(peak_opacity, 0.55)))
 
     class _Flow(UpdateFromAlphaFunc):
         def begin(self):
@@ -860,11 +864,12 @@ def _section_material(width, height, center):
 
 def window_glyph(x: float, sill: float, lintel: float, *, depth: float = 0.42, color=P_CYAN,
                  wall: float = 0.18, inward: float = 1.0):
-    """🪟 Casement flush with the exterior face of a cut wall, with sill/lintel joinery and mullioned glazing.
+    """🪟 Outer-leaf casement in wall section: sill/head rails and double glazing.
 
     ``x`` is the wall centreline; the sash sits on the outer leaf and opens inward. The sash stays a two-part
-    ``VGroup`` (frame + mullion) so ``open_window`` can morph it; sill/lintel boards and a vertical bar are
-    fixed joinery in the wall aperture.
+    ``VGroup`` (frame + glazing) so ``open_window`` can morph it. A building section shows glass as parallel
+    vertical cuts — not an elevation muntin across the pane.
+    https://www.detail.de/de_en/fenster
     """
     from manim import Line, Polygon, VGroup
 
@@ -872,31 +877,33 @@ def window_glyph(x: float, sill: float, lintel: float, *, depth: float = 0.42, c
         raise ValueError("A window needs positive height, depth, wall and an inward direction")
     sign = 1.0 if inward > 0 else -1.0
     height = lintel - sill
-    # Prefer most of the outer leaf; never thicker than the wall; keep a floor so thin walls still read.
-    pane = min(wall * 0.85, max(min(0.08, wall * 0.85), depth * 0.15))
+    # Outer-leaf sash is a shallow box on the exterior face — never most of a thick wall.
+    pane = min(wall * 0.85, 0.16)
     reveal_height = height * 0.07
     outer_x = x - sign * wall / 2
     hinge_x = outer_x
     inset = min(0.035, height * 0.04)
+    rail = min(0.05, height * 0.07)
     vertices = [np.array([hinge_x, sill + inset, 0.0]), np.array([hinge_x + sign * pane, sill + inset, 0.0]),
                 np.array([hinge_x + sign * pane, lintel - inset, 0.0]), np.array([hinge_x, lintel - inset, 0.0])]
     frame = Polygon(*vertices, color=color, stroke_width=2.2, fill_color=color, fill_opacity=0.18)
     mid = (sill + lintel) / 2
-    mid_x = hinge_x + sign * pane / 2
-    muntins = VGroup(
-        Line([hinge_x, mid, 0], [hinge_x + sign * pane, mid, 0], color=color, stroke_width=1.6),
-        Line([mid_x, sill + inset, 0], [mid_x, lintel - inset, 0], color=color, stroke_width=1.5),
+    g0 = hinge_x + sign * pane * 0.30
+    g1 = hinge_x + sign * pane * 0.55
+    glazing = VGroup(
+        Line([g0, sill + inset + rail * 0.35, 0], [g0, lintel - inset - rail * 0.35, 0], color=color, stroke_width=1.9),
+        Line([g1, sill + inset + rail * 0.35, 0], [g1, lintel - inset - rail * 0.35, 0], color=color, stroke_width=1.9),
     )
-    sash = VGroup(frame, muntins)
+    sash = VGroup(frame, glazing)
     reveal = VGroup(*[_section_material(wall, reveal_height, [x, y, 0])
                       for y in (sill - reveal_height / 2, lintel + reveal_height / 2)])
-    # Outer leaf alignment: white sill/lintel caps on the exterior face, vertical muntin in the pane.
-    # Caps stay inside the wall thickness so overview scales of (depth, wall, height) stay uniform.
     joinery = VGroup(
-        Line([outer_x, sill, 0], [outer_x + sign * pane, sill, 0], color=P_WHITE, stroke_width=2.4),
-        Line([outer_x, lintel, 0], [outer_x + sign * pane, lintel, 0], color=P_WHITE, stroke_width=2.4),
-        Line([outer_x, sill, 0], [outer_x, lintel, 0], color=P_WHITE, stroke_width=1.8),
-        Line([outer_x + sign * pane, sill, 0], [outer_x + sign * pane, lintel, 0], color=color, stroke_width=1.4),
+        Line([outer_x, sill, 0], [outer_x + sign * pane, sill, 0], color=P_WHITE, stroke_width=2.6),
+        Line([outer_x, sill + rail, 0], [outer_x + sign * pane, sill + rail, 0], color=P_WHITE, stroke_width=2.0),
+        Line([outer_x, lintel, 0], [outer_x + sign * pane, lintel, 0], color=P_WHITE, stroke_width=2.6),
+        Line([outer_x, lintel - rail, 0], [outer_x + sign * pane, lintel - rail, 0], color=P_WHITE, stroke_width=2.0),
+        Line([outer_x, sill, 0], [outer_x, lintel, 0], color=P_WHITE, stroke_width=2.0),
+        Line([outer_x + sign * pane, sill, 0], [outer_x + sign * pane, lintel, 0], color=color, stroke_width=1.6),
     )
     reference = Polygon(*vertices, stroke_width=0, fill_opacity=0)
     group = VGroup(reveal, sash, joinery, reference)
@@ -907,12 +914,16 @@ def window_glyph(x: float, sill: float, lintel: float, *, depth: float = 0.42, c
             "group": group}
 
 
-def emphasize_casement(window, *, color=None):
-    """🪵 Stronger sash and outer-leaf joinery so overview-scale houses still read as casements."""
+def emphasize_casement(window, *, color=None, joinery_color=None):
+    """🪵 Stronger sash, glazing and outer-leaf joinery so overview-scale houses still read as casements."""
     color = color or window["sash"][0].get_stroke_color()
+    joinery_color = color if joinery_color is None else joinery_color
     window["sash"][0].set_stroke(width=max(2.6, float(window["sash"][0].get_stroke_width())))
+    window["sash"][0].set_fill(color, opacity=max(0.22, float(window["sash"][0].get_fill_opacity())))
+    for pane in window["sash"][1]:
+        pane.set_stroke(width=max(2.0, float(pane.get_stroke_width()) + 0.3), color=color)
     for line in window["joinery"]:
-        line.set_stroke(width=max(2.4, float(line.get_stroke_width()) + 0.4), color=P_WHITE)
+        line.set_stroke(width=max(2.4, float(line.get_stroke_width()) + 0.4), color=joinery_color)
     window["joinery"][-1].set_stroke(color=color, width=2.2)
     return window
 
@@ -928,14 +939,12 @@ def window_opening(window, *, fraction: float = 1.0, tilt: bool = False):
     across = (near_bottom - bottom) * window["projection_ratio"] * (0.55 if tilt else 0.92) * fraction
     height = top - bottom
     if tilt:
-        # Bottom-hinged Kipp: top leans into the room — exaggerate so it never reads as a closed leaf.
         span = max(fraction, 0.4)
         lean = across * (0.55 / max(fraction, 1e-6)) * span
         drop = height * 0.12 * span
         vertices = [bottom, near_bottom, near_top + lean - drop, top + lean - drop]
     else:
         edge = near_bottom - bottom
-        # Full casement swing into the room (Stoßlüften).
         vertices = [bottom, bottom + edge * (1 - fraction) + across + height * 0.12 * fraction,
                     top + edge * (1 - fraction) + across - height * 0.12 * fraction, top]
     stroke = max(2.4, float(sash[0].get_stroke_width()))
@@ -943,18 +952,18 @@ def window_opening(window, *, fraction: float = 1.0, tilt: bool = False):
     opacity = min(0.22, max(0.12, float(sash[0].get_fill_opacity())))
     frame = Polygon(*vertices, color=sash[0].get_stroke_color(), stroke_width=stroke,
                     fill_color=fill, fill_opacity=opacity)
-    # Cross muntin tracks the projected sash (same two-part identity as the closed glyph).
-    muntin_color = sash[1][0].get_stroke_color() if hasattr(sash[1], "__getitem__") else sash[1].get_stroke_color()
-    muntin_w = 1.6
+    glass_color = sash[1][0].get_stroke_color() if hasattr(sash[1], "__getitem__") else sash[1].get_stroke_color()
+    glass_w = 1.9
     if hasattr(sash[1], "__getitem__"):
-        muntin_w = max(1.5, float(sash[1][0].get_stroke_width()))
+        glass_w = max(1.7, float(sash[1][0].get_stroke_width()))
     else:
-        muntin_w = max(1.5, float(sash[1].get_stroke_width()))
-    muntins = VGroup(
-        Line((vertices[0] + vertices[3]) / 2, (vertices[1] + vertices[2]) / 2, color=muntin_color, stroke_width=muntin_w),
-        Line((vertices[0] + vertices[1]) / 2, (vertices[3] + vertices[2]) / 2, color=muntin_color, stroke_width=muntin_w),
-    )
-    return VGroup(frame, muntins)
+        glass_w = max(1.7, float(sash[1].get_stroke_width()))
+    def glass_at(t: float):
+        return Line(vertices[0] * (1 - t) + vertices[1] * t,
+                    vertices[3] * (1 - t) + vertices[2] * t,
+                    color=glass_color, stroke_width=glass_w)
+    glazing = VGroup(glass_at(0.30), glass_at(0.55))
+    return VGroup(frame, glazing)
 
 
 def pose_animation(mobject, target, **kwargs):
@@ -1013,8 +1022,8 @@ def house_section(center=None, scale: float = 1.0):
     )))
     windows = []
     for a, b in openings:
-        win = window_glyph(x_l + t / 2, a, b, depth=0.85 * (b - a), wall=t, inward=1)
-        emphasize_casement(win)
+        win = window_glyph(x_l + t / 2, a, b, depth=0.85 * (b - a), wall=t, inward=1, color=P_CYAN)
+        emphasize_casement(win, color=P_CYAN)
         windows.append(win)
     window_group = VGroup(*[window["group"] for window in windows])
     material = section_assembly(floor, walls, roof, *(window["reveal"] for window in windows))
@@ -1053,7 +1062,7 @@ def room_section(center, *, w: float = 5.0, h: float = 2.5, wall: float = 0.2, s
     depth = 0.85 * (hi - lo)
     windows = []
     if window_side in {"left", "both"}:
-        left_win = emphasize_casement(window_glyph(gx, lo, hi, depth=depth, wall=wall, inward=1))
+        left_win = emphasize_casement(window_glyph(gx, lo, hi, depth=depth, wall=wall, inward=1, color=P_CYAN), color=P_CYAN)
         windows.append(left_win)
         glass = left_win["group"]
     else:
@@ -1062,7 +1071,7 @@ def room_section(center, *, w: float = 5.0, h: float = 2.5, wall: float = 0.2, s
         glass.set_opacity(0)
     right_glass = None
     if window_side in {"right", "both"}:
-        right_win = emphasize_casement(window_glyph(rx, lo, hi, depth=depth, wall=wall, inward=-1))
+        right_win = emphasize_casement(window_glyph(rx, lo, hi, depth=depth, wall=wall, inward=-1, color=P_CYAN), color=P_CYAN)
         windows.append(right_win)
         right_glass = right_win["group"]
     air = Rectangle(width=w, height=h, stroke_width=0, fill_color=P_RED, fill_opacity=0).move_to([cx, cy, 0])

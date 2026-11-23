@@ -1,0 +1,16 @@
+{
+  "id": "2026/11/22/FIX-HEAT-BRIDGE-PSI-PANEL-OVERLAP",
+  "title": "Fix Heat Bridge Psi Panel Overlap",
+  "status": "closed",
+  "client": "cursor-chat",
+  "opened": "2026-11-22T21:02:00",
+  "goal": "ANIMATE",
+  "prompt": "Beat6 Wärmebrücken: ψ formulas overlap the difference formula panel and crowd the caption; fix fully.",
+  "closed": "2026-11-22T21:10:00",
+  "summary": "Beat6: fade ψ labels before diff panel; raise ψ_i; lift panel edge_buff.",
+  "files": [
+    "🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧱️conduction/🐍️.py",
+    "🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧱️conduction/🎪️tests/🔣️.cases.json",
+    "🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧱️conduction/🎪️tests/🐍️.py"
+  ]
+}

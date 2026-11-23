@@ -269,7 +269,7 @@ class Stage:
             temporary.unlink(missing_ok=True)
 
     def transition(self, transition_id, source=None, target=None):
-        """🔀 Return ONE Manim animation for `transition_id`: preview swap or full morph by the active profile. The `fade`, `split`, `hull`, `move`, `replace` and `retext` recipes always run the full morph so a preview still dissolves, sprouts, silhouettes, relocates, reshapes or rewrites glyphs instead of hard-swapping. `source`/`target` bind the declared entities inline (rebinding replaces an entity bound to another object)."""
+        """🔀 Return ONE Manim animation for `transition_id`: preview swap or full morph by the active profile. The `fade`, `split`, `hull`, `move`, `replace`, `retext`, `appear` and `vanish` recipes always run the full morph so a preview still dissolves, sprouts, silhouettes, relocates, reshapes, rewrites glyphs, grows in or collapses out instead of hard-swapping. `source`/`target` bind the declared entities inline (rebinding replaces an entity bound to another object)."""
         item = self._attach(transition_id, source, target)
         if item.timing.duration == 0:
             raise ValueError(f"transition {transition_id!r} has duration 0, which Manim cannot play. Fix: call stage.cut({transition_id!r}) for an atomic switch or give it a positive duration")
@@ -279,7 +279,7 @@ class Stage:
         item, source, target = self._subjects(transition_id)
         self._report(item)
         fps = float(_engine.config.frame_rate)
-        soft = item.recipe in ("fade", "split", "hull", "move", "replace", "retext")
+        soft = item.recipe in ("fade", "split", "hull", "move", "replace", "retext", "appear", "vanish")
         animation = (_module(PREVIEW_MODULE).PreviewSwap(source, target, transition=item, fps=fps, frames=self._frames() or None)
                      if profile.morph == "swap" and not soft
                      else _module(FULL_MODULE).execute(source, target, transition=item, fps=fps))

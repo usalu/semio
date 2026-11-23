@@ -1,0 +1,15 @@
+{
+  "schema": "cooling-solar-radiation-windows/v1",
+  "houseRays": {
+    "required": "sun_rays(sun_c, w[\"outer\"]",
+    "forbid": "sun_rays(sun_c, w[\"x\"]"
+  },
+  "roomRays": {
+    "required": "glass_outer = room[\"windows\"][0][\"outer\"]",
+    "forbid": "sun_rays(sun_pos, room[\"glass_x\"]"
+  },
+  "frame": {
+    "required": "SurroundingRectangle(sash",
+    "forbid": "move_to(np.array([gx, win_mid_y, 0.0]))"
+  }
+}

@@ -1,0 +1,5 @@
+{
+  "schema": "cooling-transmission-humidity-windows/v1",
+  "required": "x, y = float(win[\"outer\"]), float(win[\"center\"][1])",
+  "forbid": "x, y = float(win[\"x\"]), float(win[\"center\"][1])"
+}

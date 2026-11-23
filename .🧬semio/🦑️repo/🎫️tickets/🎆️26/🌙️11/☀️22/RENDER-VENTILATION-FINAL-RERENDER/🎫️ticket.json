@@ -1,0 +1,13 @@
+{
+  "id": "2026/11/22/RENDER-VENTILATION-FINAL-RERENDER",
+  "title": "Rerender Ventilation Final Video",
+  "status": "closed",
+  "client": "cursor-chat",
+  "opened": "2026-11-22T10:54:26",
+  "goal": "ANIMATE",
+  "summary": "Full_Ventilation_speaker_de_1080p30.mp4 re-rendered.",
+  "closed": "2026-11-22T12:19:46",
+  "files": [
+    "videos/final/de/speaker/rendered/Full_Ventilation_speaker_de_1080p30.mp4"
+  ]
+}

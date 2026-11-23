@@ -157,8 +157,8 @@ def _parallel_rays(sun_pos, targets, *, gap: float = 0.45):
 #region Air through the openings
 def _through(win, scale: float, reach: float, *, inward: bool, dy: float = 0.0):
     """➡️ Particle track through one opening — from the room out, or reversed from outside in."""
-    x, y = float(win["x"]), float(win["center"][1])
-    pts = [(x + 1.05 * scale, y - 0.06 + dy), (x + 0.35 * scale, y + dy), (x - 0.3 * scale, y + 0.03 + dy),
+    x, y = float(win["outer"]), float(win["center"][1])
+    pts = [(x + 1.05 * scale, y - 0.06 + dy), (x + 0.35 * scale, y + dy), (x - 0.18 * scale, y + 0.03 + dy),
            (x - reach, y + 0.2 + dy)]
     if inward:
         pts = pts[::-1]

@@ -5,15 +5,15 @@
     "animation": null
   },
   "sources": {
-    "\ud83c\udf93\ufe0fteaching/\ud83c\udfdb\ufe0farchitecture/\u26a1\ufe0fenergy/\ud83c\udf2c\ufe0fventilation/\ud83c\udfac\ufe0fclip/\u2699\ufe0fmechanical/\ud83d\udc0d\ufe0f.py": "9718a51bfa7db3d3430a687cf5d2b332907d59fb9b0605ac73d2270ccfc72783",
+    "\ud83c\udf93\ufe0fteaching/\ud83c\udfdb\ufe0farchitecture/\u26a1\ufe0fenergy/\ud83c\udf2c\ufe0fventilation/\ud83c\udfac\ufe0fclip/\u2699\ufe0fmechanical/\ud83d\udc0d\ufe0f.py": "04d95f7afdd60087fea55d6707634c354bc396a7856ecfc48e3fa9de75ca98ff",
     "\ud83c\udf93\ufe0fteaching/\ud83c\udfdb\ufe0farchitecture/\u26a1\ufe0fenergy/\ud83c\udf2c\ufe0fventilation/\ud83c\udfac\ufe0fclip/\u2699\ufe0fmechanical/\ud83d\udd00\ufe0ftransitions/\ud83d\udd23\ufe0f.json": "c31425522999c5a7bff5448cef4dca71242539ebdc7bb8e61ceb519730afcc6d",
     "\ud83c\udf93\ufe0fteaching/\ud83c\udfdb\ufe0farchitecture/\u26a1\ufe0fenergy/\ud83c\udfd7\ufe0fauthoring/\ud83c\udfa8\ufe0ftheme/\ud83d\udc0d\ufe0f.py": "a7367e0158b70f9d1807f45e1f6a29ca338370218e5e0698ddc49bcf14f346e9",
-    "\ud83c\udf93\ufe0fteaching/\ud83c\udfdb\ufe0farchitecture/\u26a1\ufe0fenergy/\ud83c\udfd7\ufe0fauthoring/\ud83c\udfa8\ufe0fvisuals/\ud83d\udc0d\ufe0f.py": "7e95a0ecbe7a148f080ba66c34dacbd12bb2aa6963ce886c8cc9ce2c8954751f",
-    "\ud83c\udf93\ufe0fteaching/\ud83c\udfdb\ufe0farchitecture/\u26a1\ufe0fenergy/\ud83c\udfd7\ufe0fauthoring/\ud83c\udfa8\ufe0fvisuals/\ud83d\udd23\ufe0f.json": "e22b8903a7b9d62b31771053cb7ac906335b7204a3689aed515fe688d4a821c5",
+    "\ud83c\udf93\ufe0fteaching/\ud83c\udfdb\ufe0farchitecture/\u26a1\ufe0fenergy/\ud83c\udfd7\ufe0fauthoring/\ud83c\udfa8\ufe0fvisuals/\ud83d\udc0d\ufe0f.py": "2c8b69d97b77412c5fcf1450ddbb18d8c7a06ebb5b594f1bb28ea9bd7676a1dd",
+    "\ud83c\udf93\ufe0fteaching/\ud83c\udfdb\ufe0farchitecture/\u26a1\ufe0fenergy/\ud83c\udfd7\ufe0fauthoring/\ud83c\udfa8\ufe0fvisuals/\ud83d\udd23\ufe0f.json": "00fc2d2b3780fd2766a567726c06e13052e396f14f1f0e2223a7958b873a439f",
     "\ud83c\udf93\ufe0fteaching/\ud83c\udfdb\ufe0farchitecture/\u26a1\ufe0fenergy/\ud83c\udfd7\ufe0fauthoring/\ud83c\udfa8\ufe0fvisuals/\ud83d\udd23\ufe0ficons/\ud83d\udd23\ufe0f.json": "35e1eaf0ad3bafaf91bd95af96ac17e500e40fd5a6109246cc27f0278949de1c",
     "\ud83c\udf93\ufe0fteaching/\ud83c\udfdb\ufe0farchitecture/\u26a1\ufe0fenergy/\ud83c\udfd7\ufe0fauthoring/\ud83c\udfa8\ufe0fvisuals/\ud83d\udd23\ufe0ficons/\ud83e\uddec\ufe0fschema/\ud83d\udd23\ufe0f.schema.json": "3f09fe3fcfd0f4a740cfcb35653c4813c358630f56a12b901147a4d6710b55ba",
     "\ud83c\udf93\ufe0fteaching/\ud83c\udfdb\ufe0farchitecture/\u26a1\ufe0fenergy/\ud83c\udfd7\ufe0fauthoring/\ud83c\udfa8\ufe0fvisuals/\ud83e\uddcd\ufe0fstaffage/\ud83d\udc0d\ufe0f.py": "5bc1f6475e60cdee72a774816be783147dad5b05cfbebd48c02b2bdf4248acf6",
-    "\ud83c\udf93\ufe0fteaching/\ud83c\udfdb\ufe0farchitecture/\u26a1\ufe0fenergy/\ud83c\udfd7\ufe0fauthoring/\ud83c\udfa8\ufe0fvisuals/\ud83e\uddcd\ufe0fstaffage/\ud83d\udd23\ufe0f.json": "f662711a10b4001198bcde2ea36e5e0302c9522af9db2885bf43e5d0b583ddf4",
+    "\ud83c\udf93\ufe0fteaching/\ud83c\udfdb\ufe0farchitecture/\u26a1\ufe0fenergy/\ud83c\udfd7\ufe0fauthoring/\ud83c\udfa8\ufe0fvisuals/\ud83e\uddcd\ufe0fstaffage/\ud83d\udd23\ufe0f.json": "1fb97a9d0e8e6034ebacf6d356e23b0f382e38fe1d731ef2e9dcd37d6ce10c7d",
     "\ud83c\udf93\ufe0fteaching/\ud83c\udfdb\ufe0farchitecture/\u26a1\ufe0fenergy/\ud83c\udfd7\ufe0fauthoring/\ud83c\udfa8\ufe0fvisuals/\ud83e\uddec\ufe0fschema/\ud83d\udd23\ufe0f.schema.json": "e5b8b7d3dfc9b54d3694e9d31f0df6cb2649b6d6e91ec3dc256f1ad01af44526",
     "\ud83c\udf93\ufe0fteaching/\ud83c\udfdb\ufe0farchitecture/\u26a1\ufe0fenergy/\ud83c\udfd7\ufe0fauthoring/\ud83c\udfac\ufe0fclip/\u2699\ufe0fruntime/\ud83d\udc0d\ufe0f.py": "70987277c891686022ac25134dd3400ce43ad32512cbe87d8cc8d5a59d42c066",
     "\ud83c\udf93\ufe0fteaching/\ud83c\udfdb\ufe0farchitecture/\u26a1\ufe0fenergy/\ud83c\udfd7\ufe0fauthoring/\ud83c\udfac\ufe0fclip/\ud83c\udf9a\ufe0fprofile/\ud83d\udc0d\ufe0f.py": "b0e6255465408194009b4026a6a418073af658490e86fa458bd6e210ff29234b",
@@ -47,14 +47,14 @@
     "\ud83c\udf93\ufe0fteaching/\ud83c\udfdb\ufe0farchitecture/\ud83d\udd00\ufe0fmorph/\u23f1\ufe0ftimeline/\ud83d\udc0d\ufe0f.py": "c503e039c1e83e01f9cf39c7851cdae6c4e32479c6561b77ed9f9629d3224d43",
     "\ud83c\udf93\ufe0fteaching/\ud83c\udfdb\ufe0farchitecture/\ud83d\udd00\ufe0fmorph/\u270f\ufe0fauthoring/\ud83e\uddec\ufe0fschema/\ud83d\udd23\ufe0f.schema.json": "70061955ee68c3d745fa1b028ee3abcedb5d47ca5eff4fe7e54713a2a50b42c6",
     "\ud83c\udf93\ufe0fteaching/\ud83c\udfdb\ufe0farchitecture/\ud83d\udd00\ufe0fmorph/\ud83c\udf9e\ufe0ffull/\ud83d\udc0d\ufe0f.py": "bb6d9eeec61cc76a6405bb8cf0790d1459aa227bc1147d91f8ae0faac536cb74",
-    "\ud83c\udf93\ufe0fteaching/\ud83c\udfdb\ufe0farchitecture/\ud83d\udd00\ufe0fmorph/\ud83c\udfad\ufe0fstage/\ud83d\udc0d\ufe0f.py": "11d1552731c94241a121574cdb13c03b7c55535dbcd4e16f400a3c92c2f8a82c",
+    "\ud83c\udf93\ufe0fteaching/\ud83c\udfdb\ufe0farchitecture/\ud83d\udd00\ufe0fmorph/\ud83c\udfad\ufe0fstage/\ud83d\udc0d\ufe0f.py": "89a948ab6bcaaa8d00b76b0d23fe3a046421c7f06513493c819dfa1876c09dc7",
     "\ud83c\udf93\ufe0fteaching/\ud83c\udfdb\ufe0farchitecture/\ud83d\udd00\ufe0fmorph/\ud83d\udc0d\ufe0f.py": "cbd0f079e3a818a2594d6b30a5fa9405e55a6fea72b8722f98e22b0173d77ec7",
     "\ud83c\udf93\ufe0fteaching/\ud83c\udfdb\ufe0farchitecture/\ud83d\udd00\ufe0fmorph/\ud83d\udcca\ufe0finstrument/\ud83d\udc0d\ufe0f.py": "26749fec70e0ef5022b1bfc2a803def0ccd9d628d2173630311109d8766e2244",
     "\ud83c\udf93\ufe0fteaching/\ud83c\udfdb\ufe0farchitecture/\ud83d\udd00\ufe0fmorph/\ud83d\udccb\ufe0fspec/\ud83d\udc0d\ufe0f.py": "584081b84bfe84245a66c816d9a22af33ef79015eaff11b9c19339d9e9c8b0de",
     "\ud83c\udf93\ufe0fteaching/\ud83c\udfdb\ufe0farchitecture/\ud83d\udd00\ufe0fmorph/\ud83e\uddec\ufe0fschema/\ud83d\udd23\ufe0f.schema.json": "a7f62d9e3ccbd7bff9d0635f0212644d7d27ebc8a6af369ad8389f3c5b659d0d",
     "\ud83c\udf93\ufe0fteaching/\ud83c\udfdb\ufe0farchitecture/\ud83d\udd00\ufe0fmorph/\ud83e\ude99\ufe0ftoken/\ud83d\udc0d\ufe0f.py": "ea34495ce4625fa96b7091f51ab69f2f49da2167d88e65bf3134d168ac320f5b",
     "\ud83c\udf93\ufe0fteaching/\ud83c\udfdb\ufe0farchitecture/\ud83d\udd00\ufe0fmorph/\ud83e\udee5\ufe0fsilhouette/\ud83d\udc0d\ufe0f.py": "e215264b8b9287b6ba8c0d28eb6db71d5527c68a156b6d22d639c8941c821feb",
-    "\ud83c\udf93\ufe0fteaching/\ud83e\uddf0\ufe0finterop/\ud83d\udd50\ufe0fclock/\ud83d\udc0d\ufe0f.py": "c0d674e96a33d7b8efa6c3c9b64802627f6321e5757b4393eed20a2f24f69770",
+    "\ud83c\udf93\ufe0fteaching/\ud83e\uddf0\ufe0finterop/\ud83d\udd50\ufe0fclock/\ud83d\udc0d\ufe0f.py": "e30fc0171881fbef2c99fa7c23fe4e30e186040993e34f2571db17ca6aba0f32",
     "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83d\udcda\ufe0fcompiler/\ud83c\udf0d\ufe0fworld/\ud83d\udd24\ufe0ffonts/\ud83e\uddee\ufe0fLibertinusMath-Regular.otf": "ded714b0d3808af527438ed7a85f16933133f66a12104c4a83db4cc248888011",
     "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83d\uddb1\ufe0fui/\ud83c\udfa8\ufe0fstyling/\ud83d\udd23\ufe0f.json": "fbaecbd72b868c87bb1989837049bf2ba52f2f6eb58fddebf6cf6be9fab86927",
     "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83d\uddbc\ufe0fassets/\ud83d\udc46\ufe0fcursor/\u2611\ufe0fselectable/\ud83c\udf19\ufe0fdark.svg": "d6205fb1742c1486bdb9c7de449da593b065545db71476d91f5af84b3cc38ffe",
@@ -70,12 +70,12 @@
   },
   "captured": {
     "language": "de",
-    "profile": "preview",
+    "profile": "final",
     "audience": "speaker"
   },
   "size": [
     640,
     360
   ],
-  "sha256": "d4395b60c2a1d0914831634c12baea4136b685c7406c6758a8ff79f8c1176b66"
+  "sha256": "54dd9a360f55bcf0efae6c4818deca9ddf9de158bf4cdd3f2dca45f2abf7b57f"
 }

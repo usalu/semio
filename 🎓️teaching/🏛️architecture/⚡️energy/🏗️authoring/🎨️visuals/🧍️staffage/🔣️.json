@@ -64,7 +64,7 @@
       "viewpoint": "elevation",
       "theme": "dark",
       "thermalSpanK": 25,
-      "scale": 50
+      "scale": 100
     },
     "cooling-internal-gains-laptop-closed": {
       "asset": "laptop",
@@ -74,7 +74,7 @@
       "viewpoint": "elevation",
       "theme": "dark",
       "thermalSpanK": 25,
-      "scale": 50
+      "scale": 100
     },
     "cooling-internal-gains-server-rack": {
       "asset": "server-rack",
@@ -186,7 +186,7 @@
       "viewpoint": "elevation",
       "theme": "dark",
       "thermalSpanK": 25,
-      "scale": 50
+      "scale": 100
     },
     "heating-internal-gains-tower-server": {
       "asset": "tower-server",
@@ -753,7 +753,7 @@
       "viewpoint": "elevation",
       "theme": "dark",
       "thermalSpanK": 25,
-      "scale": 50,
+      "scale": 100,
       "fps": 15
     },
     "cooling-heating-comparison-laptop-summer": {
@@ -764,7 +764,7 @@
       "viewpoint": "elevation",
       "theme": "dark",
       "thermalSpanK": 25,
-      "scale": 50,
+      "scale": 100,
       "fps": 15
     },
     "cooling-summer-strategy-blind": {
@@ -787,7 +787,7 @@
       "viewpoint": "elevation",
       "theme": "dark",
       "thermalSpanK": 25,
-      "scale": 50
+      "scale": 100
     },
     "shared-watt-toaster": {
       "asset": "toaster",
@@ -1026,7 +1026,7 @@
       "viewpoint": "elevation",
       "theme": "dark",
       "thermalSpanK": 25,
-      "scale": 50
+      "scale": 100
     },
     "shared-diesel-generator-rated": {
       "asset": "diesel-generator",

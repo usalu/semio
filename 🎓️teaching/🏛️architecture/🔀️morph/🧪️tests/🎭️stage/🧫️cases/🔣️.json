@@ -150,6 +150,29 @@
         "fit": "contain",
         "uniform": true
       }
+    },
+    {
+      "id": "demo.blocks-appear",
+      "intent": "abstraction",
+      "source": null,
+      "target": {
+        "entity": "demo.tiles",
+        "revision": 1,
+        "sampling": "snapshot"
+      },
+      "relation": "one-to-one",
+      "recipe": "appear",
+      "timing": {
+        "duration": 1.0,
+        "easing": "ease-in-out",
+        "lag": 0.0
+      },
+      "placement": {
+        "space": "scene",
+        "anchor": "center",
+        "fit": "contain",
+        "uniform": true
+      }
     }
   ]
 }

@@ -1,0 +1,13 @@
+{
+  "id": "2026/11/22/FIX-VENT-NIGHT-MASS-FILL-RAYS",
+  "title": "Full Room Temperature Fill And Floor Rays",
+  "status": "closed",
+  "client": "cursor-chat",
+  "goal": "ENERGY",
+  "opened": "2026-11-22T20:55:45",
+  "closed": "2026-11-22T20:55:45",
+  "summary": "Beat5_Nachtlueftung: Speichermasse fill spans clear room height clear of slabs; sun rays land on the floor.",
+  "files": [
+    "🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🌟️natural/🐍️.py"
+  ]
+}

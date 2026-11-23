@@ -1,0 +1,14 @@
+{
+  "id": "2026/11/22/FIX-VENT-WINDOW-SECTION-DETAIL",
+  "title": "Realistic Window Section Without Mid Muntin",
+  "status": "closed",
+  "client": "cursor-chat",
+  "goal": "ENERGY",
+  "opened": "2026-11-22T20:51:43",
+  "closed": "2026-11-22T20:51:43",
+  "summary": "Shared window_glyph: drop elevation mid-muntin; show sill/head rails and double glazing in section.",
+  "files": [
+    "🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎨️visuals/🐍️.py",
+    "🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎨️visuals/🧪️tests/🔣️.cases.json"
+  ]
+}

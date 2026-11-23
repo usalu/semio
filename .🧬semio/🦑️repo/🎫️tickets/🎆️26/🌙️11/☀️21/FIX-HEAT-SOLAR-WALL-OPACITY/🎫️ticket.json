@@ -1,0 +1,16 @@
+{
+  "id": "2026/11/21/FIX-HEAT-SOLAR-WALL-OPACITY",
+  "title": "Solar Intensity Facade Wall Opacity",
+  "status": "closed",
+  "client": "cursor-chat",
+  "opened": "2026-11-21T09:26:00",
+  "closed": "2026-11-21T09:26:56",
+  "goal": "ANIMATE",
+  "prompt": "Make white wall more transparent in Strahlungsintensität scene.",
+  "summary": "Irradiance facade wall fill opacity set to 0.4.",
+  "files": [
+    "🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/☀️solar-gains/🐍️.py",
+    "🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/☀️solar-gains/🧪️tests/🐍️.py",
+    "🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/☀️solar-gains/🧪️tests/🔣️.cases.json"
+  ]
+}

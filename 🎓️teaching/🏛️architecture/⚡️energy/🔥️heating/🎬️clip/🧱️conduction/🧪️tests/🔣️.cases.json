@@ -12,5 +12,23 @@
       "Innenmaß"
     ]
   },
-  "maxNameWidth": 2
+  "maxNameWidth": 2,
+  "flatFormulaHandoff": {
+    "forbidden": [
+      "heating.conduction.flat.formula-head",
+      "heating.conduction.flat.formula-box"
+    ],
+    "required": [
+      "_drop_panel",
+      "FadeIn",
+      "Create"
+    ]
+  },
+  "bridgeMethodLayout": {
+    "baseY": -0.32,
+    "kH": 0.0155,
+    "labelOffset": 0.32,
+    "noteOffset": 0.66,
+    "minNoteToFormulaGap": 0.25
+  }
 }

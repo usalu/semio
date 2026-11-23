@@ -109,6 +109,20 @@ class ArchitectureTest(unittest.TestCase):
             self.assertGreaterEqual(len(window["sash"][1]), case["min_muntins"])
             xs = [v[0] for v in window["sash"][0].get_vertices()]
             self.assertAlmostEqual(min(xs), outer, delta=case["outer_tolerance"])
+            if case.get("joineryMatchesSash"):
+                sash_color = window["sash"][0].get_stroke_color()
+                for line in window["joinery"]:
+                    self.assertEqual(line.get_stroke_color(), sash_color)
+
+
+    def test_room_windows_outer_leaf_cyan(self):
+        room = VISUALS.room_section([0.0, 0.0, 0.0], w=4.0, h=2.5, wall=0.24, window=(0.3, 0.85))
+        window = room["windows"][0]
+        outer = room["x_l"] - room["wall"]
+        xs = [v[0] for v in window["sash"][0].get_vertices()]
+        self.assertAlmostEqual(min(xs), outer, delta=1e-9)
+        self.assertEqual(window["sash"][0].get_stroke_color(), window["joinery"][0].get_stroke_color())
+        self.assertGreaterEqual(len(window["joinery"]), 4)
 
     def test_both_room_walls_have_apertures_when_requested(self):
         room = VISUALS.room_section([0, 0, 0], window_side="both")
@@ -122,6 +136,15 @@ class ArchitectureTest(unittest.TestCase):
         self.assertAlmostEqual(room["windows"][0]["outer"], room["glass_x"] - room["wall"] / 2)
         self.assertAlmostEqual(room["windows"][1]["outer"], room["right_glass_x"] + room["wall"] / 2)
 
+
+
+
+class WindowOuterLeafPaneTest(unittest.TestCase):
+    def test_pane_depth_caps_on_thick_walls(self):
+        case = CASES["window"]
+        thick = VISUALS.window_glyph(case["x"], case["sill"], case["lintel"], depth=case["depth"], wall=case["thickWall"])
+        span = abs(thick["sash"][0].get_right()[0] - thick["sash"][0].get_left()[0])
+        self.assertLessEqual(span, case["paneCap"] + 1e-9)
 
 
 if __name__ == "__main__":

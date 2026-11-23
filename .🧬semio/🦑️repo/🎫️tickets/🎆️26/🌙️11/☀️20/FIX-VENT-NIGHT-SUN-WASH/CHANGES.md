@@ -1,6 +1,3 @@
-# Transparent Sun Wash Instead Of Rays
+# Continuous Parallel Sun Radiation
 
-Scene: Beat5_Nachtlueftung.
-
-## Fix
-Replace sun radiation `Line`s with a semi-transparent yellow `Polygon` wash onto the shading, and the glass leak with a softer fill into Speichermasse.
+Beat5: replace converging yellow triangle with parallel `sun_rays` (same look as cooling / physics scenes).

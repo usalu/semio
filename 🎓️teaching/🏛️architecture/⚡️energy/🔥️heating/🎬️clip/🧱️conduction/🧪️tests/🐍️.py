@@ -34,6 +34,35 @@ class ConductionCaption(unittest.TestCase):
                     self.assertLess(text.width, CASES["maxNameWidth"])
 
 
+    def test_flat_formula_handoff_drops_before_appear(self):
+        tree = ast.parse((Path(__file__).parents[1] / "🐍️.py").read_text(encoding="utf-8"))
+        scene = next(node for node in tree.body if isinstance(node, ast.ClassDef) and node.name == "Beat6_Waermebruecken")
+        source = ast.dump(scene)
+        case = CASES["flatFormulaHandoff"]
+        for forbidden in case["forbidden"]:
+            self.assertNotIn(forbidden, source)
+        for required in case["required"]:
+            self.assertIn(required, source)
+
+
+    def test_bridge_method_notes_clear_formula_band(self):
+        import os
+        os.environ.setdefault("SEMIO_TEACHING_LANGUAGE", "de")
+        case = CASES["bridgeMethodLayout"]
+        tree = ast.parse((Path(__file__).parents[1] / "🐍️.py").read_text(encoding="utf-8"))
+        scene = next(node for node in tree.body if isinstance(node, ast.ClassDef) and node.name == "Beat6_Waermebruecken")
+        source = ast.get_source_segment((Path(__file__).parents[1] / "🐍️.py").read_text(encoding="utf-8"), scene) or ""
+        self.assertIn(f"base_y, k_h = {case['baseY']}, {case['kH']}", source)
+        self.assertIn(f"base_y - {case['labelOffset']}", source)
+        self.assertIn(f"base_y - {case['noteOffset']}", source)
+        note_bottom = case["baseY"] - case["noteOffset"] - 0.12
+        formula_top = VISUALS.math_panel([
+            ("h", r"H", "#ffffff"), (None, "=", "#ffffff"), ("ua", r"U", "#ffffff"),
+            (None, "+", "#ffffff"), ("du", r"D", "#ffffff"),
+        ])[1].get_top()[1]
+        self.assertGreaterEqual(note_bottom - formula_top, case["minNoteToFormulaGap"])
+
+
 
 if __name__ == "__main__":
     unittest.main()

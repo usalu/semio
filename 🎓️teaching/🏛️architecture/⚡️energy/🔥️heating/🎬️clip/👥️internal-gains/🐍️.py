@@ -80,8 +80,8 @@ COLOR_EQUIP = PASTEL_CYAN
 COLOR_LIGHT = PASTEL_YELLOW
 COLOR_HEAT = PASTEL_ORANGE
 
-# Default formula_panel edge_buff is 1.7 — sit a bit lower above the caption.
-FORMULA_EDGE_BUFF = 1.2
+# Default formula_panel edge_buff is 1.7 — keep clear of a two-line caption_bar.
+FORMULA_EDGE_BUFF = 1.85
 
 # Example office occupancy (DIN V 18599-10 style point loads) — one source per beat.
 DESK_SURFACE_M = 0.72
@@ -519,7 +519,8 @@ class Beat3_GeraetePhiE(Scene):
 
 #region Beat4 — Lighting Q̇_i,l
 B4_ROOM_C = np.array([0.0, 0.05, 0.0])
-B4_LAMP_UNIT = 3.2
+B4_ROOM_H = 3.3
+B4_LAMP_UNIT = room_metre(B4_ROOM_H)
 
 
 class Beat4_BeleuchtungPhiL(Scene):
@@ -545,7 +546,7 @@ class Beat4_BeleuchtungPhiL(Scene):
         caption = caption_bar(subtitle_text(self.NARRATION, "lamp"))
         self.play(FadeIn(caption), run_time=0.3)
 
-        room = room_section(B4_ROOM_C, w=9.0, h=3.3)
+        room = room_section(B4_ROOM_C, w=9.0, h=B4_ROOM_H)
         y_f = room["y_f"]
         lamp = staffage_motion("heating-internal-gains-pendant-lamp-warm-up", unit=B4_LAMP_UNIT, anchor=np.array([room["center"][0], room["y_c"], 0.0]), rate=LAMP_WARM_RATE)
         lamp.shift(UP * (room["y_c"] - lamp.get_top()[1]))
@@ -641,8 +642,8 @@ class Beat5_SummeUndDichte(Scene):
          r"Divide by the net floor area $A_{\mathrm{N}}$ to get watts per square metre.",
          r"Geteilt durch die Nettogrundfläche $A_{\mathrm{N}}$ ergibt Watt pro Quadratmeter."),
         ("din",
-         r"That specific load $q_{\mathrm{i}}$ is tabulated in DIN/TS 18599-10; over the heating season it becomes the internal gain $Q_{\mathrm{i}}$.",
-         r"Diese spezifische Last $q_{\mathrm{i}}$ steht tabellarisch in DIN/TS 18599-10; über die Heizperiode wird daraus der interne Gewinn $Q_{\mathrm{i}}$."),
+         r"Tabulated in DIN/TS 18599-10 — over the heating season it becomes $Q_{\mathrm{i}}$.",
+         r"Tabellarisch in DIN/TS 18599-10 — über die Heizperiode wird daraus $Q_{\mathrm{i}}$."),
     ]
 
     def construct(self):

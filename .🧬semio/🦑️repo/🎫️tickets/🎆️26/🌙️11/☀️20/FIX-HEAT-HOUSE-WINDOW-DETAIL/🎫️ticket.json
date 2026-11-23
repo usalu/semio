@@ -1,9 +1,21 @@
 {
   "id": "2026/11/20/FIX-HEAT-HOUSE-WINDOW-DETAIL",
   "title": "Detailed Outer Leaf Windows In Heating",
-  "status": "open",
+  "status": "closed",
   "client": "cursor-chat",
   "opened": "2026-11-20T22:57:00",
+  "closed": "2026-11-20T23:02:38",
   "goal": "ANIMATE",
-  "prompt": "House windows in heating should match prior videos: more detailed, aligned to outer side of the wall, entire video."
+  "prompt": "House windows in heating should match prior videos: more detailed, aligned to outer side of the wall, entire video.",
+  "summary": "Shared outer-leaf casements + thicker house wall; heating envelope/plant/solar windows match ventilation detail.",
+  "files": [
+    "🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎨️visuals/🐍️.py",
+    "🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎨️visuals/🔣️.json",
+    "🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎨️visuals/🧪️tests/🐍️.py",
+    "🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎨️visuals/🧪️tests/🔣️.cases.json",
+    "🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎨️visuals/🧪️tests/🔣️sections.json",
+    "🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧮️calculation/🐍️.py",
+    "🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/☀️solar-gains/🐍️.py",
+    "🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧱️conduction/🐍️.py"
+  ]
 }

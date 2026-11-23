@@ -1,0 +1,6 @@
+{
+  "qvWindow": {
+    "reuse": "win1 = room1[\"windows\"][0]",
+    "forbid": "window_glyph(room1[\"glass_x\"]"
+  }
+}

@@ -63,6 +63,8 @@ math_text = _manim_module.math_text
 math_row = _manim_module.math_row
 math_readout = _manim_module.math_readout
 math_panel = _manim_module.math_panel
+fit_band = _manim_module.fit_band
+SAFE_BOTTOM = _manim_module.SAFE_BOTTOM
 math_label = _manim_module.math_label
 label_number = _manim_module.label_number
 house_section = _manim_module.house_section
@@ -199,6 +201,26 @@ def _freeze(*mobs):
     """🧊 Stop live readouts from redrawing once their value has settled."""
     for mob in mobs:
         mob.clear_updaters()
+
+
+def _wipe(scene, *mobs):
+    """🧹 Zero fill/stroke opacity on every drawable leaf, then drop from the scene.
+
+    ``FadeOut`` on nested ``math_text`` / ``Text`` leaves Cairo glyphs painted — parent
+    VGroup opacity does not cascade to Text leaves. Explicit leaf wipe is required.
+    https://docs.manim.community/en/stable/reference/manim.mobject.mobject.Mobject.html#manim.mobject.mobject.Mobject.family_members_with_points
+    """
+    alive = [m for m in mobs if m is not None]
+    if not alive:
+        return
+    for mob in alive:
+        mob.clear_updaters()
+        for leaf in mob.family_members_with_points():
+            leaf.set_fill(opacity=0)
+            leaf.set_stroke(opacity=0)
+            leaf.set_opacity(0)
+        mob.set_opacity(0)
+    scene.remove(*alive)
 
 
 def _fly_into(scene, stage, prefix, panel, sources, *, run_time: float = 1.2):
@@ -422,7 +444,7 @@ class Beat1_VerlustZuGewinn(Scene):
         loss_paths = [leak(x_l + 0.85, y, x_l, -1) for y in (y_lo - 0.18, y_hi + 0.12)]
         loss_paths += [leak(x_r - 0.85, y, x_r, 1) for y in (y_lo - 0.18, y_hi + 0.12)]
         loss_paths += [roof_leak(peak[0] + dx) for dx in (-1.05, 1.05)]
-        loss_guides = flow_guides(loss_paths, PASTEL_CYAN, opacity=0.3)
+        loss_guides = flow_guides(loss_paths, PASTEL_CYAN, opacity=0.3, visible=False)
         loss_label = VGroup(
             Text(tr("Heat loss", "Wärmeverlust"), font_size=BODY_FONT_SIZE, color=PASTEL_CYAN),
             math_text(r"Q_{\mathrm{T}}", font_size=BODY_FONT_SIZE, color=PASTEL_CYAN),
@@ -433,7 +455,7 @@ class Beat1_VerlustZuGewinn(Scene):
                                    cycles=max(1.0, rt / 1.3))]
 
         self.play(FadeIn(caption), Create(house["group"]), run_time=1.4)
-        self.play(FadeIn(loss_guides), FadeIn(loss_label), *leaking(1.2), run_time=1.2)
+        self.play(FadeIn(loss_label), *leaking(1.2), run_time=1.2)
         hold_for(self, self.NARRATION, "loss", used=1.4 + 1.2, during=leaking)
 
         sun_c = np.array([-5.45, 1.45, 0.0])
@@ -443,7 +465,7 @@ class Beat1_VerlustZuGewinn(Scene):
             return [UpdateFromAlphaFunc(sun, lambda m, a: m.set_fill(opacity=0.96 + 0.04 * np.cos(TAU * a)), rate_func=linear)]
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "flip"))
-        self.play(FadeOut(loss_guides), FadeOut(loss_label), FadeIn(sun, scale=0.7), run_time=1.2)
+        self.play(FadeOut(loss_label), FadeIn(sun, scale=0.7), run_time=1.2)
         hold_for(self, self.NARRATION, "flip", during=glowing)
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "gain"))
@@ -534,7 +556,7 @@ class Beat2_BestrahlungUndFlaeche(Scene):
             section_material(Rectangle(width=3.6, height=oy0 - (oc[1] - 1.65))).move_to([oc[0], (oy0 + oc[1] - 1.65) / 2, 0]),
             section_material(Rectangle(width=1.8 - ow / 2, height=oh)).move_to([(oc[0] - 1.8 + ox0) / 2, oc[1], 0]),
             section_material(Rectangle(width=1.8 - ow / 2, height=oh)).move_to([(oc[0] + 1.8 + ox1) / 2, oc[1], 0]),
-        )
+        ).set_fill(opacity=0.4)
         opening = Rectangle(width=ow, height=oh, color=COLOR_A, stroke_width=3).move_to(oc)
         self.play(Create(wall), Create(opening), run_time=1.3)
         hold_for(self, N, "aperture", used=1.3 + 0.3)
@@ -899,27 +921,29 @@ class Beat5_Verschattung(Scene):
         caption = caption_bar(subtitle_text(N, "intro"))
         self.play(FadeIn(caption), run_time=0.3)
 
-        glass_out, glass_in = -3.5, -3.3
+        # Exterior wall ~ between room slab and a thick masonry wall — same family as room_section.
+        facade_t = 0.24
+        glass_out, glass_in = -3.65, -3.65 + facade_t
+        wall_cx = (glass_out + glass_in) / 2
         wall_top, wall_bottom = 1.55, -0.85
-        lintel = section_material(Rectangle(width=0.5, height=0.6)).move_to([-3.4, wall_top + 0.3, 0])
-        sill = section_material(Rectangle(width=0.5, height=0.6)).move_to([-3.4, wall_bottom - 0.3, 0])
+        lintel = section_material(Rectangle(width=facade_t, height=0.55)).move_to([wall_cx, wall_top + 0.275, 0])
+        sill = section_material(Rectangle(width=facade_t, height=0.55)).move_to([wall_cx, wall_bottom - 0.275, 0])
         masonry = VGroup(lintel, sill).set_z_index(3)
-        shade_wall = glass_in - glass_out
         shade_win = emphasize_casement(window_glyph(
-            (glass_out + glass_in) / 2, wall_bottom, wall_top, depth=0.85 * (wall_top - wall_bottom),
-            color=COLOR_WIN, wall=shade_wall, inward=-1))
+            wall_cx, wall_bottom, wall_top, depth=0.85 * (wall_top - wall_bottom),
+            color=COLOR_WIN, wall=facade_t, inward=1))
         glazing = shade_win["group"]
         glazing.set_z_index(3)
-        slab_left, room_end_x = lintel.get_right()[0], -0.7
+        slab_left, room_end_x = glass_out, -0.7
         ceiling_y, floor_y = lintel.get_top()[1], sill.get_bottom()[1]
-        t = 0.16
+        t = 0.20
         room = VGroup(
             section_material(Rectangle(width=room_end_x + t - slab_left, height=t)).move_to(
-                [(slab_left + room_end_x + t) / 2, ceiling_y - t / 2, 0]),
+                [(slab_left + room_end_x + t) / 2, ceiling_y + t / 2, 0]),
             section_material(Rectangle(width=room_end_x + t - slab_left, height=t)).move_to(
                 [(slab_left + room_end_x + t) / 2, floor_y - t / 2, 0]),
-            section_material(Rectangle(width=t, height=ceiling_y - floor_y - t)).move_to(
-                [room_end_x + t / 2, (ceiling_y + floor_y - t) / 2, 0]),
+            section_material(Rectangle(width=t, height=ceiling_y - floor_y)).move_to(
+                [room_end_x + t / 2, (ceiling_y + floor_y) / 2, 0]),
         )
         lbl_out = Text(tr("outside", "außen"), font_size=BODY_FONT_SIZE, color=P_PRIMARY).move_to([-6.2, 0.35, 0])
         lbl_in = Text(tr("inside", "innen"), font_size=BODY_FONT_SIZE, color=P_PRIMARY).move_to([-1.55, 1.6, 0])
@@ -1051,7 +1075,7 @@ class Beat5_Verschattung(Scene):
         hold_for(self, N, "reduced", during=shaded)
 
         caption = swap_caption(self, caption, subtitle_text(N, "winter"))
-        overhang = section_material(Rectangle(width=1.25, height=0.16)).move_to([glass_out - 0.62, wall_top + 0.08, 0]).set_z_index(4)
+        overhang = section_material(Rectangle(width=1.25, height=0.20)).move_to([glass_out - 0.62, wall_top + 0.08, 0]).set_z_index(4)
         lbl_over = Text(tr("Roof overhang", "Dachüberstand"), font_size=LABEL_FONT_SIZE, color=COLOR_FRAME)
         lbl_over.move_to([overhang.get_right()[0] + 0.2 - lbl_over.width / 2, lintel.get_top()[1] + 0.25, 0])
         winter_direct = VGroup(*[ray(np.array([glass_out, y, 0.0]), width=2.4, opacity=0.8) for y in glass_ys[1:]])
@@ -1113,8 +1137,8 @@ class Beat8_Hauptgleichung(Scene):
          r"Mass only delays that power. Surplus solar heat overheats the room — the utilisation factor $\eta$ follows in the finale.",
          r"Masse verzögert diese Leistung nur. Überschüssige Sonnenwärme überhitzt den Raum — den Ausnutzungsgrad $\eta$ zeigt das Finale."),
         ("mass",
-         r"Stored heat $Q$ is mass $m$ times specific heat capacity $c$ times temperature rise $\Delta\theta$ — in joule.",
-         r"Die gespeicherte Wärme $Q$ ist Masse $m$ mal spezifische Wärmekapazität $c$ mal Temperaturanstieg $\Delta\theta$ — in Joule."),
+         r"Stored heat $Q = m \cdot c \cdot \Delta\theta$ — in joule.",
+         r"Gespeicherte Wärme $Q = m \cdot c \cdot \Delta\theta$ — in Joule."),
         ("release",
          "More mass flattens the daily temperature swing and returns the warmth after sunset.",
          "Mehr Masse glättet den Tagesgang der Temperatur und gibt die Wärme nach Sonnenuntergang zurück."),
@@ -1163,17 +1187,14 @@ class Beat8_Hauptgleichung(Scene):
         row.next_to(subtitle, DOWN, buff=0.95)
         row.set_x(0)
         box = SurroundingRectangle(row, color=P_PRIMARY, buff=_theme_module.UI_SPACING * 2, corner_radius=0, stroke_width=2)
-        slots = [items[key] for key, _s, _c in token_src]
-        rest = VGroup(*[m for m in row.submobjects if all(m is not slot for slot in slots)])
-        self.play(
-            FadeOut(labs), FadeOut(unit_head),
-            stage.transition("heating.solar-gains.main.tokens-into-formula", source=tokens, target=slots),
-            FadeIn(rest), Create(box),
-            run_time=1.6,
-        )
-        self.remove(*slots, rest)
-        self.add(row)
-        hold_for(self, N, "assemble", used=1.4 + 1.6 + 0.3)
+        # Free factor tokens must leave before the boxed row appears — FadeOut alone
+        # leaves Cairo Text glyphs on stage that later sit on Q_Speicher.
+        intro = VGroup(tokens, labs, unit_head)
+        self.play(FadeOut(intro), run_time=0.55)
+        _wipe(self, tokens, labs, unit_head)
+        self.play(FadeIn(row), Create(box), run_time=1.05)
+        self.add(row, box)
+        hold_for(self, N, "assemble", used=1.4 + 0.55 + 1.05 + 0.3)
 
         caption = swap_caption(self, caption, subtitle_text(N, "chain"))
         fac = {"g": ValueTracker(0.0), "a": ValueTracker(0.0), "gval": ValueTracker(1.0), "ff": ValueTracker(1.0),
@@ -1196,17 +1217,17 @@ class Beat8_Hauptgleichung(Scene):
             return (rf"\textcolor{{{COLOR_G}}}{{{label_number(fac['g'].get_value())}}}\,\frac{{\mathrm{{W}}}}{{\mathrm{{m^{{2}}}}}} \cdot "
                     rf"\textcolor{{{COLOR_A}}}{{{label_number(fac['a'].get_value(), 2)}}}\,\mathrm{{m^{{2}}}} = {label_number(opening())}\,\mathrm{{W}}")
 
-        chain = math_readout(chain_src, lambda: box.get_bottom() + DOWN * 0.72, size=BODY_FONT_SIZE,
+        chain = math_readout(chain_src, lambda: box.get_bottom() + DOWN * 0.55, size=BODY_FONT_SIZE,
                              color=PASTEL_WHITE, edge="center")
-        detail = math_readout(detail_src, lambda: box.get_bottom() + DOWN * 1.35, size=LABEL_FONT_SIZE,
+        detail = math_readout(detail_src, lambda: box.get_bottom() + DOWN * 1.05, size=LABEL_FONT_SIZE,
                               color=PASTEL_WHITE, edge="center")
         bar_w = 7.0
         track = always_redraw(lambda: Rectangle(width=bar_w, height=0.2, color=GREY_B, stroke_width=1.5).move_to(
-            box.get_bottom() + DOWN * 2.05))
+            box.get_bottom() + DOWN * 1.65))
         bar = always_redraw(lambda: Rectangle(
             width=max(1e-3, bar_w * phi() / PHI_GA), height=0.2, stroke_width=0,
             fill_color=COLOR_HEAT, fill_opacity=0.9,
-        ).move_to(box.get_bottom() + DOWN * 2.05 + LEFT * bar_w / 2, aligned_edge=LEFT))
+        ).move_to(box.get_bottom() + DOWN * 1.65 + LEFT * bar_w / 2, aligned_edge=LEFT))
         full = math_text(rf"{label_number(PHI_GA)}\,\mathrm{{W}}", font_size=LABEL_FONT_SIZE, color=GREY_B)
         full.add_updater(lambda m: m.next_to(track, RIGHT, buff=0.15))
         self.add(chain, detail)
@@ -1228,44 +1249,58 @@ class Beat8_Hauptgleichung(Scene):
         self.play(*[FadeOut(r) for r in rings], run_time=0.25)
 
         caption = swap_caption(self, caption, subtitle_text(N, "store"))
+        _wipe(self, tokens, labs, unit_head)
+        track.clear_updaters()
+        bar.clear_updaters()
+        full.clear_updaters()
+        self.play(FadeOut(track), FadeOut(bar), FadeOut(full), FadeOut(detail), run_time=0.35)
+        _wipe(self, track, bar, full, detail)
+        box.move_to(row.get_center())
+        chain.next_to(box, DOWN, buff=0.18)
+        solar = VGroup(row, box, chain)
         self.play(
-            FadeOut(track), FadeOut(bar), FadeOut(full), FadeOut(detail),
-            VGroup(row, box).animate.next_to(subtitle, DOWN, buff=0.45).set_x(0),
-            chain.animate.shift(UP * ((subtitle.get_bottom()[1] - 0.45) - box.get_top()[1])),
-            run_time=0.8,
+            solar.animate.next_to(subtitle, DOWN, buff=0.16).set_x(0).scale(0.86),
+            run_time=0.55,
         )
+        box.move_to(row.get_center())
+        chain.next_to(box, DOWN, buff=0.16)
 
         store_note = Text(
-            tr("↓ stored in the thermal mass", "↓ gespeichert in der thermischen Masse"), font_size=BODY_FONT_SIZE, color=COLOR_HEAT,
+            tr("↓ stored in the thermal mass", "↓ gespeichert in der thermischen Masse"),
+            font_size=BODY_FONT_SIZE, color=COLOR_HEAT,
         )
-        store_note.next_to(chain, DOWN, buff=0.4).set_x(0)
-
         row2, items2 = math_row([
             ("q", r"Q_{\mathrm{Speicher}}", COLOR_HEAT), (None, "=", PASTEL_WHITE),
             ("m", "m", COLOR_MASS), (None, r"\cdot", PASTEL_WHITE),
             ("c", "c", COLOR_C), (None, r"\cdot", PASTEL_WHITE),
             ("dt", r"\Delta\theta", COLOR_G), (None, r"\quad[Q_{\mathrm{Speicher}}] = \mathrm{J}", PASTEL_WHITE),
-        ])
-        row2.next_to(store_note, DOWN, buff=0.5).set_x(-3.0)
+        ], font_size=BODY_FONT_SIZE)
         box2 = SurroundingRectangle(row2, color=COLOR_HEAT, buff=_theme_module.UI_SPACING * 2, corner_radius=0, stroke_width=2)
         legend = VGroup(
-            math_text(tr(r"m\;\;\text{mass of the component in}\;\mathrm{kg}", r"m\;\;\text{Masse des Bauteils in}\;\mathrm{kg}"), font_size=LABEL_FONT_SIZE, color=COLOR_MASS),
-            math_text(tr(r"c\;\;\text{specific heat capacity in}\;\frac{\mathrm{J}}{\mathrm{kg\,K}}", r"c\;\;\text{spez. Wärmekapazität in}\;\frac{\mathrm{J}}{\mathrm{kg\,K}}"), font_size=LABEL_FONT_SIZE,
-                      color=COLOR_C),
-            math_text(tr(r"\Delta\theta\;\;\text{temperature rise in}\;\mathrm{K}", r"\Delta\theta\;\;\text{Temperaturanstieg in}\;\mathrm{K}"), font_size=LABEL_FONT_SIZE, color=COLOR_G),
-        ).arrange(DOWN, aligned_edge=LEFT, buff=0.16)
-        legend.next_to(box2, RIGHT, buff=0.6)
-        legend.set_opacity(0)
+            math_text(tr(r"m\;\;\text{mass of the component in}\;\mathrm{kg}",
+                         r"m\;\;\text{Masse des Bauteils in}\;\mathrm{kg}"), font_size=LABEL_FONT_SIZE, color=COLOR_MASS),
+            math_text(tr(r"c\;\;\text{specific heat capacity in}\;\frac{\mathrm{J}}{\mathrm{kg\,K}}",
+                         r"c\;\;\text{spez. Wärmekapazität in}\;\frac{\mathrm{J}}{\mathrm{kg\,K}}"),
+                      font_size=LABEL_FONT_SIZE, color=COLOR_C),
+            math_text(tr(r"\Delta\theta\;\;\text{temperature rise in}\;\mathrm{K}",
+                         r"\Delta\theta\;\;\text{Temperaturanstieg in}\;\mathrm{K}"),
+                      font_size=LABEL_FONT_SIZE, color=COLOR_G),
+        ).arrange(DOWN, aligned_edge=LEFT, buff=0.20)
+        # Side legend is safe now that free-factor tokens are wiped; keeps the band above the caption.
+        mass_block = VGroup(VGroup(row2, box2), legend).arrange(RIGHT, buff=0.85, aligned_edge=UP)
+        store_stack = VGroup(store_note, mass_block).arrange(DOWN, buff=0.28)
+        store_stack.next_to(chain, DOWN, buff=0.28).set_x(0)
+        fit_band(store_stack, top=min(chain.get_bottom()[1] - 0.18, 0.30), bottom=SAFE_BOTTOM + 0.55)
+        store_stack.set_x(0)
 
-        self.play(FadeIn(store_note, shift=DOWN * 0.1), run_time=0.6)
-        self.play(FadeIn(row2), Create(box2), run_time=1.0)
+        self.play(FadeIn(store_note, shift=DOWN * 0.1), run_time=0.55)
+        self.play(FadeIn(row2), Create(box2), run_time=0.9)
         hold_for(self, N, "store")
 
         caption = swap_caption(self, caption, subtitle_text(N, "mass"))
-        legend.set_opacity(1)
         self.play(
             LaggedStart(*[FadeIn(l, shift=RIGHT * 0.1) for l in legend], lag_ratio=0.2),
-            run_time=1.1,
+            run_time=1.0,
         )
         for key, col in (("m", COLOR_MASS), ("c", COLOR_C), ("dt", COLOR_G)):
             r = highlight_param(items2, key, color=col)

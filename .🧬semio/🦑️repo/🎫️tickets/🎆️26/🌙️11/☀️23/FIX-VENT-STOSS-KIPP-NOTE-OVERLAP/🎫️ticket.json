@@ -1,0 +1,13 @@
+{
+  "id": "2026/11/23/FIX-VENT-STOSS-KIPP-NOTE-OVERLAP",
+  "title": "Clear Stoß Pose Label From Kipp Note",
+  "status": "closed",
+  "client": "cursor-chat",
+  "goal": "ENERGY",
+  "opened": "2026-11-23T16:51:51",
+  "summary": "n_kipp_box in center gap under weit auf.",
+  "files": [
+    "🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🌟️natural/🐍️.py"
+  ],
+  "closed": "2026-11-23T17:12:11"
+}

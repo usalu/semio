@@ -1,12 +1,14 @@
 {
   "id": "2026/11/20/FIX-VENT-NIGHT-SUN-WASH",
-  "title": "Transparent Sun Wash Instead Of Rays",
+  "title": "Continuous Parallel Sun Radiation",
   "status": "closed",
   "client": "cursor-chat",
   "opened": "2026-11-20T16:31:53",
-  "closed": "2026-11-20T16:31:53",
-  "summary": "Beat5 sun radiation is a soft yellow Polygon wash; leak into Speichermasse is the same.",
+  "summary": "Beat5 sun radiation is parallel sun_rays like other scenes.",
   "files": [
-    "🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🌿️natural/🐍️.py"
-  ]
+    "\ud83c\udf93\ufe0fteaching/\ud83c\udfdb\ufe0farchitecture/\u26a1\ufe0fenergy/\ud83c\udf2c\ufe0fventilation/\ud83c\udfac\ufe0fclip/\ud83c\udf3f\ufe0fnatural/\ud83d\udc0d\ufe0f.py"
+  ],
+  "reopened": "2026-11-22T11:10:01",
+  "goal": "ENERGY",
+  "closed": "2026-11-22T11:11:07"
 }

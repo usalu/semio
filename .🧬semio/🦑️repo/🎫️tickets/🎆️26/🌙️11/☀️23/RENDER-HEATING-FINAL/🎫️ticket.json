@@ -1,0 +1,15 @@
+{
+  "id": "2026/11/23/RENDER-HEATING-FINAL",
+  "title": "Render Heating Final Video",
+  "status": "closed",
+  "client": "cursor-chat",
+  "opened": "2026-11-23T20:42:17.526312+00:00",
+  "goal": "ANIMATE",
+  "summary": "Full Heating final 1080p30 published from 3/content.mp4; ticket correction videos deleted.",
+  "files": [
+    "videos/final/de/speaker/rendered/Full_Heating_Demand_speaker_de_1080p30.mp4",
+    "videos/final/de/speaker/verify/Full_Heating_final.mp4",
+    "videos/final/de/speaker/3/content.mp4"
+  ],
+  "closed": "2026-11-23T22:12:14.641804+00:00"
+}

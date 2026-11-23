@@ -1,0 +1,16 @@
+{
+  "id": "2026/11/20/FIX-HEAT-BRIDGE-NOTE-FORMULA-GAP",
+  "title": "Gap Bridge Notes From Formula Panel",
+  "status": "closed",
+  "client": "cursor-chat",
+  "opened": "2026-11-20T23:05:00",
+  "closed": "2026-11-20T23:07:55",
+  "goal": "ANIMATE",
+  "prompt": "Red texts under Wärmebrücken bars are really near the formula box; fix spacing.",
+  "summary": "Raised comparison columns so red method notes clear the formula panel by ≥0.25.",
+  "files": [
+    "🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧱️conduction/🐍️.py",
+    "🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧱️conduction/🧪️tests/🐍️.py",
+    "🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧱️conduction/🧪️tests/🔣️.cases.json"
+  ]
+}

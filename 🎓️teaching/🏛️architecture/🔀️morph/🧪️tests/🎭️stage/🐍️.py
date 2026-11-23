@@ -236,5 +236,13 @@ class StageEndToEndTests(unittest.TestCase):
         self.assertEqual(list(result["scene"].mobjects), [result["target"]])
 
 
+    def test_appear_recipe_grows_under_preview_profile(self):
+        definitions = Definitions()
+        result = run("preview", definitions, "demo.blocks-appear")
+        counts = result["work"]["counts"]
+        self.assertGreater(counts.get("full.evaluate", 0), 0)
+        self.assertEqual(counts.get("preview.swap", 0), 0)
+
+
 if __name__ == "__main__":
     unittest.main()

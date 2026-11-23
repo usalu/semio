@@ -754,7 +754,7 @@ class Beat3_Konvektion(Scene):
         rise = stage["fit"](_path([*RISE_PTS, (-1.45, 1.47)]))
         loop, loop_color = _loop(stage)
         rise_guide = flow_guides([rise], HOT, opacity=0.25, visible=False)
-        loop_guide = loop.copy().set_stroke(color=PASTEL_CYAN, width=2.0, opacity=0.35).set_fill(opacity=0)
+        loop_guide = loop.copy().set_stroke(color=PASTEL_CYAN, width=2.0, opacity=0.0).set_fill(opacity=0)
         glow = RoundedRectangle(corner_radius=0.12, width=(RADIATOR[2] - RADIATOR[0]) * stage["s"] + 0.2,
                                 height=(RADIATOR[3] - RADIATOR[1]) * stage["s"] + 0.2,
                                 stroke_width=0, fill_color=PASTEL_RED, fill_opacity=0.3).move_to(
@@ -1039,7 +1039,7 @@ class Beat5_Zusammenfassung(Scene):
             Text(tr("Convection + radiation", "Konvektion + Strahlung"), font_size=LABEL_FONT_SIZE, color=PASTEL_CYAN).move_to(p(3.5, 2.20)),
         )
         loop, loop_color = _loop(stage)
-        loop_guide = loop.copy().set_stroke(color=PASTEL_CYAN, width=2.0, opacity=0.35).set_fill(opacity=0)
+        loop_guide = loop.copy().set_stroke(color=PASTEL_CYAN, width=2.0, opacity=0.0).set_fill(opacity=0)
         lanes = _wind(stage)
         wind_guides = flow_guides(lanes, PASTEL_CYAN, opacity=0.28, width=1.8, visible=False)
         inner = _ir_rays(stage, INNER_RAYS)
